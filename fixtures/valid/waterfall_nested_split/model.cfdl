@@ -69,8 +69,13 @@ waterfall fund.distribution on entity asset.fund {
 //    tiers of it — and the deal team's pool comes off the top.
 waterfall firm.carry_allocation on entity asset.mgmt_co {
   schedule on 2025-01
-  from series_sum("fund.distribution.gp_catchup", 0, 5)
-        + series_sum("fund.distribution.gp_promote", 0, 5)
+  // `0, time.t` rather than `0, 5`: the pot is every dollar of carry paid up
+  // to this distribution, and the waterfall runs at one date. The constant 5
+  // was that date's period index, so the two are the same number here — but
+  // written as a constant it reads as a window that could reach past the
+  // period being distributed, which a pot never does.
+  from series_sum("fund.distribution.gp_catchup", 0, time.t)
+        + series_sum("fund.distribution.gp_promote", 0, time.t)
 
   pay team_pool  to party.team = remaining * inputs.team_pool_pct
   pay firm_share to asset.mgmt_co = remaining
@@ -82,7 +87,7 @@ waterfall firm.carry_allocation on entity asset.mgmt_co {
 //    structure needs three waterfalls instead of three lines in one.
 waterfall firm.owner_split on entity asset.mgmt_co {
   schedule on 2025-01
-  from series_sum("firm.carry_allocation.firm_share", 0, 5)
+  from series_sum("firm.carry_allocation.firm_share", 0, time.t)
 
   pay stakes_strip   to party.stakes   = remaining * inputs.stakes_pct
   pay founder_share  to party.founders = remaining

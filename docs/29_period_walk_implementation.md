@@ -111,7 +111,7 @@ it is **six fixtures and three causes** — and the difference is the finding:
 | --- | --- | --- |
 | the CRE pack's `cre.exit_forward` lowering | `cre_office_two_tenant`, `pack_cadence_cre_{annual,monthly,quarterly}` | `[time.t + 1 .. time.t + 12]` |
 | an absolute base year | `cre_derived_lines` | `cre.opex.line[24..24]` |
-| an absolute window in a waterfall STEP | `waterfall_nested_split` | `[0..5]` |
+| ~~an absolute window in a waterfall pot~~ | ~~`waterfall_nested_split`~~ | fixed, see below |
 
 **The forward-income exit is a PACK CONTRACT, not a benchmark.** A scan of
 model source cannot see it, because the read lives in the pack's lowering rule
@@ -121,8 +121,20 @@ rather than in anything a modeller wrote — so every model using
 uses it", which is a different piece of work and is why it is written down here
 rather than discovered in phase 6.
 
-**A waterfall's steps read series too**, and they are not in `ir.streams`. A
-streams-only check called `waterfall_nested_split` walkable.
+**A waterfall never reads forward, and the reference says so.** `docs/17` §4:
+a waterfall "reads period-close state, because the pot it allocates is THIS
+PERIOD'S cash and the balances it measures are this period's balances." The
+schema does not enforce it — `Waterfall.source` and `WaterfallStep.amount` are
+plain `Expr` — and the engine cannot detect it, because by the time the
+distribution stage runs the whole series column exists, so a forward window
+succeeds silently. `waterfall_nested_split` had a pot written `[0..5]`, an
+absolute window, where the constant was its single distribution date's period
+index; it now reads `[0..time.t]` and says what it means, with no published
+number moved. The walk closes the gap by construction: under a period walk a
+forward pot read is impossible rather than merely disallowed.
+
+A waterfall's pot and steps do have to be CHECKED, though, and they are not in
+`ir.streams` — a streams-only eligibility check called that fixture walkable.
 
 **A cumulative window is not a forward read.** `[0..time.t]` — the Highlands
 pot, the auto-ABS cumulative prepayment — reads only what has already

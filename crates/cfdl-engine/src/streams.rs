@@ -52,21 +52,108 @@ pub(crate) fn stream_direction_sign(stream: &IrStream, warnings: &mut Vec<String
 /// Evaluate one stream over the full timeline (projection tail included).
 /// `series` is Some only for phase-2 streams and enables series_sum/avg.
 #[allow(clippy::too_many_arguments)]
-pub(crate) fn evaluate_stream(
+/// A stream's compiled form: everything that does not depend on the period.
+///
+/// SPLIT OUT SO ONE ARITHMETIC SERVES TWO ORDERS. The engine evaluates a
+/// stream's whole column today; the period walk of `docs/28` §3 needs the same
+/// stream one period at a time. Compiling and scheduling once, then stepping,
+/// means the two orders cannot drift into computing different numbers — the
+/// column path below is a loop over `step`, not a second implementation.
+///
+/// A waterfall is NOT here and never will be. It is its own stage, allocating
+/// cash that streams have already produced (`docs/17` §4); stream evaluation
+/// does not know it exists.
+pub(crate) struct StreamPlan<'a> {
+    stream: &'a IrStream,
+    amount_expr: cfdl_expr::CompiledExpr,
+    active_expr: cfdl_expr::CompiledExpr,
+    /// `accruals[pay_idx]` holds the accrual periods that settle at `pay_idx`.
+    /// An accrual is never later than the period it settles in, which is what
+    /// makes a per-period step well defined.
+    accruals: Vec<Vec<usize>>,
+    direction_sign: f64,
+}
+
+impl<'a> StreamPlan<'a> {
+    /// One period of this stream: what settles at `pay_idx`.
+    ///
+    /// Reads the same gates in the same order as the column path — the event
+    /// mask first, then the stream's own `active when` — because both must
+    /// pass and the second is the stream's own declaration.
+    #[allow(clippy::too_many_arguments)]
+    pub(crate) fn step(
+        &self,
+        ir: &Ir,
+        config: &RunConfig,
+        pay_idx: usize,
+        timeline: &[Date],
+        base_inputs: &BTreeMap<String, f64>,
+        event_sim: &EventSim,
+        states: &BTreeMap<String, Vec<f64>>,
+        series: Option<&Arc<BTreeMap<String, Vec<f64>>>>,
+        warnings: &mut Vec<String>,
+        activation_refused: &mut Vec<usize>,
+    ) -> f64 {
+        let event_mask = event_sim.stream_active.get(&self.stream.name);
+        let mut settled = 0.0_f64;
+        let Some(accruals) = self.accruals.get(pay_idx) else {
+            return 0.0;
+        };
+        for &idx in accruals {
+            if let Some(mask) = event_mask {
+                if !mask[idx] {
+                    continue;
+                }
+            }
+            let mut env =
+                build_expr_env(ir, Some(self.stream), config, idx, &timeline[idx], base_inputs);
+            apply_entity_state(&mut env, &event_sim.entity_state[idx], &self.stream.owner.symbol);
+            bind_states(&mut env, states, idx);
+            bind_all_entity_state(&mut env, &event_sim.entity_state[idx]);
+            if let Some(series) = series {
+                env.series = Arc::clone(series);
+            }
+            let active_value = eval_bool_expr(
+                &self.active_expr,
+                &env,
+                "Stream",
+                &self.stream.name,
+                "active_when",
+                warnings,
+            );
+            if !active_value {
+                if event_mask.is_some_and(|mask| mask[idx]) {
+                    activation_refused.push(idx);
+                }
+                continue;
+            }
+            let amount =
+                if let Some(override_value) = stream_amount_override(config, &self.stream.name) {
+                    override_value
+                } else {
+                    eval_amount_expr(
+                        &self.amount_expr,
+                        &env,
+                        &self.stream.name,
+                        &ir.model.currency,
+                        warnings,
+                    )
+                };
+            // Evaluated against the accrual period, paid in the payment period.
+            settled += amount * self.direction_sign;
+        }
+        settled
+    }
+}
+
+/// Compile and schedule a stream, once, for either evaluation order.
+pub(crate) fn plan_stream<'a>(
     ir: &Ir,
-    config: &RunConfig,
-    stream: &IrStream,
+    stream: &'a IrStream,
     timeline: &[Date],
-    base_inputs: &BTreeMap<String, f64>,
-    event_sim: &EventSim,
-    states: &BTreeMap<String, Vec<f64>>,
-    series: Option<&Arc<BTreeMap<String, Vec<f64>>>>,
     warnings: &mut Vec<String>,
-    // Periods where an event turned this stream ON and the stream's own
-    // `active when` then refused it. Collected rather than warned so the
-    // journal can say so once, with a count, instead of once per period.
-    activation_refused: &mut Vec<usize>,
-) -> Result<Vec<f64>, EngineError> {
+) -> Result<StreamPlan<'a>, EngineError> {
+    let _ = ir;
     if let Some(lang) = &stream.amount.lang {
         if lang != "cfdl" {
             warnings.push(format!(
@@ -111,67 +198,52 @@ pub(crate) fn evaluate_stream(
         }
     };
 
-    let schedule_accruals = schedule_accruals(&stream.schedule, timeline)?;
-    let event_mask = event_sim.stream_active.get(&stream.name);
-    let mut values = vec![0.0_f64; timeline.len()];
+    let accruals = schedule_accruals(&stream.schedule, timeline)?;
     let direction_sign = stream_direction_sign(stream, warnings);
-    // A period may receive several accruals — under net-30 both February and
-    // March settle in March — so their amounts sum into that period.
-    for (pay_idx, accruals) in schedule_accruals.iter().enumerate() {
-        for &idx in accruals {
-            if let Some(mask) = event_mask {
-                if !mask[idx] {
-                    continue;
-                }
-            }
-            let mut env =
-                build_expr_env(ir, Some(stream), config, idx, &timeline[idx], base_inputs);
-            apply_entity_state(&mut env, &event_sim.entity_state[idx], &stream.owner.symbol);
-            bind_states(&mut env, states, idx);
-            // AN EVENT WRITES THE FIELD, so a stream must see what it wrote.
-            //
-            // Field values are bound first and event writes merged over them —
-            // the order a waterfall already uses. Without this a stream read
-            // the rule's value and a waterfall read the event's, so one field
-            // name answered differently depending on who asked.
-            bind_all_entity_state(&mut env, &event_sim.entity_state[idx]);
-            if let Some(series) = series {
-                env.series = Arc::clone(series);
-            }
-            let active_value = eval_bool_expr(
-                &active_expr,
-                &env,
-                "Stream",
-                &stream.name,
-                "active_when",
-                warnings,
-            );
-            if !active_value {
-                // BOTH GATES MUST PASS. An event's `activate stream` moves the
-                // mask; `active when` is the stream's own declaration and is
-                // not overridden by an event — so the activation had no
-                // effect for this period, which is a fact the journal owes
-                // the reader (`docs/28` §8).
-                if event_mask.is_some_and(|mask| mask[idx]) {
-                    activation_refused.push(idx);
-                }
-                continue;
-            }
-            let amount = if let Some(override_value) = stream_amount_override(config, &stream.name)
-            {
-                override_value
-            } else {
-                eval_amount_expr(
-                    &amount_expr,
-                    &env,
-                    &stream.name,
-                    &ir.model.currency,
-                    warnings,
-                )
-            };
-            // Evaluated against the accrual period, paid in the payment period.
-            values[pay_idx] += amount * direction_sign;
-        }
+    Ok(StreamPlan {
+        stream,
+        amount_expr,
+        active_expr,
+        accruals,
+        direction_sign,
+    })
+}
+
+/// A stream's whole column: the period walk's step, run over every period.
+///
+/// Kept as the engine's existing entry point so the column order is unchanged
+/// and provably shares its arithmetic with the walk.
+#[allow(clippy::too_many_arguments)]
+pub(crate) fn evaluate_stream(
+    ir: &Ir,
+    config: &RunConfig,
+    stream: &IrStream,
+    timeline: &[Date],
+    base_inputs: &BTreeMap<String, f64>,
+    event_sim: &EventSim,
+    states: &BTreeMap<String, Vec<f64>>,
+    series: Option<&Arc<BTreeMap<String, Vec<f64>>>>,
+    warnings: &mut Vec<String>,
+    // Periods where an event turned this stream ON and the stream's own
+    // `active when` then refused it. Collected rather than warned so the
+    // journal can say so once, with a count, instead of once per period.
+    activation_refused: &mut Vec<usize>,
+) -> Result<Vec<f64>, EngineError> {
+    let plan = plan_stream(ir, stream, timeline, warnings)?;
+    let mut values = vec![0.0_f64; timeline.len()];
+    for (pay_idx, slot) in values.iter_mut().enumerate() {
+        *slot = plan.step(
+            ir,
+            config,
+            pay_idx,
+            timeline,
+            base_inputs,
+            event_sim,
+            states,
+            series,
+            warnings,
+            activation_refused,
+        );
     }
     Ok(values)
 }

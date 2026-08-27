@@ -251,17 +251,20 @@ fn only_the_known_models_read_forward() {
     // model source cannot find:
     //
     //   cre_derived_lines      an absolute base year, `cre.opex.line[24..24]`
-    //   cre_office_two_tenant  \
-    //   pack_cadence_cre_*      > the CRE pack's `cre.exit_forward` lowering,
-    //                          /  which reads `[time.t + 1 .. time.t + 12]`
-    //   waterfall_nested_split an absolute window in a waterfall STEP
+    //   cre_office_two_tenant  \ the CRE pack's `cre.exit_forward` lowering,
+    //   pack_cadence_cre_*     /  which reads `[time.t + 1 .. time.t + 12]`
+    //
+    // `waterfall_nested_split` was here and is not any more. Its pot was
+    // written `[0..5]`, an absolute window, where `docs/17` §4 says a pot is
+    // THIS PERIOD'S cash — the constant was the single distribution date's
+    // period index, so it now reads `[0..time.t]` and says what it means. No
+    // published number moved.
     let expected = [
         "cre_derived_lines",
         "cre_office_two_tenant",
         "pack_cadence_cre_annual",
         "pack_cadence_cre_monthly",
         "pack_cadence_cre_quarterly",
-        "waterfall_nested_split",
     ];
     assert_eq!(
         forward, expected,
