@@ -215,8 +215,11 @@ pub fn validate(output: &ResolveOutput, symbols: &SymbolTables) -> Vec<Validatio
                 // An action's value is evaluated in the same environment the
                 // guard is, so a series read there binds nothing either.
                 for action in &event.actions {
-                    if let cfdl_parser::EventAction::SetEntityField { entity, field, value } =
-                        action
+                    if let cfdl_parser::EventAction::SetEntityField {
+                        entity,
+                        field,
+                        value,
+                    } = action
                     {
                         if let Some(func) = cfdl_expr::series_call(value) {
                             diagnostics.push(ValidationDiagnostic {
