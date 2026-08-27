@@ -166,57 +166,44 @@ coupled subgraphs get the per-period interleave. Cross-time cycles are
 refused with the path named. The schedule is computed once and replayed per
 scenario and per trial.
 
-**2.3 The store.** Series storage represents partially-built columns; a
-read of a not-yet-computed cell is a loud engine error, never a substituted
-null — phase 0.1's discipline applied inside the engine.
+**2.3 The store — measured, and NOT built.**
 
-**Why this is a prerequisite and not a tuning pass.** The expression
-environment takes an `Arc<BTreeMap<..>>`, so making newly written values
-visible means replacing the map. The column order does that once per wave; the
-walk must do it per (period, wave), because a later wave reads what an earlier
-one wrote IN THIS PERIOD.
+*Revised twice, and the second revision is the measurement. This asked for
+series storage representing a partially built column, so the walk would not
+copy the store per (period, wave). The copying is real; its cost is not.*
 
-Two facts turn that from a cost into a blocker.
+**The controlled measurement.** One model, 5,000 trials, run twice: once as
+written, once with its cross-stream reads replaced by a constant so no snapshot
+is ever consulted. **10.78s against 10.74s.** The snapshot copying — the whole
+justification for a store — is inside the noise.
 
-**A same-period cross-stream read is the normal case, not an exception.** It is
-what a derived line IS, and the packs generate one for every model using the
-contract — no model author has to write it. `cre.vacancy_loss` tracks the rent
-roll; the management fee reads base rent, recoveries and vacancy together; the
-CRE exit reads eight stream families at once; `opco.taxes.cash` reads revenue
-and opex; the OpCo exit multiple reads trailing revenue and opex;
-`credit.pool.*` feeds every tranche. NOI, EGI, cash taxes and an exit multiple
-are all cross-stream reads by definition. Counting how many fixtures happen to
-have one measures the fixtures, not the domains.
+An earlier comparison appeared to show cross-stream reads costing 12x. It was
+confounded: the two models differed in size (6 periods x 1 stream against
+36 x 4), so it measured cells, not copying. Recorded because the wrong number
+was persuasive.
 
-**Monte Carlo runs the whole deterministic engine once per trial.** So every
-per-run cost is multiplied by the trial count, and `docs/01` §15.1's own
-example is `run monte_carlo trials 20000 seed 42`. On a 372-period model with
-two waves the column order takes about two snapshots per run and the walk takes
-up to 744 — 372 times the copying, on a cost already paid twenty thousand
-times. That is the difference between the walk being usable in production and
-not.
+**Where the time actually goes.** Dropping 4 streams to 1 takes 10.74s to
+5.66s, so about 9.4 microseconds per accrual and roughly 63% of the run in the
+per-accrual path; the remaining ~4s is per-trial work outside it. The suspect
+in that path is `build_expr_env`, which constructs the WHOLE environment for
+one stream at one period: it re-parses every curve point's date string,
+rebuilds every quantile, re-clones every input name, and re-scans every
+parameter override — then throws it away.
 
-**The fix is smaller than "a store" makes it sound.** Streams already just
-read streams: `Env.series` is an `Arc<BTreeMap<String, Vec<f64>>>` handed to
-each env as a refcount bump, and its own comment records why — copying the
-series into every env "made this the hot spot of a run". Reading is free
-already.
+**And the deeper point is not that this is repeated, but that it is
+UNCONDITIONAL.** A stream whose amount is `5000` needs no curves, no
+quantiles and no inputs, and is handed all of them. What an expression
+references is already known — it is how the wave graph is built — so a plan
+can carry an environment holding only the roots its stream actually names,
+built once. That is a different and better fix from hoisting invariants,
+because it makes the cost proportional to what a model uses rather than to
+what it declares.
 
-What costs is making a NEWLY WRITTEN value visible, because the map is
-immutable by design, so the engine rebuilds it whenever the visible set
-changes. And that rebuild is avoidable: **the map's keys never change.** Every
-stream name is known before evaluation begins, and only the value at index `t`
-moves as the walk proceeds. Allocate every column once, share them, write
-cells in place — every holder of the `Arc` sees the write, and nothing is
-copied at any point. Cycles remain refused exactly as today: the wave ordering
-is untouched, and this changes only how a wave's output becomes visible.
-
-**The grid is built once, and so is everything else that does not vary.**
-`run_deterministic` rebuilds the timeline, recompiles every amount and guard,
-and recomputes every schedule — and Monte Carlo calls it per trial. None of
-that varies across trials; only the sampled parameter overrides do. Twenty
-thousand trials rebuild one grid twenty thousand times. Prepare the timeline
-and the stream plans once, replay them per trial, and vary only the inputs.
+**None of this is built, and none of it is blocking.** The walk is not on the
+production path, so nothing is slow because of it. The note exists so the
+question is not reasoned about a fourth time: the store is not the cost, the
+environment is, and the fix is a per-stream minimal environment rather than a
+new storage type.
 
 **2.4 The fold — the streams half is built.** `evaluate_stream` is now
 `plan_stream` plus `StreamPlan::step`, and the column order is a loop over
