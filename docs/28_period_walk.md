@@ -25,9 +25,12 @@ what it already is: the **valuation plane**, a computation over the completed
 projection.
 
 The design was probed before it was written. Three spellings of "logic reads
-cash" run today and are silently inert — including the strictly backward
-spelling this document makes legal — and one fails loudly. `docs/13` §7.71
-records the probes; this document is the answer to them.
+cash" run today and are inert — including the strictly backward spelling this
+document makes legal — while a fourth is refused. The engine reports each
+inert read as a per-period warning naming it, and still publishes a full set
+of wrong numbers under `status: ok`; one shipped fixture carried four such
+warnings in its blessed golden without objection. `docs/13` §7.71 records the
+probes and that correction; this document is the answer to them.
 
 ## 2. The two planes
 
@@ -348,10 +351,11 @@ schedule lookup, not the cost of evaluation.
 ## 10. Pre-work, and what M1 is not
 
 Before the walk is touched, two gates from the roadmap: **loud failure for
-unbindable series reads** — the three silent spellings of §7.71 become
-compile- or load-time refusals, so a reordering defect cannot hide behind a
-silent zero — and **mutation testing** over the engine, so the suite provably
-notices when evaluation changes.
+unbindable series reads** — the three inert spellings of §7.71 become
+compile-time refusals, so a reordering defect cannot hide behind a substituted
+zero and a warning nobody reads — and **a Rust-side guard for the engine**, so
+the collapse property is checkable on every commit rather than from a shell
+script: `golden_corpus.rs` runs the whole blessed corpus in `cargo test`.
 
 M1 is the walk, the read rules, the two migrations, the declared state
 machine with its transition anchor (§6), the account construct (§5), and

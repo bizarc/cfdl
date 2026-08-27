@@ -1,0 +1,288 @@
+{
+  "results_version": "0.3",
+  "model_hash": "6f2aee8521ba9a4464b85d67cb0fdc892c0edc7e89274860585b8f54da0412f8",
+  "ledger_hash": "382e4b0310b25a74cfd423c3437048166639dca924910a8e0acae4b8e81d6e6e",
+  "engine": {
+    "name": "cfdl-engine",
+    "version": "0.7.0"
+  },
+  "warnings": [],
+  "inputs": {
+    "resolved": {
+      "rent": 1000.0,
+      "vacancy": 0.06666666666666667
+    }
+  },
+  "deterministic": {
+    "status": "ok",
+    "metrics": {
+      "entity.asset.borrower.total": {
+        "amount": 5600.0,
+        "currency": "USD"
+      },
+      "model.npv": {
+        "amount": 5476.025755,
+        "currency": "USD"
+      },
+      "model.total": {
+        "amount": 5600.0,
+        "currency": "USD"
+      },
+      "model.wal_years": 0.291667,
+      "run.annual_discount_rate": 0.08,
+      "run.periods_per_year": 12.0,
+      "stream.lease.rent.total": {
+        "amount": 5600.0,
+        "currency": "USD"
+      }
+    },
+    "series": {
+      "entity.asset.borrower.net_cash_flow": {
+        "index": {
+          "calendar": "monthly",
+          "start": "2026-01-01",
+          "periods": 6
+        },
+        "values": [
+          {
+            "amount": 933.333333,
+            "currency": "USD"
+          },
+          {
+            "amount": 933.333333,
+            "currency": "USD"
+          },
+          {
+            "amount": 933.333333,
+            "currency": "USD"
+          },
+          {
+            "amount": 933.333333,
+            "currency": "USD"
+          },
+          {
+            "amount": 933.333333,
+            "currency": "USD"
+          },
+          {
+            "amount": 933.333333,
+            "currency": "USD"
+          }
+        ]
+      },
+      "model.net_cash_flow": {
+        "index": {
+          "calendar": "monthly",
+          "start": "2026-01-01",
+          "periods": 6
+        },
+        "values": [
+          {
+            "amount": 933.333333,
+            "currency": "USD"
+          },
+          {
+            "amount": 933.333333,
+            "currency": "USD"
+          },
+          {
+            "amount": 933.333333,
+            "currency": "USD"
+          },
+          {
+            "amount": 933.333333,
+            "currency": "USD"
+          },
+          {
+            "amount": 933.333333,
+            "currency": "USD"
+          },
+          {
+            "amount": 933.333333,
+            "currency": "USD"
+          }
+        ]
+      },
+      "stream.lease.rent": {
+        "index": {
+          "calendar": "monthly",
+          "start": "2026-01-01",
+          "periods": 6
+        },
+        "offset": 1.0,
+        "values": [
+          {
+            "amount": 933.333333,
+            "currency": "USD"
+          },
+          {
+            "amount": 933.333333,
+            "currency": "USD"
+          },
+          {
+            "amount": 933.333333,
+            "currency": "USD"
+          },
+          {
+            "amount": 933.333333,
+            "currency": "USD"
+          },
+          {
+            "amount": 933.333333,
+            "currency": "USD"
+          },
+          {
+            "amount": 933.333333,
+            "currency": "USD"
+          }
+        ]
+      }
+    },
+    "annual_rollup": {
+      "series": {
+        "model.net_cash_flow": {
+          "index": {
+            "calendar": "annual",
+            "start": "2026-01-01",
+            "periods": 1
+          },
+          "values": [
+            {
+              "amount": 5600.0,
+              "currency": "USD"
+            }
+          ]
+        },
+        "stream.lease.rent": {
+          "index": {
+            "calendar": "annual",
+            "start": "2026-01-01",
+            "periods": 1
+          },
+          "values": [
+            {
+              "amount": 5600.0,
+              "currency": "USD"
+            }
+          ]
+        }
+      }
+    }
+  },
+  "scenarios": {
+    "status": "not_run",
+    "summaries": []
+  },
+  "monte_carlo": {
+    "status": "ok",
+    "trials": 8,
+    "seed": 424242,
+    "metrics": {
+      "model.npv": {
+        "type": "money",
+        "mean": {
+          "amount": 5386.532799,
+          "currency": "USD"
+        },
+        "stdev": {
+          "amount": 280.283337,
+          "currency": "USD"
+        },
+        "min": {
+          "amount": 5131.593045,
+          "currency": "USD"
+        },
+        "max": {
+          "amount": 6013.32552,
+          "currency": "USD"
+        },
+        "p50": {
+          "amount": 5280.137684,
+          "currency": "USD"
+        }
+      }
+    },
+    "trial_summaries": [
+      {
+        "trial": 0,
+        "metrics": {
+          "model.npv": {
+            "amount": 6013.32552,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 1,
+        "metrics": {
+          "model.npv": {
+            "amount": 5601.168197,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 2,
+        "metrics": {
+          "model.npv": {
+            "amount": 5211.898187,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 3,
+        "metrics": {
+          "model.npv": {
+            "amount": 5149.537737,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 4,
+        "metrics": {
+          "model.npv": {
+            "amount": 5348.377182,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 5,
+        "metrics": {
+          "model.npv": {
+            "amount": 5201.831314,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 6,
+        "metrics": {
+          "model.npv": {
+            "amount": 5434.531211,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 7,
+        "metrics": {
+          "model.npv": {
+            "amount": 5131.593045,
+            "currency": "USD"
+          }
+        }
+      }
+    ],
+    "aggregates": {
+      "npv": {
+        "mean": 5386.532799,
+        "median": 5280.137684,
+        "stddev": 280.283337,
+        "p_negative": 0.0
+      }
+    }
+  }
+}

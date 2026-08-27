@@ -75,6 +75,7 @@ register, so it cannot fall behind the language.
 | `E1129_PREV_IN_FIRST_PERIOD` | Global structure | a stream reads a field's previous period but runs from the model's first period, where there is none. Unrejected the read resolves to nothing and the stream evaluates to zero. Checked on hand-written and pack-lowered streams alike; the lowered form names the contract whose term set the schedule, since that is the term a model author can move. |
 | `E1131_UNKNOWN_FIELD_READ` | Global structure | an expression reads a field the entity does not declare. Field paths resolve through the open-world `entity` root, so unrejected a misspelling reads as null and becomes zero in arithmetic. Lifecycle `status` keeps the open world; declared fields do not. |
 | `E1133_UNKNOWN_TIME_READ` | Global structure | an expression reads a `time.` binding that does not exist. The vocabulary is closed — `t`, `date`, `days_in_period`, `phase`, `ppy` — so a miss is a typo, and unrejected it evaluates to zero every period with the run still reporting ok. There is deliberately no `E1132` for `inputs.`: an input may be supplied entirely by the run configuration, which the compiler never sees, so an unresolved input is the engine's to refuse. |
+| `E1134_SERIES_READ_IN_LOGIC` | Global structure | an event's guard or action value, a field's rule, or an option's election or payoff calls `series_sum`/`series_avg`. All of these are evaluated before any stream has a value, so the read binds nothing: the engine substitutes `false` in a guard and `0` in a rule, warns once per period, and publishes a full set of numbers under `status: ok` — an event that never fires, or a recurrence whose collapse `prev` carries for the rest of the run. A stream, a waterfall and the results layer do see stream values; drive logic from a field, a curve, `time.*` or `inputs.*` instead. `docs/28` §4 is where this becomes an ordering rule: under the period walk a guard may read a stream's settled history, at or before the previous period, and the same-period and forward forms stay refused. |
 | `E1001_DUPLICATE_ENTITY` | Symbols and references | two entities share a name. |
 | `E1002_DUPLICATE_CONTRACT` | Symbols and references | two contracts share a name. Give one a suffix to keep them separable. |
 | `E1003_DUPLICATE_STREAM` | Symbols and references | two streams share a name. |
@@ -237,7 +238,7 @@ register, so it cannot fall behind the language.
 | `E9019_CREDIT_INVALID_AGE_MONTHS` | Pack domain validations | `age_months` is the pool's weighted average age at closing. PSA, SDA and the ABS model are all indexed from ORIGINATION, so a seasoned pool starts part-way up the ramp; leaving it at the default 0 on a seasoned pool understates prepayment. Non-negative integer. |
 | `E9020_CREDIT_RATE_FLOOR_ABOVE_CAP` | Pack domain validations |  |
 
-*185 codes.*
+*186 codes.*
 <!-- /cfdl:generated diagnostics-catalog -->
 
 ## Related

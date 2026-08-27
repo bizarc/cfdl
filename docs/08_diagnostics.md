@@ -190,6 +190,17 @@ Fields that move:
   with the run still reporting ok. There is deliberately no `E1132` for
   `inputs.`: an input may be supplied entirely by the run configuration, which
   the compiler never sees, so an unresolved input is the engine's to refuse.
+- `E1134_SERIES_READ_IN_LOGIC` — an event's guard or action value, a field's
+  rule, or an option's election or payoff calls `series_sum`/`series_avg`. All
+  of these are evaluated before any stream has a value, so the read binds
+  nothing: the engine substitutes `false` in a guard and `0` in a rule, warns
+  once per period, and publishes a full set of numbers under `status: ok` — an
+  event that never fires, or a recurrence whose collapse `prev` carries for the
+  rest of the run. A stream, a waterfall and the results layer do see stream
+  values; drive logic from a field, a curve, `time.*` or `inputs.*` instead.
+  `docs/28` §4 is where this becomes an ordering rule: under the period walk a
+  guard may read a stream's settled history, at or before the previous period,
+  and the same-period and forward forms stay refused.
 
 ### 7.4 Symbols and references (E13xx)
 - `E1001_DUPLICATE_ENTITY` — two entities share a name.

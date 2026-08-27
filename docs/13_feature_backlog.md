@@ -1742,7 +1742,7 @@ Open this before any further pack contract consumes a quantile. Shipping a
 second one against an audit record that does not work would make the gap
 structural rather than a known debt.
 
-### 7.71 An event cannot see realised cash, and three of the four spellings fail in silence
+### 7.71 An event cannot see realised cash, and a warning is where it is reported
 
 **What could not be expressed:** a unit whose lifecycle responds to the cash it
 did or did not produce — "when rent is not received, the unit goes delinquent."
@@ -1754,25 +1754,45 @@ the second unit leased, with the transition published. State flowing into cash
 is settled machinery. Cash flowing into state is not, and how it fails is the
 entry.
 
-**Four spellings were probed; one fails loudly.** A guard reading the stream by
-bare path (`when cre.rent == 0`) is refused at IR load: `unresolved name:
-'cre.rent' is not declared`. The other three compile, run to completion, and
-publish plausible results:
+*Corrected. The entry first claimed these failures were SILENT. They are not,
+and the correction is below — the engine names each one precisely, in a place
+that does not stop the run. The behavioural gap is unchanged; its reporting is
+better than was claimed and still not enough.*
+
+**Four spellings were probed. One is refused; three run and report a
+warning.** A guard reading the stream by bare path (`when cre.rent == 0`) is
+refused at IR load: `unresolved name: 'cre.rent' is not declared`. The other
+three compile, run to completion, publish a full set of numbers, and each
+emits one warning PER PERIOD into `deterministic.warnings` naming the read and
+the substitution:
 
 - **A guard reading the same-period amount** — `when series_sum("cre.rent",
   time.t, time.t) < 50` — never fires. The rent series is zero for half the
-  run; `deterministic.transitions` is null.
+  run; `deterministic.transitions` is null. Twelve warnings: "series
+  `cre.rent` is not available in this context; using false".
 - **A guard reading SETTLED HISTORY** — `series_sum("cre.rent", time.t - 1,
   time.t - 1)`, the strictly-backward read that is cycle-free by the same
-  argument as `prev` — also never fires, in the same silence. This is the
+  argument as `prev` — also never fires, warning identically. This is the
   spelling that a truncated series view (§7.10) or a per-period interleave
-  would make legal, which makes its silent inertness the worst of the three: a
-  model written in the idiom the language is moving toward runs today and does
+  would make legal, which makes its inertness the worst of the three: a model
+  written in the idiom the language is moving toward runs today and does
   nothing.
 - **A recurrence reading a series** — `occupancy init 0.80 next prev +
-  series_sum("rent.total", time.t - 1, time.t - 1) / 1e7` — nulls the whole
-  expression: occupancy collapses to 0.0 from period 1, revenue with it, and
-  the run reports ok.
+  series_sum("rent.total", time.t - 1, time.t - 1) / 1e7` — substitutes 0 for
+  the read, which nulls the whole expression: occupancy collapses to 0.0 from
+  period 1 and `prev` carries the collapse for the rest of the run, revenue
+  with it. Eleven warnings, and `status: ok`.
+
+**Why a warning is not enough, demonstrated rather than argued.** The run
+reports `status: ok`, the exit code is 0, and the CLI prints nothing — the
+warnings live inside the results document. `tools/benchmark-runner.py` does
+fail on engine warnings, so a benchmark case would have caught this; the
+golden runner does not. And that gap is not hypothetical:
+`fixtures/valid/evaluation_order` carried FOUR of these warnings in its
+blessed golden, with a comment describing the guard that never fired as
+expected behaviour, and nothing objected for the life of the fixture. A
+condition whose consequence is published wrong numbers belongs at compile,
+not in an artefact nobody diffs.
 
 **Why even history is invisible.** The engine is stage-wise, not period-wise:
 state and events complete over the WHOLE timeline before the streams stage
@@ -1794,8 +1814,8 @@ Until the second stage ships, the first is what keeps tomorrow's idiom from
 running inert today.
 
 Related: §5.2 (what a recurrence may read), §7.10 (a truncated series view),
-§7.38 (a misspelled series reads as zero — same silence, misspelled name
-rather than unbindable environment).
+§7.38 (a misspelled series reads as zero — the same substitution, from a
+misspelled name rather than an unbindable environment).
 
 ### 7.72 A participant's realised return has no construct
 

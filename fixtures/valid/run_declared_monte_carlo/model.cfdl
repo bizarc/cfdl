@@ -1,0 +1,33 @@
+version 0.1
+model "run-declared-monte-carlo"
+time calendar monthly from 2026-01 for 6
+
+// A MODEL DECLARES ITS OWN RUN MODE, and the engine honours it.
+//
+// `run monte_carlo trials N seed S` is specified in `docs/01` §15.1, and the
+// engine reads it from the IR's `runs` when the run configuration does not
+// ask for a Monte Carlo run of its own. Nothing exercised that: every other
+// Monte Carlo fixture supplies the mode in `run.json`, so the pickup path was
+// reachable only from a spelling no model used — the construct was specified,
+// implemented, and untested.
+//
+// Found by mutation testing (`docs/30`): five mutants in the pickup condition
+// survived — its `&&` flipped to `||`, its `==` to `!=`, and its `trials > 0`
+// three ways — because no blessed fixture could tell the difference.
+//
+// EVERYTHING IS IN THE MODEL. The distributions are `assume ~` declarations
+// and the trials and seed are declared here, so `run.json` carries only a
+// discount rate. The seed is stated, so the draws and every published
+// quantile are reproducible: a Monte Carlo run IS a golden when its seed is.
+
+entity asset borrower : Asset.Financial
+
+assume rent    ~ Uniform(min=900, max=1100)
+assume vacancy ~ Triangular(min=0.0, mode=0.05, max=0.15)
+
+stream lease.rent on entity asset.borrower inflow currency USD {
+  schedule every month from 2026-01 to 2026-06
+  amount = inputs.rent * (1 - inputs.vacancy)
+}
+
+run monte_carlo trials 8 seed 424242

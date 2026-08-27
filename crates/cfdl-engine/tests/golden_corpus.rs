@@ -1,0 +1,219 @@
+//! The engine, run over the blessed corpus, from Rust.
+//!
+//! WHY THIS EXISTS. The engine's real guard is the golden suite — 106 valid
+//! fixtures — and until now it was reachable only through `tools/golden-runner`,
+//! a shell script driving the CLI. `cargo test -p cfdl-engine` ran 27 unit
+//! tests over a 2,200-line engine in 0.01 seconds. Anything that measures the
+//! engine against `cargo test` was therefore measuring almost nothing, which
+//! matters for two things named in `docs/29`: the mutation baseline of phase
+//! 0.2, and the collapse property of phase 2, whose whole content is "every
+//! blessed number is unchanged".
+//!
+//! WHAT IT ISOLATES. The corpus already holds compiled IR (`gold/ir`) beside
+//! the results it must produce (`gold/results`), so this test needs no
+//! compiler: IR in, results out, byte-compared against what is blessed. A
+//! failure here is the engine's, not the parser's or the lowering's — which is
+//! exactly the isolation a mutation run wants, since a mutant is injected into
+//! the engine alone.
+//!
+//! WHAT IT DOES NOT COVER, deliberately. `domain_metrics` and `statements` are
+//! assembled by the CLI from the pack registry after the engine returns, so
+//! they are dropped before comparison rather than half-checked here; the
+//! shell runner still covers them end to end. Fixtures whose IR or results are
+//! not both blessed are skipped, and the count of what ran is asserted so a
+//! corpus that silently stops being discovered fails instead of passing.
+
+use std::collections::BTreeMap;
+use std::path::{Path, PathBuf};
+
+/// The repository root, from this crate's manifest directory.
+fn repo_root() -> PathBuf {
+    Path::new(env!("CARGO_MANIFEST_DIR"))
+        .parent()
+        .and_then(Path::parent)
+        .expect("crates/<name> has two ancestors")
+        .to_path_buf()
+}
+
+/// Sections the engine does not produce, so this test cannot compare them.
+const NOT_THE_ENGINE: [&str; 2] = ["domain_metrics", "statements"];
+
+fn strip_non_engine(value: &mut serde_json::Value) {
+    if let Some(map) = value.as_object_mut() {
+        for key in NOT_THE_ENGINE {
+            map.remove(key);
+        }
+    }
+}
+
+/// Every fixture with both a blessed IR and a blessed results document.
+fn corpus(root: &Path) -> BTreeMap<String, (PathBuf, PathBuf, Option<PathBuf>)> {
+    let mut found = BTreeMap::new();
+    let ir_dir = root.join("gold/ir");
+    let entries = std::fs::read_dir(&ir_dir)
+        .unwrap_or_else(|err| panic!("cannot read {}: {err}", ir_dir.display()));
+    for entry in entries {
+        let path = entry.expect("readable dir entry").path();
+        if path.extension().and_then(|e| e.to_str()) != Some("json") {
+            continue;
+        }
+        let name = path
+            .file_stem()
+            .and_then(|s| s.to_str())
+            .expect("utf-8 file stem")
+            .to_string();
+        let results = root.join(format!("gold/results/{name}.results.json"));
+        if !results.is_file() {
+            continue;
+        }
+        // The run config the shell runner would pass, when the fixture has one.
+        let run_config = root.join(format!("fixtures/valid/{name}/run.json"));
+        let run_config = run_config.is_file().then_some(run_config);
+        found.insert(name, (path, results, run_config));
+    }
+    found
+}
+
+#[test]
+fn engine_reproduces_the_blessed_corpus() {
+    let root = repo_root();
+    let corpus = corpus(&root);
+
+    // The corpus is discovered from the filesystem, so its size is asserted:
+    // a glob that stops matching would otherwise turn this test green by
+    // running nothing at all.
+    assert!(
+        corpus.len() >= 100,
+        "expected at least 100 blessed fixtures, found {} — has the corpus moved?",
+        corpus.len()
+    );
+
+    let mut failures: Vec<String> = Vec::new();
+
+    for (name, (ir_path, results_path, run_config)) in &corpus {
+        // The shell runner's two branches, exactly: with a run config it
+        // passes `--config` and no `--rate`, so the CLI's own default of 0
+        // applies; without one it passes `--rate 0.10`. Getting this wrong
+        // makes fixtures differ here for a reason that is not the engine's.
+        let config = match run_config {
+            Some(path) => match cfdl_engine::run_config_from_json_file(path, 0.0, None) {
+                Ok(config) => config,
+                Err(err) => {
+                    failures.push(format!("{name}: run config did not load: {err}"));
+                    continue;
+                }
+            },
+            None => cfdl_engine::RunConfig {
+                discount_rate: 0.10,
+                ..Default::default()
+            },
+        };
+
+        let produced = match cfdl_engine::run_from_file(ir_path, config) {
+            Ok(results) => results,
+            Err(err) => {
+                failures.push(format!("{name}: run failed: {err}"));
+                continue;
+            }
+        };
+
+        // BOTH SIDES THROUGH THE SAME PARSER, and the reason is not cosmetic.
+        // `serde_json`'s float parser is accurate to within one ULP unless its
+        // `float_roundtrip` feature is on — which is what that feature exists
+        // for. Comparing a freshly computed f64 against a blessed value parsed
+        // from text therefore reports a difference in the last bit that the
+        // engine did not produce: measured on seven `pow`-based series, where
+        // the engine and the CLI both write ...377 and the parse returns
+        // ...376. The shell runner never sees this because it canonicalizes
+        // through Python's correctly-rounded parser on both sides. Serializing
+        // and re-parsing puts the same treatment on both, so the parse error
+        // cancels instead of masquerading as an engine change.
+        let mut produced = match serde_json::to_string(&produced)
+            .and_then(|text| serde_json::from_str::<serde_json::Value>(&text))
+        {
+            Ok(value) => value,
+            Err(err) => {
+                failures.push(format!("{name}: results did not round-trip: {err}"));
+                continue;
+            }
+        };
+        let blessed = std::fs::read_to_string(results_path)
+            .unwrap_or_else(|err| panic!("cannot read {}: {err}", results_path.display()));
+        let mut blessed: serde_json::Value = serde_json::from_str(&blessed)
+            .unwrap_or_else(|err| panic!("{} is not valid JSON: {err}", results_path.display()));
+
+        strip_non_engine(&mut produced);
+        strip_non_engine(&mut blessed);
+
+        if produced != blessed {
+            failures.push(format!("{name}: {}", first_difference(&blessed, &produced)));
+        }
+    }
+
+    assert!(
+        failures.is_empty(),
+        "{} of {} blessed fixtures did not reproduce:\n  {}",
+        failures.len(),
+        corpus.len(),
+        failures.join("\n  ")
+    );
+}
+
+/// The first path at which two documents disagree, so a failure names a key
+/// rather than printing two results documents.
+fn first_difference(blessed: &serde_json::Value, produced: &serde_json::Value) -> String {
+    fn walk(
+        path: &str,
+        blessed: &serde_json::Value,
+        produced: &serde_json::Value,
+    ) -> Option<String> {
+        match (blessed, produced) {
+            (serde_json::Value::Object(a), serde_json::Value::Object(b)) => {
+                for (key, a_value) in a {
+                    let child = if path.is_empty() {
+                        key.clone()
+                    } else {
+                        format!("{path}/{key}")
+                    };
+                    match b.get(key) {
+                        None => return Some(format!("{child} is missing")),
+                        Some(b_value) => {
+                            if let Some(found) = walk(&child, a_value, b_value) {
+                                return Some(found);
+                            }
+                        }
+                    }
+                }
+                for key in b.keys() {
+                    if !a.contains_key(key) {
+                        return Some(format!("{path}/{key} is unexpected"));
+                    }
+                }
+                None
+            }
+            (serde_json::Value::Array(a), serde_json::Value::Array(b)) => {
+                if a.len() != b.len() {
+                    return Some(format!(
+                        "{path} has {} entries, expected {}",
+                        b.len(),
+                        a.len()
+                    ));
+                }
+                for (idx, (a_value, b_value)) in a.iter().zip(b).enumerate() {
+                    if let Some(found) = walk(&format!("{path}[{idx}]"), a_value, b_value) {
+                        return Some(found);
+                    }
+                }
+                None
+            }
+            _ => {
+                if blessed == produced {
+                    None
+                } else {
+                    Some(format!("{path}: expected {blessed}, produced {produced}"))
+                }
+            }
+        }
+    }
+    walk("", blessed, produced).unwrap_or_else(|| "documents differ".to_string())
+}

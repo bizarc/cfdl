@@ -1,0 +1,23 @@
+version 0.1
+model "run-monte-carlo-zero-trials"
+time calendar monthly from 2026-01 for 6
+
+// `trials` MUST BE POSITIVE, which the diagnostic always said and the check
+// did not enforce: `parse::<u64>()` accepted 0.
+//
+// What that produced: the model compiled, the engine's `trials > 0` guard
+// declined to set up the run, and the results carried no Monte Carlo section
+// at all — a run mode asked for, accepted, and silently not performed.
+//
+// Found by mutation testing (`docs/30`). The engine's guard had no reachable
+// case distinguishing `> 0` from `>= 0`, which is what a surviving mutant
+// means: not that the guard is wrong, but that nothing could tell.
+
+entity asset borrower : Asset.Financial
+
+stream lease.rent on entity asset.borrower inflow currency USD {
+  schedule every month from 2026-01 to 2026-06
+  amount = 1000
+}
+
+run monte_carlo trials 0 seed 1

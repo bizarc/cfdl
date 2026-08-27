@@ -65,6 +65,11 @@ pub enum EngineError {
     /// mistyped `inputs.` or `time.` read produced a column of zeros and a
     /// run reporting ok.
     UnknownName(String),
+    /// A series read in an event's guard or action, a field's rule, or an
+    /// option's election or payoff. The compiler refuses this
+    /// (`E1134_SERIES_READ_IN_LOGIC`); the engine refuses it too, because IR
+    /// reaches the engine from paths the compiler never saw.
+    SeriesReadInLogic(String),
 }
 
 impl std::fmt::Display for EngineError {
@@ -75,6 +80,7 @@ impl std::fmt::Display for EngineError {
             EngineError::SeriesCycle(msg) => write!(f, "{msg}"),
             EngineError::AssumptionCycle(msg) => write!(f, "{msg}"),
             EngineError::UnknownName(msg) => write!(f, "unresolved name: {msg}"),
+            EngineError::SeriesReadInLogic(msg) => write!(f, "{msg}"),
             EngineError::InvalidDate(value) => write!(f, "invalid ISO date: {value}"),
             EngineError::InvalidRunConfig(message) => write!(f, "invalid run config: {message}"),
             EngineError::Schedule(message) => write!(f, "unsupported schedule: {message}"),
@@ -122,7 +128,76 @@ pub fn run_from_json_str(raw_ir: &str, config: RunConfig) -> Result<Results, Eng
     compute_results(&ir, model_hash, config)
 }
 
+/// A series read where no stream value exists — the engine's backstop for the
+/// compiler's `E1134_SERIES_READ_IN_LOGIC`.
+///
+/// The compiler refuses this on every model it sees, which is every model
+/// written in CFDL. The engine also accepts IR directly — the WASM, server and
+/// Python paths all do — and there the compiler's check has not run. Without
+/// this the engine warns once per period and substitutes `false` or `0`,
+/// publishing a full set of numbers under `status: ok`: a guard that never
+/// fires, or a recurrence whose collapse `prev` carries for the rest of the
+/// run (`docs/13` §7.71).
+///
+/// `docs/28` §4 is where this becomes an ordering rule rather than a
+/// prohibition: under the period walk a guard may read a stream's settled
+/// history, at or before the previous period. Same-period and forward reads
+/// stay refused, so this narrows rather than disappears.
+fn refuse_series_reads_in_logic(ir: &Ir) -> Result<(), EngineError> {
+    let mut offences: Vec<String> = Vec::new();
+
+    let mut check = |src: &str, site: String| {
+        if let Some(func) = cfdl_expr::series_call(src) {
+            offences.push(format!("{site} calls `{func}`"));
+        }
+    };
+
+    for entity in &ir.entities {
+        for (field, rule) in &entity.rules {
+            check(
+                &rule.init.src,
+                format!("field '{}.{field}' in 'init'", entity.symbol),
+            );
+            check(
+                &rule.next.src,
+                format!("field '{}.{field}' in 'next'", entity.symbol),
+            );
+        }
+    }
+    for event in &ir.events {
+        check(&event.when.src, format!("event '{}' guard", event.name));
+        for action in &event.actions {
+            if let Some(value) = &action.value {
+                check(&value.src, format!("event '{}' action value", event.name));
+            }
+        }
+    }
+    for option in &ir.options {
+        check(
+            &option.exercise_when.src,
+            format!("option '{}' election", option.name),
+        );
+        check(
+            &option.payoff.src,
+            format!("option '{}' payoff", option.name),
+        );
+    }
+
+    if offences.is_empty() {
+        return Ok(());
+    }
+    Err(EngineError::SeriesReadInLogic(format!(
+        "logic cannot read a stream: {}. An event's guard and action values, a field's rule, \
+         and an option's election and payoff are all evaluated before any stream has a value, \
+         so the read binds nothing. Drive the logic from a field, a curve, `time.*` or \
+         `inputs.*`, or read the cash from a stream, a waterfall or the results layer.",
+        offences.join("; ")
+    )))
+}
+
 fn compute_results(ir: &Ir, model_hash: String, config: RunConfig) -> Result<Results, EngineError> {
+    refuse_series_reads_in_logic(ir)?;
+
     // A model may declare its own run modes. Honour a declared Monte Carlo run
     // when the run config does not ask for one, so `run monte_carlo trials N
     // seed S` in source does what it says without a separate config file.
@@ -1787,6 +1862,191 @@ mod tests {
             (amount - expected).abs() < 1e-9,
             "{key}: expected {expected}, got {amount}"
         );
+    }
+
+    /// A DECLARED RUN MODE IS PICKED UP ONLY WHEN IT IS A USABLE ONE.
+    ///
+    /// `compute_results` reads `ir.runs` for a Monte Carlo run when the run
+    /// config asks for none. Both halves of that condition were untestable
+    /// from source: the parser now refuses `trials 0`
+    /// (`invalid/run_monte_carlo_zero_trials`), and no grammar puts a trial
+    /// count on a `run deterministic`. Hand-written IR can do both, which is
+    /// the only place the guard is reachable — and mutation testing found it
+    /// by surviving `> 0` → `>= 0` and `&&` → `||` with nothing to tell them
+    /// apart (`docs/30`).
+    #[test]
+    fn a_declared_run_needs_a_kind_and_a_positive_trial_count() {
+        fn ir_with_run(kind: &str, trials: u64) -> String {
+            format!(
+                r#"{{
+                "model": {{ "name": "declared_run", "currency": "USD" }},
+                "time": {{ "calendar": "monthly", "start": "2026-01-01", "periods": 2 }},
+                "entities": [ {{ "symbol": "asset.a", "rules": {{}} }} ],
+                "runs": [ {{ "kind": "{kind}", "trials": {trials}, "seed": 7 }} ],
+                "streams": [
+                    {{
+                        "name": "ops.revenue",
+                        "owner": {{ "symbol": "asset.a" }},
+                        "direction": "inflow",
+                        "schedule": {{ "kind": "Every", "from": "2026-01-01", "to": "2026-02-01" }},
+                        "amount": {{ "lang": "cfdl", "src": "100.0" }},
+                        "active_when": {{ "lang": "cfdl", "src": "true" }}
+                    }}
+                ]
+            }}"#
+            )
+        }
+
+        // The usable case: honoured, with the declared trial count and seed.
+        let results = run_from_json_str(&ir_with_run("monte_carlo", 4), RunConfig::default())
+            .expect("a declared monte_carlo run is honoured");
+        assert_eq!(
+            results.monte_carlo.status, "ok",
+            "a declared monte_carlo run should actually run"
+        );
+        assert_eq!(
+            results.monte_carlo.trials, 4,
+            "the declared trial count is what runs"
+        );
+
+        // Zero trials is not a run. `>= 0` would set one up with no trials.
+        let results = run_from_json_str(&ir_with_run("monte_carlo", 0), RunConfig::default())
+            .expect("zero trials runs deterministically, not as an error");
+        assert_eq!(
+            results.monte_carlo.status, "not_run",
+            "a monte_carlo run of zero trials is not a run and must not be set up"
+        );
+
+        // A trial count on a run that is not Monte Carlo is not a Monte Carlo
+        // run. `||` would treat this one as if it were.
+        let results = run_from_json_str(&ir_with_run("deterministic", 4), RunConfig::default())
+            .expect("a deterministic run with a stray trial count still runs");
+        assert_eq!(
+            results.monte_carlo.status, "not_run",
+            "only a run whose kind is monte_carlo may set one up"
+        );
+    }
+
+    /// The IR the compiler will no longer emit, run directly.
+    ///
+    /// `E1134_SERIES_READ_IN_LOGIC` refuses this in every model written in
+    /// CFDL, which is why no fixture can carry it: the compiler stops first.
+    /// The engine still accepts IR from the WASM, server and Python paths,
+    /// where nothing has validated it — so the backstop is only reachable, and
+    /// only testable, from hand-written IR.
+    ///
+    /// Without it the engine warns once per period and substitutes `false`,
+    /// publishing a run that reports ok with an event that never fired
+    /// (`docs/13` §7.71).
+    #[test]
+    fn a_guard_reading_a_series_is_refused_at_ir_load() {
+        let ir = r#"{
+            "model": { "name": "guard_reads_series", "currency": "USD" },
+            "time": { "calendar": "monthly", "start": "2026-01-01", "periods": 3 },
+            "entities": [ { "symbol": "asset.a", "rules": {} } ],
+            "events": [
+                {
+                    "name": "vacate",
+                    "when": { "lang": "cfdl", "src": "series_sum(\"ops.revenue\", time.t, time.t) < 50" },
+                    "actions": []
+                }
+            ],
+            "streams": [
+                {
+                    "name": "ops.revenue",
+                    "owner": { "symbol": "asset.a" },
+                    "direction": "inflow",
+                    "schedule": { "kind": "Every", "from": "2026-01-01", "to": "2026-03-01" },
+                    "amount": { "lang": "cfdl", "src": "100.0" },
+                    "active_when": { "lang": "cfdl", "src": "true" }
+                }
+            ]
+        }"#;
+
+        let err = run_from_json_str(ir, RunConfig::default())
+            .expect_err("a guard reading a series must be refused, not warned about");
+        let message = err.to_string();
+        assert!(
+            matches!(err, super::EngineError::SeriesReadInLogic(_)),
+            "expected SeriesReadInLogic, got: {message}"
+        );
+        // The message must name WHERE, or it sends the reader hunting.
+        assert!(
+            message.contains("event 'vacate' guard") && message.contains("series_sum"),
+            "message should name the site and the call: {message}"
+        );
+    }
+
+    /// The same read in a field's rule, which fails differently and worse: the
+    /// substituted zero nulls the whole expression and `prev` carries it.
+    #[test]
+    fn a_recurrence_reading_a_series_is_refused_at_ir_load() {
+        let ir = r#"{
+            "model": { "name": "rule_reads_series", "currency": "USD" },
+            "time": { "calendar": "monthly", "start": "2026-01-01", "periods": 3 },
+            "entities": [
+                {
+                    "symbol": "asset.a",
+                    "rules": {
+                        "occupancy": {
+                            "init": { "lang": "cfdl", "src": "0.8" },
+                            "next": { "lang": "cfdl", "src": "prev + series_sum(\"ops.revenue\", time.t, time.t)" }
+                        }
+                    }
+                }
+            ],
+            "streams": [
+                {
+                    "name": "ops.revenue",
+                    "owner": { "symbol": "asset.a" },
+                    "direction": "inflow",
+                    "schedule": { "kind": "Every", "from": "2026-01-01", "to": "2026-03-01" },
+                    "amount": { "lang": "cfdl", "src": "100.0" },
+                    "active_when": { "lang": "cfdl", "src": "true" }
+                }
+            ]
+        }"#;
+
+        let err = run_from_json_str(ir, RunConfig::default())
+            .expect_err("a rule reading a series must be refused");
+        let message = err.to_string();
+        assert!(
+            message.contains("field 'asset.a.occupancy' in 'next'"),
+            "message should name the field and the clause: {message}"
+        );
+    }
+
+    /// The backstop must not refuse what is legal: a STREAM reading another
+    /// stream is the language's ordinary cross-stream read, and the whole
+    /// dependency-wave design exists to serve it.
+    #[test]
+    fn a_stream_reading_a_series_is_untouched() {
+        let ir = r#"{
+            "model": { "name": "stream_reads_series", "currency": "USD" },
+            "time": { "calendar": "monthly", "start": "2026-01-01", "periods": 3 },
+            "entities": [ { "symbol": "asset.a", "rules": {} } ],
+            "streams": [
+                {
+                    "name": "ops.revenue",
+                    "owner": { "symbol": "asset.a" },
+                    "direction": "inflow",
+                    "schedule": { "kind": "Every", "from": "2026-01-01", "to": "2026-03-01" },
+                    "amount": { "lang": "cfdl", "src": "100.0" },
+                    "active_when": { "lang": "cfdl", "src": "true" }
+                },
+                {
+                    "name": "ops.fee",
+                    "owner": { "symbol": "asset.a" },
+                    "direction": "outflow",
+                    "schedule": { "kind": "Every", "from": "2026-01-01", "to": "2026-03-01" },
+                    "amount": { "lang": "cfdl", "src": "series_sum(\"ops.revenue\", time.t, time.t) * 0.1" },
+                    "active_when": { "lang": "cfdl", "src": "true" }
+                }
+            ]
+        }"#;
+
+        run_from_json_str(ir, RunConfig::default())
+            .expect("a stream reading another stream is legal and must stay legal");
     }
 
     #[test]

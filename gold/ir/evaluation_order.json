@@ -676,36 +676,6 @@
         "lang": "cfdl",
         "src": "asset.pool.running <= asset.pool.trigger_level"
       }
-    },
-    {
-      "actions": [
-        {
-          "entity": {
-            "symbol": "asset.pool"
-          },
-          "field": "cash_flag",
-          "kind": "SetEntityField",
-          "value": {
-            "lang": "cfdl",
-            "src": "1.0"
-          }
-        }
-      ],
-      "id": "33c9ccf0981323a71596208b0cd64450",
-      "name": "cash_threshold",
-      "provenance": {
-        "source_file": "model.cfdl",
-        "source_span": {
-          "end_col": 1,
-          "end_line": 63,
-          "start_col": 1,
-          "start_line": 60
-        }
-      },
-      "when": {
-        "lang": "cfdl",
-        "src": "series_sum(\"credit.pool.interest.*\", time.t, time.t)                          < asset.pool.cash_trigger"
-      }
     }
   ],
   "options": [],
