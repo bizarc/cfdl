@@ -130,22 +130,82 @@ payments to payees, so a waterfall cannot read its own output
 (`distributions.rs`). And steps evaluate in declaration order over a single
 running pot that cannot go negative (`docs/17`).
 
-**The pot becomes carried state.** Today the pot is an expression evaluated
-at each scheduled period — `available` is that period's netted cash, and
-Highlands accumulates only because its author wrote a cumulative window for
-a distribution that happens once. That formulation double-counts on any
-waterfall that distributes more than once over accumulated cash, unless the
-author hand-subtracts prior distributions, and undistributed residue does
-not carry unless the expression says so. Under the walk the pot is a
-balance: each period it grows by the declared inflow, at a scheduled
-distribution the steps draw it down, and what they do not take **remains in
-the pot** for the next scheduled date. `pot(t) = pot(t−1) + inflow(t) −
-distributed(t)`, journaled at every change. Deferral is state — the same
-principle the reserve account already embodies in every structured-finance
-engine — and it gives `docs/13` §7.41's check a cleaner object: the pot
-names what flows in, and the balance is auditable per period. A declared
-one-shot pot expression stays legal and means what it says; `available`
-stays the single-period default.
+### 5.1 The account
+
+Carried cash gets the industry's own object. In a real deal cash does not
+sit in a pot; it sits in **named accounts** — collection account, reserve
+account, a participant's distribution account — and the waterfall moves
+cash between them. The construct:
+
+```
+account <name> [owned by <party-ref>] {
+  from <inflow expression>          // per-period inflow, may be negative
+  currency <code>
+}
+```
+
+An account is a declared cash location with a balance. **Ownership is
+optional**: a general account belongs to the structure (a collection
+account, a reserve); a party-owned account holds cash *allocated to that
+participant but not yet paid out*, which is what a per-payee distribution
+account is. What a participant is **owed** is not an account: owed is a
+receivable, and receivables stay entity fields (Highlands' `unreturned`),
+exactly as shipped. An account holds cash that exists; a field records
+cash that is due. Conflating the two is the classic waterfall modeling
+defect, and the type system keeps them apart.
+
+The balance law, applied at each period of the walk:
+
+```
+balance(t) = balance(t−1) + inflow(t) + payments_in(t) − draws(t)
+```
+
+**A negative inflow lowers the balance, with no floor.** The language
+models returns, and an account fed a deal's whole net cash IS the deal's
+cumulative position — negative through the J-curve, positive after — so an
+account whose inflow is every stream equals `series_sum` of those streams
+from inception, an identity a fixture pins. What is floored is the **draw**:
+a step takes at most `max(balance, 0)` remaining — cash that is not there
+cannot be distributed, and a draw that would need it is refused with the
+account named, not overdrafted.
+
+Three uses, all walk-legal:
+
+- **A waterfall draws from an account**: `from <account>` replaces the
+  hand-written cumulative window. Residue after the last step stays in the
+  account for the next scheduled date, by construction.
+- **A step pays to an account**: `pay <step> to account <name> = <expr>` —
+  the reserve pattern (fund to target, top up when short, release when
+  over) and the per-participant allocation both become one step form. This
+  is the mechanism half of every structured-finance trigger structure.
+- **Logic reads a balance**: `prev.<account>` is settled state, strictly
+  backward under §4 — an OC/IC-style trigger tests a reserve balance the
+  same way a delinquency edge tests realised rent.
+
+### 5.2 What does not change
+
+**Carryover is opt-in by declaration.** `available` keeps meaning exactly
+this period's netted cash, and `remaining` stays the step-local running
+value — both are the indenture's own vocabulary ("Available Funds",
+"amounts remaining"), and both keep their shipped semantics. Every
+every-period waterfall in the fleet — the REMICs, the auto ABS — is
+untouched: a non-exhausting period's residue stays with the entity as it
+does today, unless an account is declared to catch it. A declared
+cumulative pot expression stays legal and means what it says. The collapse
+property of §9 therefore holds by construction, not by care: no existing
+keyword changes meaning.
+
+**An account is a location, not a flow — and not a walk output.** Cash in
+an account has already been counted once, as stream cash; the account
+balance publishes in the valuation plane as a non-cash series, statements
+show the distribution flows under their financing categories, and no
+number is counted twice. The balance exists *in* the walk only as state
+that steps and guards read.
+
+The account gives `docs/13` §7.41's check its object — an account's `from`
+names what flows in, and the balance is auditable per period — and the
+journal (§8) records each account's movements at that grain: inflow, each
+step's draw or payment-in, and the carried residue.
 
 ## 6. Events and the state machine
 
@@ -266,17 +326,18 @@ must be **byte-identical**. The full golden suite is the proof obligation: it
 passes unchanged, with no re-blessing, or the walk has a defect. Models that
 do couple cash into logic are new expressiveness, pinned by new fixtures:
 the delinquency machine breaching and curing twice on realised rent; the
-lagged sweep; a once-at-end waterfall read by a later balance; the
-accumulated pot drawn down across two scheduled distributions with residue
-carried; and a state-anchored construction schedule delayed by an event and
-re-anchored on re-entry.
+lagged sweep; a once-at-end waterfall read by a later balance; a reserve
+account funded to target and released; trapped cash accumulating in an
+account across a failed trigger and releasing on cure — accounts, the
+machine, and backward guard reads in one pin; the cumulative-sum identity
+(an account fed every stream equals `series_sum` from inception);
+Highlands restated with an account in place of its cumulative window,
+tied to the same numbers; and a state-anchored construction schedule
+delayed by an event and re-anchored on re-entry.
 
-One collapse caveat is owned rather than hidden: a waterfall that
-distributes every period from `available` is unchanged under the pot
-balance, but a shipped model whose author worked around the old pot — a
-cumulative window with hand-subtracted prior distributions — keeps its
-declared expression and its old meaning. The balance semantics apply to
-pots declared as balances; nothing re-interprets an expression.
+The collapse caveat is owned by §5.2's rule: carryover is opt-in, no
+existing keyword changes meaning, and nothing re-interprets a declared
+expression — so the shipped fleet collapses by construction.
 
 Performance holds for the same reason. The schedule is static — computed
 once from the dependency graph, replayed per scenario and per Monte Carlo
@@ -293,7 +354,7 @@ silent zero — and **mutation testing** over the engine, so the suite provably
 notices when evaluation changes.
 
 M1 is the walk, the read rules, the two migrations, the declared state
-machine with its transition anchor (§6), the pot as carried state (§5), and
+machine with its transition anchor (§6), the account construct (§5), and
 the journal. It is not: the contract runtime behind `activate contract`
 (M2, §7.40i); multiple instances of one pack contract type (F.3); typed
 pack-declared actions; or optimal exercise, which stays deferred past v1
