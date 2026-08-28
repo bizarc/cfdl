@@ -1,16 +1,16 @@
 ---
 title: "Cash, state, and the machine"
-description: "The feedback the course has been missing: guards that read settled cash, the lifecycle machine whose edges replace the latch, the account that carries cash between distributions, and schedules anchored to a state entry."
+description: "Guards that read settled cash, the lifecycle machine, the account that carries cash between distributions, and schedules anchored to a state entry."
 part: 2
 order: 11.5
 track: core
 ---
 
-Every model so far has one-way causality: state gates cash, and cash never answers back. A unit's rent can depend on its status; its status could not depend on whether the rent arrived. Chapter 10's latch fires on time and on other *claims*, never on realized collections, and chapter 11's waterfalls distribute each period's cash with nowhere to hold a surplus for later. Real deals close both loops constantly — a unit goes delinquent because rent stopped, a trigger traps cash until collections cure, a reserve builds between quarterly distribution dates. This chapter adds the constructs that state those claims.
+Every model so far has one-way causality: state gates cash, and cash never answers back. A unit's rent can depend on its status. Its status cannot depend on whether the rent arrived. Real deals close the loop constantly: a unit goes delinquent because rent stopped; a trigger traps cash until collections cure; a reserve builds between distribution dates. This chapter adds the constructs that state those claims.
 
 ## Logic reads settled cash
 
-The engine settles each period in order: state first, then that period's streams, then whatever the schedules say distributes. So when a guard evaluates, every *earlier* period's cash is a settled fact — and the language lets logic read exactly that far:
+The engine settles each period in a fixed order: state first, then the period's streams, then the scheduled distributions. When a guard evaluates, every earlier period's cash is therefore a settled fact. The language lets logic read exactly that far:
 
 ```cfdl
 event delinquency.flag when series_sum("ops.rent", time.t - 1, time.t - 1) < 50 {
@@ -18,13 +18,13 @@ event delinquency.flag when series_sum("ops.rent", time.t - 1, time.t - 1) < 50 
 }
 ```
 
-The window ends at `time.t - 1`, and that bound is the rule, not a habit. Logic reads *settled* history — cash that had already arrived when the period opened. A window that touches `time.t` or later is refused at compile (`E1134`): this period's cash does not exist while this period's logic is deciding things, and acting on cash that has not happened is not causal. One consequence worth internalizing early: at period 0 there is no settled history at all, and the read is *unavailable* — not zero. Before the model began is not a quiet 0; it is a fact the model refuses to invent.
+The window ends at `time.t - 1`, and the bound is a rule, not a habit. Logic reads settled history: cash that had already arrived when the period opened. A window that touches `time.t` or later is refused at compile time (`E1134`), because the current period's cash does not exist while the current period's logic runs. One consequence is worth learning early: at period 0 there is no settled history, and the read is unavailable — not zero. The model does not invent a quiet zero before its own start.
 
-The one-period lag matches the world it models. A delinquency flag in the real world also trails the missed payment — the servicer reports it after month-end. The model's lag and the world's lag agree.
+The one-period lag matches the world the model describes. A real delinquency flag also trails the missed payment: the servicer reports it after month-end. The model's lag and the world's lag agree.
 
 ## The machine: edges instead of latches
 
-Chapter 10 said a regime that returns is not a re-firing event. Here is what it is:
+Chapter 10 said a regime that returns is not a re-firing event. This section shows what it is instead:
 
 ```cfdl
 version 0.1
@@ -49,23 +49,30 @@ stream core.rent on entity asset.suite inflow currency USD {
 }
 ```
 
-A `lifecycle` block declares a finite state machine: the **states**, enumerated up front; the **initial** state; and the **edges**, each an arrow with an optional `when` guard. An entity binds the machine by name (`lifecycle unit` in its block), opens in the initial state or its own `state` override, and from then on the machine drives its `status`.
+A `lifecycle` block declares a finite state machine. The **states** are enumerated up front. The machine names one **initial** state. Each **edge** is an arrow with an optional `when` condition. An entity binds the machine by name (`lifecycle unit` in its block) and opens in the initial state, or in its own `state` override. From then on, the machine drives the entity's `status`.
 
-Run the model and read the transitions in the results. Rent stops in month 3; the machine sees the shortfall in month 4's settled history and moves to `delinquent`. Rent resumes; month 5 cures it. Month 8 breaches again; month 10 cures again. **The topology was walked twice, and no latch was involved.** That is the construct's central idea: an edge's guard is evaluated each period the entity is in the edge's *from* state — and only then. Taking the edge moves the machine, which disarms the edge; re-entering the state re-arms it. Edge availability is the memory, which is what a finite state machine has always meant.
+The vocabulary matters, because three different things meet in one line of source. A **state**, such as `leased`, is a node on the machine's graph. An **edge** is the arrow together with its condition: `leased -> delinquent when …`. The edge is the event — the occurrence that forces the move. An arrow may also leave a state and return to the same state, as in `leased -> leased`. That arrow is called a **self-edge**. The state is not the edge: `leased` stays a node, and the self-edge is the arrow through it. Taking a self-edge is a real transition — a renewal re-enters `leased` and restarts every window anchored to that entry.
 
-The rules that make the machine reviewable:
+Run the model and read the transitions in the results:
 
-- **States are enumerated; edges are declared only as used.** A misspelled state in an edge is a compile error naming the declared set (`E1316`), never a phantom state. An edge you did not declare does not exist — absence is the prohibition, and nobody writes the full matrix.
-- **Declaration order resolves ties.** When two guards hold in one period, the first declared edge takes, and at most one transition per entity per period is taken. The same rule waterfall steps follow.
-- **A self-edge is a real transition.** `leased -> leased when …` re-enters the state — a renewal that restarts a window (see below) is exactly this.
-- **A guard-less edge is a permission.** `downtime -> leased` with no `when` never fires on its own; it exists so an *event's* write may take it. An event's `set … status` is validated against the declared edges and refused — with the edge named — where no edge permits the move. A machine that declares no edges at all leaves events unconstrained, which is what every model before this chapter effectively had.
-- **Every transition is journaled** with the edge taken and the values its guard read. A regime is never again a bare field whose flips the record cannot see.
+- Rent stops in month 3. The machine sees the shortfall in month 4's settled history and moves to `delinquent`.
+- Rent resumes. Month 5 cures the breach.
+- Month 8 breaches again. Month 10 cures again.
 
-`active in state` closes the loop back to cash: a stream declared `active in state leased` turns off during delinquency and back on after the cure, with no further mechanism. State gates cash, cash moves state, and both directions are declared.
+The topology was walked twice, and no latch was involved. An edge's condition is evaluated each period the entity is in the edge's *from* state, and only then. Taking the edge moves the machine, which disarms the edge. Re-entering the state re-arms it. Edge availability is the memory, which is what a finite state machine has always meant.
+
+Four rules make the machine reviewable:
+
+- **States are enumerated; edges are declared only as used.** A misspelled state in an edge is a compile error that names the declared set (`E1316`). An edge you did not declare does not exist: absence is the prohibition, and nobody writes the full matrix.
+- **Declaration order resolves ties.** When two conditions hold in one period, the first declared edge is taken. At most one transition per entity per period is taken. Waterfall steps follow the same rule.
+- **An edge without a condition is a permission.** `downtime -> leased` with no `when` never fires on its own. The edge exists so an *event's* write may take it. An event's `set … status` is validated against the declared edges; where no edge permits the move, the write is refused and the refusal names the edge. A machine that declares no edges leaves events unconstrained, which is what every model before this chapter effectively had.
+- **Every transition is journaled**, with the edge taken and the values its condition read. A regime is never again a bare field whose changes the record cannot see.
+
+`active in state` closes the loop back to cash. A stream declared `active in state leased` turns off during delinquency and turns back on after the cure, with no further mechanism. State gates cash; cash moves state; both directions are declared.
 
 ## The account: cash that waits
 
-Chapter 11's `available` is this period's netted cash, and a monthly waterfall distributing it stays exactly as it was. What was missing is cash that *accumulates* — a reserve building toward a target, proceeds waiting for a quarterly date, trapped cash held across a breach. The **account** is that construct:
+Chapter 11's `available` is the current period's netted cash, and a monthly waterfall that distributes it stays exactly as it was. What was missing is cash that *accumulates*: a reserve building toward a target, proceeds waiting for a quarterly date, trapped cash held across a breach. The **account** is that construct:
 
 ```cfdl
 version 0.1
@@ -99,13 +106,19 @@ waterfall release on entity asset.suite {
 }
 ```
 
-Three uses, all in those twenty lines. **A step pays into an account** — `pay top_up to account reserve` funds it to a 300 target, topping up whenever the settled balance (`prev.reserve`) reads short. **A waterfall draws from an account** — `from reserve` hands the release waterfall the accumulated balance in place of a hand-written cumulative window, on its own schedule; the June release drains the reserve, and July's top-up refills it. **Logic reads a balance** — `prev.<account>` is settled state, the balance as of the previous period's close, every allocation included; like every backward read, it is unavailable (not zero) at period 0, which is why the top-up's first period is stated explicitly.
+The twenty lines above show all three uses:
 
-The balance obeys one law — carried balance, plus this period's declared inflow, plus what steps allocated in, minus what a drawing waterfall took out — and it publishes as a non-cash series, `account.reserve`, beside the flows. The step's series is the *flow*; the account's series is the *position*; nothing is counted twice. Two more facts complete the picture. A balance has **no floor** — an account fed a deal's whole net cash *is* the deal's cumulative position, negative through the J-curve — while what a step may take is floored at zero, because cash that is not there cannot be allocated. And a party may **own** an account (`owner party.sponsor`), in which case `pay … to <party>` accumulates there; a party-owned balance is allocated cash, not an obligation — what is still owed under the rules is simply not yet allocated.
+- **A step pays into an account.** `pay top_up to account reserve` funds the reserve to a 300 target. The step tops up whenever the settled balance (`prev.reserve`) reads short.
+- **A waterfall draws from an account.** `from reserve` hands the release waterfall the accumulated balance, on the release's own schedule, in place of a hand-written cumulative window. The June release drains the reserve; July's top-up refills it.
+- **Logic reads a balance.** `prev.<account>` is the balance at the previous period's close, with every allocation included. Like every backward read, the balance is unavailable at period 0 — not zero. That is why the top-up states its first period explicitly.
+
+The balance obeys one law: the carried balance, plus the period's declared inflow, plus what steps allocated in, minus what a drawing waterfall took out. The balance publishes as a non-cash series, `account.reserve`, beside the flows. The step's series is the *flow*; the account's series is the *position*; nothing is counted twice.
+
+Two more facts complete the picture. A balance has **no floor**: an account fed a deal's whole net cash is the deal's cumulative position, and a cumulative position runs negative through the J-curve. What a step may *take* is floored at zero, because cash that is not there cannot be allocated. A party may also **own** an account (`owner party.sponsor`), and allocations paid to that party then accumulate there. A party-owned balance is allocated cash, not an obligation: what the rules still owe is simply not yet allocated.
 
 ## Windows that hang off a state
 
-The last piece connects the machine to chapter 4's schedules. Every anchor so far was a date or a phase — fixed at compile. The third anchor is a state entry:
+The last construct connects the machine to chapter 4's schedules. Every anchor so far was a date or a phase, fixed at compile time. The third anchor is a state entry:
 
 ```cfdl
 version 0.1
@@ -131,19 +144,28 @@ stream capex.build on entity asset.site outflow currency USD {
 }
 ```
 
-`from state_enter(asset.site, building) for 6 periods` opens a six-period window at each entry into `building` — "eighteen months of construction from whenever construction starts," stated as a schedule. Run it and watch the composition: nothing accrues while waiting; entry at month 4 opens the window; the pause masks months 8–9 through `active in state` (the window is *presence*, the state is *activity*, and they compose); and re-entry at month 10 opens a **fresh** six-period window — a re-entered state re-anchors, which is what a second delinquency's cure period, or a renewal's restarted term, means. Inside a window, intervals, placement, and payment terms mean exactly what chapter 4 taught.
+`from state_enter(asset.site, building) for 6 periods` opens a six-period window at each entry into `building`. The schedule states "six months of construction from whenever construction starts."
+
+Run the model and watch the parts compose:
+
+- Nothing accrues while the site waits.
+- Entry at month 4 opens the window.
+- The pause masks months 8–9 through `active in state`. The window is *presence*; the state is *activity*; the two compose.
+- Re-entry at month 10 opens a fresh six-period window. A re-entered state re-anchors, which is what a second delinquency's cure period means, and what a renewal's restarted term means.
+
+Inside a window, intervals, placement, and payment terms mean exactly what chapter 4 taught.
 
 ## What can go wrong
 
-**A guard that touches the present.** `series_sum(…, time.t, time.t)` in an edge guard or an event condition is refused at compile (`E1134`). The fix is the claim: settled history ends one period back.
+**A guard that touches the present.** `series_sum(…, time.t, time.t)` in an edge condition or an event condition is refused at compile time (`E1134`). Settled history ends one period back; the refusal restates the claim.
 
-**A state from nowhere.** An edge, an opening `state`, or a `set … status` naming a state the machine does not declare is a compile error with the declared set in the message. The finite set is the whole point — a typo cannot found a phantom regime.
+**A state from nowhere.** An edge, an opening `state`, or a `set … status` that names a state the machine does not declare is a compile error, and the message lists the declared set. The finite set is the whole point: a typo cannot found a phantom regime.
 
-**A write with no edge.** Once a machine declares edges, an event writing a status move no edge permits is refused at run with the edge named, and the journal records the refusal as `declined`. Where the target state has *no* incoming edge at all, the refusal comes at compile — the write could never be legal.
+**A write with no edge.** Once a machine declares edges, an event write that no edge permits is refused at run time. The refusal names the edge, and the journal records the outcome as `declined`. Where the target state has *no* incoming edge at all, the refusal comes at compile time, because the write could never be legal.
 
-**Waiting for the machine to fire a permission.** A guard-less edge never self-fires. If the cure should happen on its own, the cure edge needs a `when`; if an event drives it, the edge without one is exactly right.
+**Waiting for a permission to fire itself.** An edge without a condition never self-fires. If the cure should happen on its own, give the cure edge a `when`. If an event drives the cure, the bare edge is exactly right.
 
-**Expecting the trap to leak.** A step can only take what the balance holds — the floor is at the allocation, not the balance. If a release step pays less than you expected, read `account.<name>` first: the position series is the audit trail, and every movement is journaled with the balance before and after.
+**Expecting the trap to leak.** A step can take only what the balance holds. The floor is at the allocation, not at the balance. If a release step pays less than expected, read `account.<name>` first: the position series is the audit trail, and the journal records every movement with the balance before and after.
 
 ## Exercises
 
@@ -153,5 +175,5 @@ The trapped-cash structure — the machine, the account, and a backward read in 
 
 Then, on your own:
 
-1. In the breach-and-cure model, make the cure *slower* than the breach: require two consecutive months of full rent (`series_sum("core.rent", time.t - 2, time.t - 1) >= 100`). Predict the new transition months before you run — the asymmetry between how fast trouble arrives and how slowly trust returns is one guard's width.
-2. Give the reserve model a J-curve: add a capex outflow larger than early rent, feed the account `from` the net of both streams, and watch the balance go negative before it climbs. The balance has no floor because the deal's cumulative position has none; write one sentence on why the *release* still cannot overdraw it.
+1. In the breach-and-cure model, make the cure slower than the breach: require two consecutive months of full rent (`series_sum("core.rent", time.t - 2, time.t - 1) >= 100`). Predict the new transition months before you run the model. The asymmetry between how fast trouble arrives and how slowly trust returns is one guard's width.
+2. Give the reserve model a J-curve. Add a capex outflow larger than early rent, feed the account `from` the net of both streams, and watch the balance go negative before it climbs. Then write one sentence on why the *release* still cannot overdraw the balance.

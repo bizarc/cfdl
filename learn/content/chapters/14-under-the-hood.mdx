@@ -6,57 +6,65 @@ order: 14
 track: deep
 ---
 
-The core track can skip this chapter; nothing later depends on it. It exists for the reader who wants to know *why* the guarantees hold. Why can a compiled model not dangle a reference? Why are runs byte-reproducible? Why is a circular series read refused with its path named? The machinery is not incidental to the language's promises: each promise is a property of a specific stage, and knowing which stage answers which question makes you faster at diagnosing anything.
+The core track can skip this chapter; nothing later depends on it. It exists for the reader who wants to know *why* the guarantees hold. Why can a compiled model not dangle a reference? Why are runs byte-reproducible? Why is a circular series read refused with its path named? Each promise is a property of one specific stage. Knowing which stage answers which question makes diagnosis faster.
 
 ## The pipeline, stage by stage
 
-A model goes from text to results through fixed stages, each with one job and one class of refusal:
+A model goes from text to results through fixed stages. Each stage has one job and one class of refusal:
 
 1. **Lexing** turns bytes into tokens. Refusals here are lexical: an unterminated string, an unclosed comment.
 2. **Parsing** turns tokens into a syntax tree. Refusals are structural: a malformed schedule, a stream name with one segment, a keyword where an expression belongs.
-3. **Resolution** builds the import graph and the symbol table, then resolves every name — entities, streams, phases, fields — to its declaration. Refusals: cycles, escapes from the model root, duplicates, references to nothing. After this stage, *no name in the model is unbound*, which is the property chapter 2's "reference to nobody" refusal was teaching.
-4. **Validation** checks model-level shape: exactly one time grid, schedules inside the horizon, required clauses present. With a pack in play, the pack's own validations run here too — a contract missing a required term is refused with the pack's vocabulary.
-5. **Lowering and emission** produce the **IR** — the intermediate representation. Contracts expand into the streams they imply, every schedule becomes an explicit set of dated occurrences, every identifier gets a stable ID, and the whole is written as one JSON document against a published schema.
+3. **Resolution** builds the import graph and the symbol table, then resolves every name — entities, streams, phases, fields — to its declaration. Refusals: cycles, escapes from the model root, duplicates, references to nothing. After this stage, no name in the model is unbound. That property is what chapter 2's "reference to nobody" refusal was teaching.
+4. **Validation** checks model-level shape: exactly one time grid, schedules inside the horizon, required clauses present. With a pack in play, the pack's own validations run here too. A contract missing a required term is refused in the pack's vocabulary.
+5. **Lowering and emission** produce the **IR** — the intermediate representation. Contracts expand into the streams they imply. Every schedule becomes an explicit set of dated occurrences. Every identifier gets a stable ID, and the whole is written as one JSON document against a published schema.
 6. **The engine** evaluates the IR under a run configuration and emits results — the other published schema.
 
-The division of labor explains a distinction you have already felt. Everything *structural* fails before any number exists, in stages 1–5. Everything *numerical* surfaces at evaluation: a division by zero in some period, a `prev` read in period 0. When something goes wrong, asking "which stage owns this?" is the fastest route to the fix, and the next chapter's diagnostic codes are organized along exactly this seam.
+The division of labor explains a distinction you have already felt. Everything *structural* fails before any number exists, in stages 1–5. Everything *numerical* surfaces at evaluation: a division by zero in some period, a `prev` read in period 0. When something goes wrong, first ask which stage owns the failure. The next chapter's diagnostic codes are organized along the same seam.
 
 ## The IR: the model with nothing left implicit
 
-The IR deserves a moment of respect rather than a skim. It is the model after every convenience is expanded: names resolved, schedules enumerated, contract sugar lowered, defaults applied. What remains is a complete description of *what will be computed*, with no reference to how it was written. Three practical consequences:
+The IR is the model after every convenience is expanded: names resolved, schedules enumerated, contract sugar lowered, defaults applied. What remains is a complete description of *what will be computed*, with no reference to how the model was written. Three consequences follow.
 
-**It is the audit artifact.** When a regulator, a counterparty, or a future you asks "what exactly did this model do," the IR is the answer, independent of source-file organization. Two differently-organized sources that mean the same model produce the same computation — chapter 13's split-is-pure-communication claim, made mechanical.
+**The IR is the audit artifact.** When a regulator, a counterparty, or a future you asks what the model did, the IR is the answer, independent of source-file organization. Two differently organized sources that mean the same model produce the same computation. Chapter 13 called a file split pure communication; the IR makes that claim mechanical.
 
-**It is the interface.** The playground, the command line, the Python bindings, and any future surface all run IR. A tool that consumes or produces it speaks the language without parsing it.
+**The IR is the interface.** The playground, the command line, the Python bindings, and any future surface all run IR. A tool that consumes or produces IR speaks the language without parsing it.
 
-**It is diffable at the semantic level.** A source diff shows what you edited; an IR diff shows what *changed in meaning*. A reorganization produces an empty IR diff. An assumption edit produces exactly the affected expressions. Reviewing consequential changes at both levels is a habit worth having for models that move money.
+**The IR is diffable at the semantic level.** A source diff shows what you edited. An IR diff shows what changed in meaning. A reorganization produces an empty IR diff; an assumption edit produces exactly the affected expressions. For a model that moves money, review consequential changes at both levels.
 
-The model also carries a **canonical hash** — a fingerprint of the IR, recorded in results. "Which model produced this number?" has a cryptographic answer, which is what lets a committee memo cite a model the way it cites a document version.
+The model also carries a **canonical hash**: a fingerprint of the IR, recorded in the results. The question "which model produced this number?" has a cryptographic answer. A committee memo can cite a model the way it cites a document version.
 
 ## Evaluation: the period walk
 
-The engine settles **one period at a time**, and inside each period the order is fixed: state first (rules, then the machine's edges, then events), then that period's streams in their waves, then whatever the schedules say distributes. This is the **period walk**, and it is what makes chapter 11.5 possible at all — when a guard evaluates at period *t*, every period before *t* is a settled fact, so logic may read series and balances at `time.t - 1` and earlier. Chapter 8's impossible-cycles argument is this order read as a proof: rules see the previous period's committed column, guards see settled history, streams read the state just committed, and every read points backward.
+The engine settles **one period at a time**. Inside each period the order is fixed: state first (rules, then the machine's edges, then events), then the period's streams in their waves, then whatever the schedules say distributes. This order is the **period walk**, and it is what makes chapter 11.5 possible. When a guard evaluates at period *t*, every period before *t* is a settled fact, so logic may read series and balances at `time.t - 1` and earlier. Chapter 8's impossible-cycles argument is this order read as a proof: rules see the previous period's committed column, guards see settled history, streams read the state just committed, and every read points backward.
 
-One deliberate exception prices rather than breaks the rule. A stream `amount` whose window reaches *forward* — the forward-income exit capitalizing next year's NOI — is a **priced amount**: a valuation setting a causal amount. The walk skips it, prices it once every causal cell exists, and runs the distributions over the complete cash. What keeps that sound is acyclicity, enforced with the path named: logic reading what a priced amount sets — sale proceeds feeding state that feeds the NOI being capitalized — is refused, like any other cycle. A forward window in a *guard* is refused outright: whether a stream is active is a causal fact, and a fact cannot be read from the future.
+One deliberate exception prices rather than breaks the rule. A stream `amount` whose window reaches *forward* — the forward-income exit that capitalizes next year's NOI — is a **priced amount**: a valuation that sets a causal amount. The walk skips the priced cell, prices it once every causal cell exists, and runs the distributions over the complete cash. Acyclicity keeps the exception sound, and the refusal names the path: logic that reads what a priced amount sets — sale proceeds feeding state that feeds the NOI being capitalized — is refused like any other cycle. A forward window in a *guard* is refused outright. Whether a stream is active is a causal fact, and a fact cannot be read from the future.
 
-Reproducibility falls out of two further choices you have already met. Arithmetic is decimal with defined rounding — no platform float quirks — and every random draw comes from a counter-based generator keyed by `(seed, assumption, trial)`. That keying is why each assumption owns an independent draw stream and why adding one assumption reshuffles nothing else: there is no shared random state anywhere to perturb. Determinism is not a test the engine passes; it is the absence of any mechanism for nondeterminism.
+Reproducibility falls out of two further choices you have already met. Arithmetic is decimal with defined rounding, so no platform float quirks enter. Every random draw comes from a counter-based generator keyed by `(seed, assumption, trial)`. The keying is why each assumption owns an independent draw stream, and why adding one assumption reshuffles nothing else: no shared random state exists to perturb. Determinism is not a test the engine passes; it is the absence of any mechanism for nondeterminism.
 
 ## Waves: the order series reads impose
 
-Chapter 9 promised the story behind `series_sum`'s evaluation order. Here it is, in one breath.
+Chapter 9 promised the story behind `series_sum`'s evaluation order. Here it is.
 
-Every stream's reads are visible in its source — `series_sum("collections", ...)` names what it depends on — so the engine reads the dependency graph straight off the model and evaluates in **waves**. Streams that read no series are wave 0: they evaluate first, in no particular order, because nothing they read can depend on their peers. A reader evaluates one wave past the deepest stream it reads: a fee on collections is wave 1, a kicker on that fee is wave 2, and so on to any depth. Each wave runs against a store in which everything it names is already **finished**. A series read never sees a half-computed number, because the ordering guarantees the whole series it reads was committed a wave earlier.
+Every stream's reads are visible in its source: `series_sum("collections", ...)` names what the stream depends on. The engine therefore reads the dependency graph straight off the model and evaluates in **waves**. Streams that read no series are wave 0, and they evaluate first, because nothing they read can depend on their peers. A reader evaluates one wave past the deepest stream it reads: a fee on collections is wave 1, a kicker on that fee is wave 2, and so on to any depth. Each wave runs against a store in which everything the wave names is already **finished**. A series read never sees a half-computed number, because the whole series it reads was committed a wave earlier.
 
-One thing survives as a refusal, because no ordering can satisfy it: **a cycle**. Fee reads kicker, kicker reads fee: there is no wave either can go in. The engine names the loop (`'fee' -> 'kicker' -> 'fee'`) rather than iterate toward a fixed point. That is the same circularity the language refuses everywhere else.
+One thing survives as a refusal, because no ordering can satisfy it: **a cycle**. The fee reads the kicker and the kicker reads the fee; no wave can hold either. The engine names the loop (`'fee' -> 'kicker' -> 'fee'`) rather than iterate toward a fixed point. That is the same circularity the language refuses everywhere else.
 
-A cycle in a model is almost always a modeling error. When the economics genuinely loop — a fee on distributions that themselves net the fee — the fix is chapter 8's staging discipline: read the base quantity, or carry one side as a field that advances at period close. The wall is no longer "readers cannot read readers"; it is exactly the wall a spreadsheet gives you, and models that respect it are models whose evaluation you can narrate, wave by wave.
+A cycle in a model is almost always a modeling error. When the economics genuinely loop — a fee on distributions that themselves net the fee — the fix is chapter 8's staging discipline: read the base quantity, or carry one side as a field that advances at period close. The wall is exactly the wall a spreadsheet gives you. A model that respects it is a model whose evaluation you can narrate, wave by wave.
 
 ## Reading this back onto the promises
 
-Every guarantee the course has leaned on now has an address. *Nothing dangles* — resolution. *Nothing silently discarded* — parsing refuses what it cannot represent. *What compiles, runs* — validation and lowering exhaust the structural checks before the engine starts. *Same inputs, same bytes* — decimal arithmetic, keyed draws, ordered evaluation. *Cycles refused* — rules-before-streams across constructs, and the wave sort within streams, which rejects a genuine loop with its path named. None of these is a slogan; each is a stage doing one job. That is what a small language buys: the machinery is short enough to actually know.
+Every guarantee the course has leaned on now has an address:
+
+- *Nothing dangles* — resolution.
+- *Nothing is silently discarded* — parsing refuses what it cannot represent.
+- *What compiles, runs* — validation and lowering exhaust the structural checks before the engine starts.
+- *Same inputs, same bytes* — decimal arithmetic, keyed draws, ordered evaluation.
+- *Cycles are refused* — rules-before-streams across constructs, and the wave sort within streams, which rejects a genuine loop with its path named.
+
+None of these is a slogan; each is one stage doing one job. That is what a small language buys: the machinery is short enough to actually know.
 
 ## On your own
 
-1. Compile any model from this course with the command-line tool and read the IR it emits, end to end, once. Find your schedule as enumerated dates and your contract-free streams as they will be computed. Twenty minutes, and the word "compile" stops being abstract.
-2. Reorganize a multi-file model (move a stream between files) and diff the two IRs. Then change one assumption and diff again. The first diff's emptiness and the second's precision are the semantic-diff property, seen with your own eyes.
-3. Predict which wave each stream of your chapter-9 venue model evaluates in, then explain to a colleague why the percentage-rent kicker cannot ever race the revenue it reads. If you can narrate that, you own this chapter.
+1. Compile any model from this course with the command-line tool and read the IR it emits, end to end, once. Find your schedule as enumerated dates, and find your contract-free streams as they will be computed. The word "compile" stops being abstract in about twenty minutes.
+2. Reorganize a multi-file model (move a stream between files) and diff the two IRs. Then change one assumption and diff again. The first diff's emptiness and the second diff's precision are the semantic-diff property, seen directly.
+3. Predict which wave each stream of your chapter-9 venue model evaluates in. Then explain to a colleague why the percentage-rent kicker can never race the revenue it reads.
