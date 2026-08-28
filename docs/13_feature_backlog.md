@@ -1893,3 +1893,37 @@ plus state-gating through the declared machine. Per-period persistent state
 commercial path rather than the roadmap's. Pack coverage (§7.3) is M3.
 
 Re-derived 2026-08-28. Related: `docs/28` §10, `docs/29`.
+
+### 7.79 An event is restricted to firing once, and a transition cannot act
+
+*Belongs with the language and engine (section 5). Roadmap: M2 (§7.78).
+Scoped in `docs/34_events_and_the_machine.md`; found by the Argus parity
+survey (`docs/33`, Item 1).*
+
+**What could not be expressed:** an occurrence that recurs, and behavior
+performed on arrival. An event is something that happens — time, a default,
+a cure, a payment — and nothing about happening is once-only. The shipped
+constructs each hold half of this: a guarded edge (the anonymous event,
+described by the entity it impacts and the conditions that must be true)
+fires every occurrence but arrives empty-handed — no action rides on the
+transition; the named `event` carries `set` but latches — the engine skips
+a fired event forever (`event_fired`, `crates/cfdl-engine/src/state.rs`).
+The construct that repeats cannot act, and the construct that acts cannot
+repeat.
+
+**What forced the discovery:** chained rollover, probed pack-free
+(`docs/33`). The cycle itself runs — edges re-arm, `state_enter` windows
+re-anchor, per-cycle costs re-fire — but a duration-in-state counter cannot
+reset on re-entry (the conditional recurrence dies at run:
+`prev.<entity>.status is not declared`), and market rent cannot be struck
+into a field at an endogenous transition. §7.77's cure window and §7.74's
+shortfall bookkeeping are the same absence wearing credit vocabulary.
+
+**The shape** (`docs/34` D1–D8): events fire on each rising edge of their
+conditions, with no `once` keyword — a one-shot expresses its once-ness in
+a singular schedule or a no-return topology, never a latch; states carry
+`on enter` action blocks and edges carry path-specific ones,
+entity-relative, run on every arrival whatever took it, under the existing
+event-`set` write law and the guard's own environment — no new cycle
+risk. Migration is measured, not assumed: a corpus audit counts
+re-rising conditions per event before the goldens are re-blessed.
