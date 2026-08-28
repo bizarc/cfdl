@@ -1,0 +1,11 @@
+version 0.1
+model "stream-unknown-item"
+time calendar monthly from 2026-01 for 12
+
+entity asset co : Asset.Financial
+
+// Fix: payment terms go inside the schedule clause, not on their own line.
+stream co.receipts on entity asset.co inflow currency USD {
+  schedule every month net 60 from 2026-01 to 2026-12
+  amount = 10000
+}

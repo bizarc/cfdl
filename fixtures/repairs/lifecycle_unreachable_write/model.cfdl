@@ -1,0 +1,18 @@
+version 0.1
+model "lifecycle-unreachable-write"
+time calendar monthly from 2026-01 for 3
+
+// FIX: declare an edge entering 'c' — declaring it is what brings the move
+// into existence, making the event's write legal.
+lifecycle unit {
+  initial a
+  state a, b, c
+  a -> b when time.t == 1
+  b -> c when time.t == 2
+}
+
+entity asset x { lifecycle unit  state a }
+
+event jump when time.t == 1 {
+  set entity asset.x.status = "c"
+}

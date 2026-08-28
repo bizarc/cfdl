@@ -1,0 +1,14 @@
+version 0.1
+model "unresolved-contract-subject-ref"
+use pack "cre" version "0.1.0"
+time calendar monthly from 2026-01 for 24
+
+entity asset property : CRE.Asset.RealProperty
+
+// Fix: the contract's subject names the declared entity, asset.property.
+contract cre.revenue_line on entity asset.property {
+  term 2026-01..2027-12
+  terms {
+    amount = 30000
+  }
+}

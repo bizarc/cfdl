@@ -1,0 +1,27 @@
+version 0.1
+model "cre-unit-invalid-bounds"
+use pack "cre" version "0.1.0"
+time calendar monthly from 2026-01 for 48
+
+entity asset tower : CRE.Asset.RealProperty
+
+// Fix: free_rent_months and downtime_months are now whole non-negative month
+// counts, and pro_rata_share / renewal_probability are fractions in [0, 1].
+contract cre.lease_unit.tenant_a on entity asset.tower {
+  term 2026-01..2028-12
+  terms {
+    rent_year = 480000
+    free_rent_months = 3
+    pro_rata_share = 0.8
+  }
+}
+
+contract cre.rollover.tenant_a on entity asset.tower {
+  term 2029-01..2029-12
+  terms {
+    renewal_probability = 0.7
+    renewal_rent_year = 520000
+    market_rent_year = 560000
+    downtime_months = 2
+  }
+}

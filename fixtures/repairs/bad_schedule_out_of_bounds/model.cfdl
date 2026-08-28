@@ -1,0 +1,10 @@
+version 0.1
+model "bad-schedule-out-of-bounds"
+time calendar monthly from 2026-01 for 12
+entity asset borrower : Asset.Financial
+
+// Fix: the schedule is moved inside the model timeline (2026-01..2026-12).
+stream debt.principal on entity asset.borrower {
+  schedule every month on day 15 from 2026-01 to 2026-12
+  amount = 100
+}

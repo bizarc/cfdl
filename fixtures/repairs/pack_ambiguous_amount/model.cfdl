@@ -1,0 +1,15 @@
+version 0.1
+model "pack-ambiguous-amount"
+use pack "opco" version "0.1.0"
+time calendar monthly from 2026-01 for 12
+
+entity asset business : OpCo.Asset.Enterprise
+
+// FIX: give one size, not both — keep the per-period `amount` and drop
+// `amount_year`.
+contract opco.revenue_line {
+  term 2026-01..2026-12
+  terms {
+    amount = 120000
+  }
+}

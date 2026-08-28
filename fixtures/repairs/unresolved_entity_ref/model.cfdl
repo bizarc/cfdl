@@ -1,0 +1,10 @@
+version 0.1
+model "unresolved-entity"
+time calendar monthly from 2026-01 for 12
+entity asset borrower : Asset.Financial
+// Fix: the stream names the declared entity, asset.borrower (plus the
+// minimal body a stream requires: a schedule and an amount).
+stream debt.principal on entity asset.borrower outflow currency USD {
+  schedule every month from 2026-01 to 2026-12
+  amount = 100
+}

@@ -1,0 +1,12 @@
+version 0.1
+model "stream-unknown-category"
+use pack "cre" version "0.1.0"
+time calendar annual from 2026-01 for 3
+entity asset tower : CRE.Asset.RealProperty
+
+// The category names one of the pack's closed set: operating.revenue.other.
+stream cre.other.income on entity asset.tower inflow currency USD {
+  schedule every year from 2026-01 to 2028-01
+  category operating.revenue.other
+  amount = 1000
+}

@@ -1,6 +1,6 @@
 [
   {
-    "code": "EXPR_PARSE",
+    "code": "E3001_EXPR_PARSE_ERROR",
     "severity": "error",
     "message": "unexpected end of expression",
     "file": "model.cfdl",

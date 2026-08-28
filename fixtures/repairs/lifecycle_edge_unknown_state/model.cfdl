@@ -1,0 +1,13 @@
+version 0.1
+model "lifecycle-edge-unknown-state"
+time calendar monthly from 2026-01 for 3
+
+// FIX: the edge's target was the typo 'downtme'; it now names the declared
+// state 'downtime'.
+lifecycle unit {
+  initial leased
+  state leased, downtime
+  leased -> downtime when time.t == 1
+}
+
+entity asset x { lifecycle unit  state leased }

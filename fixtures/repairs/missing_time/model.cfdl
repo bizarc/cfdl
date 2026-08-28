@@ -1,0 +1,10 @@
+version 0.1
+model "missing-time"
+time calendar monthly from 2026-01 for 12
+
+entity asset borrower : Asset.Financial
+
+stream lease.rent on entity asset.borrower {
+  schedule every month from 2026-01 to 2026-12
+  amount = 1000
+}

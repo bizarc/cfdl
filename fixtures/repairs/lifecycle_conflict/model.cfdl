@@ -1,0 +1,11 @@
+version 0.1
+model "lifecycle-conflict"
+use pack "cre" version "0.1.0"
+time calendar monthly from 2026-01 for 3
+
+// FIX: one machine per entity — the type CRE.Asset.Unit already declares the
+// cre.unit lifecycle, so drop the model-declared machine and the binding.
+
+entity asset x : CRE.Asset.Unit {
+  rentable_area = 1
+}

@@ -1,0 +1,12 @@
+version 0.1
+model "schedule-stub-rejected"
+time calendar monthly from 2026-01 for 12
+
+entity asset co : Asset.Financial
+
+// Fix: stub periods are not supported, so the `stub short_front` clause is
+// removed; a partial period would be its own schedule.
+stream co.rent on entity asset.co inflow currency USD {
+  schedule every month from 2026-01 to 2026-12
+  amount = 1000
+}

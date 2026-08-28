@@ -500,6 +500,14 @@ CRE pack codes:
 - `E6012_CRE_EXIT_MISSING_NOI_VALUE`
 - `E6020_CRE_OPS_MISSING_AMOUNT`
 - `E6021_CRE_OPS_INVALID_SCHEDULE`
+- `E6031_CRE_UNIT_INVALID_FREE_RENT` — `free_rent_months` is a whole number of
+  months, 0 or more
+- `E6032_CRE_UNIT_INVALID_PRO_RATA` — `pro_rata_share` is a fraction between 0
+  and 1
+- `E6040_CRE_ROLLOVER_INVALID_PROBABILITY` — `renewal_probability` is a
+  probability between 0 and 1
+- `E6041_CRE_ROLLOVER_INVALID_DOWNTIME` — `downtime_months` is a whole number
+  of months, 0 or more
 - `E6050_CRE_DEBT_MISSING_PRINCIPAL` / `E6051_CRE_DEBT_INVALID_PRINCIPAL` — a
   pair: the first owns absent-or-unparseable, the second parsed-but-not-positive
 - `E6052_CRE_DEBT_MISSING_RATE` / `E6053_CRE_DEBT_INVALID_RATE` — the same pair
@@ -554,6 +562,9 @@ OpCo pack codes:
 - `E7001_OPCO_LINE_MISSING_AMOUNT`
 - `E7002_OPCO_LINE_INVALID_SCHEDULE`
 - `E7003_OPCO_LINE_INVALID_GROWTH`
+- `E7010_OPCO_LINE_AMBIGUOUS_AMOUNT` — a line states both `amount` (per
+  period) and `amount_year` (annual); they would be summed, so stating both is
+  refused
 - `E7025_OPCO_PERPETUITY_RATE_NOT_ABOVE_GROWTH` — a growing perpetuity needs
   `discount_rate` strictly above `growth_rate`. At or below it the denominator
   reaches zero and then goes negative, so the contract would return a huge
@@ -641,7 +652,7 @@ CLI tools SHOULD render diagnostics as:
 ## 10) Golden diagnostics files
 
 For invalid fixtures, store expected diagnostics as:
-- `gold/<fixture>.diag.json`
+- `gold/diag/<fixture>.diag.json`
 
 Rules:
 - Assert `code`, `severity`, `file`, and `span`.

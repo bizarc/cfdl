@@ -1,0 +1,12 @@
+version 0.1
+model "payment-terms-on-date"
+time calendar monthly from 2026-01 for 12
+
+entity asset co : Asset.Financial
+
+// Fix: a one-shot flow states the date the cash moves, so the `net 30`
+// payment terms are dropped from the on-date schedule.
+stream co.fee on entity asset.co outflow currency USD {
+  schedule on 2026-03
+  amount = 500
+}

@@ -2,7 +2,7 @@
   {
     "code": "E5025_TERM_EXPR_INVALID",
     "severity": "error",
-    "message": "Contract 'energy.ppa.plant_a' term 'mwh_year' is an expression that does not compile [EXPR_PARSE]: expected `)`, found end of expression",
+    "message": "Contract 'energy.ppa.plant_a' term 'mwh_year' is an expression that does not compile [E3001_EXPR_PARSE_ERROR]: expected `)`, found end of expression",
     "file": "model.cfdl",
     "span": {
       "start_line": 15,

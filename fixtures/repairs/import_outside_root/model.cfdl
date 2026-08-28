@@ -1,0 +1,6 @@
+version 0.1
+model "import_outside_root"
+time calendar monthly from 2026-01 for 1
+// Fix: the shared module is imported from inside the model root instead of
+// escaping it with '../..'.
+import "outside.cfdl"

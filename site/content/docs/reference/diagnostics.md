@@ -187,7 +187,11 @@ register, so it cannot fall behind the language.
 | `E6011_CRE_EXIT_INVALID_EXIT_CAP` | Pack domain validations |  |
 | `E6012_CRE_EXIT_MISSING_NOI_VALUE` | Pack domain validations |  |
 | `E6020_CRE_OPS_MISSING_AMOUNT` | Pack domain validations |  |
-| `E6021_CRE_OPS_INVALID_SCHEDULE` | Pack domain validations | pair: the first owns absent-or-unparseable, the second parsed-but-not-positive for the nominal annual rate |
+| `E6021_CRE_OPS_INVALID_SCHEDULE` | Pack domain validations |  |
+| `E6031_CRE_UNIT_INVALID_FREE_RENT` | Pack domain validations | `free_rent_months` is a whole number of months, 0 or more |
+| `E6032_CRE_UNIT_INVALID_PRO_RATA` | Pack domain validations | `pro_rata_share` is a fraction between 0 and 1 |
+| `E6040_CRE_ROLLOVER_INVALID_PROBABILITY` | Pack domain validations | `renewal_probability` is a probability between 0 and 1 |
+| `E6041_CRE_ROLLOVER_INVALID_DOWNTIME` | Pack domain validations | `downtime_months` is a whole number of months, 0 or more pair: the first owns absent-or-unparseable, the second parsed-but-not-positive for the nominal annual rate |
 | `E6054_CRE_DEBT_INVALID_AMORT` | Pack domain validations | `amort_months` strikes the payment and is normally longer than the loan's term |
 | `E6055_CRE_DEBT_INVALID_IO_MONTHS` | Pack domain validations | whole months, 0 or more |
 | `E6056_CRE_DEBT_INVALID_BALLOON_FLAG` | Pack domain validations | `balloon_at_maturity` is 0 or 1 |
@@ -205,6 +209,7 @@ register, so it cannot fall behind the language.
 | `E7001_OPCO_LINE_MISSING_AMOUNT` | Pack domain validations |  |
 | `E7002_OPCO_LINE_INVALID_SCHEDULE` | Pack domain validations |  |
 | `E7003_OPCO_LINE_INVALID_GROWTH` | Pack domain validations |  |
+| `E7010_OPCO_LINE_AMBIGUOUS_AMOUNT` | Pack domain validations | a line states both `amount` (per period) and `amount_year` (annual); they would be summed, so stating both is refused |
 | `E7025_OPCO_PERPETUITY_RATE_NOT_ABOVE_GROWTH` | Pack domain validations | a growing perpetuity needs `discount_rate` strictly above `growth_rate`. At or below it the denominator reaches zero and then goes negative, so the contract would return a huge value and then a negative one with nothing to say the model had stopped meaning anything. |
 | `E7026_OPCO_PERPETUITY_MISSING_BASE_VALUE` | Pack domain validations | the terminal-period flow the perpetuity is struck on. |
 | `E7027_OPCO_PERPETUITY_MISSING_DISCOUNT_RATE` | Pack domain validations | the terminal capitalization rate, stated on the contract rather than taken from the run's discount rate. |
@@ -244,7 +249,7 @@ register, so it cannot fall behind the language.
 | `E9019_CREDIT_INVALID_AGE_MONTHS` | Pack domain validations | `age_months` is the pool's weighted average age at closing. PSA, SDA and the ABS model are all indexed from ORIGINATION, so a seasoned pool starts part-way up the ramp; leaving it at the default 0 on a seasoned pool understates prepayment. Non-negative integer. |
 | `E9020_CREDIT_RATE_FLOOR_ABOVE_CAP` | Pack domain validations |  |
 
-*192 codes.*
+*197 codes.*
 <!-- /cfdl:generated diagnostics-catalog -->
 
 ## Related

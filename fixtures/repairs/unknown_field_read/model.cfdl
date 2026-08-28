@@ -1,0 +1,15 @@
+version 0.1
+model "unknown-field-read"
+time calendar annual from 2026-01 for 3
+
+// Fix: the stream reads the field the entity declares — `balance`, not the
+// typo `blance`.
+
+entity asset tlb : Asset.Financial {
+  balance init 275.0 next max(0.0, prev - 25.0)
+}
+
+stream credit.repay on entity asset.tlb outflow currency USD {
+  schedule every year from 2027-01 to 2028-01
+  amount = asset.tlb.balance
+}

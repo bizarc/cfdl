@@ -1,0 +1,7 @@
+version 0.1
+// FIX: close the model-name string literal (version is a bare number, and the
+// model gains an entity so it compiles past the lexer).
+model "lex_unterminated"
+time calendar monthly from 2026-01 for 1
+
+entity asset borrower : Asset.Financial

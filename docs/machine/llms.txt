@@ -1,0 +1,74 @@
+# CFDL
+
+> CFDL (Cash Flow Domain Language) is a declarative, source-available language
+> for financial cash-flow models: a deterministic compile -> run cycle,
+> structured diagnostics, domain packs, and an engine graded against external
+> reference benchmarks. Contracts lower to streams — a contract declaration is
+> vocabulary a pack's lowering rule turns into streams, and streams are the
+> cash.
+
+Version 0.7.0. Machine artifacts on this site are generated from the
+repository's normative sources under CI; if this file and a doc page ever
+disagree, the repository is the source of truth.
+
+## Machine bundle
+
+- [Machine docs bundle](https://cfdl.dev/machine/cfdl-machine-docs.md): the language
+  spec, full EBNF grammar, expression environment, IR and results schemas,
+  pack interface, diagnostics catalog, controlled-English authoring contract,
+  glossary, terminology register, and pack rosters, in one versioned document
+- [Diagnostics repair catalog](https://cfdl.dev/machine/diagnostics-repairs.md): per
+  diagnostic code, a minimal failing example and (where recorded) its minimal
+  compile-verified fix
+- [Valid examples corpus](https://cfdl.dev/machine/valid-examples.md): every golden
+  fixture model — single-purpose, compiling, byte-asserted in CI; what right
+  looks like
+- [llms-full.txt](https://cfdl.dev/llms-full.txt): the bundle plus every course
+  chapter, for consumers that want a single document
+
+## Specification
+
+- [Language specification](https://cfdl.dev/docs/specification/language-spec)
+- [Grammar](https://cfdl.dev/docs/specification/grammar) — full EBNF at
+  [https://cfdl.dev/schemas/CFDL_v0_1_Grammar.ebnf](https://cfdl.dev/schemas/CFDL_v0_1_Grammar.ebnf)
+- [Expression environment](https://cfdl.dev/docs/specification/expression-environment)
+- [Diagnostics](https://cfdl.dev/docs/specification/diagnostics)
+- [IR schema](https://cfdl.dev/docs/specification/ir-schema) — JSON Schema at
+  [https://cfdl.dev/schemas/CFDL_v0_1_IR.schema.json](https://cfdl.dev/schemas/CFDL_v0_1_IR.schema.json)
+- [Results schema](https://cfdl.dev/docs/specification/results-schema) — JSON Schema at
+  [https://cfdl.dev/schemas/CFDL_v0_1_Results.schema.json](https://cfdl.dev/schemas/CFDL_v0_1_Results.schema.json)
+- [Pack interface](https://cfdl.dev/docs/specification/pack-interface)
+- [Glossary](https://cfdl.dev/docs/glossary)
+
+## Optional
+
+The CFDL course — pedagogical, restates the specification narratively:
+
+- [Why a language?](https://learn.cfdl.dev/chapters/why-a-language): What a cash-flow model really is, where spreadsheets stop being able to say it, and what writing the model down as a language buys you.
+- [The object model](https://learn.cfdl.dev/chapters/the-object-model): Time as the spine, entities as the cast, streams as the atoms of cash — the three ideas every CFDL model is made of.
+- [Reading results](https://learn.cfdl.dev/chapters/reading-results): What a run produces, how to interrogate it, and the discipline of matching a source's method rather than its answer.
+- [Streams and schedules](https://learn.cfdl.dev/chapters/streams-and-schedules): The full schedule sub-language: cadences, day rules, within-period placement, business-day conventions, exceptions, and payment terms — where cash timing becomes precise.
+- [Expressions](https://learn.cfdl.dev/chapters/expressions): The amount language: evaluation environment, decimal arithmetic, the function library from rounding to time-value-of-money, and the discipline of expressions you can read aloud.
+- [Assumptions and inputs](https://learn.cfdl.dev/chapters/assumptions-and-inputs): Where numbers belong: declared assumptions, run-time parameters and observations, and the discipline that keeps the claim separate from the question.
+- [Curves](https://learn.cfdl.dev/chapters/curves): Dated series as first-class inputs: rate curves, price decks, escalation paths — and the line between a curve, an assumption, and an observation.
+- [Fields and recurrence](https://learn.cfdl.dev/chapters/fields-and-recurrence): Values that remember, owned by the things they describe: entity fields, init/next rules, the prev discipline that makes cycles impossible, and the balances every real model carries.
+- [Growth, ramps, and guards](https://learn.cfdl.dev/chapters/growth-ramps-and-guards): The idiom kit: compounding and stepping, lease-up ramps, active-when guards, and phase gating — the five patterns that assemble into most real models.
+- [Events and options](https://learn.cfdl.dev/chapters/events-and-options): Discrete change and contingent claims: latch semantics, lifecycle fields, rule-based exercise, and why the model's turning points deserve their own construct.
+- [Waterfalls](https://learn.cfdl.dev/chapters/waterfalls): Priority of payments as a first-class construct: pots, steps, owed and paid, the non-negative pot guarantee, and distribution structures written the way the documents state them.
+- [Uncertainty and Monte Carlo](https://learn.cfdl.dev/chapters/uncertainty-and-monte-carlo): From point estimates to distributions: the four families, seeded reproducible trials, reading percentiles, and the per-trial branching that captures real deal risk.
+- [Multi-file models and style](https://learn.cfdl.dev/chapters/multi-file-models-and-style): Organizing a real model: the import graph, a file layout that mirrors review, naming as taxonomy, and a style guide for models that other people read.
+- [Under the hood](https://learn.cfdl.dev/chapters/under-the-hood): Deep dive: the compilation pipeline stage by stage, the IR as the model's contract, deterministic evaluation order, and how series reads evaluate in dependency-ordered waves.
+- [Diagnostics as a discipline](https://learn.cfdl.dev/chapters/diagnostics-as-a-discipline): Deep dive: the anatomy of a refusal, the code taxonomy mapped to the pipeline, and debugging as a five-minute method instead of an afternoon.
+- [Choosing grain](https://learn.cfdl.dev/chapters/choosing-grain): The first modeling decision and the hardest to reverse: timeline grain, entity grain, and what each choice silently asserts about the deal.
+- [Choosing the construct](https://learn.cfdl.dev/chapters/choosing-constructs): The construct-choice framework: one question that sorts every claim, the paired examples that calibrate it, and the smells that say a claim is in the wrong construct.
+- [Finance semantics the language encodes](https://learn.cfdl.dev/chapters/finance-semantics): Day counts, rate conversions, prepayment curves, depreciation tables, exit conventions, and coverage tests — the finance embedded in the machinery, made explicit once.
+- [Packs: when and why](https://learn.cfdl.dev/chapters/packs-when-and-why): What an industry pack adds — typed vocabulary, contracts, domain validation, statements — when packless is the better choice, and how to migrate without moving a dollar.
+- [The capstone: Harbor Point](https://learn.cfdl.dev/chapters/the-deal-and-the-skeleton): One deal, carried to the end of the course: the case, the two-grain declaration, and the skeleton every later chapter builds on.
+- [Capstone: revenue](https://learn.cfdl.dev/chapters/capstone-revenue): The rent roll — an anchor lease with lease-up, a unit-grain retail lease with incentives and recoveries, overage rent, and the deductions that make NOI mean something.
+- [Capstone: costs and financing](https://learn.cfdl.dev/chapters/capstone-costs-and-financing): The capital stack — a construction facility built from a balance field and prev reads, its takeout, and the interest-only permanent loan with the DSCR it must clear.
+- [Capstone: exit and returns](https://learn.cfdl.dev/chapters/capstone-exit-and-returns): The reversion — a cap-rate sale with its window named, the loan payoff against proceeds, and the levered returns the whole deal has been building toward.
+- [Capstone: risk and the split](https://learn.cfdl.dev/chapters/capstone-risk): The finished deal — distributed assumptions deferred into terms, a downside scenario, a thousand seeded trials, and the equity waterfall that divides what the exit brings.
+- [Appendix A: language quick reference](https://learn.cfdl.dev/chapters/language-quick-reference): The whole language on two pages — every statement form, the schedule sub-language, the expression environment, and the run configuration.
+- [Appendix B: CRE pack term tables](https://learn.cfdl.dev/chapters/cre-pack-term-tables): Every CRE contract type with its terms, requirements, defaults, and the streams its lowering produces — the working reference for the capstone's domain.
+- [Appendix C: instructor notes](https://learn.cfdl.dev/chapters/instructor-notes): Teaching the course: session structure, per-chapter objectives and discussion prompts, problem-set variants, and how to grade with the engine.
+- [Cash, state, and the machine](https://learn.cfdl.dev/chapters/cash-state-and-the-machine): The feedback the course has been missing: guards that read settled cash, the lifecycle machine whose edges replace the latch, the account that carries cash between distributions, and schedules anchored to a state entry.

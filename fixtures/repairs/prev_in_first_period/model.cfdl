@@ -1,0 +1,15 @@
+version 0.1
+model "prev-in-first-period"
+time calendar annual from 2026-01 for 4
+
+// The fix: start the stream one period later, as a debt schedule does —
+// the first close exists by the time the stream first reads it.
+
+entity asset tlb : Asset.Financial {
+  balance init 275.0 next max(0.0, prev - 25.0)
+}
+
+stream opco.interest on entity asset.tlb outflow currency USD {
+  schedule every year from 2027-01 to 2029-01
+  amount = (prev.asset.tlb.balance + asset.tlb.balance) / 2.0 * 0.06
+}

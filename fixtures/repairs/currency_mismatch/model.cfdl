@@ -1,0 +1,17 @@
+version 0.1
+model "currency-mismatch" currency INR
+time calendar monthly from 2026-01 for 6
+
+entity asset plant : Asset.Real
+
+stream plant.revenue on entity asset.plant inflow currency INR {
+  schedule every month from 2026-01 to 2026-06
+  amount = 100000
+}
+
+// Fix: the fee stream is declared in INR, matching the model's reporting
+// currency (its amount now states the INR value directly).
+stream plant.fee on entity asset.plant outflow currency INR {
+  schedule every month from 2026-01 to 2026-06
+  amount = 500
+}

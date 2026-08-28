@@ -1927,3 +1927,38 @@ entity-relative, run on every arrival whatever took it, under the existing
 event-`set` write law and the guard's own environment — no new cycle
 risk. Migration is measured, not assumed: a corpus audit counts
 re-rising conditions per event before the goldens are re-blessed.
+
+### 7.80 121 registered diagnostic codes have no minimal failing example
+
+The machine docs work (docs/32 Phase 2) measured the register: docs/08 §7
+names 197 codes, and only 71 appear in `fixtures/invalid/` + `gold/diag/`.
+The repair catalog (`docs/machine/diagnostics-repairs.md`) lists the
+uncovered codes by name, so this entry is a work queue, not a survey: each
+item is one minimal failing fixture, its blessed golden, and a
+compile-verified repair in `fixtures/repairs/`. Retired codes (§8) are
+exempt. The catalog's coverage line is the progress meter.
+
+### 7.81 Runtime expression codes are unregistered and load-bearing
+
+`EXPR_EVAL` and `EXPR_UNKNOWN_NAME` are runtime warning codes emitted by
+`cfdl-expr`, documented in docs/03 §5, present in results goldens — and
+absent from the docs/08 register, whose `E3002`–`E3004` are registered but
+never emitted. The engine string-matches `EXPR_UNKNOWN_NAME` in warnings
+(`crates/cfdl-engine/src/lib.rs`), so renaming is not a find-replace: it
+needs a deliberate pass that reconciles the register with the emitters,
+re-blesses the results goldens, and decides whether run-time warning codes
+belong in docs/08 at all or in docs/06 beside the results contract.
+(`EXPR_PARSE` was the compile-time member of this family and is fixed:
+it now emits its registered name `E3001_EXPR_PARSE_ERROR`.)
+
+### 7.82 CFDL-CE tiers are prose; nothing asserts the estate maps to them
+
+docs/22 §2 assigns every published surface to a tier (A–D) with path
+globs written in a markdown table. No tool parses that table, so a new
+published file lands in no tier and no rule applies to it — the estate's
+coverage is whatever `check-site-voice.py` happens to glob. Promoting the
+tier table to a machine-readable form (or parsing it as written) and
+asserting every published path matches exactly one tier would close the
+loop the authoring contract needs. (`ste-allow:` rule ids are now
+validated against §3's rule tables; the tier mapping is the remaining
+unenforced half.)

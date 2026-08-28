@@ -1,0 +1,16 @@
+version 0.1
+model "pack-reserved-term-prefix"
+use pack "testpack" version "0.1.0"
+time calendar monthly from 2026-01 for 12
+
+entity asset borrower : Asset.Financial
+
+// FIX: 'model.' is reserved for cadence placeholders, so the term
+// `model.periods_per_year` is dropped — it would never be read.
+contract test.cadence_probe on entity asset.borrower {
+  term 2026-01..2026-12
+  terms {
+    amount_year = 120000
+    term_months = 12
+  }
+}
