@@ -26,12 +26,14 @@ use cfdl_mcp::{CfdlMcp, Defaults};
 struct Options {
     defaults: Defaults,
     http: Option<String>,
+    allowed_hosts: Vec<String>,
 }
 
 fn parse_args() -> Result<Options, String> {
     let mut options = Options {
         defaults: Defaults::from_root(&PathBuf::from(".")),
         http: None,
+        allowed_hosts: Vec::new(),
     };
     let mut args = std::env::args().skip(1);
     while let Some(flag) = args.next() {
@@ -46,12 +48,16 @@ fn parse_args() -> Result<Options, String> {
                 options.defaults.benchmarks_dir = Some(PathBuf::from(value("--benchmarks")?))
             }
             "--http" => options.http = Some(value("--http")?),
+            "--allowed-host" => options.allowed_hosts.push(value("--allowed-host")?),
             "--help" | "-h" => {
                 eprintln!(
                     "cfdl-mcp [--repo <dir>] [--packs <dir>] [--benchmarks <dir>] [--http <addr>]\n\
+                     \x20        [--allowed-host <host> ...]\n\
                      MCP server exposing compile, run, diff, explain, lookup, skeleton.\n\
                      Default transport is stdio; --http serves Streamable HTTP at /mcp\n\
-                     (set CFDL_MCP_TOKEN to require `Authorization: Bearer <token>`)."
+                     (set CFDL_MCP_TOKEN to require `Authorization: Bearer <token>`).\n\
+                     Host validation allows loopback only by default; a public deployment\n\
+                     names its own hostname(s) with --allowed-host."
                 );
                 std::process::exit(0);
             }
@@ -91,11 +97,19 @@ async fn require_bearer(
 
 use axum::response::IntoResponse;
 
-async fn serve_http(addr: &str, defaults: Defaults) -> anyhow::Result<()> {
+async fn serve_http(
+    addr: &str,
+    defaults: Defaults,
+    allowed_hosts: Vec<String>,
+) -> anyhow::Result<()> {
+    // Loopback-only by default (DNS-rebinding protection); a public
+    // deployment names its own hostnames with --allowed-host.
+    let mut config = StreamableHttpServerConfig::default();
+    config.allowed_hosts = allowed_hosts;
     let service = StreamableHttpService::new(
         move || Ok(CfdlMcp::new(defaults.clone())),
         Arc::new(LocalSessionManager::default()),
-        StreamableHttpServerConfig::default(),
+        config,
     );
     let app = axum::Router::new()
         .nest_service("/mcp", service)
@@ -118,7 +132,7 @@ async fn serve_http(addr: &str, defaults: Defaults) -> anyhow::Result<()> {
 async fn main() -> anyhow::Result<()> {
     let options = parse_args().map_err(|err| anyhow::anyhow!(err))?;
     match options.http {
-        Some(addr) => serve_http(&addr, options.defaults).await,
+        Some(addr) => serve_http(&addr, options.defaults, options.allowed_hosts).await,
         None => {
             let service = CfdlMcp::new(options.defaults)
                 .serve(rmcp::transport::stdio())

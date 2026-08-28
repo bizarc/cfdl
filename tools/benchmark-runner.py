@@ -71,7 +71,7 @@ def resolve_columns(fieldnames, series, failures):
     fields = list(fieldnames or [])
     index_col = next((c for c in ("period", "year") if c in fields), None)
     if index_col is None:
-        failures.append("expected.csv: need a 'period' or 'year' column")
+        failures.append(("expected.csv", "expected.csv: need a 'period' or 'year' column"))
         return None
 
     columns = []
@@ -90,16 +90,31 @@ def resolve_columns(fieldnames, series, failures):
         else:
             key, label = f"stream.{column}", column
         if key not in series:
-            failures.append(f"expected.csv column {column!r}: no series {key!r} in results")
+            failures.append((column, f"expected.csv column {column!r}: no series {key!r} in results"))
             continue
         columns.append((column, key, label))
     if not columns:
-        failures.append("expected.csv: no columns to check")
+        failures.append(("expected.csv", "expected.csv: no columns to check"))
         return None
     return index_col, columns
 
 
-def run_case(case_dir: pathlib.Path) -> list[str]:
+def run_case(case_dir: pathlib.Path, structured: bool = False):
+    """Grade one case. Default: the prose failure lines `make bench` prints.
+
+    `structured=True` returns (group, text) pairs, where group is the asserted
+    unit the failure belongs to — a CSV column, a metric key, `name.metric`
+    for a scenario, `key.aggregate` for Monte Carlo — so a consumer (the
+    agent-eval harness) can count missed assertion groups without parsing
+    prose. The prose is unchanged either way.
+    """
+    failures = _run_case_structured(case_dir)
+    if structured:
+        return failures
+    return [text for _, text in failures]
+
+
+def _run_case_structured(case_dir: pathlib.Path) -> list[tuple[str, str]]:
     failures = []
     case = tomllib.loads((case_dir / "case.toml").read_text(encoding="utf-8"))
 
@@ -115,11 +130,12 @@ def run_case(case_dir: pathlib.Path) -> list[str]:
     # as a stale page.
     summary = case.get("summary", "").strip()
     if not summary:
-        failures.append(
+        failures.append((
+            "case.toml",
             f"{case_dir.name}: case.toml has no `summary`. Add one sentence "
             f"describing the deal — it is what the docs page shows. Comments in "
-            f"this file are notes for maintainers and are not published."
-        )
+            f"this file are notes for maintainers and are not published.",
+        ))
     with tempfile.TemporaryDirectory() as tmp:
         ir = pathlib.Path(tmp) / "model.ir.json"
         results_path = pathlib.Path(tmp) / "results.json"
@@ -143,7 +159,7 @@ def run_case(case_dir: pathlib.Path) -> list[str]:
         results = json.loads(results_path.read_text(encoding="utf-8"))
 
     if results.get("warnings"):
-        failures.append(f"engine warnings: {results['warnings'][:3]}")
+        failures.append(("engine.warnings", f"engine warnings: {results['warnings'][:3]}"))
 
     series = results["deterministic"]["series"]
     # One tolerance cannot serve a whole case. HUD publishes money to whole
@@ -170,31 +186,34 @@ def run_case(case_dir: pathlib.Path) -> list[str]:
                     continue
                 actual = values[key]
                 if t >= len(actual):
-                    failures.append(
-                        f"{label} period {t}: beyond the {len(actual)}-period timeline"
-                    )
+                    failures.append((
+                        column,
+                        f"{label} period {t}: beyond the {len(actual)}-period timeline",
+                    ))
                     return failures
                 got, expected = actual[t], float(cell)
                 if got is None:
                     # The CSV states a value the results say is undefined. A
                     # blank cell means "not asserted"; a stated one means the
                     # case expected a number and did not get one.
-                    failures.append(
+                    failures.append((
+                        column,
                         f"{label} period {t}: series is null (undefined here) "
-                        f"but {expected:.6f} was expected"
-                    )
+                        f"but {expected:.6f} was expected",
+                    ))
                     if len(failures) > 5:
-                        failures.append("... (truncated)")
+                        failures.append(("meta", "... (truncated)"))
                         return failures
                     continue
                 tol = per_column.get(column, default_tolerance)
                 if abs(got - expected) > tol:
-                    failures.append(
+                    failures.append((
+                        column,
                         f"{label} period {t}: {got:.6f} vs expected {expected:.6f} "
-                        f"(|diff| {abs(got - expected):.6f} > {tol})"
-                    )
+                        f"(|diff| {abs(got - expected):.6f} > {tol})",
+                    ))
                     if len(failures) > 5:
-                        failures.append("... (truncated)")
+                        failures.append(("meta", "... (truncated)"))
                         return failures
 
     # Scenario metrics, when the case declares them. A scenario is a full
@@ -210,18 +229,25 @@ def run_case(case_dir: pathlib.Path) -> list[str]:
         expected_scenarios = json.loads(expected_scenarios_path.read_text(encoding="utf-8"))
         for name, wanted in expected_scenarios.items():
             if name not in summaries:
-                failures.append(f"scenario {name!r}: not in results")
+                # One entry per asserted metric: a missing scenario misses all
+                # of its assertions, not one meta-group.
+                for key in wanted:
+                    failures.append((f"{name}.{key}", f"scenario {name!r}: not in results"))
                 continue
             for key, spec in wanted.items():
                 if key not in summaries[name]:
-                    failures.append(f"scenario {name}: metric {key} missing from results")
+                    failures.append((
+                        f"{name}.{key}",
+                        f"scenario {name}: metric {key} missing from results",
+                    ))
                     continue
                 got = scalar(summaries[name][key])
                 if abs(got - spec["value"]) > spec["tolerance"]:
-                    failures.append(
+                    failures.append((
+                        f"{name}.{key}",
                         f"scenario {name} metric {key}: {got} vs expected "
-                        f"{spec['value']} (tolerance {spec['tolerance']})"
-                    )
+                        f"{spec['value']} (tolerance {spec['tolerance']})",
+                    ))
 
     # Monte Carlo aggregates, when the case declares them. A stochastic case
     # asserts the SHAPE of its distribution -- mean, median, spread, bounds --
@@ -234,25 +260,28 @@ def run_case(case_dir: pathlib.Path) -> list[str]:
     if expected_mc_path.exists():
         mc = results.get("monte_carlo") or {}
         if mc.get("status") != "ok":
-            failures.append(f"monte carlo: run status {mc.get('status')!r}")
+            failures.append(("monte_carlo.status", f"monte carlo: run status {mc.get('status')!r}"))
         mc_metrics = mc.get("metrics") or {}
         expected_mc = json.loads(expected_mc_path.read_text(encoding="utf-8"))
         for key, wanted in expected_mc.items():
             if key not in mc_metrics:
-                failures.append(f"monte carlo metric {key}: missing from results")
+                for agg in wanted:
+                    failures.append((f"{key}.{agg}", f"monte carlo metric {key}: missing from results"))
                 continue
             for agg, spec in wanted.items():
                 if agg not in mc_metrics[key]:
-                    failures.append(
-                        f"monte carlo {key}: aggregate {agg!r} missing from results"
-                    )
+                    failures.append((
+                        f"{key}.{agg}",
+                        f"monte carlo {key}: aggregate {agg!r} missing from results",
+                    ))
                     continue
                 got = scalar(mc_metrics[key][agg])
                 if abs(got - spec["value"]) > spec["tolerance"]:
-                    failures.append(
+                    failures.append((
+                        f"{key}.{agg}",
                         f"monte carlo {key} {agg}: {got} vs expected "
-                        f"{spec['value']} (tolerance {spec['tolerance']})"
-                    )
+                        f"{spec['value']} (tolerance {spec['tolerance']})",
+                    ))
 
     metrics = dict(results["deterministic"]["metrics"])
     domain = results.get("domain_metrics") or {}
@@ -260,14 +289,15 @@ def run_case(case_dir: pathlib.Path) -> list[str]:
     expected_metrics = json.loads((case_dir / "expected_metrics.json").read_text(encoding="utf-8"))
     for key, spec in expected_metrics.items():
         if key not in metrics:
-            failures.append(f"metric {key}: missing from results")
+            failures.append((key, f"metric {key}: missing from results"))
             continue
         got = scalar(metrics[key])
         if abs(got - spec["value"]) > spec["tolerance"]:
-            failures.append(
+            failures.append((
+                key,
                 f"metric {key}: {got} vs expected {spec['value']} "
-                f"(tolerance {spec['tolerance']})"
-            )
+                f"(tolerance {spec['tolerance']})",
+            ))
     return failures
 
 

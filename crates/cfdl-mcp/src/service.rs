@@ -13,8 +13,10 @@ use crate::tools::{self, Defaults};
 const INSTRUCTIONS: &str =
     "CFDL is a declarative cash-flow modeling language with a deterministic \
 compile -> run cycle and structured diagnostics. The authoring loop: `skeleton` (or `lookup`) to \
-start from a valid model, `compile` to get diagnostics, `run` to get results, `diff` to compare \
-against expectations, `explain` to trace any number to the journal entries that produced it. \
+start from a valid model, `compile` to get diagnostics, `run` to get results, `explain` to trace \
+any number to the journal entries that produced it — and, when expectation files are available to \
+you, `diff` to compare results against them (some deployments withhold `diff`; the loop is \
+complete without it). \
 Diagnostics and diff failures are data for repair, not errors. The evaluation model: a CONTRACT \
 declaration (`contract <pack>.<type>.<instance> on entity ...`) LOWERS to streams through its \
 pack's lowering rule — contracts are vocabulary, streams are the cash; streams evaluate first on \

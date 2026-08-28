@@ -282,25 +282,29 @@ def grade_repair(task: dict, submission: dict) -> dict:
     }
 
 
-def asserted_groups(case_dir: pathlib.Path) -> int:
-    """How many independent assertion groups the case carries: each
-    expected.csv column, each metric, each scenario metric, each MC aggregate."""
-    groups = 0
+def asserted_labels(case_dir: pathlib.Path) -> set[str]:
+    """The independent assertion groups a case carries, by the same labels
+    the benchmark runner's structured failures use: each expected.csv column,
+    each metric key, `name.metric` per scenario, `key.aggregate` per Monte
+    Carlo assertion."""
+    labels: set[str] = set()
     csv_path = case_dir / "expected.csv"
     if csv_path.exists():
         header = csv_path.read_text(encoding="utf-8").splitlines()[0]
-        groups += sum(
-            1 for c in header.split(",") if c.strip() not in ("period", "year")
-        )
-    for name in ("expected_metrics.json", "expected_scenarios.json", "expected_monte_carlo.json"):
+        labels |= {
+            c.strip() for c in header.split(",") if c.strip() not in ("period", "year")
+        }
+    metrics_path = case_dir / "expected_metrics.json"
+    if metrics_path.exists():
+        labels |= set(json.loads(metrics_path.read_text(encoding="utf-8")))
+    for name in ("expected_scenarios.json", "expected_monte_carlo.json"):
         path = case_dir / name
         if path.exists():
             data = json.loads(path.read_text(encoding="utf-8"))
-            if name == "expected_metrics.json":
-                groups += len(data)
-            else:
-                groups += sum(len(v) for v in data.values())
-    return groups
+            labels |= {
+                f"{outer}.{inner}" for outer, wanted in data.items() for inner in wanted
+            }
+    return labels
 
 
 def grade_transcribe(task: dict, submission: dict) -> dict:
@@ -336,7 +340,7 @@ def grade_transcribe(task: dict, submission: dict) -> dict:
                     src.read_text(encoding="utf-8"), encoding="utf-8"
                 )
         try:
-            failures = benchmark_runner.run_case(case_dir)
+            failures = benchmark_runner.run_case(case_dir, structured=True)
         except subprocess.CalledProcessError:
             return {
                 "compiles": True,
@@ -345,17 +349,18 @@ def grade_transcribe(task: dict, submission: dict) -> dict:
                 "partial": 0.0,
                 "failures": ["run failed"],
             }
-    total = asserted_groups(source_case)
-    # Partial credit by asserted group: a column or metric with any failure
-    # counts as missed. Failure lines open with the group's label.
-    missed = len({line.split(" period ")[0].split(":")[0] for line in failures})
-    matched = max(total - missed, 0)
+    labels = asserted_labels(source_case)
+    # Partial credit by asserted group, on the runner's structured labels —
+    # no prose parsing. A group with any failure counts as missed; meta
+    # failures (warnings, resolution) fail the match without eating a group.
+    missed = len({group for group, _ in failures} & labels)
+    matched = max(len(labels) - missed, 0)
     return {
         "compiles": True,
         "runs": True,
         "matches": not failures,
-        "partial": round(matched / total, 4) if total else 0.0,
-        "failures": failures,
+        "partial": round(matched / len(labels), 4) if labels else 0.0,
+        "failures": [text for _, text in failures],
     }
 
 
@@ -387,7 +392,7 @@ def grade_extend(task: dict, submission: dict) -> dict:
         )
         (case_dir / "expected.csv").write_text("period\n", encoding="utf-8")
         try:
-            failures = benchmark_runner.run_case(case_dir)
+            failures = benchmark_runner.run_case(case_dir, structured=True)
         except subprocess.CalledProcessError:
             return {
                 "compiles": True,
@@ -396,14 +401,14 @@ def grade_extend(task: dict, submission: dict) -> dict:
                 "partial": 0.0,
                 "failures": ["run failed"],
             }
-    total = len(task["_assertions"])
-    missed = len({line.split(":")[0] for line in failures})
+    labels = set(task["_assertions"])
+    missed = len({group for group, _ in failures} & labels)
     return {
         "compiles": True,
         "runs": True,
         "matches": not failures,
-        "partial": round(max(total - missed, 0) / total, 4) if total else 0.0,
-        "failures": failures,
+        "partial": round(max(len(labels) - missed, 0) / len(labels), 4) if labels else 0.0,
+        "failures": [text for _, text in failures],
     }
 
 
