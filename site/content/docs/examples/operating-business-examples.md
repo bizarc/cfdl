@@ -22,11 +22,11 @@ Operating Business (OpCo) examples show revenue, opex, working capital, and exit
 Each example directory includes a `run.json` for deterministic runs. Example:
 
 ```bash
-./target/debug/cfdl compile examples/opco_basic --out /tmp/opco.ir.json --packs packs
-./target/debug/cfdl run /tmp/opco.ir.json --out /tmp/opco.results.json --config examples/opco_basic/run.json --packs packs
+cfdl compile examples/opco_basic --out /tmp/opco.ir.json --packs packs
+cfdl run /tmp/opco.ir.json --out /tmp/opco.results.json --config examples/opco_basic/run.json --packs packs
 ```
 
 ## Structure
 
 - **Entities:** Examples use `operating business`; multi-entity (e.g. company + LOBs) can be added when needed.
-- **Pack contracts:** `opco_revenue_line`, `opco_opex_line`, `opco_working_capital`, `opco_exit_multiple` — see [Packs](/docs/packs) and [the OpCo pack guide](/docs/packs/opco).
+- **Pack contracts:** `opco.revenue_line`, `opco.opex_line`, `opco.working_capital`, `opco.exit_multiple` — see [Packs](/docs/packs) and [the OpCo pack guide](/docs/packs/opco).

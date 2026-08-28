@@ -52,6 +52,32 @@ amount = if(inputs.renewal_draw < 0.70, renewal_rent, market_rent)
 An expected-value blend hides the bimodal shape of outcomes like lease
 rollover; per-trial branching preserves it.
 
+## Dispersion inside one period: quantiles
+
+Distributions spread a value *across trials*. Some economics depend on the
+spread *within a single period* — a battery earns the gap between a month's
+most and least expensive hours; overage rent is an option on sales above a
+breakpoint. A `quantile` declares that within-period distribution as a value
+per cumulative share:
+
+```cfdl
+quantile prices linear {
+  0.00:  11.0
+  0.50:  28.0
+  0.98: 340.0
+  1.00: 512.0
+}
+```
+
+Three functions read it: `quantile_mean("prices", 0.98, 1.0)` averages a
+slice (the top 2% of hours), `quantile_at` reads one point, and
+`quantile_of` inverts it — the share of hours below a threshold. A nonlinear
+payoff evaluated at a point estimate is wrong even when the point estimate
+is right; when the payoff bends, feed it the distribution it bends over. The
+two compose: the quantile carries the within-period shape, and a distributed
+assumption multiplying the read carries the across-trials uncertainty about
+its level.
+
 ## What results carry
 
 Monte Carlo results summarize each metric with `mean`, `stdev`, `min`/`max`,

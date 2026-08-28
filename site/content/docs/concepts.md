@@ -42,18 +42,28 @@ Both documents have published JSON Schemas — see the
 - **Entities** — the things a model is about. An `asset` produces or consumes
   cash (`entity asset tower : CRE.Asset.RealProperty`); a `party` contracts,
   owns or lends (`entity party acme : CRE.Party.Tenant`). A type is checked
-  against the active pack's vocabulary, and may carry a lifecycle — a closed set
-  of states the asset moves through. See [the object
+  against the active pack's vocabulary. See [the object
   model](/docs/object-model).
+- **Lifecycles** — a declared finite state machine: enumerated states and
+  guarded edges, evaluated each period the entity is in the edge's from-state.
+  A unit goes delinquent because last period's rent came in short, and cures
+  when it resumes — the topology walked as often as the deal's history walks
+  it. A model declares one with a `lifecycle` block, or a pack declares it on
+  the type.
 - **Streams** — dated cash flow series with a schedule and an amount
   expression. The lowest-level building block.
 - **Contracts** — pack-templated bundles of streams declared with business
   terms (`contract cre.lease { terms { base_rent = 25000 } }`). The compiler
   expands them into streams using the pack's rules.
-- **Events and options** — an event is a condition and a state change
+- **Events and options** — an event is a condition and a one-time change
   (`event expiry when time.t >= 24 { set entity asset.suite.status = "downtime" }`);
-  an option is a contract with an exercise condition and a payoff. Both are
-  recorded in results as a transition log.
+  an option is a contract with an exercise condition and a payoff. A regime
+  that returns is a lifecycle edge, not an event. Transitions from all three
+  are recorded in results as a transition log.
+- **Accounts** — declared cash locations whose balances accumulate across
+  periods: a reserve funded to a target, proceeds waiting for a quarterly
+  distribution date. A waterfall draws one with `from <account>`, a step pays
+  into one, and logic reads its settled balance as `prev.<account>`.
 - **Assumptions** — named inputs, fixed (`assume rate = 0.10`) or stochastic
   (`assume growth ~ Normal(mean=0.02, stdev=0.01)`), referenced from
   expressions as `inputs.<name>`.

@@ -68,6 +68,18 @@ schedule every month on eom from 2026-01 to 2026-12
 `YYYY-MM` dates normalize to first-of-month; `from` must be ≤ `to`, and
 occurrences must land inside the model timeline.
 
+State-anchored (the third anchor, beside dates and phases):
+
+```cfdl
+schedule every month from state_enter(asset.site, building) for 18 periods
+```
+
+Each entry of the entity into the state opens its own window of n grid
+periods; a re-entered state re-anchors with a fresh window. This is what
+"eighteen months of construction from whenever construction starts" needs —
+the machine enters the state whenever its edge fires, and the schedule hangs
+off the entry. See [the object model](/docs/object-model).
+
 ## Day counts
 
 Accrual-style math uses `year_frac(d1, d2, basis)` in expressions, with

@@ -24,11 +24,11 @@ Commercial Real Estate (CRE) examples show construction → lease-up → stabili
 Each example directory includes a `run.json` (and/or `run.base.json`, `run.stress.json`) for deterministic runs. Example:
 
 ```bash
-./target/debug/cfdl compile examples/cre_developer --out /tmp/cre.ir.json --packs packs
-./target/debug/cfdl run /tmp/cre.ir.json --out /tmp/cre.results.json --config examples/cre_developer/run.json --packs packs
+cfdl compile examples/cre_developer --out /tmp/cre.ir.json --packs packs
+cfdl run /tmp/cre.ir.json --out /tmp/cre.results.json --config examples/cre_developer/run.json --packs packs
 ```
 
 ## Structure
 
 - **Entities:** Examples use one or more entities (e.g. `real_estate property`, `loan construction`, `loan permanent`). Streams are owned by an entity.
-- **Pack contracts:** `cre_construction_stub`, `cre_lease`, `cre_ops_revenue`, `cre_opex_line`, `cre_exit_cap` — see [Packs](/docs/packs) and [the CRE pack guide](/docs/packs/cre).
+- **Pack contracts:** `cre.construction_stub`, `cre.lease`, `cre.revenue_line`, `cre.opex_line`, `cre.exit_cap` — see [Packs](/docs/packs) and [the CRE pack guide](/docs/packs/cre).

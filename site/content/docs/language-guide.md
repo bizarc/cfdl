@@ -81,9 +81,10 @@ Every stream belongs to an entity, so cash totals per entity as well as per
 model. Where a model declares hierarchy with `part of`, a parent's total
 includes its children.
 
-An asset's type may carry a **lifecycle** — a closed set of states it moves
-through, with events that move it between them, and contracts and streams that
-switch on where it is. See [the object model](/docs/object-model).
+An asset may carry a **lifecycle** — a declared finite state machine, with
+guarded edges that move it and contracts and streams that switch on where it
+is. A model declares the machine itself, or the type brings one from its
+pack. See below, and [the object model](/docs/object-model).
 
 ## Streams
 
@@ -219,8 +220,56 @@ Writing the recurrence directly is often the only way to match a published
 figure exactly, because a source that escalates an already-rounded number each
 year is not computing a power of its base.
 
-**A field needs a typed entity.** An untyped `entity asset thing` takes no
-block, so a value that moves needs something with a declared type to belong to.
+An untyped entity may carry a block too — fields, a machine binding — and a
+typed entity's block is additionally checked against the pack's vocabulary.
+
+## The lifecycle machine
+
+A regime that changes and can change back is a **lifecycle**: enumerated
+states, an initial one, and edges declared only as used, each with an
+optional `when` guard.
+
+```cfdl
+lifecycle unit {
+  initial leased
+  state leased, delinquent
+  leased -> delinquent when series_sum("ops.rent", time.t - 1, time.t - 1) < 50
+  delinquent -> leased when series_sum("ops.rent", time.t - 1, time.t - 1) >= 50
+}
+```
+
+An entity binds it with `lifecycle unit` in its block. A guard is evaluated
+each period the entity is in the edge's from-state — there is no latch; edge
+availability is the memory — and it reads settled series strictly backward,
+so realized cash drives state. `active in state leased` on a stream closes
+the loop back to cash. A schedule can hang a window off an entry:
+`from state_enter(asset.site, building) for 18 periods`. See
+[the object model](/docs/object-model).
+
+## The account
+
+Cash that accumulates between distribution dates gets its own construct:
+
+```cfdl
+account reserve { }
+```
+
+A waterfall step pays into it (`pay top_up to account reserve = ...`), a
+waterfall draws it (`from reserve` in place of a hand-written cumulative
+window), and logic reads the settled balance as `prev.reserve`. `available`
+keeps meaning this period's netted cash, so a monthly-distributing waterfall
+is untouched; the account is the accumulated position, published as the
+non-cash series `account.<name>`, every movement journaled. See
+[Waterfalls](/docs/guides/waterfalls).
+
+## Quantiles
+
+Some economics depend on dispersion *inside* one period — a battery earning
+the spread between a month's expensive and cheap hours, overage rent above a
+breakpoint. A `quantile` declares that within-period distribution, and three
+functions read it: `quantile_mean(name, lo, hi)` averages a slice,
+`quantile_at(name, share)` reads a point, `quantile_of(name, value)` inverts
+it. See [Stochastic modeling](/docs/stochastic-modeling).
 
 ## Waterfalls
 
@@ -244,8 +293,10 @@ for or what is left, whichever is smaller. `remaining` is what survives the
 steps above; `paid.<step>` and `owed.<step>` read what an earlier step did.
 
 A waterfall runs after the period's fields and streams, so it shares out money
-that already exists. Its steps publish as series, so a waterfall declared later
-can draw on an earlier one's payment as its own pot — a fund's carry becoming a
+that already exists — and only at the periods its schedule names, with cash
+accumulating (in an account, when one is declared) between distribution
+dates. Its steps publish as series, so a waterfall declared later can draw on
+an earlier one's payment as its own pot — a fund's carry becoming a
 management company's. See [Waterfalls](/docs/guides/waterfalls).
 
 ## Contracts and packs
@@ -302,7 +353,8 @@ Declaration order does not matter. See
 
 A run produces a results document containing:
 
-- **`deterministic.series`** — every stream per period, plus `model.net_cash_flow`
+- **`deterministic.series`** — every stream per period, plus
+  `model.net_cash_flow` and each account's balance as `account.<name>`
 - **`deterministic.metrics`** — NPV, IRR, MOIC, payback, weighted average life
 - **`statements`** — the pro forma, when the pack declares one
 - **`monte_carlo`** — percentiles and trial summaries, when trials were asked for
