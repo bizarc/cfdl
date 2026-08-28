@@ -762,7 +762,7 @@ nothing. A few lines in the existing checks — the step set and
 
 ### 7.41 A freeform pot expression is still unchecked
 
-*Narrowed by M1's account (`docs/28` §5.1).* The checked forms now exist:
+*Roadmap: M2 (§7.78). Narrowed by M1's account (`docs/28` §5.1).* The checked forms now exist:
 `from available` is the engine's own quantity, and `from <account>` draws a
 balance whose inflow is declared and whose movements are journaled per
 period — what flows in is named, checked, and auditable. What remains open
@@ -848,6 +848,8 @@ of an order that is already documented and already tested by
 
 ### 7.45 A waterfall with no schedule distributes once, at the model start
 
+*Roadmap: M2 (§7.78).*
+
 `lower_schedule` answers a missing schedule with `OnDate(time_start)`
 (`crates/cfdl-compile/src/lib.rs`), so a waterfall that says nothing about when
 it runs distributes exactly once, in the first period — before the deal has
@@ -932,6 +934,8 @@ config produced an NPV equal to its own total.
 ---
 
 ### 7.50 A model cannot name the streams its own contracts produce
+
+*Roadmap: M2 (§7.78) — the substrate the retired `activate contract` leaves behind (§7.73).*
 
 *Belongs with language and packs (section 5).*
 
@@ -1639,6 +1643,8 @@ than accounts would bake in the attribution problem §7.43 records.
 
 ### 7.73 `activate contract` is the wrong grain, and the right one is already declared
 
+*Roadmap: M2 (§7.78) — this entry replaces the closed §7.40i.*
+
 **What forced the discovery:** journaling every action's outcome (§7.71's
 sibling work, `docs/28` §8) meant pinning the `ignored` outcome that
 `activate`/`deactivate contract` produces. It could not be pinned from a model
@@ -1690,6 +1696,9 @@ genuinely all-or-nothing AND cannot be said as a state. None of the three cases
 above is one.
 
 ### 7.74 Structured-finance engine parity — the Intex scope
+
+*Roadmap: partly M2 (§7.78) — the deal mechanics; the analytics ride on
+§7.25 in M4.*
 
 **What this item is.** An umbrella over the gaps that separate CFDL from the
 full scope of a structured-finance cash flow engine (the Intex/Trepp
@@ -1778,6 +1787,8 @@ here and that claim.
 
 ### 7.75 Storage state of charge is now buildable, and it is what validates the last energy rule
 
+*Roadmap: M2 (§7.78); the case it unblocks is M3 (§7.3).*
+
 **What forced the discovery:** the domain survey behind `docs/30`.
 `energy.storage_arbitrage` is the energy pack's only externally-unvalidated
 rule (§7.3: energy 9/10), and §7.1 recorded three ways forward, the third
@@ -1799,6 +1810,8 @@ segfaulted front-of-meter). The construct no longer waits on the engine; the
 case waits on a source. Related: §7.1, §7.3, `docs/27` §9, `docs/30` §2.
 
 ### 7.76 The account adoption pass: every pack has a reserve it could not model
+
+*Roadmap: M2 (§7.78).*
 
 **What forced the discovery:** the account shipped (`docs/28` §5.1) and the
 domain survey (`docs/30`) found the same absence recorded independently in
@@ -1825,6 +1838,8 @@ Related: §7.5, §7.41, §7.72, §7.74, `docs/25`, `docs/28` §5.1, `docs/30` §
 
 ### 7.77 A covenant that is published but powerless: the DSCR cash trap
 
+*Roadmap: M2 (§7.78).*
+
 **What could not be expressed:** consequences. The energy pack publishes
 `dscr_periodic` per period (`packs/energy/statements.toml`, with its own
 argument that "a project finance covenant is tested EVERY PERIOD"), and
@@ -1842,3 +1857,39 @@ the energy/infrastructure case that proves it, and the benchmark ask is
 recorded in `docs/20` §5.
 
 Related: §7.36, §7.74, `docs/28` §5.1 and §6, `docs/30` §2.
+
+### 7.78 M2: what the walk unlocked, and what it retired
+
+*An umbrella, in the shape of §7.74 — it owns no work of its own; each
+constituent is an entry below or above it.* Recorded because the v1.0
+roadmap's M2 was written before M1 shipped, and two of the four items it
+named no longer describe work.
+
+**What M2 no longer is.** Sequential-pay note classes (the closed §2.4) run
+today as an ordered waterfall — `benchmarks/credit/auto_abs_tranches`
+compiles AmeriCredit's 22-step priority — so what remains of that item is
+§7.74's deal mechanics, not a liability-stack construct. And contract gating
+(the closed §7.40i) is not a runtime to build: §7.73 concluded the grain was
+wrong and the action should be retired, which makes M2's gating work §7.50
+plus state-gating through the declared machine. Per-period persistent state
+(the closed §5.2) shipped with M1 itself.
+
+**What M2 is**, all of it standing on the walk, the machine and the account
+(`docs/28` §4–§6):
+
+| item | what it unlocks |
+|---|---|
+| §7.50 | a contract's lowered streams become addressable, so a model can gate cash it did not write |
+| §7.73 | `activate`/`deactivate contract` removed from the grammar; gating re-spelled as a lifecycle state |
+| §7.45 | a waterfall's default schedule — accumulate-then-distribute is now the declared pattern, and the first-period default contradicts it |
+| §7.41 | the freeform `from <expr>` pot, the one unchecked selection left after the account |
+| §7.76 | the account adoption pass: the reserve every pack's references assume and no pack could model |
+| §7.77 | the DSCR cash trap — the first covenant whose breach has consequences, and can end |
+| §7.75 | storage state of charge, which turns `mwh_cycled_year` from an assumption into an output |
+| §7.74 | the deal mechanics still open after the machine: coupled interest/principal waterfalls, a step's shortfall, PIK on an unpaid step, servicer advances, the clean-up call |
+
+**What M2 is not.** Declared metrics (§7.25) and participant-level returns
+(§7.72) are M4, and `docs/31` W4 pulls the first of them forward on the
+commercial path rather than the roadmap's. Pack coverage (§7.3) is M3.
+
+Re-derived 2026-08-28. Related: `docs/28` §10, `docs/29`.

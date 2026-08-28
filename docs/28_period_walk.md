@@ -31,8 +31,9 @@ cash" run today and are inert — including the strictly backward spelling this
 document makes legal — while a fourth is refused. The engine reports each
 inert read as a per-period warning naming it, and still publishes a full set
 of wrong numbers under `status: ok`; one shipped fixture carried four such
-warnings in its blessed golden without objection. `docs/13` §7.71 records the
-probes and that correction; this document is the answer to them.
+warnings in its blessed golden without objection. `docs/13` §7.71 recorded the
+probes and that correction — closed and removed from that file by this
+milestone; this document is the answer to them.
 
 ## 2. The two planes
 
@@ -292,8 +293,8 @@ longer applies; re-entry re-arms it. A covenant that breaches and cures, a
 plant that curtails and restarts, and a unit that goes delinquent and
 current again are the machine's topology walked as many times as the deal's
 history walks it — today they must be bare fields, unchecked and absent from
-the transition record (`docs/13` §7.36). The walk made the checked form
-buildable, and this milestone built it.
+the transition record (`docs/13` §7.36, closed by this milestone). The walk
+made the checked form buildable, and this milestone built it.
 
 The free-standing `event <name> when <expr>` keeps its shipped, latched
 meaning untouched, per §5.2's rule: for a pure side-effect event — no state
@@ -429,7 +430,8 @@ to every causal act:
 
 Results series carry back-references into the journal; a golden may assert on
 the journal itself. Monte Carlo emits per-trial aggregates over the same
-record, which is `docs/13` §7.18. Nothing here waits for the walk — the
+record, which was `docs/13` §7.18, closed by the journal. Nothing here waits
+for the walk — the
 journal can ship first against the current engine — but the walk is what
 makes it complete.
 
@@ -471,15 +473,22 @@ the engine**: `golden_corpus.rs` runs the whole blessed corpus in
 
 M1 is the walk, the read rules, the two migrations, the declared state
 machine with its transition anchor (§6), the account construct (§5), and
-the journal. It is not: the contract runtime behind `activate contract`
-(M2, §7.40i); multiple instances of one pack contract type (F.3); typed
-pack-declared actions; or optimal exercise, which stays deferred past v1
-and which this design exists to make possible later.
+the journal. It is not: contract gating, which M2 takes up in the shape
+`docs/13` §7.73 settled on — the action retired rather than given a
+runtime, the capability recovered from §7.50's addressable stream names
+and state-gating through §6.1's machine (the old §7.40i is closed, its
+trigger half by this milestone); multiple instances of one pack contract
+type (F.3); typed pack-declared actions; or optimal exercise, which stays
+deferred past v1 and which this design exists to make possible later.
 
 ## 11. Cross-references
 
-`docs/13` §5.2 (what a recurrence may read), §7.10 (a truncated series
-view — subsumed by §4's backward reads), §7.36, §7.38, §7.71. `docs/17`
+`docs/13` §7.38 (a misspelled series still reads as zero) and §7.78 (what
+M2 takes up from here) are the open entries. Closed by this milestone and
+removed from that file, since backlog entries do not survive their fix:
+§5.2 (what a recurrence may read), §7.10 (a truncated series view —
+subsumed by §4's backward reads), §7.36, §7.40i's trigger half, §7.71.
+`docs/17`
 (the ordered waterfall). `docs/26` for the evaluation-order canon: streams
 produce amounts, logic acts on those amounts, financing and distributions
 run over aggregated flows — the walk is that sentence made causal, with the
