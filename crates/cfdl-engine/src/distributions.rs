@@ -149,7 +149,7 @@ pub(crate) fn run_waterfalls(
                 apply_entity_state(&mut env, state, &waterfall.entity);
             }
 
-            let mut remaining = match cfdl_expr::compile_expr(&waterfall.source.src) {
+            let remaining = match cfdl_expr::compile_expr(&waterfall.source.src) {
                 Ok(compiled) => eval_amount_expr(
                     &compiled,
                     &env,
@@ -167,61 +167,17 @@ pub(crate) fn run_waterfalls(
                 }
             };
 
-            let mut paid: BTreeMap<String, ExprValue> = BTreeMap::new();
-            let mut owed: BTreeMap<String, ExprValue> = BTreeMap::new();
-            for step in &waterfall.steps {
-                let pot_before = remaining;
-                let mut step_env = env.clone();
-                step_env.remaining = Some(ExprValue::Decimal(remaining));
-                step_env.paid = paid.clone();
-                step_env.owed = owed.clone();
-
-                let wants = match cfdl_expr::compile_expr(&step.amount.src) {
-                    Ok(compiled) => eval_amount_expr(
-                        &compiled,
-                        &step_env,
-                        &format!("{}.{}", waterfall.name, step.name),
-                        &ir.model.currency,
-                        warnings,
-                    ),
-                    Err(err) => {
-                        warnings.push(format!(
-                            "Waterfall '{}' step '{}' failed to compile [{}]: {}; pays nothing.",
-                            waterfall.name, step.name, err.code, err.message
-                        ));
-                        0.0
-                    }
-                }
-                .max(0.0);
-                let takes = wants.min(remaining);
-                remaining = round_amount(remaining - takes);
-
-                owed.insert(step.name.clone(), ExprValue::Decimal(round_amount(wants)));
-                paid.insert(step.name.clone(), ExprValue::Decimal(round_amount(takes)));
-                if let Some(series) = out.get_mut(&format!("{}.{}", waterfall.name, step.name)) {
-                    series[t] = round_amount(takes);
-                }
-                let short = takes + f64::EPSILON < wants;
-                let mut entry = JournalEntry::new(
-                    t,
-                    &timeline[t].to_string(),
-                    format!("waterfall:{}", waterfall.name),
-                    "pay",
-                    format!("{} -> {}", step.name, step.payee),
-                    if short { "overridden" } else { "applied" },
-                );
-                entry.amount = Some(round_amount(takes));
-                entry.pot_before = Some(round_amount(pot_before));
-                entry.pot_after = Some(remaining);
-                if short {
-                    entry.note = Some(format!(
-                        "the pot was short: the step was owed {} and took {}",
-                        round_amount(wants),
-                        round_amount(takes)
-                    ));
-                }
-                journal.push(entry);
-            }
+            allocate_steps(
+                ir,
+                waterfall,
+                t,
+                &timeline[t],
+                &env,
+                remaining,
+                &mut out,
+                warnings,
+                journal,
+            );
         }
         // This waterfall's steps become visible to the next one.
         for step in &waterfall.steps {
@@ -232,4 +188,409 @@ pub(crate) fn run_waterfalls(
         }
     }
     out
+}
+
+/// One waterfall's priority of payments, at one period.
+///
+/// The step loop both evaluation orders share: steps take in declaration
+/// order, each `min(max(0, owed), remaining)`, and every take is journaled
+/// with the pot before and after it. Returns what each step took, in step
+/// order, so a caller that allocates FROM or INTO an account can move the
+/// balances — the takes are the allocation, seen from either end.
+#[allow(clippy::too_many_arguments)] // stage inputs, as the callers have
+fn allocate_steps(
+    ir: &Ir,
+    waterfall: &IrWaterfall,
+    t: usize,
+    date: &Date,
+    env: &ExprEnv,
+    mut remaining: f64,
+    out: &mut BTreeMap<String, Vec<f64>>,
+    warnings: &mut Vec<String>,
+    journal: &mut Vec<JournalEntry>,
+) -> Vec<f64> {
+    let mut takes_per_step: Vec<f64> = Vec::with_capacity(waterfall.steps.len());
+    let mut paid: BTreeMap<String, ExprValue> = BTreeMap::new();
+    let mut owed: BTreeMap<String, ExprValue> = BTreeMap::new();
+    {
+        for step in &waterfall.steps {
+            let pot_before = remaining;
+            let mut step_env = env.clone();
+            step_env.remaining = Some(ExprValue::Decimal(remaining));
+            step_env.paid = paid.clone();
+            step_env.owed = owed.clone();
+
+            let wants = match cfdl_expr::compile_expr(&step.amount.src) {
+                Ok(compiled) => eval_amount_expr(
+                    &compiled,
+                    &step_env,
+                    &format!("{}.{}", waterfall.name, step.name),
+                    &ir.model.currency,
+                    warnings,
+                ),
+                Err(err) => {
+                    warnings.push(format!(
+                        "Waterfall '{}' step '{}' failed to compile [{}]: {}; pays nothing.",
+                        waterfall.name, step.name, err.code, err.message
+                    ));
+                    0.0
+                }
+            }
+            .max(0.0);
+            let takes = wants.min(remaining);
+            remaining = round_amount(remaining - takes);
+            takes_per_step.push(round_amount(takes));
+
+            owed.insert(step.name.clone(), ExprValue::Decimal(round_amount(wants)));
+            paid.insert(step.name.clone(), ExprValue::Decimal(round_amount(takes)));
+            if let Some(series) = out.get_mut(&format!("{}.{}", waterfall.name, step.name)) {
+                series[t] = round_amount(takes);
+            }
+            let short = takes + f64::EPSILON < wants;
+            let mut entry = JournalEntry::new(
+                t,
+                &date.to_string(),
+                format!("waterfall:{}", waterfall.name),
+                "pay",
+                format!("{} -> {}", step.name, step.payee),
+                if short { "overridden" } else { "applied" },
+            );
+            entry.amount = Some(round_amount(takes));
+            entry.pot_before = Some(round_amount(pot_before));
+            entry.pot_after = Some(remaining);
+            if short {
+                entry.note = Some(format!(
+                    "the pot was short: the step was owed {} and took {}",
+                    round_amount(wants),
+                    round_amount(takes)
+                ));
+            }
+            journal.push(entry);
+        }
+    }
+    takes_per_step
+}
+
+/// Each entity's netted stream cash at ONE period, rolled up by `part of`.
+///
+/// The walk's form of `stream_cash_by_entity`: at period `t` the columns are
+/// filled through `t`, and the stage needs only that period's figure.
+pub(crate) fn stream_cash_by_entity_at(
+    ir: &Ir,
+    stream_series: &BTreeMap<String, Vec<f64>>,
+    t: usize,
+) -> BTreeMap<String, f64> {
+    let mut own: BTreeMap<String, f64> = BTreeMap::new();
+    for stream in &ir.streams {
+        if let Some(value) = stream_series.get(&stream.name).and_then(|v| v.get(t)) {
+            *own.entry(stream.owner.symbol.clone()).or_insert(0.0) += value;
+        }
+    }
+    let parent_of: BTreeMap<&str, &str> = ir
+        .entities
+        .iter()
+        .filter_map(|e| e.parent.as_deref().map(|p| (e.symbol.as_str(), p)))
+        .collect();
+    let mut rollup: BTreeMap<String, f64> = BTreeMap::new();
+    for entity in &ir.entities {
+        rollup.entry(entity.symbol.clone()).or_insert(0.0);
+    }
+    for (symbol, value) in &own {
+        let mut visited: BTreeSet<&str> = BTreeSet::new();
+        let mut cursor: Option<&str> = Some(symbol.as_str());
+        while let Some(current) = cursor {
+            if !visited.insert(current) {
+                break;
+            }
+            *rollup.entry(current.to_string()).or_insert(0.0) += value;
+            cursor = parent_of.get(current).copied();
+        }
+    }
+    rollup
+}
+
+/// A party reference, with or without its family prefix.
+///
+/// An account's `owner` and a step's payee are both written by the modeller,
+/// one as `party.lp1` and one as `lp1` or vice versa; the party is the same.
+fn party_key(reference: &str) -> &str {
+    reference.strip_prefix("party.").unwrap_or(reference)
+}
+
+/// The waterfall stage of the period walk (`docs/28` §5).
+///
+/// Prepared once, stepped once per period AFTER that period's streams settle
+/// and never interleaved with them. The SCHEDULE STAYS SOVEREIGN: on a period
+/// no waterfall is scheduled for, the step accumulates account inflows and
+/// does nothing else — running the stage each period is not distributing each
+/// period. A quarterly or at-exit waterfall leaves the cash building in its
+/// account until its date arrives.
+///
+/// The stage owns the whole account lifecycle at each period, in balance-law
+/// order: inflow first, then allocation in and out, all at `t` —
+/// `balance(t) = balance(t-1) + inflow(t) + allocated_in(t) - allocated_out(t)`.
+pub(crate) struct WaterfallStage {
+    /// Which periods each waterfall runs in, schedule applied once.
+    /// An unusable schedule leaves an empty vec: warned at prepare, skipped.
+    runs_in: Vec<Vec<bool>>,
+    /// Step columns, filled as the stage steps.
+    out: BTreeMap<String, Vec<f64>>,
+    /// Party (bare, no family prefix) -> the one account that party owns.
+    accounts_by_owner: BTreeMap<String, String>,
+    journal: Vec<JournalEntry>,
+}
+
+pub(crate) fn prepare_waterfall_stage(
+    ir: &Ir,
+    timeline: &[Date],
+    warnings: &mut Vec<String>,
+) -> WaterfallStage {
+    let periods = timeline.len();
+    let mut runs_in: Vec<Vec<bool>> = Vec::with_capacity(ir.waterfalls.len());
+    let mut out: BTreeMap<String, Vec<f64>> = BTreeMap::new();
+    for waterfall in &ir.waterfalls {
+        let mut hits = vec![Vec::new(); periods];
+        let runs: Vec<bool> = match &waterfall.schedule {
+            Some(schedule) => {
+                if apply_schedule_indices(schedule, timeline, &mut hits).is_err() {
+                    warnings.push(format!(
+                        "Waterfall '{}' has an unusable schedule; skipped.",
+                        waterfall.name
+                    ));
+                    runs_in.push(Vec::new());
+                    continue;
+                }
+                hits.iter().map(|h| !h.is_empty()).collect()
+            }
+            None => vec![true; periods],
+        };
+        runs_in.push(runs);
+        for step in &waterfall.steps {
+            out.insert(
+                format!("{}.{}", waterfall.name, step.name),
+                vec![0.0; periods],
+            );
+        }
+    }
+    // A party owns at most one account, so "their account" always resolves
+    // (`docs/28` §5.1). A second declaration for the same party would make the
+    // rule ambiguous, so it is refused here with both accounts named.
+    let mut accounts_by_owner: BTreeMap<String, String> = BTreeMap::new();
+    for account in &ir.accounts {
+        if let Some(owner) = &account.owner {
+            let key = party_key(owner).to_string();
+            if let Some(existing) = accounts_by_owner.get(&key) {
+                warnings.push(format!(
+                    "Party '{key}' owns accounts '{existing}' and '{}'; a party owns at most one account, and '{existing}' keeps the allocations.",
+                    account.name
+                ));
+                continue;
+            }
+            accounts_by_owner.insert(key, account.name.clone());
+        }
+    }
+    WaterfallStage {
+        runs_in,
+        out,
+        accounts_by_owner,
+        journal: Vec::new(),
+    }
+}
+
+impl WaterfallStage {
+    /// Settle one period: accounts take their inflow, then each scheduled
+    /// waterfall allocates, in declaration order.
+    #[allow(clippy::too_many_arguments)] // stage inputs, as evaluate_stream has
+    pub(crate) fn step(
+        &mut self,
+        ir: &Ir,
+        config: &RunConfig,
+        t: usize,
+        date: &Date,
+        base_inputs: &BTreeMap<String, f64>,
+        state_values: &BTreeMap<String, Vec<f64>>,
+        entity_state: &[BTreeMap<String, BTreeMap<String, ExprValue>>],
+        curves: &BTreeMap<String, cfdl_expr::CurveDef>,
+        streams: &Arc<BTreeMap<String, Vec<f64>>>,
+        account_inflows: &[Option<cfdl_expr::CompiledExpr>],
+        balances: &mut BTreeMap<String, Vec<f64>>,
+        warnings: &mut Vec<String>,
+    ) {
+        let date_str = date.to_string();
+        // 1. INFLOW. Carried balance plus this period's declared inflow, which
+        //    reads the period's settled streams. May be negative, with no
+        //    floor: an account fed a deal's whole net cash IS the cumulative
+        //    position, negative through the J-curve.
+        for (idx, account) in ir.accounts.iter().enumerate() {
+            let inflow = account_inflow_at(
+                ir,
+                config,
+                account,
+                account_inflows.get(idx).and_then(|c| c.as_ref()),
+                t,
+                date,
+                base_inputs,
+                Some(streams),
+                warnings,
+            );
+            if let Some(column) = balances.get_mut(&account.name) {
+                let carried = if t == 0 { 0.0 } else { column[t - 1] };
+                column[t] = carried + inflow;
+                if inflow != 0.0 {
+                    let mut entry = JournalEntry::new(
+                        t,
+                        &date_str,
+                        format!("account:{}", account.name),
+                        "inflow",
+                        account.name.clone(),
+                        "applied",
+                    );
+                    entry.amount = Some(round_amount(inflow));
+                    entry.pot_before = Some(round_amount(carried));
+                    entry.pot_after = Some(round_amount(column[t]));
+                    self.journal.push(entry);
+                }
+            }
+        }
+
+        // 2. ALLOCATION, on schedule.
+        let available_now = stream_cash_by_entity_at(ir, streams, t);
+        for (w, waterfall) in ir.waterfalls.iter().enumerate() {
+            if !self.runs_in[w].get(t).copied().unwrap_or(false) {
+                continue;
+            }
+            // COMPOSITION, the walk's form: this waterfall sees the streams and
+            // every EARLIER-declared waterfall's steps, filled through `t`. A
+            // walk-eligible model reads only backward, so the columns match
+            // what the column order shows at the same read.
+            let mut visible: BTreeMap<String, Vec<f64>> = (**streams).clone();
+            for prior in &ir.waterfalls[..w] {
+                for step in &prior.steps {
+                    let key = format!("{}.{}", prior.name, step.name);
+                    if let Some(values) = self.out.get(&key) {
+                        visible.insert(key, values.clone());
+                    }
+                }
+            }
+            let mut env = build_base_env(ir, config, t, date, base_inputs);
+            env.curves = curves.clone();
+            env.series = Arc::new(visible);
+            env.available = Some(ExprValue::Decimal(
+                available_now.get(&waterfall.entity).copied().unwrap_or(0.0),
+            ));
+            bind_states(&mut env, state_values, t);
+            if let Some(state) = entity_state.get(t) {
+                bind_all_entity_state(&mut env, state);
+                apply_entity_state(&mut env, state, &waterfall.entity);
+            }
+
+            // THE POT. `from <account>` hands the waterfall the ACCUMULATED
+            // balance — inflow of this period included, allocations of earlier
+            // waterfalls this period included. Anything else is an expression,
+            // `from available` foremost. Either way the pot is floored at
+            // zero: cash that is not there cannot be allocated.
+            let source_account = ir
+                .accounts
+                .iter()
+                .find(|a| a.name == waterfall.source.src.trim())
+                .map(|a| a.name.clone());
+            let pot = match &source_account {
+                Some(name) => balances
+                    .get(name)
+                    .map(|column| column[t])
+                    .unwrap_or(0.0)
+                    .max(0.0),
+                None => match cfdl_expr::compile_expr(&waterfall.source.src) {
+                    Ok(compiled) => eval_amount_expr(
+                        &compiled,
+                        &env,
+                        &waterfall.name,
+                        &ir.model.currency,
+                        warnings,
+                    )
+                    .max(0.0),
+                    Err(err) => {
+                        warnings.push(format!(
+                            "Waterfall '{}' pot failed to compile [{}]: {}; treated as zero.",
+                            waterfall.name, err.code, err.message
+                        ));
+                        0.0
+                    }
+                },
+            };
+
+            let takes = allocate_steps(
+                ir,
+                waterfall,
+                t,
+                date,
+                &env,
+                pot,
+                &mut self.out,
+                warnings,
+                &mut self.journal,
+            );
+
+            // 3. THE BALANCES MOVE — one allocation, seen from both ends.
+            //    Credits land before the source is reduced, and both before the
+            //    next waterfall runs, so a later waterfall this period reads
+            //    the moved balance.
+            let mut total_taken = 0.0;
+            for (step, take) in waterfall.steps.iter().zip(&takes) {
+                total_taken += take;
+                if *take == 0.0 {
+                    continue;
+                }
+                let destination = if step.payee_is_account {
+                    Some(step.payee.clone())
+                } else {
+                    self.accounts_by_owner.get(party_key(&step.payee)).cloned()
+                };
+                if let Some(name) = destination {
+                    if let Some(column) = balances.get_mut(&name) {
+                        let before = column[t];
+                        column[t] = round_amount(before + take);
+                        let mut entry = JournalEntry::new(
+                            t,
+                            &date_str,
+                            format!("waterfall:{}", waterfall.name),
+                            "allocate_in",
+                            format!("{} -> account:{name}", step.name),
+                            "applied",
+                        );
+                        entry.amount = Some(*take);
+                        entry.pot_before = Some(round_amount(before));
+                        entry.pot_after = Some(column[t]);
+                        self.journal.push(entry);
+                    }
+                }
+            }
+            if let Some(name) = source_account {
+                if total_taken > 0.0 {
+                    if let Some(column) = balances.get_mut(&name) {
+                        let before = column[t];
+                        column[t] = round_amount(before - total_taken);
+                        let mut entry = JournalEntry::new(
+                            t,
+                            &date_str,
+                            format!("waterfall:{}", waterfall.name),
+                            "allocate_out",
+                            format!("account:{name}"),
+                            "applied",
+                        );
+                        entry.amount = Some(round_amount(total_taken));
+                        entry.pot_before = Some(round_amount(before));
+                        entry.pot_after = Some(column[t]);
+                        self.journal.push(entry);
+                    }
+                }
+            }
+        }
+    }
+
+    /// The stage's outputs: each step's column, and the journal of every
+    /// allocation and inflow, in the order the run happened in.
+    pub(crate) fn finish(self) -> (BTreeMap<String, Vec<f64>>, Vec<JournalEntry>) {
+        (self.out, self.journal)
+    }
 }
