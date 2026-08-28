@@ -281,45 +281,69 @@ at 9 of 10 rules in 7.3 until that measurement exists.
 True hourly dispatch optimization is out of scope and should stay there — that
 is an optimizer, not a declarative cash-flow model.
 
-### 7.3 The external cases route around the packs they should be validating
+### 7.3 Pack contract coverage across the benchmark suite
 
 *Belongs with no single pack — it is about the validation programme.*
 
-Measured across the six externally-reconciled benchmarks, counting pack contract
-types exercised by at least one of them:
+**Re-measured 2026-08-27** across all 42 registered cases (2 bespoke, 8 cre,
+18 credit, 6 energy, 8 opco), counting a pack contract type as *exercised*
+when at least one case declares it. When first measured (six cases, headline
+"the external cases route around the packs they should be validating") the
+counts were energy 9/10, credit 1/4, cre 1/12, opco 0/10 — for cre and opco
+the benchmarks bypassed the pack entirely, so they validated the engine, not
+the domain logic. That circularity is now broken:
 
-| pack | externally validated | not covered |
+| pack | exercised | not exercised |
 |---|---|---|
-| energy | **9 / 10** | `storage_arbitrage` |
-| credit | 1 / 4 | `pool_io_bullet`, `pool_float_io_bullet`, `purchase` |
-| cre | 1 / 12 | everything but `exit_forward` |
-| opco | **0 / 10** | everything |
+| energy | **10 / 10** (see caveat) | — |
+| credit | **4 / 4** | — |
+| cre | 9 / 14 | `lease`, `percentage_rent_expected`, `revenue_line`, `construction_stub`, `exit_cap` |
+| opco | 9 / 11 | `working_capital`, `exit_multiple` |
 
-And by construction: `hud_home_multifamily` is 0 pack contracts and 6 native
-streams, `banker_dcf_conventions` 0 and 6, `mit_rentleg_plaza` 2 and 9. The
-credit and energy cases are the opposite — `auto_abs_wal` is 43 contracts and
-no native streams.
+(The cre and opco rosters have grown since the first measure — 12→14 and
+10→11 — so the denominators moved too.)
 
-Each case documents why its pack rules did not fit — non-escalating vacancy,
-sources that publish per-year figures rather than drivers. "Single-instance
-opex" is no longer among the reasons: `cre.opex_line` covers a blended figure
-and an itemised schedule with one contract, and `mit_rentleg_plaza` moved its
-opex onto it. But the aggregate is circular: **the two packs with the weakest rule
-coverage are exactly the ones whose benchmarks bypass the pack**, so for cre and
-opco we are validating the engine, not the domain logic.
+What closed the gaps: `office_two_tenant` exercises the acquisition spine
+through the pack (`lease_unit`, `rollover`, `vacancy_loss`, `opex_line`,
+`permanent_debt`, `exit_forward`), `retail_strip` adds `percentage_rent` and
+`exit`, `one_lincoln_street_contract` proves `construction_loan` against the
+native twin, `float_bridge_pool` and `io_bullet_loan` close credit, and
+`lbo_buyout` plus `damodaran_fcff` take opco from zero to nine — the
+driver-disclosing sources the first measure asked for.
 
-Two things follow, and they are separable:
+**Exercised is not the same as validated.** One caveat stands: `storage_arbitrage`
+is declared by `solar_ppa_microgrid`, but that case reconciles the reduced-form
+arbitrage margin against convention, not against a dispatch model — the
+chronology comparison the storage entry (§7.5's duration-curve discussion)
+requires does not exist, so energy's *validated* count stays **9 / 10** until it
+does. Read strictly, cases whose references are independently recreated
+conventions (`office_two_tenant`, `retail_strip`, `solar_ppa_microgrid`) sit a
+step below a published third-party model; each CASE.md states which kind it is.
 
-- **Fix the rules the cases tripped over** (1.5, 1.6, 1.7) so a CRE deal can be
-  expressed in pack contracts at all. That converts an existing case rather than
-  needing a new source.
-- **Choose sources that disclose drivers, not outputs.** A fairness opinion
-  publishes the unlevered cash flow; a sponsor model publishes the growth rate,
-  margin path and working-capital policy that produce it. Only the second can
-  validate `opco.revenue_line`.
+**Two axes, not one.** A concept can be expressible in the core language, in a
+pack contract, or both — and a case on native streams is a choice, not a
+coverage failure. `one_lincoln_street` exists in both spellings, and the pair
+is the assertion. `tax_equity_flip` uses no streams and no contracts at all —
+declared state and an event, with the model's own comments arguing why core is
+the right spelling. The penzance developments, `banker_dcf_conventions` and
+`saas_sbc_convention_fork` model natively for the same reason. A core-spelled
+case proves the LANGUAGE expresses the deal with no domain vocabulary — the
+stronger claim; the pack contract is the ergonomics layer, and this entry
+measures whether that layer is exercised, not whether it is mandatory.
 
-Recorded because the headline "four domains externally validated" is true and
-does not mean what it sounds like.
+What remains, and it is now narrow:
+
+- **cre:** five types unexercised. `exit_cap` and `revenue_line` look like
+  case-conversions of existing sources; `lease` (non-unit grain),
+  `percentage_rent_expected` and `construction_stub` may want a new case each.
+- **opco:** `working_capital` (the non-policy variant) and `exit_multiple`.
+- **energy:** the dispatch comparison that would move `storage_arbitrage` from
+  exercised to validated.
+
+Recorded because coverage claims must cite this table, and the table must be
+re-measured — by scanning `contract <pack>.<type>` declarations, not `<pack>.`
+prefixes, which also match namespaced stream names — whenever cases or rosters
+change.
 
 ### 7.4 A discount rate cannot vary over time
 
@@ -366,7 +390,8 @@ With 1.5, 1.6 and 1.7, these are what would let a real CRE deal be expressed in
 pack contracts instead of native streams — which is the actual fix for 7.3 on
 the CRE side, and needs no new source.
 
-**A correction to how 7.3 framed this.** That entry treats a benchmark running
+**A correction to how 7.3 originally framed this** (absorbed into its
+2026-08-27 re-measure, kept here for the argument). That entry treated a benchmark running
 on native streams as a coverage failure. It is not, or not only. A case built
 from primitives proves the LANGUAGE expresses the deal with no domain vocabulary
 — which is the stronger claim, and the one a reader evaluating CFDL as a
