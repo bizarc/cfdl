@@ -1877,3 +1877,157 @@ retires the `ignored` outcome the journal currently has to carry.
 What would reopen it: a document describing a contract-level switch that is
 genuinely all-or-nothing AND cannot be said as a state. None of the three cases
 above is one.
+
+### 7.74 Structured-finance engine parity — the Intex scope
+
+**What this item is.** An umbrella over the gaps that separate CFDL from the
+full scope of a structured-finance cash flow engine (the Intex/Trepp
+category: collateral pools feeding tranche waterfalls with triggers and
+reserve accounts, plus bond analytics over the result). It exists so the
+parity question has one place to stand; each constituent either references an
+existing item or is named here for the first time.
+
+**What is already covered, and is the larger half.** The collateral side runs
+to published-schedule parity (the credit pack; the FNMA REMIC family at six
+PSA speeds, the auto-ABS cases at speed variants). Sequential-pay tranching
+runs as an ordered waterfall (`benchmarks/credit/auto_abs_tranches`; the
+AmeriCredit 22-step priority compiles). The walk with accounts covers reserve
+mechanics — fund to target, top up, release, trapped cash across a failed
+test — and logic reads settled cash strictly backward (`docs/28` §4–§5,
+shipped). Deterministic scenario grids — the dominant workflow of the
+category — are scenarios plus curves plus options, today.
+
+**Deal mechanics still open:**
+
+- **Repeatable triggers as a checked construct.** An OC/IC test that fails
+  and cures is a bare field flipping both ways until the declared machine
+  ships — `docs/28` §6, docs/29 phase 5. Referenced, not duplicated.
+- **Coupled interest/principal waterfalls.** Interest diverted into principal
+  redemption on a trigger failure crosses two waterfalls; one pot does not
+  express it. `docs/17` §5 question 2, still unresolved — the account and the
+  walk are the machinery an answer would use, but the answer is not designed.
+- **A step's shortfall as a published series** (`docs/17` §5 question 3) and
+  **deferred/PIK interest on an unpaid step** (`docs/17` §5 question 1 —
+  "probably a second form, not a default"). Both are the write-up-from-the-
+  bottom mechanics CMBS and CLO documents assume.
+- **Servicer advances.** P&I advancing and stop-advance appear nowhere in the
+  docs. Under the machine they are a state (`advancing`, `stopped`) with
+  streams gated on it and a recoverable-advances account; the item is naming
+  that shape, not new machinery.
+- **The clean-up call.** Exists only as the `called` lifecycle state in the
+  credit pack's ontology; the election itself is an option whose guard reads
+  pool factor — expressible now, but no shipped case exercises it. A
+  benchmark deal with a call is the ask, not a construct.
+
+**Analytics still open:**
+
+- **Valuation-plane solvers: yield from price, price from yield, discount
+  margin.** `model.irr` is the shipped precedent — a bracketed bisection over
+  the completed projection, deterministic and replayable. These are the same
+  computation with a different objective, and they belong in the valuation
+  plane as declared metrics (§7.25 is the construct they ride on), bracketed
+  bisection or Brent per `docs/17` §12 — never in the causal core, where a
+  solver would cost provenance and replay.
+- **The make-whole.** A causal cash amount whose size is a discounting
+  computation — the priced exception of `docs/28` §7 is the sanctioned
+  mechanism, as with the direct-cap reversion. Currently on the credit pack's
+  parity worklist as "needs an engine primitive"; the primitive is the priced
+  exception plus a PV expression, not a new solver.
+- **Per-period stochastic draws.** `assume ~ Dist` draws one scalar per
+  trial; a rate path is a field recurrence whose innovation must differ per
+  period. The extension is a per-period draw stream, seeded per
+  (assumption, period, trial) the way per-assumption streams are seeded
+  today — additive, journaled, replayable. Correlation stays excluded
+  (`docs/01` §1.1.10) until a document forces it; a rate-dependent CPR is a
+  recurrence reading the rate path, and needs no correlation construct.
+- **The output surface an analyst reads:** per-class WAL assertions (§7.22),
+  the published settlement axis (§7.26), participant-level return (§7.72),
+  model-declared metrics and statements (§7.25, §7.55). Referenced, not
+  duplicated.
+
+**Infrastructure still open:**
+
+- **Multi-currency.** No mechanism has landed; the account was shaped so the
+  currency clause is additive (`docs/28` §5.1). Blocked on a document that
+  needs it, not on design room.
+- **Loan-level scale is undemonstrated, not disproven.** Four loans tie to
+  the single-pool model at 0.0 over 372 periods (§2.2); 43 sub-pool entities
+  run in the auto-ABS cases. Nothing has measured thousands of entities, and
+  the per-(stream, period) environment rebuild (`docs/29` §2.3) is the known
+  hot spot to profile first. The ask is a measurement, then the fix if the
+  measurement demands one.
+
+**What stays out, on purpose.** Same-period circular conventions (a fee on an
+ending balance that includes the fee) are spreadsheet artifacts, not
+indenture mechanics; priorities are ordered, and the causal plane's refusal
+to iterate is the product's guarantee, not its gap. A tool of this category
+built on CFDL is those guarantees applied to the one domain that most needs
+an auditable engine — the constituent items above are what remain between
+here and that claim.
+
+### 7.75 Storage state of charge is now buildable, and it is what validates the last energy rule
+
+**What forced the discovery:** the domain survey behind `docs/30`.
+`energy.storage_arbitrage` is the energy pack's only externally-unvalidated
+rule (§7.3: energy 9/10), and §7.1 recorded three ways forward, the third
+being "needs per-period persistent state (5.2) and would let cycling be
+modeled rather than assumed." The walk's phases 3 and 4 are that state: a
+state-of-charge balance — a field or an account — stepped per period, charged
+and discharged by streams the balance reads strictly backward.
+
+**What it changes:** `mwh_cycled_year` stops being an assumed input and
+becomes an output of dispatch against a price shape, which is the circularity
+§7.1 says blocks validation against a dispatch reference. It is also the
+state the `energy.storage_dispatch` quantile rule (`docs/27` §9 stage 4)
+prices around: the quantile closes the Jensen gap, the SOC balance closes the
+chronology gap — a 4-hour battery reaching only contiguous hours is a
+constraint on a walked balance, not on a distribution.
+
+**What still gates it:** a dispatch reference that runs (§7.1's SAM attempt
+segfaulted front-of-meter). The construct no longer waits on the engine; the
+case waits on a source. Related: §7.1, §7.3, `docs/27` §9, `docs/30` §2.
+
+### 7.76 The account adoption pass: every pack has a reserve it could not model
+
+**What forced the discovery:** the account shipped (`docs/28` §5.1) and the
+domain survey (`docs/30`) found the same absence recorded independently in
+every domain's references. `crest_solar_cost_based/NOTES.md`: the reference
+EBITDA "includes interest earned on funded reserve accounts (~$4,606 in year
+one), which CFDL does not model." `utility_pv_singleowner/NOTES.md` lists
+reserves among what the reference zeroed out to be comparable. §7.5 carries
+`cre.replacement_reserve` from two sources. The roadmap's hospitality entry
+is one accumulating FF&E reserve. Servicer advancing (§7.74) is a
+recoverable-advances balance.
+
+**The ask, in three parts.** First, the migrations the shipped fleet already
+owes: the flip case's hand-carried pot (`docs/25` — the one case where
+revenue is computed a second time inside the distribution) and Highlands'
+cumulative window, both named gate shapes in `docs/29` phase 4. Second, a
+reserve contract shape per pack where a document demands one — the DSRA
+funded to target with `dscr_periodic` gating the release, the replacement
+reserve of §7.5, the FF&E reserve — each as the `pay <step> to account`
+pattern rather than a bespoke contract. Third, interest ON a reserve balance:
+a stream whose amount reads `prev.<account>`, legal under §4's backward rule,
+and the first case that models it closes the CREST reconciliation line.
+
+Related: §7.5, §7.41, §7.72, §7.74, `docs/25`, `docs/28` §5.1, `docs/30` §1.
+
+### 7.77 A covenant that is published but powerless: the DSCR cash trap
+
+**What could not be expressed:** consequences. The energy pack publishes
+`dscr_periodic` per period (`packs/energy/statements.toml`, with its own
+argument that "a project finance covenant is tested EVERY PERIOD"), and
+`ppiaf_toll_highway` sizes a subsidy to hold 1.30x — but no model can say
+what a real credit agreement says: below the trigger, distributions stop and
+cash traps in an account; at or above it for the cure period, the trap
+releases. The breach must be able to happen, and to end.
+
+**Why it waits on phase 5:** the trap is the repeatable machine (§7.36,
+`docs/28` §6) reading a settled ratio strictly backward, plus an account to
+hold what is trapped — the same pin as the credit trigger fixture in `docs/29`
+phase 5 ("trapped cash accumulating across a failed trigger and releasing on
+cure"), wearing project finance's vocabulary. When phase 5 lands, this is
+the energy/infrastructure case that proves it, and the benchmark ask is
+recorded in `docs/20` §5.
+
+Related: §7.36, §7.74, `docs/28` §5.1 and §6, `docs/30` §2.
