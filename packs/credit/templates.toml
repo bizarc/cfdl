@@ -1,94 +1,77 @@
 # Credit contract templates — the conventional starting set, offered by the
-# editor as snippets (the LSP reads these for completion and `applyTemplate`).
+# editor as snippets and assembled into starting models by the MCP `skeleton`
+# tool. Defaults are the values the benchmark suite validates
+# (benchmarks/credit/level_pay_pool, io_bullet_loan), not measurements — a
+# real deal states its own.
 #
-# Each template carries the terms its rule REQUIRES, with a conventional value
-# where a convention exists and zero where only the deal knows. A term may hold
-# an expression, so a varying rate is written directly —
-# `growth_rate = curve_value("cpi", time.date)` — and no template offers a
-# curve-selector twin.
-#
-# `${key}` placeholders resolve from the request, then from
-# [templates.defaults].
+# `${key}` placeholders resolve from the request, then from [templates.defaults].
 
 [[templates]]
 id = "credit.pool_level_pay"
-label = "Level-pay pool (six collection streams)"
+label = "Amortizing pool — level pay with CPR/CDR/severity"
 kind = "contract"
 body = """
-contract credit.pool_level_pay.pool_a {
+contract credit.pool_level_pay {
   term ${term_start}..${term_end}
   terms {
     balance = ${balance}
     rate = ${rate}
     term_months = ${term_months}
-    smm = ${smm}
-    mdr = ${mdr}
+    cpr = ${cpr}
+    cdr = ${cdr}
     severity = ${severity}
+    recovery_lag_months = ${recovery_lag_months}
     servicing_fee = ${servicing_fee}
   }
 }
 """
 [templates.defaults]
 term_start = "2026-01"
-term_end = "2031-12"
-balance = "10000000"
-rate = "0.06"
-term_months = "72"
-smm = "0"
-mdr = "0"
-severity = "0"
-servicing_fee = "0"
+term_end = "2036-06"
+balance = "25000000"
+rate = "0.065"
+term_months = "120"
+cpr = "0.08"
+cdr = "0.02"
+severity = "0.35"
+recovery_lag_months = "6"
+servicing_fee = "0.005"
 
 [[templates]]
 id = "credit.pool_io_bullet"
-label = "Interest-only pool, bullet at maturity"
+label = "Interest-only pool — bullet maturity"
 kind = "contract"
 body = """
-contract credit.pool_io_bullet.pool_a {
+contract credit.pool_io_bullet {
   term ${term_start}..${term_end}
   terms {
     balance = ${balance}
     rate = ${rate}
     term_months = ${term_months}
+    cpr = ${cpr}
+    cdr = ${cdr}
+    severity = ${severity}
+    recovery_lag_months = ${recovery_lag_months}
   }
 }
 """
 [templates.defaults]
 term_start = "2026-01"
-term_end = "2031-12"
+term_end = "2031-04"
 balance = "10000000"
-rate = "0.06"
-term_months = "72"
-
-[[templates]]
-id = "credit.pool_float_io_bullet"
-label = "Floating-rate IO pool, bullet at maturity"
-kind = "contract"
-body = """
-contract credit.pool_float_io_bullet.pool_a {
-  term ${term_start}..${term_end}
-  terms {
-    balance = ${balance}
-    index_curve = "${index_curve}"
-    margin = ${margin}
-    term_months = ${term_months}
-  }
-}
-"""
-[templates.defaults]
-term_start = "2026-01"
-term_end = "2031-12"
-balance = "10000000"
-index_curve = "sofr"
-margin = "0.025"
-term_months = "72"
+rate = "0.0725"
+term_months = "60"
+cpr = "0.05"
+cdr = "0.01"
+severity = "0.40"
+recovery_lag_months = "4"
 
 [[templates]]
 id = "credit.purchase"
-label = "Pool purchase price"
+label = "Purchase — price paid at close"
 kind = "contract"
 body = """
-contract credit.purchase.pool_a {
+contract credit.purchase {
   term ${term_start}..${term_start}
   terms {
     price = ${price}
@@ -97,5 +80,4 @@ contract credit.purchase.pool_a {
 """
 [templates.defaults]
 term_start = "2026-01"
-price = "0"
-
+price = "24750000"

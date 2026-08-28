@@ -26,6 +26,7 @@ categories = [
 # contract type names the rule that turns it into cash.
 ontology = "ontology/types.toml"
 aliases = "aliases.toml"
+templates = "templates.toml"
 lowering = "lowering/rules.toml"
 metrics = "metrics.toml"
 statements = "statements.toml"

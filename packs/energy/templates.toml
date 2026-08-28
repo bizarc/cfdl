@@ -1,65 +1,40 @@
-# Energy contract templates — the conventional starting set, offered by the
-# editor as snippets (the LSP reads these for completion and `applyTemplate`).
+# Energy contract templates — the conventional starting set for a contracted
+# generation asset, offered by the editor as snippets and assembled into
+# starting models by the MCP `skeleton` tool. Defaults are the values the
+# benchmark suite validates (benchmarks/energy/solar_ppa_microgrid), not
+# measurements — a real project states its own.
 #
-# Each template carries the terms its rule REQUIRES, with a conventional value
-# where a convention exists and zero where only the deal knows. A term may hold
-# an expression, so a varying rate is written directly —
-# `growth_rate = curve_value("cpi", time.date)` — and no template offers a
-# curve-selector twin.
-#
-# `${key}` placeholders resolve from the request, then from
-# [templates.defaults].
+# `${key}` placeholders resolve from the request, then from [templates.defaults].
 
 [[templates]]
 id = "energy.ppa"
-label = "PPA revenue"
+label = "Power purchase agreement — contracted offtake"
 kind = "contract"
 body = """
-contract energy.ppa.plant_a {
+contract energy.ppa {
   term ${term_start}..${term_end}
   terms {
     mwh_year = ${mwh_year}
     ppa_price = ${ppa_price}
     escalation = ${escalation}
     degradation = ${degradation}
-    availability = ${availability}
   }
 }
 """
 [templates.defaults]
 term_start = "2026-01"
 term_end = "2050-12"
-mwh_year = "0"
-ppa_price = "0"
-escalation = "0"
+mwh_year = "4200"
+ppa_price = "85"
+escalation = "0.02"
 degradation = "0.005"
-availability = "1.0"
-
-[[templates]]
-id = "energy.merchant"
-label = "Merchant revenue"
-kind = "contract"
-body = """
-contract energy.merchant.plant_a {
-  term ${term_start}..${term_end}
-  terms {
-    mwh_year = ${mwh_year}
-    price = ${price}
-  }
-}
-"""
-[templates.defaults]
-term_start = "2026-01"
-term_end = "2050-12"
-mwh_year = "0"
-price = "0"
 
 [[templates]]
 id = "energy.om"
 label = "Operations and maintenance"
 kind = "contract"
 body = """
-contract energy.om.plant_a {
+contract energy.om {
   term ${term_start}..${term_end}
   terms {
     om_year = ${om_year}
@@ -70,15 +45,15 @@ contract energy.om.plant_a {
 [templates.defaults]
 term_start = "2026-01"
 term_end = "2050-12"
-om_year = "0"
+om_year = "70000"
 escalation = "0.025"
 
 [[templates]]
 id = "energy.capex"
-label = "Capital outlay"
+label = "Capital expenditure at close"
 kind = "contract"
 body = """
-contract energy.capex.plant_a {
+contract energy.capex {
   term ${term_start}..${term_start}
   terms {
     amount = ${amount}
@@ -87,66 +62,27 @@ contract energy.capex.plant_a {
 """
 [templates.defaults]
 term_start = "2026-01"
-amount = "0"
+amount = "2400000"
 
 [[templates]]
 id = "energy.debt_service"
-label = "Project debt (proceeds, interest, principal)"
+label = "Level-pay project debt"
 kind = "contract"
 body = """
-contract energy.debt_service.plant_a {
+contract energy.debt_service {
   term ${term_start}..${term_end}
   terms {
-    principal = ${principal}
     rate = ${rate}
     term_months = ${term_months}
+    principal = ${principal}
+    funded_at_close = ${funded_at_close}
   }
 }
 """
 [templates.defaults]
 term_start = "2026-01"
-term_end = "2043-12"
-principal = "3150000"
-rate = "0.07"
-term_months = "216"
-
-[[templates]]
-id = "energy.ptc"
-label = "Production tax credit"
-kind = "contract"
-body = """
-contract energy.ptc.plant_a {
-  term ${term_start}..${term_end}
-  terms {
-    credit_per_mwh = ${credit_per_mwh}
-    mwh_year = ${mwh_year}
-  }
-}
-"""
-[templates.defaults]
-term_start = "2026-01"
-term_end = "2035-12"
-credit_per_mwh = "0"
-mwh_year = "0"
-
-[[templates]]
-id = "energy.macrs_shield"
-label = "MACRS depreciation shield"
-kind = "contract"
-body = """
-contract energy.macrs_shield.plant_a {
-  term ${term_start}..${term_end}
-  terms {
-    basis = ${basis}
-    life = ${life}
-    tax_rate = ${tax_rate}
-  }
-}
-"""
-[templates.defaults]
-term_start = "2026-01"
-term_end = "2031-12"
-basis = "0"
-life = "5"
-tax_rate = "0.21"
-
+term_end = "2045-12"
+rate = "0.06"
+term_months = "240"
+principal = "1600000"
+funded_at_close = "0"

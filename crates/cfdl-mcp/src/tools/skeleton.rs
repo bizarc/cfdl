@@ -43,9 +43,16 @@ pub struct SkeletonResult {
     pub model: String,
     /// Whether the skeleton compiles as returned.
     pub ok: bool,
+    /// Whether the compiled skeleton also RUNS without engine warnings. A
+    /// skeleton that compiles but warns (an unfilled curve, a term outside
+    /// the grid) is not a clean start; `warnings` says what to fill in.
+    pub run_ok: bool,
     /// Compile diagnostics when it does not (unfilled `${placeholders}` land here).
     #[serde(skip_serializing_if = "Vec::is_empty")]
     pub diagnostics: Vec<serde_json::Value>,
+    /// Engine warnings from the verification run (deduplicated).
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub warnings: Vec<String>,
     pub templates_used: Vec<String>,
     #[serde(skip_serializing_if = "Vec::is_empty")]
     pub notes: Vec<String>,
@@ -158,6 +165,22 @@ pub fn skeleton(params: &SkeletonParams, defaults: &Defaults) -> Result<Skeleton
         templates_used.push(template.id.clone());
     }
 
+    // A body that reads a curve needs that curve declared, or every stream
+    // it lowers evaluates to zero at run time with EXPR_EVAL warnings — a
+    // hole compile-checking alone does not see. Stub each referenced curve
+    // with a single flat point the modeller replaces.
+    for curve in referenced_curves(&model) {
+        if !model.contains(&format!("curve {curve} ")) {
+            let stub = format!("\ncurve {curve} step {{\n  {start}: 1000000\n}}\n");
+            let insert_at = model.find("\n\ncontract").unwrap_or(model.len());
+            model.insert_str(insert_at, &stub);
+            notes.push(format!(
+                "declared stub curve '{curve}' (one flat point) — replace its points \
+                 with the deal's"
+            ));
+        }
+    }
+
     // Compile the skeleton before handing it over.
     let mut files = BTreeMap::new();
     files.insert("model.cfdl".to_string(), model.clone());
@@ -168,14 +191,15 @@ pub fn skeleton(params: &SkeletonParams, defaults: &Defaults) -> Result<Skeleton
         params.packs_dir.as_deref(),
         defaults,
     )?;
-    let (ok, diagnostics) = match compiled {
-        Ok(_) => (true, Vec::new()),
+    let (ok, diagnostics, ir) = match compiled {
+        Ok(ir) => (true, Vec::new(), Some(ir)),
         Err(diags) => (
             false,
             diags
                 .iter()
                 .map(|d| serde_json::to_value(d).unwrap_or(serde_json::Value::Null))
                 .collect(),
+            None,
         ),
     };
     if !ok {
@@ -185,13 +209,66 @@ pub fn skeleton(params: &SkeletonParams, defaults: &Defaults) -> Result<Skeleton
                 .to_string(),
         );
     }
+    // A verification run: compiling is necessary, running warning-free is
+    // what makes this a clean start.
+    let mut run_ok = false;
+    let mut warnings = Vec::new();
+    if let Some(ir) = ir {
+        match cfdl_run::run_enriched(&ir, cfdl_engine::RunConfig::default(), None, None) {
+            Ok(results) => {
+                for warning in &results.warnings {
+                    if !warnings.contains(warning) {
+                        warnings.push(warning.clone());
+                    }
+                    if warnings.len() >= 8 {
+                        break;
+                    }
+                }
+                run_ok = warnings.is_empty();
+                if !run_ok {
+                    notes.push(
+                        "the skeleton runs with engine warnings; fill in what they name \
+                         before growing the model"
+                            .to_string(),
+                    );
+                }
+            }
+            Err(err) => {
+                notes.push(format!("the skeleton compiles but does not run: {err}"));
+            }
+        }
+    }
     Ok(SkeletonResult {
         model,
         ok,
+        run_ok,
         diagnostics,
+        warnings,
         templates_used,
         notes,
     })
+}
+
+/// Curve names the model reads: `<term>_curve = "<name>"` terms and
+/// `curve_value("<name>", ...)` calls.
+fn referenced_curves(model: &str) -> Vec<String> {
+    let mut curves = Vec::new();
+    for marker in ["_curve = \"", "curve_value(\""] {
+        let mut rest = model;
+        while let Some(pos) = rest.find(marker) {
+            rest = &rest[pos + marker.len()..];
+            if let Some(end) = rest.find('"') {
+                let name = &rest[..end];
+                if !name.is_empty()
+                    && name.chars().all(|c| c.is_ascii_alphanumeric() || c == '_')
+                    && !curves.contains(&name.to_string())
+                {
+                    curves.push(name.to_string());
+                }
+            }
+        }
+    }
+    curves
 }
 
 /// `YYYY-MM` plus N periods on the given calendar (monthly/quarterly/annual).
