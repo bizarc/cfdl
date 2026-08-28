@@ -33,13 +33,54 @@
       "symbol": "asset.microgrid",
       "type": "Energy.Asset.GenerationFacility",
       "fields": {},
-      "state": {}
+      "state": {},
+      "lifecycle": "energy.facility"
     }
   ],
   "assumptions": {
     "constants": {},
     "random": {}
   },
+  "lifecycles": [
+    {
+      "id": "energy.facility",
+      "initial": "development",
+      "states": [
+        "development",
+        "construction",
+        "commissioning",
+        "operating",
+        "curtailed",
+        "decommissioned"
+      ],
+      "edges": [
+        {
+          "from": "development",
+          "to": "construction"
+        },
+        {
+          "from": "construction",
+          "to": "commissioning"
+        },
+        {
+          "from": "commissioning",
+          "to": "operating"
+        },
+        {
+          "from": "operating",
+          "to": "curtailed"
+        },
+        {
+          "from": "curtailed",
+          "to": "operating"
+        },
+        {
+          "from": "operating",
+          "to": "decommissioned"
+        }
+      ]
+    }
+  ],
   "subtotals": [
     {
       "id": "domain.energy.revenue",

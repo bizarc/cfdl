@@ -1,0 +1,12 @@
+version 0.1
+model "lifecycle-no-initial"
+time calendar monthly from 2026-01 for 3
+
+// EVERY MACHINE OPENS SOMEWHERE. A machine with no initial state has no
+// answer to "what is the entity's status before anything fires".
+lifecycle unit {
+  state a, b
+  a -> b when time.t == 1
+}
+
+entity asset x { lifecycle unit  state a }

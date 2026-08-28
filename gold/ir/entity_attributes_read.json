@@ -19,7 +19,8 @@
         "rentable_area": "12000"
       },
       "state": {},
-      "parent": "asset.tower"
+      "parent": "asset.tower",
+      "lifecycle": "cre.unit"
     },
     {
       "id": "121876c85ba64d3a28b2875e9e107d71",
@@ -29,13 +30,86 @@
         "asset_class": "office",
         "rentable_area": "30000"
       },
-      "state": {}
+      "state": {},
+      "lifecycle": "cre.property"
     }
   ],
   "assumptions": {
     "constants": {},
     "random": {}
   },
+  "lifecycles": [
+    {
+      "id": "cre.property",
+      "initial": "operating",
+      "states": [
+        "predevelopment",
+        "construction",
+        "lease_up",
+        "operating",
+        "repositioning",
+        "disposed"
+      ],
+      "edges": [
+        {
+          "from": "predevelopment",
+          "to": "construction"
+        },
+        {
+          "from": "construction",
+          "to": "lease_up"
+        },
+        {
+          "from": "lease_up",
+          "to": "operating"
+        },
+        {
+          "from": "operating",
+          "to": "repositioning"
+        },
+        {
+          "from": "repositioning",
+          "to": "lease_up"
+        },
+        {
+          "from": "operating",
+          "to": "disposed"
+        }
+      ]
+    },
+    {
+      "id": "cre.unit",
+      "initial": "vacant",
+      "states": [
+        "vacant",
+        "leased",
+        "holdover",
+        "downtime"
+      ],
+      "edges": [
+        {
+          "from": "vacant",
+          "to": "leased"
+        },
+        {
+          "from": "leased",
+          "to": "holdover"
+        },
+        {
+          "from": "leased",
+          "to": "downtime"
+        },
+        {
+          "from": "holdover",
+          "to": "leased"
+        },
+        {
+          "from": "downtime",
+          "to": "leased"
+        }
+      ]
+    }
+  ],
   "subtotals": [
     {
       "id": "domain.cre.pgr",

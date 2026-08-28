@@ -1,0 +1,17 @@
+[
+  {
+    "code": "E1352_DUPLICATE_LIFECYCLE",
+    "severity": "error",
+    "message": "Lifecycle 'unit' is declared twice. One machine, one declaration — merge the edges into one block.",
+    "file": "model.cfdl",
+    "span": {
+      "start_line": 8,
+      "start_col": 1,
+      "end_line": 8,
+      "end_col": 37
+    },
+    "path": null,
+    "hint": null,
+    "notes": []
+  }
+]

@@ -1,0 +1,14 @@
+version 0.1
+model "lifecycle-conflict"
+use pack "cre" version "0.1.0"
+time calendar monthly from 2026-01 for 3
+
+// ONE MACHINE PER ENTITY. CRE.Asset.Unit's type already declares the
+// cre.unit lifecycle; binding a model-declared one too would leave two
+// authorities over one status.
+lifecycle unit { initial a  state a, b }
+
+entity asset x : CRE.Asset.Unit {
+  lifecycle unit
+  rentable_area = 1
+}

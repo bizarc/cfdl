@@ -1,0 +1,19 @@
+version 0.1
+model "lifecycle-unreachable-write"
+time calendar monthly from 2026-01 for 3
+
+// NO EDGE ENTERS 'c', SO THE WRITE CAN NEVER BE LEGAL — whatever state the
+// entity is in at run. That certainty is what makes the refusal
+// compile-time (docs/28 §6.1 rule 3); the run-time half, where the
+// from-state is a fact, lives in the engine.
+lifecycle unit {
+  initial a
+  state a, b, c
+  a -> b when time.t == 1
+}
+
+entity asset x { lifecycle unit  state a }
+
+event jump when time.t == 1 {
+  set entity asset.x.status = "c"
+}

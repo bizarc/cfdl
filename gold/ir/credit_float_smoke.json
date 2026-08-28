@@ -50,7 +50,8 @@
           }
         }
       },
-      "state": {}
+      "state": {},
+      "lifecycle": "credit.pool"
     }
   ],
   "assumptions": {
@@ -69,6 +70,36 @@
         {
           "date": "2027-01-01",
           "value": 0.038
+        }
+      ]
+    }
+  ],
+  "lifecycles": [
+    {
+      "id": "credit.pool",
+      "initial": "amortizing",
+      "states": [
+        "warehouse",
+        "amortizing",
+        "called",
+        "retired"
+      ],
+      "edges": [
+        {
+          "from": "warehouse",
+          "to": "amortizing"
+        },
+        {
+          "from": "amortizing",
+          "to": "called"
+        },
+        {
+          "from": "amortizing",
+          "to": "retired"
+        },
+        {
+          "from": "called",
+          "to": "retired"
         }
       ]
     }

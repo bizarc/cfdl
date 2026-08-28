@@ -1,0 +1,17 @@
+[
+  {
+    "code": "E1351_LIFECYCLE_NO_INITIAL",
+    "severity": "error",
+    "message": "Lifecycle 'unit' declares no initial state. Every machine opens somewhere — add `initial <state>`.",
+    "file": "model.cfdl",
+    "span": {
+      "start_line": 7,
+      "start_col": 1,
+      "end_line": 10,
+      "end_col": 1
+    },
+    "path": null,
+    "hint": null,
+    "notes": []
+  }
+]

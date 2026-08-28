@@ -16,7 +16,8 @@
       "symbol": "asset.legacy",
       "type": "CRE.Asset.RealProperty",
       "fields": {},
-      "state": {}
+      "state": {},
+      "lifecycle": "cre.property"
     },
     {
       "id": "4b3815af6f8727aa5e6a0802a277ce2e",
@@ -27,7 +28,8 @@
       },
       "state": {},
       "parent": "asset.tower",
-      "initial_state": "leased"
+      "initial_state": "leased",
+      "lifecycle": "cre.unit"
     },
     {
       "id": "121876c85ba64d3a28b2875e9e107d71",
@@ -38,7 +40,8 @@
         "rentable_area": "30000"
       },
       "state": {},
-      "initial_state": "operating"
+      "initial_state": "operating",
+      "lifecycle": "cre.property"
     },
     {
       "id": "0fbaf93a67f73e142625ed8e48f208b2",
@@ -54,6 +57,78 @@
     "constants": {},
     "random": {}
   },
+  "lifecycles": [
+    {
+      "id": "cre.property",
+      "initial": "operating",
+      "states": [
+        "predevelopment",
+        "construction",
+        "lease_up",
+        "operating",
+        "repositioning",
+        "disposed"
+      ],
+      "edges": [
+        {
+          "from": "predevelopment",
+          "to": "construction"
+        },
+        {
+          "from": "construction",
+          "to": "lease_up"
+        },
+        {
+          "from": "lease_up",
+          "to": "operating"
+        },
+        {
+          "from": "operating",
+          "to": "repositioning"
+        },
+        {
+          "from": "repositioning",
+          "to": "lease_up"
+        },
+        {
+          "from": "operating",
+          "to": "disposed"
+        }
+      ]
+    },
+    {
+      "id": "cre.unit",
+      "initial": "vacant",
+      "states": [
+        "vacant",
+        "leased",
+        "holdover",
+        "downtime"
+      ],
+      "edges": [
+        {
+          "from": "vacant",
+          "to": "leased"
+        },
+        {
+          "from": "leased",
+          "to": "holdover"
+        },
+        {
+          "from": "leased",
+          "to": "downtime"
+        },
+        {
+          "from": "holdover",
+          "to": "leased"
+        },
+        {
+          "from": "downtime",
+          "to": "leased"
+        }
+      ]
+    }
+  ],
   "subtotals": [
     {
       "id": "domain.cre.pgr",

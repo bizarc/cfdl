@@ -53,7 +53,8 @@
         }
       },
       "state": {},
-      "parent": "asset.trust"
+      "parent": "asset.trust",
+      "lifecycle": "credit.pool"
     },
     {
       "id": "d3c5afc1ad2e142b6066daa65f97b5b0",
@@ -62,7 +63,8 @@
       "fields": {
         "collateral_type": "auto"
       },
-      "state": {}
+      "state": {},
+      "lifecycle": "credit.pool"
     },
     {
       "id": "114a26abbb5c38ec6001a6889a43968e",
@@ -87,6 +89,36 @@
     },
     "random": {}
   },
+  "lifecycles": [
+    {
+      "id": "credit.pool",
+      "initial": "amortizing",
+      "states": [
+        "warehouse",
+        "amortizing",
+        "called",
+        "retired"
+      ],
+      "edges": [
+        {
+          "from": "warehouse",
+          "to": "amortizing"
+        },
+        {
+          "from": "amortizing",
+          "to": "called"
+        },
+        {
+          "from": "amortizing",
+          "to": "retired"
+        },
+        {
+          "from": "called",
+          "to": "retired"
+        }
+      ]
+    }
+  ],
   "waterfalls": [
     {
       "name": "notes.principal",

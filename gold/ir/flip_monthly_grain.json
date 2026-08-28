@@ -51,7 +51,8 @@
         }
       },
       "state": {},
-      "initial_state": "pre_flip"
+      "initial_state": "pre_flip",
+      "lifecycle": "energy.flip_structure"
     },
     {
       "id": "e543bf7d14a9fd314df744fc80d7d002",
@@ -213,6 +214,22 @@
     },
     "random": {}
   },
+  "lifecycles": [
+    {
+      "id": "energy.flip_structure",
+      "initial": "pre_flip",
+      "states": [
+        "pre_flip",
+        "post_flip"
+      ],
+      "edges": [
+        {
+          "from": "pre_flip",
+          "to": "post_flip"
+        }
+      ]
+    }
+  ],
   "waterfalls": [
     {
       "name": "interest.distribution",

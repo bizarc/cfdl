@@ -1,0 +1,17 @@
+[
+  {
+    "code": "E1316_UNKNOWN_LIFECYCLE_STATE",
+    "severity": "error",
+    "message": "Lifecycle 'unit' has an edge naming 'downtme', which is not a declared state. Declared: downtime, leased.",
+    "file": "model.cfdl",
+    "span": {
+      "start_line": 11,
+      "start_col": 3,
+      "end_line": 11,
+      "end_col": 36
+    },
+    "path": null,
+    "hint": null,
+    "notes": []
+  }
+]

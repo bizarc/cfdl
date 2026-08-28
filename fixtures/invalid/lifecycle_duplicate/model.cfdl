@@ -1,0 +1,10 @@
+version 0.1
+model "lifecycle-duplicate"
+time calendar monthly from 2026-01 for 3
+
+// ONE MACHINE, ONE DECLARATION. Two blocks sharing a name would leave the
+// binding ambiguous about which relation governs the entity.
+lifecycle unit { initial a  state a }
+lifecycle unit { initial a  state a }
+
+entity asset x { lifecycle unit }
