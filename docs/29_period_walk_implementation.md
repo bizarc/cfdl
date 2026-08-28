@@ -10,7 +10,8 @@ into `docs/28` unless said otherwise.
 ## Phase 0 — the gates (pre-work; blocks everything)
 
 **0.1 Loud failure for unbindable series reads.** The three inert spellings
-of `docs/13` §7.71 — each of which today warns per period and publishes wrong
+of `docs/13` §7.71 (since closed and removed) — each of which then warned
+per period and published wrong
 numbers under `status: ok` — become refusals: `series_sum`/`series_avg` in
 an event guard or a field recurrence is refused at compile where the
 validator can see it, and at IR load otherwise, with the read named — the
@@ -369,7 +370,9 @@ The training site is checked for chapters the walk contradicts (events,
 waterfalls) and corrected. `docs/13` closes or narrows §5.2, §7.10, §7.36,
 §7.40i's trigger half, §7.41, §7.45, §7.71 — each under the file's own
 standard: closed items removed, residue restated under an accurate
-headline.
+headline. **Done:** §5.2, §7.10, §7.36, §7.40i and §7.71 are closed and
+gone from that file; §7.41 and §7.45 stand narrowed; §7.40i's gating half
+survives as §7.73, and §7.78 collects what M2 takes up.
 
 ## Decisions still open, and who settles them
 
@@ -384,7 +387,9 @@ headline.
 
 ## What this plan does not contain
 
-The contract runtime behind `activate contract` (M2), multiple instances of
+Contract gating (M2) — which `docs/13` §7.73 has since re-specified as the
+retirement of `activate contract`, not the runtime this plan once deferred —
+multiple instances of
 one pack contract type (F.3), typed pack-declared actions, participant-level
 return metrics (`docs/13` §7.72 — gated on the account, built on §7.25's
 declared metrics in M4), and optimal exercise (past v1). Each is listed in
