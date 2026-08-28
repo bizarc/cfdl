@@ -15,6 +15,7 @@ statement       = version_stmt
                 | quantile_stmt
                 | contract_stmt
                 | stream_stmt
+                | account_stmt
                 | waterfall_stmt
                 | event_stmt
                 | option_stmt
@@ -206,6 +207,28 @@ waterfall_stmt  = "waterfall" qname
                   waterfall_block ;
 
 waterfall_block = "{" schedule_stmt "from" expr { waterfall_step } "}" ;
+
+(* --- accounts ---
+   A declared cash location whose balance carries ACROSS periods. `available`
+   is unchanged and still means this period's netted cash; an account is the
+   accumulated cash, and is what a waterfall draws its pot from when its
+   schedule names a period.
+
+   An account is denominated by the MODEL, so there is no currency clause: the
+   only thing it could express is a restatement of what `model_stmt` already
+   declares, or a second unit that must be refused.
+
+   `owner` is optional. A general account belongs to the structure — a
+   collection account, a reserve — and a party-owned one holds what has been
+   ALLOCATED to that party. It is not an obligation: it holds cash that
+   exists, and what is still owed is simply not yet allocated.
+   See docs/28_period_walk.md §5.1. --- *)
+account_stmt    = "account" IDENT account_block ;
+
+account_block   = "{" { account_item } "}" ;
+account_item    = account_owner | account_from ;
+account_owner   = "owner" entity_ref ;
+account_from    = "from" expr ;
 waterfall_step  = "pay" IDENT "to" entity_ref "=" expr ;
 
 (* --- schedules --- *)

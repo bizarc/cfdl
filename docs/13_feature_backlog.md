@@ -1366,6 +1366,15 @@ not survive it. Five productions were wrong when checked by hand — `contract`
 alone was wrong four ways, and would have rejected 519 of the 520 contract
 declarations in this repository. They are fixed. Nothing stops it recurring.
 
+**It recurred on 2026-08-27, as predicted.** `account_stmt` was added to the
+parser and then to the EBNF BY HAND, in separate edits, with nothing checking
+that the two describe the same language. Both copies of the grammar —
+`docs/schemas/` and the site mirror — had to be edited by hand as well. The
+production may be right; nothing establishes that it is, which is the whole
+complaint. Every keyword this project adds from here repeats the exposure, and
+`account` will not be the last: the state machine of `docs/28` §6.1 and the
+schedule anchor of §6.2 are both new surface.
+
 **The parser is hand-written recursive descent, so the grammar is source for
 nothing.** That is the right call — the diagnostics are a feature and generated
 parsers do not produce them — but it means the two artefacts agree only by
