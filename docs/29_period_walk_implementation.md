@@ -329,10 +329,16 @@ what flows in, checked.
 
 ## Phase 5 — the state machine (§6.1–6.2)
 
-Transition edges declared beside lifecycle states in pack `types.toml` and
-in model-declared lifecycles; undeclared transitions refused (compile where
-statable, run otherwise); the trigger policy (`once`, the default latch,
-vs. every-period); `state_enter` as the third schedule anchor, resolved
+The `lifecycle` block as a core-language construct — states enumerated,
+edges declared only as used, guards on edges evaluated each period the
+entity is in the from-state (no latch, no trigger-policy keyword: edge
+availability is the memory, and free-standing `event … when` keeps its
+shipped latched meaning). Pack `types.toml` edges gain optional guards.
+Event `set … status` writes validated against the declared relation
+(compile where statable, run otherwise; an edge-less lifecycle stays
+unconstrained, `permits()`'s shipped rule). Self-edges journal and
+re-anchor; declaration order resolves simultaneous guards; one transition
+per entity per period. `state_enter` as the third schedule anchor, resolved
 during the walk, re-anchoring on re-entry.
 
 - Files: `crates/cfdl-parser`, `crates/cfdl-pack` (lifecycle loading),
@@ -369,8 +375,10 @@ headline.
 
 1. **The expense stop's plane** (§7) — settled by MIT Rentleg in phase 6.
 2. **Concrete syntax** for the account declaration, the pay-to-account
-   step, the trigger policy, and `state_enter` — settled at each phase's
-   parser PR, against `docs/02` and the §7.19 reserved-word caution.
+   step, the lifecycle block, and `state_enter` — settled at each phase's
+   parser PR, against `docs/02` and the §7.19 reserved-word caution. The
+   trigger policy dissolved in phase 5: the machine needs none, and the
+   latched `event … when` is unchanged.
 3. **Whether the journal is a golden by default** or only where a fixture
    opts in — settled in phase 1 by the size of what it produces.
 
