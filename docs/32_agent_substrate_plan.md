@@ -7,6 +7,12 @@ Phase 2 implemented 2026-08-28: `tools/gen-machine-docs.py` generates
 `docs/machine/` (llms.txt, the machine docs bundle, llms-full.txt with the
 course chapters, the diagnostics → repair catalog, and the valid-examples corpus), staged to the site by
 `sync-content.mjs` and gated by `make machine-docs-check` in `ci-gates`.
+Phase 3 harness implemented 2026-08-28: `tools/agent-eval/runner.py` — three
+tiers (repair from the 70 fixture/fix pairs, transcribe from the 42 cases,
+extend by declared assertions), agents as `replay`/`cmd:`/HTTP, grading
+imported from the benchmark runner, `make agent-eval-selftest` in `ci-gates`
+and `make agent-eval-replay` as the full 100% gate. The private split and
+real-agent runs remain open.
 **Scope:** §3.4 of the EVS strategy survey (evs-platform `docs/15`): making
 CFDL the modeling target an AI agent can write, verify, and explain —
 "describe the deal, get a verified model." This plan covers the toolkit, the

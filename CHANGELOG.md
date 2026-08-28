@@ -8,6 +8,21 @@ This project follows Semantic Versioning: https://semver.org/
 
 ## [Unreleased]
 
+### Added: the agent-eval harness (docs/32 Phase 3)
+
+`tools/agent-eval/runner.py`: the benchmark suite becomes the grader.
+Three tiers — repair (the 70 fixture/fix pairs; scored on compile),
+transcribe (the 42 cases: CASE.md and permitted reference material, never
+`expected.csv`; scored compiles/runs/matches with partial credit by
+asserted column and metric), extend (declared assertions; format defined,
+public set empty until independently-derived assertions exist). Agents
+plug in as the scripted `replay`, a `cmd:` subprocess, or an HTTP
+endpoint — the provider-agnostic seam. Grading imports the benchmark
+runner's own comparison, so the eval and `make bench` cannot grade
+differently. `make agent-eval-selftest` (sampled replay at 100%) joins
+`ci-gates`; `make agent-eval-replay` is the full gate. `--benchmarks-dir`
+points the transcribe tier at a private held-out split.
+
 ### Added: benchmark exemplars in the machine surface
 
 `docs/machine/exemplars.md` (served at `/machine/exemplars.md`, and inlined

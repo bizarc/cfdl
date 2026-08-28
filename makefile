@@ -3,7 +3,7 @@
 
 SHELL := /bin/bash
 
-.PHONY: pack-series pack-templates keyword-register ci-gates invariants glossary glossary-check machine-docs machine-docs-check shipped-examples benchmark-cases help fmt fmt-check lint test build clean gold gold-update ci verify site-voice verify-python verify-site verify-site-nofresh verify-site-fresh verify-learn-nofresh doc-examples training-examples py-develop py-test py-wheel notebooks-render notebooks-check wasm cadence-parity ir-schema results-schema run-schema pack-validations rule-fragments py-stamp py-check
+.PHONY: pack-series pack-templates keyword-register ci-gates invariants glossary glossary-check machine-docs machine-docs-check agent-eval-selftest agent-eval-replay shipped-examples benchmark-cases help fmt fmt-check lint test build clean gold gold-update ci verify site-voice verify-python verify-site verify-site-nofresh verify-site-fresh verify-learn-nofresh doc-examples training-examples py-develop py-test py-wheel notebooks-render notebooks-check wasm cadence-parity ir-schema results-schema run-schema pack-validations rule-fragments py-stamp py-check
 
 help:
 	@echo "Targets:"
@@ -96,7 +96,7 @@ bench:
 # was in this file and not in the workflow.
 ci-gates: analytic invariants cadence-parity ir-schema results-schema run-schema \
           pack-validations pack-series pack-templates keyword-register site-voice \
-          glossary-check machine-docs-check \
+          glossary-check machine-docs-check agent-eval-selftest \
           rule-fragments \
           doc-examples training-examples shipped-examples benchmark-cases
 	@echo
@@ -189,6 +189,18 @@ machine-docs:
 machine-docs-check:
 	cargo build -p cfdl-cli
 	$(PYGATE) tools/gen-machine-docs.py --check
+
+# The agent-eval harness self-test (docs/32 Phase 3): the scripted replay
+# agent must score 100% on a sampled task set — the check that separates
+# harness bugs from model failures. The full replay run is
+# `make agent-eval-replay`, before any public claim about agent authoring.
+agent-eval-selftest:
+	cargo build -p cfdl-cli
+	$(PYGATE) tools/agent-eval/runner.py --self-test
+
+agent-eval-replay:
+	cargo build -p cfdl-cli
+	$(PYGATE) tools/agent-eval/runner.py --tier all --agent replay
 
 site-voice:
 	$(PYGATE) tools/check-site-voice.py
