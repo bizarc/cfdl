@@ -178,11 +178,18 @@ account, a participant's distribution account — and the waterfall moves
 cash between them. The construct:
 
 ```
-account <name> [owned by <party-ref>] {
+account <name> {
+  owner <party-ref>                 // optional; a general account has none
   from <inflow expression>          // per-period inflow, may be negative
-  currency <code>
 }
 ```
+
+**No currency clause.** An account is denominated by the model, which already
+declares its reporting currency. Offering the clause would only let a modeller
+restate it — or state a different one, which must be refused, so the option
+would exist solely to be policed. Making the invalid state unrepresentable is
+better than diagnosing it. When multi-currency lands the clause can be added,
+which is additive and breaks nothing.
 
 An account is a declared cash location with a balance. **Ownership is
 optional**: a general account belongs to the structure — a collection account,

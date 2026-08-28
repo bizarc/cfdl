@@ -506,7 +506,6 @@ pub struct AccountStmt {
     /// `from <expr>` — what flows in each period. May be negative: an account
     /// fed a deal's whole net cash IS the deal's cumulative position.
     pub inflow: Option<ExprSlot>,
-    pub currency: Option<String>,
     pub span: Span,
 }
 
@@ -1840,7 +1839,6 @@ impl<'a> Parser<'a> {
         // where `owned by` would have cost two.
         let mut owner = None;
         let mut inflow = None;
-        let mut currency = None;
         let end;
         loop {
             match self.peek().kind {
@@ -1866,29 +1864,13 @@ impl<'a> Parser<'a> {
                     // Bounded, or the slot swallows the lines after it: an
                     // expression has no terminator of its own, so the block's
                     // other clauses are what end it.
-                    inflow = self.parse_expr_slot_until(kw.span, &["currency", "owner"]);
-                }
-                TokenKind::Keyword(Keyword::Currency) => {
-                    let _ = self.bump();
-                    let tok = self.bump();
-                    currency = match tok.kind {
-                        TokenKind::Ident(ref i) => Some(i.clone()),
-                        TokenKind::String(ref v) => Some(v.clone()),
-                        _ => {
-                            self.push_expected(
-                                tok.span,
-                                "Expected a currency code after 'currency'.".to_string(),
-                            );
-                            None
-                        }
-                    };
+                    inflow = self.parse_expr_slot_until(kw.span, &["owner"]);
                 }
                 _ => {
                     let tok = self.bump();
                     self.push_expected(
                         tok.span,
-                        "Expected 'owner', 'from', 'currency' or '}' in an account block."
-                            .to_string(),
+                        "Expected 'owner', 'from' or '}' in an account block.".to_string(),
                     );
                     return None;
                 }
@@ -1898,7 +1880,6 @@ impl<'a> Parser<'a> {
             name,
             owner,
             inflow,
-            currency,
             span: merge_spans(start.span, end.span),
         })
     }
@@ -2177,7 +2158,6 @@ impl<'a> Parser<'a> {
                 TokenKind::Eof
                 | TokenKind::Punct(Punct::RBrace)
                 | TokenKind::Keyword(Keyword::Schedule)
-                | TokenKind::Keyword(Keyword::Currency)
                 | TokenKind::Keyword(Keyword::Owner)
                 | TokenKind::Keyword(Keyword::Active) => break,
                 // An operand cannot follow an operand — but `and`, `or` and
