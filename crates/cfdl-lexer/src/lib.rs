@@ -61,6 +61,10 @@ pub enum Punct {
     DotDot,
     Equal,
     Tilde,
+    /// `->` — a lifecycle edge, `from -> to`. Lexed as one token only when
+    /// the two characters are adjacent, so `a - >b` stays minus-then-greater
+    /// and no expression changes meaning (`docs/28` §6.1).
+    Arrow,
     // Expression operators (bare native expressions)
     Plus,
     Minus,
@@ -511,7 +515,14 @@ impl<'a> Lexer<'a> {
             ',' => Some(Punct::Comma),
             '~' => Some(Punct::Tilde),
             '+' => Some(Punct::Plus),
-            '-' => Some(Punct::Minus),
+            '-' => {
+                if self.peek() == Some('>') {
+                    let _ = self.bump();
+                    Some(Punct::Arrow)
+                } else {
+                    Some(Punct::Minus)
+                }
+            }
             '*' => Some(Punct::Star),
             '/' => Some(Punct::Slash),
             '%' => Some(Punct::Percent),

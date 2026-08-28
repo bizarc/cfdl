@@ -877,6 +877,7 @@ fn referenced_names<'a>(src: &'a str, prefix: &str) -> Vec<&'a str> {
 fn statement_span(stmt: &Stmt) -> Span {
     match stmt {
         Stmt::Account(s) => s.span,
+        Stmt::Lifecycle(s) => s.span,
         Stmt::Version(s) => s.span,
         Stmt::Model(s) => s.span,
         Stmt::UsePack(s) => s.span,

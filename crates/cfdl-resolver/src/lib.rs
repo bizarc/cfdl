@@ -681,6 +681,7 @@ fn merge_modules(source_statements: &[SourceStatement]) -> CompilationUnit {
 fn statement_span(stmt: &Stmt) -> Span {
     match stmt {
         Stmt::Account(s) => s.span,
+        Stmt::Lifecycle(s) => s.span,
         Stmt::Version(s) => s.span,
         Stmt::Model(s) => s.span,
         Stmt::UsePack(s) => s.span,
@@ -761,6 +762,7 @@ mod tests {
                         fields: vec![],
                         parent: None,
                         initial_state: None,
+                        lifecycle: None,
                         span: span(),
                     }),
                 },
@@ -807,6 +809,7 @@ mod tests {
                         fields: vec![],
                         parent: None,
                         initial_state: None,
+                        lifecycle: None,
                         span: span(),
                     }),
                 },

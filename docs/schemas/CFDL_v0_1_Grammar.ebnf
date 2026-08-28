@@ -17,6 +17,7 @@ statement       = version_stmt
                 | stream_stmt
                 | account_stmt
                 | waterfall_stmt
+                | lifecycle_stmt
                 | event_stmt
                 | option_stmt
                 | run_stmt
@@ -51,6 +52,7 @@ entity_block    = "{" { entity_item } "}" ;
 entity_item     = entity_field
                 | part_of_stmt
                 | entity_state_stmt
+                | entity_lifecycle
                 ;
 
 (* Where this entity sits in the hierarchy. Optional by design: the same
@@ -59,6 +61,12 @@ part_of_stmt    = "part" "of" entity_ref ;
 
 (* The lifecycle state the entity OPENS in. Unrelated to a field. *)
 entity_state_stmt = "state" IDENT ;
+
+(* Bind a model-declared machine to this entity. `lifecycle` is a
+   contextual identifier, not a reserved word; the following IDENT is what
+   disambiguates it from a field of that name. An entity whose ontology
+   type declares a lifecycle needs none. *)
+entity_lifecycle = "lifecycle" IDENT ;
 
 (* --- assumptions --- *)
 assume_stmt     = "assume" IDENT ( "=" expr | "~" dist_expr ) ;
@@ -223,6 +231,24 @@ waterfall_block = "{" schedule_stmt "from" expr { waterfall_step } "}" ;
    ALLOCATED to that party. It is not an obligation: it holds cash that
    exists, and what is still owed is simply not yet allocated.
    See docs/28_period_walk.md §5.1. --- *)
+(* The declared finite state machine (docs/28 §6.1). `lifecycle` and
+   `initial` are contextual identifiers, not reserved words. The STATES are
+   enumerated ahead of time — the finite set is what makes a misspelled
+   state in an edge a compile error rather than a phantom state. The EDGES
+   are declared only as used: declaring one brings it into existence, an
+   undeclared edge does not exist, and absence is the prohibition. A
+   self-edge (from = to) is a real transition: it journals and re-anchors.
+   A guard-less edge is a permission only — an event's write may take it,
+   but the machine never fires it on its own. A guarded edge is evaluated
+   each period the entity is in its from-state; there is no latch, because
+   edge availability is the memory. *)
+lifecycle_stmt  = "lifecycle" IDENT "{" { lifecycle_item } "}" ;
+lifecycle_item  = "initial" IDENT
+                | "state" IDENT { "," IDENT }
+                | lifecycle_edge
+                ;
+lifecycle_edge  = IDENT "->" IDENT [ "when" expr ] ;
+
 account_stmt    = "account" IDENT account_block ;
 
 account_block   = "{" { account_item } "}" ;

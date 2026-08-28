@@ -36,6 +36,7 @@ pub enum Stmt {
     Event(EventStmt),
     Option(OptionStmt),
     Account(AccountStmt),
+    Lifecycle(LifecycleStmt),
     Waterfall(WaterfallStmt),
     Run(RunStmt),
 }
@@ -116,6 +117,46 @@ pub struct EntityStmt {
     /// declared initial state.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub initial_state: Option<String>,
+    /// A model-declared lifecycle bound by name — `lifecycle unit` in the
+    /// entity block. An entity with a typed lifecycle needs none; this is
+    /// what gives a pack-free entity a machine (`docs/28` §6.1).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub lifecycle: Option<String>,
+    pub span: Span,
+}
+
+/// A declared finite state machine — the core-language form (`docs/28` §6.1).
+///
+/// The STATES are enumerated ahead of time; that is the "finite" that makes
+/// the machine checkable, and a misspelled state in an edge is a compile
+/// error rather than a phantom state. The EDGES are declared only as used:
+/// declaring one is what brings it into existence, and an undeclared edge
+/// does not exist — absence is the prohibition, and nobody fills in the
+/// n-squared matrix. `lifecycle` and `initial` are contextual identifiers,
+/// not reserved words (`docs/13` §7.19).
+#[derive(Debug, Clone, PartialEq, Eq, serde::Serialize)]
+pub struct LifecycleStmt {
+    pub name: String,
+    /// The state the machine opens in. Mandatory by validation, optional
+    /// here so the parser can report the omission with the block's span.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub initial: Option<String>,
+    pub states: Vec<String>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub edges: Vec<LifecycleEdge>,
+    pub span: Span,
+}
+
+/// One edge: `from -> to [when <expr>]`. A self-edge (`from == to`) is a
+/// real transition — it journals and re-anchors. A guard-less edge is a
+/// permission only, the shape a pack's `types.toml` edge has today: an
+/// event's write may take it, but the machine never fires it on its own.
+#[derive(Debug, Clone, PartialEq, Eq, serde::Serialize)]
+pub struct LifecycleEdge {
+    pub from: String,
+    pub to: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub guard: Option<ExprSlot>,
     pub span: Span,
 }
 
@@ -730,6 +771,13 @@ impl<'a> Parser<'a> {
             TokenKind::Keyword(Keyword::Event) => self.parse_event_stmt().map(Stmt::Event),
             TokenKind::Keyword(Keyword::Option) => self.parse_option_stmt().map(Stmt::Option),
             TokenKind::Keyword(Keyword::Account) => self.parse_account_stmt().map(Stmt::Account),
+            // `lifecycle <name> { ... }` — contextual: `lifecycle` is an
+            // ordinary identifier, and an identifier starts no other
+            // top-level statement, so nothing else can begin this way
+            // (`docs/13` §7.19 — no new reserved word).
+            TokenKind::Ident(ref ident) if ident == "lifecycle" => {
+                self.parse_lifecycle_stmt().map(Stmt::Lifecycle)
+            }
             TokenKind::Keyword(Keyword::Waterfall) => {
                 self.parse_waterfall_stmt().map(Stmt::Waterfall)
             }
@@ -996,51 +1044,45 @@ impl<'a> Parser<'a> {
             }
         };
 
-        // `entity <family> <name>` is the whole statement unless a type follows.
-        // The typed form has been in the grammar since v0.1
-        // (`entity_stmt = "entity" IDENT IDENT ":" qname entity_block`) and was
-        // never implemented; an entity was a two-part name, and the first
-        // identifier was doing informal typing badly.
-        if !matches!(self.peek().kind, TokenKind::Punct(Punct::Colon)) {
-            return Some(EntityStmt {
-                namespace,
-                name,
-                type_name: None,
-                literal_fields: Vec::new(),
-                fields: Vec::new(),
-                parent: None,
-                initial_state: None,
-                span: merge_spans(start.span, name_tok.span),
-            });
-        }
-        let _ = self.bump(); // ':'
-
-        let type_tok = self.bump();
-        let type_name = match type_tok.kind {
-            TokenKind::Qname(ref qname) => qname.clone(),
-            TokenKind::Ident(ref ident) => ident.clone(),
-            _ => {
-                self.push_expected(
-                    type_tok.span,
-                    "Expected an ontology type after ':' (e.g. CRE.Asset.RealProperty)."
-                        .to_string(),
-                );
-                return None;
+        // `entity <family> <name>` is a complete statement; a type and a
+        // block are each optional, per the grammar
+        // (`entity_stmt = "entity" IDENT IDENT [":" qname] [entity_block]`).
+        // An UNTYPED entity may carry a block too — that is what lets a
+        // pack-free model bind a model-declared lifecycle (`docs/28` §6.1):
+        // the core has the full functionality, and packs tailor it.
+        let type_name = if matches!(self.peek().kind, TokenKind::Punct(Punct::Colon)) {
+            let _ = self.bump(); // ':'
+            let type_tok = self.bump();
+            match type_tok.kind {
+                TokenKind::Qname(ref qname) => Some(qname.clone()),
+                TokenKind::Ident(ref ident) => Some(ident.clone()),
+                _ => {
+                    self.push_expected(
+                        type_tok.span,
+                        "Expected an ontology type after ':' (e.g. CRE.Asset.RealProperty)."
+                            .to_string(),
+                    );
+                    return None;
+                }
             }
+        } else {
+            None
         };
+        let last_header_span = self.tokens[self.idx.saturating_sub(1)].span;
 
-        // The block is optional: a type alone is a complete statement, because
-        // a type with no required fields needs nothing said about it.
+        // The block is optional: the header alone is a complete statement,
+        // because a type with no required fields needs nothing said about it.
         if !matches!(self.peek().kind, TokenKind::Punct(Punct::LBrace)) {
             return Some(EntityStmt {
                 namespace,
                 name,
-                type_name: Some(type_name),
+                type_name,
                 literal_fields: Vec::new(),
                 fields: Vec::new(),
                 parent: None,
                 initial_state: None,
-                span: merge_spans(start.span, type_tok.span),
+                lifecycle: None,
+                span: merge_spans(start.span, last_header_span),
             });
         }
         let _ = self.bump(); // '{'
@@ -1049,6 +1091,7 @@ impl<'a> Parser<'a> {
         let mut fields: Vec<EntityField> = Vec::new();
         let mut parent: Option<String> = None;
         let mut initial_state: Option<String> = None;
+        let mut lifecycle: Option<String> = None;
         let end;
         loop {
             match self.peek().kind {
@@ -1089,6 +1132,22 @@ impl<'a> Parser<'a> {
                             return None;
                         }
                     }
+                }
+                // `lifecycle <name>` — bind a model-declared machine to this
+                // entity. Contextual: `lifecycle` stays an ordinary
+                // identifier everywhere else (`docs/13` §7.19), and the
+                // NEXT token being an identifier is what disambiguates it
+                // from a field named `lifecycle`.
+                TokenKind::Ident(ref ident)
+                    if ident == "lifecycle"
+                        && matches!(self.peek_ahead(1).kind, TokenKind::Ident(_)) =>
+                {
+                    let _ = self.bump();
+                    let name_tok = self.bump();
+                    let TokenKind::Ident(ref lc) = name_tok.kind else {
+                        unreachable!("matched Ident above")
+                    };
+                    lifecycle = Some(lc.clone());
                 }
                 // `state <name>` — the lifecycle state this entity STARTS in,
                 // overriding the type's declared initial. Every entity with a
@@ -1219,11 +1278,12 @@ impl<'a> Parser<'a> {
         Some(EntityStmt {
             namespace,
             name,
-            type_name: Some(type_name),
+            type_name,
             literal_fields,
             fields,
             parent,
             initial_state,
+            lifecycle,
             span: merge_spans(start.span, end.span),
         })
     }
@@ -1823,6 +1883,145 @@ impl<'a> Parser<'a> {
     /// A declared cash location whose balance carries ACROSS periods — what
     /// `docs/28` §5.1 renames the pot to. `available` is unchanged and still
     /// means this period's netted cash; an account is the accumulated cash.
+    /// `lifecycle <name> { initial <state>  state a, b, c  a -> b [when <expr>] ... }`
+    ///
+    /// The declared finite state machine (`docs/28` §6.1). States are
+    /// enumerated — the finite set is what makes a misspelled state in an
+    /// edge a compile error rather than a phantom state — and edges are
+    /// declared only as used. `initial` is contextual, like `lifecycle`
+    /// itself; `state` and `when` are already reserved.
+    fn parse_lifecycle_stmt(&mut self) -> Option<LifecycleStmt> {
+        let start = self.bump(); // `lifecycle`
+        let name_tok = self.bump();
+        let name = match name_tok.kind {
+            TokenKind::Ident(ref ident) => ident.clone(),
+            _ => {
+                self.push_expected(
+                    name_tok.span,
+                    "Expected a name after 'lifecycle'.".to_string(),
+                );
+                return None;
+            }
+        };
+        let _ = self.expect_punct(Punct::LBrace, "'{'")?;
+
+        let mut initial: Option<String> = None;
+        let mut states: Vec<String> = Vec::new();
+        let mut edges: Vec<LifecycleEdge> = Vec::new();
+        let end;
+        loop {
+            match self.peek().kind {
+                TokenKind::Punct(Punct::RBrace) => {
+                    end = self.bump();
+                    break;
+                }
+                TokenKind::Eof => {
+                    self.push_expected(
+                        self.current_span(),
+                        "Unterminated lifecycle block: expected '}'.".to_string(),
+                    );
+                    return None;
+                }
+                // `state a, b, c` — the enumerated set. More than one line
+                // is allowed and appends.
+                TokenKind::Keyword(Keyword::State) => {
+                    let state_tok = self.bump();
+                    loop {
+                        let tok = self.bump();
+                        match tok.kind {
+                            TokenKind::Ident(ref ident) => states.push(ident.clone()),
+                            _ => {
+                                self.push_expected(
+                                    merge_spans(state_tok.span, tok.span),
+                                    "Expected a state name after 'state' (e.g. state vacant, leased)."
+                                        .to_string(),
+                                );
+                                return None;
+                            }
+                        }
+                        if matches!(self.peek().kind, TokenKind::Punct(Punct::Comma)) {
+                            let _ = self.bump();
+                        } else {
+                            break;
+                        }
+                    }
+                }
+                // `initial <state>` — contextual, like `lifecycle` itself.
+                TokenKind::Ident(ref ident) if ident == "initial" => {
+                    let init_tok = self.bump();
+                    let tok = self.bump();
+                    match tok.kind {
+                        TokenKind::Ident(ref state) => initial = Some(state.clone()),
+                        _ => {
+                            self.push_expected(
+                                merge_spans(init_tok.span, tok.span),
+                                "Expected a state name after 'initial'.".to_string(),
+                            );
+                            return None;
+                        }
+                    }
+                }
+                // `<from> -> <to> [when <expr>]` — one edge. A self-edge is
+                // legal; a guard-less edge is a permission only.
+                TokenKind::Ident(_) => {
+                    let from_tok = self.bump();
+                    let TokenKind::Ident(ref from) = from_tok.kind else {
+                        unreachable!("matched Ident above")
+                    };
+                    let from = from.clone();
+                    let arrow = self.bump();
+                    if !matches!(arrow.kind, TokenKind::Punct(Punct::Arrow)) {
+                        self.push_expected(
+                            arrow.span,
+                            format!(
+                                "Expected '->' after '{from}' in a lifecycle block: an edge reads '{from} -> <state>'."
+                            ),
+                        );
+                        return None;
+                    }
+                    let to_tok = self.bump();
+                    let TokenKind::Ident(ref to) = to_tok.kind else {
+                        self.push_expected(
+                            to_tok.span,
+                            "Expected a state name after '->'.".to_string(),
+                        );
+                        return None;
+                    };
+                    let to = to.clone();
+                    let guard = if matches!(self.peek().kind, TokenKind::Keyword(Keyword::When)) {
+                        let when_tok = self.bump();
+                        self.parse_expr_slot_until(when_tok.span, &["initial"])
+                    } else {
+                        None
+                    };
+                    let span_end = guard.as_ref().map(|g| g.span).unwrap_or(to_tok.span);
+                    edges.push(LifecycleEdge {
+                        from,
+                        to,
+                        guard,
+                        span: merge_spans(from_tok.span, span_end),
+                    });
+                }
+                _ => {
+                    let tok = self.bump();
+                    self.push_expected(
+                        tok.span,
+                        "Expected 'initial', 'state', an edge ('a -> b'), or '}' in a lifecycle block."
+                            .to_string(),
+                    );
+                    return None;
+                }
+            }
+        }
+        Some(LifecycleStmt {
+            name,
+            initial,
+            states,
+            edges,
+            span: merge_spans(start.span, end.span),
+        })
+    }
+
     fn parse_account_stmt(&mut self) -> Option<AccountStmt> {
         let start = self.expect_keyword(Keyword::Account, "'account'")?;
         let name_tok = self.bump();
@@ -3669,6 +3868,7 @@ fn statement_span(stmt: &Stmt) -> Span {
         Stmt::Time(s) => s.span,
         Stmt::Phase(s) => s.span,
         Stmt::Entity(s) => s.span,
+        Stmt::Lifecycle(s) => s.span,
         Stmt::Assume(s) => s.span,
         Stmt::Curve(s) => s.span,
         Stmt::Quantile(s) => s.span,
