@@ -1,0 +1,28 @@
+version 0.1
+model "waterfall-series-reads-own-step"
+time calendar annual from 2020-01 for 6
+
+// Fix: a step may not read its own waterfall's payments — a step is a pure
+// function of the pot. The shortfall subtraction is dropped; tracking what
+// has already been paid is a balance a field carries forward, not the account
+// reconstructing its own postings.
+
+entity asset fund : Asset.Financial
+entity party lp   : Party { name = "Limited Partners" }
+entity party gp   : Party { name = "General Partner" }
+
+assume called_capital = 10000000.0
+assume pref_rate      = 0.08
+assume proceeds       = 3000000.0
+
+stream fund.sale_proceeds on entity asset.fund inflow currency USD {
+  schedule on 2020-01
+  amount = inputs.proceeds
+}
+
+waterfall fund.distribution on entity asset.fund {
+  from available
+
+  pay preferred to party.lp = inputs.called_capital * inputs.pref_rate
+  pay residual  to party.gp = remaining
+}

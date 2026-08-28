@@ -1,0 +1,5 @@
+version 0.1
+/* Fix: the block comment is terminated. */
+model "lex_block"
+time calendar monthly from 2026-01 for 1
+entity asset a : Asset.Real

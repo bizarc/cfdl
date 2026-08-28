@@ -1,0 +1,9 @@
+version 0.1
+model "lifecycle-unresolved-ref"
+time calendar monthly from 2026-01 for 3
+
+// FIX: the binding must name a machine that exists — declare `lifecycle
+// ghost` with the state the entity opens in.
+lifecycle ghost { initial a  state a }
+
+entity asset x { lifecycle ghost  state a }

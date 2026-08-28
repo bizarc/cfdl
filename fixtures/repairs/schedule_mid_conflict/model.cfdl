@@ -1,0 +1,21 @@
+version 0.1
+model "schedule-mid-conflict"
+time calendar annual from 2026-01 for 4
+entity asset co : Asset.Financial
+
+// Fix: a schedule states ONE position in its period, so each stream keeps a
+// single placement — the day rule, the payment terms, or `mid` — not two.
+stream co.mid_and_due on entity asset.co inflow currency USD {
+  schedule every year on day 15 from 2026-01 to 2029-01
+  amount = 100
+}
+
+stream co.mid_and_net on entity asset.co inflow currency USD {
+  schedule every year net 30 from 2026-01 to 2029-01
+  amount = 100
+}
+
+stream co.mid_and_day on entity asset.co inflow currency USD {
+  schedule every year mid from 2026-01 to 2029-01
+  amount = 100
+}

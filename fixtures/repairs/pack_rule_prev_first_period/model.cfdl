@@ -1,0 +1,16 @@
+version 0.1
+model "pack-rule-prev-first-period"
+use pack "testpack" version "0.1.0"
+time calendar monthly from 2026-01 for 4
+
+entity asset borrower : Asset.Financial
+
+// FIX: start the contract's term one period after the model, so the rule's
+// previous-period read always has a close to read.
+contract test.avg_balance_contract on entity asset.borrower {
+  term 2026-02..2026-04
+  terms {
+    draw = 100
+    rate = 0.01
+  }
+}

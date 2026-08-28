@@ -1,0 +1,11 @@
+version 0.1
+model "schedule-finer-than-calendar"
+time calendar monthly from 2026-01 for 24
+
+entity asset co : Asset.Financial
+
+// Fix: the schedule cadence matches the calendar grid — monthly, not weekly.
+stream co.rent on entity asset.co inflow currency USD {
+  schedule every month from 2026-01 to 2027-12
+  amount = 1000
+}

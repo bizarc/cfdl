@@ -1,0 +1,16 @@
+version 0.1
+model "pack-period-term-not-literal"
+use pack "testpack" version "0.1.0"
+time calendar quarterly from 2026-01 for 8
+
+entity asset borrower : Asset.Financial
+
+// FIX: a months-denominated term is converted at compile time, so it must be
+// a literal — `term_months = 24` rather than `inputs.tenor`.
+contract test.cadence_probe on entity asset.borrower {
+  term 2026-01..2027-10
+  terms {
+    amount_year = 120000
+    term_months = 24
+  }
+}

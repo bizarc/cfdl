@@ -1,0 +1,29 @@
+version 0.1
+model "stream-reads-waterfall-step"
+time calendar annual from 2020-01 for 6
+
+// Fix: a stream may not read a waterfall step — steps publish after every
+// stream has run. The fee is based on the stream the waterfall draws from,
+// which IS visible to a dependency-ordered stream.
+
+entity asset fund : Asset.Financial
+entity party lp   : Party { name = "Limited Partners" }
+entity party gp   : Party { name = "General Partner" }
+
+assume proceeds = 3000000.0
+
+stream fund.sale_proceeds on entity asset.fund inflow currency USD {
+  schedule on 2020-01
+  amount = inputs.proceeds
+}
+
+stream fund.fee_on_distributions on entity asset.fund outflow currency USD {
+  schedule every year from 2020-01 to 2025-01
+  amount = 0.01 * series_sum("fund.sale_proceeds", 0, time.t)
+}
+
+waterfall fund.distribution on entity asset.fund {
+  from available
+
+  pay residual to party.gp = remaining
+}

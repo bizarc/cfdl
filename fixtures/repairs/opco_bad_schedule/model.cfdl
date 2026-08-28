@@ -1,0 +1,15 @@
+version 0.1
+model "opco-bad-schedule"
+use pack "opco" version "0.1.0"
+time calendar monthly from 2026-01 for 24
+
+entity asset business : OpCo.Asset.Enterprise
+
+// FIX: the term range was reversed; start now precedes end and both sit
+// inside the model timeline.
+contract opco.opex_line {
+  term 2026-01..2027-12
+  terms {
+    amount = 50000
+  }
+}

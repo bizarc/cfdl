@@ -1,0 +1,14 @@
+version 0.1
+model "run-monte-carlo-zero-trials"
+time calendar monthly from 2026-01 for 6
+
+// Fix: `trials` must be a positive integer.
+
+entity asset borrower : Asset.Financial
+
+stream lease.rent on entity asset.borrower inflow currency USD {
+  schedule every month from 2026-01 to 2026-06
+  amount = 1000
+}
+
+run monte_carlo trials 1 seed 1

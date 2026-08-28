@@ -3,7 +3,7 @@
 
 SHELL := /bin/bash
 
-.PHONY: pack-series pack-templates keyword-register ci-gates invariants glossary glossary-check shipped-examples benchmark-cases help fmt fmt-check lint test build clean gold gold-update ci verify site-voice verify-python verify-site verify-site-nofresh verify-site-fresh verify-learn-nofresh doc-examples training-examples py-develop py-test py-wheel notebooks-render notebooks-check wasm cadence-parity ir-schema results-schema run-schema pack-validations rule-fragments py-stamp py-check
+.PHONY: pack-series pack-templates keyword-register ci-gates invariants glossary glossary-check machine-docs machine-docs-check shipped-examples benchmark-cases help fmt fmt-check lint test build clean gold gold-update ci verify site-voice verify-python verify-site verify-site-nofresh verify-site-fresh verify-learn-nofresh doc-examples training-examples py-develop py-test py-wheel notebooks-render notebooks-check wasm cadence-parity ir-schema results-schema run-schema pack-validations rule-fragments py-stamp py-check
 
 help:
 	@echo "Targets:"
@@ -96,7 +96,7 @@ bench:
 # was in this file and not in the workflow.
 ci-gates: analytic invariants cadence-parity ir-schema results-schema run-schema \
           pack-validations pack-series pack-templates keyword-register site-voice \
-          glossary-check \
+          glossary-check machine-docs-check \
           rule-fragments \
           doc-examples training-examples shipped-examples benchmark-cases
 	@echo
@@ -176,6 +176,19 @@ glossary:
 
 glossary-check:
 	$(PYGATE) tools/gen-glossary.py --check
+
+# The documentation surface for machines (docs/32 Phase 2): llms.txt, the
+# machine docs bundle, llms-full.txt, and the diagnostics -> repair catalog,
+# generated from the same sources the site renders. Outputs are committed;
+# --check byte-compares, so drift fails the fast loop. Builds cfdl-cli because
+# every recorded repair in fixtures/repairs/ must compile.
+machine-docs:
+	cargo build -p cfdl-cli
+	$(PYGATE) tools/gen-machine-docs.py
+
+machine-docs-check:
+	cargo build -p cfdl-cli
+	$(PYGATE) tools/gen-machine-docs.py --check
 
 site-voice:
 	$(PYGATE) tools/check-site-voice.py

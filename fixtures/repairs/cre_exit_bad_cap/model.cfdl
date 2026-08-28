@@ -1,0 +1,15 @@
+version 0.1
+model "cre-exit-bad-cap"
+use pack "cre" version "0.1.0"
+time calendar monthly from 2026-01 for 72
+
+entity asset property : CRE.Asset.RealProperty
+
+// Fix: `exit_cap` must be greater than 0; a positive cap rate is stated.
+contract cre.exit_cap {
+  term 2031-12..2031-12
+  terms {
+    exit_cap = 0.06
+    noi_value = 180000
+  }
+}

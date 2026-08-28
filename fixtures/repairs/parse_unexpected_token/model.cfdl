@@ -1,0 +1,6 @@
+version 0.1
+model "parse_unexpected"
+time calendar monthly from 2026-01 for 12
+// Fix: the stray `foobar` token is removed (an entity is added, since a model
+// must declare at least one).
+entity asset co : Asset.Financial

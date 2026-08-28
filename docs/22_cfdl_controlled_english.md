@@ -9,7 +9,7 @@ conformance** — see §6. The evidence behind each rule is in
 `21_documentation_standards_audit.md`; the approved forms are in
 `terminology.toml`.
 
-Status: adopted as the standard. Not yet enforced by any gate.
+Status: adopted as the standard. The mechanical subset (spellings, synonyms, contractions, number formats) is enforced by `tools/check-site-voice.py` (`make site-voice`), which also validates `ste-allow:` rule ids against §3; the tier mapping in §2 is not yet machine-checked (backlog 7.82).
 
 ---
 

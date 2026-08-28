@@ -1,0 +1,16 @@
+version 0.1
+model "pack-term-months-not-divisible"
+use pack "testpack" version "0.1.0"
+time calendar annual from 2026-01 for 4
+
+entity asset borrower : Asset.Financial
+
+// FIX: term_months must be a whole number of annual periods — 36 months is
+// exactly three, where 30 was two and a half.
+contract test.cadence_probe on entity asset.borrower {
+  term 2026-01..2029-01
+  terms {
+    amount_year = 120000
+    term_months = 36
+  }
+}

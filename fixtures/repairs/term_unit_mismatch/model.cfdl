@@ -1,0 +1,17 @@
+version 0.1
+model "term-unit-mismatch"
+use pack "energy" version "0.1.0"
+time calendar annual from 2026-01 for 3
+
+// Fix: the credit is stated in the rule's own unit — 2.75 c/kWh is
+// 27.50 USD/MWh.
+
+entity asset plant : Energy.Asset.GenerationFacility
+
+contract energy.ptc on entity asset.plant {
+  term 2026-01..2028-01
+  terms {
+    mwh_year       = 250000 "MWh/yr"
+    credit_per_mwh = 27.50 "USD/MWh"
+  }
+}

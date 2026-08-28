@@ -1,0 +1,16 @@
+version 0.1
+model "pack-term-start-off-grid"
+use pack "testpack" version "0.1.0"
+time calendar quarterly from 2026-01 for 8
+
+entity asset borrower : Asset.Financial
+
+// FIX: the term now starts on a period boundary — 2026-01, where the model's
+// quarterly grid begins — instead of one month into a period (and ends inside
+// the timeline).
+contract test.fee_contract on entity asset.borrower {
+  term 2026-01..2027-10
+  terms {
+    rate = 100
+  }
+}

@@ -1,0 +1,17 @@
+version 0.1
+model "entity-unknown-type"
+use pack "cre" version "0.1.0"
+time calendar annual from 2026-01 for 1
+
+// Fix: the type, field, and state are spelled as the ontology declares them —
+// CRE.Asset.RealProperty, asset_class, and lifecycle state `operating`.
+entity asset tower : CRE.Asset.RealProperty {
+  asset_class = "office"
+  state operating
+}
+
+stream cre.rent on entity asset.tower inflow currency USD {
+  schedule every year from 2026-01 to 2026-01
+  category operating.revenue.base_rent
+  amount = 1
+}

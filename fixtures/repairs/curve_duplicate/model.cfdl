@@ -1,0 +1,15 @@
+version 0.1
+model "curve-duplicate"
+time calendar monthly from 2026-01 for 12
+
+// Fix: the curve 'sofr' is declared exactly once.
+curve sofr {
+  2026-01: 0.045
+}
+
+entity asset buyer : Asset.Financial
+
+stream test.interest on entity asset.buyer inflow currency USD {
+  schedule every month from 2026-01 to 2026-12
+  amount = curve_value("sofr", time.date)
+}

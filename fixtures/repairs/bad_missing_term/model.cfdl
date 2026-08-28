@@ -1,0 +1,10 @@
+version 0.1
+model "bad-missing-term"
+time calendar monthly from 2026-01 for 12
+
+entity asset borrower : Asset.Financial
+
+contract test.loan_a {
+  term 2026-01..2026-12
+  effects {}
+}

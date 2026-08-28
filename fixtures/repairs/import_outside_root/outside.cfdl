@@ -1,0 +1,2 @@
+// Fix: the previously-external module now lives inside the model root.
+entity asset a : Asset.Real

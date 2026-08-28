@@ -1,0 +1,2 @@
+// Fix: the import of a.cfdl is removed to break the cycle.
+entity asset a : Asset.Real

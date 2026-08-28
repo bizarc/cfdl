@@ -204,7 +204,7 @@ impl std::error::Error for ExprError {}
 
 fn parse_error(e: cfdl_calc::CalcError) -> ExprError {
     ExprError {
-        code: "EXPR_PARSE".to_string(),
+        code: "E3001_EXPR_PARSE_ERROR".to_string(),
         message: e.message,
         span: e.span.map(|s| ExprSpan {
             start: s.start,
@@ -1090,7 +1090,7 @@ mod tests {
     #[test]
     fn parse_error_has_code_and_span() {
         let err = compile_expr("1 + ").unwrap_err();
-        assert_eq!(err.code, "EXPR_PARSE");
+        assert_eq!(err.code, "E3001_EXPR_PARSE_ERROR");
         assert!(err.span.is_some());
     }
 

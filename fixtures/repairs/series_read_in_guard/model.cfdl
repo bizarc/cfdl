@@ -1,0 +1,23 @@
+version 0.1
+model "series-read-in-guard"
+use pack "cre" version "0.1.0"
+time calendar monthly from 2026-01 for 12
+
+// Fix: logic settles before this period's cash exists, so the guard's window
+// ends at `time.t - 1` — the settled history it can already see.
+
+entity asset suite : CRE.Asset.Unit {
+  rentable_area = 1000
+  state leased
+}
+
+stream cre.rent on entity asset.suite inflow currency USD {
+  schedule every month from 2026-01 to 2026-06
+  category operating.revenue.base_rent
+  amount = 100
+  active in state leased
+}
+
+event vacate when series_sum("cre.rent", time.t - 1, time.t - 1) < 50 {
+  set entity asset.suite.status = "downtime"
+}

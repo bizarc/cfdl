@@ -1,0 +1,2 @@
+// Fix: this file is the module the model imports; it exists now.
+entity asset a : Asset.Real

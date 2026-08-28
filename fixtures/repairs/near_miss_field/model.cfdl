@@ -1,0 +1,11 @@
+version 0.1
+model "near-miss-field"
+use pack "credit" version "0.1.0"
+time calendar annual from 2026-01 for 3
+
+// FIX: the near-miss typo 'senority' is corrected to the declared field
+// 'seniority'.
+
+entity asset tlb : Credit.Asset.Tranche {
+  seniority = 1
+}

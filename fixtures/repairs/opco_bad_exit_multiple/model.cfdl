@@ -1,0 +1,16 @@
+version 0.1
+model "opco-bad-exit-multiple"
+use pack "opco" version "0.1.0"
+time calendar monthly from 2026-01 for 60
+
+entity asset business : OpCo.Asset.Enterprise
+
+// FIX: exit_multiple must be greater than 0; 0 becomes a real multiple.
+contract opco.exit_multiple {
+  term 2030-12..2030-12
+  terms {
+    exit_period = 60
+    exit_multiple = 7.0
+    base_value = 500000
+  }
+}

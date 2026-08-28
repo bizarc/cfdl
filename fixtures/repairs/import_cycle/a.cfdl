@@ -1,0 +1,3 @@
+// Fix: a.cfdl still imports b.cfdl, but b.cfdl no longer imports a.cfdl,
+// breaking the cycle.
+import "b.cfdl"

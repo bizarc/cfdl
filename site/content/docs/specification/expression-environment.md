@@ -383,7 +383,7 @@ add_business_days(time.date, 2, "london")           -- T+2 on the UK calendar
 
 Every parse and evaluation error carries a byte-offset span into the
 expression source. The compiler surfaces them as diagnostics with code
-`EXPR_PARSE`; runtime failures surface as `EXPR_EVAL` warnings in Results
+`E3001_EXPR_PARSE_ERROR`; runtime failures surface as `EXPR_EVAL` warnings in Results
 (the engine substitutes 0 / false and records the warning).
 
 ## 6. IR representation

@@ -1,0 +1,15 @@
+version 0.1
+model "assume-reserved-keyword"
+time calendar annual from 2026-01 for 2
+
+// Fix: `term` is a reserved word (spec section 18), so the assumption is
+// renamed to `term_years`.
+
+entity asset a : Asset.Real
+
+assume term_years = 5.0
+
+stream a.s on entity asset.a inflow currency USD {
+  schedule every year from 2026-01 to 2027-01
+  amount = 10.0
+}

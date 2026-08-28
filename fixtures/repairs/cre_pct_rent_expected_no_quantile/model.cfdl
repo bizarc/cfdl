@@ -1,0 +1,24 @@
+version 0.1
+model "cre-pct-rent-expected-no-quantile"
+use pack "cre" version "0.1.0"
+time calendar annual from 2026-01 for 2
+
+entity asset store : CRE.Asset.RealProperty
+
+// Fix: an expected percentage rent needs a distribution to take an
+// expectation over — a quantile curve is declared and named in
+// `sales_quantile` in place of the point estimate `sales_year`.
+quantile store_sales linear {
+  0.00:  400000.0
+  0.50: 1000000.0
+  1.00: 1800000.0
+}
+
+contract cre.percentage_rent_expected.no_dist on entity asset.store {
+  term 2026-01..2027-01
+  terms {
+    sales_quantile  = store_sales
+    breakpoint_year = 1200000
+    overage_pct     = 0.06
+  }
+}

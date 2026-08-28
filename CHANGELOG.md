@@ -8,6 +8,31 @@ This project follows Semantic Versioning: https://semver.org/
 
 ## [Unreleased]
 
+### Added: the documentation surface for machines (docs/32 Phase 2)
+
+`tools/gen-machine-docs.py` generates `docs/machine/` from the same sources
+the site renders: `llms.txt` (normative links plus the course chapters as
+Optional), the machine docs bundle (language spec, full EBNF grammar,
+expression environment, IR and results schemas, pack interface, diagnostics
+catalog, controlled-English authoring contract, glossary, terminology
+register, pack rosters), `llms-full.txt` (the bundle plus every learn
+chapter), and the diagnostics -> repair catalog (per invalid fixture: the
+minimal failing example, its golden diagnostics, and — where recorded under
+`fixtures/repairs/` — the minimal fix, compile-verified by the generator).
+`sync-content.mjs` stages the artifacts to `site/public/`, so cfdl.dev serves
+`/llms.txt`, `/llms-full.txt`, and `/machine/*`. `make machine-docs-check`
+joins `ci-gates`. Also in this pass: a valid-examples corpus
+(`docs/machine/valid-examples.md`, every golden fixture model) joins the
+served artifacts; all 70 invalid fixtures now carry a compile-verified
+repair in `fixtures/repairs/`; five pack validation codes the compiler
+emits joined the docs/08 §7 register (`E6031`, `E6032`, `E6040`, `E6041`,
+`E7010`); the expression parser now emits its registered code
+`E3001_EXPR_PARSE_ERROR` instead of the bare `EXPR_PARSE` (two diagnostics
+goldens re-blessed); the orphaned `gold/diag/expr_type_error.diag.json` is
+removed; `check-site-voice.py` validates `ste-allow:` rule ids against
+docs/22 §3; and backlog 7.80–7.82 record the remaining measured gaps
+(unexemplified codes, runtime expression code naming, CE tier mapping).
+
 ### Added: cfdl-mcp — the agent toolkit (docs/32 Phase 1)
 
 A new `cfdl-mcp` crate serves the authoring loop over MCP stdio: `compile`,

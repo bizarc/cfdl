@@ -55,6 +55,25 @@ sys.stderr.reconfigure(encoding="utf-8")
 
 REPO_ROOT = pathlib.Path(__file__).resolve().parents[1]
 ALLOW = re.compile(r"site-allow:|ste-allow:")
+# An ste-allow waiver names the docs/22 rule it waives. An id docs/22 does not
+# declare is a typo that silently waives nothing forever, so it is a failure —
+# the annotation contract (docs/22 §5) only works if the ids are real.
+STE_ALLOW_ID = re.compile(r"ste-allow:\s*(\S+)")
+RULE_ID = re.compile(r"^\|\s*([SVWCP]\d+)\s*\|")
+
+
+def ce_rule_ids() -> set[str]:
+    """Rule ids declared in docs/22 §3 (the first column of the rule tables)."""
+    ids = set()
+    doc = (REPO_ROOT / "docs" / "22_cfdl_controlled_english.md").read_text(encoding="utf-8")
+    for line in doc.splitlines():
+        match = RULE_ID.match(line.strip())
+        if match:
+            ids.add(match.group(1))
+    return ids
+
+
+CE_RULE_IDS = None  # populated lazily; docs/22 is read once
 
 # Each pattern is a thing that reads as development process rather than as
 # documentation. Kept narrow on purpose: a gate that cries wolf gets disabled.
@@ -295,6 +314,15 @@ def check_text_file(path: pathlib.Path, *, narrative: bool = True) -> list[str]:
         if in_fence:
             continue
         if ALLOW.search(line):
+            global CE_RULE_IDS
+            if CE_RULE_IDS is None:
+                CE_RULE_IDS = ce_rule_ids()
+            ste = STE_ALLOW_ID.search(line)
+            if ste and ste.group(1) not in CE_RULE_IDS:
+                findings.append(
+                    f"  {rel}:{n}  ste-allow names rule '{ste.group(1)}', which "
+                    f"docs/22 does not declare\n      {line.strip()[:100]}"
+                )
             continue
         if only_summary and not line.lstrip().startswith("summary"):
             continue

@@ -1,0 +1,24 @@
+version 0.1
+model "event-action-unknown-targets"
+time calendar annual from 2026-01 for 3
+
+// Fix: every event target now names a declared thing — entity asset.co,
+// stream loan.debt_service, and option refi_fee.
+
+entity asset co : Asset.Financial
+
+stream loan.debt_service on entity asset.co outflow currency USD {
+  schedule every year from 2026-01 to 2028-01
+  amount = 100
+}
+
+option refi_fee type Option.Call {
+  exercise when false
+  payoff 10
+}
+
+event refi when time.t >= 1 {
+  set entity asset.co.status = "refinanced"
+  deactivate stream loan.debt_service
+  exercise option refi_fee
+}

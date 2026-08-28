@@ -3,6 +3,10 @@
 **Status:** plan, 2026-08-27. Phase 1 implemented 2026-08-28: `crates/cfdl-mcp`
 (six tools over MCP stdio), with post-run enrichment extracted into the shared
 `cfdl-run` facade and the self-test gate at `crates/cfdl-mcp/tests/self_test.rs`.
+Phase 2 implemented 2026-08-28: `tools/gen-machine-docs.py` generates
+`docs/machine/` (llms.txt, the machine docs bundle, llms-full.txt with the
+course chapters, the diagnostics → repair catalog, and the valid-examples corpus), staged to the site by
+`sync-content.mjs` and gated by `make machine-docs-check` in `ci-gates`.
 **Scope:** §3.4 of the EVS strategy survey (evs-platform `docs/15`): making
 CFDL the modeling target an AI agent can write, verify, and explain —
 "describe the deal, get a verified model." This plan covers the toolkit, the
@@ -69,11 +73,16 @@ Agents read docs differently: retrieval-sized, deduplicated, versioned.
   one versioned, plain-text artifact — generated from the same sources the
   site renders, by a `tools/` script under CI so it cannot go stale.
 - **A diagnostics → repair catalog**: for each diagnostic code, one minimal
-  failing example and its minimal fix. Start from the validate crate's test
-  fixtures — most pairs already exist as tests; this publishes them.
+  failing example and its minimal fix. The failing examples are
+  `fixtures/invalid/` with their goldens in `gold/diag/` (the validate crate
+  itself carries no fixture tests — the original premise here was wrong); the
+  fixes did not exist anywhere and are authored into `fixtures/repairs/`,
+  compile-verified by the generator.
 - **The controlled-English register** (`docs/22`) promoted to an authoring
-  contract: the subset an agent should emit, checked by the existing
-  keyword-register tool.
+  contract: the subset an agent should emit. The mechanical subset is
+  enforced by `tools/check-site-voice.py` (not the keyword-register tool,
+  which checks the lexer's reserved words against spec §18 — this plan
+  originally named the wrong gate).
 
 **Gate:** bundle generation is a CI step; a checksum golden catches drift.
 

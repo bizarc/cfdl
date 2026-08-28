@@ -1,0 +1,12 @@
+version 0.1
+model "field-declared-twice"
+use pack "credit" version "0.1.0"
+time calendar annual from 2026-01 for 3
+
+// Fix: 'original_balance' is declared once — the rule form is kept and the
+// duplicate '=' declaration removed.
+
+entity asset tranche : Credit.Asset.Tranche {
+  seniority = 1
+  original_balance init 275.0 next prev - 25.0
+}

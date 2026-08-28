@@ -1,0 +1,11 @@
+version 0.1
+model "unknown-time-read"
+time calendar monthly from 2026-01 for 12
+
+entity asset a : Asset.Real
+
+// The binding is time.t (elapsed periods); years elapsed is time.t / time.ppy.
+stream a.s on entity asset.a inflow currency USD {
+  schedule every month from 2026-01 to 2026-12
+  amount = 1000 * (time.t / time.ppy)
+}

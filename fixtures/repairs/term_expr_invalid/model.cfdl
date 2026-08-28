@@ -1,0 +1,19 @@
+version 0.1
+model "term-expr-invalid"
+use pack "energy" version "0.1.0"
+time calendar monthly from 2026-01 for 12
+
+entity asset plant : Energy.Asset.GenerationFacility
+
+// Fix: the expression's parenthesis is closed, so the term compiles and means
+// what it says — 1500.
+contract energy.ppa.plant_a on entity asset.plant {
+  term 2026-01..2026-12
+  terms {
+    mwh_year = (1000 + 500)
+    ppa_price = 3000
+    escalation = 0.0
+    degradation = 0.005
+    availability = 1.0
+  }
+}

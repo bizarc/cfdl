@@ -1,0 +1,19 @@
+version 0.1
+model "quantile-not-monotone"
+time calendar monthly from 2026-01 for 2
+
+entity asset a : Asset.Financial
+
+// Fix: a quantile function is non-decreasing, so the value at the 90th
+// percentile is raised above the value at the 50th.
+quantile broken {
+  0.00:  10.0
+  0.50: 100.0
+  0.90: 140.0
+}
+
+stream a.line on entity asset.a inflow currency USD {
+  category operating.revenue.other
+  schedule every month from 2026-01 to 2026-02
+  amount = quantile_at("broken", 0.5)
+}

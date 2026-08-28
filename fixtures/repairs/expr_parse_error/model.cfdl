@@ -1,0 +1,10 @@
+version 0.1
+model "expr-parse-error"
+time calendar monthly from 2026-01 for 3
+entity asset borrower : Asset.Financial
+
+// Fix: the truncated amount expression is completed.
+stream lease.rent on entity asset.borrower inflow currency USD {
+  schedule every month from 2026-01 to 2026-03
+  amount = 1200 * (1 + 0.02)
+}
