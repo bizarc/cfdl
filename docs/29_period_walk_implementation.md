@@ -297,17 +297,35 @@ Grammar and lexer changes are audited against `docs/02` (the §7.19 and
 ## Phase 4 — the account (§5.1)
 
 Parser and IR for the declaration (`account <name> [owned by <party>]`,
-`from`, `currency`), `from <account>` as a waterfall pot, `pay ... to
-account <name>` as a step form, and `prev.<account>` as a read. Engine
-carries balances in the walk under the balance law; draws floored at
-`max(balance, 0)` with the refusal named; negative inflows lower the
-balance. Balances publish in the valuation plane as non-cash series;
-journal entries per §5.2. The `docs/13` §7.41 residue closes here: an
-account's `from` names what flows in, checked.
+`from`, `currency`), `from <account>` as a waterfall's source, `pay ... to
+account <name>` as a step form, and the balance readable as settled history.
+Engine carries balances under the balance law; draws floored at
+`max(balance, 0)` with the refusal named; negative inflows lower the balance.
+Balances publish in the valuation plane as non-cash series; journal entries
+per §5.2. `docs/13` §7.41's residue closes here: an account's `from` names
+what flows in, checked.
 
-- Gate fixtures (§9): reserve fund-to-target and release; the
-  cumulative-sum identity; Highlands restated through an account, tied to
-  the same numbers.
+**Settled before building** (`docs/28` §5.1), so none of it is re-argued:
+
+* `available` is KEPT and unchanged — this period's netted cash. An account is
+  the ACCUMULATED cash. Phase 4 is therefore ADDITIVE: every waterfall in the
+  corpus compiles untouched.
+* The pot is RENAMED, not supplemented — the accumulating thing is an account.
+  `remaining` still tracks the draw-down within one distribution.
+* A party-owned account holds what was ALLOCATED to that party, and is not an
+  obligation. What is still owed is not in any account; it is not yet
+  allocated.
+* `pay <step> to <party>` allocates into that party's account; a party with no
+  account behaves exactly as today. `pay <step> to account <name>` is the
+  explicit form. A party owns at most one account.
+* The `E1342` narrowing — a rule reading its own settled allocations — is NOT
+  here. It needs the waterfall stage running at its own period, which is a
+  different prerequisite, and it is a refusal narrowing rather than a
+  construct: it belongs with the `E1134` family.
+
+- Gate fixtures (§9): a reserve funded to target and released; the
+  cumulative-sum identity; Highlands restated through an account, tied to the
+  same numbers.
 
 ## Phase 5 — the state machine (§6.1–6.2)
 

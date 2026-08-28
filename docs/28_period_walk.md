@@ -214,6 +214,23 @@ account named, not overdrafted.
 
 Three uses, all walk-legal:
 
+**Allocating to a party allocates to their account.** `pay <step> to <party>`
+is what every waterfall already writes, and where the cash lands follows from
+what that party owns: into their account if they have one, and if they have
+none the step publishes its series and nothing accumulates — which is exactly
+today's behaviour, and what keeps every shipped waterfall untouched. The
+explicit form `pay <step> to account <name>` names the destination directly.
+
+**A party owns at most one account**, so "their account" always resolves. The
+explicit form is what covers anything that outgrows the rule, which is a
+reason to have it before anyone needs it rather than after.
+
+**The two records are not a double count.** A step's series is the FLOW — what
+was allocated this period — and the account's balance is the POSITION,
+accumulated less what has been drawn out. The balance publishes as a non-cash
+series and never enters cash totals; the same separation that keeps a
+waterfall from reading its own output keeps these apart.
+
 - **A waterfall draws from an account**: `from <account>` replaces the
   hand-written cumulative window. Residue after the last step stays in the
   account for the next scheduled date, by construction.
