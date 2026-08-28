@@ -1,17 +1,25 @@
-# OpCo contract templates — the conventional starting set for an operating
-# business, offered by the editor as snippets and assembled into starting
-# models by the MCP `skeleton` tool. Defaults are the values the benchmark
-# suite validates (benchmarks/opco/lbo_buyout), not measurements — a real
-# deal states its own.
+# OpCo contract templates — the conventional starting set, offered by the
+# editor as snippets (the LSP reads these for completion and `applyTemplate`).
 #
-# `${key}` placeholders resolve from the request, then from [templates.defaults].
+# Each template carries the terms its rule REQUIRES, with a conventional value
+# where a convention exists and zero where only the deal knows. A term may hold
+# an expression, so a varying rate is written directly —
+# `growth_rate = curve_value("cpi", time.date)` — and no template offers a
+# curve-selector twin.
+#
+# `${key}` placeholders resolve from the request, then from
+# [templates.defaults].
+
+# --- line items -------------------------------------------------------------
+#
+# Instanced per statement line; the vocabulary is the instance name.
 
 [[templates]]
-id = "opco.revenue_line"
-label = "Revenue line with growth"
+id = "opco.revenue_line.core"
+label = "Revenue line — core"
 kind = "contract"
 body = """
-contract opco.revenue_line {
+contract opco.revenue_line.core {
   term ${term_start}..${term_end}
   terms {
     amount = ${amount}
@@ -21,16 +29,16 @@ contract opco.revenue_line {
 """
 [templates.defaults]
 term_start = "2026-01"
-term_end = "2030-12"
-amount = "1000000"
-growth_rate = "0.06"
+term_end = "2031-12"
+amount = "0"
+growth_rate = "0.03"
 
 [[templates]]
-id = "opco.opex_line"
-label = "Operating expense line with growth"
+id = "opco.opex_line.operating"
+label = "Opex line — operating"
 kind = "contract"
 body = """
-contract opco.opex_line {
+contract opco.opex_line.operating {
   term ${term_start}..${term_end}
   terms {
     amount = ${amount}
@@ -40,30 +48,36 @@ contract opco.opex_line {
 """
 [templates.defaults]
 term_start = "2026-01"
-term_end = "2030-12"
-amount = "650000"
-growth_rate = "0.04"
+term_end = "2031-12"
+amount = "0"
+growth_rate = "0.03"
 
 [[templates]]
-id = "opco.capex_line"
-label = "Capital expenditure as a share of revenue"
+id = "opco.capex_line.maintenance"
+label = "Capex line — maintenance"
 kind = "contract"
 body = """
-contract opco.capex_line {
+contract opco.capex_line.maintenance {
   term ${term_start}..${term_end}
   terms {
+    amount = ${amount}
+    growth_rate = ${growth_rate}
     pct_of_revenue = ${pct_of_revenue}
   }
 }
 """
 [templates.defaults]
 term_start = "2026-01"
-term_end = "2030-12"
-pct_of_revenue = "0.03"
+term_end = "2031-12"
+amount = "0"
+growth_rate = "0.03"
+pct_of_revenue = "0"
+
+# --- instruments ------------------------------------------------------------
 
 [[templates]]
 id = "opco.term_debt"
-label = "Term loan — IO then amortizing"
+label = "Term loan (proceeds, interest, principal)"
 kind = "contract"
 body = """
 contract opco.term_debt {
@@ -71,34 +85,88 @@ contract opco.term_debt {
   terms {
     principal = ${principal}
     rate = ${rate}
-    io_months = ${io_months}
     amort_months = ${amort_months}
+    io_months = ${io_months}
   }
 }
 """
 [templates.defaults]
 term_start = "2026-01"
-term_end = "2030-12"
-principal = "21000000"
-rate = "0.085"
-io_months = "12"
+term_end = "2031-12"
+principal = "0"
+rate = "0.08"
 amort_months = "84"
+io_months = "0"
 
 [[templates]]
 id = "opco.cash_taxes"
 label = "Cash taxes on EBIT"
 kind = "contract"
 body = """
-contract opco.cash_taxes {
+contract opco.cash_taxes.federal {
   term ${term_start}..${term_end}
   terms {
     tax_rate = ${tax_rate}
-    da_monthly = ${da_monthly}
   }
 }
 """
 [templates.defaults]
 term_start = "2026-01"
-term_end = "2030-12"
-tax_rate = "0.26"
-da_monthly = "150000"
+term_end = "2031-12"
+tax_rate = "0.21"
+
+[[templates]]
+id = "opco.working_capital_policy"
+label = "Working capital — days policy"
+kind = "contract"
+body = """
+contract opco.working_capital_policy {
+  term ${term_start}..${term_end}
+  terms {
+    ar_days = ${ar_days}
+    inv_days = ${inv_days}
+    ap_days = ${ap_days}
+  }
+}
+"""
+[templates.defaults]
+term_start = "2026-01"
+term_end = "2031-12"
+ar_days = "45"
+inv_days = "30"
+ap_days = "30"
+
+[[templates]]
+id = "opco.exit_ebitda"
+label = "Exit at an EBITDA multiple (gross, selling costs)"
+kind = "contract"
+body = """
+contract opco.exit_ebitda {
+  term ${term_start}..${term_start}
+  terms {
+    exit_multiple = ${exit_multiple}
+    selling_costs = ${selling_costs}
+  }
+}
+"""
+[templates.defaults]
+term_start = "2031-12"
+exit_multiple = "10.0"
+selling_costs = "0.02"
+
+[[templates]]
+id = "opco.acquisition"
+label = "Acquisition price"
+kind = "contract"
+body = """
+contract opco.acquisition {
+  term ${term_start}..${term_start}
+  terms {
+    price = ${price}
+  }
+}
+"""
+[templates.defaults]
+term_start = "2026-01"
+price = "0"
+
