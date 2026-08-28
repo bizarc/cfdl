@@ -13,8 +13,10 @@ use crate::tools::{self, Defaults};
 const INSTRUCTIONS: &str =
     "CFDL is a declarative cash-flow modeling language with a deterministic \
 compile -> run cycle and structured diagnostics. The authoring loop: `skeleton` (or `lookup`) to \
-start from a valid model, `compile` to get diagnostics, `run` to get results, `diff` to compare \
-against expectations, `explain` to trace any number to the journal entries that produced it. \
+start from a valid model, `compile` to get diagnostics, `run` to get results, `explain` to trace \
+any number to the journal entries that produced it — and, when expectation files are available to \
+you, `diff` to compare results against them (some deployments withhold `diff`; the loop is \
+complete without it). \
 Diagnostics and diff failures are data for repair, not errors. The evaluation model: a CONTRACT \
 declaration (`contract <pack>.<type>.<instance> on entity ...`) LOWERS to streams through its \
 pack's lowering rule — contracts are vocabulary, streams are the cash; streams evaluate first on \
@@ -80,7 +82,7 @@ impl CfdlMcp {
     }
 
     #[tool(
-        description = "Explain one number: a series key + period -> its value, neighbors, and the journal entries (actor, action, target, amounts, pot levels) that produced it."
+        description = "Explain one number: a series key + period (0-based) -> its value, neighbors, and the journal entries (actor, action, target, amounts, pot levels) that produced it. A plain scheduled stream has no journal rows; waterfalls, events, and accounts do."
     )]
     fn explain(
         &self,
@@ -104,7 +106,7 @@ impl CfdlMcp {
     }
 
     #[tool(
-        description = "Generate a minimal valid CFDL model for a pack from its own templates — a starting point to grow. The skeleton is compiled before it is returned; `ok` says whether it is already valid."
+        description = "Generate a minimal valid CFDL model for a pack from its own templates — a starting point to grow. The skeleton is compiled AND run before it is returned: `ok` is the compile, `run_ok` says the run produced no engine warnings, and `warnings`/`notes` say what to fill in (stubbed curves included)."
     )]
     fn skeleton(
         &self,
