@@ -52,9 +52,15 @@ The proceeds have owners. Two parties join the cast, and the deal ends the way i
 entity party lp : Party
 entity party gp : Party
 
+account net_proceeds {
+  from series_sum("cre.exit.proceeds", time.t, time.t)
+     + series_sum("cre.exit.selling_costs", time.t, time.t)
+     + series_sum("harbor.perm_payoff", time.t, time.t)
+}
+
 waterfall harbor.equity_split on entity asset.harbor {
   schedule on 2030-12
-  from series_sum("cre.exit.proceeds", time.t, time.t) - 9500000
+  from net_proceeds
 
   pay lp_preferred to party.lp = 8200000 * 0.08 * 5
   pay lp_capital   to party.lp = 8200000
@@ -63,7 +69,7 @@ waterfall harbor.equity_split on entity asset.harbor {
 }
 ```
 
-The pot is worth reading twice: it is the sale proceeds *as the model computes them*, net of the payoff — a series read, so every widened assumption flows through automatically. In a downside trial the pot shrinks, and the waterfall's guarantee does the rest. The promote is the shock absorber, the preferred is the cushion, and no step can be paid from money that is not there. In the base case: a 14.8 million pot pays the LP's 3.28 million preferred and 8.2 million capital, leaving 3.32 million — 664,800 to the GP, the rest to the LP. Hand-check the promote: 20% of the remainder, to the dollar.
+The pot is worth reading twice, because it is built from the machine chapter's account and nothing in it is restated. Gross proceeds, selling costs, and the loan payoff are all *read* from the streams the model already computes — the costs and the payoff arrive signed negative, so the account's inflow is the net wire, and `from net_proceeds` hands the split exactly what the deal has left. No literal 9,500,000 (chapter 22 warned about restating the payoff), no forgotten selling costs, and every widened assumption flows through automatically. In a downside trial the pot shrinks, and the waterfall's guarantee does the rest. The promote is the shock absorber, the preferred is the cushion, and no step can be paid from money that is not there. In the base case: a 14.8 million pot pays the LP's 3.28 million preferred and 8.2 million capital, leaving 3.32 million — 664,800 to the GP, the rest to the LP. Hand-check the promote: 20% of the remainder, to the dollar.
 
 One simplification to name, in the open: the preferred here is *simple* — five years at 8% on committed capital, stated as arithmetic. A compounding preferred, or a full IRR-hurdle promote with catch-up, accrues period by period. It is an entitlement field growing beside the deal, paid through `owed`/`paid` steps — every piece of which you have built in chapters 8 and 11. It is the natural next model past the course's edge, and the exercise points at it.
 

@@ -153,9 +153,15 @@ stream harbor.perm_payoff on entity asset.harbor outflow currency USD {
 entity party lp : Party
 entity party gp : Party
 
+account net_proceeds {
+  from series_sum("cre.exit.proceeds", time.t, time.t)
+     + series_sum("cre.exit.selling_costs", time.t, time.t)
+     + series_sum("harbor.perm_payoff", time.t, time.t)
+}
+
 waterfall harbor.equity_split on entity asset.harbor {
   schedule on 2030-12
-  from series_sum("cre.exit.proceeds", time.t, time.t) - 9500000
+  from net_proceeds
 
   pay lp_preferred to party.lp = 8200000 * 0.08 * 5
   pay lp_capital   to party.lp = 8200000

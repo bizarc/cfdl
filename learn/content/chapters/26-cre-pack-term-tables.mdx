@@ -16,18 +16,15 @@ The CRE pack's contract types, one table each: the terms, which are required, wh
 |---|---|---|
 | `amount` | yes | Draw per period — a material number the model must state |
 
-**`cre.revenue_line{.<id>}`** → `cre.revenue.line{.<id>}` (operating.revenue.other, inflow); **`cre.opex_line{.<id>}`** → `cre.opex.line{.<id>}` (operating.expense.opex, outflow). Instanced per line; `amount` or `amount_year`, with `escalation` (which may hold an expression).
-
-| Term | Required | Meaning |
-|---|---|---|
-| `amount` | yes | Per-period amount |
-
-**`cre.opex_line`** → `cre.opex.line[.suffix]` (operating.expense.opex, outflow).
+**`cre.revenue_line{.<id>}`** → `cre.revenue.line{.<id>}` (operating.revenue.other, inflow); **`cre.opex_line{.<id>}`** → `cre.opex.line{.<id>}` (operating.expense.opex, outflow). Instanced per line, and both take the same amount spellings:
 
 | Term | Required | Default | Meaning |
 |---|---|---|---|
-| `opex_year` | yes | — | Annual operating cost |
-| `escalation` | no | 0 | Annual escalation, stepped on anniversaries |
+| `amount` | one of the two | 0 | Per-period amount |
+| `amount_year` | one of the two | 0 | Annual spelling; the two are additive |
+| `escalation` | no | 0 | Stepped on anniversaries; may hold an expression |
+| `pct_fixed` | no | 1 | Opex only: the fixed share; the rest scales with `occupancy` |
+| `occupancy` | no | 1 | Opex only: occupancy for the variable share |
 
 **`cre.vacancy_loss`** → `cre.vacancy.loss` (operating.deduction.vacancy, outflow).
 
@@ -102,9 +99,9 @@ Three forms, one decision: where does the NOI come from?
 
 **`cre.exit_cap`** → `cre.exit.sale` (investing.reversion, inflow) = `noi_value / exit_cap`. You state the NOI. | Required: `noi_value`, `exit_cap`.
 
-**`cre.exit`** → `cre.exit.proceeds` = `noi_forward_year / exit_cap × (1 − selling_costs)`. You state a *named forward window* — reconcile it against the modeled final year. | Required: `noi_forward_year`, `exit_cap`. Default: `selling_costs = 0`.
+**`cre.exit`** → `cre.exit.proceeds` = `noi_forward_year / exit_cap` **gross**, with `cre.exit.selling_costs` (investing.selling_costs, outflow) lowering beside it — gross less costs is the net, and the statement shows both. You state a *named forward window* — reconcile it against the modeled final year. | Required: `noi_forward_year`, `exit_cap`. Default: `selling_costs = 0`.
 
-**`cre.exit_forward`** → `cre.exit.proceeds`, with forward NOI *derived* from the modeled streams over the twelve months after the sale date. It cannot drift and cannot be committee-edited, and it requires a projection tail so the window has data. | Required: `exit_cap`. Default: `selling_costs = 0`.
+**`cre.exit_forward`** → the same two streams, with forward NOI *derived* from the modeled streams over the twelve months after the sale date. It cannot drift and cannot be committee-edited, and it requires a projection tail so the window has data — with the operating terms extended through the tail, so the forward year exists to be read. | Required: `exit_cap`. Default: `selling_costs = 0`.
 
 All three settle at the *end* of the sale period — the full holding period discounts.
 

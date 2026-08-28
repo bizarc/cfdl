@@ -21,7 +21,7 @@ And that is all. No file access, no wall-clock date, no environment variables, n
 
 ## Arithmetic you can trust
 
-The operators are the familiar set — `+ - * / %`, comparisons, `&&` and `||` — with one property worth a paragraph: arithmetic is **decimal**, not binary floating point. `0.1 + 0.2` is `0.3`, a cent is a cent, and a million-row sum does not accumulate float dust. This is the arithmetic a general-purpose language reserves for its money library, made the default because every number here is money or a rate on money.
+The operators are the familiar set — `+ - * / %`, comparisons, and the spelled-out `and`, `or`, `not` (the language has no `&&`) — with one property worth a paragraph: arithmetic is **decimal**, not binary floating point. `0.1 + 0.2` is `0.3`, a cent is a cent, and a million-row sum does not accumulate float dust. This is the arithmetic a general-purpose language reserves for its money library, made the default because every number here is money or a rate on money.
 
 Conditionals are the `if` function — an expression, not a statement:
 

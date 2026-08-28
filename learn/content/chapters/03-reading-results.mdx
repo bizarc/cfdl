@@ -50,7 +50,7 @@ A run produces one document with a consistent anatomy, whether the model is this
 
 **Annual rollup.** The same cash regrouped by calendar year — the view a committee actually reads, and the bridge to how results are compared against a source document that reports annually.
 
-**Metrics.** NPV, IRR, and — once packs are involved — domain metrics like coverage ratios. Each metric carries its inputs in the output (the discount rate used, the as-of date), so a metric is never a bare number you have to reconstruct context for.
+**Metrics.** NPV, weighted average life, IRR where the cash shape defines one, and — once packs are involved — domain metrics like coverage ratios. Each metric carries its inputs in the output (the discount rate used, the as-of date), so a metric is never a bare number you have to reconstruct context for.
 
 ## Discounting: the two knobs that change everything
 
@@ -62,7 +62,7 @@ Two conventions to fix in your head now, because every discrepancy-hunt you ever
 
 **Timing.** Cash is dated by its period on the grid; discounting measures from the as-of date. A model whose rent lands on the 1st versus the 15th versus month-end can carry the same totals and different NPVs. The schedule chapter in Part II gives you precise control over placement; what matters now is knowing that placement is a claim, and the results reflect it.
 
-IRR is reported alongside NPV: the rate at which this cash's NPV crosses zero. For well-behaved shapes — money out, then money in, like this practice — it is the familiar number. Part III discusses the shapes where IRR misleads (sign changes mid-life, multiple roots) and what to report instead.
+IRR is the rate at which a cash shape's NPV crosses zero — and notice that this practice's output has no IRR at all. Its net cash is positive from the first month, so no discount rate ever zeroes it, and the engine reports nothing rather than invent a root. That absence is your first lesson in reading metrics: a metric that does not apply is omitted, not faked. IRR appears for the shapes that define one — money out, then money in, as in the capstone's development deal. Part III discusses the shapes where IRR misleads (sign changes mid-life, multiple roots) and what to report instead.
 
 ## Interrogating a number
 
