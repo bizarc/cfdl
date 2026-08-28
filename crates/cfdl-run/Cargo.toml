@@ -1,0 +1,17 @@
+# The shared run facade: engine run + post-engine enrichment (domain metrics,
+# statements). The CLI, the HTTP server, and the MCP server all call this one
+# function, so the three surfaces cannot drift.
+[package]
+name = "cfdl-run"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+homepage.workspace = true
+
+[dependencies]
+cfdl-engine = { path = "../cfdl-engine" }
+cfdl-metrics = { path = "../cfdl-metrics" }
+cfdl-statement = { path = "../cfdl-statement" }
+cfdl-pack = { path = "../cfdl-pack" }
+serde_json.workspace = true

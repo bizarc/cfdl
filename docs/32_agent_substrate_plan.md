@@ -1,6 +1,8 @@
 # The agent substrate — implementation plan
 
-**Status:** plan, 2026-08-27.
+**Status:** plan, 2026-08-27. Phase 1 implemented 2026-08-28: `crates/cfdl-mcp`
+(six tools over MCP stdio), with post-run enrichment extracted into the shared
+`cfdl-run` facade and the self-test gate at `crates/cfdl-mcp/tests/self_test.rs`.
 **Scope:** §3.4 of the EVS strategy survey (evs-platform `docs/15`): making
 CFDL the modeling target an AI agent can write, verify, and explain —
 "describe the deal, get a verified model." This plan covers the toolkit, the
