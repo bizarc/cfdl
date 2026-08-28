@@ -1964,3 +1964,70 @@ to iterate is the product's guarantee, not its gap. A tool of this category
 built on CFDL is those guarantees applied to the one domain that most needs
 an auditable engine — the constituent items above are what remain between
 here and that claim.
+
+### 7.75 Storage state of charge is now buildable, and it is what validates the last energy rule
+
+**What forced the discovery:** the domain survey behind `docs/30`.
+`energy.storage_arbitrage` is the energy pack's only externally-unvalidated
+rule (§7.3: energy 9/10), and §7.1 recorded three ways forward, the third
+being "needs per-period persistent state (5.2) and would let cycling be
+modeled rather than assumed." The walk's phases 3 and 4 are that state: a
+state-of-charge balance — a field or an account — stepped per period, charged
+and discharged by streams the balance reads strictly backward.
+
+**What it changes:** `mwh_cycled_year` stops being an assumed input and
+becomes an output of dispatch against a price shape, which is the circularity
+§7.1 says blocks validation against a dispatch reference. It is also the
+state the `energy.storage_dispatch` quantile rule (`docs/27` §9 stage 4)
+prices around: the quantile closes the Jensen gap, the SOC balance closes the
+chronology gap — a 4-hour battery reaching only contiguous hours is a
+constraint on a walked balance, not on a distribution.
+
+**What still gates it:** a dispatch reference that runs (§7.1's SAM attempt
+segfaulted front-of-meter). The construct no longer waits on the engine; the
+case waits on a source. Related: §7.1, §7.3, `docs/27` §9, `docs/30` §2.
+
+### 7.76 The account adoption pass: every pack has a reserve it could not model
+
+**What forced the discovery:** the account shipped (`docs/28` §5.1) and the
+domain survey (`docs/30`) found the same absence recorded independently in
+every domain's references. `crest_solar_cost_based/NOTES.md`: the reference
+EBITDA "includes interest earned on funded reserve accounts (~$4,606 in year
+one), which CFDL does not model." `utility_pv_singleowner/NOTES.md` lists
+reserves among what the reference zeroed out to be comparable. §7.5 carries
+`cre.replacement_reserve` from two sources. The roadmap's hospitality entry
+is one accumulating FF&E reserve. Servicer advancing (§7.74) is a
+recoverable-advances balance.
+
+**The ask, in three parts.** First, the migrations the shipped fleet already
+owes: the flip case's hand-carried pot (`docs/25` — the one case where
+revenue is computed a second time inside the distribution) and Highlands'
+cumulative window, both named gate shapes in `docs/29` phase 4. Second, a
+reserve contract shape per pack where a document demands one — the DSRA
+funded to target with `dscr_periodic` gating the release, the replacement
+reserve of §7.5, the FF&E reserve — each as the `pay <step> to account`
+pattern rather than a bespoke contract. Third, interest ON a reserve balance:
+a stream whose amount reads `prev.<account>`, legal under §4's backward rule,
+and the first case that models it closes the CREST reconciliation line.
+
+Related: §7.5, §7.41, §7.72, §7.74, `docs/25`, `docs/28` §5.1, `docs/30` §1.
+
+### 7.77 A covenant that is published but powerless: the DSCR cash trap
+
+**What could not be expressed:** consequences. The energy pack publishes
+`dscr_periodic` per period (`packs/energy/statements.toml`, with its own
+argument that "a project finance covenant is tested EVERY PERIOD"), and
+`ppiaf_toll_highway` sizes a subsidy to hold 1.30x — but no model can say
+what a real credit agreement says: below the trigger, distributions stop and
+cash traps in an account; at or above it for the cure period, the trap
+releases. The breach must be able to happen, and to end.
+
+**Why it waits on phase 5:** the trap is the repeatable machine (§7.36,
+`docs/28` §6) reading a settled ratio strictly backward, plus an account to
+hold what is trapped — the same pin as the credit trigger fixture in `docs/29`
+phase 5 ("trapped cash accumulating across a failed trigger and releasing on
+cure"), wearing project finance's vocabulary. When phase 5 lands, this is
+the energy/infrastructure case that proves it, and the benchmark ask is
+recorded in `docs/20` §5.
+
+Related: §7.36, §7.74, `docs/28` §5.1 and §6, `docs/30` §2.
