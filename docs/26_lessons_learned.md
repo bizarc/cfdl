@@ -654,3 +654,41 @@ amount_expr = "... * if(entity.status == \"called\", 0.0, 1.0)"
 
 An event naming a lowered stream in `deactivate stream` does not resolve today
 (§7.50).
+
+### A sized loan does not need a solver
+
+Excel sizes debt with Goal Seek or circular references, so a rebuild's first
+instinct is to ask for a solver. Every sizing the programme has met so far
+falls to one of three moves, none of which is iteration:
+
+**Closed form.** An LTV constraint is `value * ratio`. A DSCR constraint on a
+level-pay loan is the present value of the `NOI / target` annuity — one
+expression in the financial functions the language already has. Sculpted
+principal (constant-DSCR amortization) is per-period arithmetic off NOI that
+is already settled when the period is evaluated.
+
+**The fixed point is sequential once the wiring is untangled.**
+`benchmarks/bespoke/ppiaf_toll_highway` computes an ADSCR-targeted subsidy —
+subsidy feeds cash, cash feeds tax, tax feeds the subsidy — with no solver,
+because tax is paid one year in arrears: everything on the right-hand side is
+finished before period `t` is evaluated, and the subsidy falls out
+arithmetically once a period. The tax-equity flip's IRR hurdle is the same
+move (a discounted running sum). The circularity is in how the spreadsheet is
+wired, not in the deal.
+
+**Affine terms collect.** Capitalised construction interest — the classic
+Excel circular reference — is affine in the closing balance, so collecting
+terms solves it in one substitution (`cre.construction_loan`, and
+`benchmarks/opco/lbo_financing_cases`' balance/interest circularity, both
+noted at their sites).
+
+**The residual case is transcription plus assertion.** Where a workbook's
+sizing is genuinely a solved artifact (HUD's First Mortgage Sizing tab), the
+deal documents state the loan amount anyway: take the stated figure as the
+input it is, and assert the resulting ratio against the source —
+`hud_home_multifamily` pins DSCR to 1e-4 that way, which is the check that
+matters.
+
+Ask which of the three moves applies before proposing iteration; a genuine
+simultaneous fixed point that none of them covers has not yet appeared in a
+benchmark.
