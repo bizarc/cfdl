@@ -618,6 +618,133 @@ struct StreamDeps {
     /// `docs/28` §7 migrates to the valuation plane. Everything else reads
     /// cumulatively backward, which a walk serves exactly.
     reads_forward: bool,
+    /// The forward reach is in the AMOUNT alone — the priced exception's
+    /// shape (`docs/28` §7): the amount is a valuation over cells beyond the
+    /// flow, and may set a causal amount where the graph stays acyclic. A
+    /// forward-reaching GUARD is not priced: whether a stream is active is a
+    /// causal fact, and a fact cannot be read from the future.
+    amount_reads_forward: bool,
+}
+
+/// The cycle the priced exception refuses (`docs/28` §7), as a hard error
+/// with the path named — not a routing decision, because no evaluation order
+/// serves it: LOGIC settles before the priced pass in the walk, and reads
+/// nothing at all under the column order. Sale proceeds feeding state that
+/// feeds what is being capitalized is the canonical instance; logic reading
+/// `prev.<account>` in a priced model is the same read through a balance
+/// that may carry priced cash.
+fn priced_refusal(ir: &Ir, deps: &[StreamDeps]) -> Option<String> {
+    let closure = priced_closure(ir, deps);
+    if !closure.iter().any(|p| *p) {
+        return None;
+    }
+    let closure_names: Vec<&str> = ir
+        .streams
+        .iter()
+        .zip(&closure)
+        .filter(|(_, inc)| **inc)
+        .map(|(stream, _)| stream.name.as_str())
+        .collect();
+    for (site, src) in &logic_expression_sources(ir) {
+        for pattern in cfdl_expr::series_references(src) {
+            if let Some(hit) = closure_names
+                .iter()
+                .find(|p| cfdl_expr::selector_matches(&pattern, p))
+            {
+                return Some(format!(
+                    "{site} reads '{hit}', which a priced amount sets: a valuation feeding logic that feeds what is being capitalized is the cycle the priced exception refuses (docs/28 §7)"
+                ));
+            }
+        }
+        for account in &ir.accounts {
+            let needle = format!("prev.{}", account.name);
+            if src.contains(&needle) {
+                return Some(format!(
+                    "{site} reads {needle} in a model with a priced amount, and a balance may carry priced cash logic cannot yet see"
+                ));
+            }
+        }
+    }
+    None
+}
+
+/// Which streams the priced pass owns: the priced amounts and every stream
+/// that transitively reads one (`docs/28` §7). A priced amount SETS a causal
+/// amount, and causal cells reading it are ordinary downstream flow — the
+/// management fee on collections that include a priced recovery is the
+/// shipped case. They evaluate together, in wave order, after the causal
+/// walk settles; what stays outside is anything the walk itself must serve.
+fn priced_closure(ir: &Ir, deps: &[StreamDeps]) -> Vec<bool> {
+    let mut in_closure: Vec<bool> = deps.iter().map(|d| d.amount_reads_forward).collect();
+    loop {
+        let mut changed = false;
+        for (idx, dep) in deps.iter().enumerate() {
+            if in_closure[idx] {
+                continue;
+            }
+            let reads_closure = dep.refs.iter().any(|pattern| {
+                ir.streams.iter().enumerate().any(|(j, other)| {
+                    in_closure[j] && cfdl_expr::selector_matches(pattern, &other.name)
+                })
+            });
+            if reads_closure {
+                in_closure[idx] = true;
+                changed = true;
+            }
+        }
+        if !changed {
+            break;
+        }
+    }
+    in_closure
+}
+
+/// Every LOGIC expression a model has — event guards and their set values,
+/// field rules, and machine edge guards — each with a name a refusal can
+/// print. Logic settles before the priced pass runs, which is why a priced
+/// coupling here routes the model back to the column order.
+fn logic_expression_sources(ir: &Ir) -> Vec<(String, String)> {
+    let mut sources: Vec<(String, String)> = Vec::new();
+    for event in &ir.events {
+        sources.push((
+            format!("event '{}' guard", event.name),
+            event.when.src.clone(),
+        ));
+        for action in &event.actions {
+            if let Some(value) = &action.value {
+                sources.push((
+                    format!("event '{}' set value", event.name),
+                    value.src.clone(),
+                ));
+            }
+        }
+    }
+    for entity in &ir.entities {
+        for (name, rule) in &entity.rules {
+            sources.push((
+                format!("field '{}.{name}' init", entity.symbol),
+                rule.init.src.clone(),
+            ));
+            sources.push((
+                format!("field '{}.{name}' next", entity.symbol),
+                rule.next.src.clone(),
+            ));
+        }
+    }
+    for lifecycle in &ir.lifecycles {
+        for edge in &lifecycle.edges {
+            if let Some(guard) = &edge.guard {
+                sources.push((
+                    format!(
+                        "lifecycle '{}' edge '{} -> {}' guard",
+                        lifecycle.id, edge.from, edge.to
+                    ),
+                    guard.src.clone(),
+                ));
+            }
+        }
+    }
+    sources
 }
 
 /// Can this model be evaluated one period at a time?
@@ -662,7 +789,8 @@ fn stream_deps(ir: &Ir) -> Vec<StreamDeps> {
         };
         let (mut uses, mut computed) = probe(&stream.amount.src);
         let mut refs = cfdl_expr::series_references(&stream.amount.src);
-        let mut reads_forward = forward(&stream.amount.src);
+        let amount_reads_forward = forward(&stream.amount.src);
+        let mut reads_forward = amount_reads_forward;
         if let Some(guard) = &stream.active_when {
             let (guard_uses, guard_computed) = probe(&guard.src);
             uses |= guard_uses;
@@ -675,6 +803,7 @@ fn stream_deps(ir: &Ir) -> Vec<StreamDeps> {
             computed,
             refs,
             reads_forward,
+            amount_reads_forward,
         });
     }
     deps
@@ -845,6 +974,14 @@ fn walk_periods(
     let max_wave = prep.waves.iter().copied().max().unwrap_or(0);
     let mut walk = prepare_state_walk(ir, timeline, warnings);
     let mut stage = prepare_waterfall_stage(ir, timeline, warnings);
+    // THE PRICED PASS (`docs/28` §7). A priced amount is a valuation over
+    // cells beyond the flow; eligibility has already established that nothing
+    // causal reads it back. The walk therefore skips priced streams, prices
+    // them from the settled store once every causal cell exists, and runs the
+    // waterfall stage after that — so a distribution at the sale period
+    // allocates proceeds that exist.
+    let priced: Vec<bool> = priced_closure(ir, &stream_deps(ir));
+    let any_priced = priced.iter().any(|p| *p);
     let curves = ir_curve_defs(ir);
     // STATE-ANCHORED PLANS ARE WALK-LOCAL. `prep` is shared across
     // scenarios and Monte Carlo trials, and each run's entries are its own —
@@ -926,6 +1063,9 @@ fn walk_periods(
             }
             let snapshot = (wave > 0).then(|| Arc::new(full.clone()));
             for (idx, stream) in ir.streams.iter().enumerate() {
+                if priced[idx] {
+                    continue;
+                }
                 let plan = anchored.get(&idx).unwrap_or(&prep.plans[idx]);
                 if prep.waves[idx] != wave || !plan.settles_at(t) {
                     continue;
@@ -960,23 +1100,93 @@ fn walk_periods(
         // 3. THE WATERFALL STAGE, over cash this period has produced and never
         //    interleaved with it. Accounts take their inflow, then each
         //    waterfall the SCHEDULE says runs allocates — from `available`,
-        //    or from an account's accumulated balance.
-        let snapshot = Arc::new(full.clone());
-        let (field_values, entity_state, _) = walk.settled();
-        stage.step(
-            ir,
-            config,
-            t,
-            &timeline[t],
-            base_inputs,
-            field_values,
-            entity_state,
-            &curves,
-            &snapshot,
-            &prep.account_inflows,
-            &mut account_balances,
-            warnings,
-        );
+        //    or from an account's accumulated balance. DEFERRED when the
+        //    model prices: the stage must see the priced cash, and nothing in
+        //    it feeds back into logic or streams (eligibility said so), so
+        //    running it after the priced pass changes no causal cell.
+        if !any_priced {
+            let snapshot = Arc::new(full.clone());
+            let (field_values, entity_state, _) = walk.settled();
+            stage.step(
+                ir,
+                config,
+                t,
+                &timeline[t],
+                base_inputs,
+                field_values,
+                entity_state,
+                &curves,
+                &snapshot,
+                &prep.account_inflows,
+                &mut account_balances,
+                warnings,
+            );
+        }
+    }
+
+    // THE PRICED PASS, then the deferred stage. Priced streams evaluate in
+    // wave order against the settled store with no watermark — the forward
+    // window is exactly what a valuation is allowed to see — and each column
+    // joins the store as it finishes, so a priced amount may read an
+    // earlier-priced one.
+    if any_priced {
+        let (field_values, entity_state, stream_active) = walk.settled();
+        for wave in 0..=max_wave {
+            for (idx, stream) in ir.streams.iter().enumerate() {
+                if !priced[idx] || prep.waves[idx] != wave {
+                    continue;
+                }
+                let snapshot = Arc::new(full.clone());
+                let plan = &prep.plans[idx];
+                let mut refused: Vec<usize> = Vec::new();
+                let mut column = vec![0.0_f64; timeline.len()];
+                for (t, slot) in column.iter_mut().enumerate() {
+                    if !plan.settles_at(t) {
+                        continue;
+                    }
+                    *slot = plan.step(
+                        ir,
+                        config,
+                        t,
+                        timeline,
+                        base_inputs,
+                        entity_state,
+                        stream_active,
+                        field_values,
+                        Some(&snapshot),
+                        warnings,
+                        &mut refused,
+                        None,
+                    );
+                }
+                if let Some(slot) = full.get_mut(&stream.name) {
+                    *slot = column;
+                }
+                if !refused.is_empty() {
+                    refusals
+                        .entry(stream.name.clone())
+                        .or_default()
+                        .extend(refused);
+                }
+            }
+        }
+        for (t, date) in timeline.iter().enumerate() {
+            let snapshot = Arc::new(full.clone());
+            stage.step(
+                ir,
+                config,
+                t,
+                date,
+                base_inputs,
+                field_values,
+                entity_state,
+                &curves,
+                &snapshot,
+                &prep.account_inflows,
+                &mut account_balances,
+                warnings,
+            );
+        }
     }
 
     let (state_values, event_sim) = walk.finish(ir);
@@ -992,6 +1202,21 @@ fn walk_periods(
     )
 }
 
+/// The streams whose amounts are PRICED — forward windows served by the
+/// priced pass (`docs/28` §7). Public so the corpus test keeps the inventory
+/// deliberate: a new priced amount is added there by hand, not by blessing.
+pub fn priced_streams(raw_ir: &str) -> Result<Vec<String>, EngineError> {
+    let ir: Ir = serde_json::from_str(raw_ir)?;
+    let deps = stream_deps(&ir);
+    Ok(ir
+        .streams
+        .iter()
+        .zip(&deps)
+        .filter(|(_, dep)| dep.amount_reads_forward)
+        .map(|(stream, _)| stream.name.clone())
+        .collect())
+}
+
 pub fn walk_eligibility(raw_ir: &str) -> Result<Option<String>, EngineError> {
     let ir: Ir = serde_json::from_str(raw_ir)?;
     let deps = stream_deps(&ir);
@@ -999,14 +1224,25 @@ pub fn walk_eligibility(raw_ir: &str) -> Result<Option<String>, EngineError> {
 }
 
 fn walk_ineligible_reason(ir: &Ir, deps: &[StreamDeps]) -> Option<String> {
+    // THE PRICED EXCEPTION (`docs/28` §7). A forward window in an AMOUNT is a
+    // valuation setting a causal amount — the forward-income exit, the
+    // expense stop's base year — and the walk serves it in a priced pass
+    // after the causal cells settle. A forward window in a GUARD is not
+    // priced: activity is a causal fact, and the model keeps the column
+    // order, named.
+    let mut priced: Vec<&str> = Vec::new();
     for (stream, dep) in ir.streams.iter().zip(deps) {
-        if dep.reads_forward {
+        if dep.reads_forward && !dep.amount_reads_forward {
             return Some(format!(
-                "stream '{}' reads a series window that can reach beyond the current period",
+                "stream '{}' has a guard whose series window can reach beyond the current period",
                 stream.name
             ));
         }
+        if dep.amount_reads_forward {
+            priced.push(&stream.name);
+        }
     }
+    let _ = priced;
     // A WATERFALL'S STEPS READ SERIES TOO, and they are not in `ir.streams`.
     // `waterfall_nested_split` reads `[0..5]` from a step, which a
     // streams-only check reported as walkable — the fund waterfall composition
@@ -1172,6 +1408,9 @@ fn prepare_model<'a>(ir: &'a Ir, warnings: &mut Vec<String>) -> Result<ModelPrep
     let total_periods = ir.time.periods as usize + ir.time.projection as usize;
     let timeline = timeline_dates(&ir.time.start, &ir.time.calendar, total_periods)?;
     let deps = stream_deps(ir);
+    if let Some(path) = priced_refusal(ir, &deps) {
+        return Err(EngineError::SeriesCycle(path));
+    }
     let stream_names: Vec<&str> = ir.streams.iter().map(|s| s.name.as_str()).collect();
     let waves = assign_waves(&stream_names, &deps)?;
     let mut plans = Vec::with_capacity(ir.streams.len());
@@ -3112,6 +3351,7 @@ mod series_wave_tests {
             computed,
             refs: refs.iter().map(|r| r.to_string()).collect(),
             reads_forward: false,
+            amount_reads_forward: false,
         }
     }
 
