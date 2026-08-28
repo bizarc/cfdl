@@ -1,7 +1,7 @@
 # Events and the machine — scope
 
-Status: **draft scope, for review.** 2026-08-28. Not published;
-repository-only.
+Status: **decisions settled** — reviewed and answered 2026-08-28; D1–D8
+resolved, D2a added in review. Not published; repository-only.
 
 ## The principle
 
@@ -65,8 +65,8 @@ vocabulary, same journaling.
 
 ## Design decisions
 
-Numbered so review can answer them individually. Each carries a
-recommendation; none is settled until this document's status changes.
+Numbered; each was answered individually in review, 2026-08-28. The
+decisions below are settled.
 
 ### D1 — when does an event fire? On each occurrence (rising edge).
 
@@ -114,9 +114,19 @@ calendars — and schedules are already event sources for payments. An event
 whose occurrence is time-driven says so in that language rather than in
 grid-fragile arithmetic: `schedule on 2027-03`, not `when time.t == 15`.
 An event — named or anonymous — may carry a **schedule clause** (its time
-condition) and/or a **`when` clause** (its state and cash conditions);
-both present means the event fires on scheduled occurrences where the
-conditions hold.
+condition) and/or a **`when` clause** (its state and cash conditions).
+
+**Settled: the schedule supplies the occurrences; `when` filters them.**
+With both present, the event fires at EACH scheduled occurrence where the
+conditions hold — `schedule every quarter` + `when dscr < 1.2` is a
+quarterly covenant test, and four consecutive failing tests are four
+breach events, because the model declared quarterly testing. This is not
+the level-triggering D1 rejected: that was rejected as a DEFAULT, because
+it made every grid period an implicit occurrence nobody declared. Here
+the occurrences are declared. Rising-edge applies only when no schedule
+is present — occurrences then come from the condition's own dynamics.
+A model wanting "only on entry into breach" has the honest spelling
+already: `ok -> breach` on a machine, which is what states are for.
 
 ### D2 — the anonymous event acts: transitions carry behavior
 
@@ -133,6 +143,20 @@ write moving the entity across a permission edge. Field names are
 entity-relative (`set shortfall`, not `set asset.unit_a.shortfall`): one
 lifecycle is bound by many entities, and the behavior belongs to the entity
 that transitioned.
+
+### D2a — a model may augment a pack machine's actions, additively
+
+Per-edge and entry actions must be reachable from all three positions a
+practitioner occupies: authoring a pack, modeling with no pack, and — the
+common middle — modeling ON a pack whose machine is right but whose
+actions stop short. A model may therefore attach entry and edge actions
+to a pack-declared machine's states and edges, **additively only**: it
+cannot add states or edges, remove the pack's actions, or alter the
+topology — the pack's machine stays the checkable contract, and the
+model's actions run after the pack's (the specific refines the general,
+same-field conflicts journaling `overridden` per D5). This is what makes
+per-edge actions an extensibility surface rather than a pack-author
+convenience.
 
 ### D3 — entry actions are first-class, and the primary domain spelling
 
@@ -164,7 +188,16 @@ Stream gating is already declarative (`active in state`) and schedule
 anchoring already follows entry (`state_enter`); imperative
 `activate`/`deactivate` on an edge would duplicate the declared pattern.
 `exercise option` stays with named events. If a case forces more verbs, it
-forces them with provenance.
+forces them with provenance — the settled starting point is `set`, with
+more verbs added as domain packs require them.
+
+**Pinned: an entry or edge action may `set` FIELDS only, never `status`.**
+An action writing status would fire a second transition inside the same
+period — violating one-transition-per-entity-per-period and inviting
+same-period cascades. A transition that should cause another transition
+is topology: an edge from the target state, taken next period. Status
+writes remain the named event's privilege, validated against the edge
+relation as today.
 
 ### D5 — evaluation discipline (unchanged, extended)
 
@@ -240,14 +273,15 @@ broken — but it is measured, not assumed:
    in the engine.
 2. **Golden re-blessing** follows the audit under the full cadence; the
    collapse property over the blessed corpus must hold before and after.
-3. No deprecation period: the audit is the deprecation period.
+3. No deprecation period: the audit is the deprecation period. Settled in
+   review as a clean cut — no compatibility flag, no surviving latch.
 
 ## Phases
 
 | phase | delivers | gate |
 |---|---|---|
 | 1 | Semantics settled: D1–D8 answered; `docs/01` §7.3/§13, `docs/02` grammar, `docs/05` IR schema updated together; `docs/28` §6 amended | spec/grammar/IR reviewed as one change |
-| 2 | Parser + IR + validation: entry-action and edge-action blocks, the event schedule clause (D1a), entity-relative field resolution; diagnostics — unknown field on the bound entity (named set), action expression reading same-period series refused (E1134's argument, one construct over) | per-code validate tests from invalid fixtures |
+| 2 | Parser + IR + validation: entry-action and edge-action blocks, the event schedule clause (D1a), entity-relative field resolution, model-side augmentation of pack machines (D2a); diagnostics — unknown field on the bound entity (named set), action expression reading same-period series refused (E1134's argument, one construct over) | per-code validate tests from invalid fixtures |
 | 3 | Engine: rising-edge firing once per period, scheduled occurrences (D1a), entry-then-edge action execution in the walk, journal children, `results_version` 0.6 | fixtures: re-fire on cure/re-default; action write visible to a same-period stream; declaration-order writes; one-shot via no-return topology |
 | 4 | Corpus audit + golden re-bless per Migration | collapse property holds across the blessed corpus |
 | 5 | Pack surface: `types.toml` machines carry `on enter` blocks (and per-transition actions); `cre.unit` gains re-let entry actions (re-strike, counter reset); pack validations for action fields | doc-examples gate; pack READMEs |
@@ -272,8 +306,10 @@ that closes it — and a §7.77 cure-counter.
 
 ## Relation to the roadmap
 
-M2-shaped work: it stands on the walk, the machine and the journal, and it
-is the mechanism §7.77 (cure window) and §7.74 (shortfall, advances) were
-waiting to spell. §7.73 composes: state-gating gates the streams, and this
+**First priority within M2** (settled in review): it stands on the walk,
+the machine and the journal, and it is the mechanism §7.77 (cure window),
+§7.74 (shortfall, advances) and §7.76's counters were waiting to spell —
+three other M2 entries consume it, so it goes first, ahead of the
+independent §7.50/§7.73 pair. §7.73 composes: state-gating gates the streams, and this
 plan makes the states act. A backlog entry referencing this document is
 appended as §7.79.
