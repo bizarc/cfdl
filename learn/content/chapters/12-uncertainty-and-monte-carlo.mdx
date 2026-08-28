@@ -86,6 +86,40 @@ stream building.rollover_rent on entity asset.building inflow currency USD {
 
 Each trial commits to one branch for its whole path. This is a *fork in the world*, not noise around a level. The output distribution goes properly bimodal, with a cluster of renewal paths and a cluster of vacancy paths. The percentiles then say what no blended-average model can: the deal's median is fine *and* a quarter of paths spend a year starved. Blending 70/30 into "expected rent of 81,700" would have hidden exactly the scenario the reserve account exists for. Deterministically, the draw resolves to 0.5 — the renewal branch — so the base case stays sensible too.
 
+## Quantiles: dispersion inside one period
+
+Distributions spread a value *across trials*. Some economics depend on a spread *within a single period* — a battery earns the gap between the most and least expensive hours of a month; overage rent is an option on sales above a breakpoint; a tranche absorbs losses between two attachment points. For those, the model declares the spread itself:
+
+```cfdl
+version 0.1
+model "quantiles-battery"
+time calendar monthly from 2026-01 for 12
+
+entity asset battery : Asset.Financial
+
+// A price duration curve: the value at each cumulative share of the
+// period's hours. Interpolation is a claim here exactly as it was for
+// curves — linear glides between the stated points.
+quantile prices linear {
+  0.00:  11.0
+  0.50:  28.0
+  0.98: 340.0
+  1.00: 512.0
+}
+
+// The battery discharges into the top 2% of hours and charges from the
+// bottom half, at 85% round-trip efficiency — a dispersion payoff no
+// scalar "average spread" can state.
+stream battery.arbitrage on entity asset.battery inflow currency USD {
+  schedule every month from 2026-01 to 2026-12
+  amount = (quantile_mean("prices", 0.98, 1.0) - quantile_mean("prices", 0.0, 0.5) / 0.85) * 100.0
+}
+```
+
+Three functions read a declared quantile. `quantile_mean(name, lo, hi)` averages a slice — the top 2% of hours, the bottom half. `quantile_at(name, share)` reads one point — the median hour's price. `quantile_of(name, value)` inverts it — the share of hours below a stated threshold, which is what a breakpoint or an attachment point needs. The construct is the answer to a failure you can now name: a *nonlinear* payoff evaluated at a point estimate is wrong even when the point estimate is right — an option on sales priced at average sales returns zero whenever the average sits below the breakpoint, when the true expectation is positive. When the payoff bends, feed it the distribution it bends over.
+
+Quantiles and trial distributions compose: the declared curve carries the *within-period* shape, and a distributed assumption multiplying the read carries the *across-trials* uncertainty about its level.
+
 ## What can go wrong
 
 **Distributions on everything.** Twenty distributed assumptions produce a wide, smooth, unexplainable fan. Distribute the three to five inputs that are both genuinely uncertain and genuinely consequential (question 4 above tells you which); state the rest as the scalars they effectively are. Precision about *what you are uncertain about* is the whole craft.
