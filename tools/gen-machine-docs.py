@@ -369,6 +369,62 @@ def render_bundle() -> str:
     return body.strip() + "\n"
 
 
+# --- Benchmark exemplars -----------------------------------------------------
+
+# Editorial, like the site's BUILTIN_GROUPS: the benchmark cases that exercise
+# the core language and the domain packs in meaningful ways, chosen so every
+# language mechanism and every meaningfully-composed pack pattern appears at
+# least once. Near-duplicates (rate-sweep variants, twins) stay out — the full
+# suite remains the grader; this is the reading list.
+EXEMPLARS = [
+    "bespoke/buenavista_del_cobre",
+    "bespoke/ppiaf_toll_highway",
+    "cre/office_two_tenant",
+    "cre/retail_strip",
+    "cre/one_lincoln_street_contract",
+    "cre/penzance_highlands",
+    "credit/level_pay_pool",
+    "credit/float_bridge_pool",
+    "credit/mbs_pool_by_loan",
+    "credit/fnma_remic_2019_2_g3",
+    "credit/auto_abs_tranches",
+    "energy/utility_pv_singleowner",
+    "energy/merchant_capacity",
+    "energy/tax_equity_flip",
+    "opco/lbo_buyout",
+    "opco/lbo_financing_cases",
+    "opco/lbo_option_pool_exit",
+    "opco/damodaran_fcff",
+]
+
+EXERCISES = re.compile(r"## What it exercises\n(.*?)\n## ", re.DOTALL)
+
+
+def render_exemplars() -> str:
+    lines = [
+        provenance("benchmark exemplars"),
+        "",
+        "# CFDL benchmark exemplars",
+        "",
+        f"CFDL {workspace_version()}. {len(EXEMPLARS)} of the registered benchmark",
+        "cases, curated so every core-language mechanism and every",
+        "meaningfully-composed pack pattern appears at least once. Each model",
+        "compiles, runs, and matches an external reference within stated tolerances",
+        "in CI — these are full deals, the step up from the single-purpose valid",
+        "corpus. Each entry carries the case's own \"what it exercises\" grid.",
+        "",
+    ]
+    for case_id in EXEMPLARS:
+        case_dir = ROOT / "benchmarks" / case_id
+        case = tomllib.loads(read(case_dir / "case.toml"))
+        lines += [f"## {case_id}", "", case.get("summary", "").strip(), ""]
+        match = EXERCISES.search(read(case_dir / "CASE.md"))
+        if match:
+            lines += [match.group(1).strip(), ""]
+        lines += ["```cfdl", read(case_dir / "model.cfdl").rstrip(), "```", ""]
+    return "\n".join(lines).rstrip() + "\n"
+
+
 # --- The valid corpus --------------------------------------------------------
 
 def render_valid_examples() -> str:
@@ -464,6 +520,10 @@ def render_llms_txt(chapters: list[dict]) -> str:
         f"- [Valid examples corpus]({SITE}/machine/valid-examples.md): every golden",
         "  fixture model — single-purpose, compiling, byte-asserted in CI; what right",
         "  looks like",
+        f"- [Benchmark exemplars]({SITE}/machine/exemplars.md): 18 curated full-deal",
+        "  models from the benchmark suite — every language mechanism and every",
+        "  meaningfully-composed pack pattern, each matched to an external reference",
+        "  in CI",
         f"- [llms-full.txt]({SITE}/llms-full.txt): the bundle plus every course",
         "  chapter, for consumers that want a single document",
         "",
@@ -500,6 +560,8 @@ def render_llms_full(bundle: str, chapters: list[dict]) -> str:
         "",
         "\n\n---\n\n# Valid examples — the golden corpus\n",
         "\n" + render_valid_examples().split("\n", 2)[2].strip() + "\n",
+        "\n\n---\n\n# Benchmark exemplars\n",
+        "\n" + render_exemplars().split("\n", 2)[2].strip() + "\n",
         "\n\n---\n\n# The CFDL course (learn.cfdl.dev)\n",
         "\nPedagogical: the chapters restate the specification narratively. The",
         "specification above is normative where they differ.\n",
@@ -525,6 +587,7 @@ def outputs() -> dict[str, str]:
         "cfdl-machine-docs.md": bundle,
         "diagnostics-repairs.md": render_repairs(cases, registered),
         "valid-examples.md": render_valid_examples(),
+        "exemplars.md": render_exemplars(),
         "llms.txt": render_llms_txt(chapters),
         "llms-full.txt": render_llms_full(bundle, chapters),
     }

@@ -23,6 +23,10 @@ disagree, the repository is the source of truth.
 - [Valid examples corpus](https://cfdl.dev/machine/valid-examples.md): every golden
   fixture model — single-purpose, compiling, byte-asserted in CI; what right
   looks like
+- [Benchmark exemplars](https://cfdl.dev/machine/exemplars.md): 18 curated full-deal
+  models from the benchmark suite — every language mechanism and every
+  meaningfully-composed pack pattern, each matched to an external reference
+  in CI
 - [llms-full.txt](https://cfdl.dev/llms-full.txt): the bundle plus every course
   chapter, for consumers that want a single document
 

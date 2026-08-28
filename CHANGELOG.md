@@ -8,6 +8,16 @@ This project follows Semantic Versioning: https://semver.org/
 
 ## [Unreleased]
 
+### Added: benchmark exemplars in the machine surface
+
+`docs/machine/exemplars.md` (served at `/machine/exemplars.md`, and inlined
+in `llms-full.txt`): 18 of the 42 benchmark cases, curated so every
+core-language mechanism and every meaningfully-composed pack pattern
+appears at least once — full-deal models, each matched to an external
+reference in CI, each carrying its case's "what it exercises" grid.
+Near-duplicates (rate sweeps, twins) stay out; the full suite remains the
+grader. The set doubles as the transcribe-tier nucleus for docs/32 Phase 3.
+
 ### Added: the documentation surface for machines (docs/32 Phase 2)
 
 `tools/gen-machine-docs.py` generates `docs/machine/` from the same sources
