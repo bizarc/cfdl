@@ -8,6 +8,40 @@ This project follows Semantic Versioning: https://semver.org/
 
 ## [Unreleased]
 
+### Added: M1 — the period walk, shipped end to end
+
+`docs/28` restated from proposed to shipped; `docs/29` is the phase record.
+The engine evaluates one period at a time — state settles, streams evaluate,
+waterfalls the schedule names distribute — so realised cash feeds the
+model's own logic with a one-period lag, and the whole corpus computes the
+same numbers it did under the column order (the collapse property, asserted
+over every blessed fixture in `cargo test`).
+
+What the walk carries, phase by phase:
+
+- **Backward reads** (`docs/28` §4): logic reads settled series at or before
+  the previous period; `E1134` narrowed from a prohibition to that rule. A
+  unit goes delinquent because rent was not received.
+- **The account** (§5.1): a declared cash location under the balance law —
+  `from <account>` pots, `pay … to account` credits, `prev.<account>` in
+  logic, no floor on the balance, every movement journaled.
+  `results_version` 0.4.
+- **The lifecycle machine** (§6.1): a core-language finite state machine
+  with guarded edges declared only as used; no latch — edge availability is
+  the memory; event status writes validated against the relation.
+  `results_version` 0.5 (`transition` journal action).
+- **`state_enter`** (§6.2): the third schedule anchor; each entry opens its
+  own window and a re-entered state re-anchors.
+- **The priced exception** (§7): a forward window in an amount is a
+  valuation setting a causal amount, evaluated after the causal cells
+  settle; the cycle is refused with the path named; the expense stop
+  declares itself in the valuation plane (decided by the MIT Rentleg
+  reference tie, recorded in `docs/26`).
+
+Not one shipped golden moved in any number across the milestone; the
+re-blessings were `results_version` strings, `model_hash`, and the additive
+machine publication in IR.
+
 ### Added: which models can be walked, and the forward reads that answer it
 
 Phase 2.0 of `docs/29_period_walk_implementation.md`. A period walk cannot

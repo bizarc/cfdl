@@ -72,59 +72,6 @@ is the answer `docs/18` gives for the 43-sub-pool auto ABS case as well.
 
 ## 5. Language and engine
 
-### 5.2 A recurrence cannot read the model's own streams
-
-*Rewritten. The entry said cash sweeps and revolver draws were "still blocked"
-and needed an ordered allocation pass. A sweep is not blocked — a shipped
-benchmark reconciles one — and the allocation pass exists as the waterfall.
-What remains is narrower and is a duplication cost, not an absence.*
-
-**A cash sweep works today.** `benchmarks/opco/lbo_financing_cases` sweeps every
-dollar of free cash flow against a Term Loan B and reproduces the reference's
-MoIC and IRR across three financing cases. Two things make it work, and neither
-is new: the balance/interest circularity is affine, so collecting terms solves
-it in one substitution rather than iterating (`docs/14` §9); and the operating
-drivers are CURVES, which a recurrence may read.
-
-**What is actually blocked is a recurrence reading a series.** A field's `next`
-sees `prev`, other fields' `prev`, `time.*`, `inputs`, `cfg`, `obs` and curves —
-and no series at all (`docs/07`, `docs/14` §3.1). So a balance whose movement is
-determined by REALISED cash, rather than by drivers a field can also see, has to
-restate how that cash is computed. Two shipped models pay that cost:
-`americredit_2017_1` carries seven class balances each duplicating its step-down
-expression, and the LBO above rebuilds its whole free-cash-flow stack inside the
-balance recurrence.
-
-**Much of the duplication is avoidable today, and models should do this first.**
-State the quantity ONCE as a field and let both the published stream and the
-recurrence read it, rather than computing it twice:
-
-```cfdl
-entity asset co : Asset.Financial {
-  fcf     init <build> next <build>          // stated once
-  balance init 3000.0  next max(0.0, prev - prev.asset.co.fcf)
-}
-stream opco.fcf on entity asset.co inflow currency USD {
-  amount = asset.co.fcf                       // the published line reads it
-}
-```
-
-Verified: the balance tracks the sweep to the cent with one statement of the
-build. This works whenever free cash flow is derivable from curves, inputs and
-fields — which is what the LBO's curve-shaped operating case achieves.
-
-**The residue.** When the quantity is only knowable from stream output — a
-pack-lowered contract's cash, or what a waterfall actually paid under a short
-pot — no field can see it, and the restatement is forced. Shapes that would
-close it, none designed: a truncated series view up to `t-1` (§7.10, which
-costs an O(n) copy per period unless it is a borrowed slice); `prev.<waterfall>.<step>`
-as the symmetric extension of `prev.<entity>.<field>`, strictly backward and so
-cycle-free by the same argument; or a step that moves a balance directly.
-
-Do not relax the same-period stream reference rules to get any of it: a
-waterfall is an author-declared priority over a pot, and reading this period's
-realised cash is what the waterfall is already for.
-
 ## 6. Cross-pack
 
 ## Where these came from
@@ -448,27 +395,6 @@ sales-to-capital ratio, reading revenue through `series_sum` as
 (`EBIT(1-t) − reinvestment`) expressible from drivers rather than from a
 hand-computed base.
 
-### 7.10 A state's `next` cannot read a stream's history
-
-Deliberate in v1 of `docs/14_state_and_recurrence.md` §3.1, and recorded so it is
-a stated boundary rather than a silent gap.
-
-`next` sees `prev`, `prev.<name>`, `time.*`, `inputs.*`, `cfg`, `obs` and curves.
-It does **not** see stream series. The design permits series up to `t-1`, but
-enforcing "up to `t-1`" would mean truncating the series map per period — an
-O(n) copy per period, O(n²) overall — and, worse, would make the restriction a
-runtime *check* rather than an *absence*, which is the property the whole design
-exists to preserve.
-
-Nothing currently needs it: every shape the backlog asks for is multiplicative
-(survival factors, escalation indices, degradation, discount factors), additive
-(accumulators) or a running maximum (high-water marks). What it would unlock is a
-state that accumulates a stream — a reserve balance fed by actual collections, a
-carryforward of realised losses.
-
-Shape when needed: a borrowed truncated view rather than a copy, so the cost is a
-slice and the restriction stays structural.
-
 ### 7.13 District energy has no usable reference model
 
 Scoped, not built. `research/CFDL_pack_roadmap_and_model_catalogue.xlsx` ranks
@@ -769,65 +695,6 @@ that are unreachable in production and read as catastrophic contrast bugs; two
 false findings died that way during the assessment.
 
 
-### 7.36 A repeatable regime cannot use the checked lifecycle vocabulary
-
-The item claimed that a machine with a return edge is not expressible — that a
-covenant which breaches and cures, a plant that curtails and restarts, a
-facility drawn and repaid each need a state that can be re-entered, and that
-the latch forecloses it. Probed with no pack active, the behavior and a
-published indicator both work today.
-
-`active when` is level-triggered, re-evaluated every period, so a plant curtails
-and restarts with no event at all. A field tracks the regime and flips both
-ways, because a `next` may read curves and time, and it publishes as a series:
-
-```
-price             100   10  100   10  100   10
-active when >=50  100    0  100    0  100    0     curtails and restarts
-field curtailed     0    1    0    1    0    1     published, flips both ways
-```
-
-**What is actually missing is the vocabulary, not the machine.** `active in
-state` and the lifecycle a pack declares in `types.toml` are checked — a state
-name is verified against the lifecycle and a typo is `E1332` — but a lifecycle
-state is entered by an event, and an event latches, so a regime that returns
-cannot use them. It must be a bare field: unchecked, and absent from
-`deterministic.transitions`, so the audit trail is silent about when the regime
-changed even though the field's series shows it.
-
-That is a type-checking and audit gap. Shape, if it earns its place: a way to
-declare states and transitions a model can re-enter, keeping the existing
-once-per-period, declaration-order, period-open evaluation, so the states and
-edges are reviewable in one place and an undeclared transition is a diagnostic
-rather than a silent absence. Truly linear items keep the choice they have
-today: calendar-fixed eras are phases, condition-driven regimes are states.
-
-**The three adjacent findings are closed.**
-
-A `set` on a rule-bearing field is no longer discarded. An event's write
-overwrites the field at that period and the recurrence resumes from it;
-`fixtures/valid/event_reseeds_recurrence` pins `1000, 900, 550, 450, 350, 250`.
-
-An event CAN fire on the boundary of a declared phase.
-`when time.phase == "operations"` fires once, at the first period of that phase,
-which is what the latch is for — verified firing at 2026-10-01 for a phase
-beginning that month. The obstacle was never the event surface: `time.phase` was
-null in every model. §6.4 no longer promises event-position helpers that §13
-does not define, and says what an expression actually reads.
-
-A date literal does compare, written the way the expression language spells one.
-`docs/03` §2 states that expression literals are numbers, booleans and strings,
-and §4 provides `date(y, m, d)` and `parse_date(text)`. Both work:
-`time.date == date(2022, 1, 1)` fires in that period. A bare `2022-01-01` in an
-expression is subtraction because the operator table says it is, which is worth
-a lint suggesting the constructor, not a defect in comparison.
-
-Provenance: found modeling the Buenavista del Cobre lifecycle
-(`benchmarks/bespoke/buenavista_del_cobre`), August 2026. Narrowed August 2026
-by probing each claim: the return edge works, two adjacent findings were stale
-or wrong, and the third was a symptom of `time.phase` rather than of events.
----
-
 ### 7.38 A misspelled series reads as zero, in silence
 
 `series_sum("no.such.series", 0, time.t)` in a stream returns 0.0 for every
@@ -893,24 +760,16 @@ nothing. A few lines in the existing checks — the step set and
 
 ---
 
-### 7.41 A waterfall's pot is never checked for what it names
+### 7.41 A freeform pot expression is still unchecked
 
-*Narrowed. Four of the five invariants this item listed have shipped: cash
-purity and pack additivity as `tools/invariant-checks.py` in `make ci`, the
-series-visibility refusal as `E1342`, and the interleaved state/event walk with
-`fixtures/valid/event_reseeds_recurrence`. The framing also no longer holds —
-`make ci` now runs invariant gates alongside the output gates.*
-
-What remains is the fifth: nothing flags a waterfall whose `from` expression
-names a pack-lowered stream. A pot built from `series_sum` over a family the
-pack emits will silently miss instances if the selector is wrong, in exactly
-the way `tools/check-pack-series.py` catches for pack rules but not for a
-model's own waterfall.
-
-Shape: extend the pack-series gate to waterfall `from` expressions, since it
-already knows which families are instanceable and already understands that a
-bare name matches only the unsuffixed instance.
-
+*Narrowed by M1's account (`docs/28` §5.1).* The checked forms now exist:
+`from available` is the engine's own quantity, and `from <account>` draws a
+balance whose inflow is declared and whose movements are journaled per
+period — what flows in is named, checked, and auditable. What remains open
+is the freeform `from <expr>`: a hand-written pot names whatever its
+windows happen to say, and nothing checks the economics of the selection.
+The residue is the freeform form only, and the account is the recommended
+spelling wherever the pot is "what has accumulated."
 ### 7.43 Results do not say which entity owns a stream
 
 This is a request rather than a defect, and the part of it that is a defect is
@@ -1004,7 +863,9 @@ one that loses is the one whose comment explains the intent.
 The first period is the least defensible of the three candidate defaults. A
 waterfall accumulates over a holding period and then distributes — a preferred
 return and then a split — so the useful default is at the END of the hold, not
-its start. Distributing at the start answers with whatever the first period
+its start.
+The account (`docs/28` §5.1) sharpens this: accumulate-then-distribute is now
+the declared pattern, which makes a first-period default stranger still. Distributing at the start answers with whatever the first period
 happened to produce.
 
 Shape, in the order they should be considered: require the schedule and reject
@@ -1746,81 +1607,6 @@ compile-time scalar record stays for the literal case or is replaced.
 Open this before any further pack contract consumes a quantile. Shipping a
 second one against an audit record that does not work would make the gap
 structural rather than a known debt.
-
-### 7.71 An event cannot see realised cash, and a warning is where it is reported
-
-**What could not be expressed:** a unit whose lifecycle responds to the cash it
-did or did not produce — "when rent is not received, the unit goes delinquent."
-The forward direction works today and is worth stating first: an event writes a
-field or a lifecycle state, streams read it in the same period, and a family
-selector totals the contributions. A probe with two units and an `active in
-state leased` square-footage stream saw occupancy step 0.60 to 1.00 the month
-the second unit leased, with the transition published. State flowing into cash
-is settled machinery. Cash flowing into state is not, and how it fails is the
-entry.
-
-*Corrected. The entry first claimed these failures were SILENT. They are not,
-and the correction is below — the engine names each one precisely, in a place
-that does not stop the run. The behavioural gap is unchanged; its reporting is
-better than was claimed and still not enough.*
-
-**Four spellings were probed. One is refused; three run and report a
-warning.** A guard reading the stream by bare path (`when cre.rent == 0`) is
-refused at IR load: `unresolved name: 'cre.rent' is not declared`. The other
-three compile, run to completion, publish a full set of numbers, and each
-emits one warning PER PERIOD into `deterministic.warnings` naming the read and
-the substitution:
-
-- **A guard reading the same-period amount** — `when series_sum("cre.rent",
-  time.t, time.t) < 50` — never fires. The rent series is zero for half the
-  run; `deterministic.transitions` is null. Twelve warnings: "series
-  `cre.rent` is not available in this context; using false".
-- **A guard reading SETTLED HISTORY** — `series_sum("cre.rent", time.t - 1,
-  time.t - 1)`, the strictly-backward read that is cycle-free by the same
-  argument as `prev` — also never fires, warning identically. This is the
-  spelling that a truncated series view (§7.10) or a per-period interleave
-  would make legal, which makes its inertness the worst of the three: a model
-  written in the idiom the language is moving toward runs today and does
-  nothing.
-- **A recurrence reading a series** — `occupancy init 0.80 next prev +
-  series_sum("rent.total", time.t - 1, time.t - 1) / 1e7` — substitutes 0 for
-  the read, which nulls the whole expression: occupancy collapses to 0.0 from
-  period 1 and `prev` carries the collapse for the rest of the run, revenue
-  with it. Eleven warnings, and `status: ok`.
-
-**Why a warning is not enough, demonstrated rather than argued.** The run
-reports `status: ok`, the exit code is 0, and the CLI prints nothing — the
-warnings live inside the results document. `tools/benchmark-runner.py` does
-fail on engine warnings, so a benchmark case would have caught this; the
-golden runner does not. And that gap is not hypothetical:
-`fixtures/valid/evaluation_order` carried FOUR of these warnings in its
-blessed golden, with a comment describing the guard that never fired as
-expected behaviour, and nothing objected for the life of the fixture. A
-condition whose consequence is published wrong numbers belongs at compile,
-not in an artefact nobody diffs.
-
-**Why even history is invisible.** The engine is stage-wise, not period-wise:
-state and events complete over the WHOLE timeline before the streams stage
-begins (`cfdl-engine/src/lib.rs`, the orchestrator comment). At guard time no
-stream value exists for any period — the past has not been computed yet. So the
-lagged read is not blocked by acyclicity, which it satisfies; it is blocked by
-execution order alone.
-
-**The ask, in two stages.** First, the same-family gate that already catches
-the bare path should catch the series functions: a `series_sum`/`series_avg` in
-an event guard or a field recurrence is a read the environment will never bind,
-and should be refused at compile or load with the read named — this is §7.38's
-argument, one environment over. Second, the lagged spelling should eventually
-become LEGAL rather than loud: a per-period interleave (settle state at t
-reading streams up to t−1, then evaluate streams at t against that state)
-serves both directions — state into cash same-period, cash into state strictly
-backward — and stays cycle-free by construction, with no fixed-point iteration.
-Until the second stage ships, the first is what keeps tomorrow's idiom from
-running inert today.
-
-Related: §5.2 (what a recurrence may read), §7.10 (a truncated series view),
-§7.38 (a misspelled series reads as zero — the same substitution, from a
-misspelled name rather than an unbindable environment).
 
 ### 7.72 A participant's realised return has no construct
 

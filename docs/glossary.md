@@ -9,6 +9,10 @@ the expansion given is the form to use on first mention.
 
 The constructs a model is written from.
 
+**account**
+
+A declared cash location whose balance accumulates across periods under the balance law; drawn by a waterfall, credited by a step, read by logic as settled history.
+
 **assumption**
 
 A declared input to the model, constant or stochastic. Declared with `assume`.
@@ -41,6 +45,10 @@ A field on an entity that takes a literal and nothing else. A value that moves m
 
 How finely the model slices time and things. Timeline grain and entity grain are independent choices.
 
+**lifecycle**
+
+A declared finite state machine: enumerated states, an initial one, and guarded edges declared only as used. A core-language construct that packs tailor to domains.
+
 **metric**
 
 A derived summary figure over the model's cash flows.
@@ -52,6 +60,10 @@ An electable right held by a party.
 **pack**
 
 A domain vocabulary supplying types, roles, and terms to a model.
+
+**priced amount**
+
+A stream amount whose series window reaches forward: a valuation setting a causal amount, evaluated after the causal cells settle, refused where the graph cycles.
 
 **quantile**
 

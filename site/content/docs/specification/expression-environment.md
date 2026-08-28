@@ -81,6 +81,8 @@ The host (compiler or engine) provides values under these roots:
 | `inputs` | assumption values (`assume` statements), including ones derived from other assumptions (§2.1) |
 | `prev` | a field's own previous value, bare — present inside that field's `next` only |
 | `prev.<entity>.<field>` | a field one period back — `prev.asset.tlb.balance`, inside a rule |
+| `prev.<account>` | an account's balance at the previous period, every allocation through it included — rules, guards, and step expressions; absent (not zero) at period 0 |
+| `available` | this period's netted stream cash of the waterfall's entity — waterfall `from` and step expressions |
 | `remaining` | what is left in the pot — present in waterfall step expressions only (§3.2) |
 | `paid` | `paid.<step>`, what an earlier waterfall step actually paid — steps only |
 | `owed` | `owed.<step>`, what an earlier step would have paid, unbounded — steps only |

@@ -268,6 +268,34 @@ occurrences = 100
 note = "Also the finance term. One meaning covers both here, which is why it is registered once."
 
 [[technical_name]]
+term = "account"
+category = "language"
+definition = "A declared cash location whose balance accumulates across periods under the balance law; drawn by a waterfall, credited by a step, read by logic as settled history."
+occurrences = 0
+note = "docs/28 §5.1. The word 'pot' retired with nothing left to denote: 'available' is this period's netted cash, an account is the accumulated cash."
+
+[[technical_name]]
+term = "period walk"
+category = "engine"
+definition = "The engine's evaluation order: per period, state settles, streams evaluate, waterfalls the schedule names distribute — so logic reads cash that has already happened."
+occurrences = 0
+note = "docs/28. The column order remains for models that cannot walk, and the two compute the same numbers wherever both run."
+
+[[technical_name]]
+term = "lifecycle"
+category = "language"
+definition = "A declared finite state machine: enumerated states, an initial one, and guarded edges declared only as used. A core-language construct that packs tailor to domains."
+occurrences = 0
+note = "docs/28 §6.1. There is no latch: edge availability is the memory, and a re-entered state re-arms its edges."
+
+[[technical_name]]
+term = "priced amount"
+category = "language"
+definition = "A stream amount whose series window reaches forward: a valuation setting a causal amount, evaluated after the causal cells settle, refused where the graph cycles."
+occurrences = 0
+note = "docs/28 §7. The forward-income exit and the expense stop's base year are the two shipped cases."
+
+[[technical_name]]
 term = "pack"
 category = "language"
 definition = "A domain vocabulary supplying types, roles, and terms to a model."
