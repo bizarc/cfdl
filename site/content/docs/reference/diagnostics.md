@@ -87,6 +87,7 @@ register, so it cannot fall behind the language.
 | `E1340_WATERFALL_NO_SOURCE` | Symbols and references | a waterfall declares no `from`, so there is no pot to allocate. |
 | `E1341_WATERFALL_FORWARD_REF` | Symbols and references | a step's `paid.<step>` names a step declared later in the same waterfall. Steps pay in declaration order, so a later step has not paid anything when an earlier one is evaluated. |
 | `E1342_WATERFALL_SERIES_NOT_VISIBLE` | Symbols and references | `series_sum`/`series_avg` names a step of this waterfall or of a later one. Steps publish when their waterfall finishes, so the read would aggregate to zero and say nothing. An EARLIER waterfall is the documented composition and still compiles. |
+| `E1347_UNRESOLVED_ACCOUNT_REF` | Symbols and references | a step allocates `to account <name>` and no such account is declared. An account is not an entity and resolves in its own namespace, which is what the `account` keyword in the step says. |
 | `E1343_WATERFALL_DUPLICATE_STEP` | Symbols and references | two steps in one waterfall share a name, which would make `paid.<step>` ambiguous. |
 | `E1344_WATERFALL_NO_REMAINDER` | Symbols and references | a waterfall never says where the remainder goes, so cash could be left unallocated with nothing to say so. |
 | `E1345_WATERFALL_STEP_NO_AMOUNT` | Symbols and references | a step says nothing about what it pays. |
@@ -238,7 +239,7 @@ register, so it cannot fall behind the language.
 | `E9019_CREDIT_INVALID_AGE_MONTHS` | Pack domain validations | `age_months` is the pool's weighted average age at closing. PSA, SDA and the ABS model are all indexed from ORIGINATION, so a seasoned pool starts part-way up the ramp; leaving it at the default 0 on a seasoned pool understates prepayment. Non-negative integer. |
 | `E9020_CREDIT_RATE_FLOOR_ABOVE_CAP` | Pack domain validations |  |
 
-*186 codes.*
+*187 codes.*
 <!-- /cfdl:generated diagnostics-catalog -->
 
 ## Related

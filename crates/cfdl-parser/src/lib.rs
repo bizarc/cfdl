@@ -35,6 +35,7 @@ pub enum Stmt {
     Stream(StreamStmt),
     Event(EventStmt),
     Option(OptionStmt),
+    Account(AccountStmt),
     Waterfall(WaterfallStmt),
     Run(RunStmt),
 }
@@ -495,6 +496,20 @@ pub struct OptionStmt {
 ///
 /// See `docs/17_ordered_waterfall.md`.
 #[derive(Debug, Clone, PartialEq, Eq, serde::Serialize)]
+pub struct AccountStmt {
+    pub name: String,
+    /// `owned by <party>` — optional. A general account belongs to the
+    /// structure; a party-owned one holds what has been ALLOCATED to that
+    /// party. It is not an obligation: it holds cash that exists, and what is
+    /// still owed is simply not yet allocated (`docs/28` §5.1).
+    pub owner: Option<String>,
+    /// `from <expr>` — what flows in each period. May be negative: an account
+    /// fed a deal's whole net cash IS the deal's cumulative position.
+    pub inflow: Option<ExprSlot>,
+    pub span: Span,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, serde::Serialize)]
 pub struct WaterfallStmt {
     pub name: String,
     /// The entity whose cash this allocates.
@@ -533,8 +548,14 @@ pub struct WaterfallStmt {
 #[derive(Debug, Clone, PartialEq, Eq, serde::Serialize)]
 pub struct WaterfallStep {
     pub name: String,
-    /// Who is paid.
+    /// Who is paid — a party, or an ACCOUNT when `to_account` is set.
+    ///
+    /// Allocating to a party allocates into that party's account when it has
+    /// one; naming an account directly is the explicit form, and is how a
+    /// reserve is funded (`docs/28` §5.1).
     pub payee: String,
+    /// `to account <name>` rather than `to <party>`.
+    pub to_account: bool,
     /// What this step is owed. The engine pays `min(max(0, this), remaining)`,
     /// so the pot cannot go negative however the expression is written.
     pub amount: Option<ExprSlot>,
@@ -708,6 +729,7 @@ impl<'a> Parser<'a> {
             }
             TokenKind::Keyword(Keyword::Event) => self.parse_event_stmt().map(Stmt::Event),
             TokenKind::Keyword(Keyword::Option) => self.parse_option_stmt().map(Stmt::Option),
+            TokenKind::Keyword(Keyword::Account) => self.parse_account_stmt().map(Stmt::Account),
             TokenKind::Keyword(Keyword::Waterfall) => {
                 self.parse_waterfall_stmt().map(Stmt::Waterfall)
             }
@@ -1796,6 +1818,78 @@ impl<'a> Parser<'a> {
     /// Reserving them would have been the same mistake `term` is: a keyword
     /// cannot be an attribute name, and `cap` and `down` are names a model
     /// legitimately wants — a cap rate, a downside case.
+    /// `account <name> [owned by <party>] { from <expr> currency <code> }`
+    ///
+    /// A declared cash location whose balance carries ACROSS periods — what
+    /// `docs/28` §5.1 renames the pot to. `available` is unchanged and still
+    /// means this period's netted cash; an account is the accumulated cash.
+    fn parse_account_stmt(&mut self) -> Option<AccountStmt> {
+        let start = self.expect_keyword(Keyword::Account, "'account'")?;
+        let name_tok = self.bump();
+        let name = match name_tok.kind {
+            TokenKind::Qname(ref q) => q.clone(),
+            TokenKind::Ident(ref i) => i.clone(),
+            _ => {
+                self.push_expected(
+                    name_tok.span,
+                    "Expected a name after 'account'.".to_string(),
+                );
+                return None;
+            }
+        };
+
+        let _ = self.expect_punct(Punct::LBrace, "'{'")?;
+        // `owner <party>` is optional and lives IN the block: an account with
+        // no owner belongs to the structure. `owner` was already reserved with
+        // no production (`docs/01` §18.2), so this costs no new reserved word,
+        // where `owned by` would have cost two.
+        let mut owner = None;
+        let mut inflow = None;
+        let end;
+        loop {
+            match self.peek().kind {
+                TokenKind::Punct(Punct::RBrace) => {
+                    end = self.bump();
+                    break;
+                }
+                TokenKind::Eof => {
+                    self.push_expected(
+                        self.current_span(),
+                        "Unterminated account block: expected '}'.".to_string(),
+                    );
+                    return None;
+                }
+                TokenKind::Keyword(Keyword::Owner) => {
+                    let kw = self.bump();
+                    let owner_tok = self.bump();
+                    let _ = kw;
+                    owner = Some(self.parse_entity_ref_token(&owner_tok)?);
+                }
+                TokenKind::Keyword(Keyword::From) => {
+                    let kw = self.bump();
+                    // Bounded, or the slot swallows the lines after it: an
+                    // expression has no terminator of its own, so the block's
+                    // other clauses are what end it.
+                    inflow = self.parse_expr_slot_until(kw.span, &["owner"]);
+                }
+                _ => {
+                    let tok = self.bump();
+                    self.push_expected(
+                        tok.span,
+                        "Expected 'owner', 'from' or '}' in an account block.".to_string(),
+                    );
+                    return None;
+                }
+            }
+        }
+        Some(AccountStmt {
+            name,
+            owner,
+            inflow,
+            span: merge_spans(start.span, end.span),
+        })
+    }
+
     fn parse_waterfall_stmt(&mut self) -> Option<WaterfallStmt> {
         let start = self.expect_keyword(Keyword::Waterfall, "'waterfall'")?;
         let name_tok = self.bump();
@@ -1895,8 +1989,30 @@ impl<'a> Parser<'a> {
         };
 
         let _ = self.expect_keyword(Keyword::To, "'to'")?;
+        // `to account <name>` names a destination that is not a party. The
+        // keyword is what disambiguates: an entity can never be called
+        // `account`, because it is reserved.
+        let mut to_account = false;
+        if matches!(self.peek().kind, TokenKind::Keyword(Keyword::Account)) {
+            let _ = self.bump();
+            to_account = true;
+        }
         let payee_tok = self.bump();
-        let payee = self.parse_entity_ref_token(&payee_tok)?;
+        let payee = if to_account {
+            match payee_tok.kind {
+                TokenKind::Ident(ref i) => i.clone(),
+                TokenKind::Qname(ref q) => q.clone(),
+                _ => {
+                    self.push_expected(
+                        payee_tok.span,
+                        "Expected an account name after 'to account'.".to_string(),
+                    );
+                    return None;
+                }
+            }
+        } else {
+            self.parse_entity_ref_token(&payee_tok)?
+        };
 
         let eq = self.expect_punct(Punct::Equal, "'=' before the amount this step pays")?;
         let amount = self.parse_expr_slot_until(eq.span, &["pay"]);
@@ -1904,6 +2020,7 @@ impl<'a> Parser<'a> {
         Some(WaterfallStep {
             name,
             payee,
+            to_account,
             amount,
             span: merge_spans(start.span, eq.span),
         })
@@ -2070,6 +2187,7 @@ impl<'a> Parser<'a> {
                 TokenKind::Eof
                 | TokenKind::Punct(Punct::RBrace)
                 | TokenKind::Keyword(Keyword::Schedule)
+                | TokenKind::Keyword(Keyword::Owner)
                 | TokenKind::Keyword(Keyword::Active) => break,
                 // An operand cannot follow an operand — but `and`, `or` and
                 // `not` lex as identifiers and are OPERATORS, so they continue
@@ -3559,6 +3677,7 @@ fn statement_span(stmt: &Stmt) -> Span {
         Stmt::Stream(s) => s.span,
         Stmt::Event(s) => s.span,
         Stmt::Option(s) => s.span,
+        Stmt::Account(s) => s.span,
         Stmt::Waterfall(s) => s.span,
     }
 }
@@ -3587,6 +3706,7 @@ fn token_label(token: &Token) -> String {
 
 fn keyword_text(keyword: Keyword) -> &'static str {
     match keyword {
+        Keyword::Account => "account",
         Keyword::Waterfall => "waterfall",
         Keyword::Version => "version",
         Keyword::Model => "model",

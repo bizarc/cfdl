@@ -159,6 +159,9 @@ pub enum Keyword {
     Event,
     When,
     Set,
+    /// `account <name> [owned by <party>]` — a declared cash location whose
+    /// balance carries across periods. `docs/28` §5.1.
+    Account,
     Activate,
     Deactivate,
     Exercise,
@@ -686,6 +689,7 @@ fn keyword_from(s: &str) -> Option<Keyword> {
         "event" => Keyword::Event,
         "when" => Keyword::When,
         "set" => Keyword::Set,
+        "account" => Keyword::Account,
         "activate" => Keyword::Activate,
         "deactivate" => Keyword::Deactivate,
         "exercise" => Keyword::Exercise,

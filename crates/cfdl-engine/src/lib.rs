@@ -733,7 +733,7 @@ pub fn compare_evaluation_orders(
     // The walk: state settles, then that period's streams, one period at a
     // time.
     let mut walk_warnings = Vec::new();
-    let (_state_values, _event_sim, walked, _refusals) =
+    let (_state_values, _event_sim, walked, _refusals, _balances) =
         walk_periods(&ir, &config, &prep, &base_inputs, &mut walk_warnings);
     Ok(Some((column, walked)))
 }
@@ -748,7 +748,63 @@ type WalkOutput = (
     EventSim,
     StreamColumns,
     BTreeMap<String, Vec<usize>>,
+    // Each account's balance, period by period.
+    BTreeMap<String, Vec<f64>>,
 );
+
+/// An account's balance, period by period.
+///
+/// `balance(t) = balance(t-1) + inflow(t)`, and draws are subtracted as a
+/// waterfall takes them — which is why this is computed INSIDE the walk rather
+/// than as a post-pass: the balance at `t` is what a distribution at `t` may
+/// draw on, and what logic at `t + 1` may read.
+///
+/// A NEGATIVE INFLOW LOWERS THE BALANCE, with no floor. The language models
+/// returns, and an account fed a deal's whole net cash IS the deal's
+/// cumulative position — negative through the J-curve and positive after. What
+/// is floored is the DRAW: cash that is not there cannot be allocated.
+#[allow(clippy::too_many_arguments)] // stage inputs, as elsewhere in this file
+fn account_inflow_at(
+    ir: &Ir,
+    config: &RunConfig,
+    account: &IrAccount,
+    compiled: Option<&cfdl_expr::CompiledExpr>,
+    t: usize,
+    timeline: &[Date],
+    base_inputs: &BTreeMap<String, f64>,
+    series: Option<&Arc<BTreeMap<String, Vec<f64>>>>,
+    warnings: &mut Vec<String>,
+) -> f64 {
+    let Some(compiled) = compiled else {
+        return 0.0;
+    };
+    let mut env = build_expr_env(ir, None, config, t, &timeline[t], base_inputs);
+    if let Some(series) = series {
+        env.series = Arc::clone(series);
+    }
+    // An account's inflow reads cash that has settled this period, the way a
+    // waterfall's pot does — it is the period's cash arriving, not logic
+    // deciding on it.
+    env.series_available_to = Some(t);
+    match cfdl_expr::eval(compiled, &env) {
+        Ok(ExprValue::Decimal(v)) => v,
+        Ok(ExprValue::Int(v)) => v as f64,
+        Ok(other) => {
+            warnings.push(format!(
+                "Account '{}' inflow evaluated to {other:?}, which is not a number; using 0.",
+                account.name
+            ));
+            0.0
+        }
+        Err(err) => {
+            warnings.push(format!(
+                "Account '{}' inflow failed [{}]: {}; using 0.",
+                account.name, err.code, err.message
+            ));
+            0.0
+        }
+    }
+}
 
 /// THE PERIOD WALK. One period at a time: state settles, then that period's
 /// streams evaluate against it.
@@ -784,6 +840,14 @@ fn walk_periods(
         .map(|s| (s.name.clone(), vec![0.0_f64; timeline.len()]))
         .collect();
     let mut refusals: BTreeMap<String, Vec<usize>> = BTreeMap::new();
+    // An account's balance carries across periods: the walk fills it as it
+    // advances, so a distribution at `t` draws on what has accumulated and
+    // logic at `t + 1` reads a settled figure.
+    let mut account_balances: BTreeMap<String, Vec<f64>> = ir
+        .accounts
+        .iter()
+        .map(|a| (a.name.clone(), vec![0.0_f64; timeline.len()]))
+        .collect();
 
     for t in 0..timeline.len() {
         // 0. THE CASH ALREADY SETTLED, handed over before this period's state
@@ -837,10 +901,31 @@ fn walk_periods(
                 }
             }
         }
+
+        // 3. ACCOUNTS ACCUMULATE, once this period's cash exists. The inflow
+        //    reads the period's settled streams, so it runs after them.
+        let snapshot = Arc::new(full.clone());
+        for (idx, account) in ir.accounts.iter().enumerate() {
+            let inflow = account_inflow_at(
+                ir,
+                config,
+                account,
+                prep.account_inflows[idx].as_ref(),
+                t,
+                timeline,
+                base_inputs,
+                Some(&snapshot),
+                warnings,
+            );
+            if let Some(column) = account_balances.get_mut(&account.name) {
+                let carried = if t == 0 { 0.0 } else { column[t - 1] };
+                column[t] = carried + inflow;
+            }
+        }
     }
 
     let (state_values, event_sim) = walk.finish(ir);
-    (state_values, event_sim, full, refusals)
+    (state_values, event_sim, full, refusals, account_balances)
 }
 
 pub fn walk_eligibility(raw_ir: &str) -> Result<Option<String>, EngineError> {
@@ -1010,6 +1095,8 @@ pub(crate) struct ModelPrep<'a> {
     plans: Vec<StreamPlan<'a>>,
     /// Each stream's evaluation wave, from the dependency graph.
     waves: Vec<usize>,
+    /// Each account's compiled inflow, in `ir.accounts` order.
+    account_inflows: Vec<Option<cfdl_expr::CompiledExpr>>,
     /// Why this model cannot be walked, when it cannot: a window somewhere
     /// reaches past the period being computed, and a walk has no such period
     /// yet. `None` means the walk runs it.
@@ -1027,11 +1114,28 @@ fn prepare_model<'a>(ir: &'a Ir, warnings: &mut Vec<String>) -> Result<ModelPrep
     for stream in &ir.streams {
         plans.push(plan_stream(ir, stream, &timeline, warnings)?);
     }
+    let account_inflows: Vec<Option<cfdl_expr::CompiledExpr>> = ir
+        .accounts
+        .iter()
+        .map(|account| {
+            account.inflow.as_ref().and_then(|expr| {
+                cfdl_expr::compile_expr(&expr.src)
+                    .map_err(|err| {
+                        warnings.push(format!(
+                            "Account '{}' inflow failed to compile [{}]: {}; treated as zero.",
+                            account.name, err.code, err.message
+                        ));
+                    })
+                    .ok()
+            })
+        })
+        .collect();
     let walk_ineligible = walk_ineligible_reason(ir, &deps);
     Ok(ModelPrep {
         timeline,
         plans,
         waves,
+        account_inflows,
         walk_ineligible,
     })
 }
@@ -1075,15 +1179,18 @@ fn run_deterministic(
     // not what any existing model reports.
     let walked_columns: Option<BTreeMap<String, Vec<f64>>>;
     let walked_refusals: BTreeMap<String, Vec<usize>>;
+    let account_balances: BTreeMap<String, Vec<f64>>;
     let (state_values, event_sim) = if prep.walk_ineligible.is_none() {
-        let (sv, es, columns, refusals) =
+        let (sv, es, columns, refusals, balances) =
             walk_periods(ir, config, prep, &base_inputs, &mut warnings);
         walked_columns = Some(columns);
         walked_refusals = refusals;
+        account_balances = balances;
         (sv, es)
     } else {
         walked_columns = None;
         walked_refusals = BTreeMap::new();
+        account_balances = BTreeMap::new();
         simulate_state(ir, config, &timeline, &base_inputs, &mut warnings)
     };
     let transitions = event_sim.transitions.clone();
@@ -1418,6 +1525,16 @@ fn run_deterministic(
                 stream_offsets.get(name).copied(),
                 values,
             ),
+        );
+    }
+    // AN ACCOUNT IS A LOCATION, NOT A FLOW. Its balance publishes as a bare
+    // number under its own prefix — never as cash and never into a total —
+    // because the cash it holds has already been counted once as the stream
+    // that produced it. The step series is the flow; this is the position.
+    for (name, values) in &account_balances {
+        series_map.insert(
+            format!("account.{name}"),
+            Series::from_plain(&ir.time.calendar, &ir.time.start, periods as u32, values),
         );
     }
     // Each waterfall step is a stream, so a priority of payments publishes

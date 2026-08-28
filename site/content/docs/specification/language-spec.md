@@ -981,26 +981,26 @@ These MUST compile to typed values in IR.
 A reserved word cannot be used as an identifier. The list is exhaustive and is
 checked against the lexer, so a word added to one appears in the other.
 
-### 18.1 In use (83)
+### 18.1 In use (85)
 
 Read by a production of the grammar:
 
-`activate`, `active`, `also`, `annual`, `as`, `assume`, `calendar`, `clip`, `contract`, `convention`, `currency`,
+`account`, `activate`, `active`, `also`, `annual`, `as`, `assume`, `calendar`, `clip`, `contract`, `convention`, `currency`,
 `curve`, `daily`, `day`, `days`, `deactivate`, `deterministic`, `effects`, `end`, `entity`, `eom`, `event`,
 `every`, `except`, `exercisable`, `exercise`, `false`, `following`, `for`, `from`, `import`, `in`, `inflow`,
 `LogNormal`, `mid`, `model`, `modified_following`, `modified_preceding`, `monte_carlo`, `month`, `monthly`, `months`, `net`, `none`,
-`Normal`, `on`, `option`, `outflow`, `pack`, `parties`, `payment`, `payoff`, `phase`, `phase_end`, `phase_enter`,
+`Normal`, `on`, `option`, `owner`, `outflow`, `pack`, `parties`, `payment`, `payoff`, `phase`, `phase_end`, `phase_enter`,
 `phase_start`, `preceding`, `quantile`, `quarter`, `quarterly`, `run`, `schedule`, `seed`, `set`, `state`, `start`, `stream`, `stub`,
 `term`, `terms`, `time`, `to`, `trials`, `Triangular`, `true`, `type`, `Uniform`, `use`, `version`,
 `waterfall`, `week`, `when`, `year`.
 
-### 18.2 Reserved, read by no production (14)
+### 18.2 Reserved, read by no production (13)
 
 Reserved so that adding the feature later does not break a model that had used
 the word as an identifier. Writing one today is an error, and no syntax accepts
 it:
 
-`direction`, `Fri`, `long_back`, `long_front`, `Mon`, `owner`, `Sat`, `short_back`, `short_front`, `Sun`, `tags`,
+`direction`, `Fri`, `long_back`, `long_front`, `Mon`, `Sat`, `short_back`, `short_front`, `Sun`, `tags`,
 `Thu`, `Tue`, `Wed`.
 
 `Mon` through `Sun` anchor a weekly schedule to a weekday. That syntax is not

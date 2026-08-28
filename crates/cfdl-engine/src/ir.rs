@@ -36,6 +36,8 @@ pub(crate) struct Ir {
     #[serde(default)]
     pub(crate) quantile_inputs: Vec<serde_json::Value>,
     #[serde(default)]
+    pub(crate) accounts: Vec<IrAccount>,
+    #[serde(default)]
     pub(crate) waterfalls: Vec<IrWaterfall>,
     /// Declared entities. Read so an entity's lifecycle STARTS where the model
     /// says rather than at null — the totality the ontology exists to give.
@@ -131,6 +133,25 @@ pub(crate) struct IrProvenance {
 }
 
 #[derive(Debug, Deserialize)]
+/// A declared cash location whose balance carries across periods.
+///
+/// `available` is unchanged and still means this period's netted cash; an
+/// account is the ACCUMULATED cash. There is no currency: an account is
+/// denominated by the model.
+pub(crate) struct IrAccount {
+    pub(crate) name: String,
+    /// Read when a step allocates into a party's account, which is the next
+    /// increment. It is carried here regardless because the IR is a PUBLISHED
+    /// contract: a consumer reading the document can see who an account
+    /// belongs to whether or not this engine has a use for it yet.
+    #[allow(dead_code)]
+    #[serde(default)]
+    pub(crate) owner: Option<String>,
+    #[serde(default)]
+    pub(crate) inflow: Option<IrExpr>,
+}
+
+#[derive(Debug, Deserialize)]
 pub(crate) struct IrWaterfall {
     pub(crate) name: String,
     pub(crate) entity: String,
@@ -145,6 +166,15 @@ pub(crate) struct IrWaterfall {
 pub(crate) struct IrWaterfallStep {
     pub(crate) name: String,
     pub(crate) payee: String,
+    /// The payee is an ACCOUNT rather than a party.
+    ///
+    /// Read when the waterfall stage runs at its own period and can move a
+    /// balance; carried here regardless because the IR is a published
+    /// contract, and a consumer can see where a step allocates whether or not
+    /// this engine acts on it yet.
+    #[allow(dead_code)]
+    #[serde(default)]
+    pub(crate) payee_is_account: bool,
     pub(crate) amount: IrExpr,
 }
 

@@ -107,6 +107,13 @@
       },
       "description": "Every quantile call site in the document, resolved and deduplicated. The audit record for a nonlinear input: publishing the declaration alone would say a distribution existed, not which slice of it struck a number."
     },
+    "accounts": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/Account"
+      },
+      "description": "Declared cash locations. Omitted when a model declares none, so existing IR stays byte-identical."
+    },
     "waterfalls": {
       "type": "array",
       "minItems": 0,
@@ -1564,6 +1571,31 @@
         "amount": {
           "$ref": "#/$defs/Expr",
           "description": "What the step is owed. `remaining`, `paid.<step>` and `owed.<step>` are bound on top of the ordinary expression environment."
+        },
+        "payee_is_account": {
+          "type": "boolean",
+          "description": "The payee is an ACCOUNT rather than a party. Allocating to a party allocates into that party's account when it has one; naming an account directly is the explicit form, and is how a reserve is funded. Omitted when false, so existing IR stays byte-identical."
+        }
+      }
+    },
+    "Account": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name"
+      ],
+      "description": "A declared cash location whose balance carries across periods. `available` is unchanged and still means this period's netted cash; an account is the ACCUMULATED cash, and is what a waterfall draws its pot from when its schedule names a period. There is no currency: an account is denominated by the model, so the only thing a clause could express is a restatement of what the model already declares, or a second unit that must be refused.",
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "owner": {
+          "type": "string",
+          "description": "The party this account belongs to, when it belongs to one. A general account has none — a collection account, a reserve — and a party-owned one holds what has been ALLOCATED to that party. It is not an obligation: it holds cash that exists, and what is still owed is simply not yet allocated."
+        },
+        "inflow": {
+          "$ref": "#/$defs/Expr",
+          "description": "What flows in each period. May be negative: an account fed a deal's whole net cash IS the deal's cumulative position, negative through the J-curve and positive after."
         }
       }
     }

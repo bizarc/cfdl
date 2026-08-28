@@ -148,7 +148,29 @@ payments to payees, so a waterfall cannot read its own output
 (`distributions.rs`). And steps evaluate in declaration order over a single
 running pot that cannot go negative (`docs/17`).
 
-### 5.1 The account
+### 5.1 The account — what the pot becomes
+
+**Three words are in play, and only one survives as a construct.**
+
+| term | what it is | after this |
+| --- | --- | --- |
+| `available` | this period's netted stream cash for the entity | **kept, unchanged** |
+| pot | the cash a distribution allocates, whatever `from` supplies | **retired as a term**; an account is the accumulated cash |
+| `remaining` | what is left as each step allocates | unchanged |
+
+The original text of this section said "the pot becomes carried state", and
+that is what an ACCOUNT is: the accumulating thing stops being called a pot.
+`remaining` still tracks what is left within one distribution, and `from`
+still says where the cash comes from — but what it names is an account, so
+there is nothing left for the word "pot" to denote that a reader needs.
+
+**`available` is kept, and it is not what an account replaces.** It means this
+period's netted cash and continues to; an ACCOUNT is the ACCUMULATED cash
+available. The two answer different questions — "what arrived this period" and
+"what has built up" — and a monthly-distributing structure wants the first
+while a quarterly or at-exit one wants the second. Keeping `available` is also
+what lets every waterfall in the corpus compile untouched, so phase 4 is
+ADDITIVE rather than a migration.
 
 Carried cash gets the industry's own object. In a real deal cash does not
 sit in a pot; it sits in **named accounts** — collection account, reserve
@@ -156,41 +178,73 @@ account, a participant's distribution account — and the waterfall moves
 cash between them. The construct:
 
 ```
-account <name> [owned by <party-ref>] {
+account <name> {
+  owner <party-ref>                 // optional; a general account has none
   from <inflow expression>          // per-period inflow, may be negative
-  currency <code>
 }
 ```
 
+**No currency clause.** An account is denominated by the model, which already
+declares its reporting currency. Offering the clause would only let a modeller
+restate it — or state a different one, which must be refused, so the option
+would exist solely to be policed. Making the invalid state unrepresentable is
+better than diagnosing it. When multi-currency lands the clause can be added,
+which is additive and breaks nothing.
+
 An account is a declared cash location with a balance. **Ownership is
-optional**: a general account belongs to the structure (a collection
-account, a reserve); a party-owned account holds cash *allocated to that
-participant but not yet paid out*, which is what a per-payee distribution
-account is. What a participant is **owed** is not an account: owed is a
-receivable, and receivables stay entity fields (Highlands' `unreturned`),
-exactly as shipped. An account holds cash that exists; a field records
-cash that is due. Conflating the two is the classic waterfall modeling
-defect, and the type system keeps them apart.
+optional**: a general account belongs to the structure — a collection account,
+a reserve — and a party-owned account holds what has been ALLOCATED to that
+party.
+
+**A party-owned account is not an obligation.** It holds cash that exists, in a
+location that party owns; once the rules allocate, the cash is theirs and
+nobody owes it. That is what keeps the model free of liabilities: what is
+still owed under the rules is not in any account, it is simply not yet
+allocated. Allocating is moving cash from the structure's account into a
+party's, which is also why this stays a record of ALLOCATION rather than of
+physical transfer — whether the cash ever leaves the deal is not modelled.
 
 The balance law, applied at each period of the walk:
 
 ```
-balance(t) = balance(t−1) + inflow(t) + payments_in(t) − draws(t)
+balance(t) = balance(t-1) + inflow(t) + allocated_in(t) - allocated_out(t)
 ```
+
+**There is no "draw".** A waterfall ALLOCATES; the destination's balance rises
+and the source's falls. That is one event seen from two ends, not two
+mechanisms, and a balance therefore moves in exactly two ways: its declared
+inflow, and allocation.
 
 **A negative inflow lowers the balance, with no floor.** The language
 models returns, and an account fed a deal's whole net cash IS the deal's
 cumulative position — negative through the J-curve, positive after — so an
 account whose inflow is every stream equals `series_sum` of those streams
-from inception, an identity a fixture pins. What is floored is the **draw**:
-a step takes at most `max(balance, 0)` remaining — cash that is not there
-cannot be distributed, and a draw that would need it is refused with the
+from inception, an identity a fixture pins. What is floored is what a step may
+take: at most `max(balance, 0)` — cash that is not there
+cannot be allocated, and an allocation that would need it is refused with the
 account named, not overdrafted.
 
 Three uses, all walk-legal:
 
-- **A waterfall draws from an account**: `from <account>` replaces the
-  hand-written cumulative window. Residue after the last step stays in the
+**Allocating to a party allocates to their account.** `pay <step> to <party>`
+is what every waterfall already writes, and where the cash lands follows from
+what that party owns: into their account if they have one, and if they have
+none the step publishes its series and nothing accumulates — which is exactly
+today's behaviour, and what keeps every shipped waterfall untouched. The
+explicit form `pay <step> to account <name>` names the destination directly.
+
+**A party owns at most one account**, so "their account" always resolves. The
+explicit form is what covers anything that outgrows the rule, which is a
+reason to have it before anyone needs it rather than after.
+
+**The two records are not a double count.** A step's series is the FLOW — what
+was allocated this period — and the account's balance is the POSITION,
+accumulated less what has been allocated out. The balance publishes as a non-cash
+series and never enters cash totals; the same separation that keeps a
+waterfall from reading its own output keeps these apart.
+
+- **A waterfall allocates from an account**: `from <account>` replaces the
+  hand-written cumulative window, and what it allocates leaves that balance. Residue after the last step stays in the
   account for the next scheduled date, by construction.
 - **A step pays to an account**: `pay <step> to account <name> = <expr>` —
   the reserve pattern (fund to target, top up when short, release when
@@ -223,7 +277,7 @@ that steps and guards read.
 The account gives `docs/13` §7.41's check its object — an account's `from`
 names what flows in, and the balance is auditable per period — and the
 journal (§8) records each account's movements at that grain: inflow, each
-step's draw or payment-in, and the carried residue.
+step's allocation in or out, and the carried residue.
 
 ## 6. Events and the state machine
 

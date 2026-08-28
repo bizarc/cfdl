@@ -363,6 +363,10 @@ struct Ir {
     /// input: which slice each expression asked for, and what it came to.
     #[serde(skip_serializing_if = "Vec::is_empty")]
     quantile_inputs: Vec<IrQuantileCall>,
+    /// Declared cash locations whose balances carry across periods. Omitted
+    /// when a model declares none, so existing IR stays byte-identical.
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    accounts: Vec<IrAccount>,
     /// Ordered allocations of a pot. Omitted when a model declares none, so
     /// existing IR stays byte-identical.
     #[serde(skip_serializing_if = "Vec::is_empty")]
@@ -424,6 +428,19 @@ struct IrCurve {
 /// both required by validation (E1120/E1121) before lowering runs, so they are
 /// plain fields rather than options here.
 #[derive(Debug, Serialize)]
+struct IrAccount {
+    name: String,
+    /// The party this account belongs to, when it belongs to one. A general
+    /// account has none.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    owner: Option<String>,
+    /// What flows in each period. May be negative: an account fed a deal's
+    /// whole net cash IS the deal's cumulative position.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    inflow: Option<IrExpr>,
+}
+
+#[derive(Debug, Serialize)]
 struct IrWaterfall {
     name: String,
     entity: String,
@@ -438,6 +455,10 @@ struct IrWaterfall {
 struct IrWaterfallStep {
     name: String,
     payee: String,
+    /// The payee is an ACCOUNT rather than a party. Omitted when false, so
+    /// existing IR stays byte-identical.
+    #[serde(skip_serializing_if = "std::ops::Not::not")]
+    payee_is_account: bool,
     /// What the step is owed. The engine pays `min(max(0, this), remaining)`.
     amount: IrExpr,
 }
@@ -1392,6 +1413,15 @@ fn check_waterfalls(resolve_output: &cfdl_resolver::ResolveOutput) -> Result<(),
         }
     }
 
+    let declared_accounts: std::collections::BTreeSet<String> = resolve_output
+        .source_statements
+        .iter()
+        .filter_map(|st| match &st.statement {
+            Stmt::Account(a) => Some(a.name.clone()),
+            _ => None,
+        })
+        .collect();
+
     let mut waterfall_order = 0usize;
     for source_stmt in &resolve_output.source_statements {
         let Stmt::Waterfall(waterfall) = &source_stmt.statement else {
@@ -1507,7 +1537,25 @@ fn check_waterfalls(resolve_output: &cfdl_resolver::ResolveOutput) -> Result<(),
                     ),
                 ));
             }
-            if !entities.contains(&step.payee) {
+            // AN ACCOUNT PAYEE RESOLVES AGAINST ACCOUNTS, not entities. An
+            // account is not an entity and never was; `to account <name>` says
+            // which namespace to look in, which is why the keyword is there.
+            if step.to_account {
+                if !declared_accounts.contains(&step.payee) {
+                    diagnostics.push(diag(
+                        "E1347_UNRESOLVED_ACCOUNT_REF",
+                        format!(
+                            "Waterfall '{}' step '{}' allocates to account '{}', which is not declared.",
+                            waterfall.name, step.name, step.payee
+                        ),
+                        step.span,
+                        Some(format!(
+                            "Declare it as `account {} {{ }}`, or name a party instead.",
+                            step.payee
+                        )),
+                    ));
+                }
+            } else if !entities.contains(&step.payee) {
                 diagnostics.push(diag(
                     "E1301_UNRESOLVED_ENTITY_REF",
                     format!(
@@ -2541,6 +2589,22 @@ fn build_ir(
     // A pack no longer contributes model-level state: its rules hang fields on
     // the entities they describe, folded into the entity map below.
 
+    let ir_accounts: Vec<IrAccount> = resolve_output
+        .source_statements
+        .iter()
+        .filter_map(|source_stmt| match &source_stmt.statement {
+            Stmt::Account(a) => Some(IrAccount {
+                name: a.name.clone(),
+                owner: a.owner.clone(),
+                inflow: a.inflow.as_ref().map(|slot| IrExpr {
+                    lang: "cfdl".to_string(),
+                    src: slot.src.clone(),
+                }),
+            }),
+            _ => None,
+        })
+        .collect();
+
     let ir_waterfalls: Vec<IrWaterfall> = resolve_output
         .source_statements
         .iter()
@@ -2570,6 +2634,7 @@ fn build_ir(
                     .map(|step| IrWaterfallStep {
                         name: step.name.clone(),
                         payee: step.payee.clone(),
+                        payee_is_account: step.to_account,
                         amount: IrExpr {
                             lang: "cfdl".to_string(),
                             src: step
@@ -2607,6 +2672,7 @@ fn build_ir(
         quantiles: ir_quantiles,
         // Filled below, once the document exists to be walked.
         quantile_inputs: Vec::new(),
+        accounts: ir_accounts,
         waterfalls: ir_waterfalls,
         contracts: contracts
             .into_iter()
