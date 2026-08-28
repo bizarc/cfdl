@@ -360,7 +360,7 @@ pub(crate) struct IrEntityRef {
     pub(crate) symbol: String,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Clone, Deserialize)]
 pub(crate) struct IrOnRule {
     pub(crate) kind: String,
     #[serde(default)]
@@ -419,6 +419,16 @@ pub(crate) struct IrSchedule {
     pub(crate) except_dates: Vec<String>,
     #[serde(default)]
     pub(crate) also_dates: Vec<String>,
+    /// `state_enter` anchor (`docs/28` §6.2), present only for kind
+    /// "StateEnter": each ENTRY of the entity into the state opens its own
+    /// window of `anchor_periods` grid periods, resolved during the walk,
+    /// re-anchoring on re-entry.
+    #[serde(default)]
+    pub(crate) anchor_entity: Option<String>,
+    #[serde(default)]
+    pub(crate) anchor_state: Option<String>,
+    #[serde(default)]
+    pub(crate) anchor_periods: Option<i64>,
 }
 
 #[derive(Debug, Deserialize)]

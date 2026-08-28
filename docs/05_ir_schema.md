@@ -846,7 +846,8 @@ against it by `make ir-schema`.
             "OnDate",
             "Every",
             "PhaseEnter",
-            "EveryPhase"
+            "EveryPhase",
+            "StateEnter"
           ]
         },
         "on": {
@@ -912,6 +913,19 @@ against it by `make ir-schema`.
             "end"
           ],
           "description": "Where in its period the flow sits. One axis with three positions, so two placements cannot both be stated. Omitted for the form's default, which differs by form: a one-shot (`OnDate`) opens its period, a recurrence closes it (an ordinary annuity — the interval elapses, then payment falls). `start` is an annuity due and what expense-like streams want; `mid` is the project-finance convention, half a period on every calendar, a convention rather than a date; `end` is what a disposal needs, since a reversion is taken at the close of the holding period. Mutually exclusive with a day rule and with payment terms (E2109). See 12_payment_timing.md."
+        },
+        "anchor_entity": {
+          "type": "string",
+          "description": "state_enter anchor (docs/28 §6.2): the entity whose entries open the windows. Present only for kind StateEnter."
+        },
+        "anchor_state": {
+          "type": "string",
+          "description": "The state whose entry anchors the window; a re-entered state re-anchors, and a self-edge is an entry."
+        },
+        "anchor_periods": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "Window length in grid periods from each entry."
         }
       },
       "allOf": [

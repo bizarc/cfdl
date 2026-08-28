@@ -608,7 +608,10 @@ pub fn validate(output: &ResolveOutput, symbols: &SymbolTables) -> Vec<Validatio
                         }
                     }
                     ScheduleKind::OnDate => {}
-                    ScheduleKind::Every => {
+                    // The anchor's names are checked against the machine at
+                    // compile, where the registry lives; the finer-than-grid
+                    // rule below applies to its interval the same as Every's.
+                    ScheduleKind::StateEnter { .. } | ScheduleKind::Every => {
                         // A schedule finer than the grid cannot be
                         // represented — but not because the occurrences are
                         // lost. They ACCUMULATE: a period holds many accruals

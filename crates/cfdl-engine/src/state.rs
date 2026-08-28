@@ -110,6 +110,42 @@ struct PreparedEdge {
     guard_src: String,
 }
 
+/// The lifecycle state an entity OPENS in: its own `state` clause, or its
+/// machine's `initial`. `None` for the many entities with neither.
+pub(crate) fn opening_status(ir: &Ir, entity: &str) -> Option<String> {
+    let decl = ir.entities.iter().find(|e| e.symbol == entity)?;
+    decl.initial_state.clone().or_else(|| {
+        decl.lifecycle
+            .as_ref()
+            .and_then(|id| ir.lifecycles.iter().find(|lc| &lc.id == id))
+            .map(|lc| lc.initial.clone())
+    })
+}
+
+/// Every period at which `entity` ENTERED `state`, opening included, from a
+/// transition record. Both evaluation orders build the same answer from the
+/// same records, which is what keeps a state-anchored schedule's windows
+/// identical under either (`docs/28` §6.2).
+pub(crate) fn entries_into(
+    ir: &Ir,
+    transitions: &[TransitionRecord],
+    entity: &str,
+    state: &str,
+) -> Vec<usize> {
+    let mut entries = Vec::new();
+    if opening_status(ir, entity).as_deref() == Some(state) {
+        entries.push(0);
+    }
+    for record in transitions {
+        if record.entity == entity && record.to == state {
+            entries.push(record.period);
+        }
+    }
+    entries.sort_unstable();
+    entries.dedup();
+    entries
+}
+
 pub(crate) struct StateWalk {
     /// Each machine-bound entity's compiled machine, by entity symbol.
     machines: BTreeMap<String, PreparedMachine>,
@@ -156,6 +192,11 @@ impl StateWalk {
     /// Hand the walk the account balances settled so far, likewise.
     pub(crate) fn observe_accounts(&mut self, balances: Arc<BTreeMap<String, Vec<f64>>>) {
         self.settled_accounts = balances;
+    }
+
+    /// The transition record as settled so far, for state-anchored schedules.
+    pub(crate) fn transitions_so_far(&self) -> &[TransitionRecord] {
+        &self.transitions
     }
 
     /// The state settled so far, as the two pieces a stream reads.

@@ -12,8 +12,64 @@ pub(crate) fn schedule_accruals(
     schedule: &IrSchedule,
     timeline: &[Date],
 ) -> Result<Vec<Vec<usize>>, EngineError> {
+    // A state-anchored schedule has no dates until the walk finds the
+    // entries; it opens empty and `anchored_accruals` fills it per entry.
+    if schedule.kind == "StateEnter" {
+        return Ok(vec![Vec::new(); timeline.len()]);
+    }
     let mut out = vec![Vec::new(); timeline.len()];
     apply_schedule_indices(schedule, timeline, &mut out)?;
+    Ok(out)
+}
+
+/// The accruals of a state-anchored schedule, given the entries known so far
+/// (`docs/28` §6.2). Each entry opens its own window of `anchor_periods`
+/// grid periods — a re-entered state re-anchors, and a self-edge is an entry
+/// — and within the window the schedule behaves exactly as `every <interval>
+/// from <entry> to <window end>`: one synthesized Every per entry, so
+/// intervals, placement, day rules and payment terms all mean what they mean
+/// everywhere else.
+pub(crate) fn anchored_accruals(
+    schedule: &IrSchedule,
+    entries: &[usize],
+    timeline: &[Date],
+) -> Result<Vec<Vec<usize>>, EngineError> {
+    let mut out = vec![Vec::new(); timeline.len()];
+    let window = schedule.anchor_periods.unwrap_or(0).max(0) as usize;
+    if window == 0 {
+        return Ok(out);
+    }
+    for &entry in entries {
+        if entry >= timeline.len() {
+            continue;
+        }
+        let last = (entry + window - 1).min(timeline.len() - 1);
+        let synthesized = IrSchedule {
+            kind: "Every".to_string(),
+            on: None,
+            every: schedule.every.clone(),
+            placement: schedule.placement,
+            net_days: schedule.net_days,
+            net_months: schedule.net_months,
+            from: Some(timeline[entry].to_string()),
+            to: Some(timeline[last].to_string()),
+            on_rule: schedule.on_rule.clone(),
+            phase: None,
+            convention: schedule.convention.clone(),
+            calendar: schedule.calendar.clone(),
+            except_dates: schedule.except_dates.clone(),
+            also_dates: schedule.also_dates.clone(),
+            anchor_entity: None,
+            anchor_state: None,
+            anchor_periods: None,
+        };
+        apply_schedule_indices(&synthesized, timeline, &mut out)?;
+    }
+    // Two overlapping windows must not double an accrual.
+    for cell in &mut out {
+        cell.sort_unstable();
+        cell.dedup();
+    }
     Ok(out)
 }
 

@@ -1,0 +1,119 @@
+{
+  "ir_version": "0.1",
+  "model": {
+    "name": "state-anchored-schedule",
+    "currency": "USD"
+  },
+  "time": {
+    "calendar": "monthly",
+    "start": "2026-01-01",
+    "periods": 24
+  },
+  "phases": [],
+  "entities": [
+    {
+      "id": "8d7f9cb217f952ee0226f43d33860ecc",
+      "symbol": "asset.site",
+      "type": "core.Entity",
+      "fields": {},
+      "state": {},
+      "lifecycle": "project"
+    }
+  ],
+  "assumptions": {
+    "constants": {},
+    "random": {}
+  },
+  "lifecycles": [
+    {
+      "id": "project",
+      "initial": "waiting",
+      "states": [
+        "waiting",
+        "building",
+        "paused"
+      ],
+      "edges": [
+        {
+          "from": "waiting",
+          "to": "building",
+          "guard": {
+            "lang": "cfdl",
+            "src": "time.t == 4.0"
+          }
+        },
+        {
+          "from": "building",
+          "to": "paused",
+          "guard": {
+            "lang": "cfdl",
+            "src": "time.t == 8.0"
+          }
+        },
+        {
+          "from": "paused",
+          "to": "building",
+          "guard": {
+            "lang": "cfdl",
+            "src": "time.t == 10.0"
+          }
+        }
+      ]
+    }
+  ],
+  "contracts": [],
+  "streams": [
+    {
+      "id": "366859729fad5a1829c5f7db22ea7a78",
+      "name": "capex.build",
+      "owner": {
+        "symbol": "asset.site"
+      },
+      "direction": "outflow",
+      "currency": "USD",
+      "schedule": {
+        "kind": "StateEnter",
+        "every": "monthly",
+        "anchor_entity": "asset.site",
+        "anchor_state": "building",
+        "anchor_periods": 6
+      },
+      "amount": {
+        "lang": "cfdl",
+        "src": "100.0"
+      },
+      "active_when": {
+        "lang": "cfdl",
+        "src": "entity.status == \"building\""
+      },
+      "provenance": {
+        "source_file": "model.cfdl",
+        "source_span": {
+          "start_line": 25,
+          "start_col": 1,
+          "end_line": 29,
+          "end_col": 1
+        }
+      }
+    }
+  ],
+  "events": [],
+  "options": [],
+  "runs": [
+    {
+      "kind": "deterministic"
+    }
+  ],
+  "required_observables": [],
+  "required_refs": [],
+  "provenance": {
+    "sources": [
+      "model.cfdl"
+    ],
+    "compiler": {
+      "name": "cfdl",
+      "version": "0.7.0",
+      "hash": "d80f4c40398fe75b55a6788a2be14aac"
+    }
+  }
+}

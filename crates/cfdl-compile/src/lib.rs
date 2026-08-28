@@ -714,6 +714,15 @@ struct IrSchedule {
     except_dates: Vec<String>,
     #[serde(skip_serializing_if = "Vec::is_empty", default)]
     also_dates: Vec<String>,
+    /// `state_enter` anchor (`docs/28` §6.2): the entity and state whose
+    /// entries open the windows, and the window length in grid periods.
+    /// Present only for kind "StateEnter".
+    #[serde(skip_serializing_if = "Option::is_none")]
+    anchor_entity: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    anchor_state: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    anchor_periods: Option<i64>,
 }
 
 #[derive(Debug, Serialize)]
@@ -1444,6 +1453,54 @@ fn check_state_guards(
     let (machines, machines_by_entity) = resolve_machines(resolve_output, ontology);
 
     let mut diagnostics: Vec<Diagnostic> = Vec::new();
+    // A state_enter anchor names an entity with a machine and a state that
+    // machine declares — the same finite-set discipline every other state
+    // reference has (`docs/28` §6.2).
+    for source_stmt in &resolve_output.source_statements {
+        let Stmt::Stream(stream) = &source_stmt.statement else {
+            continue;
+        };
+        let Some(schedule) = &stream.schedule else {
+            continue;
+        };
+        let cfdl_parser::ScheduleKind::StateEnter { entity, state, .. } = &schedule.kind else {
+            continue;
+        };
+        let Some(machine) = machines_by_entity
+            .get(entity)
+            .and_then(|id| machines.get(id))
+        else {
+            diagnostics.push(Diagnostic {
+                code: "E1349_UNRESOLVED_LIFECYCLE_REF".to_string(),
+                severity: "error".to_string(),
+                message: format!(
+                    "Stream '{}' anchors to state_enter({entity}, {state}), but '{entity}' has no lifecycle.",
+                    stream.name
+                ),
+                file: Some(source_stmt.file.clone()),
+                span: Some(map_span(schedule.span)),
+                path: None,
+                hint: Some("Bind a machine to the entity, or anchor to a date or phase.".to_string()),
+                notes: vec![],
+            });
+            continue;
+        };
+        if !machine.has_state(state) {
+            diagnostics.push(Diagnostic {
+                code: "E1316_UNKNOWN_LIFECYCLE_STATE".to_string(),
+                severity: "error".to_string(),
+                message: format!(
+                    "Stream '{}' anchors to state_enter({entity}, {state}), but lifecycle '{}' does not declare '{state}'.",
+                    stream.name, machine.id
+                ),
+                file: Some(source_stmt.file.clone()),
+                span: Some(map_span(schedule.span)),
+                path: None,
+                hint: Some(format!("Declared states: {}.", machine.states.join(", "))),
+                notes: vec![],
+            });
+        }
+    }
     for source_stmt in &resolve_output.source_statements {
         let Stmt::Stream(stream) = &source_stmt.statement else {
             continue;
@@ -4653,6 +4710,9 @@ fn lower_rule_state_schedule(
         calendar: None,
         except_dates: Vec::new(),
         also_dates: Vec::new(),
+        anchor_entity: None,
+        anchor_state: None,
+        anchor_periods: None,
     })
 }
 
@@ -4690,6 +4750,9 @@ fn lower_pack_rule_schedule(
             calendar: None,
             except_dates: Vec::new(),
             also_dates: Vec::new(),
+            anchor_entity: None,
+            anchor_state: None,
+            anchor_periods: None,
         }
     } else {
         IrSchedule {
@@ -4722,6 +4785,9 @@ fn lower_pack_rule_schedule(
             calendar: None,
             except_dates: Vec::new(),
             also_dates: Vec::new(),
+            anchor_entity: None,
+            anchor_state: None,
+            anchor_periods: None,
         }
     }
 }
@@ -5367,6 +5433,9 @@ fn lower_schedule(
             calendar: None,
             except_dates: Vec::new(),
             also_dates: Vec::new(),
+            anchor_entity: None,
+            anchor_state: None,
+            anchor_periods: None,
         });
     };
 
@@ -5415,6 +5484,48 @@ fn lower_schedule(
                 .iter()
                 .map(|d| normalize_date(d))
                 .collect(),
+            anchor_entity: None,
+            anchor_state: None,
+            anchor_periods: None,
+        }),
+        ScheduleKind::StateEnter {
+            entity,
+            state,
+            periods,
+        } => Ok(IrSchedule {
+            kind: "StateEnter".to_string(),
+            placement: placement_of_parsed(schedule.due, schedule.mid, schedule.at_period_end),
+            net_days: split_payment_terms(schedule.net).0,
+            net_months: split_payment_terms(schedule.net).1,
+            on: None,
+            every: Some(
+                schedule
+                    .every
+                    .as_deref()
+                    .map(|i| interval_to_frequency(i).to_string())
+                    .unwrap_or_else(|| time_calendar.to_string()),
+            ),
+            // No dates: the windows open where the WALK finds the entries,
+            // and a re-entered state re-anchors (`docs/28` §6.2).
+            from: None,
+            to: None,
+            on_rule,
+            phase: None,
+            convention: schedule.convention.clone(),
+            calendar: schedule.calendar.clone(),
+            except_dates: schedule
+                .except_dates
+                .iter()
+                .map(|d| normalize_date(d))
+                .collect(),
+            also_dates: schedule
+                .also_dates
+                .iter()
+                .map(|d| normalize_date(d))
+                .collect(),
+            anchor_entity: Some(entity.clone()),
+            anchor_state: Some(state.clone()),
+            anchor_periods: Some(*periods),
         }),
         ScheduleKind::Every => Ok(IrSchedule {
             kind: "Every".to_string(),
@@ -5449,6 +5560,9 @@ fn lower_schedule(
                 .iter()
                 .map(|d| normalize_date(d))
                 .collect(),
+            anchor_entity: None,
+            anchor_state: None,
+            anchor_periods: None,
         }),
         ScheduleKind::PhaseEnter { phase } => {
             let (start, _end) = phase_map.get(phase).ok_or_else(|| {
@@ -5477,6 +5591,9 @@ fn lower_schedule(
                     .iter()
                     .map(|d| normalize_date(d))
                     .collect(),
+                anchor_entity: None,
+                anchor_state: None,
+                anchor_periods: None,
             })
         }
         ScheduleKind::EveryPhase { phase } => {
@@ -5512,6 +5629,9 @@ fn lower_schedule(
                     .iter()
                     .map(|d| normalize_date(d))
                     .collect(),
+                anchor_entity: None,
+                anchor_state: None,
+                anchor_periods: None,
             })
         }
     }

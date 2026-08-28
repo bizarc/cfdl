@@ -473,8 +473,22 @@ pub struct ScheduleSpec {
 pub enum ScheduleKind {
     OnDate,
     Every,
-    PhaseEnter { phase: String },
-    EveryPhase { phase: String },
+    PhaseEnter {
+        phase: String,
+    },
+    EveryPhase {
+        phase: String,
+    },
+    /// `every <interval> from state_enter(<entity>, <state>) for <n> periods`
+    /// — the third anchor (`docs/28` §6.2). Membership resolves during the
+    /// walk: each ENTRY into the state opens its own n-period window, and a
+    /// re-entered state re-anchors. `state_enter` and `periods` are
+    /// contextual identifiers, not reserved words.
+    StateEnter {
+        entity: String,
+        state: String,
+        periods: i64,
+    },
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, serde::Serialize)]
@@ -2760,6 +2774,78 @@ impl<'a> Parser<'a> {
                         except_dates: Vec::new(),
                         also_dates: Vec::new(),
                         span: merge_spans(start, end_tok.span),
+                    };
+                    self.parse_schedule_opts(&mut spec);
+                    return Some(spec);
+                }
+
+                if matches!(self.peek().kind, TokenKind::Ident(ref i) if i == "state_enter") {
+                    let _ = self.bump();
+                    let _ = self.expect_punct(Punct::LParen, "'('")?;
+                    let entity_tok = self.bump();
+                    let entity = self.parse_entity_ref_token(&entity_tok)?;
+                    let _ = self.expect_punct(Punct::Comma, "','")?;
+                    let state_tok = self.bump();
+                    let TokenKind::Ident(ref state) = state_tok.kind else {
+                        self.push_expected(
+                            state_tok.span,
+                            "Expected a lifecycle state after ',' in state_enter(...).".to_string(),
+                        );
+                        return None;
+                    };
+                    let state = state.clone();
+                    let _ = self.expect_punct(Punct::RParen, "')'")?;
+                    let _ = self.expect_keyword(Keyword::For, "'for'")?;
+                    let n_tok = self.bump();
+                    let periods = match n_tok.kind {
+                        TokenKind::Number(ref n) => match n.parse::<i64>() {
+                            Ok(v) if v > 0 => v,
+                            _ => {
+                                self.push_expected(
+                                    n_tok.span,
+                                    "Expected a positive whole number of periods after 'for'."
+                                        .to_string(),
+                                );
+                                return None;
+                            }
+                        },
+                        _ => {
+                            self.push_expected(
+                                n_tok.span,
+                                "Expected a number of periods after 'for'.".to_string(),
+                            );
+                            return None;
+                        }
+                    };
+                    let unit_tok = self.bump();
+                    if !matches!(unit_tok.kind, TokenKind::Ident(ref i) if i == "periods") {
+                        self.push_expected(
+                            unit_tok.span,
+                            "Expected 'periods' after the count: the window is measured in grid periods."
+                                .to_string(),
+                        );
+                        return None;
+                    }
+                    let mut spec = ScheduleSpec {
+                        kind: ScheduleKind::StateEnter {
+                            entity,
+                            state,
+                            periods,
+                        },
+                        every: Some(every),
+                        end_of_month,
+                        net,
+                        due,
+                        at_period_end: at_end,
+                        mid,
+                        from: None,
+                        to: None,
+                        day_of_month,
+                        convention: None,
+                        calendar: None,
+                        except_dates: Vec::new(),
+                        also_dates: Vec::new(),
+                        span: merge_spans(start, unit_tok.span),
                     };
                     self.parse_schedule_opts(&mut spec);
                     return Some(spec);

@@ -1,0 +1,458 @@
+{
+  "results_version": "0.5",
+  "model_hash": "ad575316d4a8c60a182cb7e1fb529172af3884091e8e711f3c5c0aa0a40c7305",
+  "ledger_hash": "dbb064ab4cf66736af6811725e632c53bb2be83d8e6810f4460b848f791a9f2d",
+  "engine": {
+    "name": "cfdl-engine",
+    "version": "0.7.0"
+  },
+  "warnings": [],
+  "deterministic": {
+    "status": "ok",
+    "metrics": {
+      "entity.asset.site.total": {
+        "amount": -1000.0,
+        "currency": "USD"
+      },
+      "model.npv": {
+        "amount": -918.932707,
+        "currency": "USD"
+      },
+      "model.total": {
+        "amount": -1000.0,
+        "currency": "USD"
+      },
+      "run.annual_discount_rate": 0.1,
+      "run.periods_per_year": 12.0,
+      "stream.capex.build.total": {
+        "amount": -1000.0,
+        "currency": "USD"
+      }
+    },
+    "series": {
+      "entity.asset.site.net_cash_flow": {
+        "index": {
+          "calendar": "monthly",
+          "start": "2026-01-01",
+          "periods": 24
+        },
+        "values": [
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": -100.0,
+            "currency": "USD"
+          },
+          {
+            "amount": -100.0,
+            "currency": "USD"
+          },
+          {
+            "amount": -100.0,
+            "currency": "USD"
+          },
+          {
+            "amount": -100.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": -100.0,
+            "currency": "USD"
+          },
+          {
+            "amount": -100.0,
+            "currency": "USD"
+          },
+          {
+            "amount": -100.0,
+            "currency": "USD"
+          },
+          {
+            "amount": -100.0,
+            "currency": "USD"
+          },
+          {
+            "amount": -100.0,
+            "currency": "USD"
+          },
+          {
+            "amount": -100.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          }
+        ]
+      },
+      "model.net_cash_flow": {
+        "index": {
+          "calendar": "monthly",
+          "start": "2026-01-01",
+          "periods": 24
+        },
+        "values": [
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": -100.0,
+            "currency": "USD"
+          },
+          {
+            "amount": -100.0,
+            "currency": "USD"
+          },
+          {
+            "amount": -100.0,
+            "currency": "USD"
+          },
+          {
+            "amount": -100.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": -100.0,
+            "currency": "USD"
+          },
+          {
+            "amount": -100.0,
+            "currency": "USD"
+          },
+          {
+            "amount": -100.0,
+            "currency": "USD"
+          },
+          {
+            "amount": -100.0,
+            "currency": "USD"
+          },
+          {
+            "amount": -100.0,
+            "currency": "USD"
+          },
+          {
+            "amount": -100.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          }
+        ]
+      },
+      "stream.capex.build": {
+        "index": {
+          "calendar": "monthly",
+          "start": "2026-01-01",
+          "periods": 24
+        },
+        "offset": 1.0,
+        "values": [
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": -100.0,
+            "currency": "USD"
+          },
+          {
+            "amount": -100.0,
+            "currency": "USD"
+          },
+          {
+            "amount": -100.0,
+            "currency": "USD"
+          },
+          {
+            "amount": -100.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": -100.0,
+            "currency": "USD"
+          },
+          {
+            "amount": -100.0,
+            "currency": "USD"
+          },
+          {
+            "amount": -100.0,
+            "currency": "USD"
+          },
+          {
+            "amount": -100.0,
+            "currency": "USD"
+          },
+          {
+            "amount": -100.0,
+            "currency": "USD"
+          },
+          {
+            "amount": -100.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          }
+        ]
+      }
+    },
+    "transitions": [
+      {
+        "period": 4,
+        "date": "2026-05-01",
+        "entity": "asset.site",
+        "field": "status",
+        "from": "waiting",
+        "to": "building",
+        "event": "lifecycle:project"
+      },
+      {
+        "period": 8,
+        "date": "2026-09-01",
+        "entity": "asset.site",
+        "field": "status",
+        "from": "building",
+        "to": "paused",
+        "event": "lifecycle:project"
+      },
+      {
+        "period": 10,
+        "date": "2026-11-01",
+        "entity": "asset.site",
+        "field": "status",
+        "from": "paused",
+        "to": "building",
+        "event": "lifecycle:project"
+      }
+    ],
+    "journal": [
+      {
+        "period": 4,
+        "date": "2026-05-01",
+        "actor": "lifecycle:project",
+        "action": "transition",
+        "target": "asset.site: waiting -> building",
+        "outcome": "applied",
+        "note": "when time.t == 4.0 — read time.t=4"
+      },
+      {
+        "period": 8,
+        "date": "2026-09-01",
+        "actor": "lifecycle:project",
+        "action": "transition",
+        "target": "asset.site: building -> paused",
+        "outcome": "applied",
+        "note": "when time.t == 8.0 — read time.t=8"
+      },
+      {
+        "period": 10,
+        "date": "2026-11-01",
+        "actor": "lifecycle:project",
+        "action": "transition",
+        "target": "asset.site: paused -> building",
+        "outcome": "applied",
+        "note": "when time.t == 10.0 — read time.t=10"
+      }
+    ],
+    "annual_rollup": {
+      "series": {
+        "model.net_cash_flow": {
+          "index": {
+            "calendar": "annual",
+            "start": "2026-01-01",
+            "periods": 2
+          },
+          "values": [
+            {
+              "amount": -600.0,
+              "currency": "USD"
+            },
+            {
+              "amount": -400.0,
+              "currency": "USD"
+            }
+          ]
+        },
+        "stream.capex.build": {
+          "index": {
+            "calendar": "annual",
+            "start": "2026-01-01",
+            "periods": 2
+          },
+          "values": [
+            {
+              "amount": -600.0,
+              "currency": "USD"
+            },
+            {
+              "amount": -400.0,
+              "currency": "USD"
+            }
+          ]
+        }
+      }
+    }
+  },
+  "scenarios": {
+    "status": "not_run",
+    "summaries": []
+  },
+  "monte_carlo": {
+    "status": "not_run",
+    "trials": 1,
+    "seed": 0,
+    "metrics": {},
+    "trial_summaries": []
+  }
+}

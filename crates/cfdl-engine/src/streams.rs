@@ -75,6 +75,37 @@ pub(crate) struct StreamPlan<'a> {
 }
 
 impl<'a> StreamPlan<'a> {
+    /// Whether this stream's schedule anchors to a state entry — the one
+    /// schedule whose membership resolves during the walk (`docs/28` §6.2).
+    pub(crate) fn is_state_anchored(&self) -> bool {
+        self.stream.schedule.kind == "StateEnter"
+    }
+
+    /// The anchor's entity and state, for the caller collecting entries.
+    pub(crate) fn anchor(&self) -> Option<(&str, &str)> {
+        match (
+            self.stream.schedule.anchor_entity.as_deref(),
+            self.stream.schedule.anchor_state.as_deref(),
+        ) {
+            (Some(entity), Some(state)) => Some((entity, state)),
+            _ => None,
+        }
+    }
+
+    /// Recompute this plan's accruals from the entries known so far. Sound to
+    /// call once per period under the walk: an entry's window opens AT the
+    /// entry and extends forward, so periods already evaluated cannot gain an
+    /// accrual — each recomputation agrees with every earlier one about the
+    /// past, and a re-entered state re-anchors by contributing a new window.
+    pub(crate) fn re_anchor(
+        &mut self,
+        entries: &[usize],
+        timeline: &[Date],
+    ) -> Result<(), EngineError> {
+        self.accruals = anchored_accruals(&self.stream.schedule, entries, timeline)?;
+        Ok(())
+    }
+
     /// Does anything settle at this period?
     ///
     /// The grid is not the deal: a ten-year model with two years of activity
@@ -256,7 +287,17 @@ pub(crate) fn evaluate_stream(
     // journal can say so once, with a count, instead of once per period.
     activation_refused: &mut Vec<usize>,
 ) -> Result<Vec<f64>, EngineError> {
-    let plan = plan_stream(ir, stream, timeline, warnings)?;
+    let mut plan = plan_stream(ir, stream, timeline, warnings)?;
+    // Under the column order the state stage has fully settled before any
+    // stream runs, so a state-anchored schedule's entries are all known here
+    // — the same records the walk reads incrementally (`docs/28` §6.2).
+    if plan.is_state_anchored() {
+        if let Some((entity, state)) = plan.anchor() {
+            let (entity, state) = (entity.to_string(), state.to_string());
+            let entries = crate::state::entries_into(ir, &event_sim.transitions, &entity, &state);
+            plan.re_anchor(&entries, timeline)?;
+        }
+    }
     let mut values = vec![0.0_f64; timeline.len()];
     for (pay_idx, slot) in values.iter_mut().enumerate() {
         *slot = plan.step(

@@ -267,6 +267,7 @@ schedule_expr   = schedule_on
                 | schedule_every
                 | schedule_phase_enter
                 | schedule_every_phase
+                | schedule_state_enter
                 ;
 
 schedule_on     = "on" date_lit [ placement ] ;
@@ -277,6 +278,14 @@ schedule_every_phase = "every" interval [ placement ]
                        "from" "phase_start" "(" string_lit ")"
                        "to" "phase_end" "(" string_lit ")"
                        [ schedule_opts ] ;
+
+(* The third anchor (docs/28 §6.2): each ENTRY of the entity into the state
+   opens its own window of n grid periods, resolved during the walk; a
+   re-entered state re-anchors, and a self-edge is an entry. `state_enter`
+   and `periods` are contextual identifiers, not reserved words. *)
+schedule_state_enter = "every" interval [ placement ] [ "net" INT [ "days" | "months" ] ]
+                  "from" "state_enter" "(" entity_ref "," IDENT ")"
+                  "for" INT "periods" ;
 
 schedule_every  = "every" interval [ placement ] [ "net" INT [ "days" | "months" ] ]
                   [ schedule_on_day ]
