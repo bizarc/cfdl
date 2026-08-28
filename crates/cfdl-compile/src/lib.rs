@@ -367,6 +367,11 @@ struct Ir {
     /// when a model declares none, so existing IR stays byte-identical.
     #[serde(skip_serializing_if = "Vec::is_empty")]
     accounts: Vec<IrAccount>,
+    /// Every machine an entity binds — pack-declared and model-declared
+    /// resolved to the same shape (`docs/28` §6.1). Omitted when no entity
+    /// has one, so existing IR stays byte-identical.
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    lifecycles: Vec<IrLifecycle>,
     /// Ordered allocations of a pot. Omitted when a model declares none, so
     /// existing IR stays byte-identical.
     #[serde(skip_serializing_if = "Vec::is_empty")]
@@ -578,6 +583,32 @@ struct IrEntity {
     /// declares no lifecycle.
     #[serde(skip_serializing_if = "Option::is_none")]
     initial_state: Option<String>,
+    /// The machine this entity is governed by — an id into `lifecycles`.
+    /// Absent for the many entities that have none.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    lifecycle: Option<String>,
+}
+
+/// A declared finite state machine, as the published IR carries it.
+#[derive(Debug, Serialize)]
+struct IrLifecycle {
+    id: String,
+    initial: String,
+    states: Vec<String>,
+    /// Declared only as used: an absent edge does not exist. Empty means the
+    /// machine is unconstrained — `permits()`'s shipped empty-means-open rule.
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    edges: Vec<IrLifecycleEdge>,
+}
+
+#[derive(Debug, Serialize)]
+struct IrLifecycleEdge {
+    from: String,
+    to: String,
+    /// Evaluated each period the entity is in `from`; a guard-less edge is a
+    /// permission an event's write may take, never fired by the machine.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    guard: Option<IrExpr>,
 }
 
 #[derive(Debug, Serialize)]
@@ -683,6 +714,15 @@ struct IrSchedule {
     except_dates: Vec<String>,
     #[serde(skip_serializing_if = "Vec::is_empty", default)]
     also_dates: Vec<String>,
+    /// `state_enter` anchor (`docs/28` §6.2): the entity and state whose
+    /// entries open the windows, and the window length in grid periods.
+    /// Present only for kind "StateEnter".
+    #[serde(skip_serializing_if = "Option::is_none")]
+    anchor_entity: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    anchor_state: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    anchor_periods: Option<i64>,
 }
 
 #[derive(Debug, Serialize)]
@@ -1227,20 +1267,240 @@ fn reads_prev_field(src: &str) -> bool {
     .any(|p| src.contains(p))
 }
 
+/// One resolved machine, wherever it was declared (`docs/28` §6.1).
+///
+/// A pack's `types.toml` lifecycle and a model's `lifecycle` block resolve to
+/// the same thing: an id, an enumerated state set, and the edges declared —
+/// pack edges guard-less (permissions), model edges optionally guarded. The
+/// core has the full functionality and packs tailor it, so every consumer
+/// looks HERE rather than at the ontology.
+#[derive(Debug, Clone)]
+struct MachineDef {
+    id: String,
+    initial: Option<String>,
+    states: Vec<String>,
+    /// (from, to, guard source). Empty means the machine is unconstrained —
+    /// `permits()`'s shipped empty-means-open rule.
+    edges: Vec<(String, String, Option<String>)>,
+}
+
+impl MachineDef {
+    fn has_state(&self, state: &str) -> bool {
+        self.states.iter().any(|s| s == state)
+    }
+}
+
+/// Every entity's machine, and every machine by id.
+///
+/// The binding wins over the type only by being checked first elsewhere —
+/// an entity with BOTH is `E1350`, refused where the type is at hand.
+fn resolve_machines(
+    resolve_output: &cfdl_resolver::ResolveOutput,
+    ontology: &cfdl_pack::PackOntology,
+) -> (BTreeMap<String, MachineDef>, BTreeMap<String, String>) {
+    let mut machines: BTreeMap<String, MachineDef> = BTreeMap::new();
+    let mut by_entity: BTreeMap<String, String> = BTreeMap::new();
+    for source_stmt in &resolve_output.source_statements {
+        if let Stmt::Lifecycle(lc) = &source_stmt.statement {
+            machines
+                .entry(lc.name.clone())
+                .or_insert_with(|| MachineDef {
+                    id: lc.name.clone(),
+                    initial: lc.initial.clone(),
+                    states: lc.states.clone(),
+                    edges: lc
+                        .edges
+                        .iter()
+                        .map(|e| {
+                            (
+                                e.from.clone(),
+                                e.to.clone(),
+                                e.guard.as_ref().map(|g| g.src.clone()),
+                            )
+                        })
+                        .collect(),
+                });
+        }
+    }
+    for source_stmt in &resolve_output.source_statements {
+        let Stmt::Entity(entity) = &source_stmt.statement else {
+            continue;
+        };
+        if let Some(bound) = &entity.lifecycle {
+            if machines.contains_key(bound) {
+                by_entity.insert(entity.symbol(), bound.clone());
+            }
+            // An unknown binding is validate's E1349; nothing to resolve.
+            continue;
+        }
+        let from_type = entity
+            .type_name
+            .as_deref()
+            .and_then(|ty| ontology.entity(ty))
+            .and_then(|ty| ty.lifecycle.as_deref())
+            .and_then(|id| ontology.lifecycle(id));
+        if let Some(lifecycle) = from_type {
+            machines
+                .entry(lifecycle.lifecycle_id.clone())
+                .or_insert_with(|| MachineDef {
+                    id: lifecycle.lifecycle_id.clone(),
+                    initial: Some(lifecycle.initial.clone()),
+                    states: lifecycle.states.clone(),
+                    edges: lifecycle
+                        .transitions
+                        .iter()
+                        .map(|t| (t.from.clone(), t.to.clone(), None))
+                        .collect(),
+                });
+            by_entity.insert(entity.symbol(), lifecycle.lifecycle_id.clone());
+        }
+    }
+    (machines, by_entity)
+}
+
+/// The compile-statable half of `docs/28` §6.1 rule 3: where an event writes
+/// `status` with a string LITERAL, the target is checkable now. An unknown
+/// state is `E1316`; a state the declared relation gives no edge INTO can
+/// never be legally entered, whatever state the entity is in at run — that
+/// certainty is what makes the refusal compile-time. An edge-less machine
+/// stays unconstrained, `permits()`'s shipped empty-means-open rule; the
+/// run-time half, where the from-state is a fact, lives in the engine.
+fn check_status_writes(
+    resolve_output: &cfdl_resolver::ResolveOutput,
+    machines: &BTreeMap<String, MachineDef>,
+    machines_by_entity: &BTreeMap<String, String>,
+) -> Result<(), Vec<Diagnostic>> {
+    let mut diagnostics: Vec<Diagnostic> = Vec::new();
+    for source_stmt in &resolve_output.source_statements {
+        let Stmt::Event(event) = &source_stmt.statement else {
+            continue;
+        };
+        for action in &event.actions {
+            let cfdl_parser::EventAction::SetEntityField {
+                entity,
+                field,
+                value,
+            } = action
+            else {
+                continue;
+            };
+            if field != "status" {
+                continue;
+            }
+            let Some(machine) = machines_by_entity
+                .get(entity)
+                .and_then(|id| machines.get(id))
+            else {
+                continue;
+            };
+            // Statable means a bare string literal — anything computed is the
+            // run-time half's problem.
+            let trimmed = value.trim();
+            let target = match trimmed
+                .strip_prefix('"')
+                .and_then(|rest| rest.strip_suffix('"'))
+            {
+                Some(inner) if !inner.contains('"') => inner,
+                _ => continue,
+            };
+            if !machine.has_state(target) {
+                diagnostics.push(Diagnostic {
+                    code: "E1316_UNKNOWN_LIFECYCLE_STATE".to_string(),
+                    severity: "error".to_string(),
+                    message: format!(
+                        "Event '{}' sets '{entity}.status' to '{target}', which lifecycle '{}' does not declare.",
+                        event.name, machine.id
+                    ),
+                    file: Some(source_stmt.file.clone()),
+                    span: Some(map_span(event.span)),
+                    path: None,
+                    hint: Some(format!("Declared states: {}.", machine.states.join(", "))),
+                    notes: vec![],
+                });
+                continue;
+            }
+            if !machine.edges.is_empty() && !machine.edges.iter().any(|(_, to, _)| to == target) {
+                diagnostics.push(Diagnostic {
+                    code: "E1353_UNREACHABLE_STATE_WRITE".to_string(),
+                    severity: "error".to_string(),
+                    message: format!(
+                        "Event '{}' sets '{entity}.status' to '{target}', but no edge of lifecycle '{}' enters that state — the write can never be legal.",
+                        event.name, machine.id
+                    ),
+                    file: Some(source_stmt.file.clone()),
+                    span: Some(map_span(event.span)),
+                    path: None,
+                    hint: Some(
+                        "Declare the edge — declaring it is what brings the move into existence — or drop the write."
+                            .to_string(),
+                    ),
+                    notes: vec![],
+                });
+            }
+        }
+    }
+    if diagnostics.is_empty() {
+        Ok(())
+    } else {
+        Err(diagnostics)
+    }
+}
+
 fn check_state_guards(
     resolve_output: &cfdl_resolver::ResolveOutput,
     ontology: &cfdl_pack::PackOntology,
 ) -> Result<(), Vec<Diagnostic>> {
-    let entity_type: BTreeMap<String, Option<String>> = resolve_output
-        .source_statements
-        .iter()
-        .filter_map(|s| match &s.statement {
-            Stmt::Entity(entity) => Some((entity.symbol(), entity.type_name.clone())),
-            _ => None,
-        })
-        .collect();
+    let (machines, machines_by_entity) = resolve_machines(resolve_output, ontology);
 
     let mut diagnostics: Vec<Diagnostic> = Vec::new();
+    // A state_enter anchor names an entity with a machine and a state that
+    // machine declares — the same finite-set discipline every other state
+    // reference has (`docs/28` §6.2).
+    for source_stmt in &resolve_output.source_statements {
+        let Stmt::Stream(stream) = &source_stmt.statement else {
+            continue;
+        };
+        let Some(schedule) = &stream.schedule else {
+            continue;
+        };
+        let cfdl_parser::ScheduleKind::StateEnter { entity, state, .. } = &schedule.kind else {
+            continue;
+        };
+        let Some(machine) = machines_by_entity
+            .get(entity)
+            .and_then(|id| machines.get(id))
+        else {
+            diagnostics.push(Diagnostic {
+                code: "E1349_UNRESOLVED_LIFECYCLE_REF".to_string(),
+                severity: "error".to_string(),
+                message: format!(
+                    "Stream '{}' anchors to state_enter({entity}, {state}), but '{entity}' has no lifecycle.",
+                    stream.name
+                ),
+                file: Some(source_stmt.file.clone()),
+                span: Some(map_span(schedule.span)),
+                path: None,
+                hint: Some("Bind a machine to the entity, or anchor to a date or phase.".to_string()),
+                notes: vec![],
+            });
+            continue;
+        };
+        if !machine.has_state(state) {
+            diagnostics.push(Diagnostic {
+                code: "E1316_UNKNOWN_LIFECYCLE_STATE".to_string(),
+                severity: "error".to_string(),
+                message: format!(
+                    "Stream '{}' anchors to state_enter({entity}, {state}), but lifecycle '{}' does not declare '{state}'.",
+                    stream.name, machine.id
+                ),
+                file: Some(source_stmt.file.clone()),
+                span: Some(map_span(schedule.span)),
+                path: None,
+                hint: Some(format!("Declared states: {}.", machine.states.join(", "))),
+                notes: vec![],
+            });
+        }
+    }
     for source_stmt in &resolve_output.source_statements {
         let Stmt::Stream(stream) = &source_stmt.statement else {
             continue;
@@ -1269,12 +1529,9 @@ fn check_state_guards(
         }
 
         let owner = &stream.attached_entity;
-        let lifecycle = entity_type
+        let lifecycle = machines_by_entity
             .get(owner)
-            .and_then(|ty| ty.as_deref())
-            .and_then(|ty| ontology.entity(ty))
-            .and_then(|ty| ty.lifecycle.as_deref())
-            .and_then(|id| ontology.lifecycle(id));
+            .and_then(|id| machines.get(id));
 
         let Some(lifecycle) = lifecycle else {
             diagnostics.push(Diagnostic {
@@ -1303,7 +1560,7 @@ fn check_state_guards(
                     severity: "error".to_string(),
                     message: format!(
                         "Stream '{}' is active in state '{}', which lifecycle '{}' does not declare.",
-                        stream.name, guard.state, lifecycle.lifecycle_id
+                        stream.name, guard.state, lifecycle.id
                     ),
                     file: Some(source_stmt.file.clone()),
                     span: Some(map_span(guard.span)),
@@ -1941,7 +2198,11 @@ fn check_entity_types(
             // Untyped entities stay legal: every model written before types
             // existed still compiles. The type is what unlocks the checks, not
             // a condition of being an entity.
-            if entity.parent.is_some() || entity.initial_state.is_some() {
+            // A model-declared machine is what makes an untyped entity's
+            // `state` checkable — the binding, not the type, declares the
+            // set (`docs/28` §6.1). Validate checks the name against it.
+            let states_checkable = entity.lifecycle.is_some();
+            if entity.parent.is_some() || (entity.initial_state.is_some() && !states_checkable) {
                 diagnostics.push(Diagnostic {
                     code: "E1310_ENTITY_BLOCK_WITHOUT_TYPE".to_string(),
                     severity: "error".to_string(),
@@ -2074,6 +2335,26 @@ fn check_entity_types(
                     code: "E1315_ENTITY_PART_OF_ITSELF".to_string(),
                     severity: "error".to_string(),
                     message: format!("Entity '{}' is part of itself.", entity.symbol()),
+                    file: file.clone(),
+                    span: span.clone(),
+                    path: None,
+                    hint: None,
+                    notes: vec![],
+                });
+            }
+        }
+
+        // ONE MACHINE PER ENTITY. A type that declares a lifecycle and a
+        // model binding another would leave two authorities over one status.
+        if entity.lifecycle.is_some() {
+            if let Some(lifecycle_id) = ty.lifecycle.as_deref() {
+                diagnostics.push(Diagnostic {
+                    code: "E1350_LIFECYCLE_CONFLICT".to_string(),
+                    severity: "error".to_string(),
+                    message: format!(
+                        "Entity '{}' binds a model-declared lifecycle, but its type '{type_name}' already declares lifecycle '{lifecycle_id}'. One machine per entity — drop the binding, or use an untyped entity.",
+                        entity.symbol()
+                    ),
                     file: file.clone(),
                     span: span.clone(),
                     path: None,
@@ -2223,6 +2504,8 @@ fn build_ir(
     check_state_guards(resolve_output, &ontology)?;
     check_prev_first_period(resolve_output, &time_start)?;
     check_field_paths(resolve_output)?;
+    let (machines, machines_by_entity) = resolve_machines(resolve_output, &ontology);
+    check_status_writes(resolve_output, &machines, &machines_by_entity)?;
 
     let mut entities: Vec<((String, String), IrEntity)> = resolve_output
         .source_statements
@@ -2287,6 +2570,7 @@ fn build_ir(
                 state: BTreeMap::new(),
                 parent: entity.parent.clone(),
                 initial_state: entity.initial_state.clone(),
+                lifecycle: machines_by_entity.get(&symbol).cloned(),
             };
             Some(((symbol, source_stmt.file.clone()), ir_entity))
         })
@@ -2605,6 +2889,33 @@ fn build_ir(
         })
         .collect();
 
+    // Only machines an entity actually binds are published: an unbound
+    // machine governs nothing, and the IR is a record of this model.
+    let ir_lifecycles: Vec<IrLifecycle> = {
+        let bound: std::collections::BTreeSet<&String> = machines_by_entity.values().collect();
+        machines
+            .values()
+            .filter(|m| bound.contains(&m.id))
+            .map(|m| IrLifecycle {
+                id: m.id.clone(),
+                initial: m.initial.clone().unwrap_or_default(),
+                states: m.states.clone(),
+                edges: m
+                    .edges
+                    .iter()
+                    .map(|(from, to, guard)| IrLifecycleEdge {
+                        from: from.clone(),
+                        to: to.clone(),
+                        guard: guard.as_ref().map(|src| IrExpr {
+                            lang: "cfdl".to_string(),
+                            src: coerce_numeric_literals(src),
+                        }),
+                    })
+                    .collect(),
+            })
+            .collect()
+    };
+
     let ir_waterfalls: Vec<IrWaterfall> = resolve_output
         .source_statements
         .iter()
@@ -2673,6 +2984,7 @@ fn build_ir(
         // Filled below, once the document exists to be walked.
         quantile_inputs: Vec::new(),
         accounts: ir_accounts,
+        lifecycles: ir_lifecycles,
         waterfalls: ir_waterfalls,
         contracts: contracts
             .into_iter()
@@ -4398,6 +4710,9 @@ fn lower_rule_state_schedule(
         calendar: None,
         except_dates: Vec::new(),
         also_dates: Vec::new(),
+        anchor_entity: None,
+        anchor_state: None,
+        anchor_periods: None,
     })
 }
 
@@ -4435,6 +4750,9 @@ fn lower_pack_rule_schedule(
             calendar: None,
             except_dates: Vec::new(),
             also_dates: Vec::new(),
+            anchor_entity: None,
+            anchor_state: None,
+            anchor_periods: None,
         }
     } else {
         IrSchedule {
@@ -4467,6 +4785,9 @@ fn lower_pack_rule_schedule(
             calendar: None,
             except_dates: Vec::new(),
             also_dates: Vec::new(),
+            anchor_entity: None,
+            anchor_state: None,
+            anchor_periods: None,
         }
     }
 }
@@ -5112,6 +5433,9 @@ fn lower_schedule(
             calendar: None,
             except_dates: Vec::new(),
             also_dates: Vec::new(),
+            anchor_entity: None,
+            anchor_state: None,
+            anchor_periods: None,
         });
     };
 
@@ -5160,6 +5484,48 @@ fn lower_schedule(
                 .iter()
                 .map(|d| normalize_date(d))
                 .collect(),
+            anchor_entity: None,
+            anchor_state: None,
+            anchor_periods: None,
+        }),
+        ScheduleKind::StateEnter {
+            entity,
+            state,
+            periods,
+        } => Ok(IrSchedule {
+            kind: "StateEnter".to_string(),
+            placement: placement_of_parsed(schedule.due, schedule.mid, schedule.at_period_end),
+            net_days: split_payment_terms(schedule.net).0,
+            net_months: split_payment_terms(schedule.net).1,
+            on: None,
+            every: Some(
+                schedule
+                    .every
+                    .as_deref()
+                    .map(|i| interval_to_frequency(i).to_string())
+                    .unwrap_or_else(|| time_calendar.to_string()),
+            ),
+            // No dates: the windows open where the WALK finds the entries,
+            // and a re-entered state re-anchors (`docs/28` §6.2).
+            from: None,
+            to: None,
+            on_rule,
+            phase: None,
+            convention: schedule.convention.clone(),
+            calendar: schedule.calendar.clone(),
+            except_dates: schedule
+                .except_dates
+                .iter()
+                .map(|d| normalize_date(d))
+                .collect(),
+            also_dates: schedule
+                .also_dates
+                .iter()
+                .map(|d| normalize_date(d))
+                .collect(),
+            anchor_entity: Some(entity.clone()),
+            anchor_state: Some(state.clone()),
+            anchor_periods: Some(*periods),
         }),
         ScheduleKind::Every => Ok(IrSchedule {
             kind: "Every".to_string(),
@@ -5194,6 +5560,9 @@ fn lower_schedule(
                 .iter()
                 .map(|d| normalize_date(d))
                 .collect(),
+            anchor_entity: None,
+            anchor_state: None,
+            anchor_periods: None,
         }),
         ScheduleKind::PhaseEnter { phase } => {
             let (start, _end) = phase_map.get(phase).ok_or_else(|| {
@@ -5222,6 +5591,9 @@ fn lower_schedule(
                     .iter()
                     .map(|d| normalize_date(d))
                     .collect(),
+                anchor_entity: None,
+                anchor_state: None,
+                anchor_periods: None,
             })
         }
         ScheduleKind::EveryPhase { phase } => {
@@ -5257,6 +5629,9 @@ fn lower_schedule(
                     .iter()
                     .map(|d| normalize_date(d))
                     .collect(),
+                anchor_entity: None,
+                anchor_state: None,
+                anchor_periods: None,
             })
         }
     }

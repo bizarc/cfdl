@@ -40,7 +40,8 @@
           }
         }
       },
-      "state": {}
+      "state": {},
+      "lifecycle": "credit.pool"
     },
     {
       "id": "f1e37ea477b1ccd964abf31bc181757a",
@@ -74,6 +75,36 @@
     "constants": {},
     "random": {}
   },
+  "lifecycles": [
+    {
+      "id": "credit.pool",
+      "initial": "amortizing",
+      "states": [
+        "warehouse",
+        "amortizing",
+        "called",
+        "retired"
+      ],
+      "edges": [
+        {
+          "from": "warehouse",
+          "to": "amortizing"
+        },
+        {
+          "from": "amortizing",
+          "to": "called"
+        },
+        {
+          "from": "amortizing",
+          "to": "retired"
+        },
+        {
+          "from": "called",
+          "to": "retired"
+        }
+      ]
+    }
+  ],
   "waterfalls": [
     {
       "name": "abs.distribution",

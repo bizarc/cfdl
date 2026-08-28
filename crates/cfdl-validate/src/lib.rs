@@ -191,6 +191,137 @@ pub fn validate(output: &ResolveOutput, symbols: &SymbolTables) -> Vec<Validatio
         }
     }
 
+    // THE DECLARED MACHINE IS CHECKED WHERE IT IS DECLARED (`docs/28` §6.1).
+    // The states are enumerated ahead of time precisely so these refusals can
+    // exist: a misspelled state in an edge is an error naming the declared
+    // set, not a phantom state.
+    {
+        let mut machines: std::collections::BTreeMap<String, &cfdl_parser::LifecycleStmt> =
+            std::collections::BTreeMap::new();
+        for source_stmt in &output.source_statements {
+            let Stmt::Lifecycle(lc) = &source_stmt.statement else {
+                continue;
+            };
+            if machines.contains_key(&lc.name) {
+                diagnostics.push(ValidationDiagnostic {
+                    code: "E1352_DUPLICATE_LIFECYCLE",
+                    message: format!(
+                        "Lifecycle '{}' is declared twice. One machine, one declaration — merge the edges into one block.",
+                        lc.name
+                    ),
+                    file: source_stmt.file.clone(),
+                    span: lc.span,
+                });
+                continue;
+            }
+            machines.insert(lc.name.clone(), lc);
+
+            let declared: std::collections::BTreeSet<&str> =
+                lc.states.iter().map(String::as_str).collect();
+            let set = || {
+                let mut names: Vec<&str> = declared.iter().copied().collect();
+                names.sort_unstable();
+                names.join(", ")
+            };
+            match &lc.initial {
+                None => diagnostics.push(ValidationDiagnostic {
+                    code: "E1351_LIFECYCLE_NO_INITIAL",
+                    message: format!(
+                        "Lifecycle '{}' declares no initial state. Every machine opens somewhere — add `initial <state>`.",
+                        lc.name
+                    ),
+                    file: source_stmt.file.clone(),
+                    span: lc.span,
+                }),
+                Some(initial) if !declared.contains(initial.as_str()) => {
+                    diagnostics.push(ValidationDiagnostic {
+                        code: "E1316_UNKNOWN_LIFECYCLE_STATE",
+                        message: format!(
+                            "Lifecycle '{}' opens in '{initial}', which is not a declared state. Declared: {}.",
+                            lc.name,
+                            set()
+                        ),
+                        file: source_stmt.file.clone(),
+                        span: lc.span,
+                    });
+                }
+                Some(_) => {}
+            }
+            for edge in &lc.edges {
+                for endpoint in [&edge.from, &edge.to] {
+                    if !declared.contains(endpoint.as_str()) {
+                        diagnostics.push(ValidationDiagnostic {
+                            code: "E1316_UNKNOWN_LIFECYCLE_STATE",
+                            message: format!(
+                                "Lifecycle '{}' has an edge naming '{endpoint}', which is not a declared state. Declared: {}.",
+                                lc.name,
+                                set()
+                            ),
+                            file: source_stmt.file.clone(),
+                            span: edge.span,
+                        });
+                    }
+                }
+                // An edge's guard is LOGIC: it reads state as the period
+                // opened and series strictly backward, the same §4 rule an
+                // event's guard follows.
+                if let Some(guard) = &edge.guard {
+                    if let Some(window) = unreadable_window(&guard.src) {
+                        diagnostics.push(ValidationDiagnostic {
+                            code: SERIES_READ_IN_LOGIC,
+                            message: series_read_message(
+                                &window,
+                                &format!(
+                                    "lifecycle '{}' edge '{} -> {}' guard",
+                                    lc.name, edge.from, edge.to
+                                ),
+                            ),
+                            file: source_stmt.file.clone(),
+                            span: guard.span,
+                        });
+                    }
+                }
+            }
+        }
+
+        // The binding half: an entity that names a machine gets one that
+        // exists, and its opening state is in that machine's set.
+        for source_stmt in &output.source_statements {
+            let Stmt::Entity(entity) = &source_stmt.statement else {
+                continue;
+            };
+            let Some(bound) = &entity.lifecycle else {
+                continue;
+            };
+            let Some(machine) = machines.get(bound) else {
+                diagnostics.push(ValidationDiagnostic {
+                    code: "E1349_UNRESOLVED_LIFECYCLE_REF",
+                    message: format!(
+                        "Entity '{}' binds lifecycle '{bound}', which is not declared. Declare it as `lifecycle {bound} {{ ... }}`.",
+                        entity.symbol()
+                    ),
+                    file: source_stmt.file.clone(),
+                    span: entity.span,
+                });
+                continue;
+            };
+            if let Some(opening) = &entity.initial_state {
+                if !machine.states.iter().any(|s| s == opening) {
+                    diagnostics.push(ValidationDiagnostic {
+                        code: "E1316_UNKNOWN_LIFECYCLE_STATE",
+                        message: format!(
+                            "Entity '{}' opens in '{opening}', which lifecycle '{bound}' does not declare. Declared: {}.",
+                            entity.symbol(),
+                            machine.states.join(", ")
+                        ),
+                        file: source_stmt.file.clone(),
+                        span: entity.span,
+                    });
+                }
+            }
+        }
+    }
+
     // AN EVENT'S GUARD AND AN OPTION'S ELECTION CANNOT READ A STREAM either,
     // for the same reason a field's rule cannot. `docs/28` §4 is where this
     // becomes an ordering rule rather than a prohibition: under the period walk
@@ -477,7 +608,10 @@ pub fn validate(output: &ResolveOutput, symbols: &SymbolTables) -> Vec<Validatio
                         }
                     }
                     ScheduleKind::OnDate => {}
-                    ScheduleKind::Every => {
+                    // The anchor's names are checked against the machine at
+                    // compile, where the registry lives; the finer-than-grid
+                    // rule below applies to its interval the same as Every's.
+                    ScheduleKind::StateEnter { .. } | ScheduleKind::Every => {
                         // A schedule finer than the grid cannot be
                         // represented — but not because the occurrences are
                         // lost. They ACCUMULATE: a period holds many accruals
@@ -877,6 +1011,7 @@ fn referenced_names<'a>(src: &'a str, prefix: &str) -> Vec<&'a str> {
 fn statement_span(stmt: &Stmt) -> Span {
     match stmt {
         Stmt::Account(s) => s.span,
+        Stmt::Lifecycle(s) => s.span,
         Stmt::Version(s) => s.span,
         Stmt::Model(s) => s.span,
         Stmt::UsePack(s) => s.span,

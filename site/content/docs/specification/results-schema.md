@@ -40,8 +40,8 @@ against it by `make results-schema`.
   "properties": {
     "results_version": {
       "type": "string",
-      "const": "0.4",
-      "description": "Schema version of this document. 0.4 added the account journal actions `inflow`, `allocate_in` and `allocate_out`. 0.3 added `ledger_hash` and the optional `inputs` section, and `category` on IR streams upstream of it."
+      "const": "0.5",
+      "description": "Schema version of this document. 0.5 added the machine's `transition` journal action. 0.4 added the account journal actions `inflow`, `allocate_in` and `allocate_out`. 0.3 added `ledger_hash` and the optional `inputs` section, and `category` on IR streams upstream of it."
     },
     "model_hash": {
       "type": "string",
@@ -335,7 +335,8 @@ against it by `make results-schema`.
                   "pay",
                   "inflow",
                   "allocate_in",
-                  "allocate_out"
+                  "allocate_out",
+                  "transition"
                 ]
               },
               "target": {

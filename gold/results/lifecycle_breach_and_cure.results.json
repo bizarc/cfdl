@@ -1,0 +1,348 @@
+{
+  "results_version": "0.5",
+  "model_hash": "5bec366ac94db8d148306d5a0aa2f335e1b70a3c82cb05a8d3ca4190989f0f88",
+  "ledger_hash": "6299b47e98d7f0d3d1b35e35611ea621393afe6f3985fdac8d28d73c9bf9bda5",
+  "engine": {
+    "name": "cfdl-engine",
+    "version": "0.7.0"
+  },
+  "warnings": [
+    "Lifecycle 'unit edge leased -> delinquent' when evaluation failed [EXPR_EVAL]: series_sum: series `core.rent` is not available in this context; using false."
+  ],
+  "deterministic": {
+    "status": "ok",
+    "metrics": {
+      "entity.asset.suite.total": {
+        "amount": 1000.0,
+        "currency": "USD"
+      },
+      "model.npv": {
+        "amount": 950.074608,
+        "currency": "USD"
+      },
+      "model.total": {
+        "amount": 1000.0,
+        "currency": "USD"
+      },
+      "model.wal_years": 0.541667,
+      "run.annual_discount_rate": 0.1,
+      "run.periods_per_year": 12.0,
+      "stream.core.rent.total": {
+        "amount": 1000.0,
+        "currency": "USD"
+      }
+    },
+    "series": {
+      "asset.suite.paying": {
+        "index": {
+          "calendar": "monthly",
+          "start": "2026-01-01",
+          "periods": 12
+        },
+        "values": [
+          1.0,
+          1.0,
+          1.0,
+          0.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          0.0,
+          1.0,
+          1.0,
+          1.0
+        ]
+      },
+      "entity.asset.suite.net_cash_flow": {
+        "index": {
+          "calendar": "monthly",
+          "start": "2026-01-01",
+          "periods": 12
+        },
+        "values": [
+          {
+            "amount": 100.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 100.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 100.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 100.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 100.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 100.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 100.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 100.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 100.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 100.0,
+            "currency": "USD"
+          }
+        ]
+      },
+      "model.net_cash_flow": {
+        "index": {
+          "calendar": "monthly",
+          "start": "2026-01-01",
+          "periods": 12
+        },
+        "values": [
+          {
+            "amount": 100.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 100.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 100.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 100.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 100.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 100.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 100.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 100.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 100.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 100.0,
+            "currency": "USD"
+          }
+        ]
+      },
+      "stream.core.rent": {
+        "index": {
+          "calendar": "monthly",
+          "start": "2026-01-01",
+          "periods": 12
+        },
+        "offset": 1.0,
+        "values": [
+          {
+            "amount": 100.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 100.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 100.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 100.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 100.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 100.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 100.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 100.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 100.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 100.0,
+            "currency": "USD"
+          }
+        ]
+      }
+    },
+    "transitions": [
+      {
+        "period": 4,
+        "date": "2026-05-01",
+        "entity": "asset.suite",
+        "field": "status",
+        "from": "leased",
+        "to": "delinquent",
+        "event": "lifecycle:unit"
+      },
+      {
+        "period": 5,
+        "date": "2026-06-01",
+        "entity": "asset.suite",
+        "field": "status",
+        "from": "delinquent",
+        "to": "leased",
+        "event": "lifecycle:unit"
+      },
+      {
+        "period": 9,
+        "date": "2026-10-01",
+        "entity": "asset.suite",
+        "field": "status",
+        "from": "leased",
+        "to": "delinquent",
+        "event": "lifecycle:unit"
+      },
+      {
+        "period": 10,
+        "date": "2026-11-01",
+        "entity": "asset.suite",
+        "field": "status",
+        "from": "delinquent",
+        "to": "leased",
+        "event": "lifecycle:unit"
+      }
+    ],
+    "journal": [
+      {
+        "period": 4,
+        "date": "2026-05-01",
+        "actor": "lifecycle:unit",
+        "action": "transition",
+        "target": "asset.suite: leased -> delinquent",
+        "outcome": "applied",
+        "note": "when series_sum(\"core.rent\", time.t - 1.0, time.t - 1.0) < 50.0 — read time.t=4, core.rent[t-1]=0"
+      },
+      {
+        "period": 5,
+        "date": "2026-06-01",
+        "actor": "lifecycle:unit",
+        "action": "transition",
+        "target": "asset.suite: delinquent -> leased",
+        "outcome": "applied",
+        "note": "when series_sum(\"core.rent\", time.t - 1.0, time.t - 1.0) >= 50.0 — read time.t=5, core.rent[t-1]=100"
+      },
+      {
+        "period": 9,
+        "date": "2026-10-01",
+        "actor": "lifecycle:unit",
+        "action": "transition",
+        "target": "asset.suite: leased -> delinquent",
+        "outcome": "applied",
+        "note": "when series_sum(\"core.rent\", time.t - 1.0, time.t - 1.0) < 50.0 — read time.t=9, core.rent[t-1]=0"
+      },
+      {
+        "period": 10,
+        "date": "2026-11-01",
+        "actor": "lifecycle:unit",
+        "action": "transition",
+        "target": "asset.suite: delinquent -> leased",
+        "outcome": "applied",
+        "note": "when series_sum(\"core.rent\", time.t - 1.0, time.t - 1.0) >= 50.0 — read time.t=10, core.rent[t-1]=100"
+      }
+    ],
+    "annual_rollup": {
+      "series": {
+        "model.net_cash_flow": {
+          "index": {
+            "calendar": "annual",
+            "start": "2026-01-01",
+            "periods": 1
+          },
+          "values": [
+            {
+              "amount": 1000.0,
+              "currency": "USD"
+            }
+          ]
+        },
+        "stream.core.rent": {
+          "index": {
+            "calendar": "annual",
+            "start": "2026-01-01",
+            "periods": 1
+          },
+          "values": [
+            {
+              "amount": 1000.0,
+              "currency": "USD"
+            }
+          ]
+        }
+      }
+    }
+  },
+  "scenarios": {
+    "status": "not_run",
+    "summaries": []
+  },
+  "monte_carlo": {
+    "status": "not_run",
+    "trials": 1,
+    "seed": 0,
+    "metrics": {},
+    "trial_summaries": []
+  }
+}

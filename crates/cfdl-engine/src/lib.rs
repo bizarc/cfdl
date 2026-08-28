@@ -532,7 +532,7 @@ fn compute_results(ir: &Ir, model_hash: String, config: RunConfig) -> Result<Res
     };
 
     Ok(Results {
-        results_version: "0.4".to_string(),
+        results_version: "0.5".to_string(),
         model_hash,
         ledger_hash,
         engine: EngineInfo {
@@ -846,6 +846,25 @@ fn walk_periods(
     let mut walk = prepare_state_walk(ir, timeline, warnings);
     let mut stage = prepare_waterfall_stage(ir, timeline, warnings);
     let curves = ir_curve_defs(ir);
+    // STATE-ANCHORED PLANS ARE WALK-LOCAL. `prep` is shared across
+    // scenarios and Monte Carlo trials, and each run's entries are its own —
+    // a trial where the machine breaches later anchors later. The shared
+    // plan stays untouched; this walk re-anchors its own copies as entries
+    // settle.
+    let mut anchored: BTreeMap<usize, crate::streams::StreamPlan<'_>> = BTreeMap::new();
+    for (idx, stream) in ir.streams.iter().enumerate() {
+        if stream.schedule.kind == "StateEnter" {
+            match plan_stream(ir, stream, timeline, warnings) {
+                Ok(plan) => {
+                    anchored.insert(idx, plan);
+                }
+                Err(err) => warnings.push(format!(
+                    "Stream '{}' state-anchored schedule failed to plan: {err}; no periods scheduled.",
+                    stream.name
+                )),
+            }
+        }
+    }
     let mut full: BTreeMap<String, Vec<f64>> = ir
         .streams
         .iter()
@@ -873,23 +892,46 @@ fn walk_periods(
         //    overwrite them — now able to test cash that has already arrived.
         walk.step(ir, config, t, &timeline[t], timeline, base_inputs, warnings);
 
+        // 1b. STATE-ANCHORED SCHEDULES RESOLVE (`docs/28` §6.2). The entry
+        //     period is settled state by the time any stream reads it, so
+        //     each anchored plan's windows are recomputed from the entries
+        //     known through `t` — an entry AT `t` opens its window at `t`,
+        //     and a re-entered state re-anchors. Sound per period because a
+        //     window only extends forward: no evaluated period can change.
+        for (idx, plan) in anchored.iter_mut() {
+            let Some((entity, state)) = plan.anchor() else {
+                continue;
+            };
+            let (entity, state) = (entity.to_string(), state.to_string());
+            let entries = entries_into(ir, walk.transitions_so_far(), &entity, &state);
+            if let Err(err) = plan.re_anchor(&entries, timeline) {
+                warnings.push(format!(
+                    "Stream '{}' state-anchored schedule failed: {err}; no periods scheduled.",
+                    ir.streams[*idx].name
+                ));
+            }
+        }
+
         // 2. THIS PERIOD'S STREAMS, against the state just settled. The borrow
         //    of the walk ends with the period, so the next `step` may take it
         //    mutably again — sequential, not simultaneous.
         let (field_values, entity_state, stream_active) = walk.settled();
         for wave in 0..=max_wave {
-            let wave_is_active = (0..ir.streams.len())
-                .any(|idx| prep.waves[idx] == wave && prep.plans[idx].settles_at(t));
+            let wave_is_active = (0..ir.streams.len()).any(|idx| {
+                let plan = anchored.get(&idx).unwrap_or(&prep.plans[idx]);
+                prep.waves[idx] == wave && plan.settles_at(t)
+            });
             if !wave_is_active {
                 continue;
             }
             let snapshot = (wave > 0).then(|| Arc::new(full.clone()));
             for (idx, stream) in ir.streams.iter().enumerate() {
-                if prep.waves[idx] != wave || !prep.plans[idx].settles_at(t) {
+                let plan = anchored.get(&idx).unwrap_or(&prep.plans[idx]);
+                if prep.waves[idx] != wave || !plan.settles_at(t) {
                     continue;
                 }
                 let mut refused: Vec<usize> = Vec::new();
-                let value = prep.plans[idx].step(
+                let value = plan.step(
                     ir,
                     config,
                     t,

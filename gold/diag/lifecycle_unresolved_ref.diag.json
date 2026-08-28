@@ -1,0 +1,17 @@
+[
+  {
+    "code": "E1349_UNRESOLVED_LIFECYCLE_REF",
+    "severity": "error",
+    "message": "Entity 'asset.x' binds lifecycle 'ghost', which is not declared. Declare it as `lifecycle ghost { ... }`.",
+    "file": "model.cfdl",
+    "span": {
+      "start_line": 7,
+      "start_col": 1,
+      "end_line": 7,
+      "end_col": 43
+    },
+    "path": null,
+    "hint": null,
+    "notes": []
+  }
+]

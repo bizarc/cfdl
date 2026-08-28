@@ -16,13 +16,54 @@
       "symbol": "asset.tower",
       "type": "CRE.Asset.RealProperty",
       "fields": {},
-      "state": {}
+      "state": {},
+      "lifecycle": "cre.property"
     }
   ],
   "assumptions": {
     "constants": {},
     "random": {}
   },
+  "lifecycles": [
+    {
+      "id": "cre.property",
+      "initial": "operating",
+      "states": [
+        "predevelopment",
+        "construction",
+        "lease_up",
+        "operating",
+        "repositioning",
+        "disposed"
+      ],
+      "edges": [
+        {
+          "from": "predevelopment",
+          "to": "construction"
+        },
+        {
+          "from": "construction",
+          "to": "lease_up"
+        },
+        {
+          "from": "lease_up",
+          "to": "operating"
+        },
+        {
+          "from": "operating",
+          "to": "repositioning"
+        },
+        {
+          "from": "repositioning",
+          "to": "lease_up"
+        },
+        {
+          "from": "operating",
+          "to": "disposed"
+        }
+      ]
+    }
+  ],
   "subtotals": [
     {
       "id": "domain.cre.pgr",

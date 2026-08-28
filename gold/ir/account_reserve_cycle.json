@@ -19,7 +19,8 @@
         "rentable_area": "1000"
       },
       "state": {},
-      "initial_state": "leased"
+      "initial_state": "leased",
+      "lifecycle": "cre.unit"
     },
     {
       "id": "7775d2be6fb859eb35676fedc5a0e793",
@@ -38,6 +39,40 @@
   "accounts": [
     {
       "name": "reserve"
+    }
+  ],
+  "lifecycles": [
+    {
+      "id": "cre.unit",
+      "initial": "vacant",
+      "states": [
+        "vacant",
+        "leased",
+        "holdover",
+        "downtime"
+      ],
+      "edges": [
+        {
+          "from": "vacant",
+          "to": "leased"
+        },
+        {
+          "from": "leased",
+          "to": "holdover"
+        },
+        {
+          "from": "leased",
+          "to": "downtime"
+        },
+        {
+          "from": "holdover",
+          "to": "leased"
+        },
+        {
+          "from": "downtime",
+          "to": "leased"
+        }
+      ]
     }
   ],
   "waterfalls": [

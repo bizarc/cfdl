@@ -19,7 +19,8 @@
         "rentable_area": "1000"
       },
       "state": {},
-      "initial_state": "leased"
+      "initial_state": "leased",
+      "lifecycle": "cre.unit"
     }
   ],
   "assumptions": {
@@ -33,6 +34,40 @@
         "lang": "cfdl",
         "src": "series_sum(\"cre.*\", time.t, time.t)"
       }
+    }
+  ],
+  "lifecycles": [
+    {
+      "id": "cre.unit",
+      "initial": "vacant",
+      "states": [
+        "vacant",
+        "leased",
+        "holdover",
+        "downtime"
+      ],
+      "edges": [
+        {
+          "from": "vacant",
+          "to": "leased"
+        },
+        {
+          "from": "leased",
+          "to": "holdover"
+        },
+        {
+          "from": "leased",
+          "to": "downtime"
+        },
+        {
+          "from": "holdover",
+          "to": "leased"
+        },
+        {
+          "from": "downtime",
+          "to": "leased"
+        }
+      ]
     }
   ],
   "subtotals": [

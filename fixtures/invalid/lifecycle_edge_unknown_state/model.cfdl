@@ -1,0 +1,14 @@
+version 0.1
+model "lifecycle-edge-unknown-state"
+time calendar monthly from 2026-01 for 3
+
+// THE STATES ARE ENUMERATED SO THIS IS AN ERROR, NOT A PHANTOM STATE.
+// An inferred machine would silently create 'downtme' here — the exact
+// stringly-typed failure E1332 exists to catch on `active in state`.
+lifecycle unit {
+  initial leased
+  state leased, downtime
+  leased -> downtme when time.t == 1
+}
+
+entity asset x { lifecycle unit  state leased }

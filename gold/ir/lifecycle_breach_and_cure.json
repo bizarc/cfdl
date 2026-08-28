@@ -1,0 +1,121 @@
+{
+  "ir_version": "0.1",
+  "model": {
+    "name": "lifecycle-breach-and-cure",
+    "currency": "USD"
+  },
+  "time": {
+    "calendar": "monthly",
+    "start": "2026-01-01",
+    "periods": 12
+  },
+  "phases": [],
+  "entities": [
+    {
+      "id": "0e8e7ed5a33916d03ca18c8f1fb232c6",
+      "symbol": "asset.suite",
+      "type": "core.Entity",
+      "fields": {},
+      "rules": {
+        "paying": {
+          "init": {
+            "lang": "cfdl",
+            "src": "1.0"
+          },
+          "next": {
+            "lang": "cfdl",
+            "src": "if(time.t == 3 or time.t == 8, 0.0, 1.0)"
+          }
+        }
+      },
+      "state": {},
+      "lifecycle": "unit"
+    }
+  ],
+  "assumptions": {
+    "constants": {},
+    "random": {}
+  },
+  "lifecycles": [
+    {
+      "id": "unit",
+      "initial": "leased",
+      "states": [
+        "leased",
+        "delinquent"
+      ],
+      "edges": [
+        {
+          "from": "leased",
+          "to": "delinquent",
+          "guard": {
+            "lang": "cfdl",
+            "src": "series_sum(\"core.rent\", time.t - 1.0, time.t - 1.0) < 50.0"
+          }
+        },
+        {
+          "from": "delinquent",
+          "to": "leased",
+          "guard": {
+            "lang": "cfdl",
+            "src": "series_sum(\"core.rent\", time.t - 1.0, time.t - 1.0) >= 50.0"
+          }
+        }
+      ]
+    }
+  ],
+  "contracts": [],
+  "streams": [
+    {
+      "id": "2aa0ccd1f549852586d71092ae8e70bb",
+      "name": "core.rent",
+      "owner": {
+        "symbol": "asset.suite"
+      },
+      "direction": "inflow",
+      "currency": "USD",
+      "schedule": {
+        "kind": "Every",
+        "every": "monthly",
+        "from": "2026-01-01",
+        "to": "2026-12-01"
+      },
+      "amount": {
+        "lang": "cfdl",
+        "src": "100.0 * asset.suite.paying"
+      },
+      "active_when": {
+        "lang": "cfdl",
+        "src": "true"
+      },
+      "provenance": {
+        "source_file": "model.cfdl",
+        "source_span": {
+          "start_line": 21,
+          "start_col": 1,
+          "end_line": 24,
+          "end_col": 1
+        }
+      }
+    }
+  ],
+  "events": [],
+  "options": [],
+  "runs": [
+    {
+      "kind": "deterministic"
+    }
+  ],
+  "required_observables": [],
+  "required_refs": [],
+  "provenance": {
+    "sources": [
+      "model.cfdl"
+    ],
+    "compiler": {
+      "name": "cfdl",
+      "version": "0.7.0",
+      "hash": "d80f4c40398fe75b55a6788a2be14aac"
+    }
+  }
+}

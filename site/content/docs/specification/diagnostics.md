@@ -228,6 +228,18 @@ Fields that move:
   of this waterfall or of a later one. Steps publish when their waterfall
   finishes, so the read would aggregate to zero and say nothing. An EARLIER
   waterfall is the documented composition and still compiles.
+- `E1349_UNRESOLVED_LIFECYCLE_REF` — an entity binds `lifecycle <name>` and no
+  lifecycle block declares it.
+- `E1350_LIFECYCLE_CONFLICT` — an entity binds a model-declared lifecycle, but
+  its ontology type already declares one. One machine per entity.
+- `E1351_LIFECYCLE_NO_INITIAL` — a lifecycle block declares no `initial`.
+  Every machine opens somewhere.
+- `E1352_DUPLICATE_LIFECYCLE` — two lifecycle blocks share a name. One
+  machine, one declaration.
+- `E1353_UNREACHABLE_STATE_WRITE` — an event sets `status` to a state no
+  declared edge enters. The write can never be legal, whatever state the
+  entity is in at run; declare the edge or drop the write. An edge-less
+  machine stays unconstrained.
 - `E1347_UNRESOLVED_ACCOUNT_REF` — a step allocates `to account <name>` and no
   such account is declared. An account is not an entity and resolves in its own
   namespace, which is what the `account` keyword in the step says.

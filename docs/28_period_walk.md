@@ -281,14 +281,23 @@ step's allocation in or out, and the carried residue.
 
 ## 6. Events and the state machine
 
-Under the walk, the latch stops being an architectural necessity and becomes
-one trigger policy. An event declares whether it fires once (today's latch,
-the default, unchanged) or on every period its condition holds. A repeatable
-event is what a covenant that breaches and cures, a plant that curtails and
-restarts, and a unit that goes delinquent and current again all need; today
-they must be bare fields, unchecked and absent from the transition record
-(`docs/13` §7.36). The walk makes the checked form buildable, and this
-milestone builds it.
+Under the walk, the latch stops being an architectural necessity — and the
+machine is what replaces it, not a trigger policy. In a finite state machine
+there is no latch and no repeat flag: **edge availability is the memory**. A
+guard is evaluated each period the entity is in the edge's from-state and
+only then; once the edge is taken the machine has moved and the edge no
+longer applies; re-entry re-arms it. A covenant that breaches and cures, a
+plant that curtails and restarts, and a unit that goes delinquent and
+current again are the machine's topology walked as many times as the deal's
+history walks it — today they must be bare fields, unchecked and absent from
+the transition record (`docs/13` §7.36). The walk makes the checked form
+buildable, and this milestone builds it.
+
+The free-standing `event <name> when <expr>` keeps its shipped, latched
+meaning untouched, per §5.2's rule: for a pure side-effect event — no state
+moved — dropping the latch would change what a cumulative `set` means under
+a condition that stays true. The machine needs no such policy, and no
+keyword carries one.
 
 Timing is unchanged and is worth stating: an event's write at `t` is visible
 to period `t`'s streams (step 1 before step 2), which is the shipped behavior
@@ -298,36 +307,66 @@ to period `t`'s streams (step 1 before step 2), which is the shipped behavior
 
 A lifecycle today is a set of state names — declared by a pack in
 `types.toml`, checked by `active in state` (a misspelling is `E1332`) — with
-no edges: any event may write any declared state at any time, and a regime
-that returns cannot use the vocabulary at all because the latch fires once.
-The machine completes the declaration. Wherever a lifecycle is declared, its
-**transitions** are declared beside its states: which state may move to
-which, re-enterable edges included. `leased → delinquent → leased` is two
-edges, walked as many times as the deal's history walks them.
+no guarded edges: any event may write any declared state at any time, and a
+regime that returns cannot use the vocabulary at all because the latch fires
+once. The machine completes the declaration, and it is a CORE-LANGUAGE
+construct: a model declares a lifecycle with no pack at all, and a pack
+declares the same machine for its domain types in `types.toml` — the core
+has the full functionality, and packs tailor it to domains.
+
+```
+lifecycle unit {
+  initial vacant
+  state vacant, leased, downtime
+  vacant -> leased    when <expr>
+  leased -> leased    when <expr>          // self-edge: renewal
+  leased -> downtime  when series_sum("cre.rent", time.t - 1, time.t - 1) < 50
+  downtime -> leased  when <expr>
+}
+```
+
+**The states are enumerated ahead of time; the edges are not.** The finite
+set is what makes the machine checkable — a misspelled state in an edge is a
+compile error, not a phantom state — and it is one line. The transitions are
+declared only as used: **declaring an edge is what brings it into
+existence**, guard and all, and an undeclared edge simply does not exist —
+nothing evaluates it and nothing can take it. Absence is the prohibition; a
+partial machine is a complete machine; nobody fills in the n-squared matrix.
 
 The rules, all of which reuse walk machinery rather than adding any:
 
-1. **An undeclared transition is refused.** At compile where the write is
-   statable (`set … status = <literal>`), at run with the edge named where
-   it is not. Today's unconstrained write becomes the diagnostic §7.36 asks
-   for: the states and edges are reviewable in one place, and an absent edge
-   is an error rather than a silent overwrite.
-2. **Transitions are driven by events**, with the walk's semantics —
-   evaluated once per period, in declaration order, guards reading state as
-   the period opened and series strictly backward (§4). A cash-driven edge
-   is now expressible: *delinquent when last period's rent came in under
-   the amount due* is a guard on a settled series, and *current again when
-   it resumed* is the return edge.
-3. **Every transition is journaled** (§8): period, entity, edge taken, the
-   event that drove it, and the values its guard read. The transition
-   record that exists today becomes the machine's audit trail; a regime is
-   never again a bare field whose flips the record cannot see.
-4. **`active in state` is unchanged** and already re-entry-safe: the
+1. **Guards live on edges.** An edge's `when` is evaluated each period the
+   entity is in its from-state and only then, reading state as the period
+   opened and series strictly backward (§4). A cash-driven edge is now
+   expressible: *delinquent when last period's rent came in under the
+   amount due* is a guard on a settled series, and *current again when it
+   resumed* is the return edge. A time-driven edge is the same construct
+   with a `time` condition — transitions occur when time or conditions are
+   met, and both are guards.
+2. **Well-formed machines resolve.** A self-edge is a real transition — it
+   journals and re-anchors (§6.2). No guard true means the entity holds:
+   the implicit self-hold every machine has, with no else-edge required.
+   When two guards hold in one period, declaration order picks — the rule
+   waterfall steps and events already follow — and at most one transition
+   per entity per period is taken; the rest re-evaluate next period from
+   the new state.
+3. **An event's write is validated against the machine.** `set … status`
+   from a free-standing event stays legal, refused where the declared
+   relation has no such edge — at compile where the write is statable
+   (`set … status = <literal>` and the from-state is known), at run with
+   the edge named where it is not. A lifecycle that declares NO edges stays
+   unconstrained — `permits()`'s shipped empty-means-open rule — so every
+   existing pack model keeps its meaning.
+4. **Every transition is journaled** (§8): period, entity, edge taken, and
+   the values its guard read. The transition record that exists today
+   becomes the machine's audit trail; a regime is never again a bare field
+   whose flips the record cannot see.
+5. **`active in state` is unchanged** and already re-entry-safe: the
    per-period active flags the state walk hands the streams stage
    (`EventSim.stream_active`) are level-checked each period, so a stream
    gated on `leased` turns off during delinquency and back on after cure
    with no new mechanism.
-5. **Truly linear time keeps its constructs.** Calendar-fixed eras are
+6. **Truly linear time keeps its constructs.** Calendar-fixed eras are
    phases; condition-driven regimes are machine states. The machine does
    not replace phases and phases do not gain edges.
 
@@ -343,7 +382,9 @@ construction starts" needs, and with it the delayed-construction option is
 fully expressible: the event enters the state whenever its trigger fires,
 the schedule hangs off the entry, and the deal's activity window carves
 itself out of the grid. A re-entered state re-anchors: each entry starts its
-own window, which is what a second delinquency's cure period means.
+own window, which is what a second delinquency's cure period means — and a
+self-edge is an entry, so a renewal that restarts an 18-month window is a
+`leased -> leased` edge doing exactly its job.
 
 ## 7. The valuation plane, and the priced exception
 

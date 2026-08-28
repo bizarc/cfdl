@@ -93,7 +93,62 @@ struct Prepared {
 /// It holds what accumulates ACROSS periods. Everything a single period reads
 /// but does not own — the IR, the config, the timeline, the resolved inputs —
 /// is passed to `step`.
+/// One entity's machine, guards compiled once (`docs/28` §6.1).
+struct PreparedMachine {
+    lifecycle_id: String,
+    /// Edges in declaration order — the order that resolves two guards
+    /// holding in one period, the same rule waterfall steps follow.
+    edges: Vec<PreparedEdge>,
+}
+
+struct PreparedEdge {
+    from: String,
+    to: String,
+    /// `None` for a guard-less edge: a permission an event's write may take,
+    /// never fired by the machine on its own.
+    guard: Option<cfdl_expr::CompiledExpr>,
+    guard_src: String,
+}
+
+/// The lifecycle state an entity OPENS in: its own `state` clause, or its
+/// machine's `initial`. `None` for the many entities with neither.
+pub(crate) fn opening_status(ir: &Ir, entity: &str) -> Option<String> {
+    let decl = ir.entities.iter().find(|e| e.symbol == entity)?;
+    decl.initial_state.clone().or_else(|| {
+        decl.lifecycle
+            .as_ref()
+            .and_then(|id| ir.lifecycles.iter().find(|lc| &lc.id == id))
+            .map(|lc| lc.initial.clone())
+    })
+}
+
+/// Every period at which `entity` ENTERED `state`, opening included, from a
+/// transition record. Both evaluation orders build the same answer from the
+/// same records, which is what keeps a state-anchored schedule's windows
+/// identical under either (`docs/28` §6.2).
+pub(crate) fn entries_into(
+    ir: &Ir,
+    transitions: &[TransitionRecord],
+    entity: &str,
+    state: &str,
+) -> Vec<usize> {
+    let mut entries = Vec::new();
+    if opening_status(ir, entity).as_deref() == Some(state) {
+        entries.push(0);
+    }
+    for record in transitions {
+        if record.entity == entity && record.to == state {
+            entries.push(record.period);
+        }
+    }
+    entries.sort_unstable();
+    entries.dedup();
+    entries
+}
+
 pub(crate) struct StateWalk {
+    /// Each machine-bound entity's compiled machine, by entity symbol.
+    machines: BTreeMap<String, PreparedMachine>,
     // Read by the walk between periods; see `entity_state_so_far`.
     values: BTreeMap<String, Vec<f64>>,
     prepared: Vec<Prepared>,
@@ -137,6 +192,11 @@ impl StateWalk {
     /// Hand the walk the account balances settled so far, likewise.
     pub(crate) fn observe_accounts(&mut self, balances: Arc<BTreeMap<String, Vec<f64>>>) {
         self.settled_accounts = balances;
+    }
+
+    /// The transition record as settled so far, for state-anchored schedules.
+    pub(crate) fn transitions_so_far(&self) -> &[TransitionRecord] {
+        &self.transitions
     }
 
     /// The state settled so far, as the two pieces a stream reads.
@@ -280,6 +340,94 @@ impl StateWalk {
                     .or_insert(ExprValue::Decimal(column[t - 1]));
             }
         }
+        // THE MACHINE MOVES FIRST (`docs/28` §6.1). Each machined entity's
+        // outgoing edges are evaluated in declaration order against the SAME
+        // frozen pre-state and settled cash the events read; the first guard
+        // that holds takes its edge, and at most one transition per entity
+        // per period is taken. There is no latch — the from-state gate is the
+        // memory, and a self-edge is a real transition. The write is visible
+        // to this period's streams, the timing every event write has.
+        let machine_moves: Vec<(String, String, String, String, String)> = self
+            .machines
+            .iter()
+            .filter_map(|(symbol, machine)| {
+                let from = match pre_state.get(symbol).and_then(|f| f.get("status")) {
+                    Some(ExprValue::String(state)) => state.clone(),
+                    _ => return None,
+                };
+                for edge in &machine.edges {
+                    if edge.from != from {
+                        continue;
+                    }
+                    let Some(guard) = &edge.guard else {
+                        // A guard-less edge is a permission, never fired here.
+                        continue;
+                    };
+                    if !eval_bool_expr(
+                        guard,
+                        &env,
+                        "Lifecycle",
+                        &format!("{} edge {} -> {}", machine.lifecycle_id, edge.from, edge.to),
+                        "when",
+                        warnings,
+                    ) {
+                        continue;
+                    }
+                    // The values the guard read, for the journal (§6.1 rule
+                    // 4): each series it names at the settled watermark, and
+                    // the period itself.
+                    let mut reads: Vec<String> = vec![format!("time.t={t}")];
+                    for series in cfdl_expr::series_references(&edge.guard_src) {
+                        let cell = (t > 0)
+                            .then(|| {
+                                self.settled_cash
+                                    .get(&series)
+                                    .and_then(|col| col.get(t - 1))
+                            })
+                            .flatten();
+                        match cell {
+                            Some(v) => reads.push(format!("{series}[t-1]={v}")),
+                            None => reads.push(format!("{series}[t-1]=unavailable")),
+                        }
+                    }
+                    return Some((
+                        symbol.clone(),
+                        machine.lifecycle_id.clone(),
+                        edge.from.clone(),
+                        edge.to.clone(),
+                        format!("when {} — read {}", edge.guard_src, reads.join(", ")),
+                    ));
+                }
+                None
+            })
+            .collect();
+        for (symbol, lifecycle_id, from, to, note) in machine_moves {
+            self.current_state
+                .entry(symbol.clone())
+                .or_default()
+                .insert("status".to_string(), ExprValue::String(to.clone()));
+            self.transitions.push(TransitionRecord {
+                period: t,
+                date: date.to_string(),
+                entity: symbol.clone(),
+                field: "status".to_string(),
+                from: Some(from.clone()),
+                to: to.clone(),
+                event: format!("lifecycle:{lifecycle_id}"),
+            });
+            self.journal.push(
+                JournalEntry::new(
+                    t,
+                    &date.to_string(),
+                    format!("lifecycle:{lifecycle_id}"),
+                    "transition",
+                    format!("{symbol}: {from} -> {to}"),
+                    "applied",
+                )
+                .with_note(note),
+            );
+        }
+
         for (event_idx, event) in ir.events.iter().enumerate() {
             if self.event_fired[event_idx] {
                 continue;
@@ -348,6 +496,61 @@ impl StateWalk {
                                         .with_change(before, after),
                                     );
                                     continue;
+                                }
+                                // AN EVENT'S WRITE IS VALIDATED AGAINST THE
+                                // MACHINE (`docs/28` §6.1 rule 3). The
+                                // from-state is the status as it stands NOW
+                                // in the period — a machine move this period
+                                // included — and an absent edge is a refusal
+                                // with the edge named, not a silent
+                                // overwrite. An edge-less machine stays
+                                // unconstrained, `permits()`'s shipped rule;
+                                // any declared edge suffices whether guarded
+                                // or not, because a guard-less edge is
+                                // exactly a permission for a write like this.
+                                if field == "status" {
+                                    if let Some(machine) = self.machines.get(&entity.symbol) {
+                                        if !machine.edges.is_empty() {
+                                            let from = self
+                                                .current_state
+                                                .get(&entity.symbol)
+                                                .and_then(|f| f.get("status"))
+                                                .and_then(|v| match v {
+                                                    ExprValue::String(s) => Some(s.clone()),
+                                                    _ => None,
+                                                })
+                                                .unwrap_or_default();
+                                            let to = match &v {
+                                                ExprValue::String(s) => s.clone(),
+                                                other => describe_value(other),
+                                            };
+                                            let permitted = machine
+                                                .edges
+                                                .iter()
+                                                .any(|e| e.from == from && e.to == to);
+                                            if !permitted {
+                                                warnings.push(format!(
+                                                    "Event '{}' would move '{}' {from} -> {to}, an edge lifecycle '{}' does not declare; the write is refused.",
+                                                    event.name, entity.symbol, machine.lifecycle_id
+                                                ));
+                                                self.journal.push(
+                                                    JournalEntry::new(
+                                                        t,
+                                                        &date.to_string(),
+                                                        format!("event:{}", event.name),
+                                                        "set",
+                                                        format!("{}.status", entity.symbol),
+                                                        "declined",
+                                                    )
+                                                    .with_note(format!(
+                                                        "{from} -> {to} is not a declared edge of lifecycle '{}'",
+                                                        machine.lifecycle_id
+                                                    )),
+                                                );
+                                                continue;
+                                            }
+                                        }
+                                    }
                                 }
                                 let slot =
                                     self.current_state.entry(entity.symbol.clone()).or_default();
@@ -708,12 +911,63 @@ pub(crate) fn prepare_state_walk(
                 .or_default()
                 .insert(name.clone(), value);
         }
-        if let Some(initial) = &entity.initial_state {
+        // The entity's own `state` wins; the machine's `initial` is the
+        // fallback — every machine opens somewhere, so a bound entity is
+        // never status-less.
+        let opening = entity.initial_state.clone().or_else(|| {
+            entity
+                .lifecycle
+                .as_ref()
+                .and_then(|id| ir.lifecycles.iter().find(|lc| &lc.id == id))
+                .map(|lc| lc.initial.clone())
+        });
+        if let Some(initial) = opening {
             current_state
                 .entry(entity.symbol.clone())
                 .or_default()
-                .insert("status".to_string(), ExprValue::String(initial.clone()));
+                .insert("status".to_string(), ExprValue::String(initial));
         }
+    }
+
+    // THE MACHINES, GUARDS COMPILED ONCE. Only entities that bind one get an
+    // entry, so the per-period pass is over exactly the machined entities.
+    let mut machines: BTreeMap<String, PreparedMachine> = BTreeMap::new();
+    for entity in &ir.entities {
+        let Some(machine) = entity
+            .lifecycle
+            .as_ref()
+            .and_then(|id| ir.lifecycles.iter().find(|lc| &lc.id == id))
+        else {
+            continue;
+        };
+        let edges = machine
+            .edges
+            .iter()
+            .map(|edge| PreparedEdge {
+                from: edge.from.clone(),
+                to: edge.to.clone(),
+                guard: edge.guard.as_ref().and_then(|g| {
+                    match cfdl_expr::compile_expr(&g.src) {
+                        Ok(compiled) => Some(compiled),
+                        Err(err) => {
+                            warnings.push(format!(
+                                "Lifecycle '{}' edge '{} -> {}' guard compile failed [{}]: {}; edge disabled.",
+                                machine.id, edge.from, edge.to, err.code, err.message
+                            ));
+                            None
+                        }
+                    }
+                }),
+                guard_src: edge.guard.as_ref().map(|g| g.src.clone()).unwrap_or_default(),
+            })
+            .collect();
+        machines.insert(
+            entity.symbol.clone(),
+            PreparedMachine {
+                lifecycle_id: machine.id.clone(),
+                edges,
+            },
+        );
     }
     let current_active: BTreeMap<String, bool> = BTreeMap::new();
     let stream_active: BTreeMap<String, Vec<bool>> = BTreeMap::new();
@@ -758,6 +1012,7 @@ pub(crate) fn prepare_state_walk(
         .collect();
 
     StateWalk {
+        machines,
         values,
         prepared,
         entity_state,

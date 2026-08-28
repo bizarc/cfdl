@@ -1,0 +1,17 @@
+[
+  {
+    "code": "E1353_UNREACHABLE_STATE_WRITE",
+    "severity": "error",
+    "message": "Event 'jump' sets 'asset.x.status' to 'c', but no edge of lifecycle 'unit' enters that state — the write can never be legal.",
+    "file": "model.cfdl",
+    "span": {
+      "start_line": 17,
+      "start_col": 1,
+      "end_line": 19,
+      "end_col": 1
+    },
+    "path": null,
+    "hint": "Declare the edge — declaring it is what brings the move into existence — or drop the write.",
+    "notes": []
+  }
+]

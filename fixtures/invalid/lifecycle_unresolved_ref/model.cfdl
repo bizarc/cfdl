@@ -1,0 +1,7 @@
+version 0.1
+model "lifecycle-unresolved-ref"
+time calendar monthly from 2026-01 for 3
+
+// THE BINDING NAMES A MACHINE THAT EXISTS. `lifecycle ghost` with no
+// declaration is the same class of error as an unknown ontology type.
+entity asset x { lifecycle ghost  state a }

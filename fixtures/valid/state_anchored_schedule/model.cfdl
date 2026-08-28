@@ -1,0 +1,29 @@
+version 0.1
+model "state-anchored-schedule"
+time calendar monthly from 2026-01 for 24
+
+// "18 MONTHS OF CONSTRUCTION FROM WHENEVER CONSTRUCTION STARTS" — the third
+// schedule anchor (docs/28 §6.2), pinned as §9's delayed, re-anchored
+// construction schedule. The machine delays the start: nothing accrues while
+// waiting. Entry at t=4 opens a six-period window; the pause at t=8 masks
+// the tail through `active in state` — the window is presence, the state is
+// activity, and the two compose. Re-entry at t=10 RE-ANCHORS: a fresh
+// six-period window, not the remnant of the old one, which is what a second
+// entry means.
+lifecycle project {
+  initial waiting
+  state waiting, building, paused
+  waiting -> building when time.t == 4
+  building -> paused  when time.t == 8
+  paused -> building  when time.t == 10
+}
+
+entity asset site {
+  lifecycle project
+}
+
+stream capex.build on entity asset.site outflow currency USD {
+  schedule every month from state_enter(asset.site, building) for 6 periods
+  amount = 100
+  active in state building
+}

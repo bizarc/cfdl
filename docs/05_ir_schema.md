@@ -126,6 +126,13 @@ against it by `make ir-schema`.
       },
       "description": "Declared cash locations. Omitted when a model declares none, so existing IR stays byte-identical."
     },
+    "lifecycles": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/Lifecycle"
+      },
+      "description": "Every machine an entity binds — pack-declared and model-declared resolved to the same shape. Absent when no entity has one."
+    },
     "waterfalls": {
       "type": "array",
       "minItems": 0,
@@ -414,6 +421,10 @@ against it by `make ir-schema`.
             },
             "description": "A field's recurrence. `schedule` is present only on a field a PACK emitted: it inherits the contract's payment rhythm, so a monthly-paying pool on a daily book compounds twelve times a year rather than 365. A field a modeller wrote has none and steps every period."
           }
+        },
+        "lifecycle": {
+          "type": "string",
+          "description": "The machine this entity is governed by — an id into `lifecycles`. Absent for the many entities that have none."
         }
       }
     },
@@ -835,7 +846,8 @@ against it by `make ir-schema`.
             "OnDate",
             "Every",
             "PhaseEnter",
-            "EveryPhase"
+            "EveryPhase",
+            "StateEnter"
           ]
         },
         "on": {
@@ -901,6 +913,19 @@ against it by `make ir-schema`.
             "end"
           ],
           "description": "Where in its period the flow sits. One axis with three positions, so two placements cannot both be stated. Omitted for the form's default, which differs by form: a one-shot (`OnDate`) opens its period, a recurrence closes it (an ordinary annuity — the interval elapses, then payment falls). `start` is an annuity due and what expense-like streams want; `mid` is the project-finance convention, half a period on every calendar, a convention rather than a date; `end` is what a disposal needs, since a reversion is taken at the close of the holding period. Mutually exclusive with a day rule and with payment terms (E2109). See 12_payment_timing.md."
+        },
+        "anchor_entity": {
+          "type": "string",
+          "description": "state_enter anchor (docs/28 §6.2): the entity whose entries open the windows. Present only for kind StateEnter."
+        },
+        "anchor_state": {
+          "type": "string",
+          "description": "The state whose entry anchors the window; a re-entered state re-anchors, and a self-edge is an entry."
+        },
+        "anchor_periods": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "Window length in grid periods from each entry."
         }
       },
       "allOf": [
@@ -1608,6 +1633,60 @@ against it by `make ir-schema`.
         "inflow": {
           "$ref": "#/$defs/Expr",
           "description": "What flows in each period. May be negative: an account fed a deal's whole net cash IS the deal's cumulative position, negative through the J-curve and positive after."
+        }
+      }
+    },
+    "Lifecycle": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "initial",
+        "states"
+      ],
+      "description": "A declared finite state machine (docs/28 §6.1). The states are enumerated ahead of time — the finite set is what makes a misspelled state a compile error rather than a phantom state. The edges are declared only as used: declaring one brings it into existence, an undeclared edge does not exist, and absence is the prohibition. Only machines an entity binds are published.",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "initial": {
+          "type": "string",
+          "description": "The state the machine opens in; an entity's initial_state overrides it."
+        },
+        "states": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "minItems": 1
+        },
+        "edges": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/LifecycleEdge"
+          },
+          "description": "Empty or absent means the machine is unconstrained — permits()'s empty-means-open rule."
+        }
+      }
+    },
+    "LifecycleEdge": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "from",
+        "to"
+      ],
+      "description": "One edge, from -> to. A self-edge (from = to) is a real transition: it journals and re-anchors. A guard-less edge is a permission only — an event's write may take it, but the machine never fires it on its own.",
+      "properties": {
+        "from": {
+          "type": "string"
+        },
+        "to": {
+          "type": "string"
+        },
+        "guard": {
+          "$ref": "#/$defs/Expr",
+          "description": "Evaluated each period the entity is in `from`, reading state as the period opened and series strictly backward (docs/28 §4). There is no latch: edge availability is the memory."
         }
       }
     }

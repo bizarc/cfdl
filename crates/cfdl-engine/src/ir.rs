@@ -37,6 +37,10 @@ pub(crate) struct Ir {
     pub(crate) quantile_inputs: Vec<serde_json::Value>,
     #[serde(default)]
     pub(crate) accounts: Vec<IrAccount>,
+    /// Every machine an entity binds (`docs/28` §6.1). Absent for the many
+    /// models that declare none.
+    #[serde(default)]
+    pub(crate) lifecycles: Vec<IrLifecycle>,
     #[serde(default)]
     pub(crate) waterfalls: Vec<IrWaterfall>,
     /// Declared entities. Read so an entity's lifecycle STARTS where the model
@@ -151,6 +155,33 @@ pub(crate) struct IrAccount {
     pub(crate) inflow: Option<IrExpr>,
 }
 
+/// A declared finite state machine. The states are enumerated; the edges are
+/// declared only as used, and an undeclared edge does not exist. A guard-less
+/// edge is a permission an event's write may take; a guarded edge is
+/// evaluated each period the entity is in `from` — there is no latch, because
+/// edge availability is the memory (`docs/28` §6.1).
+#[derive(Debug, Deserialize)]
+pub(crate) struct IrLifecycle {
+    pub(crate) id: String,
+    pub(crate) initial: String,
+    /// Validated at compile (`E1316`); carried because the IR is a published
+    /// contract and a consumer reads the set whether or not this engine
+    /// needs it again.
+    #[allow(dead_code)]
+    #[serde(default)]
+    pub(crate) states: Vec<String>,
+    #[serde(default)]
+    pub(crate) edges: Vec<IrLifecycleEdge>,
+}
+
+#[derive(Debug, Deserialize)]
+pub(crate) struct IrLifecycleEdge {
+    pub(crate) from: String,
+    pub(crate) to: String,
+    #[serde(default)]
+    pub(crate) guard: Option<IrExpr>,
+}
+
 #[derive(Debug, Deserialize)]
 pub(crate) struct IrWaterfall {
     pub(crate) name: String,
@@ -207,6 +238,9 @@ pub(crate) struct IrEntityDecl {
     /// same pass as a declared state because it is the same construct.
     #[serde(default)]
     pub(crate) rules: BTreeMap<String, IrFieldRule>,
+    /// The machine this entity is governed by — an id into `lifecycles`.
+    #[serde(default)]
+    pub(crate) lifecycle: Option<String>,
     /// The lifecycle state this entity opens in. `None` when its type declares
     /// no lifecycle, which is most entities.
     #[serde(default)]
@@ -326,7 +360,7 @@ pub(crate) struct IrEntityRef {
     pub(crate) symbol: String,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Clone, Deserialize)]
 pub(crate) struct IrOnRule {
     pub(crate) kind: String,
     #[serde(default)]
@@ -385,6 +419,16 @@ pub(crate) struct IrSchedule {
     pub(crate) except_dates: Vec<String>,
     #[serde(default)]
     pub(crate) also_dates: Vec<String>,
+    /// `state_enter` anchor (`docs/28` §6.2), present only for kind
+    /// "StateEnter": each ENTRY of the entity into the state opens its own
+    /// window of `anchor_periods` grid periods, resolved during the walk,
+    /// re-anchoring on re-entry.
+    #[serde(default)]
+    pub(crate) anchor_entity: Option<String>,
+    #[serde(default)]
+    pub(crate) anchor_state: Option<String>,
+    #[serde(default)]
+    pub(crate) anchor_periods: Option<i64>,
 }
 
 #[derive(Debug, Deserialize)]

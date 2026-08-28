@@ -1,0 +1,17 @@
+[
+  {
+    "code": "E1350_LIFECYCLE_CONFLICT",
+    "severity": "error",
+    "message": "Entity 'asset.x' binds a model-declared lifecycle, but its type 'CRE.Asset.Unit' already declares lifecycle 'cre.unit'. One machine per entity — drop the binding, or use an untyped entity.",
+    "file": "model.cfdl",
+    "span": {
+      "start_line": 11,
+      "start_col": 1,
+      "end_line": 14,
+      "end_col": 1
+    },
+    "path": null,
+    "hint": null,
+    "notes": []
+  }
+]

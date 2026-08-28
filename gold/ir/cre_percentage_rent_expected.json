@@ -16,7 +16,8 @@
       "symbol": "asset.store",
       "type": "CRE.Asset.RealProperty",
       "fields": {},
-      "state": {}
+      "state": {},
+      "lifecycle": "cre.property"
     }
   ],
   "assumptions": {
@@ -61,6 +62,46 @@
       "quantile": "store_sales",
       "function": "quantile_of",
       "args": []
+    }
+  ],
+  "lifecycles": [
+    {
+      "id": "cre.property",
+      "initial": "operating",
+      "states": [
+        "predevelopment",
+        "construction",
+        "lease_up",
+        "operating",
+        "repositioning",
+        "disposed"
+      ],
+      "edges": [
+        {
+          "from": "predevelopment",
+          "to": "construction"
+        },
+        {
+          "from": "construction",
+          "to": "lease_up"
+        },
+        {
+          "from": "lease_up",
+          "to": "operating"
+        },
+        {
+          "from": "operating",
+          "to": "repositioning"
+        },
+        {
+          "from": "repositioning",
+          "to": "lease_up"
+        },
+        {
+          "from": "operating",
+          "to": "disposed"
+        }
+      ]
     }
   ],
   "subtotals": [
