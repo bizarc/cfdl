@@ -77,14 +77,16 @@ Real risk is often binary: the tenant renews or vacates, the permit lands or doe
 ```cfdl
 assume renewal_draw ~ Uniform(min=0.0, max=1.0)
 
-// 70% of trials: renewal at market. 30%: vacancy, then re-let at a discount.
+// 70% of trials: renewal at market. 30%: three months dark, then a re-let
+// at a discount. (The lease-up model's grid ends 2028-12; the rollover year
+// is its final year, periods 24 through 35.)
 stream building.rollover_rent on entity asset.building inflow currency USD {
-  schedule every month from 2029-01 to 2029-12
-  amount = if(inputs.renewal_draw < 0.70, 85000, if(time.t < 39, 0, 74000))
+  schedule every month from 2028-01 to 2028-12
+  amount = if(inputs.renewal_draw < 0.70, 85000, if(time.t < 27, 0, 74000))
 }
 ```
 
-Each trial commits to one branch for its whole path. This is a *fork in the world*, not noise around a level. The output distribution goes properly bimodal, with a cluster of renewal paths and a cluster of vacancy paths. The percentiles then say what no blended-average model can: the deal's median is fine *and* a quarter of paths spend a year starved. Blending 70/30 into "expected rent of 81,700" would have hidden exactly the scenario the reserve account exists for. Deterministically, the draw resolves to 0.5 — the renewal branch — so the base case stays sensible too.
+Each trial commits to one branch for its whole path. This is a *fork in the world*, not noise around a level. The output distribution goes properly bimodal, with a cluster of renewal paths and a cluster of vacancy paths. The percentiles then say what no blended-average model can: the deal's median is fine *and* a quarter of paths spend a quarter starved. Blending 70/30 into "expected rent of 81,700" would have hidden exactly the scenario the reserve account exists for. Deterministically, the draw resolves to 0.5 — the renewal branch — so the base case stays sensible too.
 
 ## Quantiles: dispersion inside one period
 

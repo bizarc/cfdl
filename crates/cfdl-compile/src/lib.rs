@@ -3551,7 +3551,14 @@ fn lower_contract_streams(
             ctx.time_calendar,
             ctx.time_start,
             ctx.time_periods,
-            ctx.timeline_end,
+            // The furthest period a term may legally reach: the cash horizon
+            // plus any `project` tail — the SAME boundary the lowering's own
+            // bounds check uses. A lease running through the valuation tail
+            // is what a derived forward exit requires ("runs through the
+            // projection tail so exit valuation sees a full forward year"),
+            // and the pack validation must not refuse what the lowering
+            // demands.
+            ctx.timeline_eval_end,
         ));
         if diagnostics[before..]
             .iter()
