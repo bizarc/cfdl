@@ -548,8 +548,14 @@ pub struct WaterfallStmt {
 #[derive(Debug, Clone, PartialEq, Eq, serde::Serialize)]
 pub struct WaterfallStep {
     pub name: String,
-    /// Who is paid.
+    /// Who is paid — a party, or an ACCOUNT when `to_account` is set.
+    ///
+    /// Allocating to a party allocates into that party's account when it has
+    /// one; naming an account directly is the explicit form, and is how a
+    /// reserve is funded (`docs/28` §5.1).
     pub payee: String,
+    /// `to account <name>` rather than `to <party>`.
+    pub to_account: bool,
     /// What this step is owed. The engine pays `min(max(0, this), remaining)`,
     /// so the pot cannot go negative however the expression is written.
     pub amount: Option<ExprSlot>,
@@ -1983,8 +1989,30 @@ impl<'a> Parser<'a> {
         };
 
         let _ = self.expect_keyword(Keyword::To, "'to'")?;
+        // `to account <name>` names a destination that is not a party. The
+        // keyword is what disambiguates: an entity can never be called
+        // `account`, because it is reserved.
+        let mut to_account = false;
+        if matches!(self.peek().kind, TokenKind::Keyword(Keyword::Account)) {
+            let _ = self.bump();
+            to_account = true;
+        }
         let payee_tok = self.bump();
-        let payee = self.parse_entity_ref_token(&payee_tok)?;
+        let payee = if to_account {
+            match payee_tok.kind {
+                TokenKind::Ident(ref i) => i.clone(),
+                TokenKind::Qname(ref q) => q.clone(),
+                _ => {
+                    self.push_expected(
+                        payee_tok.span,
+                        "Expected an account name after 'to account'.".to_string(),
+                    );
+                    return None;
+                }
+            }
+        } else {
+            self.parse_entity_ref_token(&payee_tok)?
+        };
 
         let eq = self.expect_punct(Punct::Equal, "'=' before the amount this step pays")?;
         let amount = self.parse_expr_slot_until(eq.span, &["pay"]);
@@ -1992,6 +2020,7 @@ impl<'a> Parser<'a> {
         Some(WaterfallStep {
             name,
             payee,
+            to_account,
             amount,
             span: merge_spans(start.span, eq.span),
         })

@@ -455,6 +455,10 @@ struct IrWaterfall {
 struct IrWaterfallStep {
     name: String,
     payee: String,
+    /// The payee is an ACCOUNT rather than a party. Omitted when false, so
+    /// existing IR stays byte-identical.
+    #[serde(skip_serializing_if = "std::ops::Not::not")]
+    payee_is_account: bool,
     /// What the step is owed. The engine pays `min(max(0, this), remaining)`.
     amount: IrExpr,
 }
@@ -1409,6 +1413,15 @@ fn check_waterfalls(resolve_output: &cfdl_resolver::ResolveOutput) -> Result<(),
         }
     }
 
+    let declared_accounts: std::collections::BTreeSet<String> = resolve_output
+        .source_statements
+        .iter()
+        .filter_map(|st| match &st.statement {
+            Stmt::Account(a) => Some(a.name.clone()),
+            _ => None,
+        })
+        .collect();
+
     let mut waterfall_order = 0usize;
     for source_stmt in &resolve_output.source_statements {
         let Stmt::Waterfall(waterfall) = &source_stmt.statement else {
@@ -1524,7 +1537,25 @@ fn check_waterfalls(resolve_output: &cfdl_resolver::ResolveOutput) -> Result<(),
                     ),
                 ));
             }
-            if !entities.contains(&step.payee) {
+            // AN ACCOUNT PAYEE RESOLVES AGAINST ACCOUNTS, not entities. An
+            // account is not an entity and never was; `to account <name>` says
+            // which namespace to look in, which is why the keyword is there.
+            if step.to_account {
+                if !declared_accounts.contains(&step.payee) {
+                    diagnostics.push(diag(
+                        "E1347_UNRESOLVED_ACCOUNT_REF",
+                        format!(
+                            "Waterfall '{}' step '{}' allocates to account '{}', which is not declared.",
+                            waterfall.name, step.name, step.payee
+                        ),
+                        step.span,
+                        Some(format!(
+                            "Declare it as `account {} {{ }}`, or name a party instead.",
+                            step.payee
+                        )),
+                    ));
+                }
+            } else if !entities.contains(&step.payee) {
                 diagnostics.push(diag(
                     "E1301_UNRESOLVED_ENTITY_REF",
                     format!(
@@ -2603,6 +2634,7 @@ fn build_ir(
                     .map(|step| IrWaterfallStep {
                         name: step.name.clone(),
                         payee: step.payee.clone(),
+                        payee_is_account: step.to_account,
                         amount: IrExpr {
                             lang: "cfdl".to_string(),
                             src: step

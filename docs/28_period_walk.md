@@ -156,11 +156,11 @@ running pot that cannot go negative (`docs/17`).
 | --- | --- | --- |
 | `available` | this period's netted stream cash for the entity | **kept, unchanged** |
 | pot | the cash a distribution allocates, whatever `from` supplies | **retired as a term**; an account is the accumulated cash |
-| `remaining` | what is left as each step draws | unchanged |
+| `remaining` | what is left as each step allocates | unchanged |
 
 The original text of this section said "the pot becomes carried state", and
 that is what an ACCOUNT is: the accumulating thing stops being called a pot.
-`remaining` still tracks the draw-down within one distribution, and `from`
+`remaining` still tracks what is left within one distribution, and `from`
 still says where the cash comes from — but what it names is an account, so
 there is nothing left for the word "pot" to denote that a reader needs.
 
@@ -207,16 +207,21 @@ physical transfer — whether the cash ever leaves the deal is not modelled.
 The balance law, applied at each period of the walk:
 
 ```
-balance(t) = balance(t−1) + inflow(t) + payments_in(t) − draws(t)
+balance(t) = balance(t-1) + inflow(t) + allocated_in(t) - allocated_out(t)
 ```
+
+**There is no "draw".** A waterfall ALLOCATES; the destination's balance rises
+and the source's falls. That is one event seen from two ends, not two
+mechanisms, and a balance therefore moves in exactly two ways: its declared
+inflow, and allocation.
 
 **A negative inflow lowers the balance, with no floor.** The language
 models returns, and an account fed a deal's whole net cash IS the deal's
 cumulative position — negative through the J-curve, positive after — so an
 account whose inflow is every stream equals `series_sum` of those streams
-from inception, an identity a fixture pins. What is floored is the **draw**:
-a step takes at most `max(balance, 0)` remaining — cash that is not there
-cannot be distributed, and a draw that would need it is refused with the
+from inception, an identity a fixture pins. What is floored is what a step may
+take: at most `max(balance, 0)` — cash that is not there
+cannot be allocated, and an allocation that would need it is refused with the
 account named, not overdrafted.
 
 Three uses, all walk-legal:
@@ -234,12 +239,12 @@ reason to have it before anyone needs it rather than after.
 
 **The two records are not a double count.** A step's series is the FLOW — what
 was allocated this period — and the account's balance is the POSITION,
-accumulated less what has been drawn out. The balance publishes as a non-cash
+accumulated less what has been allocated out. The balance publishes as a non-cash
 series and never enters cash totals; the same separation that keeps a
 waterfall from reading its own output keeps these apart.
 
-- **A waterfall draws from an account**: `from <account>` replaces the
-  hand-written cumulative window. Residue after the last step stays in the
+- **A waterfall allocates from an account**: `from <account>` replaces the
+  hand-written cumulative window, and what it allocates leaves that balance. Residue after the last step stays in the
   account for the next scheduled date, by construction.
 - **A step pays to an account**: `pay <step> to account <name> = <expr>` —
   the reserve pattern (fund to target, top up when short, release when
@@ -272,7 +277,7 @@ that steps and guards read.
 The account gives `docs/13` §7.41's check its object — an account's `from`
 names what flows in, and the balance is auditable per period — and the
 journal (§8) records each account's movements at that grain: inflow, each
-step's draw or payment-in, and the carried residue.
+step's allocation in or out, and the carried residue.
 
 ## 6. Events and the state machine
 

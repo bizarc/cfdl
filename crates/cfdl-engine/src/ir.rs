@@ -166,6 +166,15 @@ pub(crate) struct IrWaterfall {
 pub(crate) struct IrWaterfallStep {
     pub(crate) name: String,
     pub(crate) payee: String,
+    /// The payee is an ACCOUNT rather than a party.
+    ///
+    /// Read when the waterfall stage runs at its own period and can move a
+    /// balance; carried here regardless because the IR is a published
+    /// contract, and a consumer can see where a step allocates whether or not
+    /// this engine acts on it yet.
+    #[allow(dead_code)]
+    #[serde(default)]
+    pub(crate) payee_is_account: bool,
     pub(crate) amount: IrExpr,
 }
 

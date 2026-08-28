@@ -1571,6 +1571,10 @@
         "amount": {
           "$ref": "#/$defs/Expr",
           "description": "What the step is owed. `remaining`, `paid.<step>` and `owed.<step>` are bound on top of the ordinary expression environment."
+        },
+        "payee_is_account": {
+          "type": "boolean",
+          "description": "The payee is an ACCOUNT rather than a party. Allocating to a party allocates into that party's account when it has one; naming an account directly is the explicit form, and is how a reserve is funded. Omitted when false, so existing IR stays byte-identical."
         }
       }
     },
