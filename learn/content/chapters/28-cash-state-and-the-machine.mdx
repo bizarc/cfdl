@@ -20,7 +20,7 @@ event delinquency.flag when series_sum("ops.rent", time.t - 1, time.t - 1) < 50 
 
 The window ends at `time.t - 1`, and that bound is the rule, not a habit. Logic reads *settled* history — cash that had already arrived when the period opened. A window that touches `time.t` or later is refused at compile (`E1134`): this period's cash does not exist while this period's logic is deciding things, and acting on cash that has not happened is not causal. One consequence worth internalizing early: at period 0 there is no settled history at all, and the read is *unavailable* — not zero. Before the model began is not a quiet 0; it is a fact the model refuses to invent.
 
-The one-period lag is the construct's honesty. A delinquency flag in the real world also trails the missed payment — the servicer reports it after month-end. The model's lag and the world's lag agree.
+The one-period lag matches the world it models. A delinquency flag in the real world also trails the missed payment — the servicer reports it after month-end. The model's lag and the world's lag agree.
 
 ## The machine: edges instead of latches
 
