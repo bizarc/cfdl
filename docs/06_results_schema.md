@@ -30,8 +30,8 @@ against it by `make results-schema`.
   "properties": {
     "results_version": {
       "type": "string",
-      "const": "0.3",
-      "description": "Schema version of this document. 0.3 added `ledger_hash` and the optional `inputs` section, and `category` on IR streams upstream of it."
+      "const": "0.4",
+      "description": "Schema version of this document. 0.4 added the account journal actions `inflow`, `allocate_in` and `allocate_out`. 0.3 added `ledger_hash` and the optional `inputs` section, and `category` on IR streams upstream of it."
     },
     "model_hash": {
       "type": "string",
@@ -322,7 +322,10 @@ against it by `make results-schema`.
                   "activate_contract",
                   "deactivate_contract",
                   "exercise_option",
-                  "pay"
+                  "pay",
+                  "inflow",
+                  "allocate_in",
+                  "allocate_out"
                 ]
               },
               "target": {

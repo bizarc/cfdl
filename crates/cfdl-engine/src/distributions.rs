@@ -483,6 +483,22 @@ impl WaterfallStage {
                 bind_all_entity_state(&mut env, state);
                 apply_entity_state(&mut env, state, &waterfall.entity);
             }
+            // `prev.<account>` in a step's amount: the balance at the previous
+            // period, strictly backward — the reserve pattern's own read
+            // (`fund to target` is `target - prev.<reserve>`). This period's
+            // inflow and earlier allocations are NOT in it; they are this
+            // period, and this period is not settled while it is being
+            // allocated. At period 0 there is no binding: before the model
+            // began is not zero, it is unavailable.
+            if t > 0 {
+                for account in &ir.accounts {
+                    if let Some(column) = balances.get(&account.name) {
+                        env.prev_states
+                            .entry(account.name.clone())
+                            .or_insert(ExprValue::Decimal(column[t - 1]));
+                    }
+                }
+            }
 
             // THE POT. `from <account>` hands the waterfall the ACCUMULATED
             // balance — inflow of this period included, allocations of earlier

@@ -1,0 +1,47 @@
+version 0.1
+model "account-reserve-cycle"
+use pack "cre" version "0.1.0"
+time calendar monthly from 2026-01 for 12
+
+// A RESERVE IS FUNDED TO TARGET, RELEASED, AND REFILLED — docs/28 §5.1's
+// reserve pattern, as one step form and one account.
+//
+// The monthly waterfall funds the reserve to 300 and tops it up when short:
+// `target - prev.<account>` is a strictly-backward read, the balance as it
+// stood when the period opened. The release waterfall runs ONCE, on its own
+// schedule, drawing `from reserve` — the schedule stays sovereign, and on
+// every other period the account just carries.
+//
+// June: the release drains the reserve to zero. July: the top-up sees the
+// empty account through `prev.reserve` and refills it. The balance column
+// reads 300 through May, 0 in June, 300 from July — funded, released,
+// refunded, with every movement journaled.
+
+entity asset suite : CRE.Asset.Unit {
+  rentable_area = 1000
+  state leased
+}
+
+entity party sponsor : Party { name = "Sponsor" }
+
+account reserve { }
+
+stream cre.rent on entity asset.suite inflow currency USD {
+  schedule every month from 2026-01 to 2026-12
+  category operating.revenue.base_rent
+  amount = 1000
+  active in state leased
+}
+
+waterfall dist on entity asset.suite {
+  schedule every month from 2026-01 to 2026-12
+  from available
+  pay top_up   to account reserve = if(time.t == 0, 300.0, max(0.0, 300.0 - prev.reserve))
+  pay residual to party.sponsor   = remaining
+}
+
+waterfall release on entity asset.suite {
+  schedule on 2026-06
+  from reserve
+  pay released to party.sponsor = remaining
+}

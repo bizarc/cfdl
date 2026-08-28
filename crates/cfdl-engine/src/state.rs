@@ -117,12 +117,26 @@ pub(crate) struct StateWalk {
     /// the column order it stays empty, because there the state stage runs
     /// before any stream has a value and there is nothing to offer.
     settled_cash: Arc<BTreeMap<String, Vec<f64>>>,
+    /// Account balances settled so far, read as `prev.<account>`.
+    ///
+    /// `docs/28` §5.1's third use: an OC/IC-style trigger tests a reserve
+    /// balance the same way a delinquency edge tests realised rent — strictly
+    /// backward, so at period `t` the binding is the balance at `t - 1`, every
+    /// allocation through `t - 1` included, because those stage passes have
+    /// run. At period 0 there is no binding at all: before the model began is
+    /// not zero, it is unavailable.
+    settled_accounts: Arc<BTreeMap<String, Vec<f64>>>,
 }
 
 impl StateWalk {
     /// Hand the walk the cash settled so far, before stepping the next period.
     pub(crate) fn observe_cash(&mut self, cash: Arc<BTreeMap<String, Vec<f64>>>) {
         self.settled_cash = cash;
+    }
+
+    /// Hand the walk the account balances settled so far, likewise.
+    pub(crate) fn observe_accounts(&mut self, balances: Arc<BTreeMap<String, Vec<f64>>>) {
+        self.settled_accounts = balances;
     }
 
     /// The state settled so far, as the two pieces a stream reads.
@@ -155,7 +169,7 @@ impl StateWalk {
         // in this period sees the same completed history regardless of order.
         // Both spellings, for the reason `build_expr_env` gives: a field answers
         // to `asset.x.bal` and `entity.asset.x.bal` alike, and `prev` must too.
-        let previous: BTreeMap<String, ExprValue> = if t == 0 {
+        let mut previous: BTreeMap<String, ExprValue> = if t == 0 {
             BTreeMap::new()
         } else {
             self.values
@@ -168,6 +182,16 @@ impl StateWalk {
                 })
                 .collect()
         };
+        // `prev.<account>` is the balance at the previous period, settled
+        // history the way a field's prior value is. A field keeps its name on
+        // collision — an account cannot shadow declared state.
+        if t > 0 {
+            for (name, column) in self.settled_accounts.iter() {
+                previous
+                    .entry(name.clone())
+                    .or_insert(ExprValue::Decimal(column[t - 1]));
+            }
+        }
 
         for entry in &self.prepared {
             let name = &entry.name;
@@ -246,6 +270,16 @@ impl StateWalk {
         // finding a cell the walk has not computed.
         env.series = Arc::clone(&self.settled_cash);
         env.series_available_to = Some(t.saturating_sub(1));
+        // A guard reads `prev.<account>` the way a rule does: the balance at
+        // `t - 1`, and no binding at all in the first period — before the
+        // model began is not zero, it is unavailable.
+        if t > 0 {
+            for (name, column) in self.settled_accounts.iter() {
+                env.prev_states
+                    .entry(name.clone())
+                    .or_insert(ExprValue::Decimal(column[t - 1]));
+            }
+        }
         for (event_idx, event) in ir.events.iter().enumerate() {
             if self.event_fired[event_idx] {
                 continue;
@@ -740,6 +774,7 @@ pub(crate) fn prepare_state_walk(
         compiled_options,
         periods,
         settled_cash: Arc::default(),
+        settled_accounts: Arc::default(),
     }
 }
 

@@ -1,0 +1,50 @@
+version 0.1
+model "account-restates-the-window"
+use pack "cre" version "0.1.0"
+time calendar monthly from 2026-01 for 12
+
+// HIGHLANDS' SHAPE, RESTATED THROUGH AN ACCOUNT — docs/28 §5.1.
+//
+// penzance_highlands distributes once, at the end of the hold, from
+// `series_sum("cre.*", 0, time.t)`: the hand-written cumulative window. The
+// account is that window as a construct: `from collection` where the account's
+// inflow is each period's net cash. Both waterfalls run here, at the same end
+// date, over the same deal — and every mirrored step must take the SAME
+// number, which the golden pins cell for cell. A declared cumulative window
+// stays legal and means what it says (docs/28 §5.2); the account is the same
+// cash as a location instead of an expression.
+
+entity asset suite : CRE.Asset.Unit {
+  rentable_area = 1000
+  state leased
+}
+
+entity party investor : Party { name = "Investor" }
+entity party sponsor  : Party { name = "Sponsor" }
+
+account collection {
+  from series_sum("cre.*", time.t, time.t)
+}
+
+stream cre.rent on entity asset.suite inflow currency USD {
+  schedule every month from 2026-01 to 2026-12
+  category operating.revenue.base_rent
+  amount = 1000
+  active in state leased
+}
+
+waterfall windowed on entity asset.suite {
+  schedule on 2026-12
+  from series_sum("cre.*", 0, time.t)
+  pay preferred to party.investor = 8000.0
+  pay promote   to party.sponsor  = remaining * 0.20
+  pay residual  to party.investor = remaining
+}
+
+waterfall accounted on entity asset.suite {
+  schedule on 2026-12
+  from collection
+  pay preferred to party.investor = 8000.0
+  pay promote   to party.sponsor  = remaining * 0.20
+  pay residual  to party.investor = remaining
+}

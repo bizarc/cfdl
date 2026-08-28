@@ -18,8 +18,10 @@ use std::sync::Arc;
 //                  period's candidates, events overwrite, the column settles;
 //                  `prev` reads what settled (one value per path)
 //   streams        stage 3 — activity, in two phases
-//   distributions  stage 4 — waterfalls, allocating `available`
-//   results        stage 5 — netting, rollups, metrics, statements
+//   distributions  the waterfall stage. Under the walk it runs INSIDE each
+//                  period, after that period's streams (`docs/28` §3 stage 3);
+//                  under the column order it stays a post-pass over all time
+//   results        last — netting, rollups, metrics, statements
 //   stochastic     sampling, shared by scenario and Monte Carlo runs
 //
 // `run_deterministic` below is the orchestrator and the only place the order
@@ -530,7 +532,7 @@ fn compute_results(ir: &Ir, model_hash: String, config: RunConfig) -> Result<Res
     };
 
     Ok(Results {
-        results_version: "0.3".to_string(),
+        results_version: "0.4".to_string(),
         model_hash,
         ledger_hash,
         engine: EngineInfo {
@@ -865,6 +867,7 @@ fn walk_periods(
         //    the store holds exactly that, because periods `0..t` are done and
         //    period `t` has not started.
         walk.observe_cash(Arc::new(full.clone()));
+        walk.observe_accounts(Arc::new(account_balances.clone()));
 
         // 1. STATE SETTLES. Fields take this period's candidates and events
         //    overwrite them — now able to test cash that has already arrived.
@@ -1972,6 +1975,14 @@ fn run_deterministic(
         for name in scenario.parameter_overrides.keys() {
             declared.insert(name.clone());
         }
+    }
+    // `prev.<account>` is DECLARED by the account statement and UNBOUND in
+    // exactly one place: period 0, where the previous period does not exist.
+    // Before the model began is not zero, it is unavailable — the read warns
+    // and substitutes there, the same condition as an input declared only as
+    // a distribution, and only a name nothing declares is fatal.
+    for account in &ir.accounts {
+        declared.insert(format!("prev.{}", account.name));
     }
     let unresolved = unresolved_names(&warnings, &declared);
     if !unresolved.is_empty() {
