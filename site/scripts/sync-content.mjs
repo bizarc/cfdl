@@ -1121,7 +1121,8 @@ const stagedMachineDocs = {
   "llms-full.txt": "public/llms-full.txt",
   "cfdl-machine-docs.md": "public/machine/cfdl-machine-docs.md",
   "diagnostics-repairs.md": "public/machine/diagnostics-repairs.md",
-  "valid-examples.md": "public/machine/valid-examples.md"
+  "valid-examples.md": "public/machine/valid-examples.md",
+  "exemplars.md": "public/machine/exemplars.md"
 };
 for (const [sourceName, sitePath] of Object.entries(stagedMachineDocs)) {
   const src = path.resolve(repoRoot, "docs", "machine", sourceName);
