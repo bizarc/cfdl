@@ -1,0 +1,26 @@
+# The agent toolkit (docs/32 Phase 1): an MCP server over the same library
+# entry points the CLI and HTTP server use, speaking stdio JSON-RPC.
+[package]
+name = "cfdl-mcp"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+homepage.workspace = true
+
+[[bin]]
+name = "cfdl-mcp"
+path = "src/main.rs"
+
+[dependencies]
+anyhow.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+toml.workspace = true
+tokio.workspace = true
+schemars = "1"
+rmcp = { version = "3", features = ["server", "transport-io", "macros"] }
+cfdl-compile = { path = "../cfdl-compile", features = ["embedded-packs"] }
+cfdl-engine = { path = "../cfdl-engine" }
+cfdl-run = { path = "../cfdl-run" }
+cfdl-pack = { path = "../cfdl-pack", features = ["embedded-packs"] }

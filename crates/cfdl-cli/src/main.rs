@@ -270,44 +270,16 @@ fn main() -> Result<()> {
                 }
             };
             if let Some(pack_name) = &pack {
-                let specs = registry
-                    .as_ref()
-                    .map(|reg| reg.metric_specs(pack_name))
-                    .unwrap_or_default();
-                results.domain_metrics = cfdl_metrics::compute(pack_name, &specs, &results);
-
-                // Statements read a stream's CATEGORY, which the engine does
-                // not republish — it is on the IR the run came from. Reading it
-                // back here keeps the results document from carrying a field
-                // only one consumer wants.
-                let subtotal_specs = registry
-                    .as_ref()
-                    .map(|reg| reg.subtotal_specs(pack_name))
-                    .unwrap_or_default();
-                let statement_specs = registry
-                    .as_ref()
-                    .map(|reg| reg.statement_specs(pack_name))
-                    .unwrap_or_default();
-                // Parsed once: the statement needs both what each stream is
-                // and which series are waterfall steps rather than cash.
-                let ir_value = std::fs::read_to_string(&ir_json_path)
-                    .ok()
-                    .and_then(|raw| serde_json::from_str::<serde_json::Value>(&raw).ok());
-                let categories = ir_value
-                    .as_ref()
-                    .map(cfdl_statement::stream_categories)
-                    .unwrap_or_default();
-                let waterfall_series = ir_value
-                    .as_ref()
-                    .map(cfdl_statement::waterfall_series)
-                    .unwrap_or_default();
-                results.statements = cfdl_statement::compute(
+                // Enrichment (domain metrics, statements) is the shared
+                // cfdl-run facade. Statements read the IR back because a
+                // stream's CATEGORY lives there, not in results; an unreadable
+                // IR skips statements and keeps metrics, as before.
+                let raw_ir = std::fs::read_to_string(&ir_json_path).ok();
+                cfdl_run::enrich_results(
+                    &mut results,
+                    raw_ir.as_deref(),
                     pack_name,
-                    &statement_specs,
-                    &subtotal_specs,
-                    &categories,
-                    &waterfall_series,
-                    &results,
+                    registry.as_ref(),
                 );
             }
             let json = match serde_json::to_string_pretty(&results) {

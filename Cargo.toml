@@ -12,10 +12,12 @@ members = [
   "crates/cfdl-engine",
   "crates/cfdl-metrics",
   "crates/cfdl-statement",
+  "crates/cfdl-run",
   "crates/cfdl-cli",
   "crates/cfdl-py",
   "crates/cfdl-lsp",
   "crates/cfdl-server",
+  "crates/cfdl-mcp",
   "crates/cfdl-wasm",
 ]
 

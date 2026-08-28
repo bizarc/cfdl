@@ -8,6 +8,21 @@ This project follows Semantic Versioning: https://semver.org/
 
 ## [Unreleased]
 
+### Added: cfdl-mcp — the agent toolkit (docs/32 Phase 1)
+
+A new `cfdl-mcp` crate serves the authoring loop over MCP stdio: `compile`,
+`run`, `diff`, `explain`, `lookup`, and `skeleton`, every result a typed
+schema-carrying structure. `diff` is a Rust port of the benchmark runner's
+comparison discipline (same column resolution, absolute tolerances, and null
+semantics); `lookup` answers from the embedded terminology register and
+re-derives pack contract coverage by scanning benchmark declarations;
+`skeleton` compiles its own output before returning it. Post-engine
+enrichment (domain metrics, statements) moved into a shared `cfdl-run`
+facade, so the CLI, HTTP server, and MCP server call one function and cannot
+drift. The Phase-1 gate is `crates/cfdl-mcp/tests/self_test.rs`: the tool
+loop rebuilds `benchmarks/cre/office_two_tenant` and matches its
+expectations, and localizes a seeded divergence.
+
 ### Added: M1 — the period walk, shipped end to end
 
 `docs/28` restated from proposed to shipped; `docs/29` is the phase record.

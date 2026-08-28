@@ -199,48 +199,13 @@ async fn run(Json(req): Json<RunRequest>) -> Response {
     }
 
     // The engine is synchronous and CPU-bound; run it off the async runtime.
+    // Enrichment (domain metrics, statements) is the shared cfdl-run facade.
     let pack = req.pack.clone();
     let join = tokio::task::spawn_blocking(move || {
-        let mut results = cfdl_engine::run_from_json_str(&ir_json, config)?;
-        if let Some(pack_name) = pack {
-            let registry = cfdl_pack::PackRegistry::load_embedded().ok();
-            let specs = registry
-                .as_ref()
-                .map(|reg| reg.metric_specs(&pack_name))
-                .unwrap_or_default();
-            results.domain_metrics = cfdl_metrics::compute(&pack_name, &specs, &results);
-            // Statements read a stream's CATEGORY, which lives on the IR rather
-            // than in results. Parsing it back here keeps the results document from
-            // carrying a field only this consumer wants.
-            let subtotal_specs = registry
-                .as_ref()
-                .map(|reg| reg.subtotal_specs(&pack_name))
-                .unwrap_or_default();
-            let statement_specs = registry
-                .as_ref()
-                .map(|reg| reg.statement_specs(&pack_name))
-                .unwrap_or_default();
-            // Parsed once: the statement needs both what each stream is and
-            // which series are waterfall steps rather than cash.
-            let ir_value = serde_json::from_str::<serde_json::Value>(&ir_json).ok();
-            let categories = ir_value
-                .as_ref()
-                .map(cfdl_statement::stream_categories)
-                .unwrap_or_default();
-            let waterfall_series = ir_value
-                .as_ref()
-                .map(cfdl_statement::waterfall_series)
-                .unwrap_or_default();
-            results.statements = cfdl_statement::compute(
-                &pack_name,
-                &statement_specs,
-                &subtotal_specs,
-                &categories,
-                &waterfall_series,
-                &results,
-            );
-        }
-        Ok::<_, cfdl_engine::EngineError>(results)
+        let registry = pack
+            .as_ref()
+            .and_then(|_| cfdl_pack::PackRegistry::load_embedded().ok());
+        cfdl_run::run_enriched(&ir_json, config, pack.as_deref(), registry.as_ref())
     })
     .await;
 
