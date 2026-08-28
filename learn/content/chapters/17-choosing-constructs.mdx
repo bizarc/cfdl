@@ -1,12 +1,12 @@
 ---
-title: "Stream, contract, field, event, option, or waterfall?"
+title: "Choosing the construct"
 description: "The construct-choice framework: one question that sorts every claim, the paired examples that calibrate it, and the smells that say a claim is in the wrong construct."
 part: 3
 order: 17
 track: core
 ---
 
-Part II gave you six ways to say things. Every working session now begins with the same silent decision: *which one is this claim?* Most modeling reviews that go badly go badly here — not on wrong numbers but on wrong *constructs*, economics that are technically computed and structurally illegible. This chapter makes the decision explicit: one sorting question, calibration through pairs, and the smells that tell you a claim has been poured into the wrong shape.
+Part II gave you eight ways to say things. Every working session now begins with the same silent decision: *which one is this claim?* Most modeling reviews that go badly go badly here — not on wrong numbers but on wrong *constructs*, economics that are technically computed and structurally illegible. This chapter makes the decision explicit: one sorting question, calibration through pairs, and the smells that tell you a claim has been poured into the wrong shape.
 
 ## One question: what kind of claim is it?
 
@@ -14,7 +14,9 @@ Ask what the sentence you would say aloud *is about*, and the construct follows:
 
 - *"Cash moves on this pattern."* → a **stream**. The atom; when nothing below applies, this is the answer.
 - *"This quantity persists and evolves."* → a **field** — a fact or rule on the entity that owns it. Not cash: memory.
-- *"At some point, the regime changes."* → an **event**. Once, at a condition — and streams state which regime they belong to.
+- *"Cash accumulates here until the rules move it."* → an **account**. Not a quantity *about* the deal but a location *in* it; a field remembers, an account holds.
+- *"At some point, the regime changes — once."* → an **event**. A turning point, latched.
+- *"The regime changes and can change back."* → a **lifecycle**. Declared states, guarded edges, no latch — the breach that cures is topology, not a re-firing trigger.
 - *"Someone holds a right they may use."* → an **option**. The right's terms, apart from the prediction of its use.
 - *"A pot is divided by priority."* → a **waterfall**. Contested cash, document order.
 - *"This is a standard deal in a domain."* → a **contract** (next chapter): a pack's named economics, stated by its terms.
@@ -48,7 +50,9 @@ For review checklists — yours and your team's:
 3. **History re-derived in an amount.** `base - rate * time.t`, `pow` on something that rounds or resets: a recurrence flattened into a formula.
 4. **A field with a bailiff.** Balance field + paydown stream + implicit ordering against other claims: a waterfall built by hand.
 5. **Mirror streams.** Two streams that must always negate each other — one transfer written as two claims; usually one stream (or one waterfall step) attached to the right entities.
-6. **An expression that stops reading aloud.** The chapter-5 limit, which is really this chapter's question arriving early: three claims in a trench coat want three constructs.
+6. **A cumulative window doing an account's job.** `series_sum("x.*", 0, time.t)` as a waterfall's pot, or a field accumulating cash a step then "pays down" — the accumulated-cash claim has its own construct, with a journaled balance the hand-rolled sum never gets.
+7. **A pair of events fighting over one field.** A set-and-unset pair, or a condition and its negation on the same status — a regime that returns, wearing two latches; it is one lifecycle with two edges.
+8. **An expression that stops reading aloud.** The chapter-5 limit, which is really this chapter's question arriving early: three claims in a trench coat want three constructs.
 
 None of these is a compile error, and that is the point of Part III: the compiler guarantees the model computes what it says; only judgment guarantees it *says what the deal means*.
 
@@ -67,4 +71,4 @@ None of these is a compile error, and that is the point of Part III: the compile
 Then, on your own:
 
 1. Return to the chapter-10 exercise and write its if-ladder twin: one stream, `if(time.t < 12, 9500, 6200)`, same totals. Now add a second consequence of the refinance — a 1% exit fee on the bridge, one time, at the switch. Implement it in both versions and notice how many places each required you to restate the trigger.
-2. Audit any Part II model of your own against the six smells. The most instructive finding is usually smell 3 — a formula you wrote fluently that is quietly a recurrence.
+2. Audit any Part II model of your own against the eight smells. The most instructive finding is usually smell 3 — a formula you wrote fluently that is quietly a recurrence.
