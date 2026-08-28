@@ -74,6 +74,36 @@ curve <name> <step|linear> { <date>: <value>  ... }
 
 Read as `inputs.<name>` and `curve_value("<name>", <date>)`. Deterministic runs use central values: Normal → mean, LogNormal → exp(mu + sigma²/2), Uniform → midpoint, Triangular → (min + mode + max) / 3 — *not* the mode. Curves clamp outside their stated range.
 
+## Lifecycles and accounts
+
+```text
+lifecycle <name> {                               -- a finite state machine
+  initial <state>
+  state <a>, <b>, <c>
+  <from> -> <to> [when <boolean expr>]           -- guard: checked each period
+}                                                --   in <from>; no latch
+account <name> {                                 -- cash that accumulates
+  [owner <family>.<name>]                        -- a party owns at most one
+  [from <expr>]                                  -- per-period inflow; no floor
+}
+```
+
+An entity binds a machine with `lifecycle <name>` in its block (or from its
+pack type — never both). Edges are declared only as used; a guard-less edge
+is a permission an event's write may take. Declaration order resolves
+simultaneous guards; one transition per entity per period; a self-edge
+re-anchors. Logic reads series strictly backward — windows end at
+`time.t - 1` — and reads a balance as `prev.<account>`; both are unavailable
+(not zero) at period 0. A waterfall draws an account with `from <account>`
+and a step credits one with `pay <step> to account <name> = <expr>`. The
+balance publishes as the non-cash series `account.<name>`. The third
+schedule anchor: `every <interval> from state_enter(<ref>, <state>) for <n>
+periods` — a window per entry, re-anchored on re-entry.
+
+A stream `amount` whose window reaches forward is a **priced amount** — a
+valuation setting a causal amount, evaluated after the causal cells settle;
+logic reading what it sets is a refused cycle, with the path named.
+
 ## Contracts, events, options, waterfalls
 
 ```text
@@ -83,6 +113,8 @@ contract <pack>.<type>[.<suffix>] [on entity <ref>] {
 }
 
 event <a>.<b> when <boolean expr> {          -- fires ONCE, first true period
+                                             -- a returning regime is a
+                                             --   lifecycle edge, not an event
   set entity <family>.<name>.<field> = <value>
   activate stream <name> | deactivate stream <name>
   exercise option <name>

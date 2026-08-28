@@ -1,0 +1,39 @@
+version 0.1
+model "the-trap"
+time calendar monthly from 2026-01 for 12
+
+// A collections shortfall should trap the residual until collections
+// resume. The machine and the trap account are declared; the waterfall
+// still pays everything straight through. Your job:
+//
+// 1. Add a `trapped` step ABOVE the residual that diverts `remaining`
+//    into the trap account while the machine is in `trapped`.
+// 2. Add a `release` waterfall drawing `from trap` that pays the
+//    accumulated balance to the sponsor once the machine is `normal`.
+
+lifecycle trigger {
+  initial normal
+  state normal, trapped
+  normal -> trapped when series_sum("ops.rent", time.t - 1, time.t - 1) < 50
+  trapped -> normal when series_sum("ops.rent", time.t - 1, time.t - 1) >= 50
+}
+
+entity asset suite {
+  lifecycle trigger
+  paying init 1.0 next if(time.t == 3, 0.0, 1.0)
+}
+
+entity party sponsor { name = "Sponsor" }
+
+account trap { }
+
+stream ops.rent on entity asset.suite inflow currency USD {
+  schedule every month from 2026-01 to 2026-12
+  amount = 100 * asset.suite.paying
+}
+
+waterfall dist on entity asset.suite {
+  schedule every month from 2026-01 to 2026-12
+  from available
+  pay residual to party.sponsor = remaining
+}
