@@ -19,7 +19,13 @@ serde_json.workspace = true
 toml.workspace = true
 tokio.workspace = true
 schemars = "1"
-rmcp = { version = "3", features = ["server", "transport-io", "macros"] }
+rmcp = { version = "3", features = [
+  "server",
+  "transport-io",
+  "transport-streamable-http-server",
+  "macros",
+] }
+axum = "0.7"
 cfdl-compile = { path = "../cfdl-compile", features = ["embedded-packs"] }
 cfdl-engine = { path = "../cfdl-engine" }
 cfdl-run = { path = "../cfdl-run" }
