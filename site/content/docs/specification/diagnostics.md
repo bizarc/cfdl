@@ -228,6 +228,9 @@ Fields that move:
   of this waterfall or of a later one. Steps publish when their waterfall
   finishes, so the read would aggregate to zero and say nothing. An EARLIER
   waterfall is the documented composition and still compiles.
+- `E1347_UNRESOLVED_ACCOUNT_REF` — a step allocates `to account <name>` and no
+  such account is declared. An account is not an entity and resolves in its own
+  namespace, which is what the `account` keyword in the step says.
 - `E1343_WATERFALL_DUPLICATE_STEP` — two steps in one waterfall share a name,
   which would make `paid.<step>` ambiguous.
 - `E1344_WATERFALL_NO_REMAINDER` — a waterfall never says where the remainder
