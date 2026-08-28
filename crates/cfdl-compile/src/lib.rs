@@ -1349,7 +1349,7 @@ fn resolve_machines(
                     edges: lifecycle
                         .transitions
                         .iter()
-                        .map(|t| (t.from.clone(), t.to.clone(), None))
+                        .map(|t| (t.from.clone(), t.to.clone(), t.guard.clone()))
                         .collect(),
                 });
             by_entity.insert(entity.symbol(), lifecycle.lifecycle_id.clone());
@@ -1453,6 +1453,49 @@ fn check_state_guards(
     let (machines, machines_by_entity) = resolve_machines(resolve_output, ontology);
 
     let mut diagnostics: Vec<Diagnostic> = Vec::new();
+    // A MACHINE GUARD IS LOGIC wherever it was declared: it reads series
+    // strictly backward (`docs/28` §4). Model-side guards are checked by the
+    // validator against source; a PACK's guards arrive here, so the same
+    // rule is applied to every bound machine's edges — one rule, two
+    // declaration sites.
+    let model_declared: std::collections::BTreeSet<String> = resolve_output
+        .source_statements
+        .iter()
+        .filter_map(|s| match &s.statement {
+            Stmt::Lifecycle(lc) => Some(lc.name.clone()),
+            _ => None,
+        })
+        .collect();
+    for machine in machines.values() {
+        // Model-side guards are the validator's, with source spans; only a
+        // PACK's guards are first seen here.
+        if model_declared.contains(&machine.id) {
+            continue;
+        }
+        for (from, to, guard) in &machine.edges {
+            let Some(guard) = guard else { continue };
+            let forward = cfdl_expr::series_windows(guard).iter().any(|w| {
+                !(cfdl_expr::window_bound_is_strictly_backward(&w.from_src)
+                    && cfdl_expr::window_bound_is_strictly_backward(&w.to_src))
+            });
+            if forward {
+                diagnostics.push(Diagnostic {
+                    code: "E1134_SERIES_READ_IN_LOGIC".to_string(),
+                    severity: "error".to_string(),
+                    message: format!(
+                        "Lifecycle '{}' edge '{from} -> {to}' guard reads a series window that can reach the current period or beyond. Logic reads settled history: at or before the previous period.",
+                        machine.id
+                    ),
+                    file: None,
+                    span: None,
+                    path: None,
+                    hint: Some("Write the window against time.t - 1 or earlier.".to_string()),
+                    notes: vec![],
+                });
+            }
+        }
+    }
+
     // A state_enter anchor names an entity with a machine and a state that
     // machine declares — the same finite-set discipline every other state
     // reference has (`docs/28` §6.2).

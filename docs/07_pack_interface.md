@@ -196,6 +196,33 @@ Type registry semantics:
 - Packs MAY extend fields.
 - Packs MAY provide documentation strings and examples.
 
+**Lifecycles.** A type MAY declare a lifecycle — the same finite state
+machine a model declares with a `lifecycle` block (`docs/28` §6.1): the core
+has the full functionality, and a pack tailors it to its domain. In
+`types.toml`:
+
+```toml
+[[lifecycles]]
+lifecycle_id = "cre.unit"
+initial = "vacant"
+states = ["vacant", "leased", "downtime"]
+
+[[lifecycles.transitions]]
+from = "leased"
+to = "downtime"
+guard = 'series_sum("cre.rent", time.t - 1, time.t - 1) < 50'
+```
+
+- A transition without `guard` is a **permission**: an event's write may
+  take it, and the machine never fires it on its own. Every edge shipped
+  before guards existed is this kind, so no pack changed meaning.
+- A `guard` makes the edge self-driving, evaluated each period an entity of
+  the type is in `from` — reading series strictly backward, the same rule a
+  model-declared edge's `when` follows, checked at compile.
+- A lifecycle that declares no transitions at all is unconstrained.
+- An entity whose type declares a lifecycle MUST NOT also bind a
+  model-declared one (`E1350`): one machine per entity.
+
 ### 6.2 Alias registry
 Aliases map domain-friendly names to canonical TypeIds or contract templates.
 

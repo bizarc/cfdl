@@ -385,6 +385,13 @@ pub struct OntologyTransition {
     pub to: String,
     #[serde(default)]
     pub description: Option<String>,
+    /// `guard = "<expr>"` — evaluated each period an entity of this type is
+    /// in `from`, exactly as a model-declared edge's `when` is (`docs/28`
+    /// §6.1): the core has the full functionality, and a pack tailors it. A
+    /// guard-less edge stays a permission an event's write may take, which
+    /// every shipped pack edge is.
+    #[serde(default)]
+    pub guard: Option<String>,
 }
 
 /// A market observable. Declared in the model today; the shape admits an
@@ -3134,5 +3141,45 @@ mod ontology_embedded_parity {
             );
             assert_eq!(disk, emb, "{name}: embedded and on-disk ontologies differ");
         }
+    }
+}
+
+#[cfg(test)]
+mod lifecycle_guard_tests {
+    use super::*;
+
+    /// A pack edge may carry a guard — the same machine a model declares,
+    /// tailored to the domain (`docs/28` §6.1). Guard-less edges stay
+    /// permissions, which every shipped pack edge is.
+    #[test]
+    fn a_pack_transition_carries_its_guard() {
+        let toml = r#"
+[[lifecycles]]
+lifecycle_id = "t.unit"
+initial = "leased"
+states = ["leased", "delinquent"]
+
+[[lifecycles.transitions]]
+from = "leased"
+to = "delinquent"
+guard = "series_sum(\"t.rent\", time.t - 1, time.t - 1) < 50"
+
+[[lifecycles.transitions]]
+from = "delinquent"
+to = "leased"
+"#;
+        #[derive(serde::Deserialize)]
+        struct Doc {
+            lifecycles: Vec<OntologyLifecycle>,
+        }
+        let doc: Doc = toml::from_str(toml).expect("guarded lifecycle parses");
+        let lc = &doc.lifecycles[0];
+        assert_eq!(lc.transitions.len(), 2);
+        assert!(lc.transitions[0]
+            .guard
+            .as_deref()
+            .unwrap()
+            .contains("series_sum"));
+        assert!(lc.transitions[1].guard.is_none());
     }
 }

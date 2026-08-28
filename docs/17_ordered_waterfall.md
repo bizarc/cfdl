@@ -694,3 +694,31 @@ and for the same reason.
 
 Nothing from the reference. The six structures between them use one step form,
 three bindings and the composition rule.
+
+## 13. The account — the pot, grown up
+
+Shipped with the period walk (`docs/28` §5.1). The "pot" of the sections
+above was always this period's cash by another name; what accumulates ACROSS
+periods is now a declared construct, and the word "pot" retires with nothing
+left to denote.
+
+- `account <name> { owner <party>  from <expr> }` — a declared cash location
+  with a balance under the law
+  `balance(t) = balance(t-1) + inflow(t) + allocated_in(t) - allocated_out(t)`.
+- `from <account>` hands a waterfall the accumulated balance in place of a
+  hand-written cumulative window; residue after the last step stays for the
+  next scheduled date. `from available` is unchanged, and every waterfall in
+  this document runs untouched.
+- `pay <step> to account <name>` allocates into an account — the reserve
+  pattern as one step form — and `pay <step> to <party>` lands in that
+  party's account when they own one.
+- The balance publishes as a non-cash series (`account.<name>`), the flow
+  stays the step's series, and every movement journals with the balance
+  before and after.
+
+Under the walk the stage runs INSIDE each period, after that period's
+streams and never interleaved with them; the schedule stays sovereign, so
+"when a waterfall runs" (§10) is unchanged — an unscheduled period just
+accumulates. §4's "after the period's fields and streams are known" now
+means after THAT period's, not after all time.
+

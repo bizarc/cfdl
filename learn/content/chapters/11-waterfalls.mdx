@@ -44,6 +44,8 @@ A waterfall has three parts. It has a **schedule**, because it distributes on da
 
 The engine applies one rule at every step: the step receives `min(max(0, owed), remaining)`. That single rule is the construct's guarantee — **the pot cannot go negative, and no step can be paid more than what survives the steps above it** — however any individual step is written. The seniority logic that a spreadsheet re-implements per cell, correctly or not, is here the meaning of the construct itself, proved once in the engine rather than per model. What is left after a step is `remaining`, and a final `= remaining` step sweeps the residual — the equity's position in one word.
 
+And when cash should *accumulate* between distribution dates rather than pay out each period, the language gives the accumulation its own object: the **account**. `account reserve { }` declares a cash location whose balance carries across periods; a step pays into it (`pay top_up to account reserve = ...`), a waterfall draws from it (`from reserve` in place of a hand-written cumulative window), and logic reads its settled balance as `prev.reserve`. `available` keeps meaning this period's netted cash — a monthly-distributing waterfall is untouched — while an at-exit waterfall distributes what its account has built. Fund to target, top up when short, release when over: the reserve pattern is one step form and one account.
+
 Each step publishes as a series under the waterfall's name, so results show the full allocation grid: who was owed what, who received what, period by period.
 
 ## owed and paid: shortfalls made visible

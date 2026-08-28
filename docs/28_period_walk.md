@@ -1,8 +1,10 @@
 # 28 — The Period Walk
 
-Status: proposed. This is the specification for milestone M1 of the v1.0
-roadmap: the engine's evaluation order. Nothing here is built. The pre-work
-that must land first is in §10.
+Status: **shipped**. This is the specification for milestone M1 of the v1.0
+roadmap: the engine's evaluation order. Everything here is built —
+`docs/29` is the phase-by-phase implementation record, and §9's gates are
+fixtures and benchmarks in the suite. §10 records what M1 deliberately is
+not.
 
 ---
 
@@ -290,8 +292,8 @@ longer applies; re-entry re-arms it. A covenant that breaches and cures, a
 plant that curtails and restarts, and a unit that goes delinquent and
 current again are the machine's topology walked as many times as the deal's
 history walks it — today they must be bare fields, unchecked and absent from
-the transition record (`docs/13` §7.36). The walk makes the checked form
-buildable, and this milestone builds it.
+the transition record (`docs/13` §7.36). The walk made the checked form
+buildable, and this milestone built it.
 
 The free-standing `event <name> when <expr>` keeps its shipped, latched
 meaning untouched, per §5.2's rule: for a pure side-effect event — no state
@@ -458,14 +460,14 @@ trial — and uncoupled subgraphs still evaluate as columns. A ten-year grid
 with a two-year deal window walks past inert cells at the cost of the
 schedule lookup, not the cost of evaluation.
 
-## 10. Pre-work, and what M1 is not
+## 10. What M1 is, and is not
 
-Before the walk is touched, two gates from the roadmap: **loud failure for
-unbindable series reads** — the three inert spellings of §7.71 become
-compile-time refusals, so a reordering defect cannot hide behind a substituted
-zero and a warning nobody reads — and **a Rust-side guard for the engine**, so
-the collapse property is checkable on every commit rather than from a shell
-script: `golden_corpus.rs` runs the whole blessed corpus in `cargo test`.
+The pre-work landed first, as the roadmap gated: **loud failure for
+unbindable series reads** — the three inert spellings of §7.71 became
+compile-time refusals, so a reordering defect cannot hide behind a
+substituted zero and a warning nobody reads — and **a Rust-side guard for
+the engine**: `golden_corpus.rs` runs the whole blessed corpus in
+`cargo test`, so the collapse property is checked on every commit.
 
 M1 is the walk, the read rules, the two migrations, the declared state
 machine with its transition anchor (§6), the account construct (§5), and

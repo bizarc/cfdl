@@ -283,6 +283,57 @@ Rules:
 - Every write is published in `deterministic.transitions`, so a transition is
   observable and assertable rather than inferred from the cash.
 
+### 7.3 The lifecycle machine
+
+A lifecycle is a finite state machine, and the machine is a **core-language
+construct**: a model declares one with no pack at all, and a pack declares
+the same machine for its domain types in `types.toml` — the core has the
+full functionality, and packs tailor it to domains.
+
+```cfdl
+lifecycle unit {
+  initial vacant
+  state vacant, leased, downtime
+
+  vacant   -> leased    when time.t >= 1
+  leased   -> leased    when time.t == 6
+  leased   -> downtime  when series_sum("core.rent", time.t - 1, time.t - 1) < 50
+  downtime -> leased
+}
+```
+
+An entity binds a model-declared machine by name — `lifecycle unit` in its
+block — and an entity whose ontology type declares a lifecycle needs no
+binding (declaring both is an error: one machine per entity). `lifecycle`
+and `initial` are contextual identifiers, not reserved words.
+
+Rules:
+- **States are enumerated ahead of time; edges are not.** The finite set is
+  what makes the machine checkable — a misspelled state in an edge is a
+  compile error naming the declared set, not a phantom state. Declaring an
+  edge is what brings it into existence; an undeclared edge does not exist,
+  and absence is the prohibition. A partial machine is a complete machine.
+- **Guards live on edges** and are evaluated each period the entity is in
+  the edge's from-state — and only then. A guard reads state as the period
+  opened and series strictly backward (at or before the previous period). A
+  time condition is the same construct with a `time` guard.
+- **There is no latch.** Edge availability is the memory: taking an edge
+  moves the machine and disarms it, and re-entry re-arms it. A covenant
+  that breaches and cures is the topology walked twice.
+- **A well-formed machine resolves.** A self-edge (`leased -> leased`) is a
+  real transition — it journals and re-anchors a state-anchored schedule
+  (§11.7). No guard true means the entity holds. When two guards hold in
+  one period, declaration order picks, and at most one transition per
+  entity per period is taken.
+- **A guard-less edge is a permission only**: an event's write may take it,
+  and the machine never fires it on its own. An event's `set … status` is
+  validated against the declared relation — refused with the edge named
+  where no edge permits the move — and a machine that declares no edges at
+  all stays unconstrained, which is what every shipped pack machine was.
+- **Every transition is journaled** with the edge taken and the values its
+  guard read, and published in `deterministic.transitions` as
+  `lifecycle:<id>`.
+
 ---
 
 ## 8. Contracts (Behavior container)
@@ -442,6 +493,31 @@ If omitted, streams are active for all scheduled occurrences.
 - Streams MUST define an `amount` expression.
 - Amount expressions MUST evaluate to `Money` or `Decimal` depending on slot; in v0.1, `amount` MUST evaluate to `Money` (or a `Decimal` that is implicitly converted to Money using the stream currency).
 
+### 9.5 Priced amounts (the valuation exception)
+
+An `amount` whose series window reaches the current period or beyond is a
+**priced amount**: a valuation setting a causal amount. The forward-income
+exit is the canonical case — the sale is a causal event, the receipt is
+causal cash, and only the amount is a valuation, forward income against a
+cap rate:
+
+```cfdl
+stream cre.exit on entity asset.project inflow currency USD {
+  schedule on 2037-06 end
+  category investing.reversion
+  amount = series_sum("cre.noi", time.t + 1, time.t + 12) / inputs.cap_rate
+}
+```
+
+- A priced amount is evaluated after every causal cell settles; streams that
+  read it are priced with it, and a waterfall distributing at the sale
+  period allocates proceeds that exist.
+- **The graph must stay acyclic**: logic reading what a priced amount sets —
+  sale proceeds feeding state that feeds what is being capitalized — is
+  refused with the path named, like any other cycle.
+- A forward window in a GUARD is not priced. Whether a stream is active is a
+  causal fact, and a fact cannot be read from the future.
+
 ---
 
 ## 10. Waterfalls (ordered allocation)
@@ -504,6 +580,11 @@ A waterfall runs **after** the period's fields and streams are evaluated, so it
 allocates cash that already exists. A waterfall MUST NOT feed a stream in the
 same period.
 
+The schedule stays sovereign: a waterfall distributes only at the periods its
+schedule names. On every other period its cash accumulates — with the entity,
+or in a declared account (§10.6) — and a quarterly or at-exit waterfall
+distributes the accumulated position when its date arrives.
+
 ### 10.5 Output and composition
 Each step publishes as a series named `stream.<waterfall>.<step>`, and its cash
 counts toward the payee's total. A waterfall is not a separate kind of output:
@@ -514,6 +595,60 @@ waterfall **declared before it** — a fund's carry becoming a management
 company's pot, and that company's own share becoming a third waterfall's.
 Composition follows declaration order, the same rule steps follow within a
 waterfall.
+
+### 10.6 The account
+
+Carried cash gets the industry's own object: a declared cash location whose
+balance accumulates across periods — a collection account, a reserve, a
+participant's distribution account.
+
+```cfdl
+account reserve {
+  owner party.sponsor
+  from series_sum("ops.net", time.t, time.t)
+}
+```
+
+- `owner` is optional: a general account belongs to the structure, and a
+  party-owned account holds what has been **allocated** to that party. A
+  party owns at most one account. A party-owned balance is not an
+  obligation — what is still owed under the rules is not in any account, it
+  is simply not yet allocated.
+- `from` is the per-period inflow, reading cash that has settled this
+  period. It MAY be negative, and **the balance has no floor**: an account
+  fed a deal's whole net cash IS the deal's cumulative position, negative
+  through the J-curve and positive after.
+- There is no currency clause: an account is denominated by the model.
+
+The balance law, applied at each period:
+
+```
+balance(t) = balance(t-1) + inflow(t) + allocated_in(t) - allocated_out(t)
+```
+
+Three uses:
+- **A waterfall draws from an account** — `from <account>` in place of a
+  hand-written cumulative window. The pot is the accumulated balance,
+  floored at zero (cash that is not there cannot be allocated); what its
+  steps take leaves the balance, and residue stays for the next scheduled
+  date.
+- **A step pays to an account** — `pay <step> to account <name> = <expr>`,
+  the reserve pattern's mechanism (fund to target, top up when short,
+  release when over). `pay <step> to <party>` lands in that party's account
+  when they own one, and behaves exactly as before when they do not.
+- **Logic reads a balance** — `prev.<account>` is settled state, strictly
+  backward: the balance at the previous period, every allocation through it
+  included. At period 0 there is no binding: before the model began is not
+  zero, it is unavailable.
+
+A step's series is the FLOW and the account's balance is the POSITION. The
+balance publishes as a non-cash series under `account.<name>`, never enters
+cash totals, and every movement — inflow, allocation in, allocation out —
+is journaled with the balance before and after.
+
+`available` is unchanged and still means this period's netted cash; an
+account is the ACCUMULATED cash. The two answer different questions, and a
+monthly-distributing waterfall keeps using `available` untouched.
 
 ---
 
@@ -665,6 +800,34 @@ sub-period occurrence layer so a model could compute finer than its grid. It was
 Recommended v0.1 rule (normative):
 - If timeline is monthly/quarterly/annual, schedule occurrences are represented at that period’s end-date unless the schedule specifies otherwise.
 
+### 11.4 State-anchored windows
+
+The third anchor, beside dates and phases: a state entry.
+
+```cfdl
+schedule every month from state_enter(asset.site, building) for 18 periods
+```
+
+Each ENTRY of the entity into the state opens its own window of `n` grid
+periods, resolved during the walk — the entry period is settled state by
+the time any stream reads it. This is what "18 months of construction from
+whenever construction starts" needs: the machine enters the state whenever
+its edge fires, the schedule hangs off the entry, and the activity window
+carves itself out of the grid.
+
+- **A re-entered state re-anchors**: each entry starts its own window — a
+  second delinquency's cure period, a renewal restarting its term. A
+  self-edge is an entry.
+- Within a window the schedule behaves exactly as
+  `every <interval> from <entry> to <window end>`: intervals, placement,
+  day rules and payment terms mean what they mean everywhere else.
+- The anchor's entity must have a machine and the state must be declared —
+  the same finite-set discipline every other state reference has.
+  `state_enter` and `periods` are contextual identifiers.
+- Truly linear time keeps its constructs: calendar-fixed eras are phases,
+  condition-driven regimes are machine states, and this anchor belongs to
+  the second.
+
 ---
 
 ## 12. Assumptions (deterministic and stochastic)
@@ -791,6 +954,14 @@ Rules:
   there is no repeating or level-triggered form. ("Evaluated discretely at each
   time step" describes when the condition is TESTED, not how often the event may
   fire — a distinction this spec previously left to be discovered.)
+- **The machine does not latch — and needs no policy saying so.** A
+  condition that holds and clears and holds again is a lifecycle edge
+  (§7.3), where edge availability is the memory. The free-standing event
+  keeps its latched meaning; a regime that returns is the machine's job.
+- **A status write is validated against the machine.** `set … status` on an
+  entity whose lifecycle declares edges is refused — with the edge named —
+  where no declared edge permits the move; the refusal is journaled as
+  `declined`, and an edge-less machine stays unconstrained.
 - **Declaration order decides which event fires first** within a period, and
   which write wins when two events set the same field.
 - **A guard reads the state as the period OPENED.** Every event and option in a
@@ -1003,8 +1174,11 @@ positionally. `tags` and the four stub conventions belong to features that are
 specified and not yet built.
 
 `pay` is contextual — it introduces a waterfall step and is an ordinary
-identifier elsewhere. `remaining`, `paid` and `owed` are bindings the host
-provides inside a step expression (§10.3), not keywords.
+identifier elsewhere, and so are `lifecycle`, `initial` (§7.3),
+`state_enter` and `periods` (§11.4): position disambiguates each, and no
+model loses an identifier to them. `remaining`, `paid` and `owed` are
+bindings the host provides inside a step expression (§10.3), not keywords,
+and `available` and `prev.<account>` (§10.6) are the same kind of thing.
 
 ---
 
