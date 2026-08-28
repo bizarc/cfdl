@@ -18,8 +18,10 @@ use std::sync::Arc;
 //                  period's candidates, events overwrite, the column settles;
 //                  `prev` reads what settled (one value per path)
 //   streams        stage 3 — activity, in two phases
-//   distributions  stage 4 — waterfalls, allocating `available`
-//   results        stage 5 — netting, rollups, metrics, statements
+//   distributions  the waterfall stage. Under the walk it runs INSIDE each
+//                  period, after that period's streams (`docs/28` §3 stage 3);
+//                  under the column order it stays a post-pass over all time
+//   results        last — netting, rollups, metrics, statements
 //   stochastic     sampling, shared by scenario and Monte Carlo runs
 //
 // `run_deterministic` below is the orchestrator and the only place the order
@@ -530,7 +532,7 @@ fn compute_results(ir: &Ir, model_hash: String, config: RunConfig) -> Result<Res
     };
 
     Ok(Results {
-        results_version: "0.3".to_string(),
+        results_version: "0.4".to_string(),
         model_hash,
         ledger_hash,
         engine: EngineInfo {
@@ -733,7 +735,7 @@ pub fn compare_evaluation_orders(
     // The walk: state settles, then that period's streams, one period at a
     // time.
     let mut walk_warnings = Vec::new();
-    let (_state_values, _event_sim, walked, _refusals, _balances) =
+    let (_state_values, _event_sim, walked, _refusals, _balances, _waterfalls, _stage_journal) =
         walk_periods(&ir, &config, &prep, &base_inputs, &mut walk_warnings);
     Ok(Some((column, walked)))
 }
@@ -750,6 +752,10 @@ type WalkOutput = (
     BTreeMap<String, Vec<usize>>,
     // Each account's balance, period by period.
     BTreeMap<String, Vec<f64>>,
+    // Each waterfall step's column — the stage runs inside the walk.
+    BTreeMap<String, Vec<f64>>,
+    // What the stage journaled: inflows and allocations, period-major.
+    Vec<JournalEntry>,
 );
 
 /// An account's balance, period by period.
@@ -770,7 +776,7 @@ fn account_inflow_at(
     account: &IrAccount,
     compiled: Option<&cfdl_expr::CompiledExpr>,
     t: usize,
-    timeline: &[Date],
+    date: &Date,
     base_inputs: &BTreeMap<String, f64>,
     series: Option<&Arc<BTreeMap<String, Vec<f64>>>>,
     warnings: &mut Vec<String>,
@@ -778,7 +784,7 @@ fn account_inflow_at(
     let Some(compiled) = compiled else {
         return 0.0;
     };
-    let mut env = build_expr_env(ir, None, config, t, &timeline[t], base_inputs);
+    let mut env = build_expr_env(ir, None, config, t, date, base_inputs);
     if let Some(series) = series {
         env.series = Arc::clone(series);
     }
@@ -820,9 +826,13 @@ fn account_inflow_at(
 /// so no model can ask. Phase 3 relaxes it to refuse only FORWARD reads, and
 /// this loop is what makes the refusal narrowable rather than absolute.
 ///
-/// Waterfalls are not here. They remain their own stage over cash this one has
-/// produced (`docs/17` §4); moving them inside is what `prev.<waterfall>.<step>`
-/// will need, and is the remaining piece of §2.4.
+/// Waterfalls run as stage 3 OF EACH PERIOD — after that period's streams
+/// settle, never interleaved with them (`docs/28` §5). The schedule stays
+/// sovereign: on a period no waterfall is scheduled for, the stage accumulates
+/// account inflows and does nothing else, so running the stage each period is
+/// not distributing each period. What it buys is the balance law applied AT
+/// each period: a distribution at `t` draws on what has accumulated, and
+/// logic at `t + 1` reads a settled figure.
 #[allow(clippy::too_many_arguments)]
 fn walk_periods(
     ir: &Ir,
@@ -834,6 +844,8 @@ fn walk_periods(
     let timeline = &prep.timeline;
     let max_wave = prep.waves.iter().copied().max().unwrap_or(0);
     let mut walk = prepare_state_walk(ir, timeline, warnings);
+    let mut stage = prepare_waterfall_stage(ir, timeline, warnings);
+    let curves = ir_curve_defs(ir);
     let mut full: BTreeMap<String, Vec<f64>> = ir
         .streams
         .iter()
@@ -855,6 +867,7 @@ fn walk_periods(
         //    the store holds exactly that, because periods `0..t` are done and
         //    period `t` has not started.
         walk.observe_cash(Arc::new(full.clone()));
+        walk.observe_accounts(Arc::new(account_balances.clone()));
 
         // 1. STATE SETTLES. Fields take this period's candidates and events
         //    overwrite them — now able to test cash that has already arrived.
@@ -902,30 +915,39 @@ fn walk_periods(
             }
         }
 
-        // 3. ACCOUNTS ACCUMULATE, once this period's cash exists. The inflow
-        //    reads the period's settled streams, so it runs after them.
+        // 3. THE WATERFALL STAGE, over cash this period has produced and never
+        //    interleaved with it. Accounts take their inflow, then each
+        //    waterfall the SCHEDULE says runs allocates — from `available`,
+        //    or from an account's accumulated balance.
         let snapshot = Arc::new(full.clone());
-        for (idx, account) in ir.accounts.iter().enumerate() {
-            let inflow = account_inflow_at(
-                ir,
-                config,
-                account,
-                prep.account_inflows[idx].as_ref(),
-                t,
-                timeline,
-                base_inputs,
-                Some(&snapshot),
-                warnings,
-            );
-            if let Some(column) = account_balances.get_mut(&account.name) {
-                let carried = if t == 0 { 0.0 } else { column[t - 1] };
-                column[t] = carried + inflow;
-            }
-        }
+        let (field_values, entity_state, _) = walk.settled();
+        stage.step(
+            ir,
+            config,
+            t,
+            &timeline[t],
+            base_inputs,
+            field_values,
+            entity_state,
+            &curves,
+            &snapshot,
+            &prep.account_inflows,
+            &mut account_balances,
+            warnings,
+        );
     }
 
     let (state_values, event_sim) = walk.finish(ir);
-    (state_values, event_sim, full, refusals, account_balances)
+    let (waterfall_series, stage_journal) = stage.finish();
+    (
+        state_values,
+        event_sim,
+        full,
+        refusals,
+        account_balances,
+        waterfall_series,
+        stage_journal,
+    )
 }
 
 pub fn walk_eligibility(raw_ir: &str) -> Result<Option<String>, EngineError> {
@@ -1180,17 +1202,31 @@ fn run_deterministic(
     let walked_columns: Option<BTreeMap<String, Vec<f64>>>;
     let walked_refusals: BTreeMap<String, Vec<usize>>;
     let account_balances: BTreeMap<String, Vec<f64>>;
+    let walked_waterfalls: Option<BTreeMap<String, Vec<f64>>>;
+    let mut stage_journal: Vec<JournalEntry> = Vec::new();
     let (state_values, event_sim) = if prep.walk_ineligible.is_none() {
-        let (sv, es, columns, refusals, balances) =
+        let (sv, es, columns, refusals, balances, waterfalls, journal) =
             walk_periods(ir, config, prep, &base_inputs, &mut warnings);
         walked_columns = Some(columns);
         walked_refusals = refusals;
         account_balances = balances;
+        walked_waterfalls = Some(waterfalls);
+        stage_journal = journal;
         (sv, es)
     } else {
         walked_columns = None;
         walked_refusals = BTreeMap::new();
         account_balances = BTreeMap::new();
+        walked_waterfalls = None;
+        if !ir.accounts.is_empty() {
+            // A forward-reading model keeps the column order, and the column
+            // order has no periods to carry a balance through. Said rather
+            // than silently published as zeros.
+            warnings.push(
+                "This model declares accounts, but a forward-reaching read keeps it on the                  column order, where account balances are not computed."
+                    .to_string(),
+            );
+        }
         simulate_state(ir, config, &timeline, &base_inputs, &mut warnings)
     };
     let transitions = event_sim.transitions.clone();
@@ -1498,20 +1534,31 @@ fn run_deterministic(
     // period's streams and states have already produced.
     // Computed from streams alone, before any distribution: the quantity a
     // waterfall's `available` binding reads.
-    let available_by_entity = stream_cash_by_entity(ir, &stream_series, cash_periods);
-    let waterfall_series = run_waterfalls(
-        ir,
-        &timeline,
-        &base_inputs,
-        &state_values,
-        &event_sim.entity_state,
-        &ir_curve_defs(ir),
-        &stream_series,
-        &available_by_entity,
-        config,
-        &mut warnings,
-        &mut journal,
-    );
+    let waterfall_series = match walked_waterfalls {
+        // The walk already ran the stage, period by period; its journal joins
+        // here, after the state stage's entries, the position the post-pass
+        // wrote from.
+        Some(series) => {
+            journal.append(&mut stage_journal);
+            series
+        }
+        None => {
+            let available_by_entity = stream_cash_by_entity(ir, &stream_series, cash_periods);
+            run_waterfalls(
+                ir,
+                &timeline,
+                &base_inputs,
+                &state_values,
+                &event_sim.entity_state,
+                &ir_curve_defs(ir),
+                &stream_series,
+                &available_by_entity,
+                config,
+                &mut warnings,
+                &mut journal,
+            )
+        }
+    };
 
     let mut series_map = BTreeMap::new();
     for (name, values) in &stream_series {
@@ -1928,6 +1975,14 @@ fn run_deterministic(
         for name in scenario.parameter_overrides.keys() {
             declared.insert(name.clone());
         }
+    }
+    // `prev.<account>` is DECLARED by the account statement and UNBOUND in
+    // exactly one place: period 0, where the previous period does not exist.
+    // Before the model began is not zero, it is unavailable — the read warns
+    // and substitutes there, the same condition as an input declared only as
+    // a distribution, and only a name nothing declares is fatal.
+    for account in &ir.accounts {
+        declared.insert(format!("prev.{}", account.name));
     }
     let unresolved = unresolved_names(&warnings, &declared);
     if !unresolved.is_empty() {

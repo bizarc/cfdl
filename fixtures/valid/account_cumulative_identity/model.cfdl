@@ -1,0 +1,39 @@
+version 0.1
+model "account-cumulative-identity"
+use pack "cre" version "0.1.0"
+time calendar monthly from 2026-01 for 12
+
+// THE CUMULATIVE-SUM IDENTITY, PINNED — docs/28 §5.1.
+//
+// An account fed a deal's whole net cash IS the deal's cumulative position:
+// `balance(t) = series_sum("cre.*", 0, t)`, every period. Capex makes the
+// first quarter net-negative, so the balance goes NEGATIVE THROUGH THE
+// J-CURVE — a balance has no floor, because the language models returns and
+// the position through the J-curve is the truth of the deal. What is floored
+// is only what a step may take.
+//
+// Nothing distributes here: the account observes. The identity is the whole
+// assertion — position [-2000, -4000, -6000, -5100, ...] against cumulative
+// net cash, equal in every cell.
+
+entity asset suite : CRE.Asset.Unit {
+  rentable_area = 1000
+  state leased
+}
+
+stream cre.capex on entity asset.suite outflow currency USD {
+  schedule every month from 2026-01 to 2026-03
+  category investing.capital.capex
+  amount = 2000
+}
+
+stream cre.rent on entity asset.suite inflow currency USD {
+  schedule every month from 2026-04 to 2026-12
+  category operating.revenue.base_rent
+  amount = 900
+  active in state leased
+}
+
+account position {
+  from series_sum("cre.*", time.t, time.t)
+}

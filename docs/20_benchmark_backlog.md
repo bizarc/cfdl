@@ -270,3 +270,53 @@ published values are exactly 0 or 100, which assert only "retired by then" and
 "not started yet". Ginnie Mae Group 16 publishes 180 cells of which 74 carry
 information; Fannie Mae Group 3 publishes 30 of which 14 do. Quoting the gross
 count overstates the evidence.
+
+## 5. Domains the suite does not cover
+
+Sections 1–4 are structured credit. The suite is not: 40 registered cases
+across five directories, and `docs/13` §7.3 records the imbalance the credit
+sections cannot see — cre at 1/12 and opco at 0/10 contract types externally
+validated, against credit's 10/10 and energy's 9/10. The items here are
+domain cases the language can express (or will, at a named phase) that the
+suite has not checked. Provenance: the domain survey in `docs/30`.
+
+**5.1 The gate fixtures should graduate.** The walk and phase 5 name their
+proof fixtures (`docs/29` phases 4–5): the delinquency machine breaching and
+curing twice on realised rent; trapped cash accumulating across a failed
+trigger and releasing on cure; a reserve funded to target and released;
+Highlands restated through an account, tied to the same numbers. Each is a
+fixture pinning a mechanism. Each is also a deal shape with published
+references — a servicer's delinquency roll, a credit agreement's cash-trap
+covenant (`docs/13` §7.77), a DSRA funding schedule — and a fixture asserted
+against its own engine is the suite marking its own homework, the same
+argument as `docs/13` §7.5's contract twin. The ask: one benchmark case per
+mechanism, each against an external reference, promoted as the phases land.
+
+**5.2 The contract-twin debt.** `one_lincoln_street_contract` proves the
+form: the pack contract asserted against the primitive-built original, zero
+difference in all 48 cells. No other primitive-built case has its twin. The
+cheapest coverage moves in the suite are twins for the cases that already
+exist, and the opco candidates of `docs/13` §7.5 (depreciation, equity
+bridge, share count, forward multiple) each arrive with a case or they are
+not validated.
+
+**5.3 The flip case rebuilt on the walk.** `energy/tax_equity_flip` restates
+the project's cash build inside its `return_position` recurrence and carries
+a hand-carried pot (`docs/25`); its own header defers the rehoming because
+the asserted figures would move. Rebuilding it — backward reads for the
+return test, an account for the pot — re-asserts the same published figures
+through the machinery the case motivated, and is the walk's first end-to-end
+benchmark rather than fixture.
+
+**5.4 A storage dispatch case.** Blocked on a reference that runs, not on
+the language any longer (`docs/13` §7.75, §7.1's SAM attempt). Whichever
+reference first produces a defensible dispatch schedule — even behind the
+meter — gets the case, and with it the energy pack's last uncovered rule.
+
+**5.5 A promotion, not an invention: the availability-payment concession.**
+`bespoke/ppiaf_toll_highway` already models three tranches, capitalizing
+interest, staggered grace and a subsidy sized to hold 1.30x cover — as a
+bespoke case with no pack. The toll-road entry of the roadmap's Tier 1 is
+this case with a pack behind it and a deduction-regime availability
+adjustment; the benchmark exists before the pack does, which is the right
+order and worth recording as such.
