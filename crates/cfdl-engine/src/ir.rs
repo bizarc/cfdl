@@ -36,6 +36,8 @@ pub(crate) struct Ir {
     #[serde(default)]
     pub(crate) quantile_inputs: Vec<serde_json::Value>,
     #[serde(default)]
+    pub(crate) accounts: Vec<IrAccount>,
+    #[serde(default)]
     pub(crate) waterfalls: Vec<IrWaterfall>,
     /// Declared entities. Read so an entity's lifecycle STARTS where the model
     /// says rather than at null — the totality the ontology exists to give.
@@ -128,6 +130,25 @@ pub(crate) struct IrOption {
 pub(crate) struct IrProvenance {
     #[serde(default)]
     pub(crate) generated_by: Option<serde_json::Value>,
+}
+
+#[derive(Debug, Deserialize)]
+/// A declared cash location whose balance carries across periods.
+///
+/// `available` is unchanged and still means this period's netted cash; an
+/// account is the ACCUMULATED cash. There is no currency: an account is
+/// denominated by the model.
+pub(crate) struct IrAccount {
+    pub(crate) name: String,
+    /// Read when a step allocates into a party's account, which is the next
+    /// increment. It is carried here regardless because the IR is a PUBLISHED
+    /// contract: a consumer reading the document can see who an account
+    /// belongs to whether or not this engine has a use for it yet.
+    #[allow(dead_code)]
+    #[serde(default)]
+    pub(crate) owner: Option<String>,
+    #[serde(default)]
+    pub(crate) inflow: Option<IrExpr>,
 }
 
 #[derive(Debug, Deserialize)]
