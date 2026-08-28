@@ -986,13 +986,13 @@ Read by a production of the grammar:
 `term`, `terms`, `time`, `to`, `trials`, `Triangular`, `true`, `type`, `Uniform`, `use`, `version`,
 `waterfall`, `week`, `when`, `year`.
 
-### 18.2 Reserved, read by no production (14)
+### 18.2 Reserved, read by no production (15)
 
 Reserved so that adding the feature later does not break a model that had used
 the word as an identifier. Writing one today is an error, and no syntax accepts
 it:
 
-`direction`, `Fri`, `long_back`, `long_front`, `Mon`, `owner`, `Sat`, `short_back`, `short_front`, `Sun`, `tags`,
+`account`, `direction`, `Fri`, `long_back`, `long_front`, `Mon`, `owner`, `Sat`, `short_back`, `short_front`, `Sun`, `tags`,
 `Thu`, `Tue`, `Wed`.
 
 `Mon` through `Sun` anchor a weekly schedule to a weekday. That syntax is not

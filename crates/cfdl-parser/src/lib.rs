@@ -3587,6 +3587,7 @@ fn token_label(token: &Token) -> String {
 
 fn keyword_text(keyword: Keyword) -> &'static str {
     match keyword {
+        Keyword::Account => "account",
         Keyword::Waterfall => "waterfall",
         Keyword::Version => "version",
         Keyword::Model => "model",
