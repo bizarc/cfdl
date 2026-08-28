@@ -55,7 +55,9 @@ import sys
 import tempfile
 import urllib.request
 
-sys.stdout.reconfigure(encoding="utf-8")
+# line_buffering so a redirected long run (nohup ... > log) streams per-task
+# progress instead of flushing in 8 KB blocks.
+sys.stdout.reconfigure(encoding="utf-8", line_buffering=True)
 sys.stderr.reconfigure(encoding="utf-8")
 
 try:
