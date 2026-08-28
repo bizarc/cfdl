@@ -118,6 +118,32 @@ Only after Phases 1–3 measure well enough to demo honestly:
 - **Prompt/pattern library:** the rebuild patterns catalog (`docs/31` W2
   phase 4) shipped as system-prompt material alongside the MCP server.
 
+## The domain-agent layer (sketch)
+
+An "Argus agent" in CRE, an "Intex agent" in structured credit, an "energy
+agent" — none of these is a new toolkit. Each is the Phase-1 loop plus four
+domain layers, and each layer already has a home in a phase:
+
+| layer | what it is | where it lives |
+|---|---|---|
+| **vocabulary** | the pack: contract roster, templates, metrics, statements — `lookup` and `skeleton` are already pack-parameterized | shipped today; grows by backlog |
+| **evaluation** | the domain's slice of the three task tiers, and its share of the private split (W2 engagements arrive one domain at a time) | Phase 3 |
+| **conventions** | what the incumbent computes and how to reconcile against it: `excel_compat` arithmetic, forward-NOI exits, ordered-waterfall trigger semantics, curve and shape handling — the pattern library, as system-prompt material per domain | Phase 4 |
+| **ingestion** | the domain's canonical artifact into model inputs: a rent roll, a collateral tape, a price/shape curve. The only genuinely new tool surface, and the last one to build — it is worthless until transcription scores well | Phase 4 |
+
+**The domain agent is the pack's checkpoint.** Standing one up is the test
+of whether the shipped pack covers the Pareto set of its domain's use cases
+and modeling goals: the transcribe tier fails loudly and specifically where
+vocabulary is missing, because a specification that names a structure the
+pack cannot say produces a diagnostic, not a plausible workaround. That is
+the same evidence discipline as everywhere else — an eval failure that
+implicates the pack becomes a backlog entry with the failing case attached
+— but run per domain and against real engagements, it becomes the
+measurement `docs/13` §7.3 approximates by counting benchmark declarations
+(`lookup` now derives that count mechanically). `docs/33` is the CRE
+instance of this survey done by hand; the eval harness is how the other
+domains get theirs without the hand.
+
 ## What this plan does not do
 
 - **No language changes.** If an eval failure implicates the language, it
