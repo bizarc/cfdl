@@ -51,7 +51,7 @@ of payment, because every kind is arithmetic:
 | a fixed amount | `= 12500.0` |
 | capped at a limit | `= min(fee, cap)` |
 | pay a balance down to a target | `= asset.class_a.balance - asset.trust.pool_balance` |
-| top an account up to a level | `= inputs.specified_reserve - asset.reserve.balance` |
+| fund a reserve to a target | `= max(0.0, inputs.reserve_target - prev.reserve)` — see the account, below |
 | only on a certain date | `= if(time.t >= 24, balance, 0.0)` |
 | an earlier step's shortfall | `= owed.trustee_fee - paid.trustee_fee` |
 | everything left | `= remaining` |
@@ -113,6 +113,52 @@ schedule every month from 2026-01 to 2030-12
 // Once — an exit, a liquidation, a final recoupment.
 schedule on 2030-12
 ```
+
+## Cash that accumulates: the account
+
+`available` is this period's cash, and a waterfall distributes only at the
+periods its schedule names. What accumulates in between — a reserve building
+toward a target, proceeds waiting for a quarterly date, trapped cash held
+across a breach — lives in a declared **account**:
+
+```cfdl
+account reserve { }
+
+waterfall dist on entity asset.suite {
+  schedule every month from 2026-01 to 2026-12
+  from available
+  pay top_up   to account reserve = max(0.0, 300.0 - prev.reserve)
+  pay residual to party.sponsor   = remaining
+}
+
+waterfall release on entity asset.suite {
+  schedule on 2026-06
+  from reserve
+  pay released to party.sponsor = remaining
+}
+```
+
+Three uses, all in those lines. A **step pays into an account** — the
+reserve pattern (fund to target, top up when short) as one step form, with
+`prev.<account>` reading the settled balance. A **waterfall draws from an
+account** — `from reserve` hands it the accumulated balance in place of a
+hand-written cumulative window, on its own schedule, and residue after the
+last step stays for the next date. **Logic reads a balance** — a guard or
+rule reads `prev.<account>` the way it reads any settled history, and the
+read is unavailable (not zero) at period 0.
+
+The balance follows one law — carried balance, plus the account's declared
+`from` inflow, plus what steps allocated in, minus what a drawing waterfall
+took — and it has **no floor**: an account fed a deal's whole net cash is
+the deal's cumulative position, negative through the J-curve. What a step
+may take is floored at zero, because cash that is not there cannot be
+allocated. An `owner` makes it a party's: `pay … to <party>` then
+accumulates there, and the balance is allocated cash, not an obligation.
+
+The step's series is the flow; the account's balance is the position,
+published as the non-cash series `account.<name>` with every movement —
+inflow, allocation in, allocation out — journaled with the balance before
+and after.
 
 ## What comes out
 

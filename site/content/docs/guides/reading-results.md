@@ -15,7 +15,7 @@ and stable, additive-intent shapes.
 
 ```json
 {
-  "results_version": "0.2",
+  "results_version": "0.5",
   "model_hash": "…",
   "engine": { "name": "cfdl-engine", "version": "…" },
   "warnings": [],
@@ -32,7 +32,10 @@ and stable, additive-intent shapes.
   metrics; money metrics carry `amount` + `currency`.
 - `monte_carlo.metrics` — per-metric summaries: mean, stdev, min/max,
   percentiles p01–p99.
-- Per-period stream series and annual rollups accompany the metrics; the
+- Per-period stream series and annual rollups accompany the metrics, with
+  each declared account's balance as the non-cash series `account.<name>`,
+  a transition log for lifecycle and event state changes, and a journal of
+  every causal act with what became of it; the
   [Python SDK](/docs/python-sdk) exposes them as `results.cashflows()` (wide,
   PeriodIndex) and `results.annual()`.
 

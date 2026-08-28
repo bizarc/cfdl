@@ -40,6 +40,13 @@ Three more are bound inside a [waterfall](/docs/guides/waterfalls) step:
 | `remaining` | what is left in the pot at this step |
 | `paid.<step>` | what an earlier step actually paid |
 | `owed.<step>` | what an earlier step would have paid, unbounded |
+| `available` | this period's netted cash of the waterfall's entity — also the default pot |
+| `prev.<account>` | an account's settled balance one period back — steps, rules and guards alike; unavailable (not zero) at period 0 |
+
+In logic — an event's guard, a field's rule, a lifecycle edge's `when` — a
+series window must end at `time.t - 1` or earlier: logic reads settled
+history, and a window that touches the current period is refused
+(`E1134`).
 
 Inside a pack's lowering rule, `{{contract.*}}` placeholders are substituted
 before the expression is parsed. A term holding an expression is substituted
@@ -54,7 +61,8 @@ a branch — both arms are the same type.
 
 ## Numbers
 
-All arithmetic is floating point. Where a source rounds — a workbook that
+Arithmetic is decimal — `0.1 + 0.2` equals `0.3`, and a cent is a cent —
+with float64 only at the storage boundary. Where a source rounds — a workbook that
 computes on already-rounded figures — reach for `round_to` and match the
 source's *method* rather than restating its answer, so the model reproduces the
 published number by doing what the publisher did.

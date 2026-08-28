@@ -73,10 +73,37 @@ building-wide expense on the building. The building's totals include its suites'
 totals because they are its suites — the relation is what aggregates, not a
 shared name prefix.
 
-## Assets have lifecycles
+## Assets have lifecycles — and a lifecycle is a machine
 
-A pack declares, for each asset type, the closed set of states that type can be
-in, which state it starts in, and which transitions are legal.
+A lifecycle is a declared finite state machine: the closed set of states, the
+state it opens in, and the **edges** — each an arrow with an optional guard. A
+model declares one directly, and an entity binds it by name:
+
+```cfdl
+lifecycle unit {
+  initial vacant
+  state vacant, leased, downtime
+  vacant -> leased    when time.t >= 1
+  leased -> downtime  when series_sum("cre.rent", time.t - 1, time.t - 1) < 50
+  downtime -> leased
+}
+
+entity asset suite {
+  lifecycle unit
+  state leased
+}
+```
+
+A guarded edge is evaluated each period the entity is in the edge's
+from-state — and only then. Taking the edge moves the machine, which disarms
+it; re-entering the state re-arms it. There is no latch: a unit that goes
+delinquent and cures and goes delinquent again is the topology walked twice.
+A guard reads state as the period opened and the model's own **settled cash**
+strictly backward — at or before the previous period — which is how "the
+rent stopped arriving" becomes a condition rather than a narration.
+
+A pack declares the same machine for its domain types in `types.toml`, with
+the same optional guards:
 
 ```toml
 [[lifecycles]]
@@ -89,36 +116,38 @@ from = "vacant"
 to = "leased"
 ```
 
-Because the set is closed and the initial state is declared, an asset is always
-in a known state from period zero, and a state name that does not exist is
-rejected at compile time.
+Because the set is enumerated and the initial state is declared, an asset is
+always in a known state from period zero, and a state name that does not
+exist — in an edge, an opening `state`, or a `set` — is rejected at compile
+time with the declared set in the message. Edges are declared only as used:
+an edge you did not declare does not exist, and a machine that declares no
+edges leaves events unconstrained.
 
-Declare a starting state other than the default inside the entity:
+A schedule can anchor to a state entry —
+`schedule every month from state_enter(asset.suite, building) for 18 periods`
+— opening a fresh window at each entry, which is what "eighteen months of
+construction from whenever construction starts" needs.
 
-```cfdl
-entity asset suite : CRE.Asset.Unit {
-  rentable_area = 10000
-  state leased
-}
-```
+## Events move assets between states too
 
-## Events move assets between states
-
-An event is a condition and what happens when it holds.
+An event is a condition and a one-time change: it fires at the first period
+its condition holds, once.
 
 ```cfdl
 event expiry when time.t >= 2 {
   set entity asset.suite.status = "downtime"
 }
-
-event reletting when time.t >= 4 {
-  set entity asset.suite.status = "leased"
-}
 ```
 
-Conditions can read time, computed values, and the state of any entity. The
-target of a `set` is resolved: writing to an entity or a field that does not
-exist is an error.
+Conditions can read time, computed values, the state of any entity, and
+settled series strictly backward. The target of a `set` is resolved: writing
+to an entity or a field that does not exist is an error — and a status write
+is validated against the machine's declared edges, refused with the edge
+named where no edge permits the move. A guard-less edge exists exactly for
+this: a permission an event's write may take, which the machine never fires
+on its own. When you find yourself writing a *pair* of events that set and
+un-set one status, the claim is a regime that returns, and it is two guarded
+edges of one lifecycle.
 
 ### Contracts and streams can depend on state
 
@@ -212,8 +241,11 @@ waterfall deal.distribution on entity asset.trust {
 ```
 
 Each step's cash counts toward its payee's total, so a waterfall is how money
-reaches the parties and tranches an ontology already names. See
-[Waterfalls](/docs/guides/waterfalls).
+reaches the parties and tranches an ontology already names. Cash that should
+**accumulate** between distribution dates — a reserve, proceeds waiting for a
+quarterly date — lives in a declared `account`: a step pays into one, a
+waterfall draws one with `from <account>`, and logic reads its settled
+balance as `prev.<account>`. See [Waterfalls](/docs/guides/waterfalls).
 
 ## Quantities can carry units
 
