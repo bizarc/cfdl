@@ -1,0 +1,46 @@
+version 0.1
+model "trapped-cash-cure"
+time calendar monthly from 2026-01 for 12
+
+// TRAPPED CASH, CURED — accounts, the machine, and backward guard reads in
+// one pin (docs/28 §9). A collections shortfall trips the trigger: the
+// machine reads SETTLED cash strictly backward and moves to trapped. While
+// trapped, the waterfall allocates the residual into the trap account
+// instead of to the sponsor — the step reads the status the machine settled
+// THIS period, stage 1 before stage 3. Collections resume, the cure edge
+// sees them, and the release step hands the accumulated balance back. The
+// trap's balance is the pin: 0 until the breach, the trapped months' cash
+// while it holds, 0 again after the cure.
+lifecycle trigger {
+  initial normal
+  state normal, trapped
+  normal -> trapped when series_sum("ops.rent", time.t - 1, time.t - 1) < 50
+  trapped -> normal when series_sum("ops.rent", time.t - 1, time.t - 1) >= 50
+}
+
+entity asset suite {
+  lifecycle trigger
+  paying init 1.0 next if(time.t == 3, 0.0, 1.0)
+}
+
+entity party sponsor { name = "Sponsor" }
+
+account trap { }
+
+stream ops.rent on entity asset.suite inflow currency USD {
+  schedule every month from 2026-01 to 2026-12
+  amount = 100 * asset.suite.paying
+}
+
+waterfall dist on entity asset.suite {
+  schedule every month from 2026-01 to 2026-12
+  from available
+  pay trapped  to account trap  = if(asset.suite.status == "trapped", remaining, 0.0)
+  pay residual to party.sponsor = remaining
+}
+
+waterfall release on entity asset.suite {
+  schedule every month from 2026-01 to 2026-12
+  from trap
+  pay released to party.sponsor = if(asset.suite.status == "normal", remaining, 0.0)
+}

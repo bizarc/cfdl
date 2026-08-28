@@ -1,0 +1,194 @@
+{
+  "ir_version": "0.1",
+  "model": {
+    "name": "trapped-cash-cure",
+    "currency": "USD"
+  },
+  "time": {
+    "calendar": "monthly",
+    "start": "2026-01-01",
+    "periods": 12
+  },
+  "phases": [],
+  "entities": [
+    {
+      "id": "0e8e7ed5a33916d03ca18c8f1fb232c6",
+      "symbol": "asset.suite",
+      "type": "core.Entity",
+      "fields": {},
+      "rules": {
+        "paying": {
+          "init": {
+            "lang": "cfdl",
+            "src": "1.0"
+          },
+          "next": {
+            "lang": "cfdl",
+            "src": "if(time.t == 3, 0.0, 1.0)"
+          }
+        }
+      },
+      "state": {},
+      "lifecycle": "trigger"
+    },
+    {
+      "id": "24a62c472a43f2095bc8f47536162f83",
+      "symbol": "party.sponsor",
+      "type": "core.Entity",
+      "fields": {
+        "name": "Sponsor"
+      },
+      "state": {}
+    }
+  ],
+  "assumptions": {
+    "constants": {},
+    "random": {}
+  },
+  "accounts": [
+    {
+      "name": "trap"
+    }
+  ],
+  "lifecycles": [
+    {
+      "id": "trigger",
+      "initial": "normal",
+      "states": [
+        "normal",
+        "trapped"
+      ],
+      "edges": [
+        {
+          "from": "normal",
+          "to": "trapped",
+          "guard": {
+            "lang": "cfdl",
+            "src": "series_sum(\"ops.rent\", time.t - 1.0, time.t - 1.0) < 50.0"
+          }
+        },
+        {
+          "from": "trapped",
+          "to": "normal",
+          "guard": {
+            "lang": "cfdl",
+            "src": "series_sum(\"ops.rent\", time.t - 1.0, time.t - 1.0) >= 50.0"
+          }
+        }
+      ]
+    }
+  ],
+  "waterfalls": [
+    {
+      "name": "dist",
+      "entity": "asset.suite",
+      "schedule": {
+        "kind": "Every",
+        "every": "monthly",
+        "from": "2026-01-01",
+        "to": "2026-12-01"
+      },
+      "source": {
+        "lang": "cfdl",
+        "src": "available"
+      },
+      "steps": [
+        {
+          "name": "trapped",
+          "payee": "trap",
+          "payee_is_account": true,
+          "amount": {
+            "lang": "cfdl",
+            "src": "if(asset.suite.status == \"trapped\", remaining, 0.0)"
+          }
+        },
+        {
+          "name": "residual",
+          "payee": "party.sponsor",
+          "amount": {
+            "lang": "cfdl",
+            "src": "remaining"
+          }
+        }
+      ]
+    },
+    {
+      "name": "release",
+      "entity": "asset.suite",
+      "schedule": {
+        "kind": "Every",
+        "every": "monthly",
+        "from": "2026-01-01",
+        "to": "2026-12-01"
+      },
+      "source": {
+        "lang": "cfdl",
+        "src": "trap"
+      },
+      "steps": [
+        {
+          "name": "released",
+          "payee": "party.sponsor",
+          "amount": {
+            "lang": "cfdl",
+            "src": "if(asset.suite.status == \"normal\", remaining, 0.0)"
+          }
+        }
+      ]
+    }
+  ],
+  "contracts": [],
+  "streams": [
+    {
+      "id": "66609d28cefa7b01a7112672c7194068",
+      "name": "ops.rent",
+      "owner": {
+        "symbol": "asset.suite"
+      },
+      "direction": "inflow",
+      "currency": "USD",
+      "schedule": {
+        "kind": "Every",
+        "every": "monthly",
+        "from": "2026-01-01",
+        "to": "2026-12-01"
+      },
+      "amount": {
+        "lang": "cfdl",
+        "src": "100.0 * asset.suite.paying"
+      },
+      "active_when": {
+        "lang": "cfdl",
+        "src": "true"
+      },
+      "provenance": {
+        "source_file": "model.cfdl",
+        "source_span": {
+          "start_line": 30,
+          "start_col": 1,
+          "end_line": 33,
+          "end_col": 1
+        }
+      }
+    }
+  ],
+  "events": [],
+  "options": [],
+  "runs": [
+    {
+      "kind": "deterministic"
+    }
+  ],
+  "required_observables": [],
+  "required_refs": [],
+  "provenance": {
+    "sources": [
+      "model.cfdl"
+    ],
+    "compiler": {
+      "name": "cfdl",
+      "version": "0.7.0",
+      "hash": "d80f4c40398fe75b55a6788a2be14aac"
+    }
+  }
+}

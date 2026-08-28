@@ -1,0 +1,1044 @@
+{
+  "results_version": "0.5",
+  "model_hash": "2287946e1e8a905530dc324318e6f47276344ce823a8ebeef7aab093451a7c3a",
+  "ledger_hash": "8f233098ef07198cde4eb77e598905b5a1a89402fd3b482d30afd3b1d61d556f",
+  "engine": {
+    "name": "cfdl-engine",
+    "version": "0.7.0"
+  },
+  "warnings": [
+    "Lifecycle 'trigger edge normal -> trapped' when evaluation failed [EXPR_EVAL]: series_sum: series `ops.rent` is not available in this context; using false."
+  ],
+  "deterministic": {
+    "status": "ok",
+    "metrics": {
+      "entity.asset.suite.total": {
+        "amount": 1100.0,
+        "currency": "USD"
+      },
+      "entity.party.sponsor.total": {
+        "amount": 1100.0,
+        "currency": "USD"
+      },
+      "entity.trap.total": {
+        "amount": 100.0,
+        "currency": "USD"
+      },
+      "model.npv": {
+        "amount": 1043.175852,
+        "currency": "USD"
+      },
+      "model.total": {
+        "amount": 1100.0,
+        "currency": "USD"
+      },
+      "model.wal_years": 0.560606,
+      "run.annual_discount_rate": 0.1,
+      "run.periods_per_year": 12.0,
+      "stream.ops.rent.total": {
+        "amount": 1100.0,
+        "currency": "USD"
+      }
+    },
+    "series": {
+      "account.trap": {
+        "index": {
+          "calendar": "monthly",
+          "start": "2026-01-01",
+          "periods": 12
+        },
+        "values": [
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          100.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ]
+      },
+      "asset.suite.paying": {
+        "index": {
+          "calendar": "monthly",
+          "start": "2026-01-01",
+          "periods": 12
+        },
+        "values": [
+          1.0,
+          1.0,
+          1.0,
+          0.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ]
+      },
+      "entity.asset.suite.net_cash_flow": {
+        "index": {
+          "calendar": "monthly",
+          "start": "2026-01-01",
+          "periods": 12
+        },
+        "values": [
+          {
+            "amount": 100.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 100.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 100.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 100.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 100.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 100.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 100.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 100.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 100.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 100.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 100.0,
+            "currency": "USD"
+          }
+        ]
+      },
+      "entity.party.sponsor.net_cash_flow": {
+        "index": {
+          "calendar": "monthly",
+          "start": "2026-01-01",
+          "periods": 12
+        },
+        "values": [
+          {
+            "amount": 100.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 100.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 100.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 200.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 100.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 100.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 100.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 100.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 100.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 100.0,
+            "currency": "USD"
+          }
+        ]
+      },
+      "entity.trap.net_cash_flow": {
+        "index": {
+          "calendar": "monthly",
+          "start": "2026-01-01",
+          "periods": 12
+        },
+        "values": [
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 100.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          }
+        ]
+      },
+      "model.net_cash_flow": {
+        "index": {
+          "calendar": "monthly",
+          "start": "2026-01-01",
+          "periods": 12
+        },
+        "values": [
+          {
+            "amount": 100.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 100.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 100.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 100.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 100.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 100.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 100.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 100.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 100.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 100.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 100.0,
+            "currency": "USD"
+          }
+        ]
+      },
+      "stream.dist.residual": {
+        "index": {
+          "calendar": "monthly",
+          "start": "2026-01-01",
+          "periods": 12
+        },
+        "values": [
+          {
+            "amount": 100.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 100.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 100.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 100.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 100.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 100.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 100.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 100.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 100.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 100.0,
+            "currency": "USD"
+          }
+        ]
+      },
+      "stream.dist.trapped": {
+        "index": {
+          "calendar": "monthly",
+          "start": "2026-01-01",
+          "periods": 12
+        },
+        "values": [
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 100.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          }
+        ]
+      },
+      "stream.ops.rent": {
+        "index": {
+          "calendar": "monthly",
+          "start": "2026-01-01",
+          "periods": 12
+        },
+        "offset": 1.0,
+        "values": [
+          {
+            "amount": 100.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 100.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 100.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 100.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 100.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 100.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 100.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 100.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 100.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 100.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 100.0,
+            "currency": "USD"
+          }
+        ]
+      },
+      "stream.release.released": {
+        "index": {
+          "calendar": "monthly",
+          "start": "2026-01-01",
+          "periods": 12
+        },
+        "values": [
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 100.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          }
+        ]
+      }
+    },
+    "transitions": [
+      {
+        "period": 4,
+        "date": "2026-05-01",
+        "entity": "asset.suite",
+        "field": "status",
+        "from": "normal",
+        "to": "trapped",
+        "event": "lifecycle:trigger"
+      },
+      {
+        "period": 5,
+        "date": "2026-06-01",
+        "entity": "asset.suite",
+        "field": "status",
+        "from": "trapped",
+        "to": "normal",
+        "event": "lifecycle:trigger"
+      }
+    ],
+    "journal": [
+      {
+        "period": 4,
+        "date": "2026-05-01",
+        "actor": "lifecycle:trigger",
+        "action": "transition",
+        "target": "asset.suite: normal -> trapped",
+        "outcome": "applied",
+        "note": "when series_sum(\"ops.rent\", time.t - 1.0, time.t - 1.0) < 50.0 — read time.t=4, ops.rent[t-1]=0"
+      },
+      {
+        "period": 5,
+        "date": "2026-06-01",
+        "actor": "lifecycle:trigger",
+        "action": "transition",
+        "target": "asset.suite: trapped -> normal",
+        "outcome": "applied",
+        "note": "when series_sum(\"ops.rent\", time.t - 1.0, time.t - 1.0) >= 50.0 — read time.t=5, ops.rent[t-1]=100"
+      },
+      {
+        "period": 0,
+        "date": "2026-01-01",
+        "actor": "waterfall:dist",
+        "action": "pay",
+        "target": "trapped -> trap",
+        "outcome": "applied",
+        "amount": 0.0,
+        "pot_before": 100.0,
+        "pot_after": 100.0
+      },
+      {
+        "period": 0,
+        "date": "2026-01-01",
+        "actor": "waterfall:dist",
+        "action": "pay",
+        "target": "residual -> party.sponsor",
+        "outcome": "applied",
+        "amount": 100.0,
+        "pot_before": 100.0,
+        "pot_after": 0.0
+      },
+      {
+        "period": 0,
+        "date": "2026-01-01",
+        "actor": "waterfall:release",
+        "action": "pay",
+        "target": "released -> party.sponsor",
+        "outcome": "applied",
+        "amount": 0.0,
+        "pot_before": 0.0,
+        "pot_after": 0.0
+      },
+      {
+        "period": 1,
+        "date": "2026-02-01",
+        "actor": "waterfall:dist",
+        "action": "pay",
+        "target": "trapped -> trap",
+        "outcome": "applied",
+        "amount": 0.0,
+        "pot_before": 100.0,
+        "pot_after": 100.0
+      },
+      {
+        "period": 1,
+        "date": "2026-02-01",
+        "actor": "waterfall:dist",
+        "action": "pay",
+        "target": "residual -> party.sponsor",
+        "outcome": "applied",
+        "amount": 100.0,
+        "pot_before": 100.0,
+        "pot_after": 0.0
+      },
+      {
+        "period": 1,
+        "date": "2026-02-01",
+        "actor": "waterfall:release",
+        "action": "pay",
+        "target": "released -> party.sponsor",
+        "outcome": "applied",
+        "amount": 0.0,
+        "pot_before": 0.0,
+        "pot_after": 0.0
+      },
+      {
+        "period": 2,
+        "date": "2026-03-01",
+        "actor": "waterfall:dist",
+        "action": "pay",
+        "target": "trapped -> trap",
+        "outcome": "applied",
+        "amount": 0.0,
+        "pot_before": 100.0,
+        "pot_after": 100.0
+      },
+      {
+        "period": 2,
+        "date": "2026-03-01",
+        "actor": "waterfall:dist",
+        "action": "pay",
+        "target": "residual -> party.sponsor",
+        "outcome": "applied",
+        "amount": 100.0,
+        "pot_before": 100.0,
+        "pot_after": 0.0
+      },
+      {
+        "period": 2,
+        "date": "2026-03-01",
+        "actor": "waterfall:release",
+        "action": "pay",
+        "target": "released -> party.sponsor",
+        "outcome": "applied",
+        "amount": 0.0,
+        "pot_before": 0.0,
+        "pot_after": 0.0
+      },
+      {
+        "period": 3,
+        "date": "2026-04-01",
+        "actor": "waterfall:dist",
+        "action": "pay",
+        "target": "trapped -> trap",
+        "outcome": "applied",
+        "amount": 0.0,
+        "pot_before": 0.0,
+        "pot_after": 0.0
+      },
+      {
+        "period": 3,
+        "date": "2026-04-01",
+        "actor": "waterfall:dist",
+        "action": "pay",
+        "target": "residual -> party.sponsor",
+        "outcome": "applied",
+        "amount": 0.0,
+        "pot_before": 0.0,
+        "pot_after": 0.0
+      },
+      {
+        "period": 3,
+        "date": "2026-04-01",
+        "actor": "waterfall:release",
+        "action": "pay",
+        "target": "released -> party.sponsor",
+        "outcome": "applied",
+        "amount": 0.0,
+        "pot_before": 0.0,
+        "pot_after": 0.0
+      },
+      {
+        "period": 4,
+        "date": "2026-05-01",
+        "actor": "waterfall:dist",
+        "action": "pay",
+        "target": "trapped -> trap",
+        "outcome": "applied",
+        "amount": 100.0,
+        "pot_before": 100.0,
+        "pot_after": 0.0
+      },
+      {
+        "period": 4,
+        "date": "2026-05-01",
+        "actor": "waterfall:dist",
+        "action": "pay",
+        "target": "residual -> party.sponsor",
+        "outcome": "applied",
+        "amount": 0.0,
+        "pot_before": 0.0,
+        "pot_after": 0.0
+      },
+      {
+        "period": 4,
+        "date": "2026-05-01",
+        "actor": "waterfall:dist",
+        "action": "allocate_in",
+        "target": "trapped -> account:trap",
+        "outcome": "applied",
+        "amount": 100.0,
+        "pot_before": 0.0,
+        "pot_after": 100.0
+      },
+      {
+        "period": 4,
+        "date": "2026-05-01",
+        "actor": "waterfall:release",
+        "action": "pay",
+        "target": "released -> party.sponsor",
+        "outcome": "applied",
+        "amount": 0.0,
+        "pot_before": 100.0,
+        "pot_after": 100.0
+      },
+      {
+        "period": 5,
+        "date": "2026-06-01",
+        "actor": "waterfall:dist",
+        "action": "pay",
+        "target": "trapped -> trap",
+        "outcome": "applied",
+        "amount": 0.0,
+        "pot_before": 100.0,
+        "pot_after": 100.0
+      },
+      {
+        "period": 5,
+        "date": "2026-06-01",
+        "actor": "waterfall:dist",
+        "action": "pay",
+        "target": "residual -> party.sponsor",
+        "outcome": "applied",
+        "amount": 100.0,
+        "pot_before": 100.0,
+        "pot_after": 0.0
+      },
+      {
+        "period": 5,
+        "date": "2026-06-01",
+        "actor": "waterfall:release",
+        "action": "pay",
+        "target": "released -> party.sponsor",
+        "outcome": "applied",
+        "amount": 100.0,
+        "pot_before": 100.0,
+        "pot_after": 0.0
+      },
+      {
+        "period": 5,
+        "date": "2026-06-01",
+        "actor": "waterfall:release",
+        "action": "allocate_out",
+        "target": "account:trap",
+        "outcome": "applied",
+        "amount": 100.0,
+        "pot_before": 100.0,
+        "pot_after": 0.0
+      },
+      {
+        "period": 6,
+        "date": "2026-07-01",
+        "actor": "waterfall:dist",
+        "action": "pay",
+        "target": "trapped -> trap",
+        "outcome": "applied",
+        "amount": 0.0,
+        "pot_before": 100.0,
+        "pot_after": 100.0
+      },
+      {
+        "period": 6,
+        "date": "2026-07-01",
+        "actor": "waterfall:dist",
+        "action": "pay",
+        "target": "residual -> party.sponsor",
+        "outcome": "applied",
+        "amount": 100.0,
+        "pot_before": 100.0,
+        "pot_after": 0.0
+      },
+      {
+        "period": 6,
+        "date": "2026-07-01",
+        "actor": "waterfall:release",
+        "action": "pay",
+        "target": "released -> party.sponsor",
+        "outcome": "applied",
+        "amount": 0.0,
+        "pot_before": 0.0,
+        "pot_after": 0.0
+      },
+      {
+        "period": 7,
+        "date": "2026-08-01",
+        "actor": "waterfall:dist",
+        "action": "pay",
+        "target": "trapped -> trap",
+        "outcome": "applied",
+        "amount": 0.0,
+        "pot_before": 100.0,
+        "pot_after": 100.0
+      },
+      {
+        "period": 7,
+        "date": "2026-08-01",
+        "actor": "waterfall:dist",
+        "action": "pay",
+        "target": "residual -> party.sponsor",
+        "outcome": "applied",
+        "amount": 100.0,
+        "pot_before": 100.0,
+        "pot_after": 0.0
+      },
+      {
+        "period": 7,
+        "date": "2026-08-01",
+        "actor": "waterfall:release",
+        "action": "pay",
+        "target": "released -> party.sponsor",
+        "outcome": "applied",
+        "amount": 0.0,
+        "pot_before": 0.0,
+        "pot_after": 0.0
+      },
+      {
+        "period": 8,
+        "date": "2026-09-01",
+        "actor": "waterfall:dist",
+        "action": "pay",
+        "target": "trapped -> trap",
+        "outcome": "applied",
+        "amount": 0.0,
+        "pot_before": 100.0,
+        "pot_after": 100.0
+      },
+      {
+        "period": 8,
+        "date": "2026-09-01",
+        "actor": "waterfall:dist",
+        "action": "pay",
+        "target": "residual -> party.sponsor",
+        "outcome": "applied",
+        "amount": 100.0,
+        "pot_before": 100.0,
+        "pot_after": 0.0
+      },
+      {
+        "period": 8,
+        "date": "2026-09-01",
+        "actor": "waterfall:release",
+        "action": "pay",
+        "target": "released -> party.sponsor",
+        "outcome": "applied",
+        "amount": 0.0,
+        "pot_before": 0.0,
+        "pot_after": 0.0
+      },
+      {
+        "period": 9,
+        "date": "2026-10-01",
+        "actor": "waterfall:dist",
+        "action": "pay",
+        "target": "trapped -> trap",
+        "outcome": "applied",
+        "amount": 0.0,
+        "pot_before": 100.0,
+        "pot_after": 100.0
+      },
+      {
+        "period": 9,
+        "date": "2026-10-01",
+        "actor": "waterfall:dist",
+        "action": "pay",
+        "target": "residual -> party.sponsor",
+        "outcome": "applied",
+        "amount": 100.0,
+        "pot_before": 100.0,
+        "pot_after": 0.0
+      },
+      {
+        "period": 9,
+        "date": "2026-10-01",
+        "actor": "waterfall:release",
+        "action": "pay",
+        "target": "released -> party.sponsor",
+        "outcome": "applied",
+        "amount": 0.0,
+        "pot_before": 0.0,
+        "pot_after": 0.0
+      },
+      {
+        "period": 10,
+        "date": "2026-11-01",
+        "actor": "waterfall:dist",
+        "action": "pay",
+        "target": "trapped -> trap",
+        "outcome": "applied",
+        "amount": 0.0,
+        "pot_before": 100.0,
+        "pot_after": 100.0
+      },
+      {
+        "period": 10,
+        "date": "2026-11-01",
+        "actor": "waterfall:dist",
+        "action": "pay",
+        "target": "residual -> party.sponsor",
+        "outcome": "applied",
+        "amount": 100.0,
+        "pot_before": 100.0,
+        "pot_after": 0.0
+      },
+      {
+        "period": 10,
+        "date": "2026-11-01",
+        "actor": "waterfall:release",
+        "action": "pay",
+        "target": "released -> party.sponsor",
+        "outcome": "applied",
+        "amount": 0.0,
+        "pot_before": 0.0,
+        "pot_after": 0.0
+      },
+      {
+        "period": 11,
+        "date": "2026-12-01",
+        "actor": "waterfall:dist",
+        "action": "pay",
+        "target": "trapped -> trap",
+        "outcome": "applied",
+        "amount": 0.0,
+        "pot_before": 100.0,
+        "pot_after": 100.0
+      },
+      {
+        "period": 11,
+        "date": "2026-12-01",
+        "actor": "waterfall:dist",
+        "action": "pay",
+        "target": "residual -> party.sponsor",
+        "outcome": "applied",
+        "amount": 100.0,
+        "pot_before": 100.0,
+        "pot_after": 0.0
+      },
+      {
+        "period": 11,
+        "date": "2026-12-01",
+        "actor": "waterfall:release",
+        "action": "pay",
+        "target": "released -> party.sponsor",
+        "outcome": "applied",
+        "amount": 0.0,
+        "pot_before": 0.0,
+        "pot_after": 0.0
+      }
+    ],
+    "annual_rollup": {
+      "series": {
+        "model.net_cash_flow": {
+          "index": {
+            "calendar": "annual",
+            "start": "2026-01-01",
+            "periods": 1
+          },
+          "values": [
+            {
+              "amount": 1100.0,
+              "currency": "USD"
+            }
+          ]
+        },
+        "stream.ops.rent": {
+          "index": {
+            "calendar": "annual",
+            "start": "2026-01-01",
+            "periods": 1
+          },
+          "values": [
+            {
+              "amount": 1100.0,
+              "currency": "USD"
+            }
+          ]
+        }
+      }
+    }
+  },
+  "scenarios": {
+    "status": "not_run",
+    "summaries": []
+  },
+  "monte_carlo": {
+    "status": "not_run",
+    "trials": 1,
+    "seed": 0,
+    "metrics": {},
+    "trial_summaries": []
+  }
+}

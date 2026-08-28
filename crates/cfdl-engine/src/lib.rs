@@ -532,7 +532,7 @@ fn compute_results(ir: &Ir, model_hash: String, config: RunConfig) -> Result<Res
     };
 
     Ok(Results {
-        results_version: "0.4".to_string(),
+        results_version: "0.5".to_string(),
         model_hash,
         ledger_hash,
         engine: EngineInfo {
