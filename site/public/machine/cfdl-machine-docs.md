@@ -7722,10 +7722,9 @@ Metrics: `domain.credit.interest`, `domain.credit.principal`, `domain.credit.rec
 
 Templates (starting points; the `skeleton` MCP tool assembles them into a compiling model):
 
-- `credit.pool_level_pay` — Level-pay pool (six collection streams)
-- `credit.pool_io_bullet` — Interest-only pool, bullet at maturity
-- `credit.pool_float_io_bullet` — Floating-rate IO pool, bullet at maturity
-- `credit.purchase` — Pool purchase price
+- `credit.pool_level_pay` — Amortizing pool — level pay with CPR/CDR/severity
+- `credit.pool_io_bullet` — Interest-only pool — bullet maturity
+- `credit.purchase` — Purchase — price paid at close
 
 ### Pack `energy` 0.1.0
 
@@ -7751,13 +7750,10 @@ Metrics: `domain.energy.revenue`, `domain.energy.opex`, `domain.energy.ebitda`, 
 
 Templates (starting points; the `skeleton` MCP tool assembles them into a compiling model):
 
-- `energy.ppa` — PPA revenue
-- `energy.merchant` — Merchant revenue
+- `energy.ppa` — Power purchase agreement — contracted offtake
 - `energy.om` — Operations and maintenance
-- `energy.capex` — Capital outlay
-- `energy.debt_service` — Project debt (proceeds, interest, principal)
-- `energy.ptc` — Production tax credit
-- `energy.macrs_shield` — MACRS depreciation shield
+- `energy.capex` — Capital expenditure at close
+- `energy.debt_service` — Level-pay project debt
 
 ### Pack `opco` 0.1.0
 
@@ -7784,11 +7780,8 @@ Metrics: `domain.opco.revenue`, `domain.opco.ebitda`, `domain.opco.ebitda_margin
 
 Templates (starting points; the `skeleton` MCP tool assembles them into a compiling model):
 
-- `opco.revenue_line.core` — Revenue line — core
-- `opco.opex_line.operating` — Opex line — operating
-- `opco.capex_line.maintenance` — Capex line — maintenance
-- `opco.term_debt` — Term loan (proceeds, interest, principal)
+- `opco.revenue_line` — Revenue line with growth
+- `opco.opex_line` — Operating expense line with growth
+- `opco.capex_line` — Capital expenditure as a share of revenue
+- `opco.term_debt` — Term loan — IO then amortizing
 - `opco.cash_taxes` — Cash taxes on EBIT
-- `opco.working_capital_policy` — Working capital — days policy
-- `opco.exit_ebitda` — Exit at an EBITDA multiple (gross, selling costs)
-- `opco.acquisition` — Acquisition price
