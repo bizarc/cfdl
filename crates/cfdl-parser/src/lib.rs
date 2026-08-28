@@ -35,6 +35,7 @@ pub enum Stmt {
     Stream(StreamStmt),
     Event(EventStmt),
     Option(OptionStmt),
+    Account(AccountStmt),
     Waterfall(WaterfallStmt),
     Run(RunStmt),
 }
@@ -495,6 +496,21 @@ pub struct OptionStmt {
 ///
 /// See `docs/17_ordered_waterfall.md`.
 #[derive(Debug, Clone, PartialEq, Eq, serde::Serialize)]
+pub struct AccountStmt {
+    pub name: String,
+    /// `owned by <party>` — optional. A general account belongs to the
+    /// structure; a party-owned one holds what has been ALLOCATED to that
+    /// party. It is not an obligation: it holds cash that exists, and what is
+    /// still owed is simply not yet allocated (`docs/28` §5.1).
+    pub owner: Option<String>,
+    /// `from <expr>` — what flows in each period. May be negative: an account
+    /// fed a deal's whole net cash IS the deal's cumulative position.
+    pub inflow: Option<ExprSlot>,
+    pub currency: Option<String>,
+    pub span: Span,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, serde::Serialize)]
 pub struct WaterfallStmt {
     pub name: String,
     /// The entity whose cash this allocates.
@@ -708,6 +724,7 @@ impl<'a> Parser<'a> {
             }
             TokenKind::Keyword(Keyword::Event) => self.parse_event_stmt().map(Stmt::Event),
             TokenKind::Keyword(Keyword::Option) => self.parse_option_stmt().map(Stmt::Option),
+            TokenKind::Keyword(Keyword::Account) => self.parse_account_stmt().map(Stmt::Account),
             TokenKind::Keyword(Keyword::Waterfall) => {
                 self.parse_waterfall_stmt().map(Stmt::Waterfall)
             }
@@ -1796,6 +1813,96 @@ impl<'a> Parser<'a> {
     /// Reserving them would have been the same mistake `term` is: a keyword
     /// cannot be an attribute name, and `cap` and `down` are names a model
     /// legitimately wants — a cap rate, a downside case.
+    /// `account <name> [owned by <party>] { from <expr> currency <code> }`
+    ///
+    /// A declared cash location whose balance carries ACROSS periods — what
+    /// `docs/28` §5.1 renames the pot to. `available` is unchanged and still
+    /// means this period's netted cash; an account is the accumulated cash.
+    fn parse_account_stmt(&mut self) -> Option<AccountStmt> {
+        let start = self.expect_keyword(Keyword::Account, "'account'")?;
+        let name_tok = self.bump();
+        let name = match name_tok.kind {
+            TokenKind::Qname(ref q) => q.clone(),
+            TokenKind::Ident(ref i) => i.clone(),
+            _ => {
+                self.push_expected(
+                    name_tok.span,
+                    "Expected a name after 'account'.".to_string(),
+                );
+                return None;
+            }
+        };
+
+        let _ = self.expect_punct(Punct::LBrace, "'{'")?;
+        // `owner <party>` is optional and lives IN the block: an account with
+        // no owner belongs to the structure. `owner` was already reserved with
+        // no production (`docs/01` §18.2), so this costs no new reserved word,
+        // where `owned by` would have cost two.
+        let mut owner = None;
+        let mut inflow = None;
+        let mut currency = None;
+        let end;
+        loop {
+            match self.peek().kind {
+                TokenKind::Punct(Punct::RBrace) => {
+                    end = self.bump();
+                    break;
+                }
+                TokenKind::Eof => {
+                    self.push_expected(
+                        self.current_span(),
+                        "Unterminated account block: expected '}'.".to_string(),
+                    );
+                    return None;
+                }
+                TokenKind::Keyword(Keyword::Owner) => {
+                    let kw = self.bump();
+                    let owner_tok = self.bump();
+                    let _ = kw;
+                    owner = Some(self.parse_entity_ref_token(&owner_tok)?);
+                }
+                TokenKind::Keyword(Keyword::From) => {
+                    let kw = self.bump();
+                    // Bounded, or the slot swallows the lines after it: an
+                    // expression has no terminator of its own, so the block's
+                    // other clauses are what end it.
+                    inflow = self.parse_expr_slot_until(kw.span, &["currency", "owner"]);
+                }
+                TokenKind::Keyword(Keyword::Currency) => {
+                    let _ = self.bump();
+                    let tok = self.bump();
+                    currency = match tok.kind {
+                        TokenKind::Ident(ref i) => Some(i.clone()),
+                        TokenKind::String(ref v) => Some(v.clone()),
+                        _ => {
+                            self.push_expected(
+                                tok.span,
+                                "Expected a currency code after 'currency'.".to_string(),
+                            );
+                            None
+                        }
+                    };
+                }
+                _ => {
+                    let tok = self.bump();
+                    self.push_expected(
+                        tok.span,
+                        "Expected 'owner', 'from', 'currency' or '}' in an account block."
+                            .to_string(),
+                    );
+                    return None;
+                }
+            }
+        }
+        Some(AccountStmt {
+            name,
+            owner,
+            inflow,
+            currency,
+            span: merge_spans(start.span, end.span),
+        })
+    }
+
     fn parse_waterfall_stmt(&mut self) -> Option<WaterfallStmt> {
         let start = self.expect_keyword(Keyword::Waterfall, "'waterfall'")?;
         let name_tok = self.bump();
@@ -2070,6 +2177,8 @@ impl<'a> Parser<'a> {
                 TokenKind::Eof
                 | TokenKind::Punct(Punct::RBrace)
                 | TokenKind::Keyword(Keyword::Schedule)
+                | TokenKind::Keyword(Keyword::Currency)
+                | TokenKind::Keyword(Keyword::Owner)
                 | TokenKind::Keyword(Keyword::Active) => break,
                 // An operand cannot follow an operand — but `and`, `or` and
                 // `not` lex as identifiers and are OPERATORS, so they continue
@@ -3559,6 +3668,7 @@ fn statement_span(stmt: &Stmt) -> Span {
         Stmt::Stream(s) => s.span,
         Stmt::Event(s) => s.span,
         Stmt::Option(s) => s.span,
+        Stmt::Account(s) => s.span,
         Stmt::Waterfall(s) => s.span,
     }
 }
