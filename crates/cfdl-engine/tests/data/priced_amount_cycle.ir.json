@@ -1,0 +1,131 @@
+{
+  "ir_version": "0.1",
+  "model": {
+    "name": "priced-amount-cycle",
+    "currency": "USD"
+  },
+  "time": {
+    "calendar": "monthly",
+    "start": "2026-01-01",
+    "periods": 24
+  },
+  "phases": [],
+  "entities": [
+    {
+      "id": "25e2dcf6b842bdfd68d77edc067f5580",
+      "symbol": "asset.property",
+      "type": "core.Entity",
+      "fields": {},
+      "state": {},
+      "lifecycle": "asset_state"
+    }
+  ],
+  "assumptions": {
+    "constants": {},
+    "random": {}
+  },
+  "lifecycles": [
+    {
+      "id": "asset_state",
+      "initial": "held",
+      "states": [
+        "held",
+        "sold"
+      ],
+      "edges": [
+        {
+          "from": "held",
+          "to": "sold",
+          "guard": {
+            "lang": "cfdl",
+            "src": "series_sum(\"core.exit\", time.t - 1.0, time.t - 1.0) > 0.0"
+          }
+        }
+      ]
+    }
+  ],
+  "contracts": [],
+  "streams": [
+    {
+      "id": "44d2c10ca49b1bc9db33b64e654c62e0",
+      "name": "core.exit",
+      "owner": {
+        "symbol": "asset.property"
+      },
+      "direction": "inflow",
+      "currency": "USD",
+      "schedule": {
+        "kind": "OnDate",
+        "on": "2026-12-01"
+      },
+      "amount": {
+        "lang": "cfdl",
+        "src": "series_sum(\"core.rent\", time.t + 1.0, time.t + 12.0) / 0.065"
+      },
+      "active_when": {
+        "lang": "cfdl",
+        "src": "true"
+      },
+      "provenance": {
+        "source_file": "model.cfdl",
+        "source_span": {
+          "start_line": 28,
+          "start_col": 1,
+          "end_line": 31,
+          "end_col": 1
+        }
+      }
+    },
+    {
+      "id": "2aa0ccd1f549852586d71092ae8e70bb",
+      "name": "core.rent",
+      "owner": {
+        "symbol": "asset.property"
+      },
+      "direction": "inflow",
+      "currency": "USD",
+      "schedule": {
+        "kind": "Every",
+        "every": "monthly",
+        "from": "2026-01-01",
+        "to": "2027-12-01"
+      },
+      "amount": {
+        "lang": "cfdl",
+        "src": "100.0"
+      },
+      "active_when": {
+        "lang": "cfdl",
+        "src": "entity.status == \"held\""
+      },
+      "provenance": {
+        "source_file": "model.cfdl",
+        "source_span": {
+          "start_line": 22,
+          "start_col": 1,
+          "end_line": 26,
+          "end_col": 1
+        }
+      }
+    }
+  ],
+  "events": [],
+  "options": [],
+  "runs": [
+    {
+      "kind": "deterministic"
+    }
+  ],
+  "required_observables": [],
+  "required_refs": [],
+  "provenance": {
+    "sources": [
+      "model.cfdl"
+    ],
+    "compiler": {
+      "name": "cfdl",
+      "version": "0.7.0",
+      "hash": "d80f4c40398fe75b55a6788a2be14aac"
+    }
+  }
+}

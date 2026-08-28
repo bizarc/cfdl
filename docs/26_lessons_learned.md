@@ -496,6 +496,19 @@ expense stop resetting to the 2028 actual is
 `series_sum("cre.opex.line", 24, 24) * time.ppy`. Outflow streams book signed
 negative, so a read of one is usually negated.
 
+**The expense stop declares itself in the valuation plane** — the `docs/28`
+§7 decision, settled against MIT Rentleg in phase 6. The alternative was a
+causal true-up (read the base year after it happens, adjust then), which is
+what the settlement mechanics of a real lease do — but the reference the
+benchmark ties to is Rentleg's own spreadsheet, and a spreadsheet reads the
+base year the way a valuation does: freely, from wherever the column sits.
+The absolute-window read is therefore a PRICED AMOUNT: the walk skips it,
+prices it once the causal cells settle, and evaluates its downstream readers
+(the management fee on collections that include the recovery) in the same
+pass. `mit_rentleg_plaza` and `cre_derived_lines` tie to their references
+unchanged, which is the gate that made the decision. A modeller who wants
+the true-up's timing writes the backward read the true-up actually has.
+
 Name the read as narrowly as the economics allow. A management fee reading
 `cre.opex.line.*` reaches the recoveries that read the fee, and the engine
 refuses the loop by name:

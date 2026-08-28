@@ -237,29 +237,38 @@ fn only_the_known_models_read_forward() {
     let corpus = corpus(&root);
     assert!(corpus.len() >= 100, "corpus not found: {}", corpus.len());
 
-    let mut forward: Vec<String> = Vec::new();
+    // Since phase 6, a forward window in an AMOUNT is a PRICED amount — a
+    // valuation setting a causal amount (`docs/28` §7) — and the walk serves
+    // it in a priced pass, so nothing here is walk-ineligible any more. The
+    // inventory stays deliberate: a new priced amount is added below by
+    // hand, not by blessing a diff, and anything ineligible for another
+    // reason (a forward GUARD, a priced coupling) shows up in `ineligible`.
+    let mut ineligible: Vec<String> = Vec::new();
+    let mut priced: Vec<String> = Vec::new();
     for (name, (ir_path, _, _)) in &corpus {
         let raw = std::fs::read_to_string(ir_path).expect("blessed IR is readable");
         match cfdl_engine::walk_eligibility(&raw) {
             Ok(None) => {}
-            Ok(Some(_)) => forward.push(name.clone()),
+            Ok(Some(_)) => ineligible.push(name.clone()),
             Err(err) => panic!("{name}: eligibility could not be computed: {err}"),
+        }
+        if !cfdl_engine::priced_streams(&raw)
+            .expect("priced inventory computes")
+            .is_empty()
+        {
+            priced.push(name.clone());
         }
     }
 
-    // Measured, not assumed. Three causes, and the second is the one a scan of
-    // model source cannot find:
+    // Two causes, both migrated to the priced exception:
     //
-    //   cre_derived_lines      an absolute base year, `cre.opex.line[24..24]`
+    //   cre_derived_lines      the expense stop's absolute base year,
+    //                          `cre.opex.line[24..24]` — declared in the
+    //                          valuation plane, which is what ties the MIT
+    //                          Rentleg reference
     //   cre_office_two_tenant  \ the CRE pack's `cre.exit_forward` lowering,
     //   pack_cadence_cre_*     /  which reads `[time.t + 1 .. time.t + 12]`
-    //
-    // `waterfall_nested_split` was here and is not any more. Its pot was
-    // written `[0..5]`, an absolute window, where `docs/17` §4 says a pot is
-    // THIS PERIOD'S cash — the constant was the single distribution date's
-    // period index, so it now reads `[0..time.t]` and says what it means. No
-    // published number moved.
-    let expected = [
+    let expected_priced = [
         "cre_derived_lines",
         "cre_office_two_tenant",
         "pack_cadence_cre_annual",
@@ -267,10 +276,15 @@ fn only_the_known_models_read_forward() {
         "pack_cadence_cre_quarterly",
     ];
     assert_eq!(
-        forward, expected,
-        "the set of forward-reading fixtures changed. If a new model reads \
-         forward, `docs/29` §2.0 and `docs/28` §7 both describe what happens to \
-         it — add it here deliberately, not by blessing a diff."
+        priced, expected_priced,
+        "the set of priced fixtures changed. If a new amount prices a forward \
+         window, `docs/28` §7 describes what it may and may not touch — add it \
+         here deliberately, not by blessing a diff."
+    );
+    assert_eq!(
+        ineligible,
+        Vec::<String>::new(),
+        "a fixture became walk-ineligible; the reason names the coupling"
     );
 }
 
@@ -378,5 +392,27 @@ fn walk_matches_the_column_order() {
     println!(
         "walk == column on {compared} models; {skipped} skipped as forward-reading, \
          {walk_only} as walk-only (their logic reads cash)"
+    );
+}
+
+/// The cycle the priced exception refuses, refused (`docs/28` §7).
+///
+/// Sale proceeds feeding state that feeds what is being capitalized: the
+/// exit prices forward rent, the machine's edge reads realised exit
+/// proceeds, and the rent is gated on the state the proceeds moved. No
+/// evaluation order serves it, so the engine refuses with the path named —
+/// at prepare, like every other cycle, because evaluation order is an
+/// engine concept. The IR is a committed asset: the model compiles (the
+/// cycle crosses the machine, which series-level wave analysis cannot see),
+/// so it cannot live in `fixtures/invalid`.
+#[test]
+fn the_priced_cycle_is_refused_with_the_path_named() {
+    let raw = include_str!("data/priced_amount_cycle.ir.json");
+    let err = cfdl_engine::run_from_json_str(raw, Default::default())
+        .expect_err("the priced cycle must be refused");
+    let message = err.to_string();
+    assert!(
+        message.contains("held -> sold") && message.contains("core.exit"),
+        "the refusal names the path: {message}"
     );
 }
