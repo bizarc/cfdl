@@ -222,6 +222,10 @@ def public_task(task: dict) -> dict:
     return {k: v for k, v in task.items() if not k.startswith("_")}
 
 
+class FatalAgentError(RuntimeError):
+    """The agent reported a condition no later task can recover from."""
+
+
 def call_agent(agent: str, task: dict, benchmarks_dir: pathlib.Path) -> dict:
     if agent == "replay":
         return replay_agent(task, benchmarks_dir)
@@ -234,6 +238,11 @@ def call_agent(agent: str, task: dict, benchmarks_dir: pathlib.Path) -> dict:
             capture_output=True,
             timeout=2700,
         )
+        if result.returncode == 3:
+            # The adapter's fatal code: a rejected key, exhausted credit, or a
+            # spend limit. Recording it as 112 zero scores would look like a
+            # model that cannot model.
+            raise FatalAgentError(result.stderr.decode("utf-8", "replace")[-300:].strip())
         if result.returncode != 0:
             raise RuntimeError(
                 f"agent command failed ({result.returncode}): "
@@ -432,9 +441,18 @@ def run_eval(
         tasks += extend_tasks(only)
     results = []
     for task in tasks:
+        submission = None
         try:
             submission = call_agent(agent, task, benchmarks_dir)
             score = GRADERS[task["tier"]](task, submission)
+        except FatalAgentError as err:
+            print(
+                f"\n[eval] ABORTING after {len(results)} task(s): {err}\n"
+                f"[eval] No score was recorded — this is an access or budget "
+                f"condition, not a model result.",
+                file=sys.stderr,
+            )
+            raise SystemExit(3) from None
         except Exception as err:  # an agent crash scores zero, named
             score = {
                 "compiles": False,
@@ -443,7 +461,13 @@ def run_eval(
                 "partial": 0.0,
                 "failures": [f"agent error: {err}"],
             }
-        results.append({"id": task["id"], "tier": task["tier"], "score": score})
+        row = {"id": task["id"], "tier": task["tier"], "score": score}
+        # Observed spend, when the adapter reports it (OpenRouter usage
+        # accounting). A baseline's cost column is measured, not estimated.
+        usage = (submission or {}).get("usage") if isinstance(submission, dict) else None
+        if usage:
+            row["usage"] = usage
+        results.append(row)
         marker = "PASS" if score.get("matches") or (
             task["tier"] == "repair" and score["compiles"]
         ) else "fail"
@@ -454,12 +478,15 @@ def run_eval(
         if not rows:
             continue
         key = "compiles" if tier == "repair" else "matches"
+        cost = sum(float((r.get("usage") or {}).get("cost", 0.0)) for r in rows)
         summary[tier] = {
             "tasks": len(rows),
             "passed": sum(1 for r in rows if r["score"][key]),
             "mean_partial": round(
                 sum(r["score"]["partial"] for r in rows) / len(rows), 4
             ),
+            "cost_usd": round(cost, 4),
+            "cost_per_task_usd": round(cost / len(rows), 4),
         }
     return {"agent": agent, "summary": summary, "results": results}
 
