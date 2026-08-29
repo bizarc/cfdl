@@ -1,0 +1,16 @@
+version 0.1
+model "event-when-not-bool"
+time calendar annual from 2026-01 for 3
+
+// A GUARD THAT IS NOT A CONDITION.
+//
+// The engine took a non-boolean guard as `false` and carried on: the event
+// never fired, `deterministic.warnings` said so per period, and `status`
+// stayed `ok`. That is the shape §7.71 already refused for series reads.
+//
+// The guard here is a literal, so it decides the same way on every period and
+// every run — which is what makes it checkable before the model is run at all.
+
+entity asset co : Asset.Financial
+
+event refi when 42 { set entity asset.co.status = "refinanced" }

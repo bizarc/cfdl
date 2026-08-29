@@ -1,0 +1,17 @@
+[
+  {
+    "code": "E3004_EXPR_ILLEGAL_OP",
+    "severity": "error",
+    "message": "Stream 'a.rent' amount cannot evaluate: expected bool, got number.",
+    "file": "model.cfdl",
+    "span": {
+      "start_line": 12,
+      "start_col": 1,
+      "end_line": 15,
+      "end_col": 1
+    },
+    "path": null,
+    "hint": "Every value in this expression is a literal, so it evaluates the same way on every period and every run.",
+    "notes": []
+  }
+]

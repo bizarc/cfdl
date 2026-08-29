@@ -1,0 +1,17 @@
+[
+  {
+    "code": "E1002_DUPLICATE_CONTRACT",
+    "severity": "error",
+    "message": "Duplicate contract 'cre.opex_line'. Give one a suffix to keep them separable.",
+    "file": "model.cfdl",
+    "span": {
+      "start_line": 19,
+      "start_col": 1,
+      "end_line": 22,
+      "end_col": 1
+    },
+    "path": null,
+    "hint": null,
+    "notes": []
+  }
+]

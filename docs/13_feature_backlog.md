@@ -1791,3 +1791,35 @@ asserting every published path matches exactly one tier would close the
 loop the authoring contract needs. (`ste-allow:` rule ids are now
 validated against §3's rule tables; the tier mapping is the remaining
 unenforced half.)
+
+### 7.79 An action kind the engine does not know is journaled, not refused
+
+*Recorded 2026-08-29, while retiring `activate contract` (§7.73).*
+
+The engine's action dispatch ends in a catch-all: a kind it does not recognise
+is journaled with outcome `ignored`, noted "unknown action kind", warned into
+`deterministic.warnings`, and the run continues with `status: ok`. Only
+hand-written IR can carry one, since every kind a model can write is known to
+the compiler that wrote it.
+
+**Why it was left alone.** Retiring the contract action was expected to retire
+`ignored` with it. It does not: this arm still produces it. Removing the
+outcome would have meant a `results_version` bump and 119 results goldens
+moving for a change in nothing anyone can observe, so the outcome stayed and
+the question was separated from the retirement.
+
+**The question.** `docs/13` §7.71 settled that a defect must not hide behind a
+substituted value and a warning nobody reads, and M1's pre-work turned three
+such spellings into compile-time refusals. An unrecognised action kind is the
+same shape one layer down: the IR asked for something the engine cannot do, and
+the run reports success. The alternative is to refuse the IR outright, which
+deletes `ignored` from the results schema (`results_version` bumps; every
+results golden re-blesses for the version string alone).
+
+What would settle it: whether IR is a surface a third party writes. If it is
+only ever compiler output, an unknown kind is a bug and refusing it is right.
+If hand-written IR is a supported entry point — the engine's own unit tests use
+it, and `docs/32`'s agents may — then tolerating an unknown kind loudly may be
+the better contract. `docs/05` does not say which.
+
+Related: §7.71, §7.73 (closed), `docs/28` §8, `docs/06`.

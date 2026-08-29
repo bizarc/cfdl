@@ -1,0 +1,17 @@
+[
+  {
+    "code": "E1007_DUPLICATE_EVENT",
+    "severity": "error",
+    "message": "Duplicate event 'refi'.",
+    "file": "model.cfdl",
+    "span": {
+      "start_line": 15,
+      "start_col": 1,
+      "end_line": 15,
+      "end_col": 64
+    },
+    "path": null,
+    "hint": null,
+    "notes": []
+  }
+]

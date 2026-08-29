@@ -364,6 +364,20 @@ impl<'a> Lexer<'a> {
             for _ in 0..text.len() {
                 let _ = self.bump();
             }
+            // SHAPE IS NOT VALIDITY. `try_lex_date` accepts four digits, a
+            // dash and two more — which `2026-13` satisfies. Nothing checked
+            // the calendar afterwards, so an impossible month compiled: the
+            // IR carried `"start": "2026-13-01"` and only the RUN refused it,
+            // one stage and one artifact too late.
+            if !is_real_date(&text) {
+                self.diagnostics.push(LexDiagnostic {
+                    code: "E0005_INVALID_DATE_LITERAL",
+                    message: format!(
+                        "'{text}' is not a real calendar date. Dates are `YYYY-MM` or `YYYY-MM-DD`."
+                    ),
+                    span: start.to_span(end),
+                });
+            }
             self.tokens.push(Token {
                 kind: TokenKind::Date(text),
                 span: start.to_span(end),
@@ -498,7 +512,46 @@ impl<'a> Lexer<'a> {
             span: start.to_span(last),
         });
     }
+}
 
+/// Is a date literal a real calendar date?
+///
+/// `YYYY-MM` names a month and `YYYY-MM-DD` a day; both must exist. February
+/// is checked against the proleptic Gregorian leap rule, which is the calendar
+/// the engine's own date arithmetic uses.
+fn is_real_date(text: &str) -> bool {
+    let parts: Vec<&str> = text.split('-').collect();
+    let (year, month, day) = match parts.as_slice() {
+        [y, m] => (y, m, None),
+        [y, m, d] => (y, m, Some(d)),
+        _ => return false,
+    };
+    let Ok(year) = year.parse::<i32>() else {
+        return false;
+    };
+    let Ok(month) = month.parse::<u32>() else {
+        return false;
+    };
+    if !(1..=12).contains(&month) {
+        return false;
+    }
+    let Some(day) = day else {
+        return true;
+    };
+    let Ok(day) = day.parse::<u32>() else {
+        return false;
+    };
+    let leap = (year % 4 == 0 && year % 100 != 0) || year % 400 == 0;
+    let last = match month {
+        1 | 3 | 5 | 7 | 8 | 10 | 12 => 31,
+        4 | 6 | 9 | 11 => 30,
+        _ if leap => 29,
+        _ => 28,
+    };
+    (1..=last).contains(&day)
+}
+
+impl<'a> Lexer<'a> {
     fn lex_punctuation_or_skip_unknown(&mut self) {
         let start = self.current_position();
         let Some((c, pos)) = self.bump() else {

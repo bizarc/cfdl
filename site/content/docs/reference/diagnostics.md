@@ -115,11 +115,9 @@ register, so it cannot fall behind the language.
 | `E1320_UNKNOWN_PARTY_ENTITY` | Symbols and references | a contract or option binds a role to an entity that is not declared. |
 | `E1321_NOT_A_PARTY` | Symbols and references | a role is bound to an asset. A contract is between parties. |
 | `E1322_UNKNOWN_PARTY_ROLE` | Symbols and references | a role is bound that the contract type does not declare. The declared roles are listed; a role belongs to the agreement, not to the entity. |
-| `E1305_UNRESOLVED_PHASE_REF` | Symbols and references | a schedule names a phase that is not declared. |
 | `E1306_INVALID_ENTITY_REF_FORMAT` | Symbols and references | entity ref, stream name, or contract name is not a qualified name with at least two segments (dotted hierarchy). |
 | `E2001_CONTRACT_MISSING_TERM` | Contracts and streams | a contract omits a term its pack requires. The message names it; see the pack's contract table. |
 | `E2002_CONTRACT_MISSING_EFFECTS` | Contracts and streams | a contract produces no streams, so it has no effect on the model. |
-| `E2003_CONTRACT_CURRENCY_REQUIRED` | Contracts and streams | a contract does not state its currency and none can be inferred. |
 | `E2101_STREAM_MISSING_SCHEDULE` | Contracts and streams | a stream has no `schedule`, so there is no period for its cash to land in. |
 | `E2102_STREAM_MISSING_AMOUNT` | Contracts and streams | a stream has no `amount`. |
 | `E2103_SCHEDULE_OUT_OF_BOUNDS` | Contracts and streams | a schedule reaches outside the model timeline. The bound is the cash horizon **plus** any `project <n>` tail, since the engine evaluates streams over both; a schedule may reach into the tail deliberately to feed a `series_sum` valuation. Applied to hand-written streams during validation and mirrored onto pack-lowered ones during lowering, so a pack cannot express what a model may not. |
@@ -131,18 +129,12 @@ register, so it cannot fall behind the language.
 | `E2109_SCHEDULE_CONFLICTING_PLACEMENT` | Contracts and streams | a schedule combines `mid` with a day rule or `net` payment terms. Each states where in its period the cash sits; two placements is a contradiction, not a refinement. |
 | `E2201_EVENT_WHEN_NOT_BOOL` | Events and actions | an event's `when` is not a true/false expression. |
 | `E2202_STREAM_ACTIVE_NOT_BOOL` | Events and actions | a stream's `active when` is not a true/false expression. |
-| `E2203_ACTION_SET_FIELD_INVALID` | Events and actions | an event sets an entity field that does not exist or cannot hold that value. |
 | `E3001_EXPR_PARSE_ERROR` | Expressions / typing | an expression is not valid CFDL. |
-| `E3002_EXPR_UNKNOWN_IDENT` | Expressions / typing | an expression names something not in scope. Bindings are `time.*`, `inputs.*`, `model.*`, `entity.*`, `cfg.*`, `obs.*` and entity fields by qualified path (`<family>.<entity>.<field>`). |
 | `E3003_EXPR_TYPE_ERROR` | Expressions / typing | an expression combines types that cannot combine, such as a date and a number. |
 | `E3004_EXPR_ILLEGAL_OP` | Expressions / typing | an operator is not defined for these operands. |
 | `W3001_EXPR_TYPE_UNKNOWN` | Expressions / typing | an expression's type could not be determined ahead of evaluation. It still runs; the warning notes the check was skipped. |
 | `W3002_OBS_REF_EXTRACTION_FAILED` | Expressions / typing | an observation reference could not be read out of an expression, so the run may not know it needs that input. |
-| `E4001_UNKNOWN_TYPE_ID` | Pack errors | a declaration names a type the active pack does not define. |
-| `E4002_INVALID_ENTITY_ATTR` | Pack errors | an entity field is not one the pack declares, or holds the wrong kind of value. |
-| `E4003_INVALID_CONTRACT_TERMS` | Pack errors | a contract's terms do not satisfy the pack's schema for that contract. |
 | `E4004_MISSING_PACK` | Pack errors | the named pack could not be loaded — not found, or found and rejected. |
-| `E5001_ID_GENERATION_FAILED` | Lowering/emission | the compiler could not derive a stable identifier for a declaration. |
 | `E5002_IR_SCHEMA_VALIDATION_FAILED` | Lowering/emission | the IR the compiler produced does not satisfy the published IR schema, or the IR being read does not. |
 | `E5003_IR_EMIT_FAILED` | Lowering/emission | the IR could not be written. |
 | `E5004_INVALID_LOWERING_RULE` | Lowering/emission | a pack's lowering rule is malformed. |
@@ -187,8 +179,9 @@ register, so it cannot fall behind the language.
 | `E6011_CRE_EXIT_INVALID_EXIT_CAP` | Pack domain validations |  |
 | `E6012_CRE_EXIT_MISSING_NOI_VALUE` | Pack domain validations |  |
 | `E6020_CRE_OPS_MISSING_AMOUNT` | Pack domain validations |  |
-| `E6021_CRE_OPS_INVALID_SCHEDULE` | Pack domain validations |  |
+| `E6030_CRE_LEASE_AMBIGUOUS_RENT` | Pack domain validations | a CRE lease states both `base_rent` (per period) and `base_rent_year` (annual). They would be summed; give one. |
 | `E6031_CRE_UNIT_INVALID_FREE_RENT` | Pack domain validations | `free_rent_months` is a whole number of months, 0 or more |
+| `E6033_CRE_UNIT_INVALID_ESCALATION` | Pack domain validations | a lease unit's `escalation` is below -1, which would make rent negative on the first step. |
 | `E6032_CRE_UNIT_INVALID_PRO_RATA` | Pack domain validations | `pro_rata_share` is a fraction between 0 and 1 |
 | `E6040_CRE_ROLLOVER_INVALID_PROBABILITY` | Pack domain validations | `renewal_probability` is a probability between 0 and 1 |
 | `E6041_CRE_ROLLOVER_INVALID_DOWNTIME` | Pack domain validations | `downtime_months` is a whole number of months, 0 or more pair: the first owns absent-or-unparseable, the second parsed-but-not-positive for the nominal annual rate |
@@ -215,6 +208,7 @@ register, so it cannot fall behind the language.
 | `E7027_OPCO_PERPETUITY_MISSING_DISCOUNT_RATE` | Pack domain validations | the terminal capitalization rate, stated on the contract rather than taken from the run's discount rate. |
 | `E7028_OPCO_PERPETUITY_MISSING_GROWTH` | Pack domain validations | state 0 for a flat perpetuity. |
 | `E7029_OPCO_PERPETUITY_INVALID_SELLING_COSTS` | Pack domain validations | a fraction between 0 and 1. |
+| `E7011_OPCO_TAXES_AMBIGUOUS_DA` | Pack domain validations | OpCo cash taxes state both `da_monthly` (per period) and `da_year` (annual). They would be summed; give one. |
 | `E7012_OPCO_TAXES_MISSING_RATE` | Pack domain validations | a cash-taxes contract states neither `tax_rate` nor `tax_rate_curve`. `tax_rate` carries a default of 0 so a curve may stand alone; without this check, stating neither would silently model a business that pays no tax. |
 | `E7013_OPCO_WC_MISSING_AMOUNT_OR_RULE` | Pack domain validations |  |
 | `E7014_OPCO_WC_INVALID_SCHEDULE` | Pack domain validations |  |
@@ -249,7 +243,7 @@ register, so it cannot fall behind the language.
 | `E9019_CREDIT_INVALID_AGE_MONTHS` | Pack domain validations | `age_months` is the pool's weighted average age at closing. PSA, SDA and the ABS model are all indexed from ORIGINATION, so a seasoned pool starts part-way up the ramp; leaving it at the default 0 on a seasoned pool understates prepayment. Non-negative integer. |
 | `E9020_CREDIT_RATE_FLOOR_ABOVE_CAP` | Pack domain validations |  |
 
-*197 codes.*
+*191 codes.*
 <!-- /cfdl:generated diagnostics-catalog -->
 
 ## Related

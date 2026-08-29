@@ -1,0 +1,15 @@
+version 0.1
+model "expr-illegal-op"
+time calendar annual from 2026-01 for 3
+
+// AN OPERATOR APPLIED TO THE WRONG KIND OF OPERAND.
+//
+// `and` joins conditions, not numbers. Same outcome as a type error before
+// this was checked: 0, a warning, and `status: ok`.
+
+entity asset co : Asset.Financial
+
+stream a.rent on entity asset.co inflow currency USD {
+  schedule every year from 2026-01 to 2028-01
+  amount = 10 and 3
+}

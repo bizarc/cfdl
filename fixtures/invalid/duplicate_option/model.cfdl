@@ -1,0 +1,13 @@
+version 0.1
+model "duplicate-option"
+time calendar annual from 2026-01 for 3
+
+// TWO OPTIONS UNDER ONE NAME MAKE `exercise option` AMBIGUOUS.
+//
+// Both reached the IR, and the engine resolves a forced exercise by position —
+// so which one an event exercised was an accident of declaration order.
+
+entity asset co : Asset.Financial
+
+option renewal type Option.Call { exercise when false payoff 1 }
+option renewal type Option.Call { exercise when false payoff 2 }

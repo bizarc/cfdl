@@ -314,12 +314,101 @@ pub fn resolve_symbols(output: &ResolveOutput) -> Result<SymbolTables, Vec<Resol
                 });
             }
             Stmt::Contract(contract) => {
+                // The table was declared and never written, so every duplicate
+                // check over it was dead and every lookup into it failed. A
+                // second contract under one name is not a naming quibble: both
+                // lower, and two rules striking the same stream name is
+                // E5007's downstream symptom of exactly this cause — reported
+                // only when a pack is active and only if the names collide.
+                if tables.contracts.contains_key(&contract.name) {
+                    diagnostics.push(ResolveDiagnostic {
+                        code: "E1002_DUPLICATE_CONTRACT".to_string(),
+                        message: format!(
+                            "Duplicate contract '{}'. Give one a suffix to keep them separable.",
+                            contract.name
+                        ),
+                        file: source_stmt.file.clone(),
+                        span: contract.span,
+                    });
+                } else {
+                    tables.contracts.insert(
+                        contract.name.clone(),
+                        SymbolEntry {
+                            name: contract.name.clone(),
+                            file: source_stmt.file.clone(),
+                            span: contract.span,
+                        },
+                    );
+                }
                 contract_decls.push(ContractDecl {
                     file: source_stmt.file.clone(),
                     name: contract.name.clone(),
                     subject_entity: contract.subject_entity.clone(),
                     span: contract.span,
                 });
+            }
+            Stmt::Phase(phase) => {
+                if tables.phases.contains_key(&phase.name) {
+                    diagnostics.push(ResolveDiagnostic {
+                        code: "E1004_DUPLICATE_PHASE".to_string(),
+                        message: format!("Duplicate phase '{}'.", phase.name),
+                        file: source_stmt.file.clone(),
+                        span: phase.span,
+                    });
+                } else {
+                    tables.phases.insert(
+                        phase.name.clone(),
+                        SymbolEntry {
+                            name: phase.name.clone(),
+                            file: source_stmt.file.clone(),
+                            span: phase.span,
+                        },
+                    );
+                }
+            }
+            Stmt::Option(option) => {
+                // Two options under one name both reach the IR, and
+                // `exercise option <name>` then names both — the engine
+                // resolves by position, so which one is forced is an accident
+                // of declaration order.
+                if tables.options.contains_key(&option.name) {
+                    diagnostics.push(ResolveDiagnostic {
+                        code: "E1006_DUPLICATE_OPTION".to_string(),
+                        message: format!("Duplicate option '{}'.", option.name),
+                        file: source_stmt.file.clone(),
+                        span: option.span,
+                    });
+                } else {
+                    tables.options.insert(
+                        option.name.clone(),
+                        SymbolEntry {
+                            name: option.name.clone(),
+                            file: source_stmt.file.clone(),
+                            span: option.span,
+                        },
+                    );
+                }
+            }
+            Stmt::Event(event) => {
+                // Both fire. The journal then carries two `event:<name>` actors
+                // that cannot be told apart.
+                if tables.events.contains_key(&event.name) {
+                    diagnostics.push(ResolveDiagnostic {
+                        code: "E1007_DUPLICATE_EVENT".to_string(),
+                        message: format!("Duplicate event '{}'.", event.name),
+                        file: source_stmt.file.clone(),
+                        span: event.span,
+                    });
+                } else {
+                    tables.events.insert(
+                        event.name.clone(),
+                        SymbolEntry {
+                            name: event.name.clone(),
+                            file: source_stmt.file.clone(),
+                            span: event.span,
+                        },
+                    );
+                }
             }
             _ => {}
         }

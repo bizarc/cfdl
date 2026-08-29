@@ -8,6 +8,56 @@ This project follows Semantic Versioning: https://semver.org/
 
 ## [Unreleased]
 
+### Fixed: the diagnostic register is now the codes the tools emit
+
+Nothing compared `docs/08` against what anything emits, and the drift ran both
+ways: **198 documented against 192 emitted**, 18 of them documented by nothing
+that could produce them, three the packs emit missing from the page, and two
+pack READMEs naming a number under a name its validation does not use.
+
+The register is the repair catalogue an agent reads. A promised diagnostic that
+never fires teaches it to wait for a code that will not come.
+
+**Nine checks built** — each probed first, and each silent before:
+
+| code | what compiled before |
+|---|---|
+| `E0005_INVALID_DATE_LITERAL` | `from 2026-13` reached the IR as `"2026-13-01"`; only the run refused it |
+| `E1002_DUPLICATE_CONTRACT` | reported only as `E5007`'s downstream symptom, and only under a pack |
+| `E1004_DUPLICATE_PHASE` | unreported |
+| `E1006_DUPLICATE_OPTION` | both options reached the IR; `exercise option` resolved by position |
+| `E1007_DUPLICATE_EVENT` | both events reached the IR and both fired |
+| `E2201_EVENT_WHEN_NOT_BOOL` | `when 42` ran `status: ok`, the guard taken as false |
+| `E2202_STREAM_ACTIVE_NOT_BOOL` | `active when 7` ran `status: ok`, the stream never paying |
+| `E3003_EXPR_TYPE_ERROR` | `"100" + 1` ran `status: ok`, the amount taken as 0 |
+| `E3004_EXPR_ILLEGAL_OP` | `10 and 3` the same |
+
+The duplicate family was dead because the symbol table was: `phases`,
+`contracts`, `options` and `events` were declared on it and never written by
+anything. `E0005` moved into the LEXER, where the token is minted, because
+`try_lex_date` checked shape and never the calendar.
+
+The last four are the **constant-folding subset only**. `cfdl-expr` has no type
+inference, so a general check is a feature and not a missing diagnostic; an
+expression built only from literals is decided by evaluating it, and anything
+naming a binding is left to the run. `EXPR_UNKNOWN_NAME` vs `EXPR_EVAL` draws
+that line, so "depends on a binding" is never read as "the arithmetic is wrong".
+
+**Ten entries deleted**, each a condition already caught elsewhere or one that
+cannot arise: `E1305` (`E2106`), `E4001` (`E1311`), `E3002` (`E5002`), `E2203`
+(open-world fields; a declared field already refuses an ill-typed write),
+`E2003`, `E4002`, `E4003`, `E5001`, and the `E6004`/`E6021` retirement
+tombstones. **Three documented**: `E6030`, `E6033`, `E7011`.
+
+**`docs/08` §8 now says what a pre-release language should**: before 1.0 a
+retired code is deleted and its number returns to the pool; the never-reuse
+rules take effect at 1.0, when saved artifacts start outliving the release that
+produced them.
+
+**`make diagnostic-parity`** holds it: `docs/08`, the crates, the pack
+validations and the pack READMEs must agree, both directions, with test-only
+codes listed by name and reason.
+
 ### Removed: `activate` / `deactivate contract` (§7.73)
 
 A contract is not one behaviour; it is a COLLECTION OF STREAMS. `cre.lease`
