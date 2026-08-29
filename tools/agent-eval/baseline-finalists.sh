@@ -16,7 +16,24 @@
 # that spends more has lost the plot). Every scorecard records observed
 # spend, and this script prints a per-model total as it goes.
 set -u
-[ -n "${OPENROUTER_API_KEY:-}" ] || { echo "export OPENROUTER_API_KEY first"; exit 1; }
+
+# Say it on the terminal even when stdout and stderr are redirected to a log.
+# Without this, a backgrounded run that refuses to start (no key, bad path)
+# prints its reason into the log and shows the user an empty prompt — which
+# looks exactly like a command that silently did nothing.
+announce() {
+  printf '%s\n' "$*" >&2
+  # The tty write is best-effort: a cron or sandboxed run has no terminal,
+  # and its failure must not become noise in the log.
+  { printf '%s\n' "$*" > /dev/tty; } 2>/dev/null
+  return 0
+}
+
+if [ -z "${OPENROUTER_API_KEY:-}" ]; then
+  announce "agent-eval: OPENROUTER_API_KEY is not set in this shell — nothing was run."
+  announce "  export OPENROUTER_API_KEY=\"your-key\"   then run this again"
+  exit 1
+fi
 cd "$(dirname "$0")/../.." || exit 1
 mkdir -p eval-results
 
@@ -38,6 +55,8 @@ else
   )
 fi
 
+announce "agent-eval: running ${#MODELS[@]} model(s), 112 tasks each. Progress: tail -f eval-results/baseline.log"
+
 for M in "${MODELS[@]}"; do
   SLUG=$(echo "$M" | tr '/:' '--')
   OUT="eval-results/baseline-$SLUG.json"
@@ -55,5 +74,6 @@ print(f"    spend so far on this model: ${total:.2f}")
 PY
   fi
 done
+announce "agent-eval: baseline complete."
 echo "--- baseline complete ($(date)); compare with:"
 echo "    .venv/bin/python tools/agent-eval/compare.py"
