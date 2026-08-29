@@ -236,3 +236,64 @@ print(f"NPV @ 10%: {stressed.metrics()['model.npv']:,.0f}")
 NPV @ base: 1,220,669
 NPV @ 10%: 737,280
 ```
+
+## Extended analysis — verify, decompose, cover
+
+The same discipline an agent uses: don't trust a series, interrogate it.
+
+```python
+# Verify the degradation convention: annual PPA revenue should grow at a constant
+# escalation-net-of-degradation rate. pandas makes the check one line.
+ppa_year = cf["stream.energy.ppa.revenue"].groupby(cf.index.year).sum()
+ppa_year.pct_change().dropna().round(4).unique()
+```
+
+```
+array([0.0149])
+```
+
+A constant ~1.49% — exactly `(1 + 2% escalation) x (1 - 0.5% degradation) - 1`.
+The engine's convention, recovered from the output.
+
+```python
+# Revenue decomposition: contracted PPA vs storage arbitrage vs capacity payments.
+rev = cf[["stream.energy.ppa.revenue", "stream.energy.storage.margin", "stream.energy.capacity.revenue"]]
+rev.groupby(cf.index.year).sum().rename(columns=lambda c: c.split(".")[2]).plot.area(title="Revenue stack by year")
+```
+
+```
+<Axes: title={'center': 'Revenue stack by year'}, xlabel='period'>
+```
+
+![Chart produced by the preceding cell](/notebooks/energy-solar-microgrid/cell-16-1.png)
+
+```python
+# Coverage: CFADS against debt service, annually, over the debt's life.
+annual = cf[["domain.energy.cfads", "domain.energy.debt_service_periodic"]].groupby(cf.index.year).sum()
+live = annual[annual["domain.energy.debt_service_periodic"] > 0]
+(live["domain.energy.cfads"] / live["domain.energy.debt_service_periodic"]).plot(title="Annual DSCR (CFADS / debt service)")
+```
+
+```
+<Axes: title={'center': 'Annual DSCR (CFADS / debt service)'}, xlabel='period'>
+```
+
+![Chart produced by the preceding cell](/notebooks/energy-solar-microgrid/cell-17-1.png)
+
+```python
+# Equity payback, from the cumulative net line and the engine's own metric.
+cum = cf["model.net_cash_flow"].cumsum()
+print("first cumulative-positive month:", cum[cum > 0].index.min(),
+      "| model.payback_years:", results.metrics()["model.payback_years"])
+cum.plot(title="Cumulative net cash flow")
+```
+
+```
+first cumulative-positive month: 2033-02 | model.payback_years: 7.166667
+```
+
+```
+<Axes: title={'center': 'Cumulative net cash flow'}, xlabel='period'>
+```
+
+![Chart produced by the preceding cell](/notebooks/energy-solar-microgrid/cell-18-2.png)

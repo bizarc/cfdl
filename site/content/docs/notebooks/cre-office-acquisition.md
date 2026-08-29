@@ -253,3 +253,82 @@ mf[mf["metric"].str.contains("dscr|noi|exit", case=False)]
 17       stream.cre.exit.proceeds.total  3.303207e+06      USD        core
 18  stream.cre.exit.selling_costs.total -6.606414e+04      USD        core
 ```
+
+## Extended analysis — the DataFrame is the API
+
+Everything below is ordinary pandas over `cashflows()`. The engine guarantees the
+numbers (this case is asserted against an independent reference in CI); the
+analysis on top is yours.
+
+```python
+# Annual rollup with a computed coverage column.
+annual = cf[["domain.cre.egi", "domain.cre.noi", "domain.cre.debt_service"]].groupby(cf.index.year).sum()
+annual["dscr"] = annual["domain.cre.noi"] / annual["domain.cre.debt_service"]
+annual.round(2)
+```
+
+```
+        domain.cre.egi  domain.cre.noi  domain.cre.debt_service  dscr
+period                                                               
+2026         540000.00       240000.00                442142.99  0.54
+2027         881025.00       573525.00                442142.99  1.30
+2028         910322.62       595135.12                442142.99  1.35
+2029         940426.85       617359.66                442142.99  1.40
+2030         971360.07       640216.20                442142.99  1.45
+2031         920924.75       581502.28                442142.99  1.32
+2032         991457.87       643549.84                442142.99  1.46
+2033         780329.82       423724.09                442142.99  0.96
+2034         563330.76       197809.89                442142.99  0.45
+2035         580770.69       206111.80                442142.99  0.47
+```
+
+Year one is lease-up — a 0.5x coverage year a lifetime DSCR of 1.07 would have
+hidden entirely. Per-period series are what make covenant work possible.
+
+```python
+# Covenant screen and trailing-12 NOI.
+tight = cf[cf["domain.cre.dscr"] < 1.0]
+print(f"months below 1.00x DSCR: {len(tight)} of {len(cf)} (last: {tight.index.max()})")
+cf["domain.cre.noi"].rolling(12).sum().plot(title="Trailing-12 NOI")
+```
+
+```
+months below 1.00x DSCR: 36 of 120 (last: 2035-12)
+```
+
+```
+<Axes: title={'center': 'Trailing-12 NOI'}, xlabel='period'>
+```
+
+![Chart produced by the preceding cell](/notebooks/cre-office-acquisition/cell-16-2.png)
+
+```python
+# Tenant-level revenue composition: the lease-by-lease grain survives into results.
+rev_cols = [c for c in cf.columns if ".base_rent." in c or ".recoveries." in c or ".rollover.rent." in c]
+rev = cf[rev_cols].groupby(cf.index.year).sum()
+rev.rename(columns=lambda c: c.replace("stream.cre.", "")).plot.area(title="Revenue composition by year")
+```
+
+```
+<Axes: title={'center': 'Revenue composition by year'}, xlabel='period'>
+```
+
+![Chart produced by the preceding cell](/notebooks/cre-office-acquisition/cell-17-1.png)
+
+```python
+# Value sensitivity: re-run the deal across a discount grid — four engine runs.
+import pandas as pd
+npv = pd.Series({
+    rate: model.run(config={"deterministic": {"annual_discount_rate": rate}}, pack="cre").metrics()["model.npv"]
+    for rate in (0.06, 0.08, 0.10, 0.12)
+})
+npv.round(0)
+```
+
+```
+0.06    1622142.0
+0.08    1316581.0
+0.10    1064405.0
+0.12     855277.0
+dtype: float64
+```
