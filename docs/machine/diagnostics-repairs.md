@@ -11,7 +11,7 @@ Diagnostics are the repair signal: read the `code`, `message`, `span`, and
 `hint`, change the model, recompile. The catalog is how an agent learns what
 each code looks like in the flesh before it meets one.
 
-**Coverage:** 191 codes in the docs/08 §7 register; 81 exemplified here; 70 of 81 examples carry a recorded fix.
+**Coverage:** 193 codes in the docs/08 §7 register; 83 exemplified here; 70 of 84 examples carry a recorded fix.
 
 ## active_in_unknown_state — E1332_UNKNOWN_ACTIVE_STATE
 
@@ -657,6 +657,29 @@ event refi when time.t >= 2 { set entity asset.co.status = "b" }
 ```
 
 - `E1007_DUPLICATE_EVENT` (error): Duplicate event 'refi'.
+
+Fix: not yet recorded.
+
+## duplicate_metric — E1008_DUPLICATE_METRIC
+
+Failing example:
+
+```cfdl
+version 0.1
+model "duplicate-metric"
+time calendar annual from 2026-01 for 3
+
+// TWO METRICS UNDER ONE NAME.
+//
+// Both would publish as `metric.headline` and one would win silently.
+
+entity asset co : Asset.Financial
+
+metric headline = 1.0
+metric headline = 2.0
+```
+
+- `E1008_DUPLICATE_METRIC` (error): Duplicate metric 'headline'.
 
 Fix: not yet recorded.
 
@@ -1593,6 +1616,59 @@ lifecycle ghost { initial a  state a }
 
 entity asset x { lifecycle ghost  state a }
 ```
+
+## metric_forward_ref — E1354_METRIC_FORWARD_REF
+
+Failing example:
+
+```cfdl
+version 0.1
+model "metric-forward-ref"
+time calendar annual from 2026-01 for 3
+
+// A METRIC READS THE METRICS ABOVE IT.
+//
+// Declaration order is the rule waterfalls already follow, which makes the
+// dependency an order rather than a graph: the engine's fold always finds a
+// value already computed. `headline` reads a metric declared below it, so
+// there would be nothing there when it ran.
+
+entity asset co : Asset.Financial
+
+metric headline = metric.base + 1.0
+metric base     = 2.0
+```
+
+- `E1354_METRIC_FORWARD_REF` (error): Metric 'headline' reads 'base', which is declared below it or not at all.
+  - hint: Metrics compose in declaration order, so a metric may read the metrics above it. Move the declaration up, or correct the name.
+
+Fix: not yet recorded.
+
+## metric_self_ref — E1354_METRIC_FORWARD_REF
+
+Failing example:
+
+```cfdl
+version 0.1
+model "metric-self-ref"
+time calendar annual from 2026-01 for 3
+
+// A METRIC IS NOT A RECURRENCE.
+//
+// Reading itself asks for the previous value of something computed once, at
+// the horizon, over a projection that has already finished. A running
+// quantity is a field the walk advances and a distribution moves; a metric
+// folds the result.
+
+entity asset co : Asset.Financial
+
+metric running = metric.running + 1.0
+```
+
+- `E1354_METRIC_FORWARD_REF` (error): Metric 'running' reads itself.
+  - hint: A metric is a fold over the finished projection, not a recurrence; carry a running quantity as a field the walk advances.
+
+Fix: not yet recorded.
 
 ## missing_time — E1103_MISSING_TIME, E1109_MISSING_ENTITY
 

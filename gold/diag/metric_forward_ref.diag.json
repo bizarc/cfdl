@@ -1,0 +1,17 @@
+[
+  {
+    "code": "E1354_METRIC_FORWARD_REF",
+    "severity": "error",
+    "message": "Metric 'headline' reads 'base', which is declared below it or not at all.",
+    "file": "model.cfdl",
+    "span": {
+      "start_line": 14,
+      "start_col": 1,
+      "end_line": 14,
+      "end_col": 35
+    },
+    "path": null,
+    "hint": "Metrics compose in declaration order, so a metric may read the metrics above it. Move the declaration up, or correct the name.",
+    "notes": []
+  }
+]

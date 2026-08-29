@@ -1,0 +1,12 @@
+version 0.1
+model "duplicate-metric"
+time calendar annual from 2026-01 for 3
+
+// TWO METRICS UNDER ONE NAME.
+//
+// Both would publish as `metric.headline` and one would win silently.
+
+entity asset co : Asset.Financial
+
+metric headline = 1.0
+metric headline = 2.0

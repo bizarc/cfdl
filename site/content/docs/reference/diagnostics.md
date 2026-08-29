@@ -83,11 +83,13 @@ register, so it cannot fall behind the language.
 | `E1005_DUPLICATE_ASSUME` | Symbols and references | two assumptions share a name. |
 | `E1006_DUPLICATE_OPTION` | Symbols and references | two options share a name. |
 | `E1007_DUPLICATE_EVENT` | Symbols and references | two events share a name. |
+| `E1008_DUPLICATE_METRIC` | Symbols and references | two metrics share a name. Both would publish under `metric.<name>` and one would win silently. |
 | `E1301_UNRESOLVED_ENTITY_REF` | Symbols and references | a stream, contract or event action names an entity that is not declared. |
 | `E1340_WATERFALL_NO_SOURCE` | Symbols and references | a waterfall declares no `from`, so there is no pot to allocate. |
 | `E1341_WATERFALL_FORWARD_REF` | Symbols and references | a step's `paid.<step>` names a step declared later in the same waterfall. Steps pay in declaration order, so a later step has not paid anything when an earlier one is evaluated. |
 | `E1342_WATERFALL_SERIES_NOT_VISIBLE` | Symbols and references | `series_sum`/`series_avg` names a step of this waterfall or of a later one. Steps publish when their waterfall finishes, so the read would aggregate to zero and say nothing. An EARLIER waterfall is the documented composition and still compiles. |
 | `E1349_UNRESOLVED_LIFECYCLE_REF` | Symbols and references | an entity binds `lifecycle <name>` and no lifecycle block declares it. |
+| `E1354_METRIC_FORWARD_REF` | Symbols and references | a metric reads a metric declared below it, or reads itself. Metrics compose in DECLARATION ORDER, the same rule waterfalls follow, which makes the dependency an order rather than a graph. Reading itself is a different mistake: a metric is a fold over the finished projection, not a recurrence — carry a running quantity as a field the walk advances. |
 | `E1350_LIFECYCLE_CONFLICT` | Symbols and references | an entity binds a model-declared lifecycle, but its ontology type already declares one. One machine per entity. |
 | `E1351_LIFECYCLE_NO_INITIAL` | Symbols and references | a lifecycle block declares no `initial`. Every machine opens somewhere. |
 | `E1352_DUPLICATE_LIFECYCLE` | Symbols and references | two lifecycle blocks share a name. One machine, one declaration. |
@@ -243,7 +245,7 @@ register, so it cannot fall behind the language.
 | `E9019_CREDIT_INVALID_AGE_MONTHS` | Pack domain validations | `age_months` is the pool's weighted average age at closing. PSA, SDA and the ABS model are all indexed from ORIGINATION, so a seasoned pool starts part-way up the ramp; leaving it at the default 0 on a seasoned pool understates prepayment. Non-negative integer. |
 | `E9020_CREDIT_RATE_FLOOR_ABOVE_CAP` | Pack domain validations |  |
 
-*191 codes.*
+*193 codes.*
 <!-- /cfdl:generated diagnostics-catalog -->
 
 ## Related

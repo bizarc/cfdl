@@ -117,6 +117,10 @@ pub struct SymbolTables {
     pub events: BTreeMap<String, SymbolEntry>,
 
     pub assumptions: BTreeMap<String, SymbolEntry>,
+    /// Declared metrics (`docs/13` §7.25), in declaration order — a metric may
+    /// read the metrics above it, so the order is part of the meaning.
+    pub metrics: BTreeMap<String, SymbolEntry>,
+    pub metric_order: Vec<String>,
 }
 
 #[derive(Debug, Clone)]
@@ -346,6 +350,26 @@ pub fn resolve_symbols(output: &ResolveOutput) -> Result<SymbolTables, Vec<Resol
                     subject_entity: contract.subject_entity.clone(),
                     span: contract.span,
                 });
+            }
+            Stmt::Metric(metric) => {
+                if tables.metrics.contains_key(&metric.name) {
+                    diagnostics.push(ResolveDiagnostic {
+                        code: "E1008_DUPLICATE_METRIC".to_string(),
+                        message: format!("Duplicate metric '{}'.", metric.name),
+                        file: source_stmt.file.clone(),
+                        span: metric.span,
+                    });
+                } else {
+                    tables.metrics.insert(
+                        metric.name.clone(),
+                        SymbolEntry {
+                            name: metric.name.clone(),
+                            file: source_stmt.file.clone(),
+                            span: metric.span,
+                        },
+                    );
+                    tables.metric_order.push(metric.name.clone());
+                }
             }
             Stmt::Phase(phase) => {
                 if tables.phases.contains_key(&phase.name) {
@@ -778,6 +802,7 @@ fn statement_span(stmt: &Stmt) -> Span {
         Stmt::Phase(s) => s.span,
         Stmt::Entity(s) => s.span,
         Stmt::Assume(s) => s.span,
+        Stmt::Metric(s) => s.span,
         Stmt::Curve(s) => s.span,
         Stmt::Quantile(s) => s.span,
         Stmt::Contract(s) => s.span,

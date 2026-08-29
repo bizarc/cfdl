@@ -9,6 +9,7 @@ statement       = version_stmt
                 | import_stmt
                 | time_stmt
                 | phase_stmt
+                | metric_stmt
                 | entity_stmt
                 | assume_stmt
                 | curve_stmt
@@ -41,6 +42,10 @@ time_stmt       = "time" "calendar" cadence "from" date_lit "for" INT [ "project
 cadence         = "daily" | "monthly" | "quarterly" | "annual" ;
 
 phase_stmt      = "phase" IDENT "from" date_lit "to" date_lit ;
+
+(* A figure the model solved for. Evaluated once at the horizon, over the
+   finished projection; published as `metric.<name>`. *)
+metric_stmt     = "metric" IDENT "=" expr ;
 
 (* --- entities --- *)
 (* Both the type annotation and the block are optional. `entity asset sunset`

@@ -1,0 +1,17 @@
+[
+  {
+    "code": "E1354_METRIC_FORWARD_REF",
+    "severity": "error",
+    "message": "Metric 'running' reads itself.",
+    "file": "model.cfdl",
+    "span": {
+      "start_line": 14,
+      "start_col": 1,
+      "end_line": 14,
+      "end_col": 37
+    },
+    "path": null,
+    "hint": "A metric is a fold over the finished projection, not a recurrence; carry a running quantity as a field the walk advances.",
+    "notes": []
+  }
+]

@@ -47,7 +47,7 @@ pub struct Money {
     pub currency: String,
 }
 
-#[derive(Debug, Clone, PartialEq, Default)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct ExprEnv {
     pub model: BTreeMap<String, Value>,
     pub time: BTreeMap<String, Value>,
@@ -56,6 +56,14 @@ pub struct ExprEnv {
     pub obs: BTreeMap<String, Value>,
     /// Assumption values (`assume` statements), referenced as `inputs.<name>`.
     pub inputs: BTreeMap<String, Value>,
+    /// Declared metrics already computed, referenced as `metric.<name>`.
+    ///
+    /// Populated only in the valuation plane, and only with the metrics
+    /// declared ABOVE the one being evaluated — the compiler refuses a forward
+    /// or circular reference (`E1354`), so a lookup here always finds a value
+    /// that exists. Strict like `inputs`, not open-world: a misspelled metric
+    /// is a hard error rather than a null that becomes zero.
+    pub metrics: BTreeMap<String, Value>,
     /// Per-period stream series (signed amounts) available to `series_sum` /
     /// `series_avg`. Populated by the engine for phase-2 stream evaluation;
     /// empty elsewhere.
@@ -164,6 +172,7 @@ impl ExprEnv {
             cfg: BTreeMap::new(),
             obs: BTreeMap::new(),
             inputs: BTreeMap::new(),
+            metrics: BTreeMap::new(),
             states: BTreeMap::new(),
             prev_states: BTreeMap::new(),
             prev_self: None,
@@ -652,6 +661,7 @@ impl cfdl_calc::Env for EnvAdapter<'_> {
                 "cfg" => &self.env.cfg,
                 "obs" => &self.env.obs,
                 "inputs" => &self.env.inputs,
+                "metric" => &self.env.metrics,
                 _ => return None,
             };
             (m, parts.next()?)

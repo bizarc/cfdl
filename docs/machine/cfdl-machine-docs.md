@@ -1078,7 +1078,38 @@ Rules:
 - `monte_carlo` MUST provide `trials` and `seed`.
 
 ### 15.2 Engine-computed outputs
-Output metrics (NPV, IRR, DSCR, NOI, etc.) are computed by the engine based on the domain pack's output specification. CFDL models do not declare output metrics.
+Output metrics (NPV, IRR, DSCR, NOI, etc.) are computed by the engine based on the domain pack's output specification.
+
+### 15.3 Model-declared metrics (normative)
+
+A model MAY declare a metric — a figure it solved for that neither the engine
+nor a pack mints:
+
+```cfdl
+metric class_a_wal   = series_sum("credit.class_a.principal", 0, 59) / 12.0
+metric crossover     = metric.class_a_wal - inputs.expected_wal
+```
+
+Rules:
+- A metric name MUST be unique within the model (`E1008`).
+- A metric is evaluated ONCE, at the horizon, over the finished projection —
+  the valuation plane of `docs/28` §2. It is a fold over a completed
+  projection, not a recurrence: nothing it computes can feed back into the
+  walk.
+- Its expression MAY read series (including the projection tail, which is what
+  a forward-looking figure needs), entity fields, `inputs`, `cfg`, the
+  engine's `model.*` metrics, and `metric.<name>` for any metric DECLARED
+  ABOVE IT.
+- Metrics compose in declaration order — the same rule waterfalls follow
+  (§10.5) — so the dependency is an order rather than a graph. A forward or
+  circular reference is refused (`E1354`).
+- Every metric is published as `metric.<name>` in `deterministic.metrics` and
+  in every scenario summary, so a scenario grid can assert a derived figure
+  per column and not only the engine's built-ins.
+
+The three namespaces stay distinct, and the prefix says who minted the number:
+`model.*` is the engine's, `domain.*` is the active pack's, `metric.*` is this
+model's.
 
 See the Pack Interface specification for details on how packs define output categories, aggregations, and metrics.
 
@@ -1175,14 +1206,14 @@ These MUST compile to typed values in IR.
 A reserved word cannot be used as an identifier. The list is exhaustive and is
 checked against the lexer, so a word added to one appears in the other.
 
-### 18.1 In use (85)
+### 18.1 In use (86)
 
 Read by a production of the grammar:
 
 `account`, `activate`, `active`, `also`, `annual`, `as`, `assume`, `calendar`, `clip`, `contract`, `convention`, `currency`,
 `curve`, `daily`, `day`, `days`, `deactivate`, `deterministic`, `effects`, `end`, `entity`, `eom`, `event`,
 `every`, `except`, `exercisable`, `exercise`, `false`, `following`, `for`, `from`, `import`, `in`, `inflow`,
-`LogNormal`, `mid`, `model`, `modified_following`, `modified_preceding`, `monte_carlo`, `month`, `monthly`, `months`, `net`, `none`,
+`LogNormal`, `metric`, `mid`, `model`, `modified_following`, `modified_preceding`, `monte_carlo`, `month`, `monthly`, `months`, `net`, `none`,
 `Normal`, `on`, `option`, `owner`, `outflow`, `pack`, `parties`, `payment`, `payoff`, `phase`, `phase_end`, `phase_enter`,
 `phase_start`, `preceding`, `quantile`, `quarter`, `quarterly`, `run`, `schedule`, `seed`, `set`, `state`, `start`, `stream`, `stub`,
 `term`, `terms`, `time`, `to`, `trials`, `Triangular`, `true`, `type`, `Uniform`, `use`, `version`,
@@ -1311,6 +1342,7 @@ statement       = version_stmt
                 | import_stmt
                 | time_stmt
                 | phase_stmt
+                | metric_stmt
                 | entity_stmt
                 | assume_stmt
                 | curve_stmt
@@ -1343,6 +1375,10 @@ time_stmt       = "time" "calendar" cadence "from" date_lit "for" INT [ "project
 cadence         = "daily" | "monthly" | "quarterly" | "annual" ;
 
 phase_stmt      = "phase" IDENT "from" date_lit "to" date_lit ;
+
+(* A figure the model solved for. Evaluated once at the horizon, over the
+   finished projection; published as `metric.<name>`. *)
+metric_stmt     = "metric" IDENT "=" expr ;
 
 (* --- entities --- *)
 (* Both the type annotation and the block are optional. `entity asset sunset`
@@ -2226,6 +2262,14 @@ against it by `make ir-schema`.
       },
       "description": "Every machine an entity binds — pack-declared and model-declared resolved to the same shape. Absent when no entity has one."
     },
+    "metrics": {
+      "type": "array",
+      "minItems": 0,
+      "items": {
+        "$ref": "#/$defs/Metric"
+      },
+      "description": "Reserved. Metrics are computed at run time by the engine and by the active pack, so a compile output does not carry them; no compiler emits this field."
+    },
     "waterfalls": {
       "type": "array",
       "minItems": 0,
@@ -2282,14 +2326,6 @@ against it by `make ir-schema`.
       "items": {
         "$ref": "#/$defs/Run"
       }
-    },
-    "metrics": {
-      "type": "array",
-      "minItems": 0,
-      "items": {
-        "$ref": "#/$defs/Metric"
-      },
-      "description": "Reserved. Metrics are computed at run time by the engine and by the active pack, so a compile output does not carry them; no compiler emits this field."
     },
     "required_observables": {
       "type": "array",
@@ -3370,20 +3406,17 @@ against it by `make ir-schema`.
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "id",
         "name",
-        "expr",
-        "provenance"
+        "expr"
       ],
       "properties": {
-        "id": {
-          "$ref": "#/$defs/Id"
-        },
         "name": {
-          "$ref": "#/$defs/Id"
+          "type": "string",
+          "description": "Published as `metric.<name>`."
         },
         "expr": {
-          "$ref": "#/$defs/Expr"
+          "$ref": "#/$defs/Expr",
+          "description": "Evaluated at the horizon over the finished projection. It may read series (including the projection tail), entity fields, inputs, the engine's `model.*` metrics, and `metric.<name>` for any metric declared above it."
         },
         "provenance": {
           "$ref": "#/$defs/NodeProvenance"
@@ -3964,7 +3997,7 @@ against it by `make results-schema`.
     },
     "MetricMap": {
       "type": "object",
-      "description": "Named metric scalars",
+      "description": "Named metric scalars. The prefix says who minted the number: `model.*` is the engine's (total, npv, irr, moic, payback, wal), `domain.<pack>.*` is the active pack's, and `metric.<name>` is one the MODEL declared (`docs/01` §15.3) — a figure this deal solved for, evaluated once at the horizon over the finished projection. `stream.<name>.total` is a stream's own sum. A declared metric appears in every scenario summary as well, since scenarios and the deterministic block publish the same map.",
       "additionalProperties": {
         "$ref": "#/$defs/Scalar"
       }
@@ -6027,6 +6060,7 @@ Fields that move:
 - `E1005_DUPLICATE_ASSUME` — two assumptions share a name.
 - `E1006_DUPLICATE_OPTION` — two options share a name.
 - `E1007_DUPLICATE_EVENT` — two events share a name.
+- `E1008_DUPLICATE_METRIC` — two metrics share a name. Both would publish under `metric.<name>` and one would win silently.
 - `E1301_UNRESOLVED_ENTITY_REF` — a stream, contract or event action names an entity that is not declared.
 - `E1340_WATERFALL_NO_SOURCE` — a waterfall declares no `from`, so there is no
   pot to allocate.
@@ -6039,6 +6073,7 @@ Fields that move:
   waterfall is the documented composition and still compiles.
 - `E1349_UNRESOLVED_LIFECYCLE_REF` — an entity binds `lifecycle <name>` and no
   lifecycle block declares it.
+- `E1354_METRIC_FORWARD_REF` — a metric reads a metric declared below it, or reads itself. Metrics compose in DECLARATION ORDER, the same rule waterfalls follow, which makes the dependency an order rather than a graph. Reading itself is a different mistake: a metric is a fold over the finished projection, not a recurrence — carry a running quantity as a field the walk advances.
 - `E1350_LIFECYCLE_CONFLICT` — an entity binds a model-declared lifecycle, but
   its ontology type already declares one. One machine per entity.
 - `E1351_LIFECYCLE_NO_INITIAL` — a lifecycle block declares no `initial`.

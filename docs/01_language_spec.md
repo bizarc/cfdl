@@ -1058,7 +1058,38 @@ Rules:
 - `monte_carlo` MUST provide `trials` and `seed`.
 
 ### 15.2 Engine-computed outputs
-Output metrics (NPV, IRR, DSCR, NOI, etc.) are computed by the engine based on the domain pack's output specification. CFDL models do not declare output metrics.
+Output metrics (NPV, IRR, DSCR, NOI, etc.) are computed by the engine based on the domain pack's output specification.
+
+### 15.3 Model-declared metrics (normative)
+
+A model MAY declare a metric — a figure it solved for that neither the engine
+nor a pack mints:
+
+```cfdl
+metric class_a_wal   = series_sum("credit.class_a.principal", 0, 59) / 12.0
+metric crossover     = metric.class_a_wal - inputs.expected_wal
+```
+
+Rules:
+- A metric name MUST be unique within the model (`E1008`).
+- A metric is evaluated ONCE, at the horizon, over the finished projection —
+  the valuation plane of `docs/28` §2. It is a fold over a completed
+  projection, not a recurrence: nothing it computes can feed back into the
+  walk.
+- Its expression MAY read series (including the projection tail, which is what
+  a forward-looking figure needs), entity fields, `inputs`, `cfg`, the
+  engine's `model.*` metrics, and `metric.<name>` for any metric DECLARED
+  ABOVE IT.
+- Metrics compose in declaration order — the same rule waterfalls follow
+  (§10.5) — so the dependency is an order rather than a graph. A forward or
+  circular reference is refused (`E1354`).
+- Every metric is published as `metric.<name>` in `deterministic.metrics` and
+  in every scenario summary, so a scenario grid can assert a derived figure
+  per column and not only the engine's built-ins.
+
+The three namespaces stay distinct, and the prefix says who minted the number:
+`model.*` is the engine's, `domain.*` is the active pack's, `metric.*` is this
+model's.
 
 See the Pack Interface specification for details on how packs define output categories, aggregations, and metrics.
 
@@ -1155,14 +1186,14 @@ These MUST compile to typed values in IR.
 A reserved word cannot be used as an identifier. The list is exhaustive and is
 checked against the lexer, so a word added to one appears in the other.
 
-### 18.1 In use (85)
+### 18.1 In use (86)
 
 Read by a production of the grammar:
 
 `account`, `activate`, `active`, `also`, `annual`, `as`, `assume`, `calendar`, `clip`, `contract`, `convention`, `currency`,
 `curve`, `daily`, `day`, `days`, `deactivate`, `deterministic`, `effects`, `end`, `entity`, `eom`, `event`,
 `every`, `except`, `exercisable`, `exercise`, `false`, `following`, `for`, `from`, `import`, `in`, `inflow`,
-`LogNormal`, `mid`, `model`, `modified_following`, `modified_preceding`, `monte_carlo`, `month`, `monthly`, `months`, `net`, `none`,
+`LogNormal`, `metric`, `mid`, `model`, `modified_following`, `modified_preceding`, `monte_carlo`, `month`, `monthly`, `months`, `net`, `none`,
 `Normal`, `on`, `option`, `owner`, `outflow`, `pack`, `parties`, `payment`, `payoff`, `phase`, `phase_end`, `phase_enter`,
 `phase_start`, `preceding`, `quantile`, `quarter`, `quarterly`, `run`, `schedule`, `seed`, `set`, `state`, `start`, `stream`, `stub`,
 `term`, `terms`, `time`, `to`, `trials`, `Triangular`, `true`, `type`, `Uniform`, `use`, `version`,
