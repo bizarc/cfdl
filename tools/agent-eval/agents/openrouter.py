@@ -39,6 +39,15 @@ _spec = importlib.util.spec_from_file_location(
 common = importlib.util.module_from_spec(_spec)
 _spec.loader.exec_module(common)
 
+class FatalAgentError(RuntimeError):
+    """A condition no later task can recover from — a rejected key, exhausted
+    credit, or a spend limit. The runner aborts on it rather than recording
+    112 identical zeros."""
+
+
+# Exit code the runner reads as "abort the whole run".
+FATAL_EXIT = 3
+
 ALLOWED_TOOLS = ("compile", "run", "lookup", "skeleton", "explain")
 MAX_TURNS = 40
 # A single task that has spent this much has lost the plot; stop paying for it
@@ -158,6 +167,10 @@ def chat(base_url: str, api_key: str, payload: dict) -> dict:
         except urllib.error.HTTPError as err:
             body = err.read().decode("utf-8", "replace")[:500]
             last = f"API {err.code} from {base_url}: {body}"
+            if err.code in (401, 402, 403):
+                # A bad key, no credit, or a spend limit: every remaining task
+                # would fail the same way. Say so once and stop the run.
+                raise FatalAgentError(last) from None
             if err.code not in (408, 429, 500, 502, 503, 504):
                 raise RuntimeError(last) from None
         except (urllib.error.URLError, TimeoutError, json.JSONDecodeError, OSError) as err:
@@ -253,6 +266,9 @@ def main() -> int:
             file=sys.stderr,
         )
         return 1
+    except FatalAgentError as err:
+        print(f"FATAL: {err}", file=sys.stderr)
+        return FATAL_EXIT
     finally:
         bridge.close()
 
