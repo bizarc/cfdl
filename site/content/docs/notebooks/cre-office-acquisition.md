@@ -11,6 +11,10 @@ generated: full
 
 > Outputs below are real: the notebook runs against the `cre` pack's benchmark model, which CFDL validates against an independent reference. To run it yourself, see [the Python SDK guide](/docs/python-sdk).
 
+<video controls preload="metadata" style="width:100%" src="/videos/cre-office-acquisition-walkthrough.mp4"></video>
+
+*A two-minute agent-driven walkthrough: an AI agent executes this notebook cell by cell, every output computing live in the take.*
+
 [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/bizarc/cfdl/blob/main/examples/notebooks/02_cre_office_acquisition.ipynb)
 
 A two-tenant office acquisition modeled lease-by-lease: free rent, anniversary escalations, expense recoveries over stops, TI/LC, probability-weighted rollover, and an exit on forward NOI.
