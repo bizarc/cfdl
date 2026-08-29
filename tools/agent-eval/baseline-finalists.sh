@@ -26,10 +26,15 @@ caffeinate -i -w $$ &
 if [ "$#" -gt 0 ]; then
   MODELS=("$@")
 else
+  # Cheapest first. Chosen on MEASURED spend, not list price: the smoke runs
+  # showed grok-4.6 costing 5x gpt-5.6-sol per task ($0.68 vs $0.138) while
+  # scoring below it, because a slower loop re-sends a growing conversation —
+  # a per-token price says nothing about what a task costs. grok and kimi are
+  # cut on that evidence; name them as arguments to run them anyway.
   MODELS=(
     "z-ai/glm-5.3-flash"
-    "x-ai/grok-4.6"
     "openai/gpt-5.6-sol"
+    "google/gemini-3.7-flash"
   )
 fi
 
