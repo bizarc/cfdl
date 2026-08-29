@@ -27,6 +27,7 @@ import os
 import pathlib
 import subprocess
 import sys
+import urllib.error
 import urllib.request
 
 sys.stderr.reconfigure(encoding="utf-8")
@@ -113,6 +114,19 @@ class ToolBridge:
             pass
 
 
+def _ssl_context():
+    """A CA-verified TLS context. python.org framework builds ship no system
+    CA bundle, so default urllib HTTPS fails outright; certifi supplies one."""
+    import ssl
+
+    try:
+        import certifi
+
+        return ssl.create_default_context(cafile=certifi.where())
+    except ImportError:
+        return ssl.create_default_context()
+
+
 def chat(base_url: str, api_key: str, payload: dict) -> dict:
     request = urllib.request.Request(
         f"{base_url}/chat/completions",
@@ -122,8 +136,12 @@ def chat(base_url: str, api_key: str, payload: dict) -> dict:
             "Content-Type": "application/json",
         },
     )
-    with urllib.request.urlopen(request, timeout=600) as response:
-        return json.loads(response.read().decode("utf-8"))
+    try:
+        with urllib.request.urlopen(request, timeout=600, context=_ssl_context()) as response:
+            return json.loads(response.read().decode("utf-8"))
+    except urllib.error.HTTPError as err:
+        body = err.read().decode("utf-8", "replace")[:500]
+        raise RuntimeError(f"API {err.code} from {base_url}: {body}") from None
 
 
 def main() -> int:

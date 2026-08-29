@@ -194,12 +194,16 @@ def video_block(slug: str) -> list[str]:
     video = REPO_ROOT / "site" / "public" / "videos" / f"{slug}-walkthrough.mp4"
     if not video.exists():
         return []
+    # The docs route compiles pages as plain Markdown (format: "md", no raw
+    # HTML pass), so the embed is a markdown image whose source is the mp4;
+    # the site's img component renders .mp4 sources as a captioned player.
     return [
-        f'<video controls preload="metadata" style="width:100%" '
-        f'src="/videos/{slug}-walkthrough.mp4"></video>',
+        f"![An agent-driven walkthrough of this notebook]"
+        f"(/videos/{slug}-walkthrough.mp4)",
         "",
         "*A two-minute agent-driven walkthrough: an AI agent executes this "
-        "notebook cell by cell, every output computing live in the take.*",
+        "notebook cell by cell, every output computing live in the take. "
+        "Captions carry the narration.*",
         "",
     ]
 

@@ -11,9 +11,9 @@ generated: full
 
 > Outputs below are real: the notebook runs against the `cre` pack's benchmark model, which CFDL validates against an independent reference. To run it yourself, see [the Python SDK guide](/docs/python-sdk).
 
-<video controls preload="metadata" style="width:100%" src="/videos/cre-office-acquisition-walkthrough.mp4"></video>
+![An agent-driven walkthrough of this notebook](/videos/cre-office-acquisition-walkthrough.mp4)
 
-*A two-minute agent-driven walkthrough: an AI agent executes this notebook cell by cell, every output computing live in the take.*
+*A two-minute agent-driven walkthrough: an AI agent executes this notebook cell by cell, every output computing live in the take. Captions carry the narration.*
 
 [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/bizarc/cfdl/blob/main/examples/notebooks/02_cre_office_acquisition.ipynb)
 

@@ -93,3 +93,4 @@ site/public/wasm/
 
 # Local research material — reference PDFs and scratch analysis, not repo content.
 research/REMIC example/
+eval-results/

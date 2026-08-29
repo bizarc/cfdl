@@ -237,7 +237,7 @@ def call_agent(agent: str, task: dict, benchmarks_dir: pathlib.Path) -> dict:
         if result.returncode != 0:
             raise RuntimeError(
                 f"agent command failed ({result.returncode}): "
-                f"{result.stderr.decode('utf-8', 'replace')[:400]}"
+                f"{result.stderr.decode('utf-8', 'replace')[-400:]}"
             )
         return json.loads(result.stdout.decode("utf-8"))
     if agent.startswith("http://") or agent.startswith("https://"):

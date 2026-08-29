@@ -1,0 +1,28 @@
+WEBVTT
+
+00:00:15.980 --> 00:00:31.952
+This is an institutional two-tenant office D C F — free rent, expense stops, tenant improvements, probability-blended rollover. Not a toy: every number here is asserted against an independent reference, in C I, with stated tolerances.
+
+00:00:39.090 --> 00:00:47.820
+The deal is about a hundred lines of C F D L. One call compiles it. Contracts lower to streams — the compiler is the first verifier.
+
+00:00:51.510 --> 00:01:00.474
+One call runs it: ten years, monthly, with the C R E pack computing domain metrics — N O I, debt service, coverage.
+
+00:01:04.220 --> 00:01:13.421
+Results are a pandas DataFrame. One column per stream, a real period index. From here on, nothing is our U I — it's your pandas.
+
+00:01:20.520 --> 00:01:28.730
+Deal metrics, sourced and labeled — including a twenty-nine percent I R R, each number traceable to the series that produced it.
+
+00:01:37.620 --> 00:01:51.234
+A one-line annual rollup, with a coverage column we compute ourselves. Look at year one: zero point five four coverage. That's lease-up — and a lifetime D S C R of one point zero seven would have hidden it completely.
+
+00:01:54.950 --> 00:02:04.320
+Which months breach a one-times covenant? Thirty-six of a hundred and twenty — the screen is a filter expression, and the trailing-twelve N O I is a rolling window.
+
+00:02:05.530 --> 00:02:14.620
+The lease-by-lease grain survives into results: tenant A, tenant B, recoveries, rollover — stacked straight from the stream columns.
+
+00:02:15.870 --> 00:02:27.924
+Value sensitivity is four engine re-runs in a dict comprehension. A deterministic engine, so this table is reproducible to the byte. A verified engine underneath; open pandas on top.
