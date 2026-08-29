@@ -510,8 +510,6 @@ pub enum EventAction {
     },
     ActivateStream(String),
     DeactivateStream(String),
-    ActivateContract(String),
-    DeactivateContract(String),
     ExerciseOption(String),
 }
 
@@ -3062,18 +3060,17 @@ impl<'a> Parser<'a> {
                         matches!(self.peek().kind, TokenKind::Keyword(Keyword::Activate));
                     let _ = self.bump();
                     let kind_tok = self.bump();
-                    let is_stream = match kind_tok.kind {
-                        TokenKind::Keyword(Keyword::Stream) => true,
-                        TokenKind::Keyword(Keyword::Contract) => false,
-                        _ => {
-                            self.push_expected(
-                                kind_tok.span,
-                                "Expected 'stream' or 'contract' after activate/deactivate."
-                                    .to_string(),
-                            );
-                            return None;
-                        }
-                    };
+                    if !matches!(kind_tok.kind, TokenKind::Keyword(Keyword::Stream)) {
+                        // `activate`/`deactivate contract` was removed (docs/13
+                        // §7.73): a contract is a collection of streams, and one
+                        // switch cannot say what forbearance says. Gate the
+                        // streams themselves, by name or with `active in state`.
+                        self.push_expected(
+                            kind_tok.span,
+                            "Expected 'stream' after activate/deactivate.".to_string(),
+                        );
+                        return None;
+                    }
                     let target_tok = self.bump();
                     let target = match target_tok.kind {
                         TokenKind::Ident(ref s) | TokenKind::Qname(ref s) => s.clone(),
@@ -3082,11 +3079,10 @@ impl<'a> Parser<'a> {
                             return None;
                         }
                     };
-                    actions.push(match (activate, is_stream) {
-                        (true, true) => EventAction::ActivateStream(target),
-                        (false, true) => EventAction::DeactivateStream(target),
-                        (true, false) => EventAction::ActivateContract(target),
-                        (false, false) => EventAction::DeactivateContract(target),
+                    actions.push(if activate {
+                        EventAction::ActivateStream(target)
+                    } else {
+                        EventAction::DeactivateStream(target)
                     });
                 }
                 TokenKind::Keyword(Keyword::Exercise) => {

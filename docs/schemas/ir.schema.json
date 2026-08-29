@@ -1081,8 +1081,6 @@
             "SetEntityField",
             "ActivateStream",
             "DeactivateStream",
-            "ActivateContract",
-            "DeactivateContract",
             "ExerciseOption"
           ]
         },
@@ -1096,9 +1094,6 @@
           "$ref": "#/$defs/TypedValue"
         },
         "stream": {
-          "$ref": "#/$defs/Id"
-        },
-        "contract": {
           "$ref": "#/$defs/Id"
         },
         "option": {
@@ -1147,34 +1142,6 @@
           "then": {
             "required": [
               "stream"
-            ]
-          }
-        },
-        {
-          "if": {
-            "properties": {
-              "kind": {
-                "const": "ActivateContract"
-              }
-            }
-          },
-          "then": {
-            "required": [
-              "contract"
-            ]
-          }
-        },
-        {
-          "if": {
-            "properties": {
-              "kind": {
-                "const": "DeactivateContract"
-              }
-            }
-          },
-          "then": {
-            "required": [
-              "contract"
             ]
           }
         },

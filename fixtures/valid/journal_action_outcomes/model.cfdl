@@ -27,13 +27,11 @@ entity asset bldg : Asset.Financial {
 // OVERRIDDEN: an activation against a stream that declares itself off.
 // DECLINED: an option forced outside its exercisable window.
 //
-// The sixth outcome, IGNORED, cannot be reached from a model at all:
-// `activate contract` needs a contract to name, and a contract carries only
-// its TYPE — `deactivate contract cre.lease` is `E1303_UNRESOLVED_CONTRACT_REF`
-// because there is no instance to resolve (backlog 7.63). So the action parses,
-// lowers, and is unreachable, which sequences 7.63 before 7.40i's contract
-// runtime: the runtime needs something to name. It is covered by an engine
-// unit test against hand-written IR instead.
+// The sixth outcome, IGNORED, cannot be reached from a model at all. It is
+// what the engine journals for an action KIND it does not know, and every kind
+// a model can write is known. Only hand-written IR can carry one — IR that
+// still spells `DeactivateContract`, retired from the language with the action
+// itself (backlog 7.73), is the case in hand. An engine unit test covers it.
 event expand when time.t >= 6 {
   set entity asset.bldg.expanded = 1.0
   deactivate stream ops.baseline

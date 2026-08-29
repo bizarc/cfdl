@@ -473,12 +473,12 @@ the engine**: `golden_corpus.rs` runs the whole blessed corpus in
 
 M1 is the walk, the read rules, the two migrations, the declared state
 machine with its transition anchor (§6), the account construct (§5), and
-the journal. It is not: contract gating, which M2 takes up in the shape
-`docs/13` §7.73 settled on — the action retired rather than given a
-runtime, the capability recovered from addressable stream names (§7.50,
-since closed — an event's stream target resolves after lowering, so a
-contract's streams can be stopped) and state-gating through §6.1's machine
-(the old §7.40i is closed, its trigger half by this milestone); multiple instances of one pack contract
+the journal. It is not: contract gating, which M2 has since settled in the
+shape `docs/13` §7.73 argued for (since closed) — the action RETIRED rather than given a
+runtime, the capability arriving through addressable stream names (§7.50,
+closed: an event's stream target resolves after lowering, so a contract's
+streams can be stopped) and state-gating through §6.1's machine (the old
+§7.40i is closed, its trigger half by this milestone); multiple instances of one pack contract
 type (F.3); typed pack-declared actions; or optimal exercise, which stays
 deferred past v1 and which this design exists to make possible later.
 

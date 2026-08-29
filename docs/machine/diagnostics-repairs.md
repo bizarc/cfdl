@@ -11,7 +11,7 @@ Diagnostics are the repair signal: read the `code`, `message`, `span`, and
 `hint`, change the model, recompile. The catalog is how an agent learns what
 each code looks like in the flesh before it meets one.
 
-**Coverage:** 198 codes in the docs/08 §7 register; 72 exemplified here; 70 of 72 examples carry a recorded fix.
+**Coverage:** 197 codes in the docs/08 §7 register; 72 exemplified here; 70 of 72 examples carry a recorded fix.
 
 ## active_in_unknown_state — E1332_UNKNOWN_ACTIVE_STATE
 
@@ -3423,7 +3423,6 @@ Documented in docs/08 §7, awaiting a minimal failing fixture:
 - `E1108_USE_PACK_NOT_IN_MODEL_FILE` — `use pack` appears in an imported file rather than the model's own. The pack applies to the whole model, so it is declared where the model is.
 - `E1123_PREV_OUTSIDE_NEXT` — `prev` names a recurrence's own previous value and
 - `E1125_NO_STATE_NAMESPACE` — an expression reads `state.<name>`. There is no
-- `E1303_UNRESOLVED_CONTRACT_REF` — something names a contract that is not declared.
 - `E1304_UNRESOLVED_OPTION_REF` — an event exercises an option that is not declared.
 - `E1305_UNRESOLVED_PHASE_REF` — a schedule names a phase that is not declared.
 - `E1306_INVALID_ENTITY_REF_FORMAT` — entity ref, stream name, or contract name is not a qualified name with at least two segments (dotted hierarchy).

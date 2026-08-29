@@ -991,13 +991,18 @@ Supported actions:
 - `activate stream <StreamName>`
 - `deactivate stream <StreamName>`
 
+`activate`/`deactivate contract` are not actions. A contract is a collection of
+streams — `cre.lease` lowers into base rent, recoveries and abatement — and one
+switch gives a single answer where forbearance (principal stops, interest
+accrues) and an early termination (rent stops, a fee flows, recoveries continue)
+need a per-stream one. Gate the streams themselves, by name below or with
+`active in state` (§9.3), which is checked and can end as well as begin.
+
 A `<StreamName>` is any stream the model runs: one the model declared, or one a
 contract lowered (`cre.lease.base_rent` is §9.1's own example, and `docs/07`
 §6.4 gives the identical string as an example of a generated name). Reaching
 for a contract does not cost the ability to stop its cash. A name matching
 neither is `E1302`.
-- `activate contract <ContractName>` (optional)
-- `deactivate contract <ContractName>` (optional)
 - `exercise option <OptionName>`
 
 ### 13.3 Event timing and the grid (normative)

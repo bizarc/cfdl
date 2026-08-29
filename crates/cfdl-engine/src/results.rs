@@ -680,7 +680,7 @@ pub struct JournalEntry {
     /// them.
     pub actor: String,
     /// What was attempted: `set`, `activate_stream`, `deactivate_stream`,
-    /// `activate_contract`, `deactivate_contract`, `exercise_option`, `pay`.
+    /// `exercise_option`, `pay`.
     pub action: String,
     /// What it acted on — a field path, a stream name, a step and its payee.
     pub target: String,
@@ -693,7 +693,8 @@ pub struct JournalEntry {
     ///   activation is `overridden` when the stream's own `active when` is
     ///   false for that period: both gates must pass, so the event cannot turn
     ///   on what the model says is off.
-    /// * `ignored` — the engine does not execute this action yet
+    /// * `ignored` — an action kind the engine does not know, which only
+    ///   hand-written IR can carry
     ///   (`activate contract`, until the contract runtime of `docs/29` M2).
     /// * `failed` — the action's own expression did not evaluate.
     pub outcome: String,

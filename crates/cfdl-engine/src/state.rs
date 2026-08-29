@@ -630,29 +630,6 @@ impl StateWalk {
                             ));
                         }
                     }
-                    kind @ ("ActivateContract" | "DeactivateContract") => {
-                        warnings.push(format!(
-                            "Event '{}': contract activation is not executed by the engine yet; action ignored.",
-                            event.name
-                        ));
-                        self.journal.push(
-                            JournalEntry::new(
-                                t,
-                                &date.to_string(),
-                                format!("event:{}", event.name),
-                                if kind == "ActivateContract" {
-                                    "activate_contract"
-                                } else {
-                                    "deactivate_contract"
-                                },
-                                action.contract.clone().unwrap_or_default(),
-                                "ignored",
-                            )
-                            .with_note(
-                                "the engine has no contract runtime yet; docs/29 M2 (backlog 7.40i)",
-                            ),
-                        );
-                    }
                     "ExerciseOption" => {
                         if let Some(option) = &action.option {
                             self.forced_exercise.push(option.clone());

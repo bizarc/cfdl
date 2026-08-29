@@ -87,8 +87,10 @@ did, rather than the per-trial log §7.18 rules out — which closes `docs/13`
 **Shipped.** `deterministic.journal` and `monte_carlo.journal`, with
 `fixtures/valid/journal_action_outcomes` pinning five outcomes and
 `fixtures/valid/monte_carlo_journal` pinning both halves of the summary. The
-sixth outcome, `ignored`, is unreachable from a model — see §7.73, which
-recommends retiring the action rather than building its runtime.
+sixth outcome, `ignored`, is unreachable from a model: it is what the engine
+journals for an action KIND it does not know, and every kind a model can write
+is known. §7.73 retired the last action that could reach it (closed), so only
+hand-written IR carries one.
 
 - Files: `crates/cfdl-engine/src/{state,streams,distributions,results}.rs`,
   `docs/06` and `docs/schemas` (results schema), `tools/check-results-schema`.
@@ -371,8 +373,8 @@ waterfalls) and corrected. `docs/13` closes or narrows §5.2, §7.10, §7.36,
 §7.40i's trigger half, §7.41, §7.45, §7.71 — each under the file's own
 standard: closed items removed, residue restated under an accurate
 headline. **Done:** §5.2, §7.10, §7.36, §7.40i and §7.71 are closed and
-gone from that file; §7.41 stands narrowed and §7.45 is now closed (E1348); §7.40i's gating half
-survives as §7.73, and §7.78 collects what M2 takes up.
+gone from that file; §7.41 stands narrowed; §7.45 (E1348), §7.50 and §7.73 are
+closed since; and §7.78 collects what M2 still takes up.
 
 ## Decisions still open, and who settles them
 
@@ -387,9 +389,10 @@ survives as §7.73, and §7.78 collects what M2 takes up.
 
 ## What this plan does not contain
 
-Contract gating (M2) — which `docs/13` §7.73 has since re-specified as the
-retirement of `activate contract`, not the runtime this plan once deferred —
-multiple instances of
+Contract gating (M2) — which `docs/13` §7.73 settled by RETIRING
+`activate contract` rather than giving it the runtime this plan deferred, the
+capability arriving instead through §7.50's stream names and `active in state`
+— multiple instances of
 one pack contract type (F.3), typed pack-declared actions, participant-level
 return metrics (`docs/13` §7.72 — gated on the account, built on §7.25's
 declared metrics in M4), and optimal exercise (past v1). Each is listed in
