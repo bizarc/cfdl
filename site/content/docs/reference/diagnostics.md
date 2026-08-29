@@ -96,6 +96,7 @@ register, so it cannot fall behind the language.
 | `E1343_WATERFALL_DUPLICATE_STEP` | Symbols and references | two steps in one waterfall share a name, which would make `paid.<step>` ambiguous. |
 | `E1344_WATERFALL_NO_REMAINDER` | Symbols and references | a waterfall never says where the remainder goes, so cash could be left unallocated with nothing to say so. |
 | `E1345_WATERFALL_STEP_NO_AMOUNT` | Symbols and references | a step says nothing about what it pays. |
+| `E1348_WATERFALL_NO_SCHEDULE` | Symbols and references | a waterfall does not say when it distributes. The schedule is half of what a distribution says: between its scheduled periods the pot accumulates, so "every quarter" and "once at exit" are different deals rather than two spellings of one. The omission used to lower to a one-shot in the first period, distributing whatever that period happened to produce; there is no default right often enough to be silent. |
 | `E1346_STREAM_READS_WATERFALL_STEP` | Symbols and references | a STREAM's `series_sum`/`series_avg` names a waterfall step. Every waterfall runs after every stream and a step's series is visible to a later waterfall's `from` and to nothing else, so the read could only ever aggregate to zero. Model the quantity the step pays as a stream or a field if a stream must read it. |
 | `E1302_UNRESOLVED_STREAM_REF` | Symbols and references | an event activates or deactivates a stream that is not declared. Event action targets were never resolved, so a misspelling matched nothing and the action was silently inert: the stream it was meant to stop kept paying, with no diagnostic and no warning. |
 | `E1303_UNRESOLVED_CONTRACT_REF` | Symbols and references | an event activates or deactivates a contract that is not declared. |
@@ -249,7 +250,7 @@ register, so it cannot fall behind the language.
 | `E9019_CREDIT_INVALID_AGE_MONTHS` | Pack domain validations | `age_months` is the pool's weighted average age at closing. PSA, SDA and the ABS model are all indexed from ORIGINATION, so a seasoned pool starts part-way up the ramp; leaving it at the default 0 on a seasoned pool understates prepayment. Non-negative integer. |
 | `E9020_CREDIT_RATE_FLOOR_ABOVE_CAP` | Pack domain validations |  |
 
-*197 codes.*
+*198 codes.*
 <!-- /cfdl:generated diagnostics-catalog -->
 
 ## Related

@@ -371,7 +371,7 @@ waterfalls) and corrected. `docs/13` closes or narrows §5.2, §7.10, §7.36,
 §7.40i's trigger half, §7.41, §7.45, §7.71 — each under the file's own
 standard: closed items removed, residue restated under an accurate
 headline. **Done:** §5.2, §7.10, §7.36, §7.40i and §7.71 are closed and
-gone from that file; §7.41 and §7.45 stand narrowed; §7.40i's gating half
+gone from that file; §7.41 stands narrowed and §7.45 is now closed (E1348); §7.40i's gating half
 survives as §7.73, and §7.78 collects what M2 takes up.
 
 ## Decisions still open, and who settles them

@@ -102,6 +102,7 @@ can carry a declared principal series, so the shape is:
 curve group1_principal { 2019-02: ... }
 
 waterfall g1.principal on entity asset.group1 {
+  schedule every month from 2019-02 to 2019-05
   from curve_value("group1_principal", time.date)
   pay cd_principal to party.cd_holders = remaining
 }

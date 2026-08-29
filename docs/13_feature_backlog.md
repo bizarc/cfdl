@@ -846,45 +846,6 @@ crate everything depends on, or a lot of re-export. The benefit is enforcement
 of an order that is already documented and already tested by
 `fixtures/valid/evaluation_order`, which is a real but modest gain.
 
-### 7.45 A waterfall with no schedule distributes once, at the model start
-
-*Roadmap: M2 (§7.78).*
-
-`lower_schedule` answers a missing schedule with `OnDate(time_start)`
-(`crates/cfdl-compile/src/lib.rs`), so a waterfall that says nothing about when
-it runs distributes exactly once, in the first period — before the deal has
-produced anything to distribute. Probed with no pack active: a constant pot of
-500 across five periods paid `500, 0, 0, 0, 0`.
-
-Nothing says so. `docs/17` and `docs/01` state no default, and no diagnostic
-fires. The engine believes something different — `run_waterfalls` reads a
-missing schedule as *every period* — but that branch is unreachable, because the
-compiler never emits `None`. Two components disagree about the default and the
-one that loses is the one whose comment explains the intent.
-
-The first period is the least defensible of the three candidate defaults. A
-waterfall accumulates over a holding period and then distributes — a preferred
-return and then a split — so the useful default is at the END of the hold, not
-its start.
-The account (`docs/28` §5.1) sharpens this: accumulate-then-distribute is now
-the declared pattern, which makes a first-period default stranger still. Distributing at the start answers with whatever the first period
-happened to produce.
-
-Shape, in the order they should be considered: require the schedule and reject
-the omission, which makes the author say what a distribution date is; or default
-to the end of the hold, which is the shape a deal actually has. Defaulting to
-every period matches the engine's dead branch but is not the normal case.
-Whichever is chosen, the engine's unreachable branch should go, so one component
-states the rule.
-
-Provenance: found August 2026 while probing 7.37, when a waterfall drawing
-`from available` appeared to pay only the first period's cash. The pot was
-correct; the waterfall had run once. Two earlier readings of this repository's
-behaviour were wrong because of it.
-
-
----
-
 ### 7.46 A run with no discount rate still publishes an NPV
 
 A run that states no rate discounts at zero and reports the result as
@@ -1874,6 +1835,13 @@ wrong and the action should be retired, which makes M2's gating work §7.50
 plus state-gating through the declared machine. Per-period persistent state
 (the closed §5.2) shipped with M1 itself.
 
+**Closed since.** §7.45 (a waterfall with no schedule distributed once, at the
+model start) is fixed: `E1348_WATERFALL_NO_SCHEDULE` refuses the omission, which
+is what `docs/01` §10.1 had required in normative text since the waterfall
+entered the spec — the compiler had been inventing a first-period default
+against its own specification, and the engine's every-period branch, which no
+compiler output could reach, is gone.
+
 **What M2 is**, all of it standing on the walk, the machine and the account
 (`docs/28` §4–§6):
 
@@ -1881,7 +1849,6 @@ plus state-gating through the declared machine. Per-period persistent state
 |---|---|
 | §7.50 | a contract's lowered streams become addressable, so a model can gate cash it did not write |
 | §7.73 | `activate`/`deactivate contract` removed from the grammar; gating re-spelled as a lifecycle state |
-| §7.45 | a waterfall's default schedule — accumulate-then-distribute is now the declared pattern, and the first-period default contradicts it |
 | §7.41 | the freeform `from <expr>` pot, the one unchecked selection left after the account |
 | §7.76 | the account adoption pass: the reserve every pack's references assume and no pack could model |
 | §7.77 | the DSCR cash trap — the first covenant whose breach has consequences, and can end |

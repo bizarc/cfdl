@@ -248,6 +248,12 @@ Fields that move:
 - `E1344_WATERFALL_NO_REMAINDER` — a waterfall never says where the remainder
   goes, so cash could be left unallocated with nothing to say so.
 - `E1345_WATERFALL_STEP_NO_AMOUNT` — a step says nothing about what it pays.
+- `E1348_WATERFALL_NO_SCHEDULE` — a waterfall does not say when it distributes.
+  The schedule is half of what a distribution says: between its scheduled
+  periods the pot accumulates, so "every quarter" and "once at exit" are
+  different deals rather than two spellings of one. The omission used to lower
+  to a one-shot in the first period, distributing whatever that period happened
+  to produce; there is no default right often enough to be silent.
 - `E1346_STREAM_READS_WATERFALL_STEP` — a STREAM's `series_sum`/`series_avg`
   names a waterfall step. Every waterfall runs after every stream and a step's
   series is visible to a later waterfall's `from` and to nothing else, so the

@@ -34,6 +34,7 @@ stream fund.fee_on_distributions on entity asset.fund outflow currency USD {
 
 waterfall fund.distribution on entity asset.fund {
   from available
+  schedule every year from 2020-01 to 2025-01
 
   pay residual to party.gp = remaining
 }

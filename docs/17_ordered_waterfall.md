@@ -71,6 +71,7 @@ compile error rather than a quiet zero.
 
 ```cfdl
 waterfall abs.distribution on entity asset.trust {
+  schedule every month from 2017-02 to 2017-05
   from available
 
   pay servicing        to party.servicer     amount state.servicing_fee

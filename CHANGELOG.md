@@ -8,6 +8,27 @@ This project follows Semantic Versioning: https://semver.org/
 
 ## [Unreleased]
 
+### Fixed: a waterfall must say when it distributes (§7.45)
+
+`docs/01` §10.1 has required a waterfall's `schedule` in normative text since
+the waterfall entered the spec. The compiler did not enforce it: a missing
+schedule lowered to `on <time.start>`, so the waterfall distributed once, in
+the first period, of whatever that period happened to produce — a pot of 500
+across five periods paid `500, 0, 0, 0, 0` and said nothing about the 2,000 it
+never distributed. The engine believed the opposite (no schedule meant every
+period) and could never act on it, because the compiler emitted no such IR.
+
+The omission is now **`E1348_WATERFALL_NO_SCHEDULE`**, and the engine's
+unreachable branch is gone — one component states the rule. The schedule is
+half of what a distribution says: between its scheduled periods the pot
+accumulates, so "every quarter" and "once at exit" are different deals rather
+than two spellings of one.
+
+No shipped model, benchmark, example or exercise relied on the default; the
+four fixtures that omitted a schedule are `invalid`/`repairs` pairs pinning
+unrelated diagnostics, and now declare one. `fixtures/invalid/waterfall_no_schedule`
+pins the new code.
+
 ### Added: the agent-eval harness (docs/32 Phase 3)
 
 `tools/agent-eval/runner.py`: the benchmark suite becomes the grader.

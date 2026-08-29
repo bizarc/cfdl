@@ -96,8 +96,13 @@ pub(crate) fn run_waterfalls(
     let mut visible: BTreeMap<String, Vec<f64>> = stream_series.clone();
     for waterfall in &ir.waterfalls {
         let shared = Arc::new(visible.clone());
-        // Which periods this waterfall runs in. No schedule means every
-        // period, the cadence a distribution date usually has.
+        // Which periods this waterfall runs in. The schedule is required —
+        // the compiler refuses its absence (E1348) — so a waterfall without
+        // one can only reach here from hand-written IR. This branch used to
+        // invent every-period, which the compiler never agreed with: it
+        // lowered the omission to a first-period one-shot instead, and the
+        // component whose comment explained the intent was the one that lost.
+        // Now one component states the rule and the other says nothing.
         let mut hits = vec![Vec::new(); periods];
         let runs_in: Vec<bool> = match &waterfall.schedule {
             Some(schedule) => {
@@ -110,7 +115,13 @@ pub(crate) fn run_waterfalls(
                 }
                 hits.iter().map(|h| !h.is_empty()).collect()
             }
-            None => vec![true; periods],
+            None => {
+                warnings.push(format!(
+                    "Waterfall '{}' has no schedule; skipped.",
+                    waterfall.name
+                ));
+                continue;
+            }
         };
 
         for step in &waterfall.steps {
@@ -362,7 +373,16 @@ pub(crate) fn prepare_waterfall_stage(
                 }
                 hits.iter().map(|h| !h.is_empty()).collect()
             }
-            None => vec![true; periods],
+            // Required by the compiler (E1348); absent only in hand-written
+            // IR, where inventing a cadence is what this change removes.
+            None => {
+                warnings.push(format!(
+                    "Waterfall '{}' has no schedule; skipped.",
+                    waterfall.name
+                ));
+                runs_in.push(Vec::new());
+                continue;
+            }
         };
         runs_in.push(runs);
         for step in &waterfall.steps {

@@ -1,0 +1,36 @@
+version 0.1
+model "waterfall-no-schedule"
+time calendar annual from 2020-01 for 5
+
+// A WATERFALL MUST SAY WHEN IT DISTRIBUTES.
+//
+// The schedule is not decoration on a distribution; it is half of what the
+// distribution says. Between its scheduled periods a waterfall's pot
+// ACCUMULATES — the cash builds in the account and is split when the date
+// arrives — so "every quarter" and "once at exit" are different deals, not
+// two spellings of one.
+//
+// The omission used to compile. It lowered to `on <time.start>`: one
+// distribution, in the first period, of whatever that period happened to
+// produce. A pot of 500 across five periods paid 500, 0, 0, 0, 0 and said
+// nothing about the 2,000 it never distributed. The engine believed the
+// opposite — no schedule meant every period — but the compiler never let that
+// branch run, so two components disagreed and the silent one won.
+//
+// There is no default that is right often enough to be silent, so the author
+// states it. `fixtures/valid/waterfall_nested_split` shows both shapes.
+
+entity asset fund : Asset.Financial
+entity party lp   : Party { name = "Limited Partners" }
+entity party gp   : Party { name = "General Partner" }
+
+stream fund.operating_cash on entity asset.fund inflow currency USD {
+  schedule every year from 2020-01 to 2024-01
+  amount = 500.0
+}
+
+waterfall fund.distribution on entity asset.fund {
+  from available
+
+  pay residual to party.gp = remaining
+}

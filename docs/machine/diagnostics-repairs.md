@@ -11,7 +11,7 @@ Diagnostics are the repair signal: read the `code`, `message`, `span`, and
 `hint`, change the model, recompile. The catalog is how an agent learns what
 each code looks like in the flesh before it meets one.
 
-**Coverage:** 197 codes in the docs/08 §7 register; 71 exemplified here; 70 of 70 examples carry a recorded fix.
+**Coverage:** 198 codes in the docs/08 §7 register; 72 exemplified here; 70 of 71 examples carry a recorded fix.
 
 ## active_in_unknown_state — E1332_UNKNOWN_ACTIVE_STATE
 
@@ -2614,6 +2614,7 @@ stream fund.fee_on_distributions on entity asset.fund outflow currency USD {
 
 waterfall fund.distribution on entity asset.fund {
   from available
+  schedule every year from 2020-01 to 2025-01
 
   pay residual to party.gp = remaining
 }
@@ -2651,6 +2652,7 @@ stream fund.fee_on_distributions on entity asset.fund outflow currency USD {
 
 waterfall fund.distribution on entity asset.fund {
   from available
+  schedule every year from 2020-01 to 2025-01
 
   pay residual to party.gp = remaining
 }
@@ -3224,6 +3226,54 @@ stream debt.principal on entity asset.borrower outflow currency USD {
 }
 ```
 
+## waterfall_no_schedule — E1348_WATERFALL_NO_SCHEDULE
+
+Failing example:
+
+```cfdl
+version 0.1
+model "waterfall-no-schedule"
+time calendar annual from 2020-01 for 5
+
+// A WATERFALL MUST SAY WHEN IT DISTRIBUTES.
+//
+// The schedule is not decoration on a distribution; it is half of what the
+// distribution says. Between its scheduled periods a waterfall's pot
+// ACCUMULATES — the cash builds in the account and is split when the date
+// arrives — so "every quarter" and "once at exit" are different deals, not
+// two spellings of one.
+//
+// The omission used to compile. It lowered to `on <time.start>`: one
+// distribution, in the first period, of whatever that period happened to
+// produce. A pot of 500 across five periods paid 500, 0, 0, 0, 0 and said
+// nothing about the 2,000 it never distributed. The engine believed the
+// opposite — no schedule meant every period — but the compiler never let that
+// branch run, so two components disagreed and the silent one won.
+//
+// There is no default that is right often enough to be silent, so the author
+// states it. `fixtures/valid/waterfall_nested_split` shows both shapes.
+
+entity asset fund : Asset.Financial
+entity party lp   : Party { name = "Limited Partners" }
+entity party gp   : Party { name = "General Partner" }
+
+stream fund.operating_cash on entity asset.fund inflow currency USD {
+  schedule every year from 2020-01 to 2024-01
+  amount = 500.0
+}
+
+waterfall fund.distribution on entity asset.fund {
+  from available
+
+  pay residual to party.gp = remaining
+}
+```
+
+- `E1348_WATERFALL_NO_SCHEDULE` (error): Waterfall 'fund.distribution' does not say when it distributes.
+  - hint: Add a `schedule` — `schedule on <date>` for a single distribution (an exit), `schedule every <period> from <date> to <date>` for a recurring one. Between its scheduled periods the pot accumulates.
+
+Fix: not yet recorded.
+
 ## waterfall_series_reads_own_step — E1342_WATERFALL_SERIES_NOT_VISIBLE
 
 Failing example:
@@ -3266,6 +3316,7 @@ stream fund.sale_proceeds on entity asset.fund inflow currency USD {
 
 waterfall fund.distribution on entity asset.fund {
   from available
+  schedule every year from 2020-01 to 2025-01
 
   pay preferred to party.lp = inputs.called_capital * inputs.pref_rate
                                 - series_sum("fund.distribution.preferred", 0, time.t)
@@ -3303,6 +3354,7 @@ stream fund.sale_proceeds on entity asset.fund inflow currency USD {
 
 waterfall fund.distribution on entity asset.fund {
   from available
+  schedule every year from 2020-01 to 2025-01
 
   pay preferred to party.lp = inputs.called_capital * inputs.pref_rate
   pay residual  to party.gp = remaining
