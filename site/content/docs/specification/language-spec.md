@@ -1095,6 +1095,31 @@ Rules:
   in every scenario summary, so a scenario grid can assert a derived figure
   per column and not only the engine's built-ins.
 
+**A participant's realized return.** Two folds are available in a metric and
+nowhere else:
+
+```cfdl
+metric lp_irr  = irr(party.lp)
+metric lp_moic = moic(party.lp)
+```
+
+**The party is a REFERENCE, not text.** A party is an entity, named the way the
+language names entities everywhere else — `pay … to party.lp`, `owner
+party.lp`, `on entity asset.x` — and the reference is what lets the compiler
+resolve it: an undeclared name is `E1301`, an entity that is not a party or
+that owns no account is `E1356`. Text would defer all three to the run.
+
+Both read the party's own ACCOUNT — a contribution is a negative inflow, a
+receipt is an allocation in, so the sign change an IRR needs is recorded rather
+than inferred. They are folds over the party's account and never over a payee's
+streams: a step's payee says who was paid, but attributing through stream names
+is a different question. A party owns at most one account.
+
+Both are refused outside a metric (`E1355`): reading a return in a stream
+amount asks for a return on cash that stream has not produced yet. What cannot
+be known until the run — flows that never change sign — refuses the run naming
+the party, because a metric the author declared must not silently go missing.
+
 The three namespaces stay distinct, and the prefix says who minted the number:
 `model.*` is the engine's, `domain.*` is the active pack's, `metric.*` is this
 model's.

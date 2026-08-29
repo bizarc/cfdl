@@ -1068,6 +1068,193 @@ fn check_constant_expressions(
     }
 }
 
+/// `irr`/`moic` belong to a `metric`, and nowhere else.
+///
+/// Both fold the FINISHED projection. A stream amount that read one would be
+/// asking for a return on cash the stream itself has not produced yet — a
+/// circularity, not a number. The evaluator refuses it, but a stream amount
+/// that fails to evaluate warns and substitutes zero, so without this the
+/// model runs `status: ok` on a column of zeroes.
+fn check_participant_returns(
+    resolve_output: &cfdl_resolver::ResolveOutput,
+) -> Result<(), Vec<Diagnostic>> {
+    let mut diagnostics: Vec<Diagnostic> = Vec::new();
+    let refuse = |src: &str, what: String, file: &str, span, out: &mut Vec<Diagnostic>| {
+        let Ok(compiled) = cfdl_expr::compile_expr(src) else {
+            return;
+        };
+        if !cfdl_expr::uses_participant_return(&compiled) {
+            return;
+        }
+        out.push(Diagnostic {
+            code: "E1355_PARTICIPANT_RETURN_OUTSIDE_METRIC".to_string(),
+            severity: "error".to_string(),
+            message: format!("{what} folds a participant's return."),
+            file: Some(file.to_string()),
+            span: Some(span),
+            path: None,
+            hint: Some(
+                "`irr` and `moic` are folds over the finished projection, so they belong in a \
+                 `metric` declaration. Reading one here would ask for a return on cash this \
+                 expression has not produced yet."
+                    .to_string(),
+            ),
+            notes: vec![],
+        });
+    };
+
+    // WHAT A REFERENCE BUYS OVER A STRING: the party resolves here.
+    //
+    // A declared entity, of the party family, that owns an account — all three
+    // are knowable at compile time, and each was a run-time surprise while the
+    // argument was text. `irr(asset.tower)` even reported that an ASSET owned
+    // no account.
+    let mut parties: BTreeSet<String> = BTreeSet::new();
+    let mut entities: BTreeSet<String> = BTreeSet::new();
+    for source_stmt in &resolve_output.source_statements {
+        if let Stmt::Entity(entity) = &source_stmt.statement {
+            let symbol = entity.symbol();
+            if symbol.starts_with("party.") {
+                parties.insert(symbol.clone());
+            }
+            entities.insert(symbol);
+        }
+    }
+    let mut owned: BTreeSet<String> = BTreeSet::new();
+    for source_stmt in &resolve_output.source_statements {
+        if let Stmt::Account(account) = &source_stmt.statement {
+            if let Some(owner) = &account.owner {
+                let bare = owner.strip_prefix("party.").unwrap_or(owner);
+                owned.insert(format!("party.{bare}"));
+            }
+        }
+    }
+    for source_stmt in &resolve_output.source_statements {
+        let Stmt::Metric(metric) = &source_stmt.statement else {
+            continue;
+        };
+        let Ok(compiled) = cfdl_expr::compile_expr(&metric.expr) else {
+            continue;
+        };
+        if cfdl_expr::participant_return_non_references(&compiled) > 0 {
+            diagnostics.push(Diagnostic {
+                code: "E1356_PARTICIPANT_RETURN_NOT_A_PARTY".to_string(),
+                severity: "error".to_string(),
+                message: format!(
+                    "Metric '{}' folds a return over something that is not a party reference.",
+                    metric.name
+                ),
+                file: Some(source_stmt.file.clone()),
+                span: Some(map_span(metric.span)),
+                path: None,
+                hint: Some(
+                    "Write the party as a reference — `irr(party.lp)` — so the compiler can \
+                     resolve it. A party is an entity, like the `owner` of an account and the \
+                     payee of a waterfall step."
+                        .to_string(),
+                ),
+                notes: vec![],
+            });
+        }
+        for named in cfdl_expr::participant_return_parties(&compiled) {
+            let (code, message, hint) = if !entities.contains(&named) {
+                (
+                    "E1301_UNRESOLVED_ENTITY_REF",
+                    format!("Metric '{}' folds the return of '{named}', which is not a declared entity.", metric.name),
+                    "Name a party the model declares.".to_string(),
+                )
+            } else if !parties.contains(&named) {
+                (
+                    "E1356_PARTICIPANT_RETURN_NOT_A_PARTY",
+                    format!(
+                        "Metric '{}' folds the return of '{named}', which is not a party.",
+                        metric.name
+                    ),
+                    "A return belongs to a participant. Name a `party` entity.".to_string(),
+                )
+            } else if !owned.contains(&named) {
+                (
+                    "E1356_PARTICIPANT_RETURN_NOT_A_PARTY",
+                    format!("Metric '{}' folds the return of '{named}', which owns no account.", metric.name),
+                    format!("A participant's return is folded over the party's own account: contributions are negative inflows and receipts are allocations in. Declare `account <name> {{ owner {named} … }}` and pay the waterfall's steps into it."),
+                )
+            } else {
+                continue;
+            };
+            diagnostics.push(Diagnostic {
+                code: code.to_string(),
+                severity: "error".to_string(),
+                message,
+                file: Some(source_stmt.file.clone()),
+                span: Some(map_span(metric.span)),
+                path: None,
+                hint: Some(hint),
+                notes: vec![],
+            });
+        }
+    }
+
+    for source_stmt in &resolve_output.source_statements {
+        let file = source_stmt.file.clone();
+        match &source_stmt.statement {
+            Stmt::Stream(stream) => {
+                let span = map_span(stream.span);
+                if let Some(amount) = stream.amount.as_ref() {
+                    let what = format!("Stream '{}' amount", stream.name);
+                    refuse(&amount.src, what, &file, span.clone(), &mut diagnostics);
+                }
+                if let Some(active) = stream.active_when.as_ref() {
+                    let what = format!("Stream '{}' activation", stream.name);
+                    refuse(&active.src, what, &file, span, &mut diagnostics);
+                }
+            }
+            Stmt::Event(event) => {
+                let what = format!("Event '{}' guard", event.name);
+                refuse(
+                    &event.when,
+                    what,
+                    &file,
+                    map_span(event.span),
+                    &mut diagnostics,
+                );
+            }
+            Stmt::Waterfall(waterfall) => {
+                let span = map_span(waterfall.span);
+                if let Some(source) = waterfall.source.as_ref() {
+                    let what = format!("Waterfall '{}' pot", waterfall.name);
+                    refuse(&source.src, what, &file, span.clone(), &mut diagnostics);
+                }
+                for step in &waterfall.steps {
+                    if let Some(amount) = step.amount.as_ref() {
+                        let what = format!("Waterfall '{}' step '{}'", waterfall.name, step.name);
+                        refuse(&amount.src, what, &file, span.clone(), &mut diagnostics);
+                    }
+                }
+            }
+            Stmt::Account(account) => {
+                if let Some(inflow) = account.inflow.as_ref() {
+                    let what = format!("Account '{}' inflow", account.name);
+                    refuse(
+                        &inflow.src,
+                        what,
+                        &file,
+                        map_span(account.span),
+                        &mut diagnostics,
+                    );
+                }
+            }
+            _ => {}
+        }
+    }
+
+    if diagnostics.is_empty() {
+        Ok(())
+    } else {
+        sort_compile_diagnostics(&mut diagnostics);
+        Err(diagnostics)
+    }
+}
+
 fn check_field_paths(resolve_output: &cfdl_resolver::ResolveOutput) -> Result<(), Vec<Diagnostic>> {
     let mut known: BTreeMap<String, BTreeSet<String>> = BTreeMap::new();
 
@@ -2826,6 +3013,7 @@ fn build_ir(
     check_state_guards(resolve_output, &ontology)?;
     check_prev_first_period(resolve_output, &time_start)?;
     check_constant_expressions(resolve_output)?;
+    check_participant_returns(resolve_output)?;
     check_field_paths(resolve_output)?;
     let (machines, machines_by_entity) = resolve_machines(resolve_output, &ontology);
     check_status_writes(resolve_output, &machines, &machines_by_entity)?;

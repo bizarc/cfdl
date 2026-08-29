@@ -23,7 +23,9 @@ mod value;
 
 pub use date::{CalcDate, DayCount, HolidayCalendar, RollConvention};
 pub use eval::{eval, Env, MapEnv, Mode};
-pub use funcs::{expr_calls_any, has_computed_call_name};
+pub use funcs::{
+    call_nonreference_count, call_reference_args, expr_calls_any, has_computed_call_name,
+};
 pub use parser::{parse, BinOp, Expr, ExprKind, UnOp};
 pub use token::Span;
 pub use value::Value;

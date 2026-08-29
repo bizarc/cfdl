@@ -231,6 +231,8 @@ Fields that move:
   waterfall is the documented composition and still compiles.
 - `E1349_UNRESOLVED_LIFECYCLE_REF` — an entity binds `lifecycle <name>` and no
   lifecycle block declares it.
+- `E1356_PARTICIPANT_RETURN_NOT_A_PARTY` — `irr`/`moic` names something that is not a party, or a party that owns no account, or is written as text rather than a reference. A participant's return is folded over the party's OWN ACCOUNT — contributions are negative inflows, receipts are allocations in — so a party without one has nothing to fold.
+- `E1355_PARTICIPANT_RETURN_OUTSIDE_METRIC` — `irr` or `moic` appears outside a `metric` declaration. Both fold the finished projection, so reading one in a stream amount, an activation, an event guard, a waterfall step or an account inflow asks for a return on cash that expression has not produced yet. Left to run time it is a substituted zero and a warning nobody prints.
 - `E1354_METRIC_FORWARD_REF` — a metric reads a metric declared below it, or reads itself. Metrics compose in DECLARATION ORDER, the same rule waterfalls follow, which makes the dependency an order rather than a graph. Reading itself is a different mistake: a metric is a fold over the finished projection, not a recurrence — carry a running quantity as a field the walk advances.
 - `E1350_LIFECYCLE_CONFLICT` — an entity binds a model-declared lifecycle, but
   its ontology type already declares one. One machine per entity.

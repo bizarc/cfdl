@@ -1440,36 +1440,6 @@ Open this before any further pack contract consumes a quantile. Shipping a
 second one against an audit record that does not work would make the gap
 structural rather than a known debt.
 
-### 7.72 A participant's realised return has no construct
-
-**What could not be expressed:** the return a party actually earned — IRR or
-MoIC on the cash that reached them, dated when it reached them. The model
-computes `model.irr` on the deal's net cash; a waterfall attributes each
-step's payment to a payee; and there the trail stops. To measure Baupost's
-return on the Highlands JV, an analyst must hand-assemble the payee's
-streams — capital in, preferred out, residual out — and run the arithmetic
-outside the language, against results the language already holds.
-
-**What forced the discovery:** the account design (`docs/28` §5.1). A
-party-owned account is cash allocated to a participant, journaled per period
-— which is exactly the cash-flow vector a participant-level IRR discounts.
-Once the account exists, the metric is a fold over its journal, and the gap
-becomes visible as a missing valuation-plane construct rather than a missing
-mechanism.
-
-**The shape, if it earns its place:** a declared metric (§7.25, SHIPPED — the
-construct this rides on, and the reason this item is now buildable) scoped to a
-party or a party-owned account —
-`metric baupost_irr = irr(party.baupost)` — computed in the valuation plane
-over the journaled receipts and contributions, published with the same
-lineage as any series. Related: §7.43 (results do not say which entity owns
-a stream — ownership is the same attribution question one layer down), and
-`docs/28` §5 (the account, whose journal is the input).
-
-Do not build this before the account ships; the hand-assembled version is
-the workaround until then, and building the metric on payee streams rather
-than accounts would bake in the attribution problem §7.43 records.
-
 ### 7.74 Structured-finance engine parity — the Intex scope
 
 *Roadmap: partly M2 (§7.78) — the deal mechanics; the analytics ride on
@@ -1536,7 +1506,7 @@ category — are scenarios plus curves plus options, today.
   (`docs/01` §1.1.10) until a document forces it; a rate-dependent CPR is a
   recurrence reading the rate path, and needs no correlation construct.
 - **The output surface an analyst reads:** per-class WAL assertions (§7.22),
-  the published settlement axis (§7.26), participant-level return (§7.72),
+  the published settlement axis (§7.26), participant-level return (§7.72, shipped),
   model-declared metrics (§7.25, shipped) and statements (§7.55). Referenced, not
   duplicated.
 
@@ -1609,7 +1579,7 @@ pattern rather than a bespoke contract. Third, interest ON a reserve balance:
 a stream whose amount reads `prev.<account>`, legal under §4's backward rule,
 and the first case that models it closes the CREST reconciliation line.
 
-Related: §7.5, §7.41, §7.72, §7.74, `docs/25`, `docs/28` §5.1, `docs/30` §1.
+Related: §7.5, §7.41, §7.72 (shipped), §7.74, `docs/25`, `docs/28` §5.1, `docs/30` §1.
 
 ### 7.77 A covenant that is published but powerless: the DSCR cash trap
 
@@ -1649,6 +1619,17 @@ the grain was wrong and the action should be retired, which made M2's gating
 work §7.50 plus state-gating through the declared machine — both now done. Per-period persistent state
 (the closed §5.2) shipped with M1 itself.
 
+**Closed since.** §7.72 (a participant's realized return had no construct) is
+fixed: `irr(party.<p>)` and `moic(party.<p>)` fold the party's OWN ACCOUNT —
+contributions are negative inflows, receipts are allocations in, so the sign
+change an IRR needs is recorded rather than inferred from payee streams, which
+is the §7.43 attribution trap the entry warned against. The party is a
+REFERENCE, so the compiler resolves it (`E1301`), checks it is a party that
+owns an account (`E1356`), and refuses the fold outside a `metric` (`E1355`);
+only flows that never change sign wait for the run, and that refuses naming the
+party. `docs/31` W4 phase 2 is done, which leaves the calculator a benchmark
+case and a surface.
+
 **Closed since.** §7.25 (a model could not declare a metric) is fixed:
 `metric <name> = <expr>` is evaluated once at the horizon in the valuation
 plane and published as `metric.<name>`, a third namespace beside the engine's
@@ -1656,8 +1637,8 @@ plane and published as `metric.<name>`, a third namespace beside the engine's
 waterfall rule — with a forward or circular reference refused (`E1354`) and a
 duplicate name refused (`E1008`). Every declared metric reaches every scenario
 summary, because scenarios and the deterministic block publish the same map.
-That unblocks §7.72 (participant-level returns), which was waiting on this
-construct, and `docs/31` W4 phase 1 is therefore done.
+That unblocked §7.72 (participant-level returns), since shipped, and
+`docs/31` W4 phase 1 is therefore done.
 
 **Closed since.** §7.73 (the wrong grain) is fixed: `activate`/`deactivate
 contract` is out of the grammar, and `E1303` — which resolved only that
@@ -1700,7 +1681,7 @@ compiler output could reach, is gone.
 | §7.74 | the deal mechanics still open after the machine: coupled interest/principal waterfalls, a step's shortfall, PIK on an unpaid step, servicer advances, the clean-up call |
 
 **What M2 is not.** Declared metrics (§7.25, since shipped) and
-participant-level returns (§7.72) are M4, and `docs/31` W4 pulls the first of them forward on the
+participant-level returns (§7.72) are M4 — both since shipped — and `docs/31` W4 pulled the first forward on the
 commercial path rather than the roadmap's. Pack coverage (§7.3) is M3.
 
 Re-derived 2026-08-28. Related: `docs/28` §10, `docs/29`.

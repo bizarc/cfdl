@@ -64,6 +64,18 @@ pub trait Env {
     fn quantile_of(&self, _name: &str, _value: Decimal) -> Option<Decimal> {
         None
     }
+
+    /// Host hook for a PARTICIPANT'S realised return — `irr("party.lp")` and
+    /// `moic("party.lp")`, folded over that party's account: contributions as
+    /// negative inflows, receipts as allocations.
+    ///
+    /// None by default, which is what gates these to the valuation plane: only
+    /// the host evaluating a declared metric supplies the flows, so the same
+    /// call in a stream amount is an evaluation error rather than a
+    /// circularity. `kind` is "irr" or "moic".
+    fn participant_return(&self, _party: &str, _kind: &str) -> Option<Decimal> {
+        None
+    }
 }
 
 #[derive(Debug, Default, Clone)]
@@ -133,6 +145,32 @@ pub fn eval(expr: &Expr, env: &dyn Env, mode: Mode) -> Result<Value, CalcError> 
                 let cond = bool_of(eval(&args[0], env, mode)?, args[0].span)?;
                 let taken = if cond { &args[1] } else { &args[2] };
                 return eval(taken, env, mode);
+            }
+            // A PARTICIPANT'S RETURN NAMES AN ENTITY, so it takes the
+            // reference and not its value. `party.lp` is an entity like any
+            // other — the language says `pay … to party.lp` and
+            // `owner party.lp` — and a string would drop what a reference
+            // carries: the compiler resolves it, checks it is a party, and a
+            // typo is a diagnostic rather than a run-time surprise.
+            if name == "irr" || name == "moic" {
+                let path = match args.first().map(|a| &a.kind) {
+                    Some(ExprKind::Var(path)) if args.len() == 1 => path.clone(),
+                    _ => {
+                        return Err(CalcError::new(
+                            format!("{name} takes one argument: a party, as a reference — {name}(party.<name>)."),
+                            Some(expr.span),
+                        ));
+                    }
+                };
+                return match env.participant_return(&path, name) {
+                    Some(value) => Ok(Value::Number(value)),
+                    None => Err(CalcError::new(
+                        format!(
+                            "{name}({path}) is not available here. A participant's return is a fold over the finished projection, so it is computed in a `metric` declaration and nowhere else."
+                        ),
+                        Some(expr.span),
+                    )),
+                };
             }
             let mut values = Vec::with_capacity(args.len());
             for arg in args {

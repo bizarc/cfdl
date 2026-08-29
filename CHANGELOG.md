@@ -8,6 +8,54 @@ This project follows Semantic Versioning: https://semver.org/
 
 ## [Unreleased]
 
+### Added: a participant's realized return (§7.72)
+
+The model computed `model.irr` on the deal's net cash, and a waterfall
+attributed each step's payment to a payee — and there the trail stopped. To
+measure what one party earned, an analyst hand-assembled the payee's cash,
+capital in and distributions out, and ran the arithmetic outside the language
+against results the language already held.
+
+```cfdl
+account lp_capital {
+  owner party.lp
+  from if(time.t == 0, -1000.0, 0.0)     // the capital call
+}
+...
+metric lp_irr  = irr(party.lp)           // 0.218623
+metric lp_moic = moic(party.lp)          // 1.6
+```
+
+**Folded over the party's own ACCOUNT, never over payee streams.** An account's
+journal already separates the directions — a contribution is a negative
+`inflow`, a receipt is an `allocate_in` — so the sign change an IRR needs is
+RECORDED rather than inferred from stream names, which is the attribution trap
+§7.43 records.
+
+**The party is a reference, not text.** A party is an entity, named the way the
+language names entities everywhere else, and the reference is what the compiler
+can act on:
+
+| written | before the run |
+|---|---|
+| `irr(party.lpp)` | `E1301` — not a declared entity |
+| `irr(asset.deal)` | `E1356` — not a party |
+| `irr(party.ghost)` | `E1356` — owns no account, and how to declare one |
+| `irr("party.lp")` | `E1356` — write it as a reference |
+| `irr(…)` in a stream | `E1355` — a fold over the finished projection |
+
+Only what cannot be known until the run — flows that never change sign —
+refuses at run time, naming the party, because a metric the author declared
+must not silently go missing.
+
+`E1355` closed a live silent path: `irr()` in a stream amount compiled AND ran,
+substituting zero under `status: ok`, because a stream amount that fails to
+evaluate warns and carries on. It is now refused across stream amounts,
+activations, event guards, waterfall steps and account inflows.
+
+`docs/13` §7.72 closes and `docs/31` W4 phase 2 is done, which leaves the
+waterfall calculator a benchmark case and a surface.
+
 ### Added: a model may declare a metric (§7.25)
 
 Metric keys were minted in two places: the engine (`model.*`) and a pack
@@ -469,7 +517,7 @@ golden suite byte-identical, wall-clock within noise; the read
 rules; the account; the state machine; the migrations; the documentation
 surface. Three decisions stay open and each names who settles it.
 
-New backlog entry 7.72: a participant's realised return has no construct —
+New backlog entry 7.72: a participant's realized return has no construct —
 measuring what a payee actually earned means hand-assembling their streams
 outside the language. Gated on the account (docs/28 §5.1), whose per-party
 journal is the input the metric folds over; rides on 7.25's declared

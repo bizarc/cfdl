@@ -314,6 +314,18 @@ point at or before the query date (the first value before the first point).
 points and clamp flat outside the declared range. Referencing an undeclared
 curve is an evaluation error.
 
+Participant returns: `irr(party.<name>)` and `moic(party.<name>)` fold what one
+party's ACCOUNT came to — a contribution is a negative inflow, a receipt is an
+allocation in, so the sign change an IRR needs is recorded rather than
+inferred. The argument is a REFERENCE, unlike `curve_value` and `quantile_at`,
+which name a keyed declaration rather than an entity: a party is an entity, and
+the reference is what the compiler resolves, type-checks and reports on. Both
+are available in a `metric` declaration and nowhere else: they read the finished projection, so a
+stream amount that called one would be asking for a return on cash that stream
+has not produced yet, which the compiler refuses (`E1355`). A party that owns
+no account, or whose flows never change sign, refuses the run naming the party
+rather than publishing nothing.
+
 Quantiles: a `quantile` declaration is indexed by cumulative share, not by
 date, and three functions read one. `quantile_at(name, share)` is the value at
 a share — the direct analogue of `curve_value`. `quantile_mean(name, from, to)`

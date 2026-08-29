@@ -1,0 +1,23 @@
+version 0.1
+model "participant-return-outside-metric"
+time calendar annual from 2026-01 for 3
+
+// A RETURN IS A FOLD OVER THE FINISHED PROJECTION.
+//
+// Reading one in a stream amount asks for a return on cash this stream has
+// not produced yet. The evaluator refuses it, but a stream amount that fails
+// to evaluate warns and substitutes zero — so before this check the model ran
+// `status: ok` on a column of zeroes.
+
+entity asset deal : Asset.Financial
+entity party lp   : Party { name = "Limited Partner" }
+
+account lp_capital {
+  owner party.lp
+  from -100.0
+}
+
+stream deal.fee on entity asset.deal inflow currency USD {
+  schedule every year from 2026-01 to 2028-01
+  amount = irr(party.lp) * 100.0
+}

@@ -1,0 +1,19 @@
+version 0.1
+model "participant-return-not-a-party"
+time calendar annual from 2026-01 for 3
+
+// A RETURN BELONGS TO A PARTICIPANT, AND IS FOLDED OVER THEIR ACCOUNT.
+//
+// The party here is declared and is a party, and still has nothing to fold:
+// no account names it as owner, so there is no record of what it contributed
+// or received. A step's payee would not do — attributing through stream names
+// is the question docs/13 §7.43 records, and it is not this one.
+//
+// The argument is a REFERENCE rather than text, which is what lets this be a
+// diagnostic at all: the compiler resolves `party.silent` against the declared
+// entities, checks it is a party, and checks an account names it.
+
+entity asset deal : Asset.Financial
+entity party silent : Party { name = "Never Paid" }
+
+metric silent_return = irr(party.silent)

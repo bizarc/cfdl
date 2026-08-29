@@ -11,7 +11,7 @@ Diagnostics are the repair signal: read the `code`, `message`, `span`, and
 `hint`, change the model, recompile. The catalog is how an agent learns what
 each code looks like in the flesh before it meets one.
 
-**Coverage:** 193 codes in the docs/08 §7 register; 83 exemplified here; 70 of 84 examples carry a recorded fix.
+**Coverage:** 195 codes in the docs/08 §7 register; 85 exemplified here; 70 of 86 examples carry a recorded fix.
 
 ## active_in_unknown_state — E1332_UNKNOWN_ACTIVE_STATE
 
@@ -2431,6 +2431,72 @@ time calendar monthly from 2026-01 for 12
 // must declare at least one).
 entity asset co : Asset.Financial
 ```
+
+## participant_return_not_a_party — E1356_PARTICIPANT_RETURN_NOT_A_PARTY
+
+Failing example:
+
+```cfdl
+version 0.1
+model "participant-return-not-a-party"
+time calendar annual from 2026-01 for 3
+
+// A RETURN BELONGS TO A PARTICIPANT, AND IS FOLDED OVER THEIR ACCOUNT.
+//
+// The party here is declared and is a party, and still has nothing to fold:
+// no account names it as owner, so there is no record of what it contributed
+// or received. A step's payee would not do — attributing through stream names
+// is the question docs/13 §7.43 records, and it is not this one.
+//
+// The argument is a REFERENCE rather than text, which is what lets this be a
+// diagnostic at all: the compiler resolves `party.silent` against the declared
+// entities, checks it is a party, and checks an account names it.
+
+entity asset deal : Asset.Financial
+entity party silent : Party { name = "Never Paid" }
+
+metric silent_return = irr(party.silent)
+```
+
+- `E1356_PARTICIPANT_RETURN_NOT_A_PARTY` (error): Metric 'silent_return' folds the return of 'party.silent', which owns no account.
+  - hint: A participant's return is folded over the party's own account: contributions are negative inflows and receipts are allocations in. Declare `account <name> { owner party.silent … }` and pay the waterfall's steps into it.
+
+Fix: not yet recorded.
+
+## participant_return_outside_metric — E1355_PARTICIPANT_RETURN_OUTSIDE_METRIC
+
+Failing example:
+
+```cfdl
+version 0.1
+model "participant-return-outside-metric"
+time calendar annual from 2026-01 for 3
+
+// A RETURN IS A FOLD OVER THE FINISHED PROJECTION.
+//
+// Reading one in a stream amount asks for a return on cash this stream has
+// not produced yet. The evaluator refuses it, but a stream amount that fails
+// to evaluate warns and substitutes zero — so before this check the model ran
+// `status: ok` on a column of zeroes.
+
+entity asset deal : Asset.Financial
+entity party lp   : Party { name = "Limited Partner" }
+
+account lp_capital {
+  owner party.lp
+  from -100.0
+}
+
+stream deal.fee on entity asset.deal inflow currency USD {
+  schedule every year from 2026-01 to 2028-01
+  amount = irr(party.lp) * 100.0
+}
+```
+
+- `E1355_PARTICIPANT_RETURN_OUTSIDE_METRIC` (error): Stream 'deal.fee' amount folds a participant's return.
+  - hint: `irr` and `moic` are folds over the finished projection, so they belong in a `metric` declaration. Reading one here would ask for a return on cash this expression has not produced yet.
+
+Fix: not yet recorded.
 
 ## payment_terms_on_date — E0004_EXPECTED_TOKEN
 
