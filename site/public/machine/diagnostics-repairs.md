@@ -11,7 +11,7 @@ Diagnostics are the repair signal: read the `code`, `message`, `span`, and
 `hint`, change the model, recompile. The catalog is how an agent learns what
 each code looks like in the flesh before it meets one.
 
-**Coverage:** 197 codes in the docs/08 §7 register; 72 exemplified here; 70 of 72 examples carry a recorded fix.
+**Coverage:** 191 codes in the docs/08 §7 register; 81 exemplified here; 70 of 81 examples carry a recorded fix.
 
 ## active_in_unknown_state — E1332_UNKNOWN_ACTIVE_STATE
 
@@ -601,6 +601,113 @@ stream debt.principal on entity asset.borrower {
 }
 ```
 
+## duplicate_contract — E1002_DUPLICATE_CONTRACT
+
+Failing example:
+
+```cfdl
+version 0.1
+model "duplicate-contract"
+use pack "cre" version "0.1.0"
+time calendar monthly from 2026-01 for 12
+
+// TWO CONTRACTS UNDER ONE NAME.
+//
+// Both lower, and two rules striking the same stream name was reported as
+// E5007_DUPLICATE_LOWERED_STREAM — the downstream symptom, and only when a
+// pack is active and only if the generated names happen to collide. The cause
+// is the pair of declarations below.
+
+entity asset tower : CRE.Asset.RealProperty
+
+contract cre.opex_line on entity asset.tower {
+  term 2026-01..2026-12
+  terms { amount = 100 }
+}
+contract cre.opex_line on entity asset.tower {
+  term 2026-01..2026-12
+  terms { amount = 200 }
+}
+```
+
+- `E1002_DUPLICATE_CONTRACT` (error): Duplicate contract 'cre.opex_line'. Give one a suffix to keep them separable.
+
+Fix: not yet recorded.
+
+## duplicate_event — E1007_DUPLICATE_EVENT
+
+Failing example:
+
+```cfdl
+version 0.1
+model "duplicate-event"
+time calendar annual from 2026-01 for 3
+
+// TWO EVENTS UNDER ONE NAME BOTH FIRE.
+//
+// The resolver's symbol table declared an `events` map that nothing ever
+// wrote, so the duplicate check could not run. Both events reached the IR and
+// both fired, and the journal then carried two `event:refi` actors that cannot
+// be told apart.
+
+entity asset co : Asset.Financial
+
+event refi when time.t >= 1 { set entity asset.co.status = "a" }
+event refi when time.t >= 2 { set entity asset.co.status = "b" }
+```
+
+- `E1007_DUPLICATE_EVENT` (error): Duplicate event 'refi'.
+
+Fix: not yet recorded.
+
+## duplicate_option — E1006_DUPLICATE_OPTION
+
+Failing example:
+
+```cfdl
+version 0.1
+model "duplicate-option"
+time calendar annual from 2026-01 for 3
+
+// TWO OPTIONS UNDER ONE NAME MAKE `exercise option` AMBIGUOUS.
+//
+// Both reached the IR, and the engine resolves a forced exercise by position —
+// so which one an event exercised was an accident of declaration order.
+
+entity asset co : Asset.Financial
+
+option renewal type Option.Call { exercise when false payoff 1 }
+option renewal type Option.Call { exercise when false payoff 2 }
+```
+
+- `E1006_DUPLICATE_OPTION` (error): Duplicate option 'renewal'.
+
+Fix: not yet recorded.
+
+## duplicate_phase — E1004_DUPLICATE_PHASE
+
+Failing example:
+
+```cfdl
+version 0.1
+model "duplicate-phase"
+time calendar annual from 2026-01 for 4
+
+// TWO PHASES UNDER ONE NAME.
+//
+// A schedule naming the phase gets one of the two windows, decided by
+// declaration order rather than by the model.
+
+phase build from 2026-01 to 2026-12
+phase build from 2027-01 to 2027-12
+
+entity asset co : Asset.Financial
+```
+
+- `E1004_DUPLICATE_PHASE` (error): Duplicate phase 'build'.
+
+Fix: not yet recorded.
+
 ## energy_invalid_physics — E8001_ENERGY_INVALID_DEGRADATION, E8002_ENERGY_INVALID_AVAILABILITY, E8010_ENERGY_INVALID_MACRS_LIFE, E8011_ENERGY_INVALID_TAX_RATE
 
 Failing example:
@@ -864,6 +971,61 @@ event refi when time.t >= 1 {
 
 Fix: not yet recorded.
 
+## event_when_not_bool — E2201_EVENT_WHEN_NOT_BOOL
+
+Failing example:
+
+```cfdl
+version 0.1
+model "event-when-not-bool"
+time calendar annual from 2026-01 for 3
+
+// A GUARD THAT IS NOT A CONDITION.
+//
+// The engine took a non-boolean guard as `false` and carried on: the event
+// never fired, `deterministic.warnings` said so per period, and `status`
+// stayed `ok`. That is the shape §7.71 already refused for series reads.
+//
+// The guard here is a literal, so it decides the same way on every period and
+// every run — which is what makes it checkable before the model is run at all.
+
+entity asset co : Asset.Financial
+
+event refi when 42 { set entity asset.co.status = "refinanced" }
+```
+
+- `E2201_EVENT_WHEN_NOT_BOOL` (error): Event 'refi' fires `when 42`, which is not a condition.
+  - hint: A guard must be true or false. The engine would take a non-boolean as `false`, so the event would never fire.
+
+Fix: not yet recorded.
+
+## expr_illegal_op — E3004_EXPR_ILLEGAL_OP
+
+Failing example:
+
+```cfdl
+version 0.1
+model "expr-illegal-op"
+time calendar annual from 2026-01 for 3
+
+// AN OPERATOR APPLIED TO THE WRONG KIND OF OPERAND.
+//
+// `and` joins conditions, not numbers. Same outcome as a type error before
+// this was checked: 0, a warning, and `status: ok`.
+
+entity asset co : Asset.Financial
+
+stream a.rent on entity asset.co inflow currency USD {
+  schedule every year from 2026-01 to 2028-01
+  amount = 10 and 3
+}
+```
+
+- `E3004_EXPR_ILLEGAL_OP` (error): Stream 'a.rent' amount cannot evaluate: expected bool, got number.
+  - hint: Every value in this expression is a literal, so it evaluates the same way on every period and every run.
+
+Fix: not yet recorded.
+
 ## expr_parse_error — E3001_EXPR_PARSE_ERROR
 
 Failing example:
@@ -896,6 +1058,34 @@ stream lease.rent on entity asset.borrower inflow currency USD {
   amount = 1200 * (1 + 0.02)
 }
 ```
+
+## expr_type_error — E3003_EXPR_TYPE_ERROR
+
+Failing example:
+
+```cfdl
+version 0.1
+model "expr-type-error"
+time calendar annual from 2026-01 for 3
+
+// OPERANDS THE OPERATOR CANNOT COMBINE.
+//
+// The amount evaluated to 0 with a warning, so the stream paid nothing and the
+// run reported `status: ok`. Every value here is a literal: the failure is the
+// model's, on every period and every run.
+
+entity asset co : Asset.Financial
+
+stream a.rent on entity asset.co inflow currency USD {
+  schedule every year from 2026-01 to 2028-01
+  amount = "100" + 1
+}
+```
+
+- `E3003_EXPR_TYPE_ERROR` (error): Stream 'a.rent' amount cannot evaluate: cannot apply Add to text and number.
+  - hint: Every value in this expression is a literal, so it evaluates the same way on every period and every run.
+
+Fix: not yet recorded.
 
 ## field_declared_twice — E1128_FIELD_DECLARED_TWICE
 
@@ -1100,6 +1290,30 @@ Minimal fix (compiles) — outside.cfdl:
 // Fix: the previously-external module now lives inside the model root.
 entity asset a : Asset.Real
 ```
+
+## invalid_date_literal — E0005_INVALID_DATE_LITERAL
+
+Failing example:
+
+```cfdl
+version 0.1
+model "invalid-date-literal"
+time calendar annual from 2026-13 for 2
+
+// SHAPE IS NOT VALIDITY.
+//
+// The lexer accepted four digits, a dash and two more, which `2026-13`
+// satisfies, and nothing checked the calendar afterwards. The model compiled:
+// the IR carried `"start": "2026-13-01"` and only the RUN refused it, one
+// stage and one artifact too late. February is checked the same way —
+// 2025-02-29 is refused and 2024-02-29 is not.
+
+entity asset co : Asset.Financial
+```
+
+- `E0005_INVALID_DATE_LITERAL` (error): '2026-13' is not a real calendar date. Dates are `YYYY-MM` or `YYYY-MM-DD`.
+
+Fix: not yet recorded.
 
 ## lex_unterminated_block_comment — E0003_UNTERMINATED_BLOCK_COMMENT
 
@@ -2615,6 +2829,34 @@ event vacate when series_sum("cre.rent", time.t - 1, time.t - 1) < 50 {
 }
 ```
 
+## stream_active_not_bool — E2202_STREAM_ACTIVE_NOT_BOOL
+
+Failing example:
+
+```cfdl
+version 0.1
+model "stream-active-not-bool"
+time calendar annual from 2026-01 for 3
+
+// AN ACTIVATION PREDICATE THAT IS NOT A CONDITION.
+//
+// Taken as `false`, so the stream never paid — a zero column, a warning the
+// CLI does not print, and `status: ok`.
+
+entity asset co : Asset.Financial
+
+stream a.rent on entity asset.co inflow currency USD {
+  schedule every year from 2026-01 to 2028-01
+  amount = 100
+  active when 7
+}
+```
+
+- `E2202_STREAM_ACTIVE_NOT_BOOL` (error): Stream 'a.rent' is `active when 7`, which is not a condition.
+  - hint: An activation predicate must be true or false. The engine would take a non-boolean as `false`, so the stream would never pay.
+
+Fix: not yet recorded.
+
 ## stream_reads_waterfall_step — E1346_STREAM_READS_WATERFALL_STEP
 
 Failing example:
@@ -3407,13 +3649,8 @@ waterfall fund.distribution on entity asset.fund {
 
 Documented in docs/08 §7, awaiting a minimal failing fixture:
 
-- `E0005_INVALID_DATE_LITERAL` — a date is not a real calendar date, or not in `YYYY-MM` or `YYYY-MM-DD` form.
 - `E1001_DUPLICATE_ENTITY` — two entities share a name.
-- `E1002_DUPLICATE_CONTRACT` — two contracts share a name. Give one a suffix to keep them separable.
-- `E1004_DUPLICATE_PHASE` — two phases share a name.
 - `E1005_DUPLICATE_ASSUME` — two assumptions share a name.
-- `E1006_DUPLICATE_OPTION` — two options share a name.
-- `E1007_DUPLICATE_EVENT` — two events share a name.
 - `E1101_MISSING_VERSION` — no `version` declaration. It states which language version the model is written against.
 - `E1102_MISSING_MODEL` — no `model` declaration, so the model has no name.
 - `E1104_MULTIPLE_VERSION` — `version` is declared more than once.
@@ -3424,7 +3661,6 @@ Documented in docs/08 §7, awaiting a minimal failing fixture:
 - `E1123_PREV_OUTSIDE_NEXT` — `prev` names a recurrence's own previous value and
 - `E1125_NO_STATE_NAMESPACE` — an expression reads `state.<name>`. There is no
 - `E1304_UNRESOLVED_OPTION_REF` — an event exercises an option that is not declared.
-- `E1305_UNRESOLVED_PHASE_REF` — a schedule names a phase that is not declared.
 - `E1306_INVALID_ENTITY_REF_FORMAT` — entity ref, stream name, or contract name is not a qualified name with at least two segments (dotted hierarchy).
 - `E1310_ENTITY_BLOCK_WITHOUT_TYPE` — an entity uses a block but declares no type, so there is nothing to check the block against.
 - `E1312_MISSING_REQUIRED_FIELD` — an entity omits a field its type requires.
@@ -3443,29 +3679,18 @@ Documented in docs/08 §7, awaiting a minimal failing fixture:
 - `E1345_WATERFALL_STEP_NO_AMOUNT` — a step says nothing about what it pays.
 - `E1347_UNRESOLVED_ACCOUNT_REF` — a step allocates `to account <name>` and no
 - `E2002_CONTRACT_MISSING_EFFECTS` — a contract produces no streams, so it has no effect on the model.
-- `E2003_CONTRACT_CURRENCY_REQUIRED` — a contract does not state its currency and none can be inferred.
 - `E2101_STREAM_MISSING_SCHEDULE` — a stream has no `schedule`, so there is no period for its cash to land in.
 - `E2102_STREAM_MISSING_AMOUNT` — a stream has no `amount`.
 - `E2104_SCHEDULE_INVALID_RANGE` — a schedule's `to` is before its `from`.
 - `E2105_SCHEDULE_INVALID_DAY_OF_MONTH` — a day rule names a day outside 1–31.
 - `E2106_SCHEDULE_PHASE_NOT_FOUND` — a schedule is anchored to a phase that is not declared.
-- `E2201_EVENT_WHEN_NOT_BOOL` — an event's `when` is not a true/false expression.
-- `E2202_STREAM_ACTIVE_NOT_BOOL` — a stream's `active when` is not a true/false expression.
-- `E2203_ACTION_SET_FIELD_INVALID` — an event sets an entity field that does not exist or cannot hold that value.
 - `E2301_ASSUME_UNKNOWN_DIST` — a random assumption names a distribution that
 - `E2302_ASSUME_INVALID_PARAM` — a distribution parameter is not a number, or
 - `E2303_ASSUME_MISSING_PARAM` — a distribution is missing a parameter it
 - `E2304_ASSUME_INVALID_CLIP` — a `clip=[lo, hi]` is malformed or inverted.
 - `E2401_OPTION_MISSING_EXERCISE` — an option declares no `exercise when`, so
 - `E2402_OPTION_MISSING_PAYOFF` — an option declares no `payoff`, so exercising
-- `E3002_EXPR_UNKNOWN_IDENT` — an expression names something not in scope. Bindings are `time.*`, `inputs.*`, `model.*`, `entity.*`, `cfg.*`, `obs.*` and entity fields by qualified path (`<family>.<entity>.<field>`).
-- `E3003_EXPR_TYPE_ERROR` — an expression combines types that cannot combine, such as a date and a number.
-- `E3004_EXPR_ILLEGAL_OP` — an operator is not defined for these operands.
-- `E4001_UNKNOWN_TYPE_ID` — a declaration names a type the active pack does not define.
-- `E4002_INVALID_ENTITY_ATTR` — an entity field is not one the pack declares, or holds the wrong kind of value.
-- `E4003_INVALID_CONTRACT_TERMS` — a contract's terms do not satisfy the pack's schema for that contract.
 - `E4004_MISSING_PACK` — the named pack could not be loaded — not found, or found and rejected.
-- `E5001_ID_GENERATION_FAILED` — the compiler could not derive a stable identifier for a declaration.
 - `E5002_IR_SCHEMA_VALIDATION_FAILED` — the IR the compiler produced does not satisfy the published IR schema, or the IR being read does not.
 - `E5003_IR_EMIT_FAILED` — the IR could not be written.
 - `E5004_INVALID_LOWERING_RULE` — a pack's lowering rule is malformed.
@@ -3482,7 +3707,8 @@ Documented in docs/08 §7, awaiting a minimal failing fixture:
 - `E6010_CRE_EXIT_MISSING_EXIT_CAP` — 
 - `E6012_CRE_EXIT_MISSING_NOI_VALUE` — 
 - `E6020_CRE_OPS_MISSING_AMOUNT` — 
-- `E6021_CRE_OPS_INVALID_SCHEDULE` — 
+- `E6030_CRE_LEASE_AMBIGUOUS_RENT` — a CRE lease states both `base_rent` (per period) and `base_rent_year` (annual). They would be summed; give one.
+- `E6033_CRE_UNIT_INVALID_ESCALATION` — a lease unit's `escalation` is below -1, which would make rent negative on the first step.
 - `E6054_CRE_DEBT_INVALID_AMORT` — `amort_months` strikes the payment and is
 - `E6055_CRE_DEBT_INVALID_IO_MONTHS` — whole months, 0 or more
 - `E6056_CRE_DEBT_INVALID_BALLOON_FLAG` — `balloon_at_maturity` is 0 or 1
@@ -3497,6 +3723,7 @@ Documented in docs/08 §7, awaiting a minimal failing fixture:
 - `E6065_CRE_CONSTRUCTION_INVALID_CAPITALIZE_INTEREST` — a construction loan's
 - `E6067_CRE_PCT_RENT_INVALID_OVERAGE_PCT` — a fraction between 0 and 1.
 - `E7003_OPCO_LINE_INVALID_GROWTH` — 
+- `E7011_OPCO_TAXES_AMBIGUOUS_DA` — OpCo cash taxes state both `da_monthly` (per period) and `da_year` (annual). They would be summed; give one.
 - `E7012_OPCO_TAXES_MISSING_RATE` — a cash-taxes contract states neither
 - `E7013_OPCO_WC_MISSING_AMOUNT_OR_RULE` — 
 - `E7014_OPCO_WC_INVALID_SCHEDULE` — 
