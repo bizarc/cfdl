@@ -1107,6 +1107,31 @@ Rules:
   in every scenario summary, so a scenario grid can assert a derived figure
   per column and not only the engine's built-ins.
 
+**A participant's realised return.** Two folds are available in a metric and
+nowhere else:
+
+```cfdl
+metric lp_irr  = irr(party.lp)
+metric lp_moic = moic(party.lp)
+```
+
+**The party is a REFERENCE, not text.** A party is an entity, named the way the
+language names entities everywhere else — `pay … to party.lp`, `owner
+party.lp`, `on entity asset.x` — and the reference is what lets the compiler
+resolve it: an undeclared name is `E1301`, an entity that is not a party or
+that owns no account is `E1356`. Text would defer all three to the run.
+
+Both read the party's own ACCOUNT — a contribution is a negative inflow, a
+receipt is an allocation in, so the sign change an IRR needs is recorded rather
+than inferred. They are folds over the party's account and never over a payee's
+streams: a step's payee says who was paid, but attributing through stream names
+is a different question. A party owns at most one account.
+
+Both are refused outside a metric (`E1355`): reading a return in a stream
+amount asks for a return on cash that stream has not produced yet. What cannot
+be known until the run — flows that never change sign — refuses the run naming
+the party, because a metric the author declared must not silently go missing.
+
 The three namespaces stay distinct, and the prefix says who minted the number:
 `model.*` is the engine's, `domain.*` is the active pack's, `metric.*` is this
 model's.
@@ -2038,6 +2063,18 @@ point at or before the query date (the first value before the first point).
 `linear` curves interpolate linearly in calendar days between bracketing
 points and clamp flat outside the declared range. Referencing an undeclared
 curve is an evaluation error.
+
+Participant returns: `irr(party.<name>)` and `moic(party.<name>)` fold what one
+party's ACCOUNT came to — a contribution is a negative inflow, a receipt is an
+allocation in, so the sign change an IRR needs is recorded rather than
+inferred. The argument is a REFERENCE, unlike `curve_value` and `quantile_at`,
+which name a keyed declaration rather than an entity: a party is an entity, and
+the reference is what the compiler resolves, type-checks and reports on. Both
+are available in a `metric` declaration and nowhere else: they read the finished projection, so a
+stream amount that called one would be asking for a return on cash that stream
+has not produced yet, which the compiler refuses (`E1355`). A party that owns
+no account, or whose flows never change sign, refuses the run naming the party
+rather than publishing nothing.
 
 Quantiles: a `quantile` declaration is indexed by cumulative share, not by
 date, and three functions read one. `quantile_at(name, share)` is the value at
@@ -6073,6 +6110,8 @@ Fields that move:
   waterfall is the documented composition and still compiles.
 - `E1349_UNRESOLVED_LIFECYCLE_REF` — an entity binds `lifecycle <name>` and no
   lifecycle block declares it.
+- `E1356_PARTICIPANT_RETURN_NOT_A_PARTY` — `irr`/`moic` names something that is not a party, or a party that owns no account, or is written as text rather than a reference. A participant's return is folded over the party's OWN ACCOUNT — contributions are negative inflows, receipts are allocations in — so a party without one has nothing to fold.
+- `E1355_PARTICIPANT_RETURN_OUTSIDE_METRIC` — `irr` or `moic` appears outside a `metric` declaration. Both fold the finished projection, so reading one in a stream amount, an activation, an event guard, a waterfall step or an account inflow asks for a return on cash that expression has not produced yet. Left to run time it is a substituted zero and a warning nobody prints.
 - `E1354_METRIC_FORWARD_REF` — a metric reads a metric declared below it, or reads itself. Metrics compose in DECLARATION ORDER, the same rule waterfalls follow, which makes the dependency an order rather than a graph. Reading itself is a different mistake: a metric is a fold over the finished projection, not a recurrence — carry a running quantity as a field the walk advances.
 - `E1350_LIFECYCLE_CONFLICT` — an entity binds a model-declared lifecycle, but
   its ontology type already declares one. One machine per entity.

@@ -868,6 +868,59 @@ pub(crate) fn quantile_call(
 
 /// Does the expression call any of the given function names? Used by the
 /// engine to decide which streams read series at all.
+/// Every reference passed to one of the named functions.
+///
+/// `irr(party.lp)` takes the entity, not its value, so the compiler needs the
+/// path to resolve it — which is the point of a reference over a string.
+pub fn call_reference_args(expr: &crate::Expr, names: &[&str], out: &mut Vec<String>) {
+    use crate::ExprKind;
+    match &expr.kind {
+        ExprKind::Call { name, args } => {
+            if names.contains(&name.as_str()) {
+                if let Some(ExprKind::Var(path)) = args.first().map(|a| &a.kind) {
+                    out.push(path.clone());
+                }
+            }
+            for a in args {
+                call_reference_args(a, names, out);
+            }
+        }
+        ExprKind::Unary { expr, .. } => call_reference_args(expr, names, out),
+        ExprKind::Binary { lhs, rhs, .. } => {
+            call_reference_args(lhs, names, out);
+            call_reference_args(rhs, names, out);
+        }
+        _ => {}
+    }
+}
+
+/// How many calls to the named functions take something OTHER than a
+/// reference — a string, a number, an expression. Each is a call the compiler
+/// cannot resolve and the evaluator will refuse.
+pub fn call_nonreference_count(expr: &crate::Expr, names: &[&str]) -> usize {
+    use crate::ExprKind;
+    match &expr.kind {
+        ExprKind::Call { name, args } => {
+            let here = if names.contains(&name.as_str())
+                && !matches!(args.first().map(|a| &a.kind), Some(ExprKind::Var(_)))
+            {
+                1
+            } else {
+                0
+            };
+            here + args
+                .iter()
+                .map(|a| call_nonreference_count(a, names))
+                .sum::<usize>()
+        }
+        ExprKind::Unary { expr, .. } => call_nonreference_count(expr, names),
+        ExprKind::Binary { lhs, rhs, .. } => {
+            call_nonreference_count(lhs, names) + call_nonreference_count(rhs, names)
+        }
+        _ => 0,
+    }
+}
+
 pub fn expr_calls_any(expr: &crate::Expr, names: &[&str]) -> bool {
     use crate::ExprKind;
     match &expr.kind {

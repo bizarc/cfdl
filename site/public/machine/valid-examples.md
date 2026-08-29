@@ -4,7 +4,7 @@
 
 CFDL 0.7.0. Every model below compiles, and its IR and
 results are byte-asserted against goldens in CI (`fixtures/valid/`,
-120 models.
+121 models.
 
 `gold/ir/`, `gold/results/`). Each is single-purpose: the directory name
 says what it exercises. This is what right looks like — positive few-shot
@@ -3507,6 +3507,54 @@ contract test.fee_contract {
     rate = 25
   }
 }
+```
+
+## participant_returns
+
+```cfdl
+version 0.1
+model "participant-returns"
+time calendar annual from 2026-01 for 5
+
+// WHAT DID THIS PARTICIPANT EARN?
+//
+// The model computes `model.irr` on the deal's net cash, and a waterfall
+// attributes each step's payment to a payee — and there the trail stopped. To
+// measure a party's own return an analyst had to hand-assemble the payee's
+// cash, capital in and distributions out, and run the arithmetic outside the
+// language against results the language already held.
+//
+// The vector is the party's own ACCOUNT, never the payee's streams: a step's
+// payee says who was paid, but attributing through stream names is the trap
+// docs/13 §7.43 records. An account's journal already separates the two
+// directions — a contribution is a NEGATIVE inflow, a receipt is an
+// allocation in — so the sign change an IRR needs is recorded, not inferred.
+//
+// 1,000 called at t=0, then 400 a year for four years:
+//   moic = 1,600 / 1,000            = 1.6
+//   irr  solves -1000 + 400/(1+r) + ... + 400/(1+r)^4 = 0
+
+entity asset deal : Asset.Financial
+entity party lp   : Party { name = "Limited Partner" }
+
+account lp_capital {
+  owner party.lp
+  from if(time.t == 0, -1000.0, 0.0)
+}
+
+stream deal.income on entity asset.deal inflow currency USD {
+  schedule every year from 2027-01 to 2030-01
+  amount = 400
+}
+
+waterfall deal.distribution on entity asset.deal {
+  schedule every year from 2027-01 to 2030-01
+  from available
+  pay to_lp to account lp_capital = remaining
+}
+
+metric lp_irr  = irr(party.lp)
+metric lp_moic = moic(party.lp)
 ```
 
 ## payment_terms

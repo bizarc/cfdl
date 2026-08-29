@@ -2276,6 +2276,69 @@ fn run_deterministic(
     // The same map the deterministic block publishes is what a scenario
     // summary carries, so a declared metric reaches every scenario column
     // without a second computation.
+    // A PARTICIPANT'S REALISED RETURN (`docs/13` §7.72), folded per party.
+    //
+    // The vector is the party's own account, which is why this is computed
+    // over ACCOUNTS and never over payee streams: a step's payee names who was
+    // paid, but attribution through stream names is the trap §7.43 records.
+    // An account's journal already separates the two directions — a
+    // contribution is a NEGATIVE inflow (the capital call), a receipt is an
+    // allocation in — so the sign change an IRR needs is recorded rather than
+    // inferred.
+    let mut party_returns: BTreeMap<String, cfdl_expr::ParticipantReturn> = BTreeMap::new();
+    if !ir.metrics.is_empty() {
+        let mut account_owner: BTreeMap<String, String> = BTreeMap::new();
+        for account in &ir.accounts {
+            if let Some(owner) = &account.owner {
+                let party = owner.strip_prefix("party.").unwrap_or(owner).to_string();
+                // One account per party is the rule the waterfall stage
+                // already enforces; the first declaration keeps it.
+                account_owner.entry(party).or_insert(account.name.clone());
+            }
+        }
+        for (party, account) in &account_owner {
+            let mut flows = vec![0.0; periods];
+            for entry in &journal {
+                if entry.period >= periods {
+                    continue;
+                }
+                let touches = entry.target == *account
+                    || entry.target.ends_with(&format!("account:{account}"));
+                if !touches {
+                    continue;
+                }
+                let amount = entry.amount.unwrap_or(0.0);
+                match entry.action.as_str() {
+                    "inflow" => flows[entry.period] += amount,
+                    "allocate_in" => flows[entry.period] += amount,
+                    "allocate_out" => flows[entry.period] -= amount,
+                    _ => {}
+                }
+            }
+            let received: f64 = flows.iter().filter(|v| **v > 0.0).sum();
+            let contributed: f64 = -flows.iter().filter(|v| **v < 0.0).sum::<f64>();
+            let mut entry = cfdl_expr::ParticipantReturn::default();
+            if contributed <= 0.0 {
+                entry.undefined_because =
+                    Some(format!("party '{party}' never contributed to account '{account}', so there is no investment to return on"));
+            } else if received <= 0.0 {
+                entry.undefined_because = Some(format!(
+                    "party '{party}' never received anything from account '{account}'"
+                ));
+            } else {
+                entry.moic = Some(received / contributed);
+                entry.irr = irr_with_offsets(&[(flows.clone(), 0.0)])
+                    .map(|per_period| (1.0 + per_period).powf(ppy) - 1.0);
+                if entry.irr.is_none() {
+                    entry.undefined_because = Some(format!(
+                        "party '{party}' has flows that do not solve for a rate"
+                    ));
+                }
+            }
+            party_returns.insert(party.clone(), entry);
+        }
+    }
+
     let mut declared_metrics: BTreeMap<String, ExprValue> = BTreeMap::new();
     if !ir.metrics.is_empty() {
         let horizon = periods.saturating_sub(1);
@@ -2291,6 +2354,7 @@ fn run_deterministic(
         for metric in &ir.metrics {
             let mut env = build_expr_env(ir, None, config, horizon, &date, &base_inputs);
             env.series = Arc::clone(&shared);
+            env.party_returns = party_returns.clone();
             // A metric is a fold over the FINISHED projection, so every period
             // is readable — including the tail, which is what a forward-looking
             // figure needs.
@@ -2342,12 +2406,48 @@ fn run_deterministic(
                 }
                 Err(err) => {
                     // A metric that cannot evaluate is not a metric worth
-                    // publishing as zero: the case exists to assert this
-                    // number.
-                    return Err(EngineError::UnknownName(format!(
-                        "Metric '{}' could not be evaluated: {err}",
-                        metric.name
-                    )));
+                    // publishing as zero, or omitting: the case exists to
+                    // assert this number, and a missing key reads as "not run"
+                    // rather than "not defined".
+                    //
+                    // A participant's return knows WHY it is undefined, so say
+                    // it here rather than leave the author with a hook that
+                    // returned nothing.
+                    let mut why = party_returns
+                        .iter()
+                        .find(|(party, found)| {
+                            found.undefined_because.is_some() && err.message.contains(*party)
+                        })
+                        .and_then(|(_, found)| found.undefined_because.clone());
+                    // A party with no account has no entry at all, and the
+                    // evaluator's "not available here" is the wrong reason —
+                    // the call IS in a metric. Name the real one.
+                    if why.is_none() {
+                        for call in ["irr(\"", "moic(\""] {
+                            let mut rest = metric.expr.src.as_str();
+                            while let Some(at) = rest.find(call) {
+                                rest = &rest[at + call.len()..];
+                                let Some(end) = rest.find('"') else { break };
+                                let named = &rest[..end];
+                                let party = named.strip_prefix("party.").unwrap_or(named);
+                                if !party_returns.contains_key(party) {
+                                    why = Some(format!(
+                                        "party '{party}' owns no account, and a participant's return is folded over the party's own account — declare one with `account <name> {{ owner party.{party} … }}` and pay the waterfall's steps into it"
+                                    ));
+                                    break;
+                                }
+                            }
+                            if why.is_some() {
+                                break;
+                            }
+                        }
+                    }
+                    return Err(EngineError::UnknownName(match why {
+                        Some(why) => {
+                            format!("Metric '{}' could not be evaluated: {why}.", metric.name)
+                        }
+                        None => format!("Metric '{}' could not be evaluated: {err}", metric.name),
+                    }));
                 }
             }
         }

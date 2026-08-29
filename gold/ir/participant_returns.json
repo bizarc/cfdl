@@ -1,0 +1,160 @@
+{
+  "ir_version": "0.1",
+  "model": {
+    "name": "participant-returns",
+    "currency": "USD"
+  },
+  "time": {
+    "calendar": "annual",
+    "start": "2026-01-01",
+    "periods": 5
+  },
+  "phases": [],
+  "entities": [
+    {
+      "id": "6597bd55927c6f12d1b59fb0deab7fba",
+      "symbol": "asset.deal",
+      "type": "Asset.Financial",
+      "fields": {},
+      "state": {}
+    },
+    {
+      "id": "b9fe762e53b028203656d6135ae10893",
+      "symbol": "party.lp",
+      "type": "Party",
+      "fields": {
+        "name": "Limited Partner"
+      },
+      "state": {}
+    }
+  ],
+  "assumptions": {
+    "constants": {},
+    "random": {}
+  },
+  "accounts": [
+    {
+      "name": "lp_capital",
+      "owner": "party.lp",
+      "inflow": {
+        "lang": "cfdl",
+        "src": "if(time.t == 0, -1000.0, 0.0)"
+      }
+    }
+  ],
+  "waterfalls": [
+    {
+      "name": "deal.distribution",
+      "entity": "asset.deal",
+      "schedule": {
+        "kind": "Every",
+        "every": "annual",
+        "from": "2027-01-01",
+        "to": "2030-01-01"
+      },
+      "source": {
+        "lang": "cfdl",
+        "src": "available"
+      },
+      "steps": [
+        {
+          "name": "to_lp",
+          "payee": "lp_capital",
+          "payee_is_account": true,
+          "amount": {
+            "lang": "cfdl",
+            "src": "remaining"
+          }
+        }
+      ]
+    }
+  ],
+  "metrics": [
+    {
+      "name": "lp_irr",
+      "expr": {
+        "lang": "cfdl",
+        "src": "irr(party.lp)"
+      },
+      "provenance": {
+        "source_file": "model.cfdl",
+        "source_span": {
+          "start_line": 42,
+          "start_col": 1,
+          "end_line": 42,
+          "end_col": 30
+        }
+      }
+    },
+    {
+      "name": "lp_moic",
+      "expr": {
+        "lang": "cfdl",
+        "src": "moic(party.lp)"
+      },
+      "provenance": {
+        "source_file": "model.cfdl",
+        "source_span": {
+          "start_line": 43,
+          "start_col": 1,
+          "end_line": 43,
+          "end_col": 31
+        }
+      }
+    }
+  ],
+  "contracts": [],
+  "streams": [
+    {
+      "id": "a35e1ad4a2f4e38bfa36c9853b6703a6",
+      "name": "deal.income",
+      "owner": {
+        "symbol": "asset.deal"
+      },
+      "direction": "inflow",
+      "currency": "USD",
+      "schedule": {
+        "kind": "Every",
+        "every": "annual",
+        "from": "2027-01-01",
+        "to": "2030-01-01"
+      },
+      "amount": {
+        "lang": "cfdl",
+        "src": "400.0"
+      },
+      "active_when": {
+        "lang": "cfdl",
+        "src": "true"
+      },
+      "provenance": {
+        "source_file": "model.cfdl",
+        "source_span": {
+          "start_line": 31,
+          "start_col": 1,
+          "end_line": 34,
+          "end_col": 1
+        }
+      }
+    }
+  ],
+  "events": [],
+  "options": [],
+  "runs": [
+    {
+      "kind": "deterministic"
+    }
+  ],
+  "required_observables": [],
+  "required_refs": [],
+  "provenance": {
+    "sources": [
+      "model.cfdl"
+    ],
+    "compiler": {
+      "name": "cfdl",
+      "version": "0.7.0",
+      "hash": "d80f4c40398fe75b55a6788a2be14aac"
+    }
+  }
+}

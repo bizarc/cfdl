@@ -1,0 +1,17 @@
+[
+  {
+    "code": "E1356_PARTICIPANT_RETURN_NOT_A_PARTY",
+    "severity": "error",
+    "message": "Metric 'silent_return' folds the return of 'party.silent', which owns no account.",
+    "file": "model.cfdl",
+    "span": {
+      "start_line": 19,
+      "start_col": 1,
+      "end_line": 19,
+      "end_col": 40
+    },
+    "path": null,
+    "hint": "A participant's return is folded over the party's own account: contributions are negative inflows and receipts are allocations in. Declare `account <name> { owner party.silent … }` and pay the waterfall's steps into it.",
+    "notes": []
+  }
+]

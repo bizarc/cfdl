@@ -89,9 +89,9 @@ current build accepts.
 
 **Series folds** — `series_sum`, `series_avg`
 
-**Other** — `quantile_at`, `quantile_mean`, `quantile_of`
+**Other** — `irr`, `moic`, `quantile_at`, `quantile_mean`, `quantile_of`
 
-*40 functions.*
+*42 functions.*
 <!-- /cfdl:generated expression-builtins -->
 
 ## Related

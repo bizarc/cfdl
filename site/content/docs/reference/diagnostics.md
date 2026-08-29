@@ -89,6 +89,8 @@ register, so it cannot fall behind the language.
 | `E1341_WATERFALL_FORWARD_REF` | Symbols and references | a step's `paid.<step>` names a step declared later in the same waterfall. Steps pay in declaration order, so a later step has not paid anything when an earlier one is evaluated. |
 | `E1342_WATERFALL_SERIES_NOT_VISIBLE` | Symbols and references | `series_sum`/`series_avg` names a step of this waterfall or of a later one. Steps publish when their waterfall finishes, so the read would aggregate to zero and say nothing. An EARLIER waterfall is the documented composition and still compiles. |
 | `E1349_UNRESOLVED_LIFECYCLE_REF` | Symbols and references | an entity binds `lifecycle <name>` and no lifecycle block declares it. |
+| `E1356_PARTICIPANT_RETURN_NOT_A_PARTY` | Symbols and references | `irr`/`moic` names something that is not a party, or a party that owns no account, or is written as text rather than a reference. A participant's return is folded over the party's OWN ACCOUNT — contributions are negative inflows, receipts are allocations in — so a party without one has nothing to fold. |
+| `E1355_PARTICIPANT_RETURN_OUTSIDE_METRIC` | Symbols and references | `irr` or `moic` appears outside a `metric` declaration. Both fold the finished projection, so reading one in a stream amount, an activation, an event guard, a waterfall step or an account inflow asks for a return on cash that expression has not produced yet. Left to run time it is a substituted zero and a warning nobody prints. |
 | `E1354_METRIC_FORWARD_REF` | Symbols and references | a metric reads a metric declared below it, or reads itself. Metrics compose in DECLARATION ORDER, the same rule waterfalls follow, which makes the dependency an order rather than a graph. Reading itself is a different mistake: a metric is a fold over the finished projection, not a recurrence — carry a running quantity as a field the walk advances. |
 | `E1350_LIFECYCLE_CONFLICT` | Symbols and references | an entity binds a model-declared lifecycle, but its ontology type already declares one. One machine per entity. |
 | `E1351_LIFECYCLE_NO_INITIAL` | Symbols and references | a lifecycle block declares no `initial`. Every machine opens somewhere. |
@@ -245,7 +247,7 @@ register, so it cannot fall behind the language.
 | `E9019_CREDIT_INVALID_AGE_MONTHS` | Pack domain validations | `age_months` is the pool's weighted average age at closing. PSA, SDA and the ABS model are all indexed from ORIGINATION, so a seasoned pool starts part-way up the ramp; leaving it at the default 0 on a seasoned pool understates prepayment. Non-negative integer. |
 | `E9020_CREDIT_RATE_FLOOR_ABOVE_CAP` | Pack domain validations |  |
 
-*193 codes.*
+*195 codes.*
 <!-- /cfdl:generated diagnostics-catalog -->
 
 ## Related

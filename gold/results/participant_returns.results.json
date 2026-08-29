@@ -1,0 +1,347 @@
+{
+  "results_version": "0.5",
+  "model_hash": "06f36f5ad6abbdcf14d4f344cee3e820a44825c833a371e62534259e75a3b8ba",
+  "ledger_hash": "b75752c3ff361fbffd9af452abf29c2e695ecc0cd57b17fcfd701a97ac55cfe4",
+  "engine": {
+    "name": "cfdl-engine",
+    "version": "0.7.0"
+  },
+  "warnings": [],
+  "deterministic": {
+    "status": "ok",
+    "metrics": {
+      "entity.asset.deal.total": {
+        "amount": 1600.0,
+        "currency": "USD"
+      },
+      "entity.lp_capital.total": {
+        "amount": 1600.0,
+        "currency": "USD"
+      },
+      "entity.party.lp.total": {
+        "amount": 0.0,
+        "currency": "USD"
+      },
+      "metric.lp_irr": 0.218623,
+      "metric.lp_moic": 1.6,
+      "model.npv": {
+        "amount": 1152.678344,
+        "currency": "USD"
+      },
+      "model.total": {
+        "amount": 1600.0,
+        "currency": "USD"
+      },
+      "model.wal_years": 3.5,
+      "run.annual_discount_rate": 0.1,
+      "run.periods_per_year": 1.0,
+      "stream.deal.income.total": {
+        "amount": 1600.0,
+        "currency": "USD"
+      }
+    },
+    "series": {
+      "account.lp_capital": {
+        "index": {
+          "calendar": "annual",
+          "start": "2026-01-01",
+          "periods": 5
+        },
+        "values": [
+          -1000.0,
+          -600.0,
+          -200.0,
+          200.0,
+          600.0
+        ]
+      },
+      "entity.asset.deal.net_cash_flow": {
+        "index": {
+          "calendar": "annual",
+          "start": "2026-01-01",
+          "periods": 5
+        },
+        "values": [
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 400.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 400.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 400.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 400.0,
+            "currency": "USD"
+          }
+        ]
+      },
+      "entity.lp_capital.net_cash_flow": {
+        "index": {
+          "calendar": "annual",
+          "start": "2026-01-01",
+          "periods": 5
+        },
+        "values": [
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 400.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 400.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 400.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 400.0,
+            "currency": "USD"
+          }
+        ]
+      },
+      "entity.party.lp.net_cash_flow": {
+        "index": {
+          "calendar": "annual",
+          "start": "2026-01-01",
+          "periods": 5
+        },
+        "values": [
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          }
+        ]
+      },
+      "model.net_cash_flow": {
+        "index": {
+          "calendar": "annual",
+          "start": "2026-01-01",
+          "periods": 5
+        },
+        "values": [
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 400.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 400.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 400.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 400.0,
+            "currency": "USD"
+          }
+        ]
+      },
+      "stream.deal.distribution.to_lp": {
+        "index": {
+          "calendar": "annual",
+          "start": "2026-01-01",
+          "periods": 5
+        },
+        "values": [
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 400.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 400.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 400.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 400.0,
+            "currency": "USD"
+          }
+        ]
+      },
+      "stream.deal.income": {
+        "index": {
+          "calendar": "annual",
+          "start": "2026-01-01",
+          "periods": 5
+        },
+        "offset": 1.0,
+        "values": [
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 400.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 400.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 400.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 400.0,
+            "currency": "USD"
+          }
+        ]
+      }
+    },
+    "journal": [
+      {
+        "period": 0,
+        "date": "2026-01-01",
+        "actor": "account:lp_capital",
+        "action": "inflow",
+        "target": "lp_capital",
+        "outcome": "applied",
+        "amount": -1000.0,
+        "pot_before": 0.0,
+        "pot_after": -1000.0
+      },
+      {
+        "period": 1,
+        "date": "2027-01-01",
+        "actor": "waterfall:deal.distribution",
+        "action": "pay",
+        "target": "to_lp -> lp_capital",
+        "outcome": "applied",
+        "amount": 400.0,
+        "pot_before": 400.0,
+        "pot_after": 0.0
+      },
+      {
+        "period": 1,
+        "date": "2027-01-01",
+        "actor": "waterfall:deal.distribution",
+        "action": "allocate_in",
+        "target": "to_lp -> account:lp_capital",
+        "outcome": "applied",
+        "amount": 400.0,
+        "pot_before": -1000.0,
+        "pot_after": -600.0
+      },
+      {
+        "period": 2,
+        "date": "2028-01-01",
+        "actor": "waterfall:deal.distribution",
+        "action": "pay",
+        "target": "to_lp -> lp_capital",
+        "outcome": "applied",
+        "amount": 400.0,
+        "pot_before": 400.0,
+        "pot_after": 0.0
+      },
+      {
+        "period": 2,
+        "date": "2028-01-01",
+        "actor": "waterfall:deal.distribution",
+        "action": "allocate_in",
+        "target": "to_lp -> account:lp_capital",
+        "outcome": "applied",
+        "amount": 400.0,
+        "pot_before": -600.0,
+        "pot_after": -200.0
+      },
+      {
+        "period": 3,
+        "date": "2029-01-01",
+        "actor": "waterfall:deal.distribution",
+        "action": "pay",
+        "target": "to_lp -> lp_capital",
+        "outcome": "applied",
+        "amount": 400.0,
+        "pot_before": 400.0,
+        "pot_after": 0.0
+      },
+      {
+        "period": 3,
+        "date": "2029-01-01",
+        "actor": "waterfall:deal.distribution",
+        "action": "allocate_in",
+        "target": "to_lp -> account:lp_capital",
+        "outcome": "applied",
+        "amount": 400.0,
+        "pot_before": -200.0,
+        "pot_after": 200.0
+      },
+      {
+        "period": 4,
+        "date": "2030-01-01",
+        "actor": "waterfall:deal.distribution",
+        "action": "pay",
+        "target": "to_lp -> lp_capital",
+        "outcome": "applied",
+        "amount": 400.0,
+        "pot_before": 400.0,
+        "pot_after": 0.0
+      },
+      {
+        "period": 4,
+        "date": "2030-01-01",
+        "actor": "waterfall:deal.distribution",
+        "action": "allocate_in",
+        "target": "to_lp -> account:lp_capital",
+        "outcome": "applied",
+        "amount": 400.0,
+        "pot_before": 200.0,
+        "pot_after": 600.0
+      }
+    ]
+  },
+  "scenarios": {
+    "status": "not_run",
+    "summaries": []
+  },
+  "monte_carlo": {
+    "status": "not_run",
+    "trials": 1,
+    "seed": 0,
+    "metrics": {},
+    "trial_summaries": []
+  }
+}

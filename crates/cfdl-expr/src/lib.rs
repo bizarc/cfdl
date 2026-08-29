@@ -56,6 +56,15 @@ pub struct ExprEnv {
     pub obs: BTreeMap<String, Value>,
     /// Assumption values (`assume` statements), referenced as `inputs.<name>`.
     pub inputs: BTreeMap<String, Value>,
+    /// A participant's realised return, keyed by party (no `party.` prefix),
+    /// for `irr("party.<p>")` and `moic("party.<p>")`.
+    ///
+    /// Populated only while a declared metric is being evaluated, which is
+    /// what keeps these folds out of the causal plane. A party that owns no
+    /// account is absent; a party whose flows cannot produce the figure has an
+    /// entry with the reason, so the engine can name it rather than publish
+    /// nothing.
+    pub party_returns: BTreeMap<String, ParticipantReturn>,
     /// Declared metrics already computed, referenced as `metric.<name>`.
     ///
     /// Populated only in the valuation plane, and only with the metrics
@@ -162,6 +171,18 @@ pub struct QuantileDef {
     pub points: Vec<(f64, f64)>,
 }
 
+/// What a party's account came to, folded over the finished projection.
+#[derive(Debug, Clone, PartialEq, Default)]
+pub struct ParticipantReturn {
+    /// Annualised, on the same axis the engine's own IRR uses.
+    pub irr: Option<f64>,
+    /// Receipts over contributions.
+    pub moic: Option<f64>,
+    /// Why a figure is absent, in the engine's words — "never contributed",
+    /// "never received". Carried so the refusal can say which.
+    pub undefined_because: Option<String>,
+}
+
 impl ExprEnv {
     pub fn empty() -> Self {
         Self {
@@ -172,6 +193,7 @@ impl ExprEnv {
             cfg: BTreeMap::new(),
             obs: BTreeMap::new(),
             inputs: BTreeMap::new(),
+            party_returns: BTreeMap::new(),
             metrics: BTreeMap::new(),
             states: BTreeMap::new(),
             prev_states: BTreeMap::new(),
@@ -263,6 +285,28 @@ pub fn compile_expr(src: &str) -> Result<CompiledExpr, ExprError> {
 
 /// Does this expression call `series_sum` / `series_avg`? The engine uses
 /// this to decide whether the stream reads other streams at all.
+/// Does this expression fold a participant's return?
+///
+/// `irr` and `moic` read the finished projection, so they belong to a `metric`
+/// and nowhere else. Asked at compile time, this is a refusal with a span;
+/// left to run time it is a substituted zero in a stream amount and a warning
+/// nobody prints.
+pub fn uses_participant_return(compiled: &CompiledExpr) -> bool {
+    cfdl_calc::expr_calls_any(&compiled.expr, &["irr", "moic"])
+}
+
+/// How many participant-return folds name something that is not a reference.
+pub fn participant_return_non_references(compiled: &CompiledExpr) -> usize {
+    cfdl_calc::call_nonreference_count(&compiled.expr, &["irr", "moic"])
+}
+
+/// Every party a participant-return fold names, as written.
+pub fn participant_return_parties(compiled: &CompiledExpr) -> Vec<String> {
+    let mut out = Vec::new();
+    cfdl_calc::call_reference_args(&compiled.expr, &["irr", "moic"], &mut out);
+    out
+}
+
 pub fn uses_series(compiled: &CompiledExpr) -> bool {
     cfdl_calc::expr_calls_any(&compiled.expr, &["series_sum", "series_avg"])
 }
@@ -597,6 +641,17 @@ struct EnvAdapter<'a> {
 }
 
 impl cfdl_calc::Env for EnvAdapter<'_> {
+    fn participant_return(&self, party: &str, kind: &str) -> Option<Decimal> {
+        let key = party.strip_prefix("party.").unwrap_or(party);
+        let found = self.env.party_returns.get(key)?;
+        let value = match kind {
+            "irr" => found.irr,
+            "moic" => found.moic,
+            _ => None,
+        }?;
+        Decimal::from_f64(value)
+    }
+
     fn lookup(&self, path: &str) -> Option<cfdl_calc::Value> {
         let mut parts = path.split('.');
         let root = parts.next()?;

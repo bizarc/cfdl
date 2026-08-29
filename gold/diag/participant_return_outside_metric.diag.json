@@ -1,0 +1,17 @@
+[
+  {
+    "code": "E1355_PARTICIPANT_RETURN_OUTSIDE_METRIC",
+    "severity": "error",
+    "message": "Stream 'deal.fee' amount folds a participant's return.",
+    "file": "model.cfdl",
+    "span": {
+      "start_line": 20,
+      "start_col": 1,
+      "end_line": 23,
+      "end_col": 1
+    },
+    "path": null,
+    "hint": "`irr` and `moic` are folds over the finished projection, so they belong in a `metric` declaration. Reading one here would ask for a return on cash this expression has not produced yet.",
+    "notes": []
+  }
+]
