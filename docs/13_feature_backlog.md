@@ -894,110 +894,6 @@ config produced an NPV equal to its own total.
 
 ---
 
-### 7.50 A model cannot name the streams its own contracts produce
-
-*Roadmap: M2 (§7.78) — the substrate the retired `activate contract` leaves behind (§7.73).*
-
-*Belongs with language and packs (section 5).*
-
-`docs/01` §13.2 gives the modeller `deactivate stream <StreamName>`. §9.1 says a
-stream name is a qualified name of at least two segments and illustrates it with
-`cre.lease.base_rent`. `docs/07` §6.4 gives that identical string as its example
-of a GENERATED name. The specification draws no distinction between a stream a
-model declared and a stream a contract produced.
-
-The modeller cannot use it. Two files differing only in that one line:
-
-```cfdl
-event refinance when time.t >= 12 {
-  set entity asset.tower.status = "refinanced"
-  deactivate stream <name>
-}
-```
-
-```
-deactivate stream tower.fee              declared in the model   compiles
-deactivate stream cre.lease.base_rent    produced by a contract  E1302_UNRESOLVED_STREAM_REF
-```
-
-The second name is exactly what the contract lowers to — verified against the
-IR, which carries one stream under that name.
-
-**Both routes the specification offers are closed.** §9.3 grants every stream an
-activation predicate, and a model cannot add one to a stream it did not write;
-`docs/07` §6.4 publishes the keys a lowering rule may emit — `stream_name`,
-`owner`, `direction`, `currency`, `schedule`, `amount_expr` — and the guard is
-not among them. So a contract's streams can be zeroed through their amount and
-never made inactive.
-
-**The cause is stage order, not syntax.** Traced through the compiler:
-
-```
-  1  read source
-  2  lex
-  3  parse
-  4  resolve imports
-  5  resolve_symbols          <- E1302 is decided here
-  6  resolve_active_pack
-  7  validate
-  8  validate_expressions
-  9  source-level checks
- 10  lower_contract_streams   <- the streams are generated here
- 11  check_lowered_prev_first_period
- 12  construct IR and emit
-```
-
-The symbol table is built at 5 and the streams appear at 10, so at the moment
-the check runs the streams a contract will produce do not exist. The check
-cannot tell "not yet generated" from "misspelled" and reports both as `E1302`.
-`docs/08` records that its purpose is the second: a misspelling once "matched
-nothing and the action was silently inert."
-
-**The specification's stage list does not describe the operation.** `docs/04`
-§1.1 names nine stages with Lowering eighth, and every bullet under it is
-transcription — normalize literals, default missing fields, derive canonical
-IDs, construct IR objects, preserve provenance. Turning contracts into streams
-is not among them. It is described only in `docs/01` §8.1, in the language
-specification rather than the compiler's stage list.
-
-That omission is the finding. Entities, waterfalls, assumptions and curves are
-TRANSCRIBED — one statement in, one object out, nothing newly named. Only
-contract lowering is GENERATIVE. Because the stage list does not separate the
-two, it places the operation that creates names after the operation that
-resolves them.
-
-**Two repairs, and the smaller one is already proven.** Expansion needs only the
-contract declaration and the pack's rules, both available once the pack is
-resolved: `stream_name` is a declared property of a rule (§6.4), and the
-compiler already works out which rules match which contract without building a
-stream. So expansion could become its own stage before name resolution, and the
-symbol table would cover every stream that will exist.
-
-Alternatively the check moves to the post-lowering point the compiler already
-has. Step 11 above, `check_lowered_prev_first_period`, validates lowered streams
-after they are generated, so the position exists and one check already uses it.
-Typo detection survives either way, because a misspelling still matches nothing
-once every stream is built.
-
-**Where the fix does NOT belong.** Not in the contract: a contract records what
-was agreed, and a termination or a switch-off is a modeling decision — see
-`docs/26_lessons_learned.md`. Not in the lowering rule either — a rule emitting
-`active when entity.status != "refinanced"` would bake the model's own
-vocabulary into the pack, requiring the rule author to guess which status
-strings a modeller will use. The decision is the modeller's, so it is expressed
-in the model, and the compiler has to resolve the name.
-
-**A third instance of one shape.** `E1302` here, `E1131` for a field an event
-wrote but no entity declared, and `E1342` for a waterfall step reading its own
-waterfall. Each check is right about typos, each runs where its subject does not
-yet exist, and each removes a capability the specification grants.
-
-Found August 2026, walking the clean-up call with a working model supplied by
-the author:
-the same event, in the same form, against two targets.
-
----
-
 ### 7.51 A parameter override is never checked against the model
 
 *Narrowed. The schema half shipped — `tools/check-run-schema.py`, wired at
@@ -1631,10 +1527,12 @@ answer for all of them.
 **The granular mechanism exists and is not the action vocabulary.** Two
 routes, and the second is better:
 
-1. `deactivate stream <name>` is already per-stream. What blocks it is §7.50 —
-   a modeller cannot NAME the streams a contract produced, so the addressable
-   thing is unaddressable. Fix §7.50 and the granularity arrives without a new
-   construct.
+1. `deactivate stream <name>` is already per-stream, and since §7.50 closed it
+   RESOLVES against the streams a contract produced. The granularity arrived
+   with no new construct: forbearance is two actions on two streams, and
+   `fixtures/valid/event_stops_lowered_stream` is the shipped case. What it
+   still lacks is the level-triggered form — an imperative `deactivate` cannot
+   end as well as begin, which is the argument for route 2.
 2. Better, and already in the language: **a lifecycle state, with each stream
    declaring the states it is active in.** Forbearance becomes a state; the
    interest stream is `active in state current, forbearance` and the principal
@@ -1835,6 +1733,15 @@ wrong and the action should be retired, which makes M2's gating work §7.50
 plus state-gating through the declared machine. Per-period persistent state
 (the closed §5.2) shipped with M1 itself.
 
+**Closed since.** §7.50 (a model could not name the streams its own contracts
+produced) is fixed: event stream targets resolve after lowering, where a
+contract's streams exist, so `deactivate stream cre.debt.principal` compiles and
+the loan's cash stops — `fixtures/valid/event_stops_lowered_stream` runs debt
+service to zero at the period the event fires. `docs/04` §1.1 now records that
+lowering is the one GENERATIVE stage, which is why a check over lowered names
+cannot sit at name resolution. What remains of §7.40i's additivity argument is a
+contract-surface `active when` / `active in state`, which §7.73 carries.
+
 **Closed since.** §7.45 (a waterfall with no schedule distributed once, at the
 model start) is fixed: `E1348_WATERFALL_NO_SCHEDULE` refuses the omission, which
 is what `docs/01` §10.1 had required in normative text since the waterfall
@@ -1847,7 +1754,6 @@ compiler output could reach, is gone.
 
 | item | what it unlocks |
 |---|---|
-| §7.50 | a contract's lowered streams become addressable, so a model can gate cash it did not write |
 | §7.73 | `activate`/`deactivate contract` removed from the grammar; gating re-spelled as a lifecycle state |
 | §7.41 | the freeform `from <expr>` pot, the one unchecked selection left after the account |
 | §7.76 | the account adoption pass: the reserve every pack's references assume and no pack could model |

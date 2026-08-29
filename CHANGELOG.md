@@ -8,6 +8,31 @@ This project follows Semantic Versioning: https://semver.org/
 
 ## [Unreleased]
 
+### Fixed: a model may name the streams its own contracts produce (§7.50)
+
+`docs/01` §13.2 gives the modeller `deactivate stream <name>`, and §9.1's own
+example of a stream name — `cre.lease.base_rent` — is a name a CONTRACT
+produces. The modeller could not use it. The symbol table is built before the
+pack is chosen, so at name resolution a contract's streams do not exist, and
+the check could not tell "not yet lowered" from "misspelled": both were
+`E1302`. A loan repaid early kept taking debt service, and the same model
+expressed the stop correctly the moment the pack was dropped — a pack was a
+trade rather than an addition.
+
+The check moved to the compiler's post-lowering position, where every stream
+that will exist is known — the same place `exercise option` is already checked.
+Typo detection is unchanged, since a misspelling still matches nothing, and the
+hint now lists every stream in the model, declared and lowered alike.
+
+`fixtures/valid/event_stops_lowered_stream` is the case: `cre.permanent_debt`
+runs 27,500.00 through its interest-only months and 36,845.249537 while it
+amortizes, and the prepayment event takes debt service to 0.00 from the period
+it fires. `fixtures/invalid/event_stream_typo` pins the typo.
+
+`docs/04` §1.1 now records what its stage list omitted — lowering is the one
+GENERATIVE stage, creating names no statement wrote, which is why a check over
+lowered names cannot sit at name resolution.
+
 ### Fixed: a waterfall must say when it distributes (§7.45)
 
 `docs/01` §10.1 has required a waterfall's `schedule` in normative text since

@@ -1,0 +1,24 @@
+version 0.1
+model "event-stream-typo"
+time calendar annual from 2026-01 for 3
+
+// A MISSPELLED STREAM TARGET STILL MATCHES NOTHING.
+//
+// The check moved: a stream reference in an event is resolved after contract
+// lowering, where the streams a contract produces are known as well as the
+// ones the model declared. What it does for a typo is unchanged — the action
+// would otherwise be silently inert, and the stream it was meant to stop would
+// keep paying with no diagnostic and no warning at run time.
+//
+// The hint lists every stream in the model, so the near miss is visible.
+
+entity asset co : Asset.Financial
+
+stream loan.debt_service on entity asset.co outflow currency USD {
+  schedule every year from 2026-01 to 2028-01
+  amount = 100
+}
+
+event refi when time.t >= 1 {
+  deactivate stream loan.dbt_service
+}

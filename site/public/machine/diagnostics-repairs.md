@@ -11,7 +11,7 @@ Diagnostics are the repair signal: read the `code`, `message`, `span`, and
 `hint`, change the model, recompile. The catalog is how an agent learns what
 each code looks like in the flesh before it meets one.
 
-**Coverage:** 198 codes in the docs/08 §7 register; 72 exemplified here; 70 of 71 examples carry a recorded fix.
+**Coverage:** 198 codes in the docs/08 §7 register; 72 exemplified here; 70 of 72 examples carry a recorded fix.
 
 ## active_in_unknown_state — E1332_UNKNOWN_ACTIVE_STATE
 
@@ -758,7 +758,7 @@ stream cre.rent on entity asset.tower inflow currency USD {
 }
 ```
 
-## event_action_unknown_targets — E1301_UNRESOLVED_ENTITY_REF, E1302_UNRESOLVED_STREAM_REF
+## event_action_unknown_targets — E1301_UNRESOLVED_ENTITY_REF
 
 Failing example:
 
@@ -770,6 +770,13 @@ time calendar annual from 2026-01 for 3
 // Every target an event names was unresolved before: a misspelling matched
 // nothing and the action was silently inert — the stream it was meant to stop
 // kept paying, with no diagnostic at any stage and no warning at run time.
+//
+// Two of the three typos below are reported here. The entity is resolved in the
+// resolver and fails the model at that stage, which is why the STREAM and the
+// OPTION are not also listed: both are checked in the compiler, after lowering,
+// where the streams a contract produced and the lowered options are known, and
+// the compiler does not run once resolution has failed.
+// `fixtures/invalid/event_stream_typo` pins the stream one on its own.
 
 entity asset co : Asset.Financial
 
@@ -791,7 +798,6 @@ event refi when time.t >= 1 {
 ```
 
 - `E1301_UNRESOLVED_ENTITY_REF` (error): Event 'refi' references unknown entity 'asset.ghost'.
-- `E1302_UNRESOLVED_STREAM_REF` (error): Event 'refi' references unknown stream 'loan.dbt_service'.
 
 Minimal fix (compiles):
 
@@ -821,6 +827,42 @@ event refi when time.t >= 1 {
   exercise option refi_fee
 }
 ```
+
+## event_stream_typo — E1302_UNRESOLVED_STREAM_REF
+
+Failing example:
+
+```cfdl
+version 0.1
+model "event-stream-typo"
+time calendar annual from 2026-01 for 3
+
+// A MISSPELLED STREAM TARGET STILL MATCHES NOTHING.
+//
+// The check moved: a stream reference in an event is resolved after contract
+// lowering, where the streams a contract produces are known as well as the
+// ones the model declared. What it does for a typo is unchanged — the action
+// would otherwise be silently inert, and the stream it was meant to stop would
+// keep paying with no diagnostic and no warning at run time.
+//
+// The hint lists every stream in the model, so the near miss is visible.
+
+entity asset co : Asset.Financial
+
+stream loan.debt_service on entity asset.co outflow currency USD {
+  schedule every year from 2026-01 to 2028-01
+  amount = 100
+}
+
+event refi when time.t >= 1 {
+  deactivate stream loan.dbt_service
+}
+```
+
+- `E1302_UNRESOLVED_STREAM_REF` (error): Event 'refi' references unknown stream 'loan.dbt_service'.
+  - hint: Streams in this model, declared and contract-lowered: loan.debt_service.
+
+Fix: not yet recorded.
 
 ## expr_parse_error — E3001_EXPR_PARSE_ERROR
 

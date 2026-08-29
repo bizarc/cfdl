@@ -5,6 +5,13 @@ time calendar annual from 2026-01 for 3
 // Every target an event names was unresolved before: a misspelling matched
 // nothing and the action was silently inert — the stream it was meant to stop
 // kept paying, with no diagnostic at any stage and no warning at run time.
+//
+// Two of the three typos below are reported here. The entity is resolved in the
+// resolver and fails the model at that stage, which is why the STREAM and the
+// OPTION are not also listed: both are checked in the compiler, after lowering,
+// where the streams a contract produced and the lowered options are known, and
+// the compiler does not run once resolution has failed.
+// `fixtures/invalid/event_stream_typo` pins the stream one on its own.
 
 entity asset co : Asset.Financial
 

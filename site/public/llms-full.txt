@@ -1001,6 +1001,12 @@ Supported actions:
 - `set entity <EntityRef>.<field> = <value>`
 - `activate stream <StreamName>`
 - `deactivate stream <StreamName>`
+
+A `<StreamName>` is any stream the model runs: one the model declared, or one a
+contract lowered (`cre.lease.base_rent` is §9.1's own example, and `docs/07`
+§6.4 gives the identical string as an example of a generated name). Reaching
+for a contract does not cost the ability to stop its cash. A name matching
+neither is `E1302`.
 - `activate contract <ContractName>` (optional)
 - `deactivate contract <ContractName>` (optional)
 - `exercise option <OptionName>`
@@ -6087,7 +6093,7 @@ Fields that move:
   series is visible to a later waterfall's `from` and to nothing else, so the
   read could only ever aggregate to zero. Model the quantity the step pays as a
   stream or a field if a stream must read it.
-- `E1302_UNRESOLVED_STREAM_REF` — an event activates or deactivates a stream that is not declared. Event action targets were never resolved, so a misspelling matched nothing and the action was silently inert: the stream it was meant to stop kept paying, with no diagnostic and no warning.
+- `E1302_UNRESOLVED_STREAM_REF` — an event activates or deactivates a stream the model does not run. Event action targets were never resolved, so a misspelling matched nothing and the action was silently inert: the stream it was meant to stop kept paying, with no diagnostic and no warning. Checked after lowering rather than in the resolver, so a name a CONTRACT produced resolves as readily as one the model declared — the symbol table is built before the pack is chosen, and a check running there reported an unlowered name and a typo alike. The hint lists every stream in the model, both kinds.
 - `E1303_UNRESOLVED_CONTRACT_REF` — an event activates or deactivates a contract that is not declared.
 - `E1304_UNRESOLVED_OPTION_REF` — an event exercises an option that is not declared. Checked in the compiler rather than the resolver, because options are not in the symbol tables.
 - `E1310_ENTITY_BLOCK_WITHOUT_TYPE` — an entity uses a block but declares no type, so there is nothing to check the block against.
@@ -7794,7 +7800,7 @@ Templates (starting points; the `skeleton` MCP tool assembles them into a compil
 
 CFDL 0.7.0. Every model below compiles, and its IR and
 results are byte-asserted against goldens in CI (`fixtures/valid/`,
-118 models.
+119 models.
 
 `gold/ir/`, `gold/results/`). Each is single-purpose: the directory name
 says what it exercises. This is what right looks like — positive few-shot
@@ -9538,6 +9544,52 @@ event partial_liquidation when time.t == 2.0 {
 stream loan.balance_report on entity asset.loan inflow currency USD {
   schedule every year from 2026-01 to 2031-01
   amount = asset.loan.balance
+}
+```
+
+## event_stops_lowered_stream
+
+```cfdl
+version 0.1
+model "event-stops-lowered-stream"
+use pack "cre" version "0.1.0"
+time calendar monthly from 2026-01 for 60
+
+// A MODEL MAY NAME THE STREAMS ITS OWN CONTRACTS PRODUCE.
+//
+// `cre.permanent_debt` lowers into three streams — proceeds, interest and
+// principal — and the IR carries them under the names used below. Those names
+// were unaddressable: the symbol table is built before the pack is chosen, so
+// a contract's streams did not exist when the reference was checked, and
+// `deactivate stream cre.debt.principal` read as a misspelling. A loan repaid
+// early kept taking debt service, and the same model expressed the stop
+// correctly the moment the pack was dropped.
+//
+// The prepayment below is the plain case: at period 36 the borrower repays,
+// and the loan's cash stops. Debt service runs 27,500.00 through the
+// interest-only months, 36,845.249537 while it amortizes, and 0.00 from
+// period 36 — the period the event fires.
+//
+// The stop is a modeling decision and is stated in the model. It does not
+// belong in the contract, which records what was agreed, nor in the lowering
+// rule, which would have to guess the vocabulary a modeller will use.
+
+entity asset tower : CRE.Asset.RealProperty
+
+contract cre.permanent_debt on entity asset.tower {
+  term 2026-01..2030-12
+  terms {
+    principal = 6000000
+    rate = 0.055
+    amort_months = 300
+    io_months = 24
+    balloon_at_maturity = 1
+  }
+}
+
+event prepaid when time.t >= 36 {
+  deactivate stream cre.debt.principal
+  deactivate stream cre.debt.interest
 }
 ```
 
