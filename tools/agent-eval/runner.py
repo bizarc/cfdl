@@ -426,11 +426,47 @@ GRADERS = {"repair": grade_repair, "transcribe": grade_transcribe, "extend": gra
 
 # --- Runner ------------------------------------------------------------------
 
+def save_submission(out_path: str | None, task: dict, submission: dict | None) -> str | None:
+    """Keep what the agent actually wrote.
+
+    A score says a model failed; only the source says why. Grading happens in
+    a temporary directory that is deleted, so without this the artifact — the
+    one thing that makes a failure diagnosable — is lost even on a run that
+    completes.
+    """
+    if not out_path or not isinstance(submission, dict):
+        return None
+    files = submission.get("files")
+    if not isinstance(files, dict) or not files:
+        return None
+    root = pathlib.Path(out_path).with_suffix("")
+    target = root / task["tier"] / task["id"].replace("/", "__")
+    target.mkdir(parents=True, exist_ok=True)
+    for name, source in files.items():
+        if not isinstance(source, str):
+            continue
+        # Flatten any path separators an agent invents; this is an artifact
+        # directory, not a model root.
+        safe = pathlib.Path(name).name or "model.cfdl"
+        (target / safe).write_text(source, encoding="utf-8")
+    return str(target)
+
+
+def write_report(out_path: str | None, report: dict) -> None:
+    """Write the scorecard as it stands. Called after every task so an
+    interrupted run keeps its results — a long baseline that only writes at
+    the end loses everything to one Ctrl+C."""
+    if not out_path:
+        return
+    pathlib.Path(out_path).write_text(json.dumps(report, indent=2) + "\n", encoding="utf-8")
+
+
 def run_eval(
     tiers: list[str],
     agent: str,
     benchmarks_dir: pathlib.Path,
     only: set[str] | None,
+    out_path: str | None = None,
 ) -> dict:
     tasks: list[dict] = []
     if "repair" in tiers:
@@ -467,11 +503,19 @@ def run_eval(
         usage = (submission or {}).get("usage") if isinstance(submission, dict) else None
         if usage:
             row["usage"] = usage
+        saved = save_submission(out_path, task, submission)
+        if saved:
+            row["artifact"] = saved
         results.append(row)
+        write_report(out_path, {"agent": agent, "summary": summarize(results, tiers), "results": results})
         marker = "PASS" if score.get("matches") or (
             task["tier"] == "repair" and score["compiles"]
         ) else "fail"
         print(f"[eval][{marker}] {task['tier']}/{task['id']} partial={score['partial']}")
+    return {"agent": agent, "summary": summarize(results, tiers), "results": results}
+
+
+def summarize(results: list[dict], tiers: list[str]) -> dict:
     summary = {}
     for tier in tiers:
         rows = [r for r in results if r["tier"] == tier]
@@ -488,7 +532,7 @@ def run_eval(
             "cost_usd": round(cost, 4),
             "cost_per_task_usd": round(cost / len(rows), 4),
         }
-    return {"agent": agent, "summary": summary, "results": results}
+    return summary
 
 
 def main() -> int:
@@ -525,13 +569,11 @@ def main() -> int:
 
     tiers = ["repair", "transcribe", "extend"] if args.tier == "all" else [args.tier]
     only = set(args.cases.split(",")) if args.cases else None
-    report = run_eval(tiers, args.agent, benchmarks_dir, only)
+    report = run_eval(tiers, args.agent, benchmarks_dir, only, out_path=args.out)
     print(json.dumps(report["summary"], indent=2))
     if args.out:
-        pathlib.Path(args.out).write_text(
-            json.dumps(report, indent=2) + "\n", encoding="utf-8"
-        )
-        print(f"wrote {args.out}")
+        write_report(args.out, report)
+        print(f"wrote {args.out} (+ authored sources alongside it)")
     # The replay agent must be perfect on repair + transcribe; anything else
     # exits by its own judgment.
     if args.agent == "replay":
