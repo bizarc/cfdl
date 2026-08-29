@@ -11,7 +11,7 @@ generated: full
 
 > Outputs below are real: the notebook runs against the `energy` pack's benchmark model, which CFDL validates against an independent reference. To run it yourself, see [the Python SDK guide](/docs/python-sdk).
 
-<video controls preload="metadata" style="width:100%" src="/videos/energy-solar-microgrid-walkthrough.mp4"><track kind="captions" srclang="en" label="English" default src="/videos/energy-solar-microgrid-walkthrough.vtt"></track></video>
+![An agent-driven walkthrough of this notebook](/videos/energy-solar-microgrid-walkthrough.mp4)
 
 *A two-minute agent-driven walkthrough: an AI agent executes this notebook cell by cell, every output computing live in the take. Captions carry the narration.*
 
