@@ -510,8 +510,6 @@ pub enum EventAction {
     },
     ActivateStream(String),
     DeactivateStream(String),
-    ActivateContract(String),
-    DeactivateContract(String),
     ExerciseOption(String),
 }
 
@@ -3062,18 +3060,38 @@ impl<'a> Parser<'a> {
                         matches!(self.peek().kind, TokenKind::Keyword(Keyword::Activate));
                     let _ = self.bump();
                     let kind_tok = self.bump();
-                    let is_stream = match kind_tok.kind {
-                        TokenKind::Keyword(Keyword::Stream) => true,
-                        TokenKind::Keyword(Keyword::Contract) => false,
-                        _ => {
-                            self.push_expected(
+                    match kind_tok.kind {
+                        TokenKind::Keyword(Keyword::Stream) => {}
+                        // RETIRED. A contract is not one behaviour; it is a
+                        // COLLECTION OF STREAMS, and an all-or-nothing switch
+                        // gives one answer where the real cases need a per-
+                        // stream one — forbearance stops principal while
+                        // interest accrues, an early termination stops rent
+                        // while a fee flows and recoveries continue. Both
+                        // better spellings exist: name the stream the contract
+                        // produced, or declare a lifecycle state and let each
+                        // stream say which states it is active in.
+                        TokenKind::Keyword(Keyword::Contract) => {
+                            self.push_retired(
                                 kind_tok.span,
-                                "Expected 'stream' or 'contract' after activate/deactivate."
+                                "`activate`/`deactivate contract` was retired: a contract is a \
+                                 collection of streams, and one switch cannot say what \
+                                 forbearance or an early termination says. Name the stream the \
+                                 contract produced — `deactivate stream cre.debt.principal` — or \
+                                 declare a lifecycle state and gate each stream with \
+                                 `active in state`, which is checked and can end as well as begin."
                                     .to_string(),
                             );
                             return None;
                         }
-                    };
+                        _ => {
+                            self.push_expected(
+                                kind_tok.span,
+                                "Expected 'stream' after activate/deactivate.".to_string(),
+                            );
+                            return None;
+                        }
+                    }
                     let target_tok = self.bump();
                     let target = match target_tok.kind {
                         TokenKind::Ident(ref s) | TokenKind::Qname(ref s) => s.clone(),
@@ -3082,11 +3100,10 @@ impl<'a> Parser<'a> {
                             return None;
                         }
                     };
-                    actions.push(match (activate, is_stream) {
-                        (true, true) => EventAction::ActivateStream(target),
-                        (false, true) => EventAction::DeactivateStream(target),
-                        (true, false) => EventAction::ActivateContract(target),
-                        (false, false) => EventAction::DeactivateContract(target),
+                    actions.push(if activate {
+                        EventAction::ActivateStream(target)
+                    } else {
+                        EventAction::DeactivateStream(target)
                     });
                 }
                 TokenKind::Keyword(Keyword::Exercise) => {
@@ -3895,6 +3912,18 @@ impl<'a> Parser<'a> {
     fn push_unexpected(&mut self, span: Span, message: String) {
         self.diagnostics.push(ParseDiagnostic {
             code: "E0001_UNEXPECTED_TOKEN",
+            message,
+            file: self.file.clone(),
+            span,
+        });
+    }
+
+    /// A spelling the language no longer has. Distinct from a plain parse
+    /// error because the message can name what replaced it, and because
+    /// `docs/08` §8 keeps a retirement visible rather than silent.
+    fn push_retired(&mut self, span: Span, message: String) {
+        self.diagnostics.push(ParseDiagnostic {
+            code: "E0006_RETIRED_SYNTAX",
             message,
             file: self.file.clone(),
             span,

@@ -1,0 +1,17 @@
+[
+  {
+    "code": "E0006_RETIRED_SYNTAX",
+    "severity": "error",
+    "message": "`activate`/`deactivate contract` was retired: a contract is a collection of streams, and one switch cannot say what forbearance or an early termination says. Name the stream the contract produced — `deactivate stream cre.debt.principal` — or declare a lifecycle state and gate each stream with `active in state`, which is checked and can end as well as begin.",
+    "file": "model.cfdl",
+    "span": {
+      "start_line": 31,
+      "start_col": 14,
+      "end_line": 31,
+      "end_col": 21
+    },
+    "path": null,
+    "hint": null,
+    "notes": []
+  }
+]

@@ -323,8 +323,6 @@ event_block     = "{" { action_stmt } "}" ;
 action_stmt     = set_entity_stmt
                 | activate_stream_stmt
                 | deactivate_stream_stmt
-                | activate_contract_stmt
-                | deactivate_contract_stmt
                 | exercise_option_stmt
                 ;
 
@@ -333,8 +331,6 @@ set_entity_stmt = "set" "entity" entity_ref "." IDENT "=" literal_or_expr ;
 activate_stream_stmt   = "activate" "stream" qname ;
 deactivate_stream_stmt = "deactivate" "stream" qname ;
 
-activate_contract_stmt   = "activate" "contract" qname ;
-deactivate_contract_stmt = "deactivate" "contract" qname ;
 
 exercise_option_stmt   = "exercise" "option" qname ;
 

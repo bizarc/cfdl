@@ -2755,17 +2755,17 @@ mod tests {
         );
     }
 
-    /// AN ACTION THE ENGINE DOES NOT EXECUTE IS JOURNALED AS `ignored`.
+    /// AN ACTION KIND THE ENGINE DOES NOT KNOW IS JOURNALED AS `ignored`.
     ///
-    /// `activate contract` parses and lowers, and the engine has no contract
-    /// runtime yet. It cannot be reached from a model: a contract carries only
-    /// its type, so `deactivate contract cre.lease` is
-    /// `E1303_UNRESOLVED_CONTRACT_REF` — there is no instance to name (backlog
-    /// 7.63, which therefore sequences before 7.40i's runtime). Hand-written IR
-    /// is the only way in, and the only way to test that the results say what
-    /// happened rather than staying silent.
+    /// `DeactivateContract` is the case in hand: the action was retired from
+    /// the language (`docs/13` §7.73 — a contract is a collection of streams,
+    /// and one switch cannot say what forbearance says), so no compiler emits
+    /// this kind any more. IR that still carries it must not run silently
+    /// wrong; the engine names it in `warnings` and journals it, which is what
+    /// this pins. Hand-written IR is the only way in, and the only way to test
+    /// that the results say what happened rather than staying silent.
     #[test]
-    fn a_contract_action_is_journaled_as_ignored() {
+    fn an_unknown_action_kind_is_journaled_as_ignored() {
         let ir = r#"{
             "model": { "name": "contract_action", "currency": "USD" },
             "time": { "calendar": "monthly", "start": "2026-01-01", "periods": 2 },
@@ -2795,14 +2795,16 @@ mod tests {
             .deterministic
             .journal
             .iter()
-            .find(|entry| entry.action == "deactivate_contract")
+            // The catch-all journals the kind as the IR spelled it, since it
+            // has no vocabulary of its own for a kind it does not know.
+            .find(|entry| entry.action == "DeactivateContract")
             .expect("the action must appear in the journal even though it did nothing");
         assert_eq!(row.outcome, "ignored");
-        assert_eq!(row.target, "cre.lease");
+        assert_eq!(row.target, "");
         assert!(
             row.note
                 .as_deref()
-                .is_some_and(|n| n.contains("contract runtime")),
+                .is_some_and(|n| n.contains("unknown action kind")),
             "the row must say why it did nothing: {:?}",
             row.note
         );

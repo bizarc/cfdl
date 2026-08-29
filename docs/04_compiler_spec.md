@@ -183,8 +183,6 @@ Schedule options:
 - `Action::SetEntityField { entity: EntityRef, field: Ident, value: ValueOrExpr }`
 - `Action::ActivateStream { stream: Ident }`
 - `Action::DeactivateStream { stream: Ident }`
-- `Action::ActivateContract { contract: Ident }`
-- `Action::DeactivateContract { contract: Ident }`
 - `Action::ExerciseOption { option: Ident }`
 
 #### 3.2.11 Values
@@ -216,7 +214,6 @@ The compiler MUST enforce uniqueness constraints:
 The compiler MUST resolve:
 - `EntityRef` → existing entity symbol
 - `activate/deactivate stream X` → existing stream name
-- `activate/deactivate contract X` → existing contract name
 - `exercise option X` → existing option name
 
 Resolution occurs before lowering; unresolved refs are hard errors.

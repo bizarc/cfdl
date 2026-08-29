@@ -1498,62 +1498,6 @@ Do not build this before the account ships; the hand-assembled version is
 the workaround until then, and building the metric on payee streams rather
 than accounts would bake in the attribution problem §7.43 records.
 
-### 7.73 `activate contract` is the wrong grain, and the right one is already declared
-
-*Roadmap: M2 (§7.78) — this entry replaces the closed §7.40i.*
-
-**What forced the discovery:** journaling every action's outcome (§7.71's
-sibling work, `docs/28` §8) meant pinning the `ignored` outcome that
-`activate`/`deactivate contract` produces. It could not be pinned from a model
-at all: a contract carries only its TYPE, so `deactivate contract cre.lease` is
-`E1303_UNRESOLVED_CONTRACT_REF` — there is no instance to resolve (§7.63). The
-action parses, lowers, and is unreachable.
-
-**And the grain is wrong, which matters more than the naming.** A contract is
-not one behaviour; it is a COLLECTION OF STREAMS. `cre.lease` lowers to base
-rent, recoveries and abatement; a construction facility lowers to draws and
-interest. All-or-nothing activation cannot express what the real cases need:
-
-* **Forbearance.** Principal stops; interest keeps accruing. One contract, two
-  streams, opposite answers.
-* **Early termination with a fee.** Base rent stops; a termination payment
-  flows; recoveries continue to a true-up.
-* **A facility at the end of its draw period.** Draws stop; the balance
-  amortizes.
-
-Each of those is a per-stream answer, and a contract-level switch gives one
-answer for all of them.
-
-**The granular mechanism exists and is not the action vocabulary.** Two
-routes, and the second is better:
-
-1. `deactivate stream <name>` is already per-stream, and since §7.50 closed it
-   RESOLVES against the streams a contract produced. The granularity arrived
-   with no new construct: forbearance is two actions on two streams, and
-   `fixtures/valid/event_stops_lowered_stream` is the shipped case. What it
-   still lacks is the level-triggered form — an imperative `deactivate` cannot
-   end as well as begin, which is the argument for route 2.
-2. Better, and already in the language: **a lifecycle state, with each stream
-   declaring the states it is active in.** Forbearance becomes a state; the
-   interest stream is `active in state current, forbearance` and the principal
-   stream is `active in state current`. That is declarative rather than
-   imperative, it is CHECKED (`E1332` refuses a misspelled state), it is
-   level-triggered so it can end as well as begin, and under the declared
-   machine of `docs/28` §6.1 every transition is journaled. An imperative
-   `deactivate` has none of those properties.
-
-**So the recommendation is to retire the action, not implement it.** §7.40i's
-"contract gating" should be re-specified as (a) §7.50's addressable stream
-names and (b) state-gating through the declared machine — and
-`activate`/`deactivate contract` removed from the grammar rather than given a
-runtime, on this file's own standard: a construct with no case behind it and a
-better spelling available is not capability, it is surface. Removing it also
-retires the `ignored` outcome the journal currently has to carry.
-
-What would reopen it: a document describing a contract-level switch that is
-genuinely all-or-nothing AND cannot be said as a state. None of the three cases
-above is one.
-
 ### 7.74 Structured-finance engine parity — the Intex scope
 
 *Roadmap: partly M2 (§7.78) — the deal mechanics; the analytics ride on
@@ -1728,10 +1672,20 @@ named no longer describe work.
 today as an ordered waterfall — `benchmarks/credit/auto_abs_tranches`
 compiles AmeriCredit's 22-step priority — so what remains of that item is
 §7.74's deal mechanics, not a liability-stack construct. And contract gating
-(the closed §7.40i) is not a runtime to build: §7.73 concluded the grain was
-wrong and the action should be retired, which makes M2's gating work §7.50
-plus state-gating through the declared machine. Per-period persistent state
+(the closed §7.40i) was not a runtime to build: §7.73 (also closed) concluded
+the grain was wrong and the action should be retired, which made M2's gating
+work §7.50 plus state-gating through the declared machine — both now done. Per-period persistent state
 (the closed §5.2) shipped with M1 itself.
+
+**Closed since.** §7.73 (the wrong grain) is fixed: `activate`/`deactivate
+contract` is out of the grammar, the retired spelling answering
+`E0006_RETIRED_SYNTAX` with the two replacements named, and `E1303` retired with
+the action it served. The `ignored` journal outcome survives, since the engine
+still needs it for an action kind hand-written IR carries and no compiler emits.
+What remains of §7.40i is the contract-surface `active when` / `active in state`
+that would let a pack's streams be gated as a group — worth a case before it is
+worth a construct, since the per-stream spelling now covers the three documents
+that forced the item.
 
 **Closed since.** §7.50 (a model could not name the streams its own contracts
 produced) is fixed: event stream targets resolve after lowering, where a
@@ -1740,7 +1694,8 @@ the loan's cash stops — `fixtures/valid/event_stops_lowered_stream` runs debt
 service to zero at the period the event fires. `docs/04` §1.1 now records that
 lowering is the one GENERATIVE stage, which is why a check over lowered names
 cannot sit at name resolution. What remains of §7.40i's additivity argument is a
-contract-surface `active when` / `active in state`, which §7.73 carries.
+contract-surface `active when` / `active in state`, recorded under §7.73's
+closure below.
 
 **Closed since.** §7.45 (a waterfall with no schedule distributed once, at the
 model start) is fixed: `E1348_WATERFALL_NO_SCHEDULE` refuses the omission, which
@@ -1754,7 +1709,6 @@ compiler output could reach, is gone.
 
 | item | what it unlocks |
 |---|---|
-| §7.73 | `activate`/`deactivate contract` removed from the grammar; gating re-spelled as a lifecycle state |
 | §7.41 | the freeform `from <expr>` pot, the one unchecked selection left after the account |
 | §7.76 | the account adoption pass: the reserve every pack's references assume and no pack could model |
 | §7.77 | the DSCR cash trap — the first covenant whose breach has consequences, and can end |

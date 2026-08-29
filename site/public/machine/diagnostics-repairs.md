@@ -11,7 +11,7 @@ Diagnostics are the repair signal: read the `code`, `message`, `span`, and
 `hint`, change the model, recompile. The catalog is how an agent learns what
 each code looks like in the flesh before it meets one.
 
-**Coverage:** 198 codes in the docs/08 §7 register; 72 exemplified here; 70 of 72 examples carry a recorded fix.
+**Coverage:** 198 codes in the docs/08 §7 register; 73 exemplified here; 70 of 73 examples carry a recorded fix.
 
 ## active_in_unknown_state — E1332_UNKNOWN_ACTIVE_STATE
 
@@ -827,6 +827,49 @@ event refi when time.t >= 1 {
   exercise option refi_fee
 }
 ```
+
+## event_contract_action_retired — E0006_RETIRED_SYNTAX
+
+Failing example:
+
+```cfdl
+version 0.1
+model "event-contract-action-retired"
+time calendar annual from 2026-01 for 3
+
+// `activate`/`deactivate contract` IS NOT IN THE LANGUAGE.
+//
+// A contract is not one behaviour; it is a collection of streams. `cre.lease`
+// lowers into base rent, recoveries and abatement, and a facility lowers into
+// draws and interest, so an all-or-nothing switch gives one answer where the
+// real cases need a per-stream one:
+//
+//   forbearance          principal stops, interest keeps accruing
+//   early termination    base rent stops, a fee flows, recoveries continue
+//   end of a draw period draws stop, the balance amortizes
+//
+// Two better spellings already exist. Name the stream the contract produced —
+// `deactivate stream cre.debt.principal`, which resolves since backlog 7.50 —
+// or declare a lifecycle state and let each stream say which states it is
+// active in, which is checked, level-triggered, and journaled.
+
+entity asset co : Asset.Financial
+
+contract cre.lease on entity asset.co {
+  term 2026-01..2028-01
+  terms {
+    base_rent = 1000
+  }
+}
+
+event terminate when time.t >= 1 {
+  deactivate contract cre.lease
+}
+```
+
+- `E0006_RETIRED_SYNTAX` (error): `activate`/`deactivate contract` was retired: a contract is a collection of streams, and one switch cannot say what forbearance or an early termination says. Name the stream the contract produced — `deactivate stream cre.debt.principal` — or declare a lifecycle state and gate each stream with `active in state`, which is checked and can end as well as begin.
+
+Fix: not yet recorded.
 
 ## event_stream_typo — E1302_UNRESOLVED_STREAM_REF
 
@@ -3423,7 +3466,6 @@ Documented in docs/08 §7, awaiting a minimal failing fixture:
 - `E1108_USE_PACK_NOT_IN_MODEL_FILE` — `use pack` appears in an imported file rather than the model's own. The pack applies to the whole model, so it is declared where the model is.
 - `E1123_PREV_OUTSIDE_NEXT` — `prev` names a recurrence's own previous value and
 - `E1125_NO_STATE_NAMESPACE` — an expression reads `state.<name>`. There is no
-- `E1303_UNRESOLVED_CONTRACT_REF` — something names a contract that is not declared.
 - `E1304_UNRESOLVED_OPTION_REF` — an event exercises an option that is not declared.
 - `E1305_UNRESOLVED_PHASE_REF` — a schedule names a phase that is not declared.
 - `E1306_INVALID_ENTITY_REF_FORMAT` — entity ref, stream name, or contract name is not a qualified name with at least two segments (dotted hierarchy).

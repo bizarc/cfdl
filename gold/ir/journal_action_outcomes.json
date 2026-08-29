@@ -79,9 +79,9 @@
       "provenance": {
         "source_file": "model.cfdl",
         "source_span": {
-          "start_line": 54,
+          "start_line": 52,
           "start_col": 1,
-          "end_line": 58,
+          "end_line": 56,
           "end_col": 1
         }
       }
@@ -111,9 +111,9 @@
       "provenance": {
         "source_file": "model.cfdl",
         "source_span": {
-          "start_line": 61,
+          "start_line": 59,
           "start_col": 1,
-          "end_line": 64,
+          "end_line": 62,
           "end_col": 1
         }
       }
@@ -143,9 +143,9 @@
       "provenance": {
         "source_file": "model.cfdl",
         "source_span": {
-          "start_line": 46,
+          "start_line": 44,
           "start_col": 1,
-          "end_line": 50,
+          "end_line": 48,
           "end_col": 1
         }
       }
@@ -184,9 +184,9 @@
         "source_file": "model.cfdl",
         "source_span": {
           "end_col": 1,
-          "end_line": 42,
+          "end_line": 40,
           "start_col": 1,
-          "start_line": 37
+          "start_line": 35
         }
       },
       "when": {
@@ -215,9 +215,9 @@
         "source_file": "model.cfdl",
         "source_span": {
           "end_col": 1,
-          "end_line": 71,
+          "end_line": 69,
           "start_col": 1,
-          "start_line": 68
+          "start_line": 66
         }
       },
       "type": "Option.Renewal"

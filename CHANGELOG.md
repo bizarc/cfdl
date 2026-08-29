@@ -8,6 +8,31 @@ This project follows Semantic Versioning: https://semver.org/
 
 ## [Unreleased]
 
+### Removed: `activate` / `deactivate contract` (§7.73)
+
+A contract is not one behaviour; it is a COLLECTION OF STREAMS. `cre.lease`
+lowers into base rent, recoveries and abatement, and an all-or-nothing switch
+gives one answer where the real cases need a per-stream one: forbearance stops
+principal while interest accrues, an early termination stops rent while a fee
+flows and recoveries continue, a facility at the end of its draw period stops
+drawing and amortizes.
+
+The action could not be reached from a model in any case — a contract carries
+only its type, so there was no instance to resolve — and the engine had no
+runtime for it, journaling `ignored`. Both better spellings now exist: name the
+stream the contract produced (§7.50, shipped) or declare a lifecycle state and
+gate each stream with `active in state` (§6.1), which is checked, level-
+triggered so it can end as well as begin, and journaled.
+
+- The productions leave the grammar; the retired spelling answers
+  **`E0006_RETIRED_SYNTAX`**, whose message names both replacements.
+- `E1303_UNRESOLVED_CONTRACT_REF` is retired with the action it served; per
+  `docs/08` §8 the code is never reused.
+- The IR's `Action` drops both kinds and its now-unused `contract` property.
+- The engine's contract arm goes. The `ignored` outcome stays, because an
+  action kind hand-written IR carries and no compiler emits still needs one —
+  which is what the engine unit test now pins.
+
 ### Fixed: a model may name the streams its own contracts produce (§7.50)
 
 `docs/01` §13.2 gives the modeller `deactivate stream <name>`, and §9.1's own

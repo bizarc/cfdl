@@ -417,12 +417,6 @@ pub fn resolve_symbols(output: &ResolveOutput) -> Result<SymbolTables, Vec<Resol
                 // nothing (`check_event_stream_targets`, E1302). Same reason
                 // `exercise option` is checked there.
                 EventAction::ActivateStream(_) | EventAction::DeactivateStream(_) => continue,
-                EventAction::ActivateContract(name) | EventAction::DeactivateContract(name) => (
-                    "contract",
-                    name.clone(),
-                    &tables.contracts,
-                    "E1303_UNRESOLVED_CONTRACT_REF",
-                ),
                 EventAction::SetEntityField { entity, .. } => (
                     "entity",
                     entity.clone(),

@@ -4999,12 +4999,6 @@ fn lower_events_options(
                         A::DeactivateStream(name) => {
                             serde_json::json!({ "kind": "DeactivateStream", "stream": name })
                         }
-                        A::ActivateContract(name) => {
-                            serde_json::json!({ "kind": "ActivateContract", "contract": name })
-                        }
-                        A::DeactivateContract(name) => {
-                            serde_json::json!({ "kind": "DeactivateContract", "contract": name })
-                        }
                         A::ExerciseOption(name) => {
                             serde_json::json!({ "kind": "ExerciseOption", "option": name })
                         }

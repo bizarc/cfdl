@@ -43,4 +43,4 @@ The formal EBNF grammar is maintained as a standalone file for use with grammar 
 2. `money_lit` is syntactic sugar; implementations should normalize to `Money` with `currency`.
 3. `DATE` accepts `YYYY-MM` and `YYYY-MM-DD`; normalize `YYYY-MM` to `YYYY-MM-01` during parsing.
 4. `schedule_opts` are order-independent; parsers should accept any order.
-5. `activate contract` / `deactivate contract` are included in grammar, but may be a no-op in early engines.
+5. `activate contract` / `deactivate contract` were removed: a contract is a collection of streams, and one switch cannot express forbearance or an early termination. Gate the streams a contract produced by name, or with `active in state`. The retired spelling is `E0006_RETIRED_SYNTAX`.
