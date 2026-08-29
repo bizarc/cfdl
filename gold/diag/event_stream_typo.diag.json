@@ -1,0 +1,17 @@
+[
+  {
+    "code": "E1302_UNRESOLVED_STREAM_REF",
+    "severity": "error",
+    "message": "Event 'refi' references unknown stream 'loan.dbt_service'.",
+    "file": "model.cfdl",
+    "span": {
+      "start_line": 22,
+      "start_col": 1,
+      "end_line": 24,
+      "end_col": 1
+    },
+    "path": null,
+    "hint": "Streams in this model, declared and contract-lowered: loan.debt_service.",
+    "notes": []
+  }
+]

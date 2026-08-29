@@ -1197,6 +1197,79 @@ fn check_prev_first_period(
 /// The wording differs from the source-stream case because the remedy does. A
 /// model author cannot "start the stream one period later" when the pack owns
 /// the schedule, so this names the CONTRACT whose term set it.
+/// Event stream targets, checked where every stream that will exist is known.
+///
+/// `docs/01` §13.2 gives the modeller `deactivate stream <name>`, and §9.1's
+/// own example of a stream name — `cre.lease.base_rent` — is a name a CONTRACT
+/// produces (`docs/07` §6.4 gives the identical string as its example of a
+/// generated name). The specification draws no distinction between a stream a
+/// model declared and a stream a contract lowered, and neither does the engine:
+/// the action is name-keyed, so a lowered stream stops paying the moment the
+/// name resolves.
+///
+/// The resolver could not resolve it. Its symbol table is built before the pack
+/// is even chosen, so at that point a contract's streams do not exist, and the
+/// check could not tell "not yet generated" from "misspelled" — it reported
+/// both as E1302. A repaid loan therefore kept taking debt service, and the
+/// same model expressed it correctly the moment the pack was dropped.
+///
+/// Here both kinds are in hand. A misspelling still matches nothing, which is
+/// what E1302 exists to catch (`docs/08`).
+fn check_event_stream_targets(
+    resolve_output: &cfdl_resolver::ResolveOutput,
+    declared: &[((String, String), IrStream)],
+    lowered: &[((String, String), IrStream)],
+) -> Result<(), Vec<Diagnostic>> {
+    let known: BTreeSet<&str> = declared
+        .iter()
+        .chain(lowered.iter())
+        .map(|((name, _key), _stream)| name.as_str())
+        .collect();
+
+    let mut diagnostics: Vec<Diagnostic> = Vec::new();
+    for source_stmt in &resolve_output.source_statements {
+        let Stmt::Event(event) = &source_stmt.statement else {
+            continue;
+        };
+        for action in &event.actions {
+            let name = match action {
+                cfdl_parser::EventAction::ActivateStream(name)
+                | cfdl_parser::EventAction::DeactivateStream(name) => name,
+                _ => continue,
+            };
+            if known.contains(name.as_str()) {
+                continue;
+            }
+            let mut names: Vec<&str> = known.iter().copied().collect();
+            names.sort_unstable();
+            diagnostics.push(Diagnostic {
+                code: "E1302_UNRESOLVED_STREAM_REF".to_string(),
+                severity: "error".to_string(),
+                message: format!("Event '{}' references unknown stream '{name}'.", event.name),
+                file: Some(source_stmt.file.clone()),
+                span: Some(map_span(event.span)),
+                path: None,
+                hint: Some(if names.is_empty() {
+                    "The model declares no streams, and no contract lowered any.".to_string()
+                } else {
+                    format!(
+                        "Streams in this model, declared and contract-lowered: {}.",
+                        names.join(", ")
+                    )
+                }),
+                notes: vec![],
+            });
+        }
+    }
+
+    if diagnostics.is_empty() {
+        Ok(())
+    } else {
+        sort_compile_diagnostics(&mut diagnostics);
+        Err(diagnostics)
+    }
+}
+
 fn check_lowered_prev_first_period(
     lowered: &[((String, String), IrStream)],
     stream_inputs: &[IrStreamInputs],
@@ -2881,6 +2954,7 @@ fn build_ir(
             }
         }
     }
+    check_event_stream_targets(resolve_output, &streams, &lowered.streams)?;
     check_lowered_prev_first_period(&lowered.streams, &lowered.stream_inputs, &time_start)?;
     // A LOWERING RULE'S FIELD HANGS ON THE ENTITY IT DESCRIBES.
     //

@@ -406,12 +406,17 @@ pub fn resolve_symbols(output: &ResolveOutput) -> Result<SymbolTables, Vec<Resol
         };
         for action in &event.actions {
             let (kind, target, table, code) = match action {
-                EventAction::ActivateStream(name) | EventAction::DeactivateStream(name) => (
-                    "stream",
-                    name.clone(),
-                    &tables.streams,
-                    "E1302_UNRESOLVED_STREAM_REF",
-                ),
+                // A STREAM TARGET IS NOT RESOLVED HERE, because half the
+                // streams do not exist yet. A contract lowers into ordinary
+                // streams and that happens in the compiler, long after this
+                // table is built, so a name like `cre.debt.principal` — which
+                // the IR does carry — read as a misspelling and the model
+                // could not stop cash it had not written itself. The check
+                // moved to the compiler's post-lowering position, where every
+                // stream that will exist is known and a typo still matches
+                // nothing (`check_event_stream_targets`, E1302). Same reason
+                // `exercise option` is checked there.
+                EventAction::ActivateStream(_) | EventAction::DeactivateStream(_) => continue,
                 EventAction::ActivateContract(name) | EventAction::DeactivateContract(name) => (
                     "contract",
                     name.clone(),

@@ -62,8 +62,19 @@ The compiler MUST implement the following stages in order:
 - Normalize literals (`YYYY-MM` → `YYYY-MM-01`, money literals, percent literals).
 - Default and expand missing fields.
 - Derive canonical IDs.
+- **Expand each `contract` into the streams its pack's rules emit.** Every
+  other stage is TRANSCRIPTION — one statement in, one object out, nothing
+  newly named. This one is GENERATIVE: it creates stream names that no
+  statement wrote, and it runs after stage 6, so those names cannot be in the
+  symbol table.
 - Construct canonical IR objects.
 - Preserve provenance.
+
+A check whose subject is a lowered stream therefore MUST run after this stage,
+not at stage 6. Event stream targets are resolved here for that reason
+(`E1302`, `docs/08`): at stage 6 the check cannot tell a name a contract has
+not yet produced from a misspelling, and reporting both alike removes a
+capability §13.2 grants.
 
 9) **Emit**
 - Serialize canonical IR JSON.

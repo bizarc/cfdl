@@ -251,7 +251,7 @@ Fields that move:
   series is visible to a later waterfall's `from` and to nothing else, so the
   read could only ever aggregate to zero. Model the quantity the step pays as a
   stream or a field if a stream must read it.
-- `E1302_UNRESOLVED_STREAM_REF` — an event activates or deactivates a stream that is not declared. Event action targets were never resolved, so a misspelling matched nothing and the action was silently inert: the stream it was meant to stop kept paying, with no diagnostic and no warning.
+- `E1302_UNRESOLVED_STREAM_REF` — an event activates or deactivates a stream the model does not run. Event action targets were never resolved, so a misspelling matched nothing and the action was silently inert: the stream it was meant to stop kept paying, with no diagnostic and no warning. Checked after lowering rather than in the resolver, so a name a CONTRACT produced resolves as readily as one the model declared — the symbol table is built before the pack is chosen, and a check running there reported an unlowered name and a typo alike. The hint lists every stream in the model, both kinds.
 - `E1303_UNRESOLVED_CONTRACT_REF` — an event activates or deactivates a contract that is not declared.
 - `E1304_UNRESOLVED_OPTION_REF` — an event exercises an option that is not declared. Checked in the compiler rather than the resolver, because options are not in the symbol tables.
 - `E1310_ENTITY_BLOCK_WITHOUT_TYPE` — an entity uses a block but declares no type, so there is nothing to check the block against.

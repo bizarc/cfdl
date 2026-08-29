@@ -4,7 +4,7 @@
 
 CFDL 0.7.0. Every model below compiles, and its IR and
 results are byte-asserted against goldens in CI (`fixtures/valid/`,
-118 models.
+119 models.
 
 `gold/ir/`, `gold/results/`). Each is single-purpose: the directory name
 says what it exercises. This is what right looks like — positive few-shot
@@ -1748,6 +1748,52 @@ event partial_liquidation when time.t == 2.0 {
 stream loan.balance_report on entity asset.loan inflow currency USD {
   schedule every year from 2026-01 to 2031-01
   amount = asset.loan.balance
+}
+```
+
+## event_stops_lowered_stream
+
+```cfdl
+version 0.1
+model "event-stops-lowered-stream"
+use pack "cre" version "0.1.0"
+time calendar monthly from 2026-01 for 60
+
+// A MODEL MAY NAME THE STREAMS ITS OWN CONTRACTS PRODUCE.
+//
+// `cre.permanent_debt` lowers into three streams — proceeds, interest and
+// principal — and the IR carries them under the names used below. Those names
+// were unaddressable: the symbol table is built before the pack is chosen, so
+// a contract's streams did not exist when the reference was checked, and
+// `deactivate stream cre.debt.principal` read as a misspelling. A loan repaid
+// early kept taking debt service, and the same model expressed the stop
+// correctly the moment the pack was dropped.
+//
+// The prepayment below is the plain case: at period 36 the borrower repays,
+// and the loan's cash stops. Debt service runs 27,500.00 through the
+// interest-only months, 36,845.249537 while it amortizes, and 0.00 from
+// period 36 — the period the event fires.
+//
+// The stop is a modeling decision and is stated in the model. It does not
+// belong in the contract, which records what was agreed, nor in the lowering
+// rule, which would have to guess the vocabulary a modeller will use.
+
+entity asset tower : CRE.Asset.RealProperty
+
+contract cre.permanent_debt on entity asset.tower {
+  term 2026-01..2030-12
+  terms {
+    principal = 6000000
+    rate = 0.055
+    amort_months = 300
+    io_months = 24
+    balloon_at_maturity = 1
+  }
+}
+
+event prepaid when time.t >= 36 {
+  deactivate stream cre.debt.principal
+  deactivate stream cre.debt.interest
 }
 ```
 

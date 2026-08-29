@@ -982,6 +982,12 @@ Supported actions:
 - `set entity <EntityRef>.<field> = <value>`
 - `activate stream <StreamName>`
 - `deactivate stream <StreamName>`
+
+A `<StreamName>` is any stream the model runs: one the model declared, or one a
+contract lowered (`cre.lease.base_rent` is §9.1's own example, and `docs/07`
+§6.4 gives the identical string as an example of a generated name). Reaching
+for a contract does not cost the ability to stop its cash. A name matching
+neither is `E1302`.
 - `activate contract <ContractName>` (optional)
 - `deactivate contract <ContractName>` (optional)
 - `exercise option <OptionName>`
