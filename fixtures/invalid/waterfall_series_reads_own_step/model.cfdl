@@ -35,6 +35,7 @@ stream fund.sale_proceeds on entity asset.fund inflow currency USD {
 
 waterfall fund.distribution on entity asset.fund {
   from available
+  schedule every year from 2020-01 to 2025-01
 
   pay preferred to party.lp = inputs.called_capital * inputs.pref_rate
                                 - series_sum("fund.distribution.preferred", 0, time.t)

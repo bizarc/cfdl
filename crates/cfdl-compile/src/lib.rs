@@ -1765,6 +1765,29 @@ fn check_waterfalls(resolve_output: &cfdl_resolver::ResolveOutput) -> Result<(),
             ));
         }
 
+        // WHEN a waterfall distributes is half of what it says. The schedule
+        // decides whether cash accumulates and is then split, or is paid out
+        // as it arrives — different deals, not different spellings — so there
+        // is no default that is right often enough to be silent. The omission
+        // used to lower to `on <time.start>`: one distribution, in the first
+        // period, of whatever that period happened to produce.
+        if waterfall.schedule.is_none() {
+            diagnostics.push(diag(
+                "E1348_WATERFALL_NO_SCHEDULE",
+                format!(
+                    "Waterfall '{}' does not say when it distributes.",
+                    waterfall.name
+                ),
+                waterfall.span,
+                Some(
+                    "Add a `schedule` — `schedule on <date>` for a single distribution \
+                     (an exit), `schedule every <period> from <date> to <date>` for a \
+                     recurring one. Between its scheduled periods the pot accumulates."
+                        .to_string(),
+                ),
+            ));
+        }
+
         // A `series_sum` naming a step that is not yet published aggregates to
         // zero and says nothing, which is how a preferred return came to be paid
         // in full six times. The two sibling reads already fail loudly —

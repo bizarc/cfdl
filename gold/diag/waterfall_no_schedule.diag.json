@@ -1,0 +1,17 @@
+[
+  {
+    "code": "E1348_WATERFALL_NO_SCHEDULE",
+    "severity": "error",
+    "message": "Waterfall 'fund.distribution' does not say when it distributes.",
+    "file": "model.cfdl",
+    "span": {
+      "start_line": 32,
+      "start_col": 1,
+      "end_line": 36,
+      "end_col": 1
+    },
+    "path": null,
+    "hint": "Add a `schedule` — `schedule on <date>` for a single distribution (an exit), `schedule every <period> from <date> to <date>` for a recurring one. Between its scheduled periods the pot accumulates.",
+    "notes": []
+  }
+]
