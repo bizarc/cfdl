@@ -1,0 +1,22 @@
+WEBVTT
+
+00:00:15.880 --> 00:00:27.509
+A two-megawatt solar-plus-storage microgrid on a twenty-five-year power purchase agreement — with storage arbitrage, a capacity payment, an investment tax credit, and project debt.
+
+00:00:34.590 --> 00:00:40.707
+Compile, then run — three hundred monthly periods, energy-pack metrics included.
+
+00:00:59.280 --> 00:01:07.522
+The full metric set, sourced and labeled — N P V, I R R, payback — everything computed, everything checkable.
+
+00:01:16.310 --> 00:01:34.169
+Before analyzing a series, interrogate it. Annual P P A revenue should grow at escalation net of degradation. One line of pandas recovers exactly one point four nine percent — two percent escalation times half a percent degradation. The convention, verified from the output.
+
+00:01:37.940 --> 00:01:49.161
+Revenue decomposition: contracted P P A, storage margin, capacity payments — the merchant story and the contracted story, separable because they're separate streams.
+
+00:01:50.320 --> 00:01:57.471
+The lender's view: cash flow available for debt service against the debt itself, annually, over the life of the loan.
+
+00:01:58.720 --> 00:02:10.581
+Equity payback: the cumulative line crosses zero here — and the engine's own payback metric agrees. Two derivations, one answer. This is what it looks like when the model is a program.

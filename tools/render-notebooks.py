@@ -194,12 +194,19 @@ def video_block(slug: str) -> list[str]:
     video = REPO_ROOT / "site" / "public" / "videos" / f"{slug}-walkthrough.mp4"
     if not video.exists():
         return []
+    track = ""
+    if (REPO_ROOT / "site" / "public" / "videos" / f"{slug}-walkthrough.vtt").exists():
+        track = (
+            f'<track kind="captions" srclang="en" label="English" default '
+            f'src="/videos/{slug}-walkthrough.vtt"></track>'
+        )
     return [
         f'<video controls preload="metadata" style="width:100%" '
-        f'src="/videos/{slug}-walkthrough.mp4"></video>',
+        f'src="/videos/{slug}-walkthrough.mp4">{track}</video>',
         "",
         "*A two-minute agent-driven walkthrough: an AI agent executes this "
-        "notebook cell by cell, every output computing live in the take.*",
+        "notebook cell by cell, every output computing live in the take. "
+        "Captions carry the narration.*",
         "",
     ]
 
