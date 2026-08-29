@@ -3,7 +3,7 @@
 
 SHELL := /bin/bash
 
-.PHONY: pack-series pack-templates keyword-register ci-gates invariants glossary glossary-check machine-docs machine-docs-check agent-eval-selftest agent-eval-replay shipped-examples benchmark-cases help fmt fmt-check lint test build clean gold gold-update ci verify site-voice verify-python verify-site verify-site-nofresh verify-site-fresh verify-learn-nofresh doc-examples training-examples py-develop py-test py-wheel notebooks-render notebooks-check wasm cadence-parity ir-schema results-schema run-schema pack-validations rule-fragments py-stamp py-check
+.PHONY: pack-series pack-templates keyword-register diagnostic-parity ci-gates invariants glossary glossary-check machine-docs machine-docs-check agent-eval-selftest agent-eval-replay shipped-examples benchmark-cases help fmt fmt-check lint test build clean gold gold-update ci verify site-voice verify-python verify-site verify-site-nofresh verify-site-fresh verify-learn-nofresh doc-examples training-examples py-develop py-test py-wheel notebooks-render notebooks-check wasm cadence-parity ir-schema results-schema run-schema pack-validations rule-fragments py-stamp py-check
 
 help:
 	@echo "Targets:"
@@ -96,6 +96,7 @@ bench:
 # was in this file and not in the workflow.
 ci-gates: analytic invariants cadence-parity ir-schema results-schema run-schema \
           pack-validations pack-series pack-templates keyword-register site-voice \
+          diagnostic-parity \
           glossary-check machine-docs-check agent-eval-selftest \
           rule-fragments \
           doc-examples training-examples shipped-examples benchmark-cases
@@ -248,6 +249,15 @@ pack-series:
 # weekly schedule that no production has ever read.
 keyword-register:
 	$(PYGATE) tools/check-keyword-register.py
+
+# The register in docs/08 must be the codes the tools emit. It was neither:
+# 18 codes were documented by nothing that could produce them — including the
+# duplicate-name checks, so two events under one name both fired — and three
+# the packs emit were absent from the page. An agent reads that page as the
+# repair catalogue, so a promised code that never fires teaches it to wait for
+# a diagnostic that will not come.
+diagnostic-parity:
+	$(PYGATE) tools/check-diagnostic-parity.py
 
 # A template is what the editor inserts when a modeller reaches for a contract.
 # One that does not compile teaches a shape the language rejects, and the

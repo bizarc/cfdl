@@ -1,0 +1,17 @@
+[
+  {
+    "code": "E1006_DUPLICATE_OPTION",
+    "severity": "error",
+    "message": "Duplicate option 'renewal'.",
+    "file": "model.cfdl",
+    "span": {
+      "start_line": 13,
+      "start_col": 1,
+      "end_line": 13,
+      "end_col": 64
+    },
+    "path": null,
+    "hint": null,
+    "notes": []
+  }
+]

@@ -1,0 +1,17 @@
+[
+  {
+    "code": "E0005_INVALID_DATE_LITERAL",
+    "severity": "error",
+    "message": "'2026-13' is not a real calendar date. Dates are `YYYY-MM` or `YYYY-MM-DD`.",
+    "file": "model.cfdl",
+    "span": {
+      "start_line": 3,
+      "start_col": 27,
+      "end_line": 3,
+      "end_col": 33
+    },
+    "path": null,
+    "hint": null,
+    "notes": []
+  }
+]

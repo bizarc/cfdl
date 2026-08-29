@@ -1,0 +1,22 @@
+version 0.1
+model "duplicate-contract"
+use pack "cre" version "0.1.0"
+time calendar monthly from 2026-01 for 12
+
+// TWO CONTRACTS UNDER ONE NAME.
+//
+// Both lower, and two rules striking the same stream name was reported as
+// E5007_DUPLICATE_LOWERED_STREAM — the downstream symptom, and only when a
+// pack is active and only if the generated names happen to collide. The cause
+// is the pair of declarations below.
+
+entity asset tower : CRE.Asset.RealProperty
+
+contract cre.opex_line on entity asset.tower {
+  term 2026-01..2026-12
+  terms { amount = 100 }
+}
+contract cre.opex_line on entity asset.tower {
+  term 2026-01..2026-12
+  terms { amount = 200 }
+}

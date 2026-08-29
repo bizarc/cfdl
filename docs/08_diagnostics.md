@@ -270,13 +270,11 @@ Fields that move:
 - `E1322_UNKNOWN_PARTY_ROLE` — a role is bound that the contract type does not declare. The declared roles are listed; a role belongs to the agreement, not to the entity.
 - `E1302_UNRESOLVED_STREAM_REF` — something names a stream that is not declared — often an event deactivating one.
 - `E1304_UNRESOLVED_OPTION_REF` — an event exercises an option that is not declared.
-- `E1305_UNRESOLVED_PHASE_REF` — a schedule names a phase that is not declared.
 - `E1306_INVALID_ENTITY_REF_FORMAT` — entity ref, stream name, or contract name is not a qualified name with at least two segments (dotted hierarchy).
 
 ### 7.5 Contracts and streams (E20xx/E21xx)
 - `E2001_CONTRACT_MISSING_TERM` — a contract omits a term its pack requires. The message names it; see the pack's contract table.
 - `E2002_CONTRACT_MISSING_EFFECTS` — a contract produces no streams, so it has no effect on the model.
-- `E2003_CONTRACT_CURRENCY_REQUIRED` — a contract does not state its currency and none can be inferred.
 - `E2101_STREAM_MISSING_SCHEDULE` — a stream has no `schedule`, so there is no period for its cash to land in.
 - `E2102_STREAM_MISSING_AMOUNT` — a stream has no `amount`.
 - `E2103_SCHEDULE_OUT_OF_BOUNDS` — a schedule reaches outside the model
@@ -309,22 +307,17 @@ Fields that move:
 
 - `E2201_EVENT_WHEN_NOT_BOOL` — an event's `when` is not a true/false expression.
 - `E2202_STREAM_ACTIVE_NOT_BOOL` — a stream's `active when` is not a true/false expression.
-- `E2203_ACTION_SET_FIELD_INVALID` — an event sets an entity field that does not exist or cannot hold that value.
+- An event may set a field the entity does not declare: the `entity` root is deliberately open-world, which is how lifecycle `status` works. A DECLARED field refuses a value it cannot hold — the engine warns `set … to non-numeric …; store unchanged` and the stored value is untouched, so nothing downstream reads the bad write.
 ### 7.7 Expressions / typing (E30xx/W30xx)
 - `E3001_EXPR_PARSE_ERROR` — an expression is not valid CFDL.
-- `E3002_EXPR_UNKNOWN_IDENT` — an expression names something not in scope. Bindings are `time.*`, `inputs.*`, `model.*`, `entity.*`, `cfg.*`, `obs.*` and entity fields by qualified path (`<family>.<entity>.<field>`).
 - `E3003_EXPR_TYPE_ERROR` — an expression combines types that cannot combine, such as a date and a number.
 - `E3004_EXPR_ILLEGAL_OP` — an operator is not defined for these operands.
 Warnings:
 - `W3001_EXPR_TYPE_UNKNOWN` — an expression's type could not be determined ahead of evaluation. It still runs; the warning notes the check was skipped.
 - `W3002_OBS_REF_EXTRACTION_FAILED` — an observation reference could not be read out of an expression, so the run may not know it needs that input.
 ### 7.8 Pack errors (E4xxx)
-- `E4001_UNKNOWN_TYPE_ID` — a declaration names a type the active pack does not define.
-- `E4002_INVALID_ENTITY_ATTR` — an entity field is not one the pack declares, or holds the wrong kind of value.
-- `E4003_INVALID_CONTRACT_TERMS` — a contract's terms do not satisfy the pack's schema for that contract.
 - `E4004_MISSING_PACK` — the named pack could not be loaded — not found, or found and rejected.
 ### 7.9 Lowering/emission (E5xxx)
-- `E5001_ID_GENERATION_FAILED` — the compiler could not derive a stable identifier for a declaration.
 - `E5002_IR_SCHEMA_VALIDATION_FAILED` — the IR the compiler produced does not satisfy the published IR schema, or the IR being read does not.
 - `E5003_IR_EMIT_FAILED` — the IR could not be written.
 - `E5004_INVALID_LOWERING_RULE` — a pack's lowering rule is malformed.
@@ -503,9 +496,10 @@ CRE pack codes:
 - `E6011_CRE_EXIT_INVALID_EXIT_CAP`
 - `E6012_CRE_EXIT_MISSING_NOI_VALUE`
 - `E6020_CRE_OPS_MISSING_AMOUNT`
-- `E6021_CRE_OPS_INVALID_SCHEDULE`
+- `E6030_CRE_LEASE_AMBIGUOUS_RENT` — a CRE lease states both `base_rent` (per period) and `base_rent_year` (annual). They would be summed; give one.
 - `E6031_CRE_UNIT_INVALID_FREE_RENT` — `free_rent_months` is a whole number of
   months, 0 or more
+- `E6033_CRE_UNIT_INVALID_ESCALATION` — a lease unit's `escalation` is below -1, which would make rent negative on the first step.
 - `E6032_CRE_UNIT_INVALID_PRO_RATA` — `pro_rata_share` is a fraction between 0
   and 1
 - `E6040_CRE_ROLLOVER_INVALID_PROBABILITY` — `renewal_probability` is a
@@ -553,14 +547,6 @@ CRE pack codes:
   `amount_year`; both default to zero, so stating neither is a line that
   silently earns nothing
 
-`E6020_CRE_OPS_MISSING_AMOUNT` and `E6021_CRE_OPS_INVALID_SCHEDULE` are
-**retired** with `cre.ops_revenue`: the line item takes either amount term
-(E6064), and a revenue term legitimately reaches the projection tail so that
-forward NOI has revenue to read. Per §8 the codes are never reused.
-
-`E6004_CRE_LEASE_UP_INVALID_OCCUPANCY` is **retired**: it validated lease-up
-occupancy terms that no longer exist. Per §8 the code is never reused.
-
 OpCo pack codes:
 
 - `E7001_OPCO_LINE_MISSING_AMOUNT`
@@ -580,6 +566,7 @@ OpCo pack codes:
   rate, stated on the contract rather than taken from the run's discount rate.
 - `E7028_OPCO_PERPETUITY_MISSING_GROWTH` — state 0 for a flat perpetuity.
 - `E7029_OPCO_PERPETUITY_INVALID_SELLING_COSTS` — a fraction between 0 and 1.
+- `E7011_OPCO_TAXES_AMBIGUOUS_DA` — OpCo cash taxes state both `da_monthly` (per period) and `da_year` (annual). They would be summed; give one.
 - `E7012_OPCO_TAXES_MISSING_RATE` — a cash-taxes contract states neither
   `tax_rate` nor `tax_rate_curve`. `tax_rate` carries a default of 0 so a curve
   may stand alone; without this check, stating neither would silently model a
@@ -636,9 +623,23 @@ Credit pack codes:
 
 ## 8) Deprecation and evolution policy
 
+**Before 1.0, a retired code is DELETED.** There is no installed base, so
+there is nobody holding a saved diagnostic whose meaning a reuse could
+corrupt, and a register carrying entries for conditions that can no longer
+arise costs every reader — human and machine — the work of telling live codes
+from dead ones. Remove the entry, remove the check, and let the number return
+to the pool. The rules below take effect at 1.0, when saved artifacts start to
+outlive the release that produced them:
+
 1. **Do not reuse codes**: once assigned, a code is never reused.
 2. **Soft deprecation**: a deprecated code may remain emitted for one minor version with a note.
 3. **Hard deprecation**: removal only in a major language version.
+
+**A documented code must be an emitted code, both ways.** `make
+check-diagnostic-parity` compares this page against every code the crates and
+the pack validations emit, and against the numbers the pack READMEs cite. A
+promised diagnostic that never fires is worse than an undocumented one: the
+repair catalogue teaches an agent to expect a code that will not come.
 
 ---
 

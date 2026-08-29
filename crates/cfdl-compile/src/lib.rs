@@ -885,6 +885,176 @@ fn state_guard_expr(states: &[cfdl_parser::StateGuard]) -> String {
 /// on it, and docs/03 documents the same five.
 const TIME_BINDINGS: [&str; 5] = ["t", "date", "days_in_period", "phase", "ppy"];
 
+/// Is an expression decidable without an environment?
+///
+/// Only literals and operators. Any name, any call, and the answer depends on
+/// bindings this stage does not have — the check then says nothing and the
+/// engine's run-time warning remains the signal. Conservative on purpose: a
+/// false positive here refuses a model that is correct, which is worse than
+/// the silence it replaces.
+fn is_constant_source(src: &str) -> bool {
+    if src.contains('(') {
+        return false;
+    }
+    let mut in_string = false;
+    let mut word = String::new();
+    let mut words: Vec<String> = Vec::new();
+    for c in src.chars() {
+        if c == '"' {
+            in_string = !in_string;
+            continue;
+        }
+        if in_string {
+            continue;
+        }
+        if c.is_alphabetic() || c == '_' {
+            word.push(c);
+        } else {
+            if !word.is_empty() {
+                words.push(std::mem::take(&mut word));
+            }
+        }
+    }
+    if !word.is_empty() {
+        words.push(word);
+    }
+    words
+        .iter()
+        .all(|w| matches!(w.as_str(), "and" | "or" | "not" | "true" | "false"))
+}
+
+/// Constant expressions, checked at compile time.
+///
+/// `cfdl-expr` has no type inference, so a general type check is a feature and
+/// not a missing diagnostic. But an expression built only from literals is
+/// decidable by evaluating it, and that covers what an author actually
+/// mistypes: `when 42`, `active when 7`, `"text" + 1`, `10 and 3`.
+///
+/// Each of those ran with `status: ok` — a substituted `false` or `0` and a
+/// warning in `deterministic.warnings` that the CLI does not print. `docs/13`
+/// §7.71 already settled that shape for series reads: a defect must not hide
+/// behind a substituted value and a warning nobody reads. This applies the
+/// same rule to the part of the expression language that can be decided.
+fn check_constant_expressions(
+    resolve_output: &cfdl_resolver::ResolveOutput,
+) -> Result<(), Vec<Diagnostic>> {
+    let mut diagnostics: Vec<Diagnostic> = Vec::new();
+
+    // A constant that fails to evaluate fails for every binding, so the
+    // failure is the model's and not the run's.
+    let ill_typed =
+        |src: &str, what: String, file: &str, span: &Span, out: &mut Vec<Diagnostic>| {
+            if !is_constant_source(src) {
+                return None;
+            }
+            let compiled = cfdl_expr::compile_expr(src).ok()?;
+            match cfdl_expr::eval(&compiled, &cfdl_expr::ExprEnv::default()) {
+                Ok(value) => Some(value),
+                Err(err) if err.code == cfdl_expr::EXPR_UNKNOWN_NAME => None,
+                Err(err) => {
+                    // Two documented codes split one condition: operands the
+                    // operator cannot combine, and an operator applied to the
+                    // wrong kind of operand.
+                    let code = if err.message.starts_with("cannot apply") {
+                        "E3003_EXPR_TYPE_ERROR"
+                    } else {
+                        "E3004_EXPR_ILLEGAL_OP"
+                    };
+                    out.push(Diagnostic {
+                        code: code.to_string(),
+                        severity: "error".to_string(),
+                        message: format!("{what} cannot evaluate: {}.", err.message),
+                        file: Some(file.to_string()),
+                        span: Some(span.clone()),
+                        path: None,
+                        hint: Some(
+                            "Every value in this expression is a literal, so it evaluates the \
+                         same way on every period and every run."
+                                .to_string(),
+                        ),
+                        notes: vec![],
+                    });
+                    None
+                }
+            }
+        };
+
+    for source_stmt in &resolve_output.source_statements {
+        let file = source_stmt.file.clone();
+        match &source_stmt.statement {
+            Stmt::Event(event) => {
+                let span = map_span(event.span);
+                let what = format!("Event '{}' guard", event.name);
+                if let Some(value) = ill_typed(&event.when, what, &file, &span, &mut diagnostics) {
+                    if !matches!(value, cfdl_expr::Value::Bool(_)) {
+                        diagnostics.push(Diagnostic {
+                            code: "E2201_EVENT_WHEN_NOT_BOOL".to_string(),
+                            severity: "error".to_string(),
+                            message: format!(
+                                "Event '{}' fires `when {}`, which is not a condition.",
+                                event.name,
+                                event.when.trim()
+                            ),
+                            file: Some(file.clone()),
+                            span: Some(span.clone()),
+                            path: None,
+                            hint: Some(
+                                "A guard must be true or false. The engine would take a \
+                                 non-boolean as `false`, so the event would never fire."
+                                    .to_string(),
+                            ),
+                            notes: vec![],
+                        });
+                    }
+                }
+            }
+            Stmt::Stream(stream) => {
+                let span = map_span(stream.span);
+                if let Some(active) = stream.active_when.as_ref() {
+                    let what = format!("Stream '{}' activation", stream.name);
+                    if let Some(value) =
+                        ill_typed(&active.src, what, &file, &span, &mut diagnostics)
+                    {
+                        if !matches!(value, cfdl_expr::Value::Bool(_)) {
+                            diagnostics.push(Diagnostic {
+                                code: "E2202_STREAM_ACTIVE_NOT_BOOL".to_string(),
+                                severity: "error".to_string(),
+                                message: format!(
+                                    "Stream '{}' is `active when {}`, which is not a condition.",
+                                    stream.name,
+                                    active.src.trim()
+                                ),
+                                file: Some(file.clone()),
+                                span: Some(span.clone()),
+                                path: None,
+                                hint: Some(
+                                    "An activation predicate must be true or false. The engine \
+                                     would take a non-boolean as `false`, so the stream would \
+                                     never pay."
+                                        .to_string(),
+                                ),
+                                notes: vec![],
+                            });
+                        }
+                    }
+                }
+                if let Some(amount) = stream.amount.as_ref() {
+                    let what = format!("Stream '{}' amount", stream.name);
+                    let _ = ill_typed(&amount.src, what, &file, &span, &mut diagnostics);
+                }
+            }
+            _ => {}
+        }
+    }
+
+    if diagnostics.is_empty() {
+        Ok(())
+    } else {
+        sort_compile_diagnostics(&mut diagnostics);
+        Err(diagnostics)
+    }
+}
+
 fn check_field_paths(resolve_output: &cfdl_resolver::ResolveOutput) -> Result<(), Vec<Diagnostic>> {
     let mut known: BTreeMap<String, BTreeSet<String>> = BTreeMap::new();
 
@@ -2642,6 +2812,7 @@ fn build_ir(
     check_waterfalls(resolve_output)?;
     check_state_guards(resolve_output, &ontology)?;
     check_prev_first_period(resolve_output, &time_start)?;
+    check_constant_expressions(resolve_output)?;
     check_field_paths(resolve_output)?;
     let (machines, machines_by_entity) = resolve_machines(resolve_output, &ontology);
     check_status_writes(resolve_output, &machines, &machines_by_entity)?;

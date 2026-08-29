@@ -1,0 +1,16 @@
+version 0.1
+model "expr-type-error"
+time calendar annual from 2026-01 for 3
+
+// OPERANDS THE OPERATOR CANNOT COMBINE.
+//
+// The amount evaluated to 0 with a warning, so the stream paid nothing and the
+// run reported `status: ok`. Every value here is a literal: the failure is the
+// model's, on every period and every run.
+
+entity asset co : Asset.Financial
+
+stream a.rent on entity asset.co inflow currency USD {
+  schedule every year from 2026-01 to 2028-01
+  amount = "100" + 1
+}

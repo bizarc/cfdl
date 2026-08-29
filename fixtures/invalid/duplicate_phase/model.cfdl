@@ -1,0 +1,13 @@
+version 0.1
+model "duplicate-phase"
+time calendar annual from 2026-01 for 4
+
+// TWO PHASES UNDER ONE NAME.
+//
+// A schedule naming the phase gets one of the two windows, decided by
+// declaration order rather than by the model.
+
+phase build from 2026-01 to 2026-12
+phase build from 2027-01 to 2027-12
+
+entity asset co : Asset.Financial

@@ -1,0 +1,17 @@
+[
+  {
+    "code": "E2202_STREAM_ACTIVE_NOT_BOOL",
+    "severity": "error",
+    "message": "Stream 'a.rent' is `active when 7`, which is not a condition.",
+    "file": "model.cfdl",
+    "span": {
+      "start_line": 12,
+      "start_col": 1,
+      "end_line": 16,
+      "end_col": 1
+    },
+    "path": null,
+    "hint": "An activation predicate must be true or false. The engine would take a non-boolean as `false`, so the stream would never pay.",
+    "notes": []
+  }
+]

@@ -1,0 +1,15 @@
+version 0.1
+model "duplicate-event"
+time calendar annual from 2026-01 for 3
+
+// TWO EVENTS UNDER ONE NAME BOTH FIRE.
+//
+// The resolver's symbol table declared an `events` map that nothing ever
+// wrote, so the duplicate check could not run. Both events reached the IR and
+// both fired, and the journal then carried two `event:refi` actors that cannot
+// be told apart.
+
+entity asset co : Asset.Financial
+
+event refi when time.t >= 1 { set entity asset.co.status = "a" }
+event refi when time.t >= 2 { set entity asset.co.status = "b" }

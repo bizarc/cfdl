@@ -1,0 +1,17 @@
+[
+  {
+    "code": "E3003_EXPR_TYPE_ERROR",
+    "severity": "error",
+    "message": "Stream 'a.rent' amount cannot evaluate: cannot apply Add to text and number.",
+    "file": "model.cfdl",
+    "span": {
+      "start_line": 13,
+      "start_col": 1,
+      "end_line": 16,
+      "end_col": 1
+    },
+    "path": null,
+    "hint": "Every value in this expression is a literal, so it evaluates the same way on every period and every run.",
+    "notes": []
+  }
+]

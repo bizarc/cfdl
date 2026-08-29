@@ -47,7 +47,7 @@ pub struct Money {
     pub currency: String,
 }
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Default)]
 pub struct ExprEnv {
     pub model: BTreeMap<String, Value>,
     pub time: BTreeMap<String, Value>,

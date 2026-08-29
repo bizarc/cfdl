@@ -1,0 +1,17 @@
+[
+  {
+    "code": "E2201_EVENT_WHEN_NOT_BOOL",
+    "severity": "error",
+    "message": "Event 'refi' fires `when 42`, which is not a condition.",
+    "file": "model.cfdl",
+    "span": {
+      "start_line": 16,
+      "start_col": 1,
+      "end_line": 16,
+      "end_col": 64
+    },
+    "path": null,
+    "hint": "A guard must be true or false. The engine would take a non-boolean as `false`, so the event would never fire.",
+    "notes": []
+  }
+]

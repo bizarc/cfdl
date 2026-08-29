@@ -1,0 +1,13 @@
+version 0.1
+model "invalid-date-literal"
+time calendar annual from 2026-13 for 2
+
+// SHAPE IS NOT VALIDITY.
+//
+// The lexer accepted four digits, a dash and two more, which `2026-13`
+// satisfies, and nothing checked the calendar afterwards. The model compiled:
+// the IR carried `"start": "2026-13-01"` and only the RUN refused it, one
+// stage and one artifact too late. February is checked the same way —
+// 2025-02-29 is refused and 2024-02-29 is not.
+
+entity asset co : Asset.Financial

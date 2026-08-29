@@ -1,0 +1,17 @@
+[
+  {
+    "code": "E1004_DUPLICATE_PHASE",
+    "severity": "error",
+    "message": "Duplicate phase 'build'.",
+    "file": "model.cfdl",
+    "span": {
+      "start_line": 11,
+      "start_col": 1,
+      "end_line": 11,
+      "end_col": 35
+    },
+    "path": null,
+    "hint": null,
+    "notes": []
+  }
+]
