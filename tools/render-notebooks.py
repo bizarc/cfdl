@@ -184,6 +184,26 @@ def render_outputs(cell: dict, images: dict[str, bytes], slug: str, index: int) 
     return lines
 
 
+def video_block(slug: str) -> list[str]:
+    """An agent-driven walkthrough video, when one is published for the page.
+
+    The video is a capture of this notebook being executed cell by cell by an
+    AI agent — every output computes live in the take. The renderer owns the
+    embed so the notebook itself stays clean for capture runs.
+    """
+    video = REPO_ROOT / "site" / "public" / "videos" / f"{slug}-walkthrough.mp4"
+    if not video.exists():
+        return []
+    return [
+        f'<video controls preload="metadata" style="width:100%" '
+        f'src="/videos/{slug}-walkthrough.mp4"></video>',
+        "",
+        "*A two-minute agent-driven walkthrough: an AI agent executes this "
+        "notebook cell by cell, every output computing live in the take.*",
+        "",
+    ]
+
+
 def render(path: pathlib.Path, notebook: dict) -> tuple[str, dict[str, bytes], str]:
     meta = PAGES[path.stem]
     slug = meta["slug"]
@@ -238,6 +258,7 @@ def render(path: pathlib.Path, notebook: dict) -> tuple[str, dict[str, bytes], s
         "against an independent reference. To run it yourself, see "
         "[the Python SDK guide](/docs/python-sdk).",
         "",
+        *video_block(slug),
         *body,
     ]
     return "\n".join(page).rstrip("\n") + "\n", images, title
