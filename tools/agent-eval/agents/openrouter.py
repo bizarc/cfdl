@@ -127,21 +127,42 @@ def _ssl_context():
         return ssl.create_default_context()
 
 
+RETRIES = 5
+
+
 def chat(base_url: str, api_key: str, payload: dict) -> dict:
-    request = urllib.request.Request(
-        f"{base_url}/chat/completions",
-        data=json.dumps(payload).encode("utf-8"),
-        headers={
-            "Authorization": f"Bearer {api_key}",
-            "Content-Type": "application/json",
-        },
-    )
-    try:
-        with urllib.request.urlopen(request, timeout=600, context=_ssl_context()) as response:
-            return json.loads(response.read().decode("utf-8"))
-    except urllib.error.HTTPError as err:
-        body = err.read().decode("utf-8", "replace")[:500]
-        raise RuntimeError(f"API {err.code} from {base_url}: {body}") from None
+    """One chat completion, with retries on the transient failures the smoke
+    runs hit in the wild: 429 rate limits, 5xx, network errors, and truncated
+    or non-JSON response bodies. Only a non-retryable 4xx raises immediately —
+    that is a real request problem, and retrying it would just repeat it."""
+    import time
+
+    last = None
+    for attempt in range(RETRIES):
+        request = urllib.request.Request(
+            f"{base_url}/chat/completions",
+            data=json.dumps(payload).encode("utf-8"),
+            headers={
+                "Authorization": f"Bearer {api_key}",
+                "Content-Type": "application/json",
+            },
+        )
+        try:
+            with urllib.request.urlopen(
+                request, timeout=600, context=_ssl_context()
+            ) as response:
+                return json.loads(response.read().decode("utf-8"))
+        except urllib.error.HTTPError as err:
+            body = err.read().decode("utf-8", "replace")[:500]
+            last = f"API {err.code} from {base_url}: {body}"
+            if err.code not in (408, 429, 500, 502, 503, 504):
+                raise RuntimeError(last) from None
+        except (urllib.error.URLError, TimeoutError, json.JSONDecodeError, OSError) as err:
+            last = f"{type(err).__name__}: {err}"
+        wait = 8 * (attempt + 1)
+        print(f"retryable failure ({last}); retrying in {wait}s", file=sys.stderr)
+        time.sleep(wait)
+    raise RuntimeError(f"gave up after {RETRIES} attempts: {last}")
 
 
 def main() -> int:

@@ -232,7 +232,7 @@ def call_agent(agent: str, task: dict, benchmarks_dir: pathlib.Path) -> dict:
             shell=True,
             input=payload,
             capture_output=True,
-            timeout=1800,
+            timeout=2700,
         )
         if result.returncode != 0:
             raise RuntimeError(
