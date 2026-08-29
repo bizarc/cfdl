@@ -106,7 +106,32 @@ export const mdxComponents = {
   // theme-aware styling and must NOT get that plate — it would trap a
   // dark-theme diagram on a white rectangle.
   img: ({ alt = "", ...p }: ComponentPropsWithoutRef<"img">) => {
-    const raster = !/\.svg($|\?)/i.test(String(p.src ?? ""));
+    const src = String(p.src ?? "");
+    // The corpus compiles as plain Markdown (no raw HTML), so a video embed
+    // arrives as an image whose source is an .mp4; render it as a captioned
+    // player, with the WebVTT track derived from the same path.
+    if (/\.mp4($|\?)/i.test(src)) {
+      return (
+        // eslint-disable-next-line jsx-a11y/media-has-caption
+        <video
+          controls
+          preload="metadata"
+          crossOrigin="anonymous"
+          className="my-6 block w-full rounded-lg border border-default bg-figure"
+          src={src}
+          aria-label={alt}
+        >
+          <track
+            kind="captions"
+            srcLang="en"
+            label="English"
+            default
+            src={src.replace(/\.mp4($|\?)/i, ".vtt$1")}
+          />
+        </video>
+      );
+    }
+    const raster = !/\.svg($|\?)/i.test(src);
     return (
       // Generated content: dimensions are unknown at author time, so next/image
       // cannot be used here.
