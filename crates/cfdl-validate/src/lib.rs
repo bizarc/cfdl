@@ -1020,6 +1020,7 @@ fn statement_span(stmt: &Stmt) -> Span {
         Stmt::Phase(s) => s.span,
         Stmt::Entity(s) => s.span,
         Stmt::Assume(s) => s.span,
+        Stmt::Metric(s) => s.span,
         Stmt::Curve(s) => s.span,
         Stmt::Quantile(s) => s.span,
         Stmt::Contract(s) => s.span,

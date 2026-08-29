@@ -218,6 +218,7 @@ Fields that move:
 - `E1005_DUPLICATE_ASSUME` — two assumptions share a name.
 - `E1006_DUPLICATE_OPTION` — two options share a name.
 - `E1007_DUPLICATE_EVENT` — two events share a name.
+- `E1008_DUPLICATE_METRIC` — two metrics share a name. Both would publish under `metric.<name>` and one would win silently.
 - `E1301_UNRESOLVED_ENTITY_REF` — a stream, contract or event action names an entity that is not declared.
 - `E1340_WATERFALL_NO_SOURCE` — a waterfall declares no `from`, so there is no
   pot to allocate.
@@ -230,6 +231,7 @@ Fields that move:
   waterfall is the documented composition and still compiles.
 - `E1349_UNRESOLVED_LIFECYCLE_REF` — an entity binds `lifecycle <name>` and no
   lifecycle block declares it.
+- `E1354_METRIC_FORWARD_REF` — a metric reads a metric declared below it, or reads itself. Metrics compose in DECLARATION ORDER, the same rule waterfalls follow, which makes the dependency an order rather than a graph. Reading itself is a different mistake: a metric is a fold over the finished projection, not a recurrence — carry a running quantity as a field the walk advances.
 - `E1350_LIFECYCLE_CONFLICT` — an entity binds a model-declared lifecycle, but
   its ontology type already declares one. One machine per entity.
 - `E1351_LIFECYCLE_NO_INITIAL` — a lifecycle block declares no `initial`.

@@ -8,6 +8,51 @@ This project follows Semantic Versioning: https://semver.org/
 
 ## [Unreleased]
 
+### Added: a model may declare a metric (§7.25)
+
+Metric keys were minted in two places: the engine (`model.*`) and a pack
+(`domain.*`). A case computing a deal-specific figure — a class weighted
+average life on the deal's own axis, a crossover date, an overcollateralisation
+ratio — had nowhere to name it, so the number the case existed to check sat
+unnamed in an `expected.csv` column instead of in `expected_metrics.json`
+beside the published figure it reproduces.
+
+```cfdl
+metric gross_revenue = series_sum("ops.revenue", 0, 4)
+metric total_cost    = series_sum("ops.cost", 0, 4)
+metric margin        = metric.gross_revenue + metric.total_cost
+```
+
+- **`metric.<name>`** is a third namespace beside `model.*` and `domain.*`, so
+  a results file says who minted every number in it.
+- Evaluated ONCE, at the horizon, over the finished projection — the valuation
+  plane of `docs/28` §2. A metric is a fold over a completed projection, never
+  a recurrence, so nothing it computes feeds back into the walk. It may read
+  the projection tail, which is what a forward-looking figure needs.
+- It may read series (including streams a CONTRACT lowered — §7.50), entity
+  fields, `inputs`, `cfg`, the engine's `model.*`, and `metric.<name>` for any
+  metric **declared above it**. Metrics compose in declaration order, the rule
+  waterfalls already follow, which makes the dependency an order rather than a
+  graph: **`E1354_METRIC_FORWARD_REF`** refuses a forward reference and, with a
+  different hint, a self-reference. **`E1008_DUPLICATE_METRIC`** refuses a
+  repeated name.
+- Every declared metric reaches every scenario summary, at no extra cost:
+  scenarios and the deterministic block publish the same map, so a scenario
+  grid can assert a derived figure per column and not only the engine's
+  built-ins.
+
+`docs/01` §15.3 is new and normative; §15.2's "CFDL models do not declare
+output metrics" is no longer true and is gone. `metric` joins the reserved
+words (§18.1, 86). This unblocks §7.72 (participant-level returns) and
+completes `docs/31` W4 phase 1, the commercial plan's only critical path.
+
+Two parser tidies fell out of it. A `metric` declared AFTER a contract was
+silently dropped: the contract parser asks `is_statement_start` while the
+`assume` statement carried a private copy of the same list, so a new keyword
+ended one statement and not the other — the scan now delegates to the one
+definition. And `ExprEnv::empty()` already existed, so the derived `Default`
+added alongside the constant-folding check was a second way to say it.
+
 ### Fixed: the diagnostic register is now the codes the tools emit
 
 Nothing compared `docs/08` against what anything emits, and the drift ran both

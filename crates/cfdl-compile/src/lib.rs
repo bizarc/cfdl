@@ -380,6 +380,11 @@ struct Ir {
     /// declares none, so existing IR is byte-identical.
     #[serde(skip_serializing_if = "Vec::is_empty")]
     subtotals: Vec<IrSubtotal>,
+    /// Figures this model solved for, in declaration order (`docs/13` §7.25).
+    /// A metric may read the metrics above it, so the order is the meaning.
+    /// Omitted when a model declares none, so existing IR is byte-identical.
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    metrics: Vec<IrMetric>,
     contracts: Vec<IrContract>,
     streams: Vec<IrStream>,
     /// What each pack-lowered stream consumed, keyed by stream name. Omitted
@@ -393,6 +398,14 @@ struct Ir {
     required_observables: Vec<String>,
     required_refs: Vec<String>,
     provenance: IrProvenance,
+}
+
+/// A declared metric: a name and the expression that produces it.
+#[derive(Debug, Serialize)]
+struct IrMetric {
+    name: String,
+    expr: IrExpr,
+    provenance: IrNodeProvenance,
 }
 
 #[derive(Debug, Serialize)]
@@ -948,7 +961,7 @@ fn check_constant_expressions(
                 return None;
             }
             let compiled = cfdl_expr::compile_expr(src).ok()?;
-            match cfdl_expr::eval(&compiled, &cfdl_expr::ExprEnv::default()) {
+            match cfdl_expr::eval(&compiled, &cfdl_expr::ExprEnv::empty()) {
                 Ok(value) => Some(value),
                 Err(err) if err.code == cfdl_expr::EXPR_UNKNOWN_NAME => None,
                 Err(err) => {
@@ -3227,6 +3240,71 @@ fn build_ir(
             .collect()
     };
 
+    // DECLARED METRICS, in declaration order (`docs/13` §7.25).
+    //
+    // A metric may read the metrics above it — the same rule waterfalls
+    // already follow, which makes the dependency an order rather than a graph.
+    // A forward or circular reference is refused here, so the engine's fold
+    // always finds a value already computed.
+    let mut ir_metrics: Vec<IrMetric> = Vec::new();
+    {
+        let mut declared_above: BTreeSet<&str> = BTreeSet::new();
+        let mut metric_diagnostics: Vec<Diagnostic> = Vec::new();
+        for source_stmt in &resolve_output.source_statements {
+            let Stmt::Metric(metric) = &source_stmt.statement else {
+                continue;
+            };
+            for referenced in cfdl_expr::root_references(&metric.expr, "metric") {
+                let name = referenced.trim_start_matches("metric.");
+                if declared_above.contains(name) {
+                    continue;
+                }
+                let (why, hint) = if name == metric.name {
+                    (
+                        "itself".to_string(),
+                        "A metric is a fold over the finished projection, not a recurrence; \
+                         carry a running quantity as a field the walk advances."
+                            .to_string(),
+                    )
+                } else {
+                    (
+                        format!("'{name}', which is declared below it or not at all"),
+                        "Metrics compose in declaration order, so a metric may read the \
+                         metrics above it. Move the declaration up, or correct the name."
+                            .to_string(),
+                    )
+                };
+                metric_diagnostics.push(Diagnostic {
+                    code: "E1354_METRIC_FORWARD_REF".to_string(),
+                    severity: "error".to_string(),
+                    message: format!("Metric '{}' reads {why}.", metric.name),
+                    file: Some(source_stmt.file.clone()),
+                    span: Some(map_span(metric.span)),
+                    path: None,
+                    hint: Some(hint),
+                    notes: vec![],
+                });
+            }
+            declared_above.insert(metric.name.as_str());
+            ir_metrics.push(IrMetric {
+                name: metric.name.clone(),
+                expr: IrExpr {
+                    lang: "cfdl".to_string(),
+                    src: coerce_numeric_literals(&metric.expr),
+                },
+                provenance: IrNodeProvenance {
+                    source_file: source_stmt.file.clone(),
+                    source_span: map_span(metric.span),
+                    generated_by: None,
+                },
+            });
+        }
+        if !metric_diagnostics.is_empty() {
+            sort_compile_diagnostics(&mut metric_diagnostics);
+            return Err(metric_diagnostics);
+        }
+    }
+
     let ir_waterfalls: Vec<IrWaterfall> = resolve_output
         .source_statements
         .iter()
@@ -3297,6 +3375,7 @@ fn build_ir(
         accounts: ir_accounts,
         lifecycles: ir_lifecycles,
         waterfalls: ir_waterfalls,
+        metrics: ir_metrics,
         contracts: contracts
             .into_iter()
             .map(|(_, contract)| contract)

@@ -1,0 +1,14 @@
+version 0.1
+model "metric-self-ref"
+time calendar annual from 2026-01 for 3
+
+// A METRIC IS NOT A RECURRENCE.
+//
+// Reading itself asks for the previous value of something computed once, at
+// the horizon, over a projection that has already finished. A running
+// quantity is a field the walk advances and a distribution moves; a metric
+// folds the result.
+
+entity asset co : Asset.Financial
+
+metric running = metric.running + 1.0

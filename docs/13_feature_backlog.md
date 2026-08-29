@@ -599,35 +599,6 @@ Found modelling Ginnie Mae 2026-100, whose decrement tables publish 21,570 cells
 across five to seven speeds per class, of which a single case can assert the
 0%-, 100%- or 259%-PSA column but not all three.
 
-### 7.25 A model cannot declare a metric
-
-Belongs with section 5 (language and engine).
-
-Metric keys are minted in exactly two places: the engine (`model.*`) and a
-pack's `metrics.toml` (`domain.*`). A model that computes a deal-specific
-figure — a class weighted average life on the deal's own axis, a crossover
-date, an overcollateralisation ratio — has no way to name it. The workaround
-is an entity field asserted per-period in `expected.csv`, which works (§7.22's
-single-class cases use exactly that route for balances) but leaves the number
-a case exists to check sitting unnamed in a CSV column rather than stated in
-`expected_metrics.json` next to the published figure it reproduces.
-
-This is the case-side complement of §7.22. That item asks the credit pack for
-an entity-keyed WAL; this one asks the language to let a case declare the
-number it solved for, whatever the pack thinks. "We solve for the case, not
-for the pack" needs somewhere to put the answer.
-
-Shape: a `metric` declaration — an expression over series and fields,
-evaluated at the horizon, published into `deterministic.metrics` and into
-every scenario summary. Landing in scenario summaries matters: combined with
-§7.23 it lets a speed grid assert a derived figure per column, not only the
-engine's built-ins.
-
-Found modelling FNMA 2019-2, whose published WALs are asserted through the
-pack's pool-level metric only because a single-class pass-through makes the
-pool's WAL and the class's the same number. The next deal's classes will not
-be so obliging.
-
 ### 7.26 Time-weighted metrics measure from the model start, on period fractions; a published WAL measures from settlement to stated payment days
 
 Belongs with section 5 (language and engine).
@@ -950,7 +921,7 @@ the larger of the two — the pack-side fold, the classification, the grain
 folding and the display sign all shipped.
 
 Related: §7.43, where the same absence shows up as results carrying no statement
-for a pack-less model, and §7.25, where a model cannot declare a metric either.
+for a pack-less model. §7.25, where a model could not declare a metric either, is closed.
 The three are one surface question asked from three directions.
 
 ---
@@ -1486,8 +1457,9 @@ Once the account exists, the metric is a fold over its journal, and the gap
 becomes visible as a missing valuation-plane construct rather than a missing
 mechanism.
 
-**The shape, if it earns its place:** a declared metric (§7.25 is the
-construct this would ride on) scoped to a party or a party-owned account —
+**The shape, if it earns its place:** a declared metric (§7.25, SHIPPED — the
+construct this rides on, and the reason this item is now buildable) scoped to a
+party or a party-owned account —
 `metric baupost_irr = irr(party.baupost)` — computed in the valuation plane
 over the journaled receipts and contributions, published with the same
 lineage as any series. Related: §7.43 (results do not say which entity owns
@@ -1501,7 +1473,7 @@ than accounts would bake in the attribution problem §7.43 records.
 ### 7.74 Structured-finance engine parity — the Intex scope
 
 *Roadmap: partly M2 (§7.78) — the deal mechanics; the analytics ride on
-§7.25 in M4.*
+declared metrics (§7.25, shipped).*
 
 **What this item is.** An umbrella over the gaps that separate CFDL from the
 full scope of a structured-finance cash flow engine (the Intex/Trepp
@@ -1548,7 +1520,7 @@ category — are scenarios plus curves plus options, today.
   margin.** `model.irr` is the shipped precedent — a bracketed bisection over
   the completed projection, deterministic and replayable. These are the same
   computation with a different objective, and they belong in the valuation
-  plane as declared metrics (§7.25 is the construct they ride on), bracketed
+  plane as declared metrics (§7.25, shipped — the construct they ride on), bracketed
   bisection or Brent per `docs/17` §12 — never in the causal core, where a
   solver would cost provenance and replay.
 - **The make-whole.** A causal cash amount whose size is a discounting
@@ -1565,7 +1537,7 @@ category — are scenarios plus curves plus options, today.
   recurrence reading the rate path, and needs no correlation construct.
 - **The output surface an analyst reads:** per-class WAL assertions (§7.22),
   the published settlement axis (§7.26), participant-level return (§7.72),
-  model-declared metrics and statements (§7.25, §7.55). Referenced, not
+  model-declared metrics (§7.25, shipped) and statements (§7.55). Referenced, not
   duplicated.
 
 **Infrastructure still open:**
@@ -1677,6 +1649,16 @@ the grain was wrong and the action should be retired, which made M2's gating
 work §7.50 plus state-gating through the declared machine — both now done. Per-period persistent state
 (the closed §5.2) shipped with M1 itself.
 
+**Closed since.** §7.25 (a model could not declare a metric) is fixed:
+`metric <name> = <expr>` is evaluated once at the horizon in the valuation
+plane and published as `metric.<name>`, a third namespace beside the engine's
+`model.*` and a pack's `domain.*`. Metrics compose in declaration order — the
+waterfall rule — with a forward or circular reference refused (`E1354`) and a
+duplicate name refused (`E1008`). Every declared metric reaches every scenario
+summary, because scenarios and the deterministic block publish the same map.
+That unblocks §7.72 (participant-level returns), which was waiting on this
+construct, and `docs/31` W4 phase 1 is therefore done.
+
 **Closed since.** §7.73 (the wrong grain) is fixed: `activate`/`deactivate
 contract` is out of the grammar, and `E1303` — which resolved only that
 action's target — is deleted with it. No new code marks the absence: the
@@ -1717,8 +1699,8 @@ compiler output could reach, is gone.
 | §7.75 | storage state of charge, which turns `mwh_cycled_year` from an assumption into an output |
 | §7.74 | the deal mechanics still open after the machine: coupled interest/principal waterfalls, a step's shortfall, PIK on an unpaid step, servicer advances, the clean-up call |
 
-**What M2 is not.** Declared metrics (§7.25) and participant-level returns
-(§7.72) are M4, and `docs/31` W4 pulls the first of them forward on the
+**What M2 is not.** Declared metrics (§7.25, since shipped) and
+participant-level returns (§7.72) are M4, and `docs/31` W4 pulls the first of them forward on the
 commercial path rather than the roadmap's. Pack coverage (§7.3) is M3.
 
 Re-derived 2026-08-28. Related: `docs/28` §10, `docs/29`.

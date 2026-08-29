@@ -1,0 +1,15 @@
+version 0.1
+model "metric-forward-ref"
+time calendar annual from 2026-01 for 3
+
+// A METRIC READS THE METRICS ABOVE IT.
+//
+// Declaration order is the rule waterfalls already follow, which makes the
+// dependency an order rather than a graph: the engine's fold always finds a
+// value already computed. `headline` reads a metric declared below it, so
+// there would be nothing there when it ran.
+
+entity asset co : Asset.Financial
+
+metric headline = metric.base + 1.0
+metric base     = 2.0

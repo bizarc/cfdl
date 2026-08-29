@@ -2265,6 +2265,94 @@ fn run_deterministic(
     for account in &ir.accounts {
         declared.insert(format!("prev.{}", account.name));
     }
+    // DECLARED METRICS (`docs/13` §7.25), evaluated in the valuation plane.
+    //
+    // Last, and deliberately: every series has settled, every engine metric is
+    // computed, and each metric can therefore read `model.npv` and the ones
+    // declared above it. `metric.<name>` is a third namespace beside the
+    // engine's `model.*` and a pack's `domain.*`, so a results file says who
+    // minted every number in it.
+    //
+    // The same map the deterministic block publishes is what a scenario
+    // summary carries, so a declared metric reaches every scenario column
+    // without a second computation.
+    let mut declared_metrics: BTreeMap<String, ExprValue> = BTreeMap::new();
+    if !ir.metrics.is_empty() {
+        let horizon = periods.saturating_sub(1);
+        let date = timeline
+            .get(horizon)
+            .cloned()
+            .unwrap_or_else(|| timeline[0].clone());
+        let mut visible: BTreeMap<String, Vec<f64>> = stream_series.clone();
+        for (name, values) in &waterfall_series {
+            visible.insert(name.clone(), values.clone());
+        }
+        let shared = Arc::new(visible);
+        for metric in &ir.metrics {
+            let mut env = build_expr_env(ir, None, config, horizon, &date, &base_inputs);
+            env.series = Arc::clone(&shared);
+            // A metric is a fold over the FINISHED projection, so every period
+            // is readable — including the tail, which is what a forward-looking
+            // figure needs.
+            env.series_available_to = Some(timeline.len().saturating_sub(1));
+            // The engine's own metrics, so a declared one can build on them.
+            for (key, value) in &metrics {
+                if let Some(rest) = key.strip_prefix("model.") {
+                    let bound = match value {
+                        Scalar::Number(v) => ExprValue::Decimal(*v),
+                        Scalar::Money(m) => ExprValue::Money(cfdl_expr::Money {
+                            amount: m.amount,
+                            currency: m.currency.clone(),
+                        }),
+                        Scalar::String(v) => ExprValue::String(v.clone()),
+                    };
+                    env.model.insert(rest.to_string(), bound);
+                }
+            }
+            for (name, value) in &declared_metrics {
+                env.metrics.insert(name.clone(), value.clone());
+            }
+            let compiled = match cfdl_expr::compile_expr(&metric.expr.src) {
+                Ok(compiled) => compiled,
+                Err(err) => {
+                    return Err(EngineError::UnknownName(format!(
+                        "Metric '{}' does not compile: {err}",
+                        metric.name
+                    )));
+                }
+            };
+            match cfdl_expr::eval(&compiled, &env) {
+                Ok(value) => {
+                    declared_metrics.insert(metric.name.clone(), value.clone());
+                    let published = match &value {
+                        ExprValue::Money(m) => Scalar::Money(Money {
+                            amount: round_amount(m.amount),
+                            currency: m.currency.clone(),
+                        }),
+                        ExprValue::Decimal(v) => Scalar::Number(round_amount(*v)),
+                        ExprValue::Int(v) => Scalar::Number(*v as f64),
+                        ExprValue::Bool(v) => Scalar::String(v.to_string()),
+                        ExprValue::Date(d) => {
+                            Scalar::String(format!("{:04}-{:02}-{:02}", d.year, d.month, d.day))
+                        }
+                        ExprValue::String(v) => Scalar::String(v.clone()),
+                        other => Scalar::String(describe_value(other)),
+                    };
+                    metrics.insert(format!("metric.{}", metric.name), published);
+                }
+                Err(err) => {
+                    // A metric that cannot evaluate is not a metric worth
+                    // publishing as zero: the case exists to assert this
+                    // number.
+                    return Err(EngineError::UnknownName(format!(
+                        "Metric '{}' could not be evaluated: {err}",
+                        metric.name
+                    )));
+                }
+            }
+        }
+    }
+
     let unresolved = unresolved_names(&warnings, &declared);
     if !unresolved.is_empty() {
         return Err(EngineError::UnknownName(format!(

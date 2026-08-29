@@ -143,6 +143,14 @@ against it by `make ir-schema`.
       },
       "description": "Every machine an entity binds — pack-declared and model-declared resolved to the same shape. Absent when no entity has one."
     },
+    "metrics": {
+      "type": "array",
+      "minItems": 0,
+      "items": {
+        "$ref": "#/$defs/Metric"
+      },
+      "description": "Reserved. Metrics are computed at run time by the engine and by the active pack, so a compile output does not carry them; no compiler emits this field."
+    },
     "waterfalls": {
       "type": "array",
       "minItems": 0,
@@ -199,14 +207,6 @@ against it by `make ir-schema`.
       "items": {
         "$ref": "#/$defs/Run"
       }
-    },
-    "metrics": {
-      "type": "array",
-      "minItems": 0,
-      "items": {
-        "$ref": "#/$defs/Metric"
-      },
-      "description": "Reserved. Metrics are computed at run time by the engine and by the active pack, so a compile output does not carry them; no compiler emits this field."
     },
     "required_observables": {
       "type": "array",
@@ -1287,20 +1287,17 @@ against it by `make ir-schema`.
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "id",
         "name",
-        "expr",
-        "provenance"
+        "expr"
       ],
       "properties": {
-        "id": {
-          "$ref": "#/$defs/Id"
-        },
         "name": {
-          "$ref": "#/$defs/Id"
+          "type": "string",
+          "description": "Published as `metric.<name>`."
         },
         "expr": {
-          "$ref": "#/$defs/Expr"
+          "$ref": "#/$defs/Expr",
+          "description": "Evaluated at the horizon over the finished projection. It may read series (including the projection tail), entity fields, inputs, the engine's `model.*` metrics, and `metric.<name>` for any metric declared above it."
         },
         "provenance": {
           "$ref": "#/$defs/NodeProvenance"

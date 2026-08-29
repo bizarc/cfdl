@@ -4,7 +4,7 @@
 
 CFDL 0.7.0. Every model below compiles, and its IR and
 results are byte-asserted against goldens in CI (`fixtures/valid/`,
-119 models.
+120 models.
 
 `gold/ir/`, `gold/results/`). Each is single-purpose: the directory name
 says what it exercises. This is what right looks like — positive few-shot
@@ -1245,6 +1245,47 @@ stream plant.opex on entity asset.plant outflow currency INR {
   schedule every month from 2026-01 to 2026-12
   amount = 200000
 }
+```
+
+## declared_metrics
+
+```cfdl
+version 0.1
+model "declared-metrics"
+time calendar annual from 2026-01 for 5
+
+// A MODEL MAY NAME THE FIGURE IT SOLVED FOR.
+//
+// Metric keys were minted in two places only: the engine (`model.*`) and a
+// pack (`domain.*`). A case computing a deal-specific number — a class
+// weighted average life on the deal's own axis, a crossover date, an
+// overcollateralisation ratio — had nowhere to put it, so the number a case
+// exists to check sat unnamed in an `expected.csv` column instead of in
+// `expected_metrics.json` beside the published figure it reproduces.
+//
+// A metric is a fold over the FINISHED projection, evaluated once at the
+// horizon in the valuation plane. It never feeds back into the walk.
+//
+// Metrics compose in declaration order, the rule waterfalls already follow, so
+// `margin` reads the two above it rather than repeating their expressions. The
+// composition is checkable here: 5,000 + (-2,000) = 3,000, which is exactly
+// what the engine publishes as model.total.
+
+entity asset co : Asset.Financial
+
+stream ops.revenue on entity asset.co inflow currency USD {
+  schedule every year from 2026-01 to 2030-01
+  amount = 1000
+}
+
+stream ops.cost on entity asset.co outflow currency USD {
+  schedule every year from 2026-01 to 2030-01
+  amount = 400
+}
+
+metric gross_revenue = series_sum("ops.revenue", 0, 4)
+metric total_cost    = series_sum("ops.cost", 0, 4)
+metric margin        = metric.gross_revenue + metric.total_cost
 ```
 
 ## dscr_smoke

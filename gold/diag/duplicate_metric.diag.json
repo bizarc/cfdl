@@ -1,0 +1,17 @@
+[
+  {
+    "code": "E1008_DUPLICATE_METRIC",
+    "severity": "error",
+    "message": "Duplicate metric 'headline'.",
+    "file": "model.cfdl",
+    "span": {
+      "start_line": 12,
+      "start_col": 1,
+      "end_line": 12,
+      "end_col": 21
+    },
+    "path": null,
+    "hint": null,
+    "notes": []
+  }
+]

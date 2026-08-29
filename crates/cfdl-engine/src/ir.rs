@@ -43,6 +43,10 @@ pub(crate) struct Ir {
     pub(crate) lifecycles: Vec<IrLifecycle>,
     #[serde(default)]
     pub(crate) waterfalls: Vec<IrWaterfall>,
+    /// Declared metrics, in declaration order. Evaluated in the valuation
+    /// plane, after every series they can read has settled.
+    #[serde(default)]
+    pub(crate) metrics: Vec<IrMetric>,
     /// Declared entities. Read so an entity's lifecycle STARTS where the model
     /// says rather than at null — the totality the ontology exists to give.
     #[serde(default)]
@@ -180,6 +184,12 @@ pub(crate) struct IrLifecycleEdge {
     pub(crate) to: String,
     #[serde(default)]
     pub(crate) guard: Option<IrExpr>,
+}
+
+#[derive(Debug, Deserialize)]
+pub(crate) struct IrMetric {
+    pub(crate) name: String,
+    pub(crate) expr: IrExpr,
 }
 
 #[derive(Debug, Deserialize)]

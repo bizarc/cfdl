@@ -29,6 +29,7 @@ pub enum Stmt {
     Phase(PhaseStmt),
     Entity(EntityStmt),
     Assume(AssumeStmt),
+    Metric(MetricStmt),
     Curve(CurveStmt),
     Quantile(QuantileStmt),
     Contract(ContractStmt),
@@ -260,6 +261,15 @@ pub struct PhaseStmt {
     pub name: String,
     pub from: String,
     pub to: String,
+    pub span: Span,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, serde::Serialize)]
+pub struct MetricStmt {
+    pub name: String,
+    /// The expression, as raw source. Evaluated once in the valuation plane,
+    /// after the walk has settled every series it can read.
+    pub expr: String,
     pub span: Span,
 }
 
@@ -757,6 +767,7 @@ impl<'a> Parser<'a> {
             TokenKind::Keyword(Keyword::Phase) => self.parse_phase_stmt().map(Stmt::Phase),
             TokenKind::Keyword(Keyword::Entity) => self.parse_entity_stmt().map(Stmt::Entity),
             TokenKind::Keyword(Keyword::Assume) => self.parse_assume_stmt().map(Stmt::Assume),
+            TokenKind::Keyword(Keyword::Metric) => self.parse_metric_stmt().map(Stmt::Metric),
             TokenKind::Keyword(Keyword::Curve) => self.parse_curve_stmt().map(Stmt::Curve),
             TokenKind::Keyword(Keyword::Quantile) => self.parse_quantile_stmt().map(Stmt::Quantile),
             // A value that changes over time belongs to the thing it
@@ -2362,6 +2373,38 @@ impl<'a> Parser<'a> {
         next_starts_term || next_ends_block
     }
 
+    /// Consume expression tokens up to the next TOP-LEVEL statement.
+    ///
+    /// `assume x = <expr>` and `metric m = <expr>` both run to the end of the
+    /// line in practice but are not line-delimited, so the boundary is the
+    /// next statement keyword. One list, used by both: two lists that must
+    /// agree is how a keyword comes to end one statement and not the other.
+    fn scan_to_next_top_level_statement(&mut self) -> (Option<Span>, Option<Span>) {
+        let mut first: Option<Span> = None;
+        let mut last: Option<Span> = None;
+        loop {
+            let token = self.peek();
+            // `is_statement_start` is the definition, not a copy of it: the
+            // contract parser already asks the same question, and a keyword
+            // that ended one statement and not the other is how a `metric`
+            // declared after a contract came to be swallowed silently.
+            // `state` is the one addition — it opens a block this scan must
+            // stop before, and no contract can contain one.
+            if matches!(token.kind, TokenKind::Eof)
+                || matches!(token.kind, TokenKind::Keyword(Keyword::State))
+                || is_statement_start(token)
+            {
+                break;
+            }
+            let tok = self.bump();
+            if first.is_none() {
+                first = Some(tok.span);
+            }
+            last = Some(tok.span);
+        }
+        (first, last)
+    }
+
     fn parse_expr_slot_until(
         &mut self,
         start_span: Span,
@@ -3221,6 +3264,54 @@ impl<'a> Parser<'a> {
     }
 
     /// `assume <ident> = <expr>` or `assume <ident> ~ Dist(name=num, ..., clip=[lo, hi])`
+    /// `metric <name> = <expr>` — a figure this model solved for.
+    ///
+    /// Metric keys were minted in two places only: the engine (`model.*`) and
+    /// a pack (`domain.*`). A case computing a deal-specific number — a class
+    /// WAL on the deal's own axis, a crossover date, an OC ratio — had nowhere
+    /// to name it, so it sat unnamed in an `expected.csv` column instead of in
+    /// `expected_metrics.json` beside the published figure it reproduces
+    /// (`docs/13` §7.25).
+    fn parse_metric_stmt(&mut self) -> Option<MetricStmt> {
+        let start = self.expect_keyword(Keyword::Metric, "'metric'")?;
+        let name_tok = self.bump();
+        let name = match name_tok.kind {
+            TokenKind::Ident(ref s) => s.clone(),
+            TokenKind::Keyword(_) => {
+                let word = self.slice_source(name_tok.span);
+                self.push_expected(
+                    name_tok.span,
+                    format!(
+                        "Expected identifier after 'metric', found the reserved word '{word}'. Reserved words are listed in section 18 of the language specification; choose another name."
+                    ),
+                );
+                return None;
+            }
+            _ => {
+                self.push_expected(
+                    name_tok.span,
+                    "Expected identifier after 'metric'.".to_string(),
+                );
+                return None;
+            }
+        };
+        let _ = self.expect_punct(Punct::Equal, "'='")?;
+        let (first, last) = self.scan_to_next_top_level_statement();
+        let (Some(first), Some(last)) = (first, last) else {
+            self.push_expected(
+                self.current_span(),
+                "Expected expression after '=' in a metric declaration.".to_string(),
+            );
+            return None;
+        };
+        let expr_span = merge_spans(first, last);
+        Some(MetricStmt {
+            name,
+            expr: self.slice_source(expr_span),
+            span: merge_spans(start.span, expr_span),
+        })
+    }
+
     fn parse_assume_stmt(&mut self) -> Option<AssumeStmt> {
         let start = self.expect_keyword(Keyword::Assume, "'assume'")?;
         let name_tok = self.bump();
@@ -3253,38 +3344,7 @@ impl<'a> Parser<'a> {
         match self.peek().kind {
             TokenKind::Punct(Punct::Equal) => {
                 let _ = self.bump();
-                // Consume expression tokens until the next top-level statement.
-                let mut first: Option<Span> = None;
-                let mut last: Option<Span> = None;
-                loop {
-                    match self.peek().kind {
-                        TokenKind::Eof
-                        | TokenKind::Keyword(Keyword::Version)
-                        | TokenKind::Keyword(Keyword::Model)
-                        | TokenKind::Keyword(Keyword::Use)
-                        | TokenKind::Keyword(Keyword::Import)
-                        | TokenKind::Keyword(Keyword::Time)
-                        | TokenKind::Keyword(Keyword::Phase)
-                        | TokenKind::Keyword(Keyword::Entity)
-                        | TokenKind::Keyword(Keyword::Assume)
-                        | TokenKind::Keyword(Keyword::Curve)
-                        | TokenKind::Keyword(Keyword::Quantile)
-                        | TokenKind::Keyword(Keyword::State)
-                        | TokenKind::Keyword(Keyword::Contract)
-                        | TokenKind::Keyword(Keyword::Stream)
-                        | TokenKind::Keyword(Keyword::Event)
-                        | TokenKind::Keyword(Keyword::Option)
-                        | TokenKind::Keyword(Keyword::Waterfall)
-                        | TokenKind::Keyword(Keyword::Run) => break,
-                        _ => {
-                            let tok = self.bump();
-                            if first.is_none() {
-                                first = Some(tok.span);
-                            }
-                            last = Some(tok.span);
-                        }
-                    }
-                }
+                let (first, last) = self.scan_to_next_top_level_statement();
                 let (Some(first), Some(last)) = (first, last) else {
                     self.push_expected(
                         self.current_span(),
@@ -3743,6 +3803,7 @@ impl<'a> Parser<'a> {
                 | TokenKind::Keyword(Keyword::Phase)
                 | TokenKind::Keyword(Keyword::Entity)
                 | TokenKind::Keyword(Keyword::Assume)
+                | TokenKind::Keyword(Keyword::Metric)
                 | TokenKind::Keyword(Keyword::Curve)
                 | TokenKind::Keyword(Keyword::Quantile)
                 | TokenKind::Keyword(Keyword::State)
@@ -3952,6 +4013,7 @@ fn statement_span(stmt: &Stmt) -> Span {
         Stmt::Entity(s) => s.span,
         Stmt::Lifecycle(s) => s.span,
         Stmt::Assume(s) => s.span,
+        Stmt::Metric(s) => s.span,
         Stmt::Curve(s) => s.span,
         Stmt::Quantile(s) => s.span,
         Stmt::Run(s) => s.span,
@@ -4018,6 +4080,7 @@ fn keyword_text(keyword: Keyword) -> &'static str {
         Keyword::To => "to",
         Keyword::Entity => "entity",
         Keyword::Assume => "assume",
+        Keyword::Metric => "metric",
         Keyword::Contract => "contract",
         Keyword::On => "on",
         Keyword::Term => "term",
@@ -4112,6 +4175,7 @@ fn is_statement_start(token: &Token) -> bool {
             | TokenKind::Keyword(Keyword::Phase)
             | TokenKind::Keyword(Keyword::Entity)
             | TokenKind::Keyword(Keyword::Assume)
+            | TokenKind::Keyword(Keyword::Metric)
             | TokenKind::Keyword(Keyword::Curve)
             | TokenKind::Keyword(Keyword::Quantile)
             | TokenKind::Keyword(Keyword::Contract)

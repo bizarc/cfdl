@@ -110,12 +110,12 @@ party-owned cash location (`docs/28` §5.1; engine phases 3–4, PRs #191–#193
 and the journal recording each step's action outcomes.
 
 **What is missing:** exactly §7.72 — the return a party actually earned,
-computed in the language. Its stated dependency (the account) has shipped;
-its stated vehicle is the declared metric (§7.25).
+computed in the language. Both dependencies have now shipped: the account
+(`docs/28` §5.1) and the declared metric (§7.25).
 
 | phase | deliverable | notes |
 |---|---|---|
-| 1 | **Declared metrics (§7.25)** — compile-time-resolved, named outputs; the construct §7.72 rides on | Language surface: spec, grammar, IR schema, resolver. Sequence with M4's output-resolution work — this phase *is* that roadmap item, pulled forward. |
+| 1 | ~~**Declared metrics (§7.25)**~~ **SHIPPED** — `metric <name> = <expr>`, evaluated at the horizon, published as `metric.<name>` and carried into every scenario summary | Was the plan's only critical path. §7.72 is now unblocked. |
 | 2 | **Participant-level return (§7.72)** — `metric <name> = irr(party.<p>)` / `moic(...)` over a party-owned account's journaled contributions and receipts, computed in the valuation plane, published with series lineage | Per §7.72: over accounts, never payee streams (the §7.43 attribution trap). |
 | 3 | **Benchmark case** — a published GP/LP waterfall worked example (European and American carry, preferred, catch-up, clawback test) reconciled tier-by-tier and party-by-party; register with the site | The pack question — whether tiers warrant contracts or stay core waterfall spellings — is answered by this case, not before it. `penzance_highlands` already hand-assembles Baupost's return; converting it is the second case and the §7.3 coverage proof. |
 | 4 | **Calculator surface** — a focused page: waterfall definition in, per-party cash vectors and IRR/MoIC/carry out, every number traceable to a journal line. WASM for the free tier (the playground pattern), `cfdl-server` for saved runs | The product UI lives outside this repo; what this repo owes it is phases 1–3 plus a stable results contract (`docs/06`). |
