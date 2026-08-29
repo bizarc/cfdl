@@ -163,7 +163,6 @@ Parser errors MUST use `E0xxx_...` codes.
 - `E0003_UNTERMINATED_BLOCK_COMMENT` — a `/*` block comment opens and never closes.
 - `E0004_EXPECTED_TOKEN` — something specific was required at this position and is missing. The message names what.
 - `E0005_INVALID_DATE_LITERAL` — a date is not a real calendar date, or not in `YYYY-MM` or `YYYY-MM-DD` form.
-- `E0006_RETIRED_SYNTAX` — a spelling the language no longer has. The message names what replaced it. Today the only one is `activate`/`deactivate contract`, retired because a contract is a collection of streams and one switch cannot say what forbearance or an early termination says; gate the streams the contract produced, by name or with `active in state`.
 ### 7.2 Module/import (E12xx)
 - `E1201_IMPORT_CYCLE` — two files import each other, directly or through a chain.
 - `E1202_IMPORT_NOT_FOUND` — an imported file does not exist at that path.
@@ -261,7 +260,6 @@ Fields that move:
   read could only ever aggregate to zero. Model the quantity the step pays as a
   stream or a field if a stream must read it.
 - `E1302_UNRESOLVED_STREAM_REF` — an event activates or deactivates a stream the model does not run. Event action targets were never resolved, so a misspelling matched nothing and the action was silently inert: the stream it was meant to stop kept paying, with no diagnostic and no warning. Checked after lowering rather than in the resolver, so a name a CONTRACT produced resolves as readily as one the model declared — the symbol table is built before the pack is chosen, and a check running there reported an unlowered name and a typo alike. The hint lists every stream in the model, both kinds.
-- `E1303_UNRESOLVED_CONTRACT_REF` is **retired**: it resolved the target of `activate`/`deactivate contract`, and the action itself was removed from the language. Per §8 the code is never reused.
 - `E1304_UNRESOLVED_OPTION_REF` — an event exercises an option that is not declared. Checked in the compiler rather than the resolver, because options are not in the symbol tables.
 - `E1310_ENTITY_BLOCK_WITHOUT_TYPE` — an entity uses a block but declares no type, so there is nothing to check the block against.
 - `E1311_UNKNOWN_ENTITY_TYPE` — an entity declares a type the active ontology does not define. The known types are listed.
@@ -279,7 +277,6 @@ Fields that move:
 - `E1321_NOT_A_PARTY` — a role is bound to an asset. A contract is between parties.
 - `E1322_UNKNOWN_PARTY_ROLE` — a role is bound that the contract type does not declare. The declared roles are listed; a role belongs to the agreement, not to the entity.
 - `E1302_UNRESOLVED_STREAM_REF` — something names a stream that is not declared — often an event deactivating one.
-- `E1303_UNRESOLVED_CONTRACT_REF` is **retired** with the action it served; see above.
 - `E1304_UNRESOLVED_OPTION_REF` — an event exercises an option that is not declared.
 - `E1305_UNRESOLVED_PHASE_REF` — a schedule names a phase that is not declared.
 - `E1306_INVALID_ENTITY_REF_FORMAT` — entity ref, stream name, or contract name is not a qualified name with at least two segments (dotted hierarchy).

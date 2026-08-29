@@ -56,7 +56,6 @@ register, so it cannot fall behind the language.
 | `E0003_UNTERMINATED_BLOCK_COMMENT` | Parse errors | a `/*` block comment opens and never closes. |
 | `E0004_EXPECTED_TOKEN` | Parse errors | something specific was required at this position and is missing. The message names what. |
 | `E0005_INVALID_DATE_LITERAL` | Parse errors | a date is not a real calendar date, or not in `YYYY-MM` or `YYYY-MM-DD` form. |
-| `E0006_RETIRED_SYNTAX` | Parse errors | a spelling the language no longer has. The message names what replaced it. Today the only one is `activate`/`deactivate contract`, retired because a contract is a collection of streams and one switch cannot say what forbearance or an early termination says; gate the streams the contract produced, by name or with `active in state`. |
 | `E1201_IMPORT_CYCLE` | Module/import | two files import each other, directly or through a chain. |
 | `E1202_IMPORT_NOT_FOUND` | Module/import | an imported file does not exist at that path. |
 | `E1203_IMPORT_OUTSIDE_MODEL_ROOT` | Module/import | an import reaches outside the model's directory. A model is self-contained, so it can be moved or shared without carrying hidden dependencies. |
@@ -250,7 +249,7 @@ register, so it cannot fall behind the language.
 | `E9019_CREDIT_INVALID_AGE_MONTHS` | Pack domain validations | `age_months` is the pool's weighted average age at closing. PSA, SDA and the ABS model are all indexed from ORIGINATION, so a seasoned pool starts part-way up the ramp; leaving it at the default 0 on a seasoned pool understates prepayment. Non-negative integer. |
 | `E9020_CREDIT_RATE_FLOOR_ABOVE_CAP` | Pack domain validations |  |
 
-*198 codes.*
+*197 codes.*
 <!-- /cfdl:generated diagnostics-catalog -->
 
 ## Related

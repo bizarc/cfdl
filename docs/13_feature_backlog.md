@@ -1678,9 +1678,11 @@ work §7.50 plus state-gating through the declared machine — both now done. Pe
 (the closed §5.2) shipped with M1 itself.
 
 **Closed since.** §7.73 (the wrong grain) is fixed: `activate`/`deactivate
-contract` is out of the grammar, the retired spelling answering
-`E0006_RETIRED_SYNTAX` with the two replacements named, and `E1303` retired with
-the action it served. The `ignored` journal outcome survives, since the engine
+contract` is out of the grammar, and `E1303` — which resolved only that
+action's target — is deleted with it. No new code marks the absence: the
+parser's existing "Expected 'stream' after activate/deactivate" says enough,
+and a language with no installed base retires a spelling by removing it, not by
+commemorating it. The `ignored` journal outcome survives, since the engine
 still needs it for an action kind hand-written IR carries and no compiler emits.
 What remains of §7.40i is the contract-surface `active when` / `active in state`
 that would let a pack's streams be gated as a group — worth a case before it is

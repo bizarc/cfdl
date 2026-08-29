@@ -24,10 +24,14 @@ stream the contract produced (§7.50, shipped) or declare a lifecycle state and
 gate each stream with `active in state` (§6.1), which is checked, level-
 triggered so it can end as well as begin, and journaled.
 
-- The productions leave the grammar; the retired spelling answers
-  **`E0006_RETIRED_SYNTAX`**, whose message names both replacements.
-- `E1303_UNRESOLVED_CONTRACT_REF` is retired with the action it served; per
-  `docs/08` §8 the code is never reused.
+- The productions leave the grammar and the parser. No new diagnostic marks
+  the absence: `E0004_EXPECTED_TOKEN` already answers the retired spelling with
+  "Expected 'stream' after activate/deactivate", spanned on the offending
+  token.
+- `E1303_UNRESOLVED_CONTRACT_REF` resolved only this action's target and is
+  DELETED, not entombed. `docs/08` §8's never-reuse rule is written for a
+  released language; pre-1.0, with no installed base, a code no one has seen
+  is removed rather than carried.
 - The IR's `Action` drops both kinds and its now-unused `contract` property.
 - The engine's contract arm goes. The `ignored` outcome stays, because an
   action kind hand-written IR carries and no compiler emits still needs one —
