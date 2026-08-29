@@ -432,6 +432,7 @@ def run_eval(
         tasks += extend_tasks(only)
     results = []
     for task in tasks:
+        submission = None
         try:
             submission = call_agent(agent, task, benchmarks_dir)
             score = GRADERS[task["tier"]](task, submission)
@@ -443,7 +444,13 @@ def run_eval(
                 "partial": 0.0,
                 "failures": [f"agent error: {err}"],
             }
-        results.append({"id": task["id"], "tier": task["tier"], "score": score})
+        row = {"id": task["id"], "tier": task["tier"], "score": score}
+        # Observed spend, when the adapter reports it (OpenRouter usage
+        # accounting). A baseline's cost column is measured, not estimated.
+        usage = (submission or {}).get("usage") if isinstance(submission, dict) else None
+        if usage:
+            row["usage"] = usage
+        results.append(row)
         marker = "PASS" if score.get("matches") or (
             task["tier"] == "repair" and score["compiles"]
         ) else "fail"
@@ -454,12 +461,15 @@ def run_eval(
         if not rows:
             continue
         key = "compiles" if tier == "repair" else "matches"
+        cost = sum(float((r.get("usage") or {}).get("cost", 0.0)) for r in rows)
         summary[tier] = {
             "tasks": len(rows),
             "passed": sum(1 for r in rows if r["score"][key]),
             "mean_partial": round(
                 sum(r["score"]["partial"] for r in rows) / len(rows), 4
             ),
+            "cost_usd": round(cost, 4),
+            "cost_per_task_usd": round(cost / len(rows), 4),
         }
     return {"agent": agent, "summary": summary, "results": results}
 

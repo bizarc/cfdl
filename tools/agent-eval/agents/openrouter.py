@@ -41,6 +41,9 @@ _spec.loader.exec_module(common)
 
 ALLOWED_TOOLS = ("compile", "run", "lookup", "skeleton", "explain")
 MAX_TURNS = 40
+# A single task that has spent this much has lost the plot; stop paying for it
+# and let it answer with what it has. Override with CFDL_EVAL_MAX_COST.
+DEFAULT_TASK_COST_CAP = 1.50
 
 
 class ToolBridge:
@@ -165,6 +168,10 @@ def chat(base_url: str, api_key: str, payload: dict) -> dict:
     raise RuntimeError(f"gave up after {RETRIES} attempts: {last}")
 
 
+def tool_calls_pending(choice: dict) -> bool:
+    return bool(choice.get("tool_calls"))
+
+
 def main() -> int:
     if "--self-check" in sys.argv[1:]:
         bridge = ToolBridge()
@@ -181,6 +188,8 @@ def main() -> int:
     base_url = os.environ.get("OPENROUTER_BASE_URL", "https://openrouter.ai/api/v1")
 
     task = json.load(sys.stdin)
+    cost_cap = float(os.environ.get("CFDL_EVAL_MAX_COST", DEFAULT_TASK_COST_CAP))
+    spend = {"cost": 0.0, "prompt_tokens": 0, "completion_tokens": 0, "calls": 0}
     bridge = ToolBridge()
     messages = [
         {"role": "system", "content": common.PROMPT_HEADER},
@@ -192,13 +201,32 @@ def main() -> int:
                 "model": model,
                 "messages": messages,
                 "tools": bridge.tools,
+                # OpenRouter returns the actual charge for the call, so a
+                # baseline reports observed spend rather than list-price math.
+                "usage": {"include": True},
             })
+            usage = reply.get("usage") or {}
+            spend["cost"] += float(usage.get("cost") or 0.0)
+            spend["prompt_tokens"] += int(usage.get("prompt_tokens") or 0)
+            spend["completion_tokens"] += int(usage.get("completion_tokens") or 0)
+            spend["calls"] += 1
             choice = reply["choices"][0]["message"]
             messages.append(choice)
+            if spend["cost"] >= cost_cap and tool_calls_pending(choice):
+                # Out of budget mid-loop: ask for the answer as it stands
+                # rather than abandoning the task with nothing.
+                messages.append({
+                    "role": "user",
+                    "content": "Budget reached. Output your best answer now as "
+                    'exactly one fenced json block: {"files": {"model.cfdl": "..."}}',
+                })
+                print(f"cost cap ${cost_cap} reached", file=sys.stderr)
+                continue
             tool_calls = choice.get("tool_calls") or []
             if not tool_calls:
                 answer = common.extract_files(choice.get("content") or "")
                 if answer:
+                    answer["usage"] = spend
                     print(json.dumps(answer))
                     return 0
                 # One nudge: the model stopped without the required block.
@@ -219,7 +247,11 @@ def main() -> int:
                     "tool_call_id": call["id"],
                     "content": bridge.call(function["name"], arguments),
                 })
-        print("agent hit the turn limit without a final answer", file=sys.stderr)
+        print(
+            f"agent hit the turn limit without a final answer "
+            f"(spent ${spend['cost']:.4f} over {spend['calls']} calls)",
+            file=sys.stderr,
+        )
         return 1
     finally:
         bridge.close()
