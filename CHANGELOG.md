@@ -8,7 +8,7 @@ This project follows Semantic Versioning: https://semver.org/
 
 ## [Unreleased]
 
-### Added: a participant's realised return (§7.72)
+### Added: a participant's realized return (§7.72)
 
 The model computed `model.irr` on the deal's net cash, and a waterfall
 attributed each step's payment to a payee — and there the trail stopped. To
@@ -517,7 +517,7 @@ golden suite byte-identical, wall-clock within noise; the read
 rules; the account; the state machine; the migrations; the documentation
 surface. Three decisions stay open and each names who settles it.
 
-New backlog entry 7.72: a participant's realised return has no construct —
+New backlog entry 7.72: a participant's realized return has no construct —
 measuring what a payee actually earned means hand-assembling their streams
 outside the language. Gated on the account (docs/28 §5.1), whose per-party
 journal is the input the metric folds over; rides on 7.25's declared

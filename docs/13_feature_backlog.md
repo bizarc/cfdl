@@ -1619,7 +1619,7 @@ the grain was wrong and the action should be retired, which made M2's gating
 work §7.50 plus state-gating through the declared machine — both now done. Per-period persistent state
 (the closed §5.2) shipped with M1 itself.
 
-**Closed since.** §7.72 (a participant's realised return had no construct) is
+**Closed since.** §7.72 (a participant's realized return had no construct) is
 fixed: `irr(party.<p>)` and `moic(party.<p>)` fold the party's OWN ACCOUNT —
 contributions are negative inflows, receipts are allocations in, so the sign
 change an IRR needs is recorded rather than inferred from payee streams, which

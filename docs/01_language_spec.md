@@ -1087,7 +1087,7 @@ Rules:
   in every scenario summary, so a scenario grid can assert a derived figure
   per column and not only the engine's built-ins.
 
-**A participant's realised return.** Two folds are available in a metric and
+**A participant's realized return.** Two folds are available in a metric and
 nowhere else:
 
 ```cfdl
