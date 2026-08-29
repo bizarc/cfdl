@@ -18,9 +18,9 @@ MODELS=(
 for M in "${MODELS[@]}"; do
   SLUG=$(echo "$M" | tr '/:' '--')
   echo "=== $M"
-  CFDL_EVAL_MODEL="$M" python3 tools/agent-eval/runner.py \
+  CFDL_EVAL_MODEL="$M" .venv/bin/python tools/agent-eval/runner.py \
     --tier repair --cases missing_time,dup_stream,unknown_time_read \
-    --agent 'cmd:python3 tools/agent-eval/agents/openrouter.py' \
+    --agent 'cmd:.venv/bin/python tools/agent-eval/agents/openrouter.py' \
     --out "eval-results/smoke-$SLUG.json"
 done
 echo "--- smoke matrix done; results in eval-results/"
