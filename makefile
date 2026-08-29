@@ -254,7 +254,7 @@ keyword-register:
 # 18 codes were documented by nothing that could produce them — including the
 # duplicate-name checks, so two events under one name both fired — and three
 # the packs emit were absent from the page. An agent reads that page as the
-# repair catalogue, so a promised code that never fires teaches it to wait for
+# repair catalog, so a promised code that never fires teaches it to wait for
 # a diagnostic that will not come.
 diagnostic-parity:
 	$(PYGATE) tools/check-diagnostic-parity.py

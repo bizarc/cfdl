@@ -6456,7 +6456,7 @@ outlive the release that produced them:
 check-diagnostic-parity` compares this page against every code the crates and
 the pack validations emit, and against the numbers the pack READMEs cite. A
 promised diagnostic that never fires is worse than an undocumented one: the
-repair catalogue teaches an agent to expect a code that will not come.
+repair catalog teaches an agent to expect a code that will not come.
 
 ---
 

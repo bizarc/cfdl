@@ -10,7 +10,7 @@ Three codes the packs emit were absent from the page entirely, and two pack
 READMEs named a code number that the validation under it does not use.
 
 A register nobody checks is worse than no register: an agent reads `docs/08` as
-the repair catalogue, and a promised code that never fires teaches it to expect
+the repair catalog, and a promised code that never fires teaches it to expect
 a diagnostic that will not come.
 
 Four things must agree:
@@ -78,7 +78,7 @@ def main() -> int:
             f"  {code}\n"
             f"      documented in docs/08, emitted by nothing.\n"
             f"      Build the check, or delete the entry — a promised diagnostic\n"
-            f"      that never fires is a lie the repair catalogue repeats."
+            f"      that never fires is a lie the repair catalog repeats."
         )
 
     for code, readme in sorted(readme_codes.items()):
