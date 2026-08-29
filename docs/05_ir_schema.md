@@ -1093,8 +1093,6 @@ against it by `make ir-schema`.
             "SetEntityField",
             "ActivateStream",
             "DeactivateStream",
-            "ActivateContract",
-            "DeactivateContract",
             "ExerciseOption"
           ]
         },
@@ -1108,9 +1106,6 @@ against it by `make ir-schema`.
           "$ref": "#/$defs/TypedValue"
         },
         "stream": {
-          "$ref": "#/$defs/Id"
-        },
-        "contract": {
           "$ref": "#/$defs/Id"
         },
         "option": {
@@ -1159,34 +1154,6 @@ against it by `make ir-schema`.
           "then": {
             "required": [
               "stream"
-            ]
-          }
-        },
-        {
-          "if": {
-            "properties": {
-              "kind": {
-                "const": "ActivateContract"
-              }
-            }
-          },
-          "then": {
-            "required": [
-              "contract"
-            ]
-          }
-        },
-        {
-          "if": {
-            "properties": {
-              "kind": {
-                "const": "DeactivateContract"
-              }
-            }
-          },
-          "then": {
-            "required": [
-              "contract"
             ]
           }
         },
