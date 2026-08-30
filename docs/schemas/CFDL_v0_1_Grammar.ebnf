@@ -247,12 +247,39 @@ waterfall_block = "{" schedule_stmt "from" expr { waterfall_step } "}" ;
    but the machine never fires it on its own. A guarded edge is evaluated
    each period the entity is in its from-state; there is no latch, because
    edge availability is the memory. *)
-lifecycle_stmt  = "lifecycle" IDENT "{" { lifecycle_item } "}" ;
+(* The name is a qname so a model can address a machine its PACK declared
+   (`opco.enterprise`) and not only one of its own (`unit`). A block naming a
+   machine that already exists AUGMENTS it, additively (docs/34 D2a): it may
+   contribute entry and edge actions to states and edges the pack declared,
+   and may NOT add or remove states or edges, alter the topology, or remove
+   the pack's actions. The pack's actions run first; the model's refine them.
+   A block naming no existing machine declares a new one, which is then
+   required to carry `initial` and `state`. *)
+lifecycle_stmt  = "lifecycle" qname "{" { lifecycle_item } "}" ;
 lifecycle_item  = "initial" IDENT
                 | "state" IDENT { "," IDENT }
+                | entry_actions
                 | lifecycle_edge
                 ;
-lifecycle_edge  = IDENT "->" IDENT [ "when" expr ] ;
+
+(* Arrival actions (docs/01 §7.3.1, docs/34 D2/D3). Entry actions carry what
+   is true of the STATE however it was reached; edge actions carry what is
+   true of the PATH taken. On arrival the entry block runs first, then the
+   taken edge's block — the specific refines the general — each in
+   declaration order, a same-field write journaling the earlier value
+   `overridden`. Actions run on every traversal, including one a named
+   event's status write causes. `on` and `enter` are contextual identifiers,
+   not reserved words. *)
+entry_actions   = "on" "enter" IDENT action_block ;
+lifecycle_edge  = IDENT "->" IDENT [ "when" expr ] [ action_block ] ;
+
+(* The action vocabulary on an arrival is `set` ONLY, and the field name is
+   ENTITY-RELATIVE — one lifecycle is bound by many entities and the
+   behavior belongs to the entity that transitioned. It may NOT write
+   `status`: that would fire a second transition inside the same period. A
+   transition that should cause another transition is topology. *)
+action_block    = "{" { state_action_stmt } "}" ;
+state_action_stmt = "set" IDENT "=" expr ;
 
 account_stmt    = "account" IDENT account_block ;
 
@@ -322,7 +349,15 @@ convention      = "none" | "following" | "modified_following" | "preceding" | "m
 list_date       = "[" date_lit { "," date_lit } "]" ;
 
 (* --- events --- *)
-event_stmt      = "event" qname "when" expr event_block ;
+(* An event is something that happens, and nothing restricts it to happening
+   once (docs/01 §13.1, docs/34 D1). It fires on each occurrence: a schedule
+   clause SUPPLIES the occurrences and `when` FILTERS them; with no schedule,
+   an occurrence is the rising edge of the condition — true having been
+   false. At least one of the two clauses MUST be present. There is no `once`
+   keyword and nothing latches: once-ness is declared, as a schedule whose
+   occurrence is singular or a topology with no way back. *)
+event_stmt      = "event" qname [ "schedule" schedule_expr ] [ "when" expr ]
+                  event_block ;
 event_block     = "{" { action_stmt } "}" ;
 
 action_stmt     = set_entity_stmt
