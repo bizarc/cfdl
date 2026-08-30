@@ -1,0 +1,28 @@
+# Benchmark case: a stabilized commercial acquisition, held ten years and sold
+# at a terminal cap rate.
+#
+# The source publishes every driver — year-one income, the three recoverable
+# expenses, the management fee, the reserve, the escalator, both cap rates —
+# and its own answer, so nothing here is fitted. There is deliberately no
+# reference_gen.py.
+#
+# ASSERTED: model.npv at 7% and model.irr, both against the source's published
+# figures, plus every operating line and the disposition per period.
+#
+# NOT ASSERTED: the equity multiple. model.moic partitions periods by the sign
+# of net cash flow, and period 0 carries the acquisition at its open AND the
+# first year's cash at its close, so the two net (-1,417,958.33 + 83,077.50 =
+# -1,334,880.83). The denominator shrinks and the multiple reads 1.905005
+# against a correct 1.851981. NPV and IRR are unaffected because they discount
+# by placement rather than by period sign. Recorded in NOTES.md and raised as a
+# capability gap; the case asserts the two metrics that are right rather than
+# widening a tolerance to swallow one that is not.
+#
+# tolerance: 1e-5 on NPV, 1e-6 on IRR, 1e-3 per period — all set by the results
+# document's rounding, not by the arithmetic.
+#
+# The workbook is not redistributable and is not in the repository; NOTES.md
+# records what it is and where it came from.
+summary = "A stabilized commercial property bought on a going-in cap rate, held ten years with fully reimbursed expenses, and sold by capping the final year's net operating income."
+pack = "cre"
+period_tolerance = 0.001

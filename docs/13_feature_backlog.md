@@ -232,7 +232,7 @@ is an optimizer, not a declarative cash-flow model.
 
 *Belongs with no single pack — it is about the validation programme.*
 
-**Re-measured 2026-08-30** across all 43 registered cases (2 bespoke, 8 cre,
+**Re-measured 2026-08-30** across all 44 registered cases (2 bespoke, 9 cre,
 18 credit, 6 energy, 9 opco), counting a pack contract type as *exercised*
 when at least one case declares it. When first measured (six cases, headline
 "the external cases route around the packs they should be validating") the
@@ -244,7 +244,7 @@ the domain logic. That circularity is now broken:
 |---|---|---|
 | energy | **10 / 10** (see caveat) | — |
 | credit | **4 / 4** | — |
-| cre | 9 / 14 | `lease`, `percentage_rent_expected`, `revenue_line`, `construction_stub`, `exit_cap` |
+| cre | 11 / 14 | `lease`, `percentage_rent_expected`, `construction_stub` |
 | opco | **11 / 11** | — |
 
 (The cre and opco rosters have grown since the first measure — 12→14 and
@@ -285,9 +285,11 @@ measures whether that layer is exercised, not whether it is mandatory.
 
 What remains, and it is now narrow:
 
-- **cre:** five types unexercised. `exit_cap` and `revenue_line` look like
-  case-conversions of existing sources; `lease` (non-unit grain),
-  `percentage_rent_expected` and `construction_stub` may want a new case each.
+- **cre:** three types unexercised. `basic_acquisition_exit_cap` closed
+  `revenue_line` and `exit_cap` together, off a stabilized property whose
+  income is stated at the property level and whose disposition is a stated NOI
+  over a stated cap rate. `lease` (non-unit grain), `percentage_rent_expected`
+  and `construction_stub` may want a new case each.
 - **energy:** the dispatch comparison that would move `storage_arbitrage` from
   exercised to validated.
 
@@ -1799,3 +1801,43 @@ it, and `docs/32`'s agents may — then tolerating an unknown kind loudly may be
 the better contract. `docs/05` does not say which.
 
 Related: §7.71, §7.73 (closed), `docs/28` §8, `docs/06`.
+
+### 7.84 `model.moic` partitions periods by sign, so an acquisition nets against its own first year
+
+*Belongs with the language and engine (section 5).*
+
+`model.moic` divides the sum of positive per-period net cash flows by the sum
+of negative ones. That is a partition of **periods**, not of contributions and
+distributions, and the two stop agreeing the moment one period carries both.
+
+`benchmarks/cre/basic_acquisition_exit_cap` is the minimal case. Its purchase
+settles at the open of period 0 and its first year of operations at the close
+of the same period, so they net inside it:
+
+```
+-1,417,958.33 + 83,077.50 = -1,334,880.83
+```
+
+The denominator falls by the first year's income, and the multiple reads
+**1.905005** against the source's published **1.851981**. The first year's
+income has been silently treated as a reduction in capital invested.
+
+Nothing about the deal is unusual, which is the point: on an annual grain the
+purchase and the first year's operations are always in the same period, so
+every acquisition model measured this way is overstated, and by more the
+earlier the income arrives. A monthly grain hides it — the purchase sits alone
+in month 0 — so whether the figure is right depends on the calendar rather than
+on the deal.
+
+`model.npv` and `model.irr` are unaffected and reproduce the same source
+exactly, because both discount a flow by where it sits rather than by the sign
+of the period containing it. So the fix is not to the placement: it is that a
+multiple needs contributions and distributions identified as such, which the
+per-period net cannot recover once two flows share a period.
+
+`penzance_highlands` measures a per-partner `moic(party.baupost)` instead,
+which partitions by party rather than by period and does not have this shape —
+worth reading before changing the model-level metric.
+
+Provenance: found building `basic_acquisition_exit_cap`, 30 August 2026,
+against a published equity multiple the case could not assert.

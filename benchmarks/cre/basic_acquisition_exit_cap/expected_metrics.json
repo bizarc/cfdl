@@ -1,0 +1,10 @@
+{
+  "model.npv": {
+    "value": 90853.72728969366,
+    "tolerance": 1e-05
+  },
+  "model.irr": {
+    "value": 0.07848381094537493,
+    "tolerance": 1e-06
+  }
+}
