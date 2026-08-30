@@ -19,5 +19,5 @@ stream cre.rent on entity asset.suite inflow currency USD {
 }
 
 event vacate when series_sum("cre.rent", time.t - 1, time.t - 1) < 50 {
-  set entity asset.suite.status = "downtime"
+  set entity asset.suite.status = "vacant"
 }

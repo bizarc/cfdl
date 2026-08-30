@@ -175,7 +175,7 @@ entity asset suite : CRE.Asset.Unit {
 }
 
 event expiry when time.t >= 2 {
-  set entity asset.suite.status = "downtime"
+  set entity asset.suite.status = "vacant"
 }
 
 event reletting when time.t >= 4 {
@@ -2368,7 +2368,7 @@ stream cre.rent on entity asset.suite inflow currency USD {
 }
 
 event delinquent when series_sum("cre.rent", time.t - 1, time.t - 1) < 50 {
-  set entity asset.suite.status = "downtime"
+  set entity asset.suite.status = "vacant"
 }
 ```
 
@@ -4537,7 +4537,7 @@ time calendar annual from 2026-01 for 5
 // `status` did not exist until an event wrote one.
 entity asset tower : CRE.Asset.RealProperty {
   asset_class = "office"
-  state operating
+  state stabilized
 }
 
 event start_repositioning when time.t >= 2 {
@@ -4630,7 +4630,7 @@ entity asset legacy : CRE.Asset.RealProperty
 entity asset tower : CRE.Asset.RealProperty {
   asset_class = "office"
   rentable_area = 30000
-  state operating
+  state stabilized
 }
 
 // Optional hierarchy: a unit inside the building. Never required.

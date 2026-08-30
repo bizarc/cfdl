@@ -240,7 +240,7 @@ Rules:
 ```cfdl
 entity asset tower : CRE.Asset.RealProperty {
   asset_class = "office"
-  state operating
+  state stabilized
 }
 
 entity asset suite_a : CRE.Asset.Unit {

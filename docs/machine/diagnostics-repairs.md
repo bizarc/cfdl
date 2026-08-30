@@ -29,7 +29,7 @@ entity asset suite : CRE.Asset.Unit {
 }
 
 event expiry when time.t >= 2 {
-  set entity asset.suite.status = "downtime"
+  set entity asset.suite.status = "vacant"
 }
 
 event reletting when time.t >= 4 {
@@ -48,7 +48,7 @@ stream cre.rent on entity asset.suite inflow currency USD {
 ```
 
 - `E1332_UNKNOWN_ACTIVE_STATE` (error): Stream 'cre.rent' is active in state 'leasd', which lifecycle 'cre.unit' does not declare.
-  - hint: Declared states: vacant, leased, holdover, downtime.
+  - hint: Declared states: vacant, leased, holdover, month_to_month.
 
 Minimal fix (compiles):
 
@@ -64,7 +64,7 @@ entity asset suite : CRE.Asset.Unit {
 }
 
 event expiry when time.t >= 2 {
-  set entity asset.suite.status = "downtime"
+  set entity asset.suite.status = "vacant"
 }
 
 event reletting when time.t >= 4 {
@@ -1071,7 +1071,7 @@ time calendar annual from 2026-01 for 1
 // CRE.Asset.RealProperty, asset_class, and lifecycle state `operating`.
 entity asset tower : CRE.Asset.RealProperty {
   asset_class = "office"
-  state operating
+  state stabilized
 }
 
 stream cre.rent on entity asset.tower inflow currency USD {
@@ -3168,7 +3168,7 @@ stream cre.rent on entity asset.suite inflow currency USD {
 }
 
 event vacate when series_sum("cre.rent", time.t, time.t) < 50 {
-  set entity asset.suite.status = "downtime"
+  set entity asset.suite.status = "vacant"
 }
 ```
 
@@ -3198,7 +3198,7 @@ stream cre.rent on entity asset.suite inflow currency USD {
 }
 
 event vacate when series_sum("cre.rent", time.t - 1, time.t - 1) < 50 {
-  set entity asset.suite.status = "downtime"
+  set entity asset.suite.status = "vacant"
 }
 ```
 

@@ -14,7 +14,7 @@ The engine settles each period in a fixed order: state first, then the period's 
 
 ```cfdl
 event delinquency.flag when series_sum("ops.rent", time.t - 1, time.t - 1) < 50 {
-  set entity asset.suite.status = "downtime"
+  set entity asset.suite.status = "vacant"
 }
 ```
 
