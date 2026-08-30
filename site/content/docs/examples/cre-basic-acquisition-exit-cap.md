@@ -55,10 +55,8 @@ it is and where it came from.
 | Language features | a flow settled at a period's open against flows settled at its close; a contract term carrying an expression rather than a scalar |
 | Conventions | annual escalation compounded from the model's start, a vacancy deduction on income plus recoveries, an exit struck on trailing rather than forward income |
 
-Three lines are native streams rather than contracts, because the `cre` pack
-has no contract for them: the acquisition price, the capital reserve, and
-selling costs on a capped exit — `cre.exit_cap` has no selling-cost leg, unlike
-`cre.exit` and `cre.exit_forward`, which both do.
+The acquisition price, the capital reserve and the selling costs are declared
+as streams; everything else is a pack contract.
 
 The vacancy deduction is taken on potential gross income *plus* reimbursements,
 so its base is stated as an expression that escalates with the two lines it
@@ -67,8 +65,9 @@ sits on rather than as a fixed figure.
 ## The result
 
 `model.npv` at 7% = **90,853.72729** against the published 90,853.72728969366,
-and `model.irr` = **0.078484** against the published 0.07848381094537493. Both
-exact.
+`model.irr` = **0.078484** against the published 0.07848381094537493, and the
+equity multiple **1.851981** against the published 1.8519810968410686. All
+three exact.
 
 Every line reproduces per period: potential gross income, reimbursements, the
 vacancy deduction, all four operating expenses, the capital reserve, the
@@ -76,20 +75,10 @@ purchase, the sale at 1,707,797.546881 and its selling costs.
 
 ## The delta
 
-The equity multiple is not asserted, and the reason is a difference of
-definition rather than of arithmetic.
+None. Every asserted figure is the source's own and reproduces exactly.
 
-`model.moic` divides what the model receives by what it puts in, partitioning
-periods by the sign of the period's net cash flow. Here the first period holds
-both the acquisition at its open and the first year's cash at its close, so the
-two net inside it: −1,417,958.33 + 83,077.50 = −1,334,880.83. Measured that
-way the multiple is 1.905005. Measured against the money actually invested it
-is 1.851981, which is what the source publishes.
-
-Net present value and internal rate of return are unaffected, because both
-discount a flow by where it sits rather than by the sign of the period that
-contains it. The case asserts those two and states the multiple here rather
-than widening a tolerance until the difference disappears.
+The equity multiple is measured on the capital invested — the acquisition —
+with the ten years of operations counted as what the investment returned.
 
 ## The model
 
@@ -223,6 +212,19 @@ stream cre.exit.selling_costs on entity asset.property outflow currency USD {
   category investing.disposal.selling_costs
   amount = 111006.84054723257 / 0.065 * 0.02
 }
+
+// ------------------------------------------------------------------- returns
+// The equity multiple, on the valuation plane: what came back over what went
+// in. Invested capital is the acquisition and nothing else — the operating
+// years are what the investment RETURNED, not a reduction in what it cost.
+//
+// Stated here rather than read from `model.moic`, which is a ratio of the
+// model's net-positive periods to its net-negative ones. Those are the same
+// number only when no period holds both, and period 0 here holds the purchase
+// at its open and the first year's cash at its close.
+metric invested        = 0.0 - series_sum("cre.acquisition.purchase", 0, 9)
+metric returned        = model.total + metric.invested
+metric equity_multiple = metric.returned / metric.invested
 ```
 
 ## Run configuration
@@ -257,3 +259,6 @@ Summary metrics for the base run:
 |---|---:|---:|
 | `model.npv` | 90,853.73 | ±0.00001 |
 | `model.irr` | 0.07848381094537493 | ±0.000001 |
+| `metric.invested` | 1,417,958.33 | ±0.00001 |
+| `metric.returned` | 2,626,032.03 | ±0.0001 |
+| `metric.equity_multiple` | 1.8519810968410686 | ±0.000001 |

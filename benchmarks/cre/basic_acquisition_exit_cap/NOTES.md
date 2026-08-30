@@ -49,42 +49,51 @@ ordinary annuity and settles at its CLOSE. That is the whole timing story:
 Moving the purchase to the period close moves NPV by 92,764, which is the
 mutation below.
 
-## model.moic disagrees with the published equity multiple, and is wrong
+## The equity multiple, and what model.moic is
 
-The engine reports 1.905005; the source publishes 1.851981. Reconstructed:
+The case asserts the published 1.851981 through a declared metric on the
+valuation plane:
+
+```cfdl
+metric invested        = 0.0 - series_sum("cre.acquisition.purchase", 0, 9)
+metric returned        = model.total + metric.invested
+metric equity_multiple = metric.returned / metric.invested
+```
+
+Nothing in the language or the engine had to change for that. `metric` already
+folds once at the horizon over the finished projection and may read series and
+`model.*`, which is exactly where a multiple belongs — the model states what it
+counts as invested capital rather than having the engine guess.
+
+`model.moic` gives 1.905005 on the same deal. Its own comment describes it as a
+ratio of cash in to cash out over the life; the code sums the model's
+net-positive periods over its net-negative ones, which is a different quantity
+whenever one period holds both. Here period 0 holds the purchase at its open
+and the first year's cash at its close:
 
 ```
-engine    sum(positive period NCF) / sum(negative period NCF)
-          2,542,954.5294 / 1,334,880.8333 = 1.905005
-workbook  distributions / contribution
-          2,626,032.0294 / 1,417,958.3333 = 1.851981
+-1,417,958.33 + 83,077.50 = -1,334,880.83
+2,542,954.53 / 1,334,880.83 = 1.905005
+2,626,032.03 / 1,417,958.33 = 1.851981   <- the published figure
 ```
 
-`model.moic` partitions PERIODS by the sign of net cash flow. Period 0 carries
-the acquisition at its open and the first year's cash at its close, so they net
-inside it and the denominator falls from 1,417,958.33 to 1,334,880.83 — the
-first year's income is silently treated as a reduction in capital invested.
+Because it partitions periods, the figure also moves with the grain: on a
+monthly calendar the purchase would sit alone in month 0 and the same deal
+would read differently. Noted at `docs/13` §7.84. It is an observation about
+one engine metric, not a blocker — this case asserts the multiple it wanted.
 
-This is not specific to this deal. Any acquisition model on an annual grain
-puts the purchase and the first year's operations in one period, so any of them
-gets an inflated multiple. NPV and IRR are unaffected: both discount a flow by
-where it sits, not by the sign of the period containing it, which is why they
-are exact here while the multiple is not.
+## Three native streams, by design
 
-Raised as a capability gap at `docs/13` §7.84.
+The acquisition price, the capital reserve and the selling costs are native
+streams. `cre` has no acquisition contract and does not need one: each of these
+is a single dated amount with a category, which the core language already
+states directly. Adding a pack contract would rebuild the same machinery inside
+the pack for a concept the language expresses without it.
 
-## Missing cre contracts
-
-Three lines had to be native streams:
-
-- **acquisition price** — `cre` has no acquisition contract, though `opco` does
-  (`opco.acquisition`).
-- **capital reserve** — `cre` has no capex contract at all.
-- **selling costs on a capped exit** — `cre.exit` and `cre.exit_forward` each
-  lower a selling-cost leg; `cre.exit_cap` lowers only the sale.
-
-The first two are candidate contracts. The third is an asymmetry inside a
-roster that otherwise has the leg, and is the cheapest of the three to close.
+Worth recording that `cre` has the disposal half of the acquire/dispose pair
+(`cre.exit`, `cre.exit_cap`, `cre.exit_forward`) and not the acquiring half,
+because the disposal side carries real pack logic — a cap rate applied to a
+stated or derived NOI — and a purchase price does not.
 
 ## Mutation testing
 

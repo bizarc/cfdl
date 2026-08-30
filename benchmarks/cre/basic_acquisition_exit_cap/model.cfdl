@@ -127,3 +127,16 @@ stream cre.exit.selling_costs on entity asset.property outflow currency USD {
   category investing.disposal.selling_costs
   amount = 111006.84054723257 / 0.065 * 0.02
 }
+
+// ------------------------------------------------------------------- returns
+// The equity multiple, on the valuation plane: what came back over what went
+// in. Invested capital is the acquisition and nothing else — the operating
+// years are what the investment RETURNED, not a reduction in what it cost.
+//
+// Stated here rather than read from `model.moic`, which is a ratio of the
+// model's net-positive periods to its net-negative ones. Those are the same
+// number only when no period holds both, and period 0 here holds the purchase
+// at its open and the first year's cash at its close.
+metric invested        = 0.0 - series_sum("cre.acquisition.purchase", 0, 9)
+metric returned        = model.total + metric.invested
+metric equity_multiple = metric.returned / metric.invested
