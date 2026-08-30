@@ -1,13 +1,25 @@
 # The pack lifecycles, redrawn against their standards
 
-Status: **recommendations, 2026-08-30**. Not published; repository-only, like
-the backlog. Closes the reviewable half of `docs/13` §7.84.
+Status: **adopted and implemented, 2026-08-30**. Not published;
+repository-only, like the backlog. Closes `docs/13` §7.84.
+
+Every recommendation below was accepted and is in the packs. What the
+implementation confirmed: no benchmark number moved anywhere — the results
+goldens changed only `model_hash` and, for CRE, the state NAMES inside
+transition records. All 43 benchmark cases pass unchanged.
 
 The pack lifecycles were drawn before a machine could carry behavior. Nothing
 gated on them, so their shape was never pressed: **every pack transition in all
-four packs is guard-less**, and **no benchmark model binds a state** — no
-`active in state`, no `initial_state`, no `state_enter`, no `.status` read.
-They are, today, decorative.
+four packs is guard-less** — a permission an event's write may take, never
+fired by the machine itself — and **no benchmark gates cash on a state**: no
+`active in state`, no `state_enter`, no `.status` read anywhere in the suite.
+One benchmark declares an OPENING state (`benchmarks/energy/tax_equity_flip`,
+`state operating` on its facility), which is a starting condition rather than
+a gate; an earlier survey missed it by grepping for `initial_state`, which is
+the IR's name for the field and not the source spelling.
+
+So the machines are, today, very nearly decorative — and that is why they can
+be corrected at almost no cost.
 
 That is why they can be corrected cheaply now, and why they should be corrected
 before §7.79's arrival actions land on top of them — and before the vocabulary

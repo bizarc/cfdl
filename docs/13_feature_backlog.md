@@ -1770,75 +1770,40 @@ loop the authoring contract needs. (`ste-allow:` rule ids are now
 validated against §3's rule tables; the tier mapping is the remaining
 unenforced half.)
 
-### 7.84 The pack machines were drawn before the machine could act, and several are not well-formed
+### 7.84 The pack machines were drawn before the machine could act
 
-*Belongs with the packs (sections 1 to 4). Found surveying all four packs'
-`ontology/types.toml` while implementing arrival actions (§7.79) — the first
-work that made a pack's states load-bearing rather than decorative.*
+*Closed 2026-08-30 by `docs/36_pack_lifecycle_review.md`, which carries the
+survey, the standards each machine was redrawn against, and what changed.*
 
-**What forced the discovery.** Until the machine could carry behavior, a
-pack's lifecycle was a vocabulary for `active in state` and little else, and
-its shape was never pressed. §7.79 makes states act, `docs/33` Item 1 hangs
-re-striking off state entry, and `docs/34` D3 makes `on enter <state>` a
-pack's primary domain spelling — so the state set becomes the surface a pack
-author writes against, and its defects stop being cosmetic.
+Found surveying all four packs while implementing arrival actions (§7.79) —
+the first work that made a pack's states load-bearing rather than decorative.
+Seven machines; three families of defect.
 
-**Measured across the four packs**, seven machines. Three families of defect,
-each with instances:
+**What shipped.** `credit.loan` and `credit.pool` onto Basel/EBA, IFRS 9, the
+GSE loan-level datasets and SIFMA UPM Ch. SF — conditions rather than events
+(`defaulted`, `in_foreclosure`), the cure edges the standards require including
+the EBA's probation-gated return to performing, and `days_past_due` as a field
+because a delinquency bucket is a counter reading and not a regime.
+`energy.facility` onto IEEE Std 762 as NERC GADS operationalises it, which
+restores the standard's distinction between AVAILABILITY and DISPATCH that
+`curtailed` had collapsed, and makes a derate a magnitude rather than a state.
+`cre.unit` gains `month_to_month` and loses `downtime` — the same condition as
+`vacant`, differing only in the path reached, which an edge's actions now
+carry. `cre.property` renames `operating` to `stabilized` and closes the
+returning cycle that earns it a machine at all. `opco.enterprise` is unbound:
+it encoded a transaction process and a capital structure at once, so the normal
+condition of every LBO could not be said.
 
-**1. One machine encoding two independent concerns.** `opco.enterprise` is
-`operating, under_offer, acquired, levered, deleveraged, exited`. The first
-three are a *transaction process*; `levered` and `deleveraged` are a *capital
-structure*. These are orthogonal — a bought-out business is levered AND
-operating — but an entity is in exactly one state, so the pair cannot be
-said. Worse, the declared path is `operating -> under_offer -> acquired ->
-levered`, which means an LBO leaves `operating` at close: a stream gated
-`active in state "operating"` stops paying the moment the deal funds, which
-is the opposite of what every opco benchmark models. Two machines, or one
-machine and a field, is the shape.
+**One of this entry's three findings was wrong and is withdrawn.** "Declared
+states nothing can enter" misread the language: an entity declares its own
+opening state, so `predevelopment` on `cre.property` and `warehouse` on
+`credit.pool` are reachable as opening states rather than through an edge, and
+the declared `initial` should be — and was — the common case.
 
-**2. Terminal and initial states that the topology contradicts.**
-`cre.property` declares `initial = "operating"` while listing
-`predevelopment, construction, lease_up` ahead of it with no edge into any of
-them — a development model reaches its own first phase only by overriding
-`initial_state` on the entity. `credit.pool` has the same shape:
-`initial = "amortizing"`, with `warehouse` declared, edged only outward, and
-unreachable. An initial state the machine cannot return to is fine; a
-declared state nothing can enter is a state that does not exist, which is
-what "absence is the prohibition" already says about edges.
-
-**3. Missing edges the domain has.** `cre.property` cannot go
-`repositioning -> disposed`, though selling out of a repositioning is
-ordinary. `credit.loan` cannot go `delinquent -> matured` or
-`delinquent -> prepaid`, so a borrower who is late and then pays off, or
-reaches maturity late, has nowhere to go; and it offers no cure from
-`default`, though reinstatement is a real and priced outcome.
-`energy.facility` cannot abandon from `development` or `construction`, which
-is where projects most often die, and cannot decommission from `curtailed`.
-`credit.pool` cannot unwind a `warehouse` line.
-
-**And the nomenclature is not the industry's.** `credit.loan` mixes parts of
-speech across one state set — `current` and `delinquent` are adjectives,
-`default` and `foreclosure` are nouns naming EVENTS rather than conditions,
-and `liquidated`, `prepaid`, `matured` are participles. A state is a
-condition an entity is IN, so the set should read uniformly that way:
-`defaulted`, `in_foreclosure`. This matters more than style now that
-`on enter default` is a spelling a pack author writes and a reader reads.
-
-**Not in this entry:** whether `energy.flip_structure` (`pre_flip`,
-`post_flip`, one edge) should be a machine at all rather than a field. It is
-a legitimate two-state machine and `active in state` reads it; the question
-is only whether it earns the ceremony, and no case has forced it.
-
-**What this is not.** Not a language gap — every shape above is expressible
-today, and §7.79 adds nothing it needs. It is a pack-content review, and it
-should be done per pack against the reference documents that pack already
-cites, so each change arrives with the same provenance discipline as a
-benchmark. `docs/32`'s transcribe tier is the mechanical version of this
-review: a specification naming a status the pack cannot say produces a
-diagnostic rather than a plausible workaround.
-
-Recorded 2026-08-30.
+**What it cost.** Nothing computed. Every pack transition was guard-less, so no
+machine fired on its own, and no benchmark gated on a state; the results
+goldens moved only on `model_hash` and on state names inside transition
+records, and all 43 benchmark cases passed unchanged.
 
 ### 7.83 An action kind the engine does not know is journaled, not refused
 
