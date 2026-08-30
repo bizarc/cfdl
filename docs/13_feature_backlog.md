@@ -1574,7 +1574,8 @@ reserves among what the reference zeroed out to be comparable. §7.5 carries
 is one accumulating FF&E reserve. Servicer advancing (§7.74) is a
 recoverable-advances balance.
 
-**The ask, in three parts.** First, the migrations the shipped fleet already
+**The ask, in three parts** — the third is done, the first is half done, and
+the second is open. First, the migrations the shipped fleet already
 owes: the flip case's hand-carried pot (`docs/25` — the one case where
 revenue is computed a second time inside the distribution) and Highlands'
 cumulative window, both named gate shapes in `docs/29` phase 4. **Highlands is
@@ -1590,9 +1591,18 @@ no split at all. The flip case is the remaining migration. Second, a
 reserve contract shape per pack where a document demands one — the DSRA
 funded to target with `dscr_periodic` gating the release, the replacement
 reserve of §7.5, the FF&E reserve — each as the `pay <step> to account`
-pattern rather than a bespoke contract. Third, interest ON a reserve balance:
-a stream whose amount reads `prev.<account>`, legal under §4's backward rule,
-and the first case that models it closes the CREST reconciliation line.
+pattern rather than a bespoke contract. Third, interest ON a reserve balance — **done 2026-08-30**,
+`fixtures/valid/reserve_interest_on_balance`, and the entry's own phrasing was
+wrong about how. A stream's amount may NOT read `prev.<account>`: that is
+`E1123_PREV_OUTSIDE_NEXT`, because `prev` outside a `next` means nothing.
+`docs/03` is precise about where a balance is readable — rules, guards and step
+expressions — and a field's `next` is a rule, so the field carries the balance
+forward and the stream reads the field. The pin funds a reserve toward 3,000
+and accrues 0.5% on the PRIOR balance: 5.00 on the first 1,000, 10.03 on 2,005,
+then 15.00 a month once the target holds. Reading strictly backward is what
+keeps the reserve and the interest it earns from being mutually circular. The
+CREST reconciliation line is closed as a mechanism; the case that reconciles
+against CREST's own ~$4,606 still wants the reference.
 
 Related: §7.5, §7.41, §7.72 (shipped), §7.74, `docs/25`, `docs/28` §5.1, `docs/30` §1.
 
