@@ -12,4 +12,4 @@ Then check the series:
 - The bridge stops exactly when the perm starts.
 - No month pays both loans. No month pays neither.
 
-An off-by-one is the difference between the latch firing *at* twelve and *after* twelve. The series tells you which claim you actually wrote.
+An off-by-one is the difference between the event firing *at* twelve and *after* twelve. The series tells you which claim you actually wrote.

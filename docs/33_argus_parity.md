@@ -107,7 +107,17 @@ action list to the edge, in the model grammar and in a pack's `types.toml`
 transitions alike. This closes duration counters, per-cycle burn-off
 (free rent per new lease), and endogenous-date re-striking in one construct.
 
-Scoped: `docs/34_events_and_the_machine.md`; backlog §7.79. Sits directly
+**CLOSED 2026-08-30** by backlog §7.79 (`docs/34`, phases 1-5). Both halves
+shipped: a transition carries actions (`on enter <state>` for the state, an
+action block on an edge for the path), and the named event fires on each
+occurrence rather than latching. The duration counter this item could not
+spell is now `on enter <state> { set months_in_state = 0 }`, and the
+endogenous re-strike is an edge action reading the curve at the transition's
+own instant. Verified against `cre.unit`: an event moves the unit, the pack's
+entry action resets the counter, and a re-let three months after going vacant
+runs — the probe that found the gap became the fixture that closes it.
+
+Originally scoped in `docs/34_events_and_the_machine.md`; backlog §7.79. Sits directly
 on M2's machine work (`docs/13` §7.78); adjacent to §7.73's state-gating. Note the probe's failure mode is itself §7.38-shaped: the
 state-reading recurrence compiles clean and dies at run.
 
