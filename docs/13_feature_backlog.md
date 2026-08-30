@@ -232,7 +232,7 @@ is an optimizer, not a declarative cash-flow model.
 
 *Belongs with no single pack — it is about the validation programme.*
 
-**Re-measured 2026-08-30** across all 43 registered cases (2 bespoke, 8 cre,
+**Re-measured 2026-08-30** across all 44 registered cases (2 bespoke, 9 cre,
 18 credit, 6 energy, 9 opco), counting a pack contract type as *exercised*
 when at least one case declares it. When first measured (six cases, headline
 "the external cases route around the packs they should be validating") the
@@ -244,7 +244,7 @@ the domain logic. That circularity is now broken:
 |---|---|---|
 | energy | **10 / 10** (see caveat) | — |
 | credit | **4 / 4** | — |
-| cre | 9 / 14 | `lease`, `percentage_rent_expected`, `revenue_line`, `construction_stub`, `exit_cap` |
+| cre | 11 / 14 | `lease`, `percentage_rent_expected`, `construction_stub` |
 | opco | **11 / 11** | — |
 
 (The cre and opco rosters have grown since the first measure — 12→14 and
@@ -285,9 +285,11 @@ measures whether that layer is exercised, not whether it is mandatory.
 
 What remains, and it is now narrow:
 
-- **cre:** five types unexercised. `exit_cap` and `revenue_line` look like
-  case-conversions of existing sources; `lease` (non-unit grain),
-  `percentage_rent_expected` and `construction_stub` may want a new case each.
+- **cre:** three types unexercised. `basic_acquisition_exit_cap` closed
+  `revenue_line` and `exit_cap` together, off a stabilized property whose
+  income is stated at the property level and whose disposition is a stated NOI
+  over a stated cap rate. `lease` (non-unit grain), `percentage_rent_expected`
+  and `construction_stub` may want a new case each.
 - **energy:** the dispatch comparison that would move `storage_arbitrage` from
   exercised to validated.
 
@@ -1799,3 +1801,65 @@ it, and `docs/32`'s agents may — then tolerating an unknown kind loudly may be
 the better contract. `docs/05` does not say which.
 
 Related: §7.71, §7.73 (closed), `docs/28` §8, `docs/06`.
+
+### 7.84 `model.moic` does not compute what its own comment says
+
+*Belongs with the language and engine (section 5).*
+
+The comment above it describes a ratio of cash in to cash out over the life.
+The code sums the model's net-POSITIVE periods over its net-NEGATIVE ones.
+Those are the same quantity only while no period holds both.
+
+`benchmarks/cre/basic_acquisition_exit_cap` is the minimal case. Its purchase
+settles at the open of period 0 and its first year of operations at the close
+of the same period, so they net inside it:
+
+```
+-1,417,958.33 + 83,077.50 = -1,334,880.83
+2,542,954.53 / 1,334,880.83 = 1.905005    model.moic
+2,626,032.03 / 1,417,958.33 = 1.851981    published, and what the case asserts
+```
+
+Two consequences. The figure moves with the CALENDAR: on a monthly grain the
+purchase would sit alone in month 0 and the same deal would read differently,
+which is not a property a return should have. And it is not a multiple on
+invested capital in any published sense — MOIC partitions by KIND, capital
+contributed in the denominator and value returned in the numerator, which is
+how A.CRE states it for real estate and how GIPS 2020 defines the fund-level
+TVPI it resembles. GIPS is emphatic in the other direction: a distribution that
+is recalled *increases* paid-in capital, so the same dollar out and back raises
+both sides of the ratio where this fold reduces the denominator.
+
+**This is not a gap in the language, and the remedy is already in it.** A
+multiple belongs on the valuation plane, where the model says what it counts as
+invested capital rather than the engine guessing from a sign. `metric` folds
+once at the horizon and reads series and `model.*`, so the case declares the
+multiple in three lines and asserts the published figure exactly. `moic(party.X)`
+already does the same job per party in `penzance_highlands`. Nothing needed
+adding.
+
+So the question this raises is what `model.moic` should BE, not how to fix it:
+whether a whole-model multiple has a defensible meaning at all — for a levered
+deal it puts debt proceeds in the numerator and repayment in the denominator —
+or whether it should be narrowed, renamed to what it actually computes, or
+withdrawn in favour of the declared form.
+
+**`moic(party.X)` folds the same way and is not a counter-example.**
+`penzance_highlands` reproduces exactly (baupost 1.959618, penzance 2.906607)
+only because its contributions land in periods 0-91 and its single distribution
+at period 153, so nothing ever shares a period — verified from its journal, the
+overlap is empty. A fund distributing while it is still calling capital would
+trip it.
+
+**One existing assertion depends on the current behaviour.**
+`penzance_highlands` asserts `model.moic` = 2.04664, and it is the only entry in
+that case's `expected_metrics.json` with no `source` line — the party metrics
+beside it both cite contributed and distributed. 43 of its 160 periods hold both
+a positive and a negative stream flow. Whatever is decided above, that figure
+has to be re-derived rather than carried over.
+
+Provenance: found building `basic_acquisition_exit_cap`, 30 August 2026,
+against a published equity multiple. Two earlier drafts of this entry
+overreached — the first called the party metric structurally different, the
+second proposed a taxonomy node and a `cre.acquisition` contract as though the
+language could not express the multiple. It can, and does.

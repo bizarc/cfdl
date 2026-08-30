@@ -46,6 +46,7 @@ Complete models for every pack, each checked period by period against an indepen
 
 ### Commercial real estate
 
+- [CRE: a stabilized acquisition and a terminal cap rate](/docs/examples/cre-basic-acquisition-exit-cap) — A stabilized commercial property bought on a going-in cap rate, held ten years with fully reimbursed expenses, and sold by capping the final year's net operating income.
 - [CRE: HOME-funded affordable multifamily](/docs/examples/cre-hud-home-multifamily) — A 29-year affordable multifamily underwriting from HUD's HOME Multifamily template, with restricted rents reverting to market at year 15 and a first mortgage that matures before the hold ends.
 - [CRE: rent-regulated plaza](/docs/examples/cre-mit-rentleg-plaza) — A five-year office acquisition and disposition from MIT's real estate finance course, valued on a levered before-tax cash flow with an exit at a stated cap rate.
 - [CRE: two-tenant office](/docs/examples/cre-office-two-tenant) — An institutional two-tenant office DCF: free rent, anniversary escalations, recoveries above expense stops, tenant improvements and leasing commissions, probability-blended rollover, and a forward-NOI exit over ten years.

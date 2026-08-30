@@ -1,0 +1,25 @@
+{
+  "model.npv": {
+    "value": 90853.72728969366,
+    "tolerance": 1e-05
+  },
+  "model.irr": {
+    "value": 0.07848381094537493,
+    "tolerance": 1e-06
+  },
+  "metric.invested": {
+    "value": 1417958.3333333335,
+    "tolerance": 1e-05,
+    "source": "purchase price, year-one NOI capped at 6.0%"
+  },
+  "metric.returned": {
+    "value": 2626032.0294412337,
+    "tolerance": 0.0001,
+    "source": "ten years of cash flow from operations plus net sale proceeds"
+  },
+  "metric.equity_multiple": {
+    "value": 1.8519810968410686,
+    "tolerance": 1e-06,
+    "source": "2,626,032.03 returned on 1,417,958.33 invested"
+  }
+}
