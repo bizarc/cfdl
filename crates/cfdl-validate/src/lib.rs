@@ -323,7 +323,10 @@ pub fn validate(output: &ResolveOutput, symbols: &SymbolTables) -> Vec<Validatio
                 }
                 check_arrival_actions(
                     &edge.actions,
-                    &format!("lifecycle '{}' edge '{} -> {}'", lc.name, edge.from, edge.to),
+                    &format!(
+                        "lifecycle '{}' edge '{} -> {}'",
+                        lc.name, edge.from, edge.to
+                    ),
                     &source_stmt.file,
                     &mut diagnostics,
                 );

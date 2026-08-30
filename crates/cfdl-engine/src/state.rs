@@ -585,7 +585,10 @@ impl StateWalk {
                         rule_key,
                         "applied",
                     )
-                    .with_note(format!("on {grain} into {to}: {} = {}", action.src, series[t])),
+                    .with_note(format!(
+                        "on {grain} into {to}: {} = {}",
+                        action.src, series[t]
+                    )),
                 );
             }
             self.journal.push(transition_entry);
@@ -602,9 +605,7 @@ impl StateWalk {
             // the shipped behavior: `None` here means no occurrence, never an
             // unconditional one.
             let condition = match &self.compiled_events[event_idx] {
-                Some(when) => {
-                    eval_bool_expr(when, &env, "Event", &event.name, "when", warnings)
-                }
+                Some(when) => eval_bool_expr(when, &env, "Event", &event.name, "when", warnings),
                 // No `when` at all: every scheduled occurrence fires. An event
                 // that failed to compile is a different case and is caught by
                 // the `when.is_some()` test below.

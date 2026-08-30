@@ -1892,7 +1892,11 @@ fn resolve_machines(
             // also corrupt the machine it named.
             Some(existing) if existing.from_pack => {
                 for (state, actions) in entry_actions(cfdl_parser::ActionAuthor::Model) {
-                    existing.entry_actions.entry(state).or_default().extend(actions);
+                    existing
+                        .entry_actions
+                        .entry(state)
+                        .or_default()
+                        .extend(actions);
                 }
                 for edge in &lc.edges {
                     if let Some(target) = existing
@@ -1900,41 +1904,45 @@ fn resolve_machines(
                         .iter_mut()
                         .find(|e| e.from == edge.from && e.to == edge.to)
                     {
-                        target.actions.extend(edge.actions.iter().map(|a| ActionDef {
-                            field: a.field.clone(),
-                            value: a.value.src.clone(),
-                            author: cfdl_parser::ActionAuthor::Model,
-                        }));
+                        target
+                            .actions
+                            .extend(edge.actions.iter().map(|a| ActionDef {
+                                field: a.field.clone(),
+                                value: a.value.src.clone(),
+                                author: cfdl_parser::ActionAuthor::Model,
+                            }));
                     }
                 }
             }
             // Declaring: the model's own machine, actions inline.
             _ => {
-                machines.entry(lc.name.clone()).or_insert_with(|| MachineDef {
-                    id: lc.name.clone(),
-                    initial: lc.initial.clone(),
-                    states: lc.states.clone(),
-                    edges: lc
-                        .edges
-                        .iter()
-                        .map(|e| EdgeDef {
-                            from: e.from.clone(),
-                            to: e.to.clone(),
-                            guard: e.guard.as_ref().map(|g| g.src.clone()),
-                            actions: e
-                                .actions
-                                .iter()
-                                .map(|a| ActionDef {
-                                    field: a.field.clone(),
-                                    value: a.value.src.clone(),
-                                    author: cfdl_parser::ActionAuthor::Model,
-                                })
-                                .collect(),
-                        })
-                        .collect(),
-                    entry_actions: entry_actions(cfdl_parser::ActionAuthor::Model),
-                    from_pack: false,
-                });
+                machines
+                    .entry(lc.name.clone())
+                    .or_insert_with(|| MachineDef {
+                        id: lc.name.clone(),
+                        initial: lc.initial.clone(),
+                        states: lc.states.clone(),
+                        edges: lc
+                            .edges
+                            .iter()
+                            .map(|e| EdgeDef {
+                                from: e.from.clone(),
+                                to: e.to.clone(),
+                                guard: e.guard.as_ref().map(|g| g.src.clone()),
+                                actions: e
+                                    .actions
+                                    .iter()
+                                    .map(|a| ActionDef {
+                                        field: a.field.clone(),
+                                        value: a.value.src.clone(),
+                                        author: cfdl_parser::ActionAuthor::Model,
+                                    })
+                                    .collect(),
+                            })
+                            .collect(),
+                        entry_actions: entry_actions(cfdl_parser::ActionAuthor::Model),
+                        from_pack: false,
+                    });
             }
         }
     }
@@ -1996,7 +2004,11 @@ fn check_arrival_action_fields(
         };
         let mut known: BTreeSet<&str> = entity.fields.iter().map(|f| f.name.as_str()).collect();
         known.extend(entity.literal_fields.iter().map(|f| f.name.as_str()));
-        if let Some(ty) = entity.type_name.as_deref().and_then(|ty| ontology.entity(ty)) {
+        if let Some(ty) = entity
+            .type_name
+            .as_deref()
+            .and_then(|ty| ontology.entity(ty))
+        {
             known.extend(ty.fields.iter().map(|f| f.name.as_str()));
         }
         let mut report = |action: &ActionDef, where_: String| {
@@ -2076,7 +2088,11 @@ fn check_lifecycle_augmentations(
         if !lc.states.is_empty() {
             stated.push("state");
         }
-        if lc.edges.iter().any(|e| e.guard.is_some() || e.actions.is_empty()) {
+        if lc
+            .edges
+            .iter()
+            .any(|e| e.guard.is_some() || e.actions.is_empty())
+        {
             stated.push("an edge");
         }
         if stated.is_empty() {
@@ -2171,7 +2187,7 @@ fn check_status_writes(
                 });
                 continue;
             }
-            if !machine.edges.is_empty() && !machine.edges.iter().any(|e| &e.to == target) {
+            if !machine.edges.is_empty() && !machine.edges.iter().any(|e| e.to == *target) {
                 diagnostics.push(Diagnostic {
                     code: "E1353_UNREACHABLE_STATE_WRITE".to_string(),
                     severity: "error".to_string(),
@@ -4345,13 +4361,13 @@ fn filter_pack_aware_validation(
         .into_iter()
         .filter(|diag| {
             match diag.code {
-                "E2002_CONTRACT_MISSING_EFFECTS" => !lowered_contract_anchors.iter().any(
-                    |(file, span)| {
+                "E2002_CONTRACT_MISSING_EFFECTS" => {
+                    !lowered_contract_anchors.iter().any(|(file, span)| {
                         *file == diag.file
                             && span.start_line == diag.span.start_line
                             && span.start_col == diag.span.start_col
-                    },
-                ),
+                    })
+                }
                 // The pack declared the opening state and the state set; an
                 // enhancing block restates neither.
                 "E1351_LIFECYCLE_NO_INITIAL" | "E1316_UNKNOWN_LIFECYCLE_STATE" => {

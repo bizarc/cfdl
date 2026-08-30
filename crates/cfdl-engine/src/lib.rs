@@ -709,10 +709,7 @@ fn logic_expression_sources(ir: &Ir) -> Vec<(String, String)> {
     let mut sources: Vec<(String, String)> = Vec::new();
     for event in &ir.events {
         if let Some(when) = &event.when {
-            sources.push((
-                format!("event '{}' guard", event.name),
-                when.src.clone(),
-            ));
+            sources.push((format!("event '{}' guard", event.name), when.src.clone()));
         }
         for action in &event.actions {
             if let Some(value) = &action.value {
