@@ -1,0 +1,17 @@
+[
+  {
+    "code": "E1359_ARRIVAL_ACTION_UNKNOWN_FIELD",
+    "severity": "error",
+    "message": "Lifecycle 'unit' entry into 'delinquent' sets 'markr', which entity 'asset.suite' does not have — declared: marker.",
+    "file": "model.cfdl",
+    "span": {
+      "start_line": 16,
+      "start_col": 1,
+      "end_line": 19,
+      "end_col": 1
+    },
+    "path": null,
+    "hint": "An arrival action names a field on the entity that transitioned, and one machine may be bound by several entities — every one of them needs the field. Declare it on the entity, or correct the name.",
+    "notes": []
+  }
+]

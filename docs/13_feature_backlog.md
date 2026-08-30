@@ -1770,6 +1770,76 @@ loop the authoring contract needs. (`ste-allow:` rule ids are now
 validated against §3's rule tables; the tier mapping is the remaining
 unenforced half.)
 
+### 7.84 The pack machines were drawn before the machine could act, and several are not well-formed
+
+*Belongs with the packs (sections 1 to 4). Found surveying all four packs'
+`ontology/types.toml` while implementing arrival actions (§7.79) — the first
+work that made a pack's states load-bearing rather than decorative.*
+
+**What forced the discovery.** Until the machine could carry behavior, a
+pack's lifecycle was a vocabulary for `active in state` and little else, and
+its shape was never pressed. §7.79 makes states act, `docs/33` Item 1 hangs
+re-striking off state entry, and `docs/34` D3 makes `on enter <state>` a
+pack's primary domain spelling — so the state set becomes the surface a pack
+author writes against, and its defects stop being cosmetic.
+
+**Measured across the four packs**, seven machines. Three families of defect,
+each with instances:
+
+**1. One machine encoding two independent concerns.** `opco.enterprise` is
+`operating, under_offer, acquired, levered, deleveraged, exited`. The first
+three are a *transaction process*; `levered` and `deleveraged` are a *capital
+structure*. These are orthogonal — a bought-out business is levered AND
+operating — but an entity is in exactly one state, so the pair cannot be
+said. Worse, the declared path is `operating -> under_offer -> acquired ->
+levered`, which means an LBO leaves `operating` at close: a stream gated
+`active in state "operating"` stops paying the moment the deal funds, which
+is the opposite of what every opco benchmark models. Two machines, or one
+machine and a field, is the shape.
+
+**2. Terminal and initial states that the topology contradicts.**
+`cre.property` declares `initial = "operating"` while listing
+`predevelopment, construction, lease_up` ahead of it with no edge into any of
+them — a development model reaches its own first phase only by overriding
+`initial_state` on the entity. `credit.pool` has the same shape:
+`initial = "amortizing"`, with `warehouse` declared, edged only outward, and
+unreachable. An initial state the machine cannot return to is fine; a
+declared state nothing can enter is a state that does not exist, which is
+what "absence is the prohibition" already says about edges.
+
+**3. Missing edges the domain has.** `cre.property` cannot go
+`repositioning -> disposed`, though selling out of a repositioning is
+ordinary. `credit.loan` cannot go `delinquent -> matured` or
+`delinquent -> prepaid`, so a borrower who is late and then pays off, or
+reaches maturity late, has nowhere to go; and it offers no cure from
+`default`, though reinstatement is a real and priced outcome.
+`energy.facility` cannot abandon from `development` or `construction`, which
+is where projects most often die, and cannot decommission from `curtailed`.
+`credit.pool` cannot unwind a `warehouse` line.
+
+**And the nomenclature is not the industry's.** `credit.loan` mixes parts of
+speech across one state set — `current` and `delinquent` are adjectives,
+`default` and `foreclosure` are nouns naming EVENTS rather than conditions,
+and `liquidated`, `prepaid`, `matured` are participles. A state is a
+condition an entity is IN, so the set should read uniformly that way:
+`defaulted`, `in_foreclosure`. This matters more than style now that
+`on enter default` is a spelling a pack author writes and a reader reads.
+
+**Not in this entry:** whether `energy.flip_structure` (`pre_flip`,
+`post_flip`, one edge) should be a machine at all rather than a field. It is
+a legitimate two-state machine and `active in state` reads it; the question
+is only whether it earns the ceremony, and no case has forced it.
+
+**What this is not.** Not a language gap — every shape above is expressible
+today, and §7.79 adds nothing it needs. It is a pack-content review, and it
+should be done per pack against the reference documents that pack already
+cites, so each change arrives with the same provenance discipline as a
+benchmark. `docs/32`'s transcribe tier is the mechanical version of this
+review: a specification naming a status the pack cannot say produces a
+diagnostic rather than a plausible workaround.
+
+Recorded 2026-08-30.
+
 ### 7.83 An action kind the engine does not know is journaled, not refused
 
 *Recorded 2026-08-29, while retiring `activate contract` (§7.73).*

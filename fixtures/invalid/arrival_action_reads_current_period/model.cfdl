@@ -1,0 +1,23 @@
+version 0.1
+model "arrival-action-reads-current-period"
+time calendar monthly from 2026-01 for 6
+
+// An action evaluates in the guard's environment: settled history only. This
+// is E1134's argument, one construct over.
+lifecycle unit {
+  initial leased
+  state leased, delinquent
+  leased -> delinquent when time.t >= 2 {
+    set marker = series_sum("core.rent", time.t, time.t)
+  }
+}
+
+entity asset suite {
+  lifecycle unit
+  marker init 0.0 next prev
+}
+
+stream core.rent on entity asset.suite inflow currency USD {
+  schedule every month from 2026-01 to 2026-06
+  amount = 100
+}

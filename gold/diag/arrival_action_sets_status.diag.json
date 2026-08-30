@@ -1,0 +1,17 @@
+[
+  {
+    "code": "E1358_ARRIVAL_ACTION_SETS_STATUS",
+    "severity": "error",
+    "message": "lifecycle 'unit' entry into 'delinquent' sets `status`. An arrival action writes fields, never the state.",
+    "file": "model.cfdl",
+    "span": {
+      "start_line": 12,
+      "start_col": 5,
+      "end_line": 12,
+      "end_col": 25
+    },
+    "path": null,
+    "hint": null,
+    "notes": []
+  }
+]

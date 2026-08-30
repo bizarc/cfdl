@@ -11,7 +11,7 @@ Diagnostics are the repair signal: read the `code`, `message`, `span`, and
 `hint`, change the model, recompile. The catalog is how an agent learns what
 each code looks like in the flesh before it meets one.
 
-**Coverage:** 198 codes in the docs/08 §7 register; 87 exemplified here; 70 of 90 examples carry a recorded fix.
+**Coverage:** 201 codes in the docs/08 §7 register; 90 exemplified here; 70 of 94 examples carry a recorded fix.
 
 ## active_in_unknown_state — E1332_UNKNOWN_ACTIVE_STATE
 
@@ -80,6 +80,112 @@ stream cre.rent on entity asset.suite inflow currency USD {
   active in state leased
 }
 ```
+
+## arrival_action_reads_current_period — E1134_SERIES_READ_IN_LOGIC
+
+Failing example:
+
+```cfdl
+version 0.1
+model "arrival-action-reads-current-period"
+time calendar monthly from 2026-01 for 6
+
+// An action evaluates in the guard's environment: settled history only. This
+// is E1134's argument, one construct over.
+lifecycle unit {
+  initial leased
+  state leased, delinquent
+  leased -> delinquent when time.t >= 2 {
+    set marker = series_sum("core.rent", time.t, time.t)
+  }
+}
+
+entity asset suite {
+  lifecycle unit
+  marker init 0.0 next prev
+}
+
+stream core.rent on entity asset.suite inflow currency USD {
+  schedule every month from 2026-01 to 2026-06
+  amount = 100
+}
+```
+
+- `E1134_SERIES_READ_IN_LOGIC` (error): lifecycle 'unit' edge 'leased -> delinquent' action reads `core.rent` over a window ending at `time.t`, which is this period or later. Logic settles BEFORE this period's cash exists, so only history it can already see is readable: end the window at `time.t - 1` or earlier. A stream, a waterfall and the results layer do see the current period.
+
+Fix: not yet recorded.
+
+## arrival_action_sets_status — E1358_ARRIVAL_ACTION_SETS_STATUS
+
+Failing example:
+
+```cfdl
+version 0.1
+model "arrival-action-sets-status"
+time calendar monthly from 2026-01 for 6
+
+// An arrival action writes FIELDS. A `status` write would fire a second
+// transition inside the same period; a transition that should cause another
+// transition is topology, taken next period.
+lifecycle unit {
+  initial leased
+  state leased, delinquent
+  on enter delinquent {
+    set status = "leased"
+  }
+  leased -> delinquent when time.t >= 2
+}
+
+entity asset suite {
+  lifecycle unit
+  marker init 0.0 next prev
+}
+
+stream core.rent on entity asset.suite inflow currency USD {
+  schedule every month from 2026-01 to 2026-06
+  amount = 100
+}
+```
+
+- `E1358_ARRIVAL_ACTION_SETS_STATUS` (error): lifecycle 'unit' entry into 'delinquent' sets `status`. An arrival action writes fields, never the state.
+
+Fix: not yet recorded.
+
+## arrival_action_unknown_field — E1359_ARRIVAL_ACTION_UNKNOWN_FIELD
+
+Failing example:
+
+```cfdl
+version 0.1
+model "arrival-action-unknown-field"
+time calendar monthly from 2026-01 for 6
+
+// The field name is entity-relative, so it resolves against the entity that
+// transitioned. A misspelling is a write that would land nowhere.
+lifecycle unit {
+  initial leased
+  state leased, delinquent
+  on enter delinquent {
+    set markr = 1.0
+  }
+  leased -> delinquent when time.t >= 2
+}
+
+entity asset suite {
+  lifecycle unit
+  marker init 0.0 next prev
+}
+
+stream core.rent on entity asset.suite inflow currency USD {
+  schedule every month from 2026-01 to 2026-06
+  amount = 100
+}
+```
+
+- `E1359_ARRIVAL_ACTION_UNKNOWN_FIELD` (error): Lifecycle 'unit' entry into 'delinquent' sets 'markr', which entity 'asset.suite' does not have — declared: marker.
+  - hint: An arrival action names a field on the entity that transitioned, and one machine may be bound by several entities — every one of them needs the field. Declare it on the entity, or correct the name.
+
+Fix: not yet recorded.
 
 ## assume_reserved_keyword — E0004_EXPECTED_TOKEN
 
@@ -1470,6 +1576,43 @@ time calendar monthly from 2026-01 for 1
 
 entity asset borrower : Asset.Financial
 ```
+
+## lifecycle_augment_topology — E1357_LIFECYCLE_AUGMENT_TOPOLOGY
+
+Failing example:
+
+```cfdl
+version 0.1
+model "lifecycle-augment-topology"
+use pack "opco" version "0.1.0"
+time calendar monthly from 2026-01 for 12
+
+entity asset target : OpCo.Asset.Enterprise
+
+// A model may add arrival actions to a pack's machine and nothing else. The
+// pack's machine is the checkable contract; a model needing different
+// topology declares a separate machine under its own name.
+lifecycle opco.enterprise {
+  initial operating
+  state operating, acquired
+  on enter acquired {
+    set months_held = 0.0
+  }
+}
+
+contract opco.revenue_line on entity asset.target {
+  term 2026-01..2026-12
+  terms {
+    amount = 1000000
+    growth_rate = 0.0
+  }
+}
+```
+
+- `E1357_LIFECYCLE_AUGMENT_TOPOLOGY` (error): Lifecycle 'opco.enterprise' is declared by a pack, and this block states initial and state.
+  - hint: A model may add arrival actions to a pack's machine — `on enter <state>` and actions on an existing edge — and nothing else. To change the states or the edges, declare a separate machine under its own name and bind the entity to that instead.
+
+Fix: not yet recorded.
 
 ## lifecycle_conflict — E1350_LIFECYCLE_CONFLICT
 

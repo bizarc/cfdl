@@ -1,0 +1,25 @@
+version 0.1
+model "lifecycle-augment-topology"
+use pack "opco" version "0.1.0"
+time calendar monthly from 2026-01 for 12
+
+entity asset target : OpCo.Asset.Enterprise
+
+// A model may add arrival actions to a pack's machine and nothing else. The
+// pack's machine is the checkable contract; a model needing different
+// topology declares a separate machine under its own name.
+lifecycle opco.enterprise {
+  initial operating
+  state operating, acquired
+  on enter acquired {
+    set months_held = 0.0
+  }
+}
+
+contract opco.revenue_line on entity asset.target {
+  term 2026-01..2026-12
+  terms {
+    amount = 1000000
+    growth_rate = 0.0
+  }
+}
