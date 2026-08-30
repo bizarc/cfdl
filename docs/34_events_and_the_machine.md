@@ -316,11 +316,26 @@ broken — but it is measured, not assumed:
 | 2 | Parser + IR + validation: entry-action and edge-action blocks, the event schedule clause (D1a), entity-relative field resolution, model-side augmentation of pack machines (D2a); diagnostics — unknown field on the bound entity (named set), action expression reading same-period series refused (E1134's argument, one construct over) | per-code validate tests from invalid fixtures |
 | 3 | Engine: rising-edge firing once per period, scheduled occurrences (D1a), entry-then-edge action execution in the walk, journal children, `results_version` 0.6 | fixtures: re-fire on cure/re-default; action write visible to a same-period stream; declaration-order writes; one-shot via no-return topology |
 | 4 | Corpus audit + golden re-bless per Migration | collapse property holds across the blessed corpus |
-| 5 | Pack surface: `types.toml` machines carry `on enter` blocks (and per-transition actions); `cre.unit` gains re-let entry actions (re-strike, counter reset); pack validations for action fields | doc-examples gate; pack READMEs |
+| 5 | Pack surface: `types.toml` machines carry `entry_actions` blocks and per-transition actions; pack-load validation for them; `docs/07` documents the surface. **The shipped packs declare actions as cases need them, not up front** — see the note below | pack load tests; `docs/07` |
 | 6 | Vocabulary sweep: glossary, `docs/22`, `docs/10` rows, `docs/33` Item 1 marked closed by this plan; learn-site chapters flagged for the next curriculum pass | glossary-check; site gates when published |
 
 Phases 1–4 are one arc (the semantics are not shippable half-changed); 5–6
-follow independently. The showcase fixtures are the chained-rollover
+follow independently.
+
+**Phase 5 landed as mechanism, not content.** The plan named `cre.unit`'s
+re-let actions as its deliverable, on the assumption that declaring them was
+the same act as building the surface. It is not. A pack's fields are populated
+by its LOWERING RULES, which run per contract instance — so an action can only
+rely on a field where the contract that lowers it is present. None of the eight
+models binding `CRE.Asset.Unit` carries a `cre.lease_unit` contract; they type
+an entity as a unit while exercising accounts, hierarchy and typed entities.
+Declaring the re-let actions now would warn on all eight and write nothing.
+
+So the packs ship the capability and declare actions when a case needs them,
+which is the same discipline the rest of this repository follows: worth a case
+before it is worth a construct. `docs/33` Item 1's chained-rollover case is the
+one that will force `cre.unit`'s, and it will carry a lease contract, so the
+field will lower with it. The showcase fixtures are the chained-rollover
 re-strike from `docs/33` — the probe that found the gap becomes the fixture
 that closes it — and a §7.77 cure-counter.
 

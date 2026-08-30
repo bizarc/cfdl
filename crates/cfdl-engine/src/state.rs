@@ -257,6 +257,129 @@ impl StateWalk {
         (&self.values, &self.entity_state, &self.stream_active)
     }
 
+    /// Run a state's entry actions and then the taken edge's, on ARRIVAL.
+    ///
+    /// Shared by both paths that move an entity, because `docs/34` D2 says the
+    /// actions run every time the edge is taken, WHATEVER TOOK IT: the
+    /// machine's own guard, or a named event's `status` write crossing a
+    /// permission edge. A status write reaching the state without running its
+    /// entry actions would make the same arrival mean two different things
+    /// depending on what caused it.
+    ///
+    /// Evaluation is split from application so the machine can be read while
+    /// the field store is written: everything is evaluated against the frozen
+    /// pre-state first, then applied in order.
+    #[allow(clippy::too_many_arguments)]
+    fn run_arrival_actions(
+        &mut self,
+        symbol: &str,
+        lifecycle_id: &str,
+        to: &str,
+        edge_idx: Option<usize>,
+        t: usize,
+        date: &Date,
+        env: &cfdl_expr::ExprEnv,
+        warnings: &mut Vec<String>,
+    ) -> Vec<JournalEntry> {
+        // Evaluate first, holding only an immutable borrow of the machine.
+        let mut planned: Vec<(String, String, String, ExprValue, &'static str)> = Vec::new();
+        {
+            let Some(machine) = self.machines.get(symbol) else {
+                return Vec::new();
+            };
+            let entry = machine.entry_actions.get(to).into_iter().flatten();
+            let edge = edge_idx
+                .and_then(|i| machine.edges.get(i))
+                .map(|e| &e.actions)
+                .into_iter()
+                .flatten();
+            for (action, grain) in entry.map(|a| (a, "enter")).chain(edge.map(|a| (a, "edge"))) {
+                let Some(expr) = &action.expr else {
+                    continue;
+                };
+                match cfdl_expr::eval(expr, env) {
+                    Ok(v) => planned.push((
+                        action.field.clone(),
+                        action.author.clone(),
+                        action.src.clone(),
+                        v,
+                        grain,
+                    )),
+                    Err(err) => warnings.push(format!(
+                        "Lifecycle '{lifecycle_id}' {grain} action `set {}` failed [{}]: {}; skipped.",
+                        action.field, err.code, err.message
+                    )),
+                }
+            }
+        }
+
+        let actor = |author: &str| match author {
+            "pack" => format!("lifecycle:{lifecycle_id}"),
+            _ => "model".to_string(),
+        };
+        let mut children: Vec<JournalEntry> = Vec::new();
+        // What THIS arrival has already written, and who wrote it. Only a
+        // losing write from the same arrival is `overridden`; the value a field
+        // simply held coming in was never a competing write, and reporting it
+        // as one would make every action look like a conflict.
+        let mut written_here: BTreeMap<String, String> = BTreeMap::new();
+        for (field, author, src, value, grain) in planned {
+            // ONE VALUE PER PATH, the shipped event-`set` law: the write
+            // settles the FIELD STORE and the recurrence resumes from it next
+            // period. It does not enter the entity-state record — that would be
+            // a second copy, free to go stale.
+            let rule_key = format!("{symbol}.{field}");
+            let Some(series) = self.values.get_mut(&rule_key) else {
+                warnings.push(format!(
+                    "Lifecycle '{lifecycle_id}' {grain} action `set {field}` names no field store; skipped."
+                ));
+                continue;
+            };
+            let before = series[t];
+            match &value {
+                ExprValue::Decimal(d) => series[t] = *d,
+                ExprValue::Int(i) => series[t] = *i as f64,
+                other => {
+                    warnings.push(format!(
+                        "Lifecycle '{lifecycle_id}' {grain} action `set {field}` produced {other:?}, which is not a number; skipped."
+                    ));
+                    continue;
+                }
+            }
+            let settled = series[t];
+            if let Some(loser) = written_here.get(&field) {
+                children.push(
+                    JournalEntry::new(
+                        t,
+                        &date.to_string(),
+                        actor(loser),
+                        "set",
+                        rule_key.clone(),
+                        "overridden",
+                    )
+                    .with_note(format!("{before} superseded on arrival in {to}")),
+                );
+            }
+            written_here.insert(field.clone(), author.clone());
+            children.push(
+                JournalEntry::new(
+                    t,
+                    &date.to_string(),
+                    // The AUTHOR, not the construct: a pack's machine and a
+                    // model's augmentation of it are different actors writing
+                    // one field, and an `overridden` line that cannot say which
+                    // is the one thing this record exists to prevent.
+                    actor(&author),
+                    "set",
+                    rule_key,
+                    "applied",
+                )
+                .with_note(format!("on {grain} into {to}: {src} = {settled}")),
+            );
+        }
+        children
+    }
+
     /// Settle one period: this period's field candidates, then the events and
     /// options that may overwrite them, then the column.
     #[allow(clippy::too_many_arguments)]
@@ -489,108 +612,17 @@ impl StateWalk {
             // backward. The write settles the field for this period, so a
             // stream later in the same period reads the settled value and the
             // recurrence resumes from it next period.
-            let entry_actions = self
-                .machines
-                .get(&symbol)
-                .and_then(|m| m.entry_actions.get(&to));
-            let edge_actions = self
-                .machines
-                .get(&symbol)
-                .and_then(|m| m.edges.get(edge_idx))
-                .map(|e| &e.actions);
-            let arrival: Vec<(&PreparedAction, &'static str)> = entry_actions
-                .into_iter()
-                .flatten()
-                .map(|a| (a, "enter"))
-                .chain(edge_actions.into_iter().flatten().map(|a| (a, "edge")))
-                .collect();
-            // What THIS arrival has already written, and who wrote it. Only a
-            // losing write from the same arrival is `overridden`; the value a
-            // field simply held coming in was never a competing write, and
-            // reporting it as one would make every action look like a
-            // conflict.
-            let mut written_here: BTreeMap<String, String> = BTreeMap::new();
-            for (action, grain) in arrival {
-                let Some(expr) = &action.expr else {
-                    continue;
-                };
-                let value = match cfdl_expr::eval(expr, &env) {
-                    Ok(v) => v,
-                    Err(err) => {
-                        warnings.push(format!(
-                            "Lifecycle '{lifecycle_id}' {grain} action `set {}` failed [{}]: {}; skipped.",
-                            action.field, err.code, err.message
-                        ));
-                        continue;
-                    }
-                };
-                let actor = |author: &str| match author {
-                    "pack" => format!("lifecycle:{lifecycle_id}"),
-                    _ => "model".to_string(),
-                };
-                // A losing same-arrival write is RECORDED, not dropped, and the
-                // journal names the author of the value that was superseded —
-                // which is the whole reason the author is carried. A pack's
-                // machine and a model's augmentation of it are different
-                // actors writing one field.
-                // ONE VALUE PER PATH, the shipped event-`set` law: the write
-                // settles the FIELD STORE and the recurrence resumes from it
-                // next period. It does not enter the entity-state record —
-                // that would be a second copy, free to go stale.
-                let rule_key = format!("{symbol}.{}", action.field);
-                let Some(series) = self.values.get_mut(&rule_key) else {
-                    warnings.push(format!(
-                        "Lifecycle '{lifecycle_id}' {grain} action `set {}` names no field store; skipped.",
-                        action.field
-                    ));
-                    continue;
-                };
-                let before = series[t];
-                match &value {
-                    ExprValue::Decimal(d) => series[t] = *d,
-                    ExprValue::Int(i) => series[t] = *i as f64,
-                    other => {
-                        warnings.push(format!(
-                            "Lifecycle '{lifecycle_id}' {grain} action `set {}` produced {other:?}, which is not a number; skipped.",
-                            action.field
-                        ));
-                        continue;
-                    }
-                }
-                if let Some(loser) = written_here.get(&action.field) {
-                    transition_entry.children.push(
-                        JournalEntry::new(
-                            t,
-                            &date.to_string(),
-                            actor(loser),
-                            "set",
-                            rule_key.clone(),
-                            "overridden",
-                        )
-                        .with_note(format!("{before} superseded on arrival in {to}")),
-                    );
-                }
-                written_here.insert(action.field.clone(), action.author.clone());
-                transition_entry.children.push(
-                    JournalEntry::new(
-                        t,
-                        &date.to_string(),
-                        // The AUTHOR, not the construct: a pack's machine and a
-                        // model's augmentation of it are different actors
-                        // writing the same field, and an `overridden` line that
-                        // cannot say which is the one thing this record exists
-                        // to prevent.
-                        actor(&action.author),
-                        "set",
-                        rule_key,
-                        "applied",
-                    )
-                    .with_note(format!(
-                        "on {grain} into {to}: {} = {}",
-                        action.src, series[t]
-                    )),
-                );
-            }
+            let children = self.run_arrival_actions(
+                &symbol,
+                &lifecycle_id,
+                &to,
+                Some(edge_idx),
+                t,
+                date,
+                &env,
+                warnings,
+            );
+            transition_entry.children = children;
             self.journal.push(transition_entry);
         }
 
@@ -757,17 +789,45 @@ impl StateWalk {
                                     to: after.clone(),
                                     event: event.name.clone(),
                                 });
-                                self.journal.push(
-                                    JournalEntry::new(
-                                        t,
-                                        &date.to_string(),
-                                        format!("event:{}", event.name),
-                                        "set",
-                                        format!("{}.{}", entity.symbol, field),
-                                        "applied",
-                                    )
-                                    .with_change(before, after),
-                                );
+                                let mut entry = JournalEntry::new(
+                                    t,
+                                    &date.to_string(),
+                                    format!("event:{}", event.name),
+                                    "set",
+                                    format!("{}.{}", entity.symbol, field),
+                                    "applied",
+                                )
+                                .with_change(before.clone(), after.clone());
+                                // A `status` write that MOVES the entity is an
+                                // arrival like any other, and runs the target
+                                // state's entry actions and the taken edge's
+                                // (`docs/34` D2, D6). Without this the same
+                                // arrival would mean two different things
+                                // depending on what caused it.
+                                if field == "status" && before.as_deref() != Some(after.as_str()) {
+                                    let plan = self.machines.get(&entity.symbol).map(|m| {
+                                        (
+                                            m.lifecycle_id.clone(),
+                                            m.edges.iter().position(|e| {
+                                                Some(e.from.as_str()) == before.as_deref()
+                                                    && e.to == after
+                                            }),
+                                        )
+                                    });
+                                    if let Some((lifecycle_id, edge_idx)) = plan {
+                                        entry.children = self.run_arrival_actions(
+                                            &entity.symbol,
+                                            &lifecycle_id,
+                                            &after,
+                                            edge_idx,
+                                            t,
+                                            date,
+                                            &env,
+                                            warnings,
+                                        );
+                                    }
+                                }
+                                self.journal.push(entry);
                             }
                             Err(err) => {
                                 warnings.push(format!(

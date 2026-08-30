@@ -1750,6 +1750,19 @@ fn reads_prev_field(src: &str) -> bool {
     .any(|p| src.contains(p))
 }
 
+/// A pack-declared arrival action, stamped `Pack`.
+///
+/// This is the only place `ActionAuthor::Pack` is produced. Until a pack
+/// declared actions the author field had one reachable value, which is why the
+/// pack surface and the author stamp belong to the same change.
+fn pack_action(action: &cfdl_pack::OntologyAction) -> ActionDef {
+    ActionDef {
+        field: action.set.clone(),
+        value: action.value.clone(),
+        author: cfdl_parser::ActionAuthor::Pack,
+    }
+}
+
 /// One resolved machine, wherever it was declared (`docs/28` §6.1).
 ///
 /// A pack's `types.toml` lifecycle and a model's `lifecycle` block resolve to
@@ -1854,10 +1867,22 @@ fn resolve_machines(
                             from: t.from.clone(),
                             to: t.to.clone(),
                             guard: t.guard.clone(),
-                            actions: Vec::new(),
+                            actions: t.actions.iter().map(pack_action).collect(),
                         })
                         .collect(),
-                    entry_actions: BTreeMap::new(),
+                    // The pack's own arrival actions, stamped as its own. A
+                    // model's augmentation is appended AFTER these, so the
+                    // model's write lands last and wins (`docs/34` D2a).
+                    entry_actions: lifecycle
+                        .entry_actions
+                        .iter()
+                        .map(|entry| {
+                            (
+                                entry.state.clone(),
+                                entry.actions.iter().map(pack_action).collect(),
+                            )
+                        })
+                        .collect(),
                     from_pack: true,
                 });
         }
