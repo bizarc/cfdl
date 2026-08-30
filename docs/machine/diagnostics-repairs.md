@@ -11,7 +11,7 @@ Diagnostics are the repair signal: read the `code`, `message`, `span`, and
 `hint`, change the model, recompile. The catalog is how an agent learns what
 each code looks like in the flesh before it meets one.
 
-**Coverage:** 195 codes in the docs/08 §7 register; 85 exemplified here; 70 of 86 examples carry a recorded fix.
+**Coverage:** 197 codes in the docs/08 §7 register; 86 exemplified here; 70 of 89 examples carry a recorded fix.
 
 ## active_in_unknown_state — E1332_UNKNOWN_ACTIVE_STATE
 
@@ -200,6 +200,61 @@ stream debt.principal on entity asset.borrower {
   amount = 100
 }
 ```
+
+## contract_category_bad_root — E5022_UNKNOWN_STREAM_CATEGORY
+
+Failing example:
+
+```cfdl
+version 0.1
+model "contract-category-bad-root"
+use pack "cre" version "0.1.0"
+time calendar annual from 2026-01 for 2
+
+// A contract may override the category its lowering rule assigns, and it is
+// validated like any other: rooted in one of the three activities. E5022.
+entity asset tower : CRE.Asset.RealProperty
+
+contract cre.opex_line.rooms on entity asset.tower {
+  term 2026-01..2027-01
+  category departmental.rooms
+  terms {
+    amount = 1000
+  }
+}
+```
+
+- `E5022_UNKNOWN_STREAM_CATEGORY` (error): Contract 'cre.opex_line.rooms' declares category 'departmental.rooms', whose root segment 'departmental' is not one of operating, investing, financing. A category is a path into the cash flow statement, so it has to say which section it belongs to.
+  - hint: A contract's `category` overrides the one its lowering rule assigns, for the leaf a pack could not have enumerated. It is validated like any other — for example `category operating.expense.rooms`.
+
+Fix: not yet recorded.
+
+## contract_unknown_clause — E0004_EXPECTED_TOKEN
+
+Failing example:
+
+```cfdl
+version 0.1
+model "contract-unknown-clause"
+use pack "cre" version "0.1.0"
+time calendar annual from 2026-01 for 2
+
+// A misspelled clause in a contract body used to be swallowed by a catch-all
+// and vanish without a diagnostic. E0004.
+entity asset tower : CRE.Asset.RealProperty
+
+contract cre.opex_line.rooms on entity asset.tower {
+  term 2026-01..2027-01
+  categry operating.expense.rooms
+  terms {
+    amount = 1000
+  }
+}
+```
+
+- `E0004_EXPECTED_TOKEN` (error): Unexpected 'categry' in a contract body. Expected 'term', 'payment net', 'terms', 'category', 'parties', 'on entity', 'effects', or '}'.
+
+Fix: not yet recorded.
 
 ## cre_exit_bad_cap — E6011_CRE_EXIT_INVALID_EXIT_CAP
 
@@ -2999,6 +3054,32 @@ stream a.rent on entity asset.co inflow currency USD {
 
 Fix: not yet recorded.
 
+## stream_missing_category — E5029_STREAM_MISSING_CATEGORY
+
+Failing example:
+
+```cfdl
+version 0.1
+model "stream-missing-category"
+use pack "cre" version "0.1.0"
+time calendar annual from 2026-01 for 2
+
+// A stream with no category, while a pack is active. Its cash reaches
+// model.total and folds into no subtotal, so every domain metric is computed
+// as though it were not there. E5029.
+entity asset tower : CRE.Asset.RealProperty
+
+stream misc.windfall on entity asset.tower inflow currency USD {
+  schedule every year from 2026-01 to 2027-01
+  amount = 250
+}
+```
+
+- `E5029_STREAM_MISSING_CATEGORY` (error): Stream 'misc.windfall' declares no category, and pack 'cre' is active. Its cash would reach model.total and fold into no subtotal — invisible to every domain metric, silently.
+  - hint: State what the flow IS, as a path into the cash flow statement: `category operating.revenue.rent`, `category financing.interest`. A category is only optional when no pack is active, because then nothing folds.
+
+Fix: not yet recorded.
+
 ## stream_reads_waterfall_step — E1346_STREAM_READS_WATERFALL_STEP
 
 Failing example:
@@ -3111,8 +3192,8 @@ stream cre.other.income on entity asset.tower inflow currency USD {
 }
 ```
 
-- `E5022_UNKNOWN_STREAM_CATEGORY` (error): Stream 'cre.other.income' declares category 'operating_revenue', which is not a category the active pack defines. Known categories: operating.revenue.base_rent, operating.revenue.other, operating.revenue.percentage_rent, operating.revenue.recovery, operating.deduction.vacancy, operating.deduction.abatement, operating.expense.opex, investing.capital.leasing, investing.capital.construction, investing.capital.capex, investing.reversion, investing.selling_costs, financing.debt_service, financing.interest, financing.debt_principal, financing.mortgage_insurance, financing.debt_proceeds, financing.equity.
-  - hint: A category is what a fold aggregates on, so it has to name one the pack declares — otherwise the stream reports as a line and is counted in no subtotal.
+- `E5022_UNKNOWN_STREAM_CATEGORY` (error): Stream 'cre.other.income' declares category 'operating_revenue', whose root segment 'operating_revenue' is not one of operating, investing, financing. A category is a path into the cash flow statement, so it has to say which section it belongs to.
+  - hint: Any dotted path rooted in operating, investing or financing is valid, with or without a pack — for example `operating.revenue.rent`. A pack's category list is a recommendation, not a gate.
 
 Minimal fix (compiles):
 
@@ -3901,3 +3982,4 @@ Documented in docs/08 §7, awaiting a minimal failing fixture:
 - `W3501_STATEMENT_STREAM_DOUBLE_COUNTED` — a stream claimed by more than one
 - `W3502_STATEMENT_BOTTOM_LINE_RESIDUAL` — the statement's rows do not sum to
 - `W5022_UNKNOWN_SERIES_REFERENCE` — a `series_sum`/`series_avg` names a series
+- `W5023_UNRECOGNISED_PACK_CATEGORY` — a stream's category is well-rooted and

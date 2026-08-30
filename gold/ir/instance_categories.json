@@ -1,0 +1,412 @@
+{
+  "ir_version": "0.1",
+  "model": {
+    "name": "instance-categories",
+    "currency": "USD"
+  },
+  "time": {
+    "calendar": "annual",
+    "start": "2026-01-01",
+    "periods": 2
+  },
+  "phases": [],
+  "entities": [
+    {
+      "id": "4f7c422a3d9363d21eb80cd00fc716f0",
+      "symbol": "asset.hotel",
+      "type": "CRE.Asset.RealProperty",
+      "fields": {},
+      "state": {},
+      "lifecycle": "cre.property"
+    }
+  ],
+  "assumptions": {
+    "constants": {},
+    "random": {}
+  },
+  "lifecycles": [
+    {
+      "id": "cre.property",
+      "initial": "operating",
+      "states": [
+        "predevelopment",
+        "construction",
+        "lease_up",
+        "operating",
+        "repositioning",
+        "disposed"
+      ],
+      "edges": [
+        {
+          "from": "predevelopment",
+          "to": "construction"
+        },
+        {
+          "from": "construction",
+          "to": "lease_up"
+        },
+        {
+          "from": "lease_up",
+          "to": "operating"
+        },
+        {
+          "from": "operating",
+          "to": "repositioning"
+        },
+        {
+          "from": "repositioning",
+          "to": "lease_up"
+        },
+        {
+          "from": "operating",
+          "to": "disposed"
+        }
+      ]
+    }
+  ],
+  "subtotals": [
+    {
+      "id": "domain.cre.pgr",
+      "kind": "money",
+      "op": "sum",
+      "categories": [
+        "operating.revenue.*"
+      ],
+      "formula": "sum(operating.revenue.*)"
+    },
+    {
+      "id": "domain.cre.egi",
+      "kind": "money",
+      "op": "sum",
+      "categories": [
+        "operating.revenue.*",
+        "operating.deduction.*"
+      ],
+      "formula": "potential gross revenue less vacancy and abatements"
+    },
+    {
+      "id": "domain.cre.opex_total",
+      "kind": "money",
+      "op": "sum",
+      "categories": [
+        "operating.expense.*"
+      ],
+      "formula": "sum(operating.expense.*)"
+    },
+    {
+      "id": "domain.cre.noi",
+      "kind": "money",
+      "op": "sum",
+      "categories": [
+        "operating.*"
+      ],
+      "formula": "sum(operating.*)"
+    },
+    {
+      "id": "domain.cre.debt_service",
+      "kind": "money",
+      "op": "negated_sum",
+      "categories": [
+        "financing.debt_service",
+        "financing.interest",
+        "financing.debt_principal",
+        "financing.mortgage_insurance"
+      ],
+      "formula": "-sum(financing.debt_service, financing.interest, financing.debt_principal, financing.mortgage_insurance)"
+    },
+    {
+      "id": "domain.cre.dscr",
+      "kind": "number",
+      "op": "ratio",
+      "numerator": "domain.cre.noi",
+      "denominator": "domain.cre.debt_service",
+      "formula": "domain.cre.noi / domain.cre.debt_service"
+    },
+    {
+      "id": "domain.cre.leasing_costs",
+      "kind": "money",
+      "op": "negated_sum",
+      "categories": [
+        "investing.capital.leasing"
+      ],
+      "formula": "-sum(investing.capital.leasing)"
+    }
+  ],
+  "contracts": [
+    {
+      "id": "70335ea804a945b1ef92a13eb11dddc1",
+      "name": "cre.opex_line.food_beverage",
+      "type": "core.Contract",
+      "subject": {
+        "symbol": "asset.hotel"
+      },
+      "term": {
+        "start": "2026-01-01",
+        "end": "2027-01-01"
+      },
+      "currency": "USD",
+      "terms": {},
+      "effects": {
+        "streams": []
+      },
+      "provenance": {
+        "source_file": "model.cfdl",
+        "source_span": {
+          "start_line": 27,
+          "start_col": 1,
+          "end_line": 33,
+          "end_col": 1
+        }
+      }
+    },
+    {
+      "id": "ac20b63eebb74689e47f3a689414ac56",
+      "name": "cre.opex_line.property_tax",
+      "type": "core.Contract",
+      "subject": {
+        "symbol": "asset.hotel"
+      },
+      "term": {
+        "start": "2026-01-01",
+        "end": "2027-01-01"
+      },
+      "currency": "USD",
+      "terms": {},
+      "effects": {
+        "streams": []
+      },
+      "provenance": {
+        "source_file": "model.cfdl",
+        "source_span": {
+          "start_line": 37,
+          "start_col": 1,
+          "end_line": 42,
+          "end_col": 1
+        }
+      }
+    },
+    {
+      "id": "83648e01b1df212e3928ffd28b31a6e6",
+      "name": "cre.opex_line.rooms",
+      "type": "core.Contract",
+      "subject": {
+        "symbol": "asset.hotel"
+      },
+      "term": {
+        "start": "2026-01-01",
+        "end": "2027-01-01"
+      },
+      "currency": "USD",
+      "terms": {},
+      "effects": {
+        "streams": []
+      },
+      "provenance": {
+        "source_file": "model.cfdl",
+        "source_span": {
+          "start_line": 19,
+          "start_col": 1,
+          "end_line": 25,
+          "end_col": 1
+        }
+      }
+    }
+  ],
+  "streams": [
+    {
+      "id": "547ad3bef2cf47e2cf9fc5b435cf6f1d",
+      "name": "cre.opex.line.food_beverage",
+      "owner": {
+        "symbol": "asset.hotel"
+      },
+      "direction": "outflow",
+      "currency": "USD",
+      "category": "operating.expense.food_beverage",
+      "schedule": {
+        "kind": "Every",
+        "every": "annual",
+        "from": "2026-01-01",
+        "to": "2027-01-01"
+      },
+      "amount": {
+        "lang": "cfdl",
+        "src": "(400.0 + 0.0 / 1.0) * pow(1.0 + 0.0, round_down(months_between(parse_date(\"2026-01-01\"), time.date) / 12.0, 0.0)) * (1.0 + (1.0 - 1.0) * 1.0)"
+      },
+      "active_when": {
+        "lang": "cfdl",
+        "src": "true"
+      },
+      "provenance": {
+        "source_file": "model.cfdl",
+        "source_span": {
+          "start_line": 27,
+          "start_col": 1,
+          "end_line": 33,
+          "end_col": 1
+        },
+        "generated_by": {
+          "pack": {
+            "name": "cre",
+            "version": "0.1.0"
+          },
+          "rule_id": "cre_opex_line"
+        }
+      }
+    },
+    {
+      "id": "2dbaaee619a33b575f24cb1df209129b",
+      "name": "cre.opex.line.property_tax",
+      "owner": {
+        "symbol": "asset.hotel"
+      },
+      "direction": "outflow",
+      "currency": "USD",
+      "category": "operating.expense.opex",
+      "schedule": {
+        "kind": "Every",
+        "every": "annual",
+        "from": "2026-01-01",
+        "to": "2027-01-01"
+      },
+      "amount": {
+        "lang": "cfdl",
+        "src": "(200.0 + 0.0 / 1.0) * pow(1.0 + 0.0, round_down(months_between(parse_date(\"2026-01-01\"), time.date) / 12.0, 0.0)) * (1.0 + (1.0 - 1.0) * 1.0)"
+      },
+      "active_when": {
+        "lang": "cfdl",
+        "src": "true"
+      },
+      "provenance": {
+        "source_file": "model.cfdl",
+        "source_span": {
+          "start_line": 37,
+          "start_col": 1,
+          "end_line": 42,
+          "end_col": 1
+        },
+        "generated_by": {
+          "pack": {
+            "name": "cre",
+            "version": "0.1.0"
+          },
+          "rule_id": "cre_opex_line"
+        }
+      }
+    },
+    {
+      "id": "ba2ebe680334c66ca0ad31932ef47045",
+      "name": "cre.opex.line.rooms",
+      "owner": {
+        "symbol": "asset.hotel"
+      },
+      "direction": "outflow",
+      "currency": "USD",
+      "category": "operating.expense.rooms",
+      "schedule": {
+        "kind": "Every",
+        "every": "annual",
+        "from": "2026-01-01",
+        "to": "2027-01-01"
+      },
+      "amount": {
+        "lang": "cfdl",
+        "src": "(1000.0 + 0.0 / 1.0) * pow(1.0 + 0.0, round_down(months_between(parse_date(\"2026-01-01\"), time.date) / 12.0, 0.0)) * (1.0 + (1.0 - 1.0) * 1.0)"
+      },
+      "active_when": {
+        "lang": "cfdl",
+        "src": "true"
+      },
+      "provenance": {
+        "source_file": "model.cfdl",
+        "source_span": {
+          "start_line": 19,
+          "start_col": 1,
+          "end_line": 25,
+          "end_col": 1
+        },
+        "generated_by": {
+          "pack": {
+            "name": "cre",
+            "version": "0.1.0"
+          },
+          "rule_id": "cre_opex_line"
+        }
+      }
+    }
+  ],
+  "stream_inputs": [
+    {
+      "stream": "cre.opex.line.rooms",
+      "contract": "cre.opex_line.rooms",
+      "terms": {
+        "amount": "1000",
+        "amount_year": "0",
+        "escalation": "0",
+        "occupancy": "1",
+        "pct_fixed": "1"
+      },
+      "defaults_applied": [
+        "amount_year",
+        "escalation",
+        "occupancy",
+        "pct_fixed"
+      ]
+    },
+    {
+      "stream": "cre.opex.line.food_beverage",
+      "contract": "cre.opex_line.food_beverage",
+      "terms": {
+        "amount": "400",
+        "amount_year": "0",
+        "escalation": "0",
+        "occupancy": "1",
+        "pct_fixed": "1"
+      },
+      "defaults_applied": [
+        "amount_year",
+        "escalation",
+        "occupancy",
+        "pct_fixed"
+      ]
+    },
+    {
+      "stream": "cre.opex.line.property_tax",
+      "contract": "cre.opex_line.property_tax",
+      "terms": {
+        "amount": "200",
+        "amount_year": "0",
+        "escalation": "0",
+        "occupancy": "1",
+        "pct_fixed": "1"
+      },
+      "defaults_applied": [
+        "amount_year",
+        "escalation",
+        "occupancy",
+        "pct_fixed"
+      ]
+    }
+  ],
+  "events": [],
+  "options": [],
+  "runs": [
+    {
+      "kind": "deterministic"
+    }
+  ],
+  "required_observables": [],
+  "required_refs": [],
+  "provenance": {
+    "sources": [
+      "model.cfdl"
+    ],
+    "compiler": {
+      "name": "cfdl",
+      "version": "0.7.0",
+      "hash": "d8d1db56ad202b16b86131b737550b9c",
+      "notes": [
+        "active_pack=cre@0.1.0"
+      ]
+    }
+  }
+}

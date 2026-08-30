@@ -1,0 +1,17 @@
+[
+  {
+    "code": "E0004_EXPECTED_TOKEN",
+    "severity": "error",
+    "message": "Unexpected 'categry' in a contract body. Expected 'term', 'payment net', 'terms', 'category', 'parties', 'on entity', 'effects', or '}'.",
+    "file": "model.cfdl",
+    "span": {
+      "start_line": 12,
+      "start_col": 3,
+      "end_line": 12,
+      "end_col": 9
+    },
+    "path": null,
+    "hint": null,
+    "notes": []
+  }
+]

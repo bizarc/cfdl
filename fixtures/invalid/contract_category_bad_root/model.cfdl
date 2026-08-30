@@ -1,0 +1,16 @@
+version 0.1
+model "contract-category-bad-root"
+use pack "cre" version "0.1.0"
+time calendar annual from 2026-01 for 2
+
+// A contract may override the category its lowering rule assigns, and it is
+// validated like any other: rooted in one of the three activities. E5022.
+entity asset tower : CRE.Asset.RealProperty
+
+contract cre.opex_line.rooms on entity asset.tower {
+  term 2026-01..2027-01
+  category departmental.rooms
+  terms {
+    amount = 1000
+  }
+}

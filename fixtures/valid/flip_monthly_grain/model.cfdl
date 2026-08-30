@@ -114,8 +114,11 @@ event flip when asset.interest.investor_npv_closed >= 0.0 {
 
 // Operating cash is ACTIVITY, so it is a stream; the waterfall allocates the
 // interest's available cash rather than recomputing revenue inside the pot.
+// A NET figure — PPA revenue less O&M — carried on one stream, so it is
+// categorised as energy revenue and EBITDA reads it whole.
 stream interest.operating_cash on entity asset.interest inflow currency USD {
   schedule every month from 2026-02 to 2051-12
+  category operating.revenue.energy
   amount = ( inputs.energy_year_one * inputs.ppa_price
               * pow(1.0 + inputs.ppa_escalation, asset.interest.operating_year - 1.0)
               * pow(1.0 - inputs.degradation, asset.interest.operating_year - 1.0)

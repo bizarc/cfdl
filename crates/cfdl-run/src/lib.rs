@@ -42,12 +42,22 @@ pub fn enrich_results(
         .as_ref()
         .map(cfdl_statement::waterfall_series)
         .unwrap_or_default();
+    // The pack's RECOMMENDED vocabulary, for `W5023`. It is advice about
+    // spelling, and its consequence is a presentation one — an unrecommended
+    // category is the category no statement row claims — so it is reported
+    // where the statement's own completeness diagnostics are, beside `W3500`.
+    // `results.warnings` belongs to the engine, which has no pack.
+    let recommended = registry
+        .and_then(|reg| reg.pack(pack_name))
+        .map(|pack| pack.manifest.categories.clone())
+        .unwrap_or_default();
     results.statements = cfdl_statement::compute(
         pack_name,
         &statement_specs,
         &subtotal_specs,
         &categories,
         &waterfall_series,
+        &recommended,
         results,
     );
 }

@@ -1,0 +1,16 @@
+version 0.1
+model "contract-unknown-clause"
+use pack "cre" version "0.1.0"
+time calendar annual from 2026-01 for 2
+
+// A misspelled clause in a contract body used to be swallowed by a catch-all
+// and vanish without a diagnostic. E0004.
+entity asset tower : CRE.Asset.RealProperty
+
+contract cre.opex_line.rooms on entity asset.tower {
+  term 2026-01..2027-01
+  categry operating.expense.rooms
+  terms {
+    amount = 1000
+  }
+}

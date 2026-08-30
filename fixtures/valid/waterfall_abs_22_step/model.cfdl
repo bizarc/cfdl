@@ -71,8 +71,11 @@ assume oc_target       = 940000000.0
 // schedule, so the amounts are stated here as a stream — the trust's cash,
 // which `available` hands the waterfall. The decay stands in for a pool
 // amortizing; the capital structure above is the transaction's own.
+// Undifferentiated collections, categorised as principal: the waterfall retires
+// notes with them.
 stream trust.collections on entity asset.trust inflow currency USD {
   schedule every month from 2017-02 to 2017-07
+  category operating.collection.principal
   amount = 12500000.0 * pow(0.97, time.t)
 }
 

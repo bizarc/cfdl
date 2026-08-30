@@ -1,6 +1,6 @@
 # CFDL — The category taxonomy
 
-Status: proposal. Not implemented.
+Status: §3 implemented. §4 and the §2.4 renames are not; see §7.
 
 A stream's `category` is the one thing that says what a flow *is*. Aggregation
 reads it, subtotals fold it, and statements present what it folds. This note
@@ -52,8 +52,17 @@ compiles with no diagnostic, and the IR carries the lowering rule's value:
     contracts: [('cre.opex_line.rooms', None)]
 
 Note the category written there is not in the pack's closed list, so had the
-clause been honoured it should have raised E5022. It raised nothing. A clause
-the author wrote has no effect and nothing says so.
+clause been honoured it should have raised E5022. It raised nothing.
+
+The mechanism is worse than a dropped field. `parse_contract_stmt`'s clause
+dispatch ends in
+
+    TokenKind::Punct(Punct::RBrace) => depth = depth.saturating_sub(1),
+    _ => {}
+
+a catch-all that silently swallows **every** token it does not recognise. Not
+just `category`: any misspelled clause, or one the grammar does not have,
+vanishes from a contract body without a diagnostic.
 
 ### 1.3 An uncategorised stream is silently absent from every subtotal
 
@@ -264,3 +273,42 @@ default.
 
 Diagnostics and IR output quoted in §1 were reproduced against
 `cfdl-engine 0.7.0` on the `cre` pack v0.1.0.
+
+
+---
+
+## 7. What shipped, and what has not
+
+§3 is implemented:
+
+- **One validity rule.** A pack no longer narrows the language's. `E5022` now
+  reports only a bad root, with the same text pack or no pack.
+- **`E5029_STREAM_MISSING_CATEGORY`.** An uncategorised stream is an error when
+  a pack is active, and stays legal when none is.
+- **Instance categories.** A contract may state the category its lowered streams
+  carry; it is validated against the roots and beats the rule's. The parser's
+  catch-all is closed for a bare identifier at body level, so a misspelled
+  clause now reports instead of vanishing.
+- **`W5023_UNRECOGNISED_PACK_CATEGORY`.** Reported in the statement's
+  diagnostics, beside `W3500`, naming a near match one edit away.
+
+  It was written first into `results.warnings`, following `W5022` — the
+  codebase's existing answer to a static, spelling-class advisory. The engine's
+  own golden corpus refused it, and was right to: that test strips
+  `domain_metrics` and `statements` as "sections the engine does not produce"
+  and compares `warnings`, so `warnings` is the engine's channel and the engine
+  has no pack. The statement's diagnostics are where a pack-aware post-engine
+  finding already lives. It is also the better home on the merits, because the
+  consequence of an unrecommended category is exactly a presentation one.
+
+  The trade, shared with every statement diagnostic: it appears on a run with a
+  pack that declares a statement, not on `cfdl compile`.
+
+Not implemented, and each its own change:
+
+- **§4, the category-subtree statement row.** Until it exists, instances that
+  carry distinct categories fold correctly and still render under
+  `Unclassified`, because statement rows select stream names. This feature is
+  not visible in a statement without it.
+- **§2.4 and §2.5, the IFRS-aligned renames** and the per-pack main business
+  activity stance. Wide and breaking; §5 enumerates the cost.

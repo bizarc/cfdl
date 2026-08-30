@@ -1,6 +1,6 @@
 {
   "results_version": "0.5",
-  "model_hash": "df5fd89a4036b17320afff08f0845b8547a633e27c87fef8e9ce20be74c38b35",
+  "model_hash": "d7749d5056b408f4e2e90991020ff0266544ecfe7206e2cb79ff8cfef8806d08",
   "ledger_hash": "e892b80d7c14f2078dee7e05fa69e2dfa88a193f24d7183bf896dd96acdba3ff",
   "engine": {
     "name": "cfdl-engine",
@@ -131,27 +131,27 @@
         },
         "values": [
           {
-            "amount": 0.0,
+            "amount": -12500000.0,
             "currency": "USD"
           },
           {
-            "amount": 0.0,
+            "amount": -24625000.0,
             "currency": "USD"
           },
           {
-            "amount": 0.0,
+            "amount": -36386250.0,
             "currency": "USD"
           },
           {
-            "amount": 0.0,
+            "amount": -47794662.5,
             "currency": "USD"
           },
           {
-            "amount": 0.0,
+            "amount": -58860822.625,
             "currency": "USD"
           },
           {
-            "amount": 0.0,
+            "amount": -69594997.94625,
             "currency": "USD"
           }
         ]
@@ -164,27 +164,27 @@
         },
         "values": [
           {
-            "amount": 0.0,
+            "amount": 12500000.0,
             "currency": "USD"
           },
           {
-            "amount": 0.0,
+            "amount": 12125000.0,
             "currency": "USD"
           },
           {
-            "amount": 0.0,
+            "amount": 11761250.0,
             "currency": "USD"
           },
           {
-            "amount": 0.0,
+            "amount": 11408412.5,
             "currency": "USD"
           },
           {
-            "amount": 0.0,
+            "amount": 11066160.125,
             "currency": "USD"
           },
           {
-            "amount": 0.0,
+            "amount": 10734175.32125,
             "currency": "USD"
           }
         ]
@@ -197,27 +197,27 @@
         },
         "values": [
           {
-            "amount": 0.0,
+            "amount": 12500000.0,
             "currency": "USD"
           },
           {
-            "amount": 0.0,
+            "amount": 12125000.0,
             "currency": "USD"
           },
           {
-            "amount": 0.0,
+            "amount": 11761250.0,
             "currency": "USD"
           },
           {
-            "amount": 0.0,
+            "amount": 11408412.5,
             "currency": "USD"
           },
           {
-            "amount": 0.0,
+            "amount": 11066160.125,
             "currency": "USD"
           },
           {
-            "amount": 0.0,
+            "amount": 10734175.32125,
             "currency": "USD"
           }
         ]
@@ -278,27 +278,27 @@
         },
         "values": [
           {
-            "amount": 0.0,
+            "amount": 12500000.0,
             "currency": "USD"
           },
           {
-            "amount": 0.0,
+            "amount": 12125000.0,
             "currency": "USD"
           },
           {
-            "amount": 0.0,
+            "amount": 11761250.0,
             "currency": "USD"
           },
           {
-            "amount": 0.0,
+            "amount": 11408412.5,
             "currency": "USD"
           },
           {
-            "amount": 0.0,
+            "amount": 11066160.125,
             "currency": "USD"
           },
           {
-            "amount": 0.0,
+            "amount": 10734175.32125,
             "currency": "USD"
           }
         ]
@@ -311,27 +311,27 @@
         },
         "values": [
           {
-            "amount": 0.0,
+            "amount": -12500000.0,
             "currency": "USD"
           },
           {
-            "amount": 0.0,
+            "amount": -24625000.0,
             "currency": "USD"
           },
           {
-            "amount": 0.0,
+            "amount": -36386250.0,
             "currency": "USD"
           },
           {
-            "amount": 0.0,
+            "amount": -47794662.5,
             "currency": "USD"
           },
           {
-            "amount": 0.0,
+            "amount": -58860822.625,
             "currency": "USD"
           },
           {
-            "amount": 0.0,
+            "amount": -69594997.94625,
             "currency": "USD"
           }
         ]
@@ -344,27 +344,27 @@
         },
         "values": [
           {
-            "amount": 0.0,
+            "amount": 12500000.0,
             "currency": "USD"
           },
           {
-            "amount": 0.0,
+            "amount": 24625000.0,
             "currency": "USD"
           },
           {
-            "amount": 0.0,
+            "amount": 36386250.0,
             "currency": "USD"
           },
           {
-            "amount": 0.0,
+            "amount": 47794662.5,
             "currency": "USD"
           },
           {
-            "amount": 0.0,
+            "amount": 58860822.625,
             "currency": "USD"
           },
           {
-            "amount": 0.0,
+            "amount": 69594997.94625,
             "currency": "USD"
           }
         ]
@@ -3283,7 +3283,7 @@
           },
           "values": [
             {
-              "amount": 0.0,
+              "amount": -249761733.07125,
               "currency": "USD"
             }
           ]
@@ -3296,7 +3296,7 @@
           },
           "values": [
             {
-              "amount": 0.0,
+              "amount": 69594997.94625,
               "currency": "USD"
             }
           ]
@@ -3309,7 +3309,7 @@
           },
           "values": [
             {
-              "amount": 0.0,
+              "amount": 69594997.94625,
               "currency": "USD"
             }
           ]
@@ -3345,7 +3345,7 @@
           },
           "values": [
             {
-              "amount": 0.0,
+              "amount": 69594997.94625,
               "currency": "USD"
             }
           ]
@@ -3358,7 +3358,7 @@
           },
           "values": [
             {
-              "amount": 0.0,
+              "amount": -249761733.07125,
               "currency": "USD"
             }
           ]
@@ -3371,7 +3371,7 @@
           },
           "values": [
             {
-              "amount": 0.0,
+              "amount": 249761733.07125,
               "currency": "USD"
             }
           ]

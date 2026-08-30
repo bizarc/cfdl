@@ -1,0 +1,17 @@
+[
+  {
+    "code": "E5029_STREAM_MISSING_CATEGORY",
+    "severity": "error",
+    "message": "Stream 'misc.windfall' declares no category, and pack 'cre' is active. Its cash would reach model.total and fold into no subtotal — invisible to every domain metric, silently.",
+    "file": "model.cfdl",
+    "span": {
+      "start_line": 11,
+      "start_col": 1,
+      "end_line": 14,
+      "end_col": 1
+    },
+    "path": null,
+    "hint": "State what the flow IS, as a path into the cash flow statement: `category operating.revenue.rent`, `category financing.interest`. A category is only optional when no pack is active, because then nothing folds.",
+    "notes": []
+  }
+]

@@ -1,0 +1,14 @@
+version 0.1
+model "stream-missing-category"
+use pack "cre" version "0.1.0"
+time calendar annual from 2026-01 for 2
+
+// A stream with no category, while a pack is active. Its cash reaches
+// model.total and folds into no subtotal, so every domain metric is computed
+// as though it were not there. E5029.
+entity asset tower : CRE.Asset.RealProperty
+
+stream misc.windfall on entity asset.tower inflow currency USD {
+  schedule every year from 2026-01 to 2027-01
+  amount = 250
+}

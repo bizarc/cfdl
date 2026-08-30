@@ -17,8 +17,11 @@ entity party certificate : Credit.Party.Investor { name = "Certificateholder" }
 // The pot is the cash the trust receives. `available` binds it — the trust's
 // netted stream cash for the period — so the waterfall consumes a result
 // rather than a hand-maintained field.
+// Undifferentiated collections, categorised as principal because that is what
+// the waterfall below retires with them.
 stream trust.collections on entity asset.trust inflow currency USD {
   schedule every month from 2017-02 to 2017-05
+  category operating.collection.principal
   amount = 1000.0
 }
 

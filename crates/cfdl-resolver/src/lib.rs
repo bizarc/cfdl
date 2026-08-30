@@ -939,6 +939,7 @@ mod tests {
                         terms: BTreeMap::new(),
                         parties: vec![],
                         span: span(),
+                        category: None,
                     }),
                 },
             ],

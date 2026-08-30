@@ -5362,8 +5362,16 @@ categories = [
 ]
 ```
 
-Keeping the set closed is what stops two models in the same pack spelling the
-same idea two ways.
+The list is a recommendation, not a gate. The three roots are what the language
+validates, with or without a pack, so a model may name a leaf the pack never
+enumerated — a departmental operating expense, an acquisition basis — and it
+folds exactly as a listed one does. A well-rooted category the pack does not
+list raises `W5023` naming the near match, which is what keeps two models in one
+pack from spelling the same idea two ways.
+
+A pack cannot enumerate every leaf a deal needs, because the leaf is not
+knowable by a pack that shipped before the deal. What the list carries is the
+domain's conventional spelling.
 
 #### Step 2 — classify at the point of emission
 
@@ -6238,6 +6246,14 @@ Warnings:
 Statement completeness. These are warnings rather
 than errors: the statement still renders, and the point is that the reader can
 see what is wrong with it.
+- `E5029_STREAM_MISSING_CATEGORY` — a stream declares no `category` while a pack
+  is active. Its cash still reaches `model.total` and the entity roll-up and
+  folds into no subtotal at all, so every domain metric is computed as though
+  the stream were not there. An error rather than a warning because with a pack
+  loaded there is always a right answer available — a flow that does not belong
+  in net operating income takes a different root — and a coverage ratio that
+  quietly excluded a stream is wrong and says so nowhere. Without a pack a
+  category stays optional, because nothing folds.
 
 - `W5022_UNKNOWN_SERIES_REFERENCE` — a `series_sum`/`series_avg` names a series
   no stream, contract or waterfall step produces, so it aggregates to zero and
@@ -6258,6 +6274,18 @@ see what is wrong with it.
   that looks entirely plausible.
 - `W3502_STATEMENT_BOTTOM_LINE_RESIDUAL` — the statement's rows do not sum to
   `model.total` within half a cent. Asserted, never corrected.
+
+- `W5023_UNRECOGNISED_PACK_CATEGORY` — a stream's category is well-rooted and
+  valid, and is not one the active pack recommends. The three roots are the only
+  gate: a pack's `categories` list is the domain's conventional spelling, not
+  permission, because a pack cannot enumerate every leaf a deal needs. Reported
+  in the statement's diagnostics rather than in `results.warnings`, beside
+  `W3500`, for two reasons: the consequence of an unrecommended category is a
+  presentation one — no row of a pack statement claims it, so it lands in the
+  residual — and `results.warnings` belongs to the engine, which has no pack.
+  Names a near match when one is a single edit away, the bar the compiler
+  already uses for a misspelled term. Reported once per distinct category:
+  thirteen expense lines sharing one misspelling are one mistake.
 
 - `E5022_UNKNOWN_STREAM_CATEGORY` — a stream declares `category <path>` that
   the active pack does not list in its manifest `categories`. A category is a
