@@ -59,6 +59,15 @@ name = "commercial_operation_date"
 field_type = "date"
 required = false
 
+[[entities.fields]]
+name = "available_capacity_fraction"
+field_type = "number"
+required = false
+description = """The share of net maximum capacity currently available. A DERATE \
+is partial and coexists with being in service, and IEEE 762 reports derates with \
+a magnitude — so this is a field rather than a state (`docs/36` §3.1). 1.0 is \
+fully available."""
+
 [[entities]]
 type_id = "Energy.Asset.Portfolio"
 family = "asset"
@@ -150,42 +159,99 @@ required = false
 
 [[lifecycles]]
 lifecycle_id = "energy.facility"
-initial = "development"
-states = ["development", "construction", "commissioning", "operating", "curtailed", "decommissioned"]
+initial = "in_service"
+states = ["development", "construction", "commissioning", "in_service", "reserve_shutdown", "forced_outage", "planned_outage", "maintenance_outage", "mothballed", "retired", "abandoned"]
+description = """A generating unit's condition, on IEEE Std 762 as NERC GADS \
+operationalises it (`docs/36` §3.1). The standard's central distinction is \
+AVAILABILITY against DISPATCH: a unit that is available but not synchronised is \
+in RESERVE SHUTDOWN, which is not the same condition as one forced out, and the \
+two carry opposite implications for an availability payment. Economic \
+curtailment is a reserve shutdown; a physical limit is a DERATE, which is \
+partial and coexists with being in service — so it is the \
+`available_capacity_fraction` field, not a state. Forced, planned and \
+maintenance outages stay distinct because the availability metrics this pack \
+publishes (EAF, EFOR) are defined on that distinction."""
 
 [[lifecycles.transitions]]
 from = "development"
 to = "construction"
-description = "Notice to proceed."
+
+[[lifecycles.transitions]]
+from = "development"
+to = "abandoned"
+description = "Where projects most often die."
 
 [[lifecycles.transitions]]
 from = "construction"
 to = "commissioning"
-description = "Mechanical completion."
+
+[[lifecycles.transitions]]
+from = "construction"
+to = "abandoned"
 
 [[lifecycles.transitions]]
 from = "commissioning"
-to = "operating"
-description = "Commercial operation. Revenue contracts commonly activate here."
+to = "in_service"
+description = "The service date, on which GADS reporting begins."
 
 [[lifecycles.transitions]]
-from = "operating"
-to = "curtailed"
-description = "Output curtailed by the offtaker or the grid; capacity payments may continue."
+from = "in_service"
+to = "reserve_shutdown"
+description = "Available, not synchronised. Economic curtailment lands here."
 
 [[lifecycles.transitions]]
-from = "curtailed"
-to = "operating"
+from = "reserve_shutdown"
+to = "in_service"
 
 [[lifecycles.transitions]]
-from = "operating"
-to = "decommissioned"
+from = "in_service"
+to = "forced_outage"
 
-# A PARTNERSHIP FLIP is a lifecycle, not a schedule. Before the flip the tax
-# investor takes almost all of the cash and all of the tax attributes; after
-# it, almost none. What moves the structure between the two is not a date but
-# a test — the investor's after-tax return reaching its target — so the state
-# is the honest place to hold it, and the date is derived rather than stated.
+[[lifecycles.transitions]]
+from = "forced_outage"
+to = "in_service"
+
+[[lifecycles.transitions]]
+from = "reserve_shutdown"
+to = "forced_outage"
+
+[[lifecycles.transitions]]
+from = "in_service"
+to = "planned_outage"
+
+[[lifecycles.transitions]]
+from = "planned_outage"
+to = "in_service"
+
+[[lifecycles.transitions]]
+from = "in_service"
+to = "maintenance_outage"
+
+[[lifecycles.transitions]]
+from = "maintenance_outage"
+to = "in_service"
+
+[[lifecycles.transitions]]
+from = "in_service"
+to = "mothballed"
+description = "GADS inactive. A mothballed unit can return; a retired one cannot."
+
+[[lifecycles.transitions]]
+from = "reserve_shutdown"
+to = "mothballed"
+
+[[lifecycles.transitions]]
+from = "mothballed"
+to = "in_service"
+
+[[lifecycles.transitions]]
+from = "in_service"
+to = "retired"
+
+[[lifecycles.transitions]]
+from = "mothballed"
+to = "retired"
+
 [[lifecycles]]
 lifecycle_id = "energy.flip_structure"
 initial = "pre_flip"

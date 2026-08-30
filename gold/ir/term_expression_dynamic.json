@@ -56,14 +56,19 @@
   "lifecycles": [
     {
       "id": "energy.facility",
-      "initial": "development",
+      "initial": "in_service",
       "states": [
         "development",
         "construction",
         "commissioning",
-        "operating",
-        "curtailed",
-        "decommissioned"
+        "in_service",
+        "reserve_shutdown",
+        "forced_outage",
+        "planned_outage",
+        "maintenance_outage",
+        "mothballed",
+        "retired",
+        "abandoned"
       ],
       "edges": [
         {
@@ -71,24 +76,76 @@
           "to": "construction"
         },
         {
+          "from": "development",
+          "to": "abandoned"
+        },
+        {
           "from": "construction",
           "to": "commissioning"
         },
         {
+          "from": "construction",
+          "to": "abandoned"
+        },
+        {
           "from": "commissioning",
-          "to": "operating"
+          "to": "in_service"
         },
         {
-          "from": "operating",
-          "to": "curtailed"
+          "from": "in_service",
+          "to": "reserve_shutdown"
         },
         {
-          "from": "curtailed",
-          "to": "operating"
+          "from": "reserve_shutdown",
+          "to": "in_service"
         },
         {
-          "from": "operating",
-          "to": "decommissioned"
+          "from": "in_service",
+          "to": "forced_outage"
+        },
+        {
+          "from": "forced_outage",
+          "to": "in_service"
+        },
+        {
+          "from": "reserve_shutdown",
+          "to": "forced_outage"
+        },
+        {
+          "from": "in_service",
+          "to": "planned_outage"
+        },
+        {
+          "from": "planned_outage",
+          "to": "in_service"
+        },
+        {
+          "from": "in_service",
+          "to": "maintenance_outage"
+        },
+        {
+          "from": "maintenance_outage",
+          "to": "in_service"
+        },
+        {
+          "from": "in_service",
+          "to": "mothballed"
+        },
+        {
+          "from": "reserve_shutdown",
+          "to": "mothballed"
+        },
+        {
+          "from": "mothballed",
+          "to": "in_service"
+        },
+        {
+          "from": "in_service",
+          "to": "retired"
+        },
+        {
+          "from": "mothballed",
+          "to": "retired"
         }
       ]
     }
