@@ -19,6 +19,15 @@ RESULT_SECTION = re.compile(r"## The result\n(.*?)(?=\n## )", re.DOTALL)
 # through `lookup`.
 EXAMPLE_COUNT = 2
 
+# The bare loop, for A/B comparison. With CFDL_EVAL_BARE=1 the prompt carries
+# only the specification — no worked examples, no convergence target, no pack
+# reference. That is the control arm, and it has to remain runnable after the
+# enrichments land or the comparison stops being reproducible.
+def bare_mode() -> bool:
+    import os
+
+    return os.environ.get("CFDL_EVAL_BARE", "").strip() not in ("", "0", "false")
+
 # Examples are chosen by domain, shortest first: a small complete model teaches
 # the shape of the language better than a long one, which reads as a wall.
 def worked_examples(task: dict, limit: int = EXAMPLE_COUNT) -> list[tuple[str, str]]:
@@ -166,7 +175,7 @@ def build_prompt(task: dict) -> str:
             "you to see; the per-period expectations are withheld and you will be "
             "graded against them with the benchmark suite's tolerances.\n"
         )
-        target = stated_result(task.get("spec", ""))
+        target = "" if bare_mode() else stated_result(task.get("spec", ""))
         if target:
             parts.append(
                 "\n### Verify before you answer\n\nThe specification publishes "
@@ -179,7 +188,7 @@ def build_prompt(task: dict) -> str:
                 "not checked. If you cannot reach them, say in a comment which "
                 "figure is off and by how much.\n"
             )
-        examples = worked_examples(task)
+        examples = [] if bare_mode() else worked_examples(task)
         if examples:
             parts.append(
                 "\n### Worked models in this domain\n\nThese compile, run, and "
@@ -191,7 +200,7 @@ def build_prompt(task: dict) -> str:
                 parts.append(f"\n#### {title}\n\n```cfdl\n{source.rstrip()}\n```\n")
         if task.get("pack"):
             parts.append(f"\nDomain pack: `{task['pack']}` (pass as `pack` to `run`).\n")
-            reference = pack_reference(task["pack"])
+            reference = "" if bare_mode() else pack_reference(task["pack"])
             if reference:
                 parts.append(f"\n### Pack reference\n\n{reference}\n")
         parts.append(f"\n### Specification (CASE.md)\n\n{task.get('spec', '')}\n")
