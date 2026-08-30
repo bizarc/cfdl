@@ -1,0 +1,139 @@
+{
+  "ir_version": "0.1",
+  "model": {
+    "name": "event-scheduled-occurrences",
+    "currency": "USD"
+  },
+  "time": {
+    "calendar": "monthly",
+    "start": "2026-01-01",
+    "periods": 12
+  },
+  "phases": [],
+  "entities": [
+    {
+      "id": "8ca71b46277588990b2687beb5fc6196",
+      "symbol": "asset.plant",
+      "type": "core.Entity",
+      "fields": {},
+      "rules": {
+        "covered": {
+          "init": {
+            "lang": "cfdl",
+            "src": "1.0"
+          },
+          "next": {
+            "lang": "cfdl",
+            "src": "if(time.t >= 4, 0.0, 1.0)"
+          }
+        },
+        "tests_failed": {
+          "init": {
+            "lang": "cfdl",
+            "src": "0.0"
+          },
+          "next": {
+            "lang": "cfdl",
+            "src": "prev"
+          }
+        }
+      },
+      "state": {}
+    }
+  ],
+  "assumptions": {
+    "constants": {},
+    "random": {}
+  },
+  "contracts": [],
+  "streams": [
+    {
+      "id": "074e55488dfc5255498523f724787822",
+      "name": "core.revenue",
+      "owner": {
+        "symbol": "asset.plant"
+      },
+      "direction": "inflow",
+      "currency": "USD",
+      "schedule": {
+        "kind": "Every",
+        "every": "monthly",
+        "from": "2026-01-01",
+        "to": "2026-12-01"
+      },
+      "amount": {
+        "lang": "cfdl",
+        "src": "100.0"
+      },
+      "active_when": {
+        "lang": "cfdl",
+        "src": "true"
+      },
+      "provenance": {
+        "source_file": "model.cfdl",
+        "source_span": {
+          "start_line": 19,
+          "start_col": 1,
+          "end_line": 22,
+          "end_col": 1
+        }
+      }
+    }
+  ],
+  "events": [
+    {
+      "actions": [
+        {
+          "entity": {
+            "symbol": "asset.plant"
+          },
+          "field": "tests_failed",
+          "kind": "SetEntityField",
+          "value": {
+            "lang": "cfdl",
+            "src": "prev.asset.plant.tests_failed + 1.0"
+          }
+        }
+      ],
+      "id": "49f9158f032f393ff4ddcb29e6db76cc",
+      "name": "covenant_test",
+      "provenance": {
+        "source_file": "model.cfdl",
+        "source_span": {
+          "end_col": 1,
+          "end_line": 17,
+          "start_col": 1,
+          "start_line": 15
+        }
+      },
+      "schedule": {
+        "every": "quarterly",
+        "from": "2026-01-01",
+        "kind": "Every",
+        "to": "2026-12-01"
+      },
+      "when": {
+        "lang": "cfdl",
+        "src": "asset.plant.covered < 0.5"
+      }
+    }
+  ],
+  "options": [],
+  "runs": [
+    {
+      "kind": "deterministic"
+    }
+  ],
+  "required_observables": [],
+  "required_refs": [],
+  "provenance": {
+    "sources": [
+      "model.cfdl"
+    ],
+    "compiler": {
+      "name": "cfdl",
+      "version": "0.7.0",
+      "hash": "d80f4c40398fe75b55a6788a2be14aac"
+    }
+  }
+}

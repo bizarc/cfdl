@@ -1,0 +1,24 @@
+version 0.1
+model "event-refires-on-each-occurrence"
+time calendar monthly from 2026-01 for 10
+
+// AN EVENT IS SOMETHING THAT HAPPENS, and a unit that defaults, cures and
+// defaults again has had three events. Under the latch this fired once and
+// the second breach was invisible; it now fires on each rising edge, and the
+// journal carries one row per occurrence.
+//
+// `breached` is a marker the event writes, not a state: what makes the
+// condition RE-RISE is `paying` falling, recovering and falling again.
+entity asset suite {
+  paying init 1.0 next if(time.t == 3 or time.t == 7, 0.0, 1.0)
+  breach_count init 0.0 next prev
+}
+
+event breach when asset.suite.paying < 0.5 {
+  set entity asset.suite.breach_count = prev.asset.suite.breach_count + 1.0
+}
+
+stream core.rent on entity asset.suite inflow currency USD {
+  schedule every month from 2026-01 to 2026-10
+  amount = 100 * asset.suite.paying
+}

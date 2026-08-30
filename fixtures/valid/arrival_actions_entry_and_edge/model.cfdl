@@ -1,0 +1,33 @@
+version 0.1
+model "arrival-actions-entry-and-edge"
+time calendar monthly from 2026-01 for 8
+
+// Both grains, and the conflict between them. `on enter` carries what is true
+// of the STATE however reached; the edge carries what is true of the PATH.
+// Entry runs first and the edge refines it, so the entry's value is
+// journalled `overridden` and the edge's stands.
+//
+// The write settles the field store, so the stream reads 1200 in the SAME
+// period the transition fires, and the recurrence resumes from it after.
+lifecycle unit {
+  initial vacant
+  state vacant, leased
+
+  on enter leased {
+    set in_place_rent = 1000.0
+  }
+
+  vacant -> leased when time.t >= 2 {
+    set in_place_rent = 1200.0
+  }
+}
+
+entity asset suite {
+  lifecycle unit
+  in_place_rent init 900.0 next prev
+}
+
+stream core.rent on entity asset.suite inflow currency USD {
+  schedule every month from 2026-01 to 2026-08
+  amount = asset.suite.in_place_rent
+}

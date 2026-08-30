@@ -1,0 +1,140 @@
+{
+  "ir_version": "0.1",
+  "model": {
+    "name": "arrival-actions-entry-and-edge",
+    "currency": "USD"
+  },
+  "time": {
+    "calendar": "monthly",
+    "start": "2026-01-01",
+    "periods": 8
+  },
+  "phases": [],
+  "entities": [
+    {
+      "id": "0e8e7ed5a33916d03ca18c8f1fb232c6",
+      "symbol": "asset.suite",
+      "type": "core.Entity",
+      "fields": {},
+      "rules": {
+        "in_place_rent": {
+          "init": {
+            "lang": "cfdl",
+            "src": "900.0"
+          },
+          "next": {
+            "lang": "cfdl",
+            "src": "prev"
+          }
+        }
+      },
+      "state": {},
+      "lifecycle": "unit"
+    }
+  ],
+  "assumptions": {
+    "constants": {},
+    "random": {}
+  },
+  "lifecycles": [
+    {
+      "id": "unit",
+      "initial": "vacant",
+      "states": [
+        "vacant",
+        "leased"
+      ],
+      "edges": [
+        {
+          "from": "vacant",
+          "to": "leased",
+          "guard": {
+            "lang": "cfdl",
+            "src": "time.t >= 2.0"
+          },
+          "actions": [
+            {
+              "kind": "SetField",
+              "author": "model",
+              "field": "in_place_rent",
+              "value": {
+                "lang": "cfdl",
+                "src": "1200.0"
+              }
+            }
+          ]
+        }
+      ],
+      "entry_actions": [
+        {
+          "state": "leased",
+          "actions": [
+            {
+              "kind": "SetField",
+              "author": "model",
+              "field": "in_place_rent",
+              "value": {
+                "lang": "cfdl",
+                "src": "1000.0"
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "contracts": [],
+  "streams": [
+    {
+      "id": "2aa0ccd1f549852586d71092ae8e70bb",
+      "name": "core.rent",
+      "owner": {
+        "symbol": "asset.suite"
+      },
+      "direction": "inflow",
+      "currency": "USD",
+      "schedule": {
+        "kind": "Every",
+        "every": "monthly",
+        "from": "2026-01-01",
+        "to": "2026-08-01"
+      },
+      "amount": {
+        "lang": "cfdl",
+        "src": "asset.suite.in_place_rent"
+      },
+      "active_when": {
+        "lang": "cfdl",
+        "src": "true"
+      },
+      "provenance": {
+        "source_file": "model.cfdl",
+        "source_span": {
+          "start_line": 30,
+          "start_col": 1,
+          "end_line": 33,
+          "end_col": 1
+        }
+      }
+    }
+  ],
+  "events": [],
+  "options": [],
+  "runs": [
+    {
+      "kind": "deterministic"
+    }
+  ],
+  "required_observables": [],
+  "required_refs": [],
+  "provenance": {
+    "sources": [
+      "model.cfdl"
+    ],
+    "compiler": {
+      "name": "cfdl",
+      "version": "0.7.0",
+      "hash": "d80f4c40398fe75b55a6788a2be14aac"
+    }
+  }
+}
