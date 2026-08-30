@@ -359,6 +359,34 @@ pub struct OntologyLifecycle {
     pub description: Option<String>,
     #[serde(default)]
     pub transitions: Vec<OntologyTransition>,
+    /// `[[lifecycles.entry_actions]]` — what is true of a STATE however it was
+    /// reached (`docs/34` D3). The primary domain spelling: a pack declares it
+    /// once and every model using the type inherits it, including for an edge
+    /// somebody adds later.
+    #[serde(default)]
+    pub entry_actions: Vec<OntologyStateEntry>,
+}
+
+/// One state's arrival actions, as a pack declares them.
+#[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct OntologyStateEntry {
+    pub state: String,
+    #[serde(default)]
+    pub description: Option<String>,
+    pub actions: Vec<OntologyAction>,
+}
+
+/// One arrival action. `set <field> = <expr>`, and nothing else (`docs/34`
+/// D4). The field is ENTITY-RELATIVE: it resolves against whichever entity
+/// bound this machine, because one lifecycle is bound by many.
+#[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct OntologyAction {
+    pub set: String,
+    pub value: String,
+    #[serde(default)]
+    pub description: Option<String>,
 }
 
 impl OntologyLifecycle {
@@ -392,6 +420,12 @@ pub struct OntologyTransition {
     /// every shipped pack edge is.
     #[serde(default)]
     pub guard: Option<String>,
+    /// `[[lifecycles.transitions.actions]]` — what is true of the PATH taken
+    /// rather than of the state arrived in. A renewal and a re-let both land
+    /// in `leased`, and the rent is struck differently because of how you
+    /// arrived; an entry action cannot say that.
+    #[serde(default)]
+    pub actions: Vec<OntologyAction>,
 }
 
 /// A market observable. Declared in the model today; the shape admits an
