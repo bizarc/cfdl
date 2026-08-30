@@ -223,6 +223,49 @@ guard = 'series_sum("cre.rent", time.t - 1, time.t - 1) < 50'
 - An entity whose type declares a lifecycle MUST NOT also bind a
   model-declared one (`E1350`): one machine per entity.
 
+**Arrival actions.** A machine MAY carry what happens on arrival — the same
+two grains a model declares (`docs/34` D2, D3):
+
+```toml
+[[lifecycles.entry_actions]]
+state = "leased"
+description = "True of the STATE however it was reached."
+actions = [{ set = "months_in_state", value = "0" }]
+
+[[lifecycles.transitions]]
+from = "holdover"
+to = "leased"
+actions = [{ set = "in_place_rent", value = "prev.in_place_rent * (1 + inputs.bump)" }]
+```
+
+- **Entry actions** carry what is true of the STATE however it was reached,
+  and are the primary domain spelling: a pack declares them once and every
+  entity of the type inherits them, including for an edge added later.
+- **Transition actions** carry what is true of the PATH taken. A renewal and
+  a re-let both land in `leased` and strike rent differently; an entry action
+  cannot say that, because it does not know which edge fired.
+- Both run on EVERY traversal, including one a model's event causes by
+  writing `status` across a permission edge. Entry actions run first, then
+  the taken edge's — the specific refines the general — and a same-field
+  write journals the earlier value `overridden`, naming its author.
+- `set` writes a FIELD and never `status`, refused at pack load: a status
+  write would fire a second transition inside the same period. A transition
+  that should cause another transition is an edge out of the target state,
+  taken next period.
+- The field name is **entity-relative**, refused at pack load if qualified:
+  one lifecycle is bound by many entities, and the behavior belongs to
+  whichever one transitioned.
+- **The field itself comes from the pack's lowering rules**, like every other
+  pack-populated field (`field_name` / `field_init` / `field_next` in
+  §7). Those run per contract instance, so whether a given entity has the
+  field is a fact about the model, not about the pack — an action naming a
+  field the entity does not have is skipped with a warning at run.
+- A model MAY add its own actions to a pack's machine, additively
+  (`docs/34` D2a): a `lifecycle <pack machine>` block contributes actions and
+  may not state `initial`, `state` or an edge (`E1357`). The model's actions
+  run after the pack's, so the model wins a same-field conflict and the
+  pack's value is what journals `overridden`.
+
 ### 6.2 Alias registry
 Aliases map domain-friendly names to canonical TypeIds or contract templates.
 

@@ -1738,6 +1738,43 @@ fn parse_ontology(raw: &str, source: &str, pack_name: &str) -> Result<PackOntolo
                     });
                 }
             }
+            check_arrival_actions(
+                &transition.actions,
+                &lifecycle.lifecycle_id,
+                &format!("transition '{} -> {}'", transition.from, transition.to),
+                source,
+            )?;
+        }
+        // An entry block names a state the machine HAS, and names it once. A
+        // block on a state that does not exist is silently dead otherwise, and
+        // two blocks on one state would make declaration order decide what a
+        // pack meant.
+        let mut seen_entries: BTreeSet<&str> = BTreeSet::new();
+        for entry in &lifecycle.entry_actions {
+            if !lifecycle.has_state(&entry.state) {
+                return Err(PackLoadError {
+                    message: format!(
+                        "Ontology '{source}': lifecycle '{}' has an `entry_actions` block for '{}', which is not one of its states ({}).",
+                        lifecycle.lifecycle_id,
+                        entry.state,
+                        lifecycle.states.join(", ")
+                    ),
+                });
+            }
+            if !seen_entries.insert(entry.state.as_str()) {
+                return Err(PackLoadError {
+                    message: format!(
+                        "Ontology '{source}': lifecycle '{}' declares `entry_actions` for '{}' twice.",
+                        lifecycle.lifecycle_id, entry.state
+                    ),
+                });
+            }
+            check_arrival_actions(
+                &entry.actions,
+                &lifecycle.lifecycle_id,
+                &format!("entry into '{}'", entry.state),
+                source,
+            )?;
         }
     }
 
@@ -1801,6 +1838,49 @@ fn parse_ontology(raw: &str, source: &str, pack_name: &str) -> Result<PackOntolo
 /// A type with no rule is a contract a model can declare and get no cash from;
 /// a rule with no type is cash with no counterparties and no place in the
 /// ontology. Both are silent today, which is how the drift happened.
+/// What a pack's arrival action may say (`docs/34` D4).
+///
+/// `set` writes a FIELD of the entity that transitioned, and never `status`: a
+/// status write would fire a second transition inside the same period, and a
+/// transition that should cause another transition is topology — an edge out
+/// of the target state, taken next period.
+///
+/// The field itself is not checked here. A pack's fields are populated by its
+/// LOWERING RULES, which run per contract instance, so whether a given entity
+/// has the field is a fact about the model rather than about the pack.
+fn check_arrival_actions(
+    actions: &[OntologyAction],
+    lifecycle_id: &str,
+    where_: &str,
+    source: &str,
+) -> Result<(), PackLoadError> {
+    for action in actions {
+        if action.set == "status" {
+            return Err(PackLoadError {
+                message: format!(
+                    "Ontology '{source}': lifecycle '{lifecycle_id}' {where_} sets `status`. An arrival action writes fields, never the state — a transition that should cause another transition is an edge out of the target state, taken next period."
+                ),
+            });
+        }
+        if action.set.contains('.') {
+            return Err(PackLoadError {
+                message: format!(
+                    "Ontology '{source}': lifecycle '{lifecycle_id}' {where_} sets '{}', a qualified path. An arrival action names a field on the entity that transitioned; one lifecycle is bound by many entities, so the name is entity-relative.",
+                    action.set
+                ),
+            });
+        }
+        if action.set.trim().is_empty() || action.value.trim().is_empty() {
+            return Err(PackLoadError {
+                message: format!(
+                    "Ontology '{source}': lifecycle '{lifecycle_id}' {where_} has an action with an empty `set` or `value`."
+                ),
+            });
+        }
+    }
+    Ok(())
+}
+
 fn validate_ontology_against_rules(
     ontology: &PackOntology,
     rules: &[LoweringRule],
