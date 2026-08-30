@@ -1,0 +1,60 @@
+{
+  "commitment_total": 31000000.0,
+  "lp_share": 0.9,
+  "gp_share": 0.1,
+  "preferred_irr": 0.08,
+  "preferred_split": {
+    "lp": 0.9,
+    "gp": 0.1
+  },
+  "hurdle1_irr": 0.085,
+  "hurdle1_split": {
+    "lp": 0.5,
+    "gp": 0.5
+  },
+  "hurdle2_irr": 0.09,
+  "hurdle2_split": {
+    "lp": 0.45,
+    "gp": 0.55
+  },
+  "hurdle3_irr": 1.0,
+  "hurdle3_split": {
+    "lp": 0.4,
+    "gp": 0.6
+  },
+  "final_split": {
+    "lp": 0.9,
+    "gp": 0.1
+  },
+  "gp_resplit": {
+    "gp_lp_share": 0.8,
+    "gp_gp_share": 0.2,
+    "preferred_irr": 0.1,
+    "preferred_split": {
+      "gp_lp": 0.8,
+      "gp_gp": 0.2
+    },
+    "hurdle1_irr": 0.15,
+    "hurdle1_split": {
+      "gp_lp": 0.6,
+      "gp_gp": 0.4
+    },
+    "hurdle2_irr": 0.2,
+    "hurdle2_split": {
+      "gp_lp": 0.4,
+      "gp_gp": 0.6
+    },
+    "hurdle3_irr": 1.0,
+    "hurdle3_split": {
+      "gp_lp": 0.3,
+      "gp_gp": 0.7
+    },
+    "final_split": {
+      "gp_lp": 0.8,
+      "gp_gp": 0.2
+    }
+  },
+  "calendar": "monthly",
+  "start": "2017-08",
+  "periods": 30
+}

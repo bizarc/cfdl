@@ -88,4 +88,5 @@ Complete models for every pack, each checked period by period against an indepen
 ### Without a pack
 
 - [Bespoke: open-pit copper mine](/docs/examples/bespoke-buenavista-del-cobre) — A 41-year open-pit copper mine whose production plan is derived from its reserve statement, with the pit's strip ratio drawn from a distribution and the valuation reported as a range.
+- [A fund waterfall, with each partner's own return](/docs/examples/bespoke-fund-gp-lp-waterfall) — A closed-end fund distributing 39,973,982.80 over twenty-nine months against 31,000,000 committed, split by return of capital, an 8% preferred return and three IRR-hurdle tiers, with each partner's return from its own account.
 - [Bespoke: tolled highway PPP concession](/docs/examples/bespoke-ppiaf-toll-highway) — A 125 km toll highway concession from the World Bank's highway PPP toolkit, financed with three debt tranches and topped up each year by an availability subsidy sized to hold debt service cover at 1.30x.
