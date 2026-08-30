@@ -6,9 +6,117 @@ difference, not a prompt difference.
 """
 
 import json
+import pathlib
 import re
 
+ROOT = pathlib.Path(__file__).resolve().parents[3]
+
 ANSWER_RE = re.compile(r"```json\s*(\{.*?\})\s*```", re.DOTALL)
+RESULT_SECTION = re.compile(r"## The result\n(.*?)(?=\n## )", re.DOTALL)
+
+# How many worked models to show. Two is enough to convey the idiom without
+# crowding out the specification; the agent can always ask for more structure
+# through `lookup`.
+EXAMPLE_COUNT = 2
+
+# Examples are chosen by domain, shortest first: a small complete model teaches
+# the shape of the language better than a long one, which reads as a wall.
+def worked_examples(task: dict, limit: int = EXAMPLE_COUNT) -> list[tuple[str, str]]:
+    """Compiling models from the SAME domain as the task, never the task's own.
+
+    An agent asked to write in a language it has only read about is being set
+    an unfair problem. These are the language being used — the single most
+    valuable thing to put in front of it.
+    """
+    case_id = task.get("id") or ""
+    domain = case_id.split("/")[0] if "/" in case_id else None
+    if not domain:
+        return []
+    own = case_id.split("/")[-1]
+    candidates = []
+    for model in sorted((ROOT / "benchmarks" / domain).glob("*/model.cfdl")):
+        if model.parent.name == own:
+            continue  # never show the answer to the task being graded
+        candidates.append(model)
+    candidates.sort(key=lambda p: p.stat().st_size)
+    out = []
+    for model in candidates[:limit]:
+        summary = ""
+        case_toml = model.parent / "case.toml"
+        if case_toml.exists():
+            for line in case_toml.read_text(encoding="utf-8").splitlines():
+                if line.startswith("summary"):
+                    summary = line.split("=", 1)[1].strip().strip('"')
+                    break
+        out.append((f"{domain}/{model.parent.name} — {summary}",
+                    model.read_text(encoding="utf-8")))
+    return out
+
+
+def pack_reference(pack: str | None) -> str:
+    """The pack's contract types and the terms each rule reads.
+
+    Available through `lookup`, but an agent has to know to ask; putting it in
+    the prompt removes a discovery step from every task.
+    """
+    if not pack:
+        return ""
+    rules = ROOT / "packs" / pack / "lowering" / "rules.toml"
+    if not rules.exists():
+        return ""
+    # A COMPACT reference: each contract with the terms it reads and the
+    # streams it emits. The full TOML is tens of thousands of tokens and is
+    # re-sent on every turn of the loop; what an author needs from it is the
+    # vocabulary, which `lookup` can expand on demand.
+    import tomllib
+
+    data = tomllib.loads(rules.read_text(encoding="utf-8"))
+    # One rule emits one stream, so a contract's rules are collected together:
+    # what an author needs is the contract, its terms, and every line it makes.
+    by_contract: dict[str, dict[str, set]] = {}
+    for rule in data.get("rules", []):
+        name = rule.get("contract_name")
+        if not name:
+            continue
+        entry = by_contract.setdefault(name, {"terms": set(), "streams": set()})
+        for expr in _rule_expressions(rule):
+            entry["terms"].update(re.findall(r"terms\.([a-z_][a-z0-9_]*)", expr))
+        entry["terms"].update(rule.get("defaults", {}).keys())
+        stream = rule.get("stream_name")
+        if stream:
+            entry["streams"].add(stream.replace("{{contract.dot_suffix}}", "[.instance]"))
+    lines = [f"Contracts in pack `{pack}` — the terms each reads and the streams "
+             f"it lowers to. `lookup` expands any of them."]
+    for name in sorted(by_contract):
+        entry = by_contract[name]
+        lines.append(f"\n- `{name}`")
+        if entry["terms"]:
+            lines.append(f"    terms: {', '.join(sorted(entry['terms']))}")
+        if entry["streams"]:
+            lines.append(f"    streams: {', '.join(sorted(entry['streams']))}")
+    return "\n".join(lines)
+
+
+def _rule_expressions(node) -> list:
+    """Every string in a lowering rule, so term reads can be found wherever
+    the rule spells them."""
+    if isinstance(node, str):
+        return [node]
+    if isinstance(node, dict):
+        return [s for v in node.values() for s in _rule_expressions(v)]
+    if isinstance(node, list):
+        return [s for v in node for s in _rule_expressions(v)]
+    return []
+
+
+def stated_result(spec: str) -> str:
+    """The figures the specification publishes for its own deal.
+
+    Every CASE.md states its answer. An agent that never compares its run
+    against them is flying blind on exactly the thing being graded.
+    """
+    match = RESULT_SECTION.search(spec or "")
+    return match.group(1).strip() if match else ""
 
 PROMPT_HEADER = """You are a CFDL authoring agent. CFDL is a declarative cash-flow \
 modeling language: contracts lower to streams through a pack's lowering rules — \
@@ -55,12 +163,37 @@ def build_prompt(task: dict) -> str:
         parts.append(
             "\n## Task: transcribe\n\nAuthor a CFDL model from the case "
             "specification below. The reference material is what the case allows "
-            "you to see; the expected results are withheld and you will be graded "
-            "against them with the benchmark suite's tolerances. Verify your model "
-            "compiles and runs under the given run configuration before answering.\n"
+            "you to see; the per-period expectations are withheld and you will be "
+            "graded against them with the benchmark suite's tolerances.\n"
         )
+        target = stated_result(task.get("spec", ""))
+        if target:
+            parts.append(
+                "\n### Verify before you answer\n\nThe specification publishes "
+                "the figures this deal produces:\n\n"
+                f"> {target}\n\n"
+                "Treat them as your convergence target. `run` your model, compare "
+                "its metrics against these, and if they disagree, use `explain` on "
+                "the series that drive them to find where — then fix and re-run. "
+                "Do not answer with a model whose own published figures you have "
+                "not checked. If you cannot reach them, say in a comment which "
+                "figure is off and by how much.\n"
+            )
+        examples = worked_examples(task)
+        if examples:
+            parts.append(
+                "\n### Worked models in this domain\n\nThese compile, run, and "
+                "match their own references. They are the idiom to follow — the "
+                "shape of a model, how contracts are declared, how terms are "
+                "written. Do not copy their numbers; this is a different deal.\n"
+            )
+            for title, source in examples:
+                parts.append(f"\n#### {title}\n\n```cfdl\n{source.rstrip()}\n```\n")
         if task.get("pack"):
             parts.append(f"\nDomain pack: `{task['pack']}` (pass as `pack` to `run`).\n")
+            reference = pack_reference(task["pack"])
+            if reference:
+                parts.append(f"\n### Pack reference\n\n{reference}\n")
         parts.append(f"\n### Specification (CASE.md)\n\n{task.get('spec', '')}\n")
         parts.append(
             "\n### Run configuration (pass inline as `config`)\n```json\n"
