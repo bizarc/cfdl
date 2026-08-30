@@ -1,0 +1,42 @@
+version 0.1
+model "instance-categories"
+use pack "cre" version "0.1.0"
+time calendar annual from 2026-01 for 2
+
+// A PACK STATES WHAT ITS CONTRACTS ARE. IT CANNOT STATE EVERY LEAF.
+//
+// `cre.opex_line` lowers to `operating.expense.opex` — one category however
+// many instances a model declares, which is right for a pack that cannot know
+// the deal. A hotel's statement is departmental, so these three instances say
+// what they are and the pack's default gives way.
+//
+// The three roots are the only gate, so `operating.expense.rooms` is valid
+// without the pack listing it. It is not the pack's conventional spelling, so
+// the run reports W5023 naming it. Both facts are the point of this fixture.
+
+entity asset hotel : CRE.Asset.RealProperty
+
+contract cre.opex_line.rooms on entity asset.hotel {
+  term 2026-01..2027-01
+  category operating.expense.rooms
+  terms {
+    amount = 1000
+  }
+}
+
+contract cre.opex_line.food_beverage on entity asset.hotel {
+  term 2026-01..2027-01
+  category operating.expense.food_beverage
+  terms {
+    amount = 400
+  }
+}
+
+// No override: takes the rule's `operating.expense.opex`, which is what the
+// pack's own vocabulary recommends.
+contract cre.opex_line.property_tax on entity asset.hotel {
+  term 2026-01..2027-01
+  terms {
+    amount = 200
+  }
+}

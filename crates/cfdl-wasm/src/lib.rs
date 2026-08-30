@@ -91,12 +91,18 @@ pub fn run(ir_json: &str, config_json: Option<String>, pack: Option<String>) -> 
             .as_ref()
             .map(cfdl_statement::waterfall_series)
             .unwrap_or_default();
+        let recommended = registry
+            .as_ref()
+            .and_then(|reg| reg.pack(&pack_name))
+            .map(|pack| pack.manifest.categories.clone())
+            .unwrap_or_default();
         results.statements = cfdl_statement::compute(
             &pack_name,
             &statement_specs,
             &subtotal_specs,
             &categories,
             &waterfall_series,
+            &recommended,
             &results,
         );
     }

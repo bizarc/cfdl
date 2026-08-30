@@ -2,9 +2,16 @@ name = "energy"
 version = "0.1.0"
 description = "Energy & microgrids pack: PPA/merchant revenue, storage, O&M, tax credits, project debt."
 
-# Closed vocabulary for a stream's `category`. Aggregation reads this rather
-# than pattern-matching a stream's name. Deliberately coarse; see README.md
-# for why tax benefits are kept out of EBITDA.
+# RECOMMENDED vocabulary for a stream's `category`, not a closed one.
+# Aggregation reads this rather than pattern-matching a stream's name.
+# Deliberately coarse; see README.md for why tax benefits are kept out of
+# EBITDA.
+#
+# The three roots -- operating, investing, financing -- are the language's gate
+# and the only one. A well-rooted category this list omits is valid, and raises
+# W5023 naming the near match. A pack cannot enumerate every leaf a deal needs:
+# the leaf is not knowable by a pack that shipped before the deal. What this
+# list still buys is the domain's conventional spelling. See docs/35.
 categories = [
   "operating.revenue.energy",
   "operating.expense.om",

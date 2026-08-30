@@ -528,8 +528,16 @@ categories = [
 ]
 ```
 
-Keeping the set closed is what stops two models in the same pack spelling the
-same idea two ways.
+The list is a recommendation, not a gate. The three roots are what the language
+validates, with or without a pack, so a model may name a leaf the pack never
+enumerated — a departmental operating expense, an acquisition basis — and it
+folds exactly as a listed one does. A well-rooted category the pack does not
+list raises `W5023` naming the near match, which is what keeps two models in one
+pack from spelling the same idea two ways.
+
+A pack cannot enumerate every leaf a deal needs, because the leaf is not
+knowable by a pack that shipped before the deal. What the list carries is the
+domain's conventional spelling.
 
 #### Step 2 — classify at the point of emission
 

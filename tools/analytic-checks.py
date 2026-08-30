@@ -582,10 +582,12 @@ contract credit.pool_level_pay.probe on entity legal.lender {
 }
 stream loan.interest on entity legal.lender inflow currency USD {
   schedule every month from 2026-01 to 2027-12
+  category operating.collection.interest
   amount = ipmt(0.06 / 12, time.t + 1, 24, 1200000)
 }
 stream loan.principal on entity legal.lender inflow currency USD {
   schedule every month from 2026-01 to 2027-12
+  category operating.collection.principal
   amount = ppmt(0.06 / 12, time.t + 1, 24, 1200000)
 }
 """

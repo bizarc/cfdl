@@ -343,6 +343,16 @@ pub struct ContractStmt {
     /// behavior and what every model without the clause gets.
     pub payment_net: Option<PaymentTerms>,
     pub terms: BTreeMap<String, ContractTerm>,
+    /// What the streams this contract lowers ARE, economically, overriding the
+    /// category its lowering rule would otherwise assign.
+    ///
+    /// A pack knows what a permanent-debt payment is and states it in the rule;
+    /// that stays the default. This is for the case the pack cannot know — a
+    /// deal whose operating expenses are departmental, or an entity whose main
+    /// business activity puts interest somewhere the pack's default does not
+    /// (docs/35 §2.5). Validated against the three roots like any other.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub category: Option<String>,
     /// Who the contract is between, by role. `parties` has been a reserved
     /// keyword since v0.1 and was never parsed — a contract could not say who
     /// it was with.
@@ -1366,6 +1376,7 @@ impl<'a> Parser<'a> {
         let mut term_end = None;
         let mut payment_net = None;
         let mut terms = BTreeMap::new();
+        let mut category: Option<String> = None;
         let mut end_span = start.span;
         let mut depth = 0usize;
 
@@ -1471,8 +1482,48 @@ impl<'a> Parser<'a> {
                         end_span = entity_ref_tok.span;
                     }
                 }
+                // A contract may state the category its lowered streams carry.
+                TokenKind::Ident(ref ident) if ident == "category" && depth == 1 => {
+                    let value_tok = self.peek().clone();
+                    match &value_tok.kind {
+                        TokenKind::Qname(name) | TokenKind::Ident(name) => {
+                            let _ = self.bump();
+                            end_span = value_tok.span;
+                            category = Some(name.clone());
+                        }
+                        _ => {
+                            self.push_expected(
+                                value_tok.span,
+                                "Expected a category path after 'category', e.g. \
+                                 `category operating.expense.rooms`."
+                                    .to_string(),
+                            );
+                        }
+                    }
+                }
                 TokenKind::Punct(Punct::LBrace) => depth += 1,
                 TokenKind::Punct(Punct::RBrace) => depth = depth.saturating_sub(1),
+                // AN UNRECOGNISED CLAUSE IS AN ERROR, NOT A SHRUG.
+                //
+                // This arm was `_ => {}`, which swallowed every token it did not
+                // recognise. A misspelled clause, or one the grammar does not
+                // have, vanished with no diagnostic — which is how `category` on
+                // an instance appeared to work while doing nothing at all.
+                //
+                // Narrowed to a bare identifier at body level (depth 1 — depth
+                // 0 is the signature, before the opening brace): that is where a
+                // clause name sits, and it leaves punctuation, dates and nested
+                // blocks to the arms that already handle them.
+                TokenKind::Ident(ref ident) if depth == 1 => {
+                    self.push_expected(
+                        tok.span,
+                        format!(
+                            "Unexpected '{ident}' in a contract body. Expected 'term', \
+                             'payment net', 'terms', 'category', 'parties', 'on entity', \
+                             'effects', or '}}'."
+                        ),
+                    );
+                }
                 _ => {}
             }
         }
@@ -1496,6 +1547,7 @@ impl<'a> Parser<'a> {
             term_start,
             term_end,
             terms,
+            category,
             parties,
             span: merge_spans(start.span, end_span),
         })

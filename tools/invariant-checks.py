@@ -67,6 +67,7 @@ contract credit.pool_level_pay.one on entity asset.pool {
 
 stream trust.fee_income on entity asset.trust inflow currency USD {
   schedule every month from 2017-01 to 2017-06
+  category operating.collection.penalty
   amount = 2500.0
 }
 

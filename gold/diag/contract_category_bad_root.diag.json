@@ -1,0 +1,17 @@
+[
+  {
+    "code": "E5022_UNKNOWN_STREAM_CATEGORY",
+    "severity": "error",
+    "message": "Contract 'cre.opex_line.rooms' declares category 'departmental.rooms', whose root segment 'departmental' is not one of operating, investing, financing. A category is a path into the cash flow statement, so it has to say which section it belongs to.",
+    "file": "model.cfdl",
+    "span": {
+      "start_line": 10,
+      "start_col": 1,
+      "end_line": 16,
+      "end_col": 1
+    },
+    "path": null,
+    "hint": "A contract's `category` overrides the one its lowering rule assigns, for the leaf a pack could not have enumerated. It is validated like any other — for example `category operating.expense.rooms`.",
+    "notes": []
+  }
+]

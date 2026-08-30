@@ -1,36 +1,94 @@
 {
   "results_version": "0.5",
-  "model_hash": "c3c467140ef15435ef40822b7d33bae89cb2901d82a0d0d3eb9be463dbdd5a67",
-  "ledger_hash": "025b83a90c80602c1322abb77c87f045d183d8115064fefafac5dadd4c0de26d",
+  "model_hash": "1ea64da9c75592af96855685d5dca1dd3fafb34770a65965f53a6ceb99529da0",
+  "ledger_hash": "6f6aa75fa9bae493984fef5dae9b8e7e74df9f7add0964ff755cb628ca0979d3",
   "engine": {
     "name": "cfdl-engine",
     "version": "0.7.0"
   },
   "warnings": [],
+  "inputs": {
+    "streams": [
+      {
+        "contract": "cre.opex_line.rooms",
+        "defaults_applied": [
+          "amount_year",
+          "escalation",
+          "occupancy",
+          "pct_fixed"
+        ],
+        "stream": "cre.opex.line.rooms",
+        "terms": {
+          "amount": "1000",
+          "amount_year": "0",
+          "escalation": "0",
+          "occupancy": "1",
+          "pct_fixed": "1"
+        }
+      },
+      {
+        "contract": "cre.opex_line.food_beverage",
+        "defaults_applied": [
+          "amount_year",
+          "escalation",
+          "occupancy",
+          "pct_fixed"
+        ],
+        "stream": "cre.opex.line.food_beverage",
+        "terms": {
+          "amount": "400",
+          "amount_year": "0",
+          "escalation": "0",
+          "occupancy": "1",
+          "pct_fixed": "1"
+        }
+      },
+      {
+        "contract": "cre.opex_line.property_tax",
+        "defaults_applied": [
+          "amount_year",
+          "escalation",
+          "occupancy",
+          "pct_fixed"
+        ],
+        "stream": "cre.opex.line.property_tax",
+        "terms": {
+          "amount": "200",
+          "amount_year": "0",
+          "escalation": "0",
+          "occupancy": "1",
+          "pct_fixed": "1"
+        }
+      }
+    ]
+  },
   "deterministic": {
     "status": "ok",
     "metrics": {
-      "entity.asset.tower.total": {
-        "amount": 3750.0,
+      "entity.asset.hotel.total": {
+        "amount": -3200.0,
         "currency": "USD"
       },
       "model.npv": {
-        "amount": 3108.564989,
+        "amount": -2776.859504,
         "currency": "USD"
       },
       "model.total": {
-        "amount": 3750.0,
+        "amount": -3200.0,
         "currency": "USD"
       },
-      "model.wal_years": 2.0,
       "run.annual_discount_rate": 0.1,
       "run.periods_per_year": 1.0,
-      "stream.cre.unit.base_rent.a.total": {
-        "amount": 3000.0,
+      "stream.cre.opex.line.food_beverage.total": {
+        "amount": -800.0,
         "currency": "USD"
       },
-      "stream.misc.windfall.total": {
-        "amount": 750.0,
+      "stream.cre.opex.line.property_tax.total": {
+        "amount": -400.0,
+        "currency": "USD"
+      },
+      "stream.cre.opex.line.rooms.total": {
+        "amount": -2000.0,
         "currency": "USD"
       }
     },
@@ -39,13 +97,9 @@
         "index": {
           "calendar": "annual",
           "start": "2026-01-01",
-          "periods": 3
+          "periods": 2
         },
         "values": [
-          {
-            "amount": 0.0,
-            "currency": "USD"
-          },
           {
             "amount": 0.0,
             "currency": "USD"
@@ -60,10 +114,9 @@
         "index": {
           "calendar": "annual",
           "start": "2026-01-01",
-          "periods": 3
+          "periods": 2
         },
         "values": [
-          null,
           null,
           null
         ]
@@ -72,19 +125,15 @@
         "index": {
           "calendar": "annual",
           "start": "2026-01-01",
-          "periods": 3
+          "periods": 2
         },
         "values": [
           {
-            "amount": 1250.0,
+            "amount": 0.0,
             "currency": "USD"
           },
           {
-            "amount": 1250.0,
-            "currency": "USD"
-          },
-          {
-            "amount": 1250.0,
+            "amount": 0.0,
             "currency": "USD"
           }
         ]
@@ -93,13 +142,9 @@
         "index": {
           "calendar": "annual",
           "start": "2026-01-01",
-          "periods": 3
+          "periods": 2
         },
         "values": [
-          {
-            "amount": 0.0,
-            "currency": "USD"
-          },
           {
             "amount": 0.0,
             "currency": "USD"
@@ -114,19 +159,15 @@
         "index": {
           "calendar": "annual",
           "start": "2026-01-01",
-          "periods": 3
+          "periods": 2
         },
         "values": [
           {
-            "amount": 1250.0,
+            "amount": -1600.0,
             "currency": "USD"
           },
           {
-            "amount": 1250.0,
-            "currency": "USD"
-          },
-          {
-            "amount": 1250.0,
+            "amount": -1600.0,
             "currency": "USD"
           }
         ]
@@ -135,19 +176,15 @@
         "index": {
           "calendar": "annual",
           "start": "2026-01-01",
-          "periods": 3
+          "periods": 2
         },
         "values": [
           {
-            "amount": 0.0,
+            "amount": -1600.0,
             "currency": "USD"
           },
           {
-            "amount": 0.0,
-            "currency": "USD"
-          },
-          {
-            "amount": 0.0,
+            "amount": -1600.0,
             "currency": "USD"
           }
         ]
@@ -156,40 +193,32 @@
         "index": {
           "calendar": "annual",
           "start": "2026-01-01",
-          "periods": 3
+          "periods": 2
         },
         "values": [
           {
-            "amount": 1250.0,
+            "amount": 0.0,
             "currency": "USD"
           },
           {
-            "amount": 1250.0,
-            "currency": "USD"
-          },
-          {
-            "amount": 1250.0,
+            "amount": 0.0,
             "currency": "USD"
           }
         ]
       },
-      "entity.asset.tower.net_cash_flow": {
+      "entity.asset.hotel.net_cash_flow": {
         "index": {
           "calendar": "annual",
           "start": "2026-01-01",
-          "periods": 3
+          "periods": 2
         },
         "values": [
           {
-            "amount": 1250.0,
+            "amount": -1600.0,
             "currency": "USD"
           },
           {
-            "amount": 1250.0,
-            "currency": "USD"
-          },
-          {
-            "amount": 1250.0,
+            "amount": -1600.0,
             "currency": "USD"
           }
         ]
@@ -198,63 +227,69 @@
         "index": {
           "calendar": "annual",
           "start": "2026-01-01",
-          "periods": 3
+          "periods": 2
         },
         "values": [
           {
-            "amount": 1250.0,
+            "amount": -1600.0,
             "currency": "USD"
           },
           {
-            "amount": 1250.0,
-            "currency": "USD"
-          },
-          {
-            "amount": 1250.0,
+            "amount": -1600.0,
             "currency": "USD"
           }
         ]
       },
-      "stream.cre.unit.base_rent.a": {
+      "stream.cre.opex.line.food_beverage": {
         "index": {
           "calendar": "annual",
           "start": "2026-01-01",
-          "periods": 3
+          "periods": 2
         },
         "offset": 1.0,
         "values": [
           {
-            "amount": 1000.0,
+            "amount": -400.0,
             "currency": "USD"
           },
           {
-            "amount": 1000.0,
-            "currency": "USD"
-          },
-          {
-            "amount": 1000.0,
+            "amount": -400.0,
             "currency": "USD"
           }
         ]
       },
-      "stream.misc.windfall": {
+      "stream.cre.opex.line.property_tax": {
         "index": {
           "calendar": "annual",
           "start": "2026-01-01",
-          "periods": 3
+          "periods": 2
         },
         "offset": 1.0,
         "values": [
           {
-            "amount": 250.0,
+            "amount": -200.0,
             "currency": "USD"
           },
           {
-            "amount": 250.0,
+            "amount": -200.0,
+            "currency": "USD"
+          }
+        ]
+      },
+      "stream.cre.opex.line.rooms": {
+        "index": {
+          "calendar": "annual",
+          "start": "2026-01-01",
+          "periods": 2
+        },
+        "offset": 1.0,
+        "values": [
+          {
+            "amount": -1000.0,
             "currency": "USD"
           },
           {
-            "amount": 250.0,
+            "amount": -1000.0,
             "currency": "USD"
           }
         ]
@@ -276,7 +311,7 @@
     "pack": "cre",
     "metrics": {
       "domain.cre.noi": {
-        "amount": 3750.0,
+        "amount": -3200.0,
         "currency": "USD"
       }
     },
@@ -302,8 +337,7 @@
           "start": "2026-01-01",
           "labels": [
             "2026",
-            "2027",
-            "2028"
+            "2027"
           ]
         },
         "rows": [
@@ -314,22 +348,15 @@
             "display_sign": 1.0,
             "values": [
               {
-                "amount": 1000.0,
+                "amount": 0.0,
                 "currency": "USD"
               },
               {
-                "amount": 1000.0,
-                "currency": "USD"
-              },
-              {
-                "amount": 1000.0,
+                "amount": 0.0,
                 "currency": "USD"
               }
             ],
-            "total": 3000.0,
-            "streams": [
-              "cre.unit.base_rent.a"
-            ]
+            "total": 0.0
           },
           {
             "kind": "line",
@@ -337,10 +364,6 @@
             "depth": 1,
             "display_sign": 1.0,
             "values": [
-              {
-                "amount": 0.0,
-                "currency": "USD"
-              },
               {
                 "amount": 0.0,
                 "currency": "USD"
@@ -365,10 +388,6 @@
               {
                 "amount": 0.0,
                 "currency": "USD"
-              },
-              {
-                "amount": 0.0,
-                "currency": "USD"
               }
             ],
             "total": 0.0
@@ -379,10 +398,6 @@
             "depth": 1,
             "display_sign": -1.0,
             "values": [
-              {
-                "amount": 0.0,
-                "currency": "USD"
-              },
               {
                 "amount": 0.0,
                 "currency": "USD"
@@ -407,10 +422,6 @@
               {
                 "amount": 0.0,
                 "currency": "USD"
-              },
-              {
-                "amount": 0.0,
-                "currency": "USD"
               }
             ],
             "total": 0.0
@@ -421,10 +432,6 @@
             "depth": 1,
             "display_sign": 1.0,
             "values": [
-              {
-                "amount": 0.0,
-                "currency": "USD"
-              },
               {
                 "amount": 0.0,
                 "currency": "USD"
@@ -443,19 +450,15 @@
             "display_sign": 1.0,
             "values": [
               {
-                "amount": 1250.0,
+                "amount": 0.0,
                 "currency": "USD"
               },
               {
-                "amount": 1250.0,
-                "currency": "USD"
-              },
-              {
-                "amount": 1250.0,
+                "amount": 0.0,
                 "currency": "USD"
               }
             ],
-            "total": 3750.0
+            "total": 0.0
           },
           {
             "kind": "line",
@@ -463,10 +466,6 @@
             "depth": 2,
             "display_sign": -1.0,
             "values": [
-              {
-                "amount": 0.0,
-                "currency": "USD"
-              },
               {
                 "amount": 0.0,
                 "currency": "USD"
@@ -485,19 +484,18 @@
             "display_sign": -1.0,
             "values": [
               {
-                "amount": 0.0,
+                "amount": -200.0,
                 "currency": "USD"
               },
               {
-                "amount": 0.0,
-                "currency": "USD"
-              },
-              {
-                "amount": 0.0,
+                "amount": -200.0,
                 "currency": "USD"
               }
             ],
-            "total": 0.0
+            "total": -400.0,
+            "streams": [
+              "cre.opex.line.property_tax"
+            ]
           },
           {
             "kind": "line",
@@ -505,10 +503,6 @@
             "depth": 2,
             "display_sign": -1.0,
             "values": [
-              {
-                "amount": 0.0,
-                "currency": "USD"
-              },
               {
                 "amount": 0.0,
                 "currency": "USD"
@@ -533,10 +527,6 @@
               {
                 "amount": 0.0,
                 "currency": "USD"
-              },
-              {
-                "amount": 0.0,
-                "currency": "USD"
               }
             ],
             "total": 0.0
@@ -547,10 +537,6 @@
             "depth": 2,
             "display_sign": -1.0,
             "values": [
-              {
-                "amount": 0.0,
-                "currency": "USD"
-              },
               {
                 "amount": 0.0,
                 "currency": "USD"
@@ -575,10 +561,6 @@
               {
                 "amount": 0.0,
                 "currency": "USD"
-              },
-              {
-                "amount": 0.0,
-                "currency": "USD"
               }
             ],
             "total": 0.0
@@ -589,10 +571,6 @@
             "depth": 2,
             "display_sign": -1.0,
             "values": [
-              {
-                "amount": 0.0,
-                "currency": "USD"
-              },
               {
                 "amount": 0.0,
                 "currency": "USD"
@@ -617,10 +595,6 @@
               {
                 "amount": 0.0,
                 "currency": "USD"
-              },
-              {
-                "amount": 0.0,
-                "currency": "USD"
               }
             ],
             "total": 0.0
@@ -631,10 +605,6 @@
             "depth": 2,
             "display_sign": -1.0,
             "values": [
-              {
-                "amount": 0.0,
-                "currency": "USD"
-              },
               {
                 "amount": 0.0,
                 "currency": "USD"
@@ -659,10 +629,6 @@
               {
                 "amount": 0.0,
                 "currency": "USD"
-              },
-              {
-                "amount": 0.0,
-                "currency": "USD"
               }
             ],
             "total": 0.0
@@ -674,19 +640,15 @@
             "display_sign": -1.0,
             "values": [
               {
-                "amount": 0.0,
+                "amount": -1600.0,
                 "currency": "USD"
               },
               {
-                "amount": 0.0,
-                "currency": "USD"
-              },
-              {
-                "amount": 0.0,
+                "amount": -1600.0,
                 "currency": "USD"
               }
             ],
-            "total": 0.0
+            "total": -3200.0
           },
           {
             "kind": "subtotal",
@@ -695,19 +657,15 @@
             "display_sign": 1.0,
             "values": [
               {
-                "amount": 1250.0,
+                "amount": -1600.0,
                 "currency": "USD"
               },
               {
-                "amount": 1250.0,
-                "currency": "USD"
-              },
-              {
-                "amount": 1250.0,
+                "amount": -1600.0,
                 "currency": "USD"
               }
             ],
-            "total": 3750.0
+            "total": -3200.0
           },
           {
             "kind": "spacer",
@@ -720,10 +678,6 @@
             "depth": 1,
             "display_sign": -1.0,
             "values": [
-              {
-                "amount": 0.0,
-                "currency": "USD"
-              },
               {
                 "amount": 0.0,
                 "currency": "USD"
@@ -748,10 +702,6 @@
               {
                 "amount": 0.0,
                 "currency": "USD"
-              },
-              {
-                "amount": 0.0,
-                "currency": "USD"
               }
             ],
             "total": 0.0
@@ -762,10 +712,6 @@
             "depth": 1,
             "display_sign": -1.0,
             "values": [
-              {
-                "amount": 0.0,
-                "currency": "USD"
-              },
               {
                 "amount": 0.0,
                 "currency": "USD"
@@ -790,10 +736,6 @@
               {
                 "amount": 0.0,
                 "currency": "USD"
-              },
-              {
-                "amount": 0.0,
-                "currency": "USD"
               }
             ],
             "total": 0.0
@@ -804,10 +746,6 @@
             "depth": 1,
             "display_sign": -1.0,
             "values": [
-              {
-                "amount": 0.0,
-                "currency": "USD"
-              },
               {
                 "amount": 0.0,
                 "currency": "USD"
@@ -832,10 +770,6 @@
               {
                 "amount": 0.0,
                 "currency": "USD"
-              },
-              {
-                "amount": 0.0,
-                "currency": "USD"
               }
             ],
             "total": 0.0
@@ -846,7 +780,6 @@
             "depth": 0,
             "display_sign": 1.0,
             "values": [
-              null,
               null,
               null
             ]
@@ -862,10 +795,6 @@
             "depth": 1,
             "display_sign": 1.0,
             "values": [
-              {
-                "amount": 0.0,
-                "currency": "USD"
-              },
               {
                 "amount": 0.0,
                 "currency": "USD"
@@ -890,10 +819,6 @@
               {
                 "amount": 0.0,
                 "currency": "USD"
-              },
-              {
-                "amount": 0.0,
-                "currency": "USD"
               }
             ],
             "total": 0.0
@@ -904,10 +829,6 @@
             "depth": 1,
             "display_sign": 1.0,
             "values": [
-              {
-                "amount": 0.0,
-                "currency": "USD"
-              },
               {
                 "amount": 0.0,
                 "currency": "USD"
@@ -932,10 +853,6 @@
               {
                 "amount": 0.0,
                 "currency": "USD"
-              },
-              {
-                "amount": 0.0,
-                "currency": "USD"
               }
             ],
             "total": 0.0
@@ -947,37 +864,38 @@
             "display_sign": 1.0,
             "values": [
               {
-                "amount": 250.0,
+                "amount": -1400.0,
                 "currency": "USD"
               },
               {
-                "amount": 250.0,
-                "currency": "USD"
-              },
-              {
-                "amount": 250.0,
+                "amount": -1400.0,
                 "currency": "USD"
               }
             ],
-            "total": 750.0,
+            "total": -2800.0,
             "streams": [
-              "misc.windfall"
+              "cre.opex.line.food_beverage",
+              "cre.opex.line.rooms"
             ]
           }
         ],
         "reconciliation": {
-          "bottom_line": 3750.0,
-          "model_total": 3750.0,
+          "bottom_line": -3200.0,
+          "model_total": -3200.0,
           "residual": 0.0
         },
         "diagnostics": [
           {
             "code": "W5023_UNRECOGNISED_PACK_CATEGORY",
-            "message": "Category 'operating.revenue.windfall' is not one this pack recommends. It is valid and folds correctly — the three roots are the only gate — but no row of a pack statement claims it, so it reports in the residual."
+            "message": "Category 'operating.expense.food_beverage' is not one this pack recommends. It is valid and folds correctly — the three roots are the only gate — but no row of a pack statement claims it, so it reports in the residual."
+          },
+          {
+            "code": "W5023_UNRECOGNISED_PACK_CATEGORY",
+            "message": "Category 'operating.expense.rooms' is not one this pack recommends. It is valid and folds correctly — the three roots are the only gate — but no row of a pack statement claims it, so it reports in the residual."
           },
           {
             "code": "W3500_STATEMENT_UNCLASSIFIED_STREAM",
-            "message": "1 stream(s) are in no row of statement 'operating', so the bottom line is short by 750.00: misc.windfall. Classify them, or give the statement a row that claims them."
+            "message": "2 stream(s) are in no row of statement 'operating', so the bottom line is short by -2800.00: cre.opex.line.food_beverage, cre.opex.line.rooms. Classify them, or give the statement a row that claims them."
           }
         ]
       },
@@ -990,8 +908,7 @@
           "start": "2026-01-01",
           "labels": [
             "2026",
-            "2027",
-            "2028"
+            "2027"
           ]
         },
         "rows": [
@@ -1002,22 +919,15 @@
             "display_sign": 1.0,
             "values": [
               {
-                "amount": 1000.0,
+                "amount": 0.0,
                 "currency": "USD"
               },
               {
-                "amount": 1000.0,
-                "currency": "USD"
-              },
-              {
-                "amount": 1000.0,
+                "amount": 0.0,
                 "currency": "USD"
               }
             ],
-            "total": 3000.0,
-            "streams": [
-              "cre.unit.base_rent.a"
-            ]
+            "total": 0.0
           },
           {
             "kind": "line",
@@ -1025,10 +935,6 @@
             "depth": 1,
             "display_sign": 1.0,
             "values": [
-              {
-                "amount": 0.0,
-                "currency": "USD"
-              },
               {
                 "amount": 0.0,
                 "currency": "USD"
@@ -1053,10 +959,6 @@
               {
                 "amount": 0.0,
                 "currency": "USD"
-              },
-              {
-                "amount": 0.0,
-                "currency": "USD"
               }
             ],
             "total": 0.0
@@ -1067,10 +969,6 @@
             "depth": 1,
             "display_sign": -1.0,
             "values": [
-              {
-                "amount": 0.0,
-                "currency": "USD"
-              },
               {
                 "amount": 0.0,
                 "currency": "USD"
@@ -1095,10 +993,6 @@
               {
                 "amount": 0.0,
                 "currency": "USD"
-              },
-              {
-                "amount": 0.0,
-                "currency": "USD"
               }
             ],
             "total": 0.0
@@ -1109,10 +1003,6 @@
             "depth": 1,
             "display_sign": 1.0,
             "values": [
-              {
-                "amount": 0.0,
-                "currency": "USD"
-              },
               {
                 "amount": 0.0,
                 "currency": "USD"
@@ -1131,19 +1021,15 @@
             "display_sign": 1.0,
             "values": [
               {
-                "amount": 1250.0,
+                "amount": 0.0,
                 "currency": "USD"
               },
               {
-                "amount": 1250.0,
-                "currency": "USD"
-              },
-              {
-                "amount": 1250.0,
+                "amount": 0.0,
                 "currency": "USD"
               }
             ],
-            "total": 3750.0
+            "total": 0.0
           },
           {
             "kind": "line",
@@ -1151,10 +1037,6 @@
             "depth": 2,
             "display_sign": -1.0,
             "values": [
-              {
-                "amount": 0.0,
-                "currency": "USD"
-              },
               {
                 "amount": 0.0,
                 "currency": "USD"
@@ -1173,19 +1055,18 @@
             "display_sign": -1.0,
             "values": [
               {
-                "amount": 0.0,
+                "amount": -200.0,
                 "currency": "USD"
               },
               {
-                "amount": 0.0,
-                "currency": "USD"
-              },
-              {
-                "amount": 0.0,
+                "amount": -200.0,
                 "currency": "USD"
               }
             ],
-            "total": 0.0
+            "total": -400.0,
+            "streams": [
+              "cre.opex.line.property_tax"
+            ]
           },
           {
             "kind": "line",
@@ -1193,10 +1074,6 @@
             "depth": 2,
             "display_sign": -1.0,
             "values": [
-              {
-                "amount": 0.0,
-                "currency": "USD"
-              },
               {
                 "amount": 0.0,
                 "currency": "USD"
@@ -1221,10 +1098,6 @@
               {
                 "amount": 0.0,
                 "currency": "USD"
-              },
-              {
-                "amount": 0.0,
-                "currency": "USD"
               }
             ],
             "total": 0.0
@@ -1235,10 +1108,6 @@
             "depth": 2,
             "display_sign": -1.0,
             "values": [
-              {
-                "amount": 0.0,
-                "currency": "USD"
-              },
               {
                 "amount": 0.0,
                 "currency": "USD"
@@ -1263,10 +1132,6 @@
               {
                 "amount": 0.0,
                 "currency": "USD"
-              },
-              {
-                "amount": 0.0,
-                "currency": "USD"
               }
             ],
             "total": 0.0
@@ -1277,10 +1142,6 @@
             "depth": 2,
             "display_sign": -1.0,
             "values": [
-              {
-                "amount": 0.0,
-                "currency": "USD"
-              },
               {
                 "amount": 0.0,
                 "currency": "USD"
@@ -1305,10 +1166,6 @@
               {
                 "amount": 0.0,
                 "currency": "USD"
-              },
-              {
-                "amount": 0.0,
-                "currency": "USD"
               }
             ],
             "total": 0.0
@@ -1319,10 +1176,6 @@
             "depth": 2,
             "display_sign": -1.0,
             "values": [
-              {
-                "amount": 0.0,
-                "currency": "USD"
-              },
               {
                 "amount": 0.0,
                 "currency": "USD"
@@ -1347,10 +1200,6 @@
               {
                 "amount": 0.0,
                 "currency": "USD"
-              },
-              {
-                "amount": 0.0,
-                "currency": "USD"
               }
             ],
             "total": 0.0
@@ -1362,19 +1211,15 @@
             "display_sign": -1.0,
             "values": [
               {
-                "amount": 0.0,
+                "amount": -1600.0,
                 "currency": "USD"
               },
               {
-                "amount": 0.0,
-                "currency": "USD"
-              },
-              {
-                "amount": 0.0,
+                "amount": -1600.0,
                 "currency": "USD"
               }
             ],
-            "total": 0.0
+            "total": -3200.0
           },
           {
             "kind": "subtotal",
@@ -1383,19 +1228,15 @@
             "display_sign": 1.0,
             "values": [
               {
-                "amount": 1250.0,
+                "amount": -1600.0,
                 "currency": "USD"
               },
               {
-                "amount": 1250.0,
-                "currency": "USD"
-              },
-              {
-                "amount": 1250.0,
+                "amount": -1600.0,
                 "currency": "USD"
               }
             ],
-            "total": 3750.0
+            "total": -3200.0
           },
           {
             "kind": "spacer",
@@ -1408,10 +1249,6 @@
             "depth": 1,
             "display_sign": -1.0,
             "values": [
-              {
-                "amount": 0.0,
-                "currency": "USD"
-              },
               {
                 "amount": 0.0,
                 "currency": "USD"
@@ -1436,10 +1273,6 @@
               {
                 "amount": 0.0,
                 "currency": "USD"
-              },
-              {
-                "amount": 0.0,
-                "currency": "USD"
               }
             ],
             "total": 0.0
@@ -1450,10 +1283,6 @@
             "depth": 1,
             "display_sign": -1.0,
             "values": [
-              {
-                "amount": 0.0,
-                "currency": "USD"
-              },
               {
                 "amount": 0.0,
                 "currency": "USD"
@@ -1478,10 +1307,6 @@
               {
                 "amount": 0.0,
                 "currency": "USD"
-              },
-              {
-                "amount": 0.0,
-                "currency": "USD"
               }
             ],
             "total": 0.0
@@ -1492,10 +1317,6 @@
             "depth": 1,
             "display_sign": -1.0,
             "values": [
-              {
-                "amount": 0.0,
-                "currency": "USD"
-              },
               {
                 "amount": 0.0,
                 "currency": "USD"
@@ -1520,10 +1341,6 @@
               {
                 "amount": 0.0,
                 "currency": "USD"
-              },
-              {
-                "amount": 0.0,
-                "currency": "USD"
               }
             ],
             "total": 0.0
@@ -1534,7 +1351,6 @@
             "depth": 0,
             "display_sign": 1.0,
             "values": [
-              null,
               null,
               null
             ]
@@ -1550,10 +1366,6 @@
             "depth": 1,
             "display_sign": 1.0,
             "values": [
-              {
-                "amount": 0.0,
-                "currency": "USD"
-              },
               {
                 "amount": 0.0,
                 "currency": "USD"
@@ -1578,10 +1390,6 @@
               {
                 "amount": 0.0,
                 "currency": "USD"
-              },
-              {
-                "amount": 0.0,
-                "currency": "USD"
               }
             ],
             "total": 0.0
@@ -1592,10 +1400,6 @@
             "depth": 1,
             "display_sign": 1.0,
             "values": [
-              {
-                "amount": 0.0,
-                "currency": "USD"
-              },
               {
                 "amount": 0.0,
                 "currency": "USD"
@@ -1620,10 +1424,6 @@
               {
                 "amount": 0.0,
                 "currency": "USD"
-              },
-              {
-                "amount": 0.0,
-                "currency": "USD"
               }
             ],
             "total": 0.0
@@ -1635,33 +1435,30 @@
             "display_sign": 1.0,
             "values": [
               {
-                "amount": 250.0,
+                "amount": -1400.0,
                 "currency": "USD"
               },
               {
-                "amount": 250.0,
-                "currency": "USD"
-              },
-              {
-                "amount": 250.0,
+                "amount": -1400.0,
                 "currency": "USD"
               }
             ],
-            "total": 750.0,
+            "total": -2800.0,
             "streams": [
-              "misc.windfall"
+              "cre.opex.line.food_beverage",
+              "cre.opex.line.rooms"
             ]
           }
         ],
         "reconciliation": {
-          "bottom_line": 3750.0,
-          "model_total": 3750.0,
+          "bottom_line": -3200.0,
+          "model_total": -3200.0,
           "residual": 0.0
         },
         "diagnostics": [
           {
             "code": "W3500_STATEMENT_UNCLASSIFIED_STREAM",
-            "message": "1 stream(s) are in no row of statement 'operating_annual', so the bottom line is short by 750.00: misc.windfall. Classify them, or give the statement a row that claims them."
+            "message": "2 stream(s) are in no row of statement 'operating_annual', so the bottom line is short by -2800.00: cre.opex.line.food_beverage, cre.opex.line.rooms. Classify them, or give the statement a row that claims them."
           }
         ]
       }

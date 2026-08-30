@@ -26,6 +26,8 @@ pub fn compute(
     subtotals: &[SubtotalSpec],
     stream_categories: &BTreeMap<String, String>,
     waterfall_series: &BTreeSet<String>,
+    // The pack's recommended category vocabulary, for `W5023`.
+    recommended_categories: &[String],
     results: &Results,
 ) -> Option<StatementsSection> {
     if specs.is_empty() {
@@ -61,7 +63,7 @@ pub fn compute(
     // grain needs. A post-pass has no timeline of its own.
     let index = series.values().next().map(|s| s.index.clone());
 
-    let statements = specs
+    let mut statements: Vec<Statement> = specs
         .iter()
         .map(|spec| {
             let grain = index
@@ -86,6 +88,23 @@ pub fn compute(
             )
         })
         .collect();
+
+    // `W5023` is a fact about the MODEL's vocabulary, not about any one
+    // statement's rows, so it is computed once and carried on the default
+    // statement rather than repeated on every statement a pack declares.
+    let unrecommended = unrecommended_categories(stream_categories, recommended_categories);
+    if !unrecommended.is_empty() {
+        let index = statements
+            .iter()
+            .position(|st| st.default)
+            .unwrap_or_default();
+        if let Some(st) = statements.get_mut(index) {
+            let mut merged = unrecommended;
+            merged.append(&mut st.diagnostics);
+            st.diagnostics = merged;
+        }
+    }
+
     Some(StatementsSection {
         pack: pack.to_string(),
         statements,
@@ -480,4 +499,81 @@ pub fn stream_categories(ir: &serde_json::Value) -> BTreeMap<String, String> {
         }
     }
     out
+}
+
+/// `W5023` — categories the active pack does not recommend.
+///
+/// The three roots are the only gate (docs/35): a model may name a leaf the
+/// pack never enumerated, and it folds exactly as a listed one does. What the
+/// pack's list still carries is the domain's conventional spelling, and this is
+/// where that is spent — beside `W3500`, because the consequence of an
+/// unrecommended category IS a presentation one: no row of the pack's statement
+/// claims it, so it lands in the residual.
+///
+/// Reported once per distinct category. Thirteen expense lines sharing one
+/// misspelling are one mistake.
+fn unrecommended_categories(
+    stream_categories: &BTreeMap<String, String>,
+    recommended: &[String],
+) -> Vec<StatementDiagnostic> {
+    if recommended.is_empty() {
+        return Vec::new();
+    }
+    let mut seen: BTreeSet<&str> = BTreeSet::new();
+    let mut out = Vec::new();
+    for category in stream_categories.values() {
+        if category.is_empty() || recommended.iter().any(|c| c == category) {
+            continue;
+        }
+        if !seen.insert(category.as_str()) {
+            continue;
+        }
+        // One edit apart, the bar the compiler already uses for a misspelled
+        // term. A looser bar suggests confidently and wrongly.
+        let advice = match recommended
+            .iter()
+            .find(|candidate| edit_distance_at_most_one(candidate, category))
+        {
+            Some(candidate) => format!(" Did you mean '{candidate}'?"),
+            None => String::new(),
+        };
+        out.push(StatementDiagnostic {
+            code: "W5023_UNRECOGNISED_PACK_CATEGORY".to_string(),
+            message: format!(
+                "Category '{category}' is not one this pack recommends. It is valid and \
+                 folds correctly — the three roots are the only gate — but no row of a \
+                 pack statement claims it, so it reports in the residual.{advice}"
+            ),
+        });
+    }
+    out
+}
+
+/// One insertion, deletion or substitution apart.
+fn edit_distance_at_most_one(a: &str, b: &str) -> bool {
+    let (a, b): (Vec<char>, Vec<char>) = (a.chars().collect(), b.chars().collect());
+    if a.len().abs_diff(b.len()) > 1 {
+        return false;
+    }
+    let (mut i, mut j, mut edits) = (0usize, 0usize, 0u8);
+    while i < a.len() && j < b.len() {
+        if a[i] == b[j] {
+            i += 1;
+            j += 1;
+            continue;
+        }
+        edits += 1;
+        if edits > 1 {
+            return false;
+        }
+        match a.len().cmp(&b.len()) {
+            std::cmp::Ordering::Greater => i += 1,
+            std::cmp::Ordering::Less => j += 1,
+            std::cmp::Ordering::Equal => {
+                i += 1;
+                j += 1;
+            }
+        }
+    }
+    edits + u8::from(i < a.len() || j < b.len()) <= 1
 }

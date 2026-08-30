@@ -560,6 +560,7 @@
       },
       "direction": "inflow",
       "currency": "USD",
+      "category": "operating.collection.principal",
       "schedule": {
         "kind": "Every",
         "every": "monthly",
@@ -577,9 +578,9 @@
       "provenance": {
         "source_file": "model.cfdl",
         "source_span": {
-          "start_line": 74,
+          "start_line": 76,
           "start_col": 1,
-          "end_line": 77,
+          "end_line": 80,
           "end_col": 1
         }
       }

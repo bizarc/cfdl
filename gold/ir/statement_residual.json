@@ -175,6 +175,7 @@
       },
       "direction": "inflow",
       "currency": "USD",
+      "category": "operating.revenue.windfall",
       "schedule": {
         "kind": "Every",
         "every": "annual",
@@ -192,9 +193,9 @@
       "provenance": {
         "source_file": "model.cfdl",
         "source_span": {
-          "start_line": 26,
+          "start_line": 29,
           "start_col": 1,
-          "end_line": 29,
+          "end_line": 33,
           "end_col": 1
         }
       }

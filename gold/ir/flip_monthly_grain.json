@@ -332,6 +332,7 @@
       },
       "direction": "inflow",
       "currency": "USD",
+      "category": "operating.revenue.energy",
       "schedule": {
         "kind": "Every",
         "every": "monthly",
@@ -349,9 +350,9 @@
       "provenance": {
         "source_file": "model.cfdl",
         "source_span": {
-          "start_line": 117,
+          "start_line": 119,
           "start_col": 1,
-          "end_line": 127,
+          "end_line": 130,
           "end_col": 1
         }
       }
