@@ -93,7 +93,8 @@
   th{font-weight:600; font-size:.76rem; letter-spacing:.03em; color:var(--muted)}
   td.num,th.num{
     text-align:right; font-family:var(--mono);
-    font-variant-numeric:tabular-nums; padding-right:0;
+    font-variant-numeric:tabular-nums; padding-right:0; padding-left:1.6rem;
+    white-space:nowrap;
   }
   tr.total td{border-top:1px solid var(--ink); border-bottom:none; font-weight:600}
   .exact{color:var(--good); font-family:var(--mono); font-size:.82rem}
@@ -395,11 +396,16 @@
       <table>
         <caption>By partner</caption>
         <thead>
-          <tr><th>Partner</th><th class="num">Capital</th><th class="num">Contributed</th><th class="num">Distributed</th><th class="num">Profit</th><th class="num">Share of profit</th><th class="num">Multiple</th><th class="num">Return</th></tr>
+          <tr><th></th><th class="num">The Baupost Group</th><th class="num">Penzance</th></tr>
         </thead>
         <tbody>
-          <tr><td>The Baupost Group</td><td class="num">90%</td><td class="num">167,620,752.53</td><td class="num">328,472,611.96</td><td class="num">160,851,859.43</td><td class="num">81.92%</td><td class="num">1.96x</td><td class="num">8.12%</td></tr>
-          <tr><td>Penzance</td><td class="num">10%</td><td class="num">18,624,528.06</td><td class="num">54,134,181.10</td><td class="num">35,509,653.04</td><td class="num">18.08%</td><td class="num">2.91x</td><td class="num">12.76%</td></tr>
+          <tr><td>Share of capital</td><td class="num">90%</td><td class="num">10%</td></tr>
+          <tr><td>Contributed</td><td class="num">167,620,752.53</td><td class="num">18,624,528.06</td></tr>
+          <tr><td>Distributed</td><td class="num">328,472,611.96</td><td class="num">54,134,181.10</td></tr>
+          <tr><td>Profit</td><td class="num">160,851,859.43</td><td class="num">35,509,653.04</td></tr>
+          <tr><td>Share of profit</td><td class="num">81.92%</td><td class="num">18.08%</td></tr>
+          <tr><td>Multiple on capital</td><td class="num">1.96x</td><td class="num">2.91x</td></tr>
+          <tr><td>Return over the hold</td><td class="num">8.12%</td><td class="num">12.76%</td></tr>
         </tbody>
       </table>
     </div>
