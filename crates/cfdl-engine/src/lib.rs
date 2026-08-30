@@ -172,7 +172,9 @@ fn refuse_series_reads_in_logic(ir: &Ir) -> Result<(), EngineError> {
         }
     }
     for event in &ir.events {
-        check(&event.when.src, format!("event '{}' guard", event.name));
+        if let Some(when) = &event.when {
+            check(&when.src, format!("event '{}' guard", event.name));
+        }
         for action in &event.actions {
             if let Some(value) = &action.value {
                 check(&value.src, format!("event '{}' action value", event.name));
@@ -706,10 +708,12 @@ fn priced_closure(ir: &Ir, deps: &[StreamDeps]) -> Vec<bool> {
 fn logic_expression_sources(ir: &Ir) -> Vec<(String, String)> {
     let mut sources: Vec<(String, String)> = Vec::new();
     for event in &ir.events {
-        sources.push((
-            format!("event '{}' guard", event.name),
-            event.when.src.clone(),
-        ));
+        if let Some(when) = &event.when {
+            sources.push((
+                format!("event '{}' guard", event.name),
+                when.src.clone(),
+            ));
+        }
         for action in &event.actions {
             if let Some(value) = &action.value {
                 sources.push((
