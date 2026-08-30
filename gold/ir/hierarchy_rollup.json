@@ -51,12 +51,12 @@
   "lifecycles": [
     {
       "id": "cre.property",
-      "initial": "operating",
+      "initial": "stabilized",
       "states": [
         "predevelopment",
         "construction",
         "lease_up",
-        "operating",
+        "stabilized",
         "repositioning",
         "disposed"
       ],
@@ -71,10 +71,10 @@
         },
         {
           "from": "lease_up",
-          "to": "operating"
+          "to": "stabilized"
         },
         {
-          "from": "operating",
+          "from": "stabilized",
           "to": "repositioning"
         },
         {
@@ -82,7 +82,15 @@
           "to": "lease_up"
         },
         {
-          "from": "operating",
+          "from": "stabilized",
+          "to": "disposed"
+        },
+        {
+          "from": "repositioning",
+          "to": "disposed"
+        },
+        {
+          "from": "lease_up",
           "to": "disposed"
         }
       ]
@@ -94,7 +102,7 @@
         "vacant",
         "leased",
         "holdover",
-        "downtime"
+        "month_to_month"
       ],
       "edges": [
         {
@@ -107,15 +115,27 @@
         },
         {
           "from": "leased",
-          "to": "downtime"
+          "to": "month_to_month"
+        },
+        {
+          "from": "leased",
+          "to": "vacant"
         },
         {
           "from": "holdover",
           "to": "leased"
         },
         {
-          "from": "downtime",
+          "from": "holdover",
+          "to": "vacant"
+        },
+        {
+          "from": "month_to_month",
           "to": "leased"
+        },
+        {
+          "from": "month_to_month",
+          "to": "vacant"
         }
       ]
     }

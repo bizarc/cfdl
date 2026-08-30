@@ -12,6 +12,46 @@ pub struct ValidationDiagnostic {
     pub span: Span,
 }
 
+/// The two rules an arrival action answers to (`docs/34` D4, D5).
+///
+/// `status` is refused because a write to it would fire a SECOND transition
+/// inside the same period, breaking one-transition-per-entity-per-period and
+/// inviting same-period cascades. A transition that should cause another
+/// transition is topology — an edge out of the target state, taken next
+/// period — and status writes stay the named event's privilege, validated
+/// against the declared edge relation.
+///
+/// A series read is refused on the same footing an edge guard's is: an action
+/// evaluates in the guard's environment, so it reads settled history and never
+/// this period's cash. This is `E1134`'s argument, one construct over.
+fn check_arrival_actions(
+    actions: &[cfdl_parser::StateAction],
+    what: &str,
+    file: &str,
+    diagnostics: &mut Vec<ValidationDiagnostic>,
+) {
+    for action in actions {
+        if action.field == "status" {
+            diagnostics.push(ValidationDiagnostic {
+                code: "E1358_ARRIVAL_ACTION_SETS_STATUS",
+                message: format!(
+                    "{what} sets `status`. An arrival action writes fields, never the state."
+                ),
+                file: file.to_string(),
+                span: action.span,
+            });
+        }
+        if let Some(window) = unreadable_window(&action.value.src) {
+            diagnostics.push(ValidationDiagnostic {
+                code: SERIES_READ_IN_LOGIC,
+                message: series_read_message(&window, &format!("{what} action")),
+                file: file.to_string(),
+                span: action.value.span,
+            });
+        }
+    }
+}
+
 pub fn validate(output: &ResolveOutput, symbols: &SymbolTables) -> Vec<ValidationDiagnostic> {
     let (default_file, default_span) = default_anchor(output);
     let mut diagnostics = Vec::new();
@@ -281,6 +321,41 @@ pub fn validate(output: &ResolveOutput, symbols: &SymbolTables) -> Vec<Validatio
                         });
                     }
                 }
+                check_arrival_actions(
+                    &edge.actions,
+                    &format!(
+                        "lifecycle '{}' edge '{} -> {}'",
+                        lc.name, edge.from, edge.to
+                    ),
+                    &source_stmt.file,
+                    &mut diagnostics,
+                );
+            }
+
+            // `on enter <state>` names a state the machine has. An ENHANCING
+            // block states no set of its own, so the check reports against an
+            // empty one and the caller drops it — the same position the
+            // edge-endpoint check above is in.
+            for entry in &lc.entry_actions {
+                if !declared.contains(entry.state.as_str()) {
+                    diagnostics.push(ValidationDiagnostic {
+                        code: "E1316_UNKNOWN_LIFECYCLE_STATE",
+                        message: format!(
+                            "Lifecycle '{}' has an `on enter {}` block, which is not a declared state. Declared: {}.",
+                            lc.name,
+                            entry.state,
+                            set()
+                        ),
+                        file: source_stmt.file.clone(),
+                        span: entry.span,
+                    });
+                }
+                check_arrival_actions(
+                    &entry.actions,
+                    &format!("lifecycle '{}' entry into '{}'", lc.name, entry.state),
+                    &source_stmt.file,
+                    &mut diagnostics,
+                );
             }
         }
 
@@ -332,7 +407,9 @@ pub fn validate(output: &ResolveOutput, symbols: &SymbolTables) -> Vec<Validatio
     for source_stmt in &output.source_statements {
         match &source_stmt.statement {
             Stmt::Event(event) => {
-                if let Some(window) = unreadable_window(&event.when) {
+                // An event with no `when` is scheduled, and a schedule reads
+                // no series at all — there is nothing to check.
+                if let Some(window) = event.when.as_deref().and_then(unreadable_window) {
                     diagnostics.push(ValidationDiagnostic {
                         code: SERIES_READ_IN_LOGIC,
                         message: series_read_message(

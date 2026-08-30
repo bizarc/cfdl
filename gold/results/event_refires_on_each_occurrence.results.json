@@ -1,0 +1,305 @@
+{
+  "results_version": "0.6",
+  "model_hash": "53ea578b32638303941b06ee4ad885b601169a294d90de0ece9d65790d68ae85",
+  "ledger_hash": "e62812f13e313020f60f3d99662906a9bb55ca41c558337ee7efd6aa3fa41b95",
+  "engine": {
+    "name": "cfdl-engine",
+    "version": "0.7.0"
+  },
+  "warnings": [],
+  "deterministic": {
+    "status": "ok",
+    "metrics": {
+      "entity.asset.suite.total": {
+        "amount": 800.0,
+        "currency": "USD"
+      },
+      "model.npv": {
+        "amount": 766.789102,
+        "currency": "USD"
+      },
+      "model.total": {
+        "amount": 800.0,
+        "currency": "USD"
+      },
+      "model.wal_years": 0.447917,
+      "run.annual_discount_rate": 0.1,
+      "run.periods_per_year": 12.0,
+      "stream.core.rent.total": {
+        "amount": 800.0,
+        "currency": "USD"
+      }
+    },
+    "series": {
+      "asset.suite.breach_count": {
+        "index": {
+          "calendar": "monthly",
+          "start": "2026-01-01",
+          "periods": 10
+        },
+        "values": [
+          0.0,
+          0.0,
+          0.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          2.0,
+          2.0,
+          2.0
+        ]
+      },
+      "asset.suite.paying": {
+        "index": {
+          "calendar": "monthly",
+          "start": "2026-01-01",
+          "periods": 10
+        },
+        "values": [
+          1.0,
+          1.0,
+          1.0,
+          0.0,
+          1.0,
+          1.0,
+          1.0,
+          0.0,
+          1.0,
+          1.0
+        ]
+      },
+      "entity.asset.suite.net_cash_flow": {
+        "index": {
+          "calendar": "monthly",
+          "start": "2026-01-01",
+          "periods": 10
+        },
+        "values": [
+          {
+            "amount": 100.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 100.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 100.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 100.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 100.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 100.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 100.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 100.0,
+            "currency": "USD"
+          }
+        ]
+      },
+      "model.net_cash_flow": {
+        "index": {
+          "calendar": "monthly",
+          "start": "2026-01-01",
+          "periods": 10
+        },
+        "values": [
+          {
+            "amount": 100.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 100.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 100.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 100.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 100.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 100.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 100.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 100.0,
+            "currency": "USD"
+          }
+        ]
+      },
+      "stream.core.rent": {
+        "index": {
+          "calendar": "monthly",
+          "start": "2026-01-01",
+          "periods": 10
+        },
+        "offset": 1.0,
+        "values": [
+          {
+            "amount": 100.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 100.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 100.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 100.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 100.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 100.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 100.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 100.0,
+            "currency": "USD"
+          }
+        ]
+      }
+    },
+    "transitions": [
+      {
+        "period": 3,
+        "date": "2026-04-01",
+        "entity": "asset.suite",
+        "field": "breach_count",
+        "from": "0",
+        "to": "1",
+        "event": "breach"
+      },
+      {
+        "period": 7,
+        "date": "2026-08-01",
+        "entity": "asset.suite",
+        "field": "breach_count",
+        "from": "1",
+        "to": "2",
+        "event": "breach"
+      }
+    ],
+    "journal": [
+      {
+        "period": 3,
+        "date": "2026-04-01",
+        "actor": "event:breach",
+        "action": "set",
+        "target": "asset.suite.breach_count",
+        "outcome": "applied",
+        "from": "0",
+        "to": "1"
+      },
+      {
+        "period": 7,
+        "date": "2026-08-01",
+        "actor": "event:breach",
+        "action": "set",
+        "target": "asset.suite.breach_count",
+        "outcome": "applied",
+        "from": "1",
+        "to": "2"
+      }
+    ],
+    "annual_rollup": {
+      "series": {
+        "model.net_cash_flow": {
+          "index": {
+            "calendar": "annual",
+            "start": "2026-01-01",
+            "periods": 1
+          },
+          "values": [
+            {
+              "amount": 800.0,
+              "currency": "USD"
+            }
+          ]
+        },
+        "stream.core.rent": {
+          "index": {
+            "calendar": "annual",
+            "start": "2026-01-01",
+            "periods": 1
+          },
+          "values": [
+            {
+              "amount": 800.0,
+              "currency": "USD"
+            }
+          ]
+        }
+      }
+    }
+  },
+  "scenarios": {
+    "status": "not_run",
+    "summaries": []
+  },
+  "monte_carlo": {
+    "status": "not_run",
+    "trials": 1,
+    "seed": 0,
+    "metrics": {},
+    "trial_summaries": []
+  }
+}

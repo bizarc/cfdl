@@ -137,6 +137,11 @@ pub struct EntityStmt {
 /// not reserved words (`docs/13` §7.19).
 #[derive(Debug, Clone, PartialEq, Eq, serde::Serialize)]
 pub struct LifecycleStmt {
+    /// A QNAME, not a bare identifier: a model addresses a machine its PACK
+    /// declared (`opco.enterprise`) as well as one of its own (`unit`). A
+    /// block naming a machine that already exists AUGMENTS it (`docs/34`
+    /// D2a); one naming a new name declares it, and is then required to
+    /// carry `initial` and `state`.
     pub name: String,
     /// The state the machine opens in. Mandatory by validation, optional
     /// here so the parser can report the omission with the block's span.
@@ -145,6 +150,49 @@ pub struct LifecycleStmt {
     pub states: Vec<String>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub edges: Vec<LifecycleEdge>,
+    /// `on enter <state> { … }` blocks, in declaration order. What is true of
+    /// the STATE however it was reached — the primary domain spelling, since
+    /// it holds for every edge that arrives, including one added later.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub entry_actions: Vec<StateEntry>,
+    pub span: Span,
+}
+
+/// Who wrote an arrival action (`docs/34` D2a).
+///
+/// REQUIRED on every action rather than inferred from the presence of pack
+/// provenance. Inferring it is a §7.38 shape: a lowering path that forgot the
+/// stamp would journal a pack's action as the model's, silently, and an
+/// `overridden` line that cannot name its author is the one thing the record
+/// exists to prevent.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, serde::Serialize)]
+#[serde(rename_all = "lowercase")]
+pub enum ActionAuthor {
+    Pack,
+    Model,
+}
+
+/// The arrival actions for one state: `on enter <state> { … }`.
+#[derive(Debug, Clone, PartialEq, Eq, serde::Serialize)]
+pub struct StateEntry {
+    pub state: String,
+    pub actions: Vec<StateAction>,
+    pub span: Span,
+}
+
+/// One arrival action: `set <field> = <expr>`.
+///
+/// The vocabulary is `set` only, and the target is a FIELD on the entity that
+/// transitioned — never `status`, which would fire a second transition inside
+/// the same period. The name is ENTITY-RELATIVE because one lifecycle is
+/// bound by many entities and the behavior belongs to the entity that moved.
+#[derive(Debug, Clone, PartialEq, Eq, serde::Serialize)]
+pub struct StateAction {
+    pub field: String,
+    pub value: ExprSlot,
+    /// Stamped by the parser as `Model`; a pack's own machine lowers its
+    /// actions as `Pack`.
+    pub author: ActionAuthor,
     pub span: Span,
 }
 
@@ -158,6 +206,11 @@ pub struct LifecycleEdge {
     pub to: String,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub guard: Option<ExprSlot>,
+    /// What is true of the PATH taken. Runs AFTER the target state's entry
+    /// actions — the specific refines the general — and on every traversal,
+    /// including one a named event's status write caused.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub actions: Vec<StateAction>,
     pub span: Span,
 }
 
@@ -519,8 +572,23 @@ pub enum ScheduleKind {
 #[derive(Debug, Clone, PartialEq, Eq, serde::Serialize)]
 pub struct EventStmt {
     pub name: String,
-    /// Boolean trigger expression (raw source).
-    pub when: String,
+    /// The occurrences this event is tested at (`docs/34` D1a).
+    ///
+    /// The schedule SUPPLIES occurrences and `when` FILTERS them: with both,
+    /// the event fires at each scheduled occurrence the condition admits, so
+    /// `schedule every quarter when dscr < 1.20` that fails four times running
+    /// is four breach events — the model declared quarterly testing. Absent,
+    /// occurrences come from the condition's own dynamics (rising edge).
+    ///
+    /// This is the SAME `ScheduleSpec` a stream carries: an event gets the
+    /// whole schedule sub-language, `state_enter` included, not a subset.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub schedule: Option<ScheduleSpec>,
+    /// Boolean trigger expression (raw source). Absent means every scheduled
+    /// occurrence fires; at least one of `schedule` and `when` is present,
+    /// which the parser refuses to produce otherwise.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub when: Option<String>,
     pub actions: Vec<EventAction>,
     pub span: Span,
 }
@@ -1997,11 +2065,92 @@ impl<'a> Parser<'a> {
     /// edge a compile error rather than a phantom state — and edges are
     /// declared only as used. `initial` is contextual, like `lifecycle`
     /// itself; `state` and `when` are already reserved.
+    /// `{ set <field> = <expr> … }` — an arrival's action block.
+    ///
+    /// The vocabulary is `set` only (`docs/34` D4) and the field name is
+    /// ENTITY-RELATIVE: one lifecycle is bound by many entities, so the
+    /// behavior belongs to whichever entity transitioned rather than to a
+    /// named one. `status` parses here and is refused in validation — it is a
+    /// legal field name in every other position, so refusing it in the parser
+    /// would report it as a syntax error, which it is not.
+    fn parse_action_block(&mut self) -> Option<(Vec<StateAction>, Span)> {
+        let open = self.expect_punct(Punct::LBrace, "'{'")?;
+        let mut actions: Vec<StateAction> = Vec::new();
+        loop {
+            match self.peek().kind {
+                TokenKind::Punct(Punct::RBrace) => {
+                    let close = self.bump();
+                    return Some((actions, merge_spans(open.span, close.span)));
+                }
+                TokenKind::Eof => {
+                    self.push_expected(
+                        self.current_span(),
+                        "Unterminated action block: expected '}'.".to_string(),
+                    );
+                    return None;
+                }
+                TokenKind::Keyword(Keyword::Set) => {
+                    let set_tok = self.bump();
+                    let field_tok = self.bump();
+                    let field = match field_tok.kind {
+                        TokenKind::Ident(ref f) => f.clone(),
+                        TokenKind::Qname(_) => {
+                            self.push_expected(
+                                field_tok.span,
+                                "Expected a plain field name after 'set'. An arrival action names \
+                                 a field on the entity that transitioned, not a qualified path — \
+                                 one lifecycle is bound by many entities."
+                                    .to_string(),
+                            );
+                            return None;
+                        }
+                        _ => {
+                            self.push_expected(
+                                merge_spans(set_tok.span, field_tok.span),
+                                "Expected a field name after 'set' (e.g. set months_in_state = 0)."
+                                    .to_string(),
+                            );
+                            return None;
+                        }
+                    };
+                    let eq = self.expect_punct(Punct::Equal, "'='")?;
+                    let Some(value) = self.parse_expr_slot_until(eq.span, &["set"]) else {
+                        self.push_expected(
+                            self.current_span(),
+                            "Expected a value expression after '='.".to_string(),
+                        );
+                        return None;
+                    };
+                    let span = merge_spans(set_tok.span, value.span);
+                    actions.push(StateAction {
+                        field,
+                        value,
+                        author: ActionAuthor::Model,
+                        span,
+                    });
+                }
+                _ => {
+                    let tok = self.bump();
+                    self.push_expected(
+                        tok.span,
+                        "Expected 'set' or '}' in an action block: an arrival sets fields and \
+                         nothing else."
+                            .to_string(),
+                    );
+                    return None;
+                }
+            }
+        }
+    }
+
     fn parse_lifecycle_stmt(&mut self) -> Option<LifecycleStmt> {
         let start = self.bump(); // `lifecycle`
         let name_tok = self.bump();
         let name = match name_tok.kind {
-            TokenKind::Ident(ref ident) => ident.clone(),
+            // A QNAME as well as a bare name: `lifecycle opco.enterprise`
+            // addresses the machine a PACK declared, which is what an
+            // augmenting block needs to name (`docs/34` D2a).
+            TokenKind::Ident(ref ident) | TokenKind::Qname(ref ident) => ident.clone(),
             _ => {
                 self.push_expected(
                     name_tok.span,
@@ -2015,6 +2164,7 @@ impl<'a> Parser<'a> {
         let mut initial: Option<String> = None;
         let mut states: Vec<String> = Vec::new();
         let mut edges: Vec<LifecycleEdge> = Vec::new();
+        let mut entry_actions: Vec<StateEntry> = Vec::new();
         let end;
         loop {
             match self.peek().kind {
@@ -2052,6 +2202,40 @@ impl<'a> Parser<'a> {
                             break;
                         }
                     }
+                }
+                // `on enter <state> { … }` — the state's own arrival actions.
+                // `on` is a reserved word, so this branch cannot be confused
+                // with an edge, whose from-state is an identifier.
+                TokenKind::Keyword(Keyword::On) => {
+                    let on_tok = self.bump();
+                    let enter_tok = self.bump();
+                    match enter_tok.kind {
+                        TokenKind::Ident(ref w) if w == "enter" => {}
+                        _ => {
+                            self.push_expected(
+                                merge_spans(on_tok.span, enter_tok.span),
+                                "Expected 'enter' after 'on' in a lifecycle block: entry actions \
+                                 read 'on enter <state> { … }'."
+                                    .to_string(),
+                            );
+                            return None;
+                        }
+                    }
+                    let state_tok = self.bump();
+                    let TokenKind::Ident(ref state) = state_tok.kind else {
+                        self.push_expected(
+                            state_tok.span,
+                            "Expected a state name after 'on enter'.".to_string(),
+                        );
+                        return None;
+                    };
+                    let state = state.clone();
+                    let (actions, block_span) = self.parse_action_block()?;
+                    entry_actions.push(StateEntry {
+                        state,
+                        actions,
+                        span: merge_spans(on_tok.span, block_span),
+                    });
                 }
                 // `initial <state>` — contextual, like `lifecycle` itself.
                 TokenKind::Ident(ref ident) if ident == "initial" => {
@@ -2101,11 +2285,20 @@ impl<'a> Parser<'a> {
                     } else {
                         None
                     };
-                    let span_end = guard.as_ref().map(|g| g.span).unwrap_or(to_tok.span);
+                    let mut span_end = guard.as_ref().map(|g| g.span).unwrap_or(to_tok.span);
+                    // The path's own actions, if it carries any.
+                    let actions = if matches!(self.peek().kind, TokenKind::Punct(Punct::LBrace)) {
+                        let (actions, block_span) = self.parse_action_block()?;
+                        span_end = block_span;
+                        actions
+                    } else {
+                        Vec::new()
+                    };
                     edges.push(LifecycleEdge {
                         from,
                         to,
                         guard,
+                        actions,
                         span: merge_spans(from_tok.span, span_end),
                     });
                 }
@@ -2113,7 +2306,7 @@ impl<'a> Parser<'a> {
                     let tok = self.bump();
                     self.push_expected(
                         tok.span,
-                        "Expected 'initial', 'state', an edge ('a -> b'), or '}' in a lifecycle block."
+                        "Expected 'initial', 'state', 'on enter <state>', an edge ('a -> b'), or '}' in a lifecycle block."
                             .to_string(),
                     );
                     return None;
@@ -2122,6 +2315,7 @@ impl<'a> Parser<'a> {
         }
         Some(LifecycleStmt {
             name,
+            entry_actions,
             initial,
             states,
             edges,
@@ -2524,6 +2718,13 @@ impl<'a> Parser<'a> {
             match self.peek().kind {
                 TokenKind::Eof
                 | TokenKind::Punct(Punct::RBrace)
+                // An expression never contains a BRACE. Without this an edge
+                // guard swallows its own action block: `a -> b when x < 50 {
+                // set f = 0 }` read the `{` as expression text.
+                | TokenKind::Punct(Punct::LBrace)
+                // Nor a `set`, which is reserved and always starts the next
+                // action in an arrival block.
+                | TokenKind::Keyword(Keyword::Set)
                 | TokenKind::Keyword(Keyword::Schedule)
                 | TokenKind::Keyword(Keyword::Owner)
                 | TokenKind::Keyword(Keyword::Active) => break,
@@ -3130,14 +3331,44 @@ impl<'a> Parser<'a> {
                 return None;
             }
         };
-        let _ = self.expect_keyword(Keyword::When, "'when'")?;
-        let Some(when) = self.consume_expr_until(&[TokStopKind::LBrace]) else {
+        // `schedule <expr>` SUPPLIES the occurrences, `when <expr>` FILTERS
+        // them (`docs/34` D1a). Either alone is legal; both together is a
+        // covenant test — `schedule every quarter when dscr < 1.20` failing
+        // four times running is four breach events, because the model
+        // declared quarterly testing. Neither is not an event.
+        //
+        // The schedule is the SAME production a stream's is, so an event
+        // takes the whole sub-language — `state_enter` included — rather
+        // than a second, smaller dialect of when things happen.
+        let schedule = if matches!(self.peek().kind, TokenKind::Keyword(Keyword::Schedule)) {
+            let _ = self.bump();
+            self.parse_schedule_expr()
+        } else {
+            None
+        };
+        let when = if matches!(self.peek().kind, TokenKind::Keyword(Keyword::When)) {
+            let _ = self.bump();
+            let Some(cond) = self.consume_expr_until(&[TokStopKind::LBrace]) else {
+                self.push_expected(
+                    self.current_span(),
+                    "Expected trigger expression after 'when'.".to_string(),
+                );
+                return None;
+            };
+            Some(cond)
+        } else {
+            None
+        };
+        if schedule.is_none() && when.is_none() {
             self.push_expected(
-                self.current_span(),
-                "Expected trigger expression after 'when'.".to_string(),
+                merge_spans(start.span, self.current_span()),
+                "An event needs a 'schedule', a 'when' condition, or both: a schedule supplies \
+                 the occurrences and 'when' filters them, and an event with neither has no \
+                 occasion to fire."
+                    .to_string(),
             );
             return None;
-        };
+        }
         let _ = self.expect_punct(Punct::LBrace, "'{'")?;
         let mut actions = Vec::new();
         loop {
@@ -3240,6 +3471,7 @@ impl<'a> Parser<'a> {
         let end = self.expect_punct(Punct::RBrace, "'}'")?;
         Some(EventStmt {
             name,
+            schedule,
             when,
             actions,
             span: merge_spans(start.span, end.span),

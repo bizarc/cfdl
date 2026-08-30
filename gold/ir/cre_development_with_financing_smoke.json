@@ -41,12 +41,12 @@
   "lifecycles": [
     {
       "id": "cre.property",
-      "initial": "operating",
+      "initial": "stabilized",
       "states": [
         "predevelopment",
         "construction",
         "lease_up",
-        "operating",
+        "stabilized",
         "repositioning",
         "disposed"
       ],
@@ -61,10 +61,10 @@
         },
         {
           "from": "lease_up",
-          "to": "operating"
+          "to": "stabilized"
         },
         {
-          "from": "operating",
+          "from": "stabilized",
           "to": "repositioning"
         },
         {
@@ -72,7 +72,15 @@
           "to": "lease_up"
         },
         {
-          "from": "operating",
+          "from": "stabilized",
+          "to": "disposed"
+        },
+        {
+          "from": "repositioning",
+          "to": "disposed"
+        },
+        {
+          "from": "lease_up",
           "to": "disposed"
         }
       ]

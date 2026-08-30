@@ -56,7 +56,7 @@ Both documents have published JSON Schemas — see the
   terms (`contract cre.lease { terms { base_rent = 25000 } }`). The compiler
   expands them into streams using the pack's rules.
 - **Events and options** — an event is a condition and a one-time change
-  (`event expiry when time.t >= 24 { set entity asset.suite.status = "downtime" }`);
+  (`event expiry when time.t >= 24 { set entity asset.suite.status = "vacant" }`);
   an option is a contract with an exercise condition and a payoff. A regime
   that returns is a lifecycle edge, not an event. Transitions from all three
   are recorded in results as a transition log.

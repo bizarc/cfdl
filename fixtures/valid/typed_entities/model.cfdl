@@ -10,7 +10,7 @@ entity asset legacy : CRE.Asset.RealProperty
 entity asset tower : CRE.Asset.RealProperty {
   asset_class = "office"
   rentable_area = 30000
-  state operating
+  state stabilized
 }
 
 // Optional hierarchy: a unit inside the building. Never required.

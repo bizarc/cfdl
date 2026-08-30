@@ -135,7 +135,7 @@ its condition holds, once.
 
 ```cfdl
 event expiry when time.t >= 2 {
-  set entity asset.suite.status = "downtime"
+  set entity asset.suite.status = "vacant"
 }
 ```
 

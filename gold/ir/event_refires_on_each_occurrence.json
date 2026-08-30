@@ -1,0 +1,133 @@
+{
+  "ir_version": "0.1",
+  "model": {
+    "name": "event-refires-on-each-occurrence",
+    "currency": "USD"
+  },
+  "time": {
+    "calendar": "monthly",
+    "start": "2026-01-01",
+    "periods": 10
+  },
+  "phases": [],
+  "entities": [
+    {
+      "id": "0e8e7ed5a33916d03ca18c8f1fb232c6",
+      "symbol": "asset.suite",
+      "type": "core.Entity",
+      "fields": {},
+      "rules": {
+        "breach_count": {
+          "init": {
+            "lang": "cfdl",
+            "src": "0.0"
+          },
+          "next": {
+            "lang": "cfdl",
+            "src": "prev"
+          }
+        },
+        "paying": {
+          "init": {
+            "lang": "cfdl",
+            "src": "1.0"
+          },
+          "next": {
+            "lang": "cfdl",
+            "src": "if(time.t == 3 or time.t == 7, 0.0, 1.0)"
+          }
+        }
+      },
+      "state": {}
+    }
+  ],
+  "assumptions": {
+    "constants": {},
+    "random": {}
+  },
+  "contracts": [],
+  "streams": [
+    {
+      "id": "2aa0ccd1f549852586d71092ae8e70bb",
+      "name": "core.rent",
+      "owner": {
+        "symbol": "asset.suite"
+      },
+      "direction": "inflow",
+      "currency": "USD",
+      "schedule": {
+        "kind": "Every",
+        "every": "monthly",
+        "from": "2026-01-01",
+        "to": "2026-10-01"
+      },
+      "amount": {
+        "lang": "cfdl",
+        "src": "100.0 * asset.suite.paying"
+      },
+      "active_when": {
+        "lang": "cfdl",
+        "src": "true"
+      },
+      "provenance": {
+        "source_file": "model.cfdl",
+        "source_span": {
+          "start_line": 21,
+          "start_col": 1,
+          "end_line": 24,
+          "end_col": 1
+        }
+      }
+    }
+  ],
+  "events": [
+    {
+      "actions": [
+        {
+          "entity": {
+            "symbol": "asset.suite"
+          },
+          "field": "breach_count",
+          "kind": "SetEntityField",
+          "value": {
+            "lang": "cfdl",
+            "src": "prev.asset.suite.breach_count + 1.0"
+          }
+        }
+      ],
+      "id": "12e06d753c0db1df97a403f62f926d5d",
+      "name": "breach",
+      "provenance": {
+        "source_file": "model.cfdl",
+        "source_span": {
+          "end_col": 1,
+          "end_line": 19,
+          "start_col": 1,
+          "start_line": 17
+        }
+      },
+      "when": {
+        "lang": "cfdl",
+        "src": "asset.suite.paying < 0.5"
+      }
+    }
+  ],
+  "options": [],
+  "runs": [
+    {
+      "kind": "deterministic"
+    }
+  ],
+  "required_observables": [],
+  "required_refs": [],
+  "provenance": {
+    "sources": [
+      "model.cfdl"
+    ],
+    "compiler": {
+      "name": "cfdl",
+      "version": "0.7.0",
+      "hash": "d80f4c40398fe75b55a6788a2be14aac"
+    }
+  }
+}

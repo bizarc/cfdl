@@ -7,7 +7,7 @@ time calendar annual from 2026-01 for 1
 // CRE.Asset.RealProperty, asset_class, and lifecycle state `operating`.
 entity asset tower : CRE.Asset.RealProperty {
   asset_class = "office"
-  state operating
+  state stabilized
 }
 
 stream cre.rent on entity asset.tower inflow currency USD {

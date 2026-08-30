@@ -17,8 +17,8 @@
   "properties": {
     "results_version": {
       "type": "string",
-      "const": "0.5",
-      "description": "Schema version of this document. 0.5 added the machine's `transition` journal action. 0.4 added the account journal actions `inflow`, `allocate_in` and `allocate_out`. 0.3 added `ledger_hash` and the optional `inputs` section, and `category` on IR streams upstream of it."
+      "const": "0.6",
+      "description": "Schema version of this document. 0.6 nests an act's own acts under it as `children`, which is what a transition and its arrival actions are. 0.5 added the machine's `transition` journal action. 0.4 added the account journal actions `inflow`, `allocate_in` and `allocate_out`. 0.3 added `ledger_hash` and the optional `inputs` section, and `category` on IR streams upstream of it."
     },
     "model_hash": {
       "type": "string",
@@ -276,83 +276,9 @@
         },
         "journal": {
           "type": "array",
-          "description": "Every causal act the run performed, with what became of it, in the order the engine performed them. `transitions` records field CHANGES; the journal answers the question a reviewer asks — what did the model DO, and did each thing it was asked to do happen. An action that was declined, ignored or overridden changes nothing and so appears nowhere else: an `activate stream` that lost to the stream's own `active when` used to leave no trace at all. Flat on purpose — one row per act — so a golden asserts on lines, a reviewer greps for a stream name, and this schema checks one row type. Omitted when a model has no events, options or waterfalls, so such a model publishes exactly what it published before.",
+          "description": "Every causal act the run performed, with what became of it, in the order the engine performed them. `transitions` records field CHANGES; the journal answers the question a reviewer asks — what did the model DO, and did each thing it was asked to do happen. An action that was declined, ignored or overridden changes nothing and so appears nowhere else: an `activate stream` that lost to the stream's own `active when` used to leave no trace at all. One row per act, and one row TYPE — an act whose effects are its own acts nests them as `children` rather than flattening them beside itself, which is what a transition and its arrival actions are (0.6). Omitted when a model has no events, options or waterfalls, so such a model publishes exactly what it published before.",
           "items": {
-            "type": "object",
-            "additionalProperties": false,
-            "required": [
-              "period",
-              "date",
-              "actor",
-              "action",
-              "target",
-              "outcome"
-            ],
-            "properties": {
-              "period": {
-                "type": "integer",
-                "minimum": 0
-              },
-              "date": {
-                "type": "string"
-              },
-              "actor": {
-                "type": "string",
-                "description": "Who acted, qualified by kind: `event:<name>`, `waterfall:<name>`, `option:<name>`, `stream:<name>`. Qualified because a waterfall and an event may share a name and the log must not conflate them."
-              },
-              "action": {
-                "type": "string",
-                "enum": [
-                  "set",
-                  "activate_stream",
-                  "deactivate_stream",
-                  "activate_contract",
-                  "deactivate_contract",
-                  "exercise_option",
-                  "pay",
-                  "inflow",
-                  "allocate_in",
-                  "allocate_out",
-                  "transition"
-                ]
-              },
-              "target": {
-                "type": "string",
-                "description": "What was acted on — a field path, a stream name, or a step and its payee."
-              },
-              "outcome": {
-                "type": "string",
-                "enum": [
-                  "applied",
-                  "declined",
-                  "overridden",
-                  "ignored",
-                  "failed"
-                ],
-                "description": "`applied` is the only one that changed anything. `declined` was refused for a stated reason. `overridden` was done and then lost to a stronger declaration — a stream activation against a false `active when`, or a waterfall step against a short pot. `ignored` is an action the engine does not execute yet. `failed` means the action's own expression did not evaluate."
-              },
-              "from": {
-                "type": "string"
-              },
-              "to": {
-                "type": "string"
-              },
-              "amount": {
-                "type": "number",
-                "description": "What the step allocated. Allocated, not transferred: a waterfall is an ordered allocation over a pot, deciding what each step is entitled to out of what remains. Whether that cash physically settles is a question the language does not model."
-              },
-              "pot_before": {
-                "type": "number",
-                "description": "The pot before the step drew on it, so a short pot is visible as the reason a step was allocated less than it was owed."
-              },
-              "pot_after": {
-                "type": "number"
-              },
-              "note": {
-                "type": "string",
-                "description": "Why, when the outcome is not `applied`."
-              }
-            }
+            "$ref": "#/$defs/JournalEntry"
           }
         }
       }
@@ -976,6 +902,91 @@
           "description": "What the call resolves to, rounded to the engine's published-number policy so it agrees exactly with the ledger figure it explains. ABSENT when an argument is not a literal — the call is still listed, because a silently omitted call site would read as a model that never made one."
         }
       }
+    },
+    "JournalEntry": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "period",
+        "date",
+        "actor",
+        "action",
+        "target",
+        "outcome"
+      ],
+      "properties": {
+        "period": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "date": {
+          "type": "string"
+        },
+        "actor": {
+          "type": "string",
+          "description": "Who acted, qualified by kind: `event:<name>`, `waterfall:<name>`, `option:<name>`, `stream:<name>`. Qualified because a waterfall and an event may share a name and the log must not conflate them."
+        },
+        "action": {
+          "type": "string",
+          "enum": [
+            "set",
+            "activate_stream",
+            "deactivate_stream",
+            "activate_contract",
+            "deactivate_contract",
+            "exercise_option",
+            "pay",
+            "inflow",
+            "allocate_in",
+            "allocate_out",
+            "transition"
+          ]
+        },
+        "target": {
+          "type": "string",
+          "description": "What was acted on — a field path, a stream name, or a step and its payee."
+        },
+        "outcome": {
+          "type": "string",
+          "enum": [
+            "applied",
+            "declined",
+            "overridden",
+            "ignored",
+            "failed"
+          ],
+          "description": "`applied` is the only one that changed anything. `declined` was refused for a stated reason. `overridden` was done and then lost to a stronger declaration — a stream activation against a false `active when`, or a waterfall step against a short pot. `ignored` is an action the engine does not execute yet. `failed` means the action's own expression did not evaluate."
+        },
+        "from": {
+          "type": "string"
+        },
+        "to": {
+          "type": "string"
+        },
+        "amount": {
+          "type": "number",
+          "description": "What the step allocated. Allocated, not transferred: a waterfall is an ordered allocation over a pot, deciding what each step is entitled to out of what remains. Whether that cash physically settles is a question the language does not model."
+        },
+        "pot_before": {
+          "type": "number",
+          "description": "The pot before the step drew on it, so a short pot is visible as the reason a step was allocated less than it was owed."
+        },
+        "pot_after": {
+          "type": "number"
+        },
+        "note": {
+          "type": "string",
+          "description": "Why, when the outcome is not `applied`."
+        },
+        "children": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/JournalEntry"
+          },
+          "description": "What this occurrence DID, when the occurrence and its effects are two different things. A transition's arrival actions are its children rather than its siblings because the tie between them is real: sharing a period and an entity only implies it, and a reader reconstructing which `set` belonged to which arrival would be guessing where several entities move in one period. Absent where an act has no composite effects, which is most of them."
+        }
+      },
+      "description": "One act, and what became of it. An act that DID something composite carries what it did as `children` — a transition is the occurrence, its arrival actions are its effects."
     }
   }
 }

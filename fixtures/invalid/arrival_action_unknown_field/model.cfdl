@@ -1,0 +1,24 @@
+version 0.1
+model "arrival-action-unknown-field"
+time calendar monthly from 2026-01 for 6
+
+// The field name is entity-relative, so it resolves against the entity that
+// transitioned. A misspelling is a write that would land nowhere.
+lifecycle unit {
+  initial leased
+  state leased, delinquent
+  on enter delinquent {
+    set markr = 1.0
+  }
+  leased -> delinquent when time.t >= 2
+}
+
+entity asset suite {
+  lifecycle unit
+  marker init 0.0 next prev
+}
+
+stream core.rent on entity asset.suite inflow currency USD {
+  schedule every month from 2026-01 to 2026-06
+  amount = 100
+}

@@ -1,6 +1,6 @@
 {
-  "results_version": "0.5",
-  "model_hash": "85bc3f67ab22d02ceb85f81e0a85f14ae1049715912941a5dbe2dd8e1273bd0e",
+  "results_version": "0.6",
+  "model_hash": "bd67717e117bd2d2076ab9b3ba0f82b9350055828f6f1bb86792e79760a8bd51",
   "ledger_hash": "72991c94884d44b3b9a75282b256971c7ed475dd68f814d9ef8e632e63b0a0c7",
   "engine": {
     "name": "cfdl-engine",
@@ -314,7 +314,7 @@
         "date": "2028-01-01",
         "entity": "asset.tower",
         "field": "status",
-        "from": "operating",
+        "from": "stabilized",
         "to": "repositioning",
         "event": "start_repositioning"
       }
@@ -327,7 +327,7 @@
         "action": "set",
         "target": "asset.tower.status",
         "outcome": "applied",
-        "from": "operating",
+        "from": "stabilized",
         "to": "repositioning"
       }
     ]

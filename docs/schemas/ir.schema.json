@@ -1043,7 +1043,6 @@
       "required": [
         "id",
         "name",
-        "when",
         "actions",
         "provenance"
       ],
@@ -1054,8 +1053,13 @@
         "name": {
           "$ref": "#/$defs/Id"
         },
+        "schedule": {
+          "$ref": "#/$defs/Schedule",
+          "description": "The occurrences this event is tested at. Absent means the condition's own dynamics supply them (rising edge). Present with `when`, the event fires at each scheduled occurrence the condition admits — a quarterly covenant test that fails four times running is four breach events, because the model declared quarterly testing."
+        },
         "when": {
-          "$ref": "#/$defs/Expr"
+          "$ref": "#/$defs/Expr",
+          "description": "Absent means every scheduled occurrence fires. Present with no schedule, occurrences are this expression's rising edges."
         },
         "actions": {
           "type": "array",
@@ -1066,7 +1070,20 @@
         "provenance": {
           "$ref": "#/$defs/NodeProvenance"
         }
-      }
+      },
+      "description": "An event is something that happens, and nothing restricts it to happening once. It fires on EACH occurrence: `schedule` supplies the occurrences and `when` filters them; with no schedule, an occurrence is the rising edge of the condition — true having been false, re-arming when it falls. At least one of `schedule` and `when` is present. There is no latch and no `once` flag: once-ness is declared, as a schedule whose occurrence is singular or a topology with no way back. A consumer MUST NOT infer fired-once semantics from the absence of a schedule.",
+      "anyOf": [
+        {
+          "required": [
+            "schedule"
+          ]
+        },
+        {
+          "required": [
+            "when"
+          ]
+        }
+      ]
     },
     "Action": {
       "type": "object",
@@ -1618,6 +1635,13 @@
             "$ref": "#/$defs/LifecycleEdge"
           },
           "description": "Empty or absent means the machine is unconstrained — permits()'s empty-means-open rule."
+        },
+        "entry_actions": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/StateEntry"
+          },
+          "description": "What is true of a STATE however it was reached, and the primary domain spelling: an entry action holds for every edge that arrives, including one added later. A pack's types.toml machine declares it once and every model using the type inherits it. Runs BEFORE the taken edge's actions."
         }
       }
     },
@@ -1639,6 +1663,67 @@
         "guard": {
           "$ref": "#/$defs/Expr",
           "description": "Evaluated each period the entity is in `from`, reading state as the period opened and series strictly backward (docs/28 §4). There is no latch: edge availability is the memory."
+        },
+        "actions": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/StateAction"
+          },
+          "description": "What is true of the PATH taken, run on every traversal — whatever took the edge, including a named event's status write. Runs AFTER the target state's entry actions: the specific refines the general."
+        }
+      }
+    },
+    "StateAction": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "author",
+        "field",
+        "value"
+      ],
+      "description": "One arrival action. The vocabulary is `set` only and the target is a FIELD on the entity that transitioned — never `status`, which would fire a second transition inside the same period. The field name is entity-relative because one lifecycle is bound by many entities. Evaluated in the guard's environment (state as the period opened, series strictly backward), so arrival actions add no cycle risk; the write settles the field for the period and the recurrence resumes from it next period. `author` is REQUIRED rather than inferred from the presence of provenance: a pack action whose stamp was forgotten would otherwise journal as the model's, and an unattributable `overridden` line is the one thing this record exists to prevent.",
+      "properties": {
+        "kind": {
+          "type": "string",
+          "enum": [
+            "SetField"
+          ]
+        },
+        "author": {
+          "type": "string",
+          "enum": [
+            "pack",
+            "model"
+          ],
+          "description": "Who wrote this action. Within one state's or edge's list every `pack` action precedes every `model` action — the pack's machine is the general case and the model's augmentation refines it — and the journal names this as the actor, so a same-field conflict records which author's value was `overridden`."
+        },
+        "field": {
+          "$ref": "#/$defs/Id",
+          "description": "Entity-relative field name, resolved against the entity bound to this machine."
+        },
+        "value": {
+          "$ref": "#/$defs/Expr"
+        }
+      }
+    },
+    "StateEntry": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "state",
+        "actions"
+      ],
+      "description": "The arrival actions for one state. At most one entry per state per author; a model augmenting a pack-declared machine contributes a SEPARATE list that runs after the pack's, additively — the model may not add or remove states or edges, alter the topology, or remove the pack's actions.",
+      "properties": {
+        "state": {
+          "type": "string"
+        },
+        "actions": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/StateAction"
+          }
         }
       }
     }

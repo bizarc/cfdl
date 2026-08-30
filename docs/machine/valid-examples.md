@@ -4,7 +4,7 @@
 
 CFDL 0.7.0. Every model below compiles, and its IR and
 results are byte-asserted against goldens in CI (`fixtures/valid/`,
-123 models.
+126 models.
 
 `gold/ir/`, `gold/results/`). Each is single-purpose: the directory name
 says what it exercises. This is what right looks like — positive few-shot
@@ -175,7 +175,7 @@ entity asset suite : CRE.Asset.Unit {
 }
 
 event expiry when time.t >= 2 {
-  set entity asset.suite.status = "downtime"
+  set entity asset.suite.status = "vacant"
 }
 
 event reletting when time.t >= 4 {
@@ -213,6 +213,44 @@ stream bonus.fee on entity asset.co inflow currency USD {
   schedule every year from 2026-01 to 2028-01
   active when series_sum("base.revenue", 0, time.t) > 150
   amount = 25
+}
+```
+
+## arrival_actions_entry_and_edge
+
+```cfdl
+version 0.1
+model "arrival-actions-entry-and-edge"
+time calendar monthly from 2026-01 for 8
+
+// Both grains, and the conflict between them. `on enter` carries what is true
+// of the STATE however reached; the edge carries what is true of the PATH.
+// Entry runs first and the edge refines it, so the entry's value is
+// journalled `overridden` and the edge's stands.
+//
+// The write settles the field store, so the stream reads 1200 in the SAME
+// period the transition fires, and the recurrence resumes from it after.
+lifecycle unit {
+  initial vacant
+  state vacant, leased
+
+  on enter leased {
+    set in_place_rent = 1000.0
+  }
+
+  vacant -> leased when time.t >= 2 {
+    set in_place_rent = 1200.0
+  }
+}
+
+entity asset suite {
+  lifecycle unit
+  in_place_rent init 900.0 next prev
+}
+
+stream core.rent on entity asset.suite inflow currency USD {
+  schedule every month from 2026-01 to 2026-08
+  amount = asset.suite.in_place_rent
 }
 ```
 
@@ -1754,6 +1792,35 @@ stream credit.amortization on entity asset.pool outflow currency USD {
 }
 ```
 
+## event_refires_on_each_occurrence
+
+```cfdl
+version 0.1
+model "event-refires-on-each-occurrence"
+time calendar monthly from 2026-01 for 10
+
+// AN EVENT IS SOMETHING THAT HAPPENS, and a unit that defaults, cures and
+// defaults again has had three events. Under the latch this fired once and
+// the second breach was invisible; it now fires on each rising edge, and the
+// journal carries one row per occurrence.
+//
+// `breached` is a marker the event writes, not a state: what makes the
+// condition RE-RISE is `paying` falling, recovering and falling again.
+entity asset suite {
+  paying init 1.0 next if(time.t == 3 or time.t == 7, 0.0, 1.0)
+  breach_count init 0.0 next prev
+}
+
+event breach when asset.suite.paying < 0.5 {
+  set entity asset.suite.breach_count = prev.asset.suite.breach_count + 1.0
+}
+
+stream core.rent on entity asset.suite inflow currency USD {
+  schedule every month from 2026-01 to 2026-10
+  amount = 100 * asset.suite.paying
+}
+```
+
 ## event_reseeds_recurrence
 
 ```cfdl
@@ -1789,6 +1856,33 @@ event partial_liquidation when time.t == 2.0 {
 stream loan.balance_report on entity asset.loan inflow currency USD {
   schedule every year from 2026-01 to 2031-01
   amount = asset.loan.balance
+}
+```
+
+## event_scheduled_occurrences
+
+```cfdl
+version 0.1
+model "event-scheduled-occurrences"
+time calendar monthly from 2026-01 for 12
+
+// A schedule SUPPLIES the occurrences and `when` FILTERS them: a quarterly
+// covenant test is four tests a year, and four consecutive failures are four
+// breach events, because the model declared quarterly testing. The schedule
+// is the same sub-language a stream's is, so `every quarter` tests at the
+// quarter's close.
+entity asset plant {
+  covered init 1.0 next if(time.t >= 4, 0.0, 1.0)
+  tests_failed init 0.0 next prev
+}
+
+event covenant_test schedule every quarter from 2026-01 to 2026-12 when asset.plant.covered < 0.5 {
+  set entity asset.plant.tests_failed = prev.asset.plant.tests_failed + 1.0
+}
+
+stream core.revenue on entity asset.plant inflow currency USD {
+  schedule every month from 2026-01 to 2026-12
+  amount = 100
 }
 ```
 
@@ -2274,7 +2368,7 @@ stream cre.rent on entity asset.suite inflow currency USD {
 }
 
 event delinquent when series_sum("cre.rent", time.t - 1, time.t - 1) < 50 {
-  set entity asset.suite.status = "downtime"
+  set entity asset.suite.status = "vacant"
 }
 ```
 
@@ -4443,7 +4537,7 @@ time calendar annual from 2026-01 for 5
 // `status` did not exist until an event wrote one.
 entity asset tower : CRE.Asset.RealProperty {
   asset_class = "office"
-  state operating
+  state stabilized
 }
 
 event start_repositioning when time.t >= 2 {
@@ -4536,7 +4630,7 @@ entity asset legacy : CRE.Asset.RealProperty
 entity asset tower : CRE.Asset.RealProperty {
   asset_class = "office"
   rentable_area = 30000
-  state operating
+  state stabilized
 }
 
 // Optional hierarchy: a unit inside the building. Never required.

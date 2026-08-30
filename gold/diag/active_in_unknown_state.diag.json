@@ -11,7 +11,7 @@
       "end_col": 23
     },
     "path": null,
-    "hint": "Declared states: vacant, leased, holdover, downtime.",
+    "hint": "Declared states: vacant, leased, holdover, month_to_month.",
     "notes": []
   }
 ]

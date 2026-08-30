@@ -1770,6 +1770,41 @@ loop the authoring contract needs. (`ste-allow:` rule ids are now
 validated against §3's rule tables; the tier mapping is the remaining
 unenforced half.)
 
+### 7.84 The pack machines were drawn before the machine could act
+
+*Closed 2026-08-30 by `docs/36_pack_lifecycle_review.md`, which carries the
+survey, the standards each machine was redrawn against, and what changed.*
+
+Found surveying all four packs while implementing arrival actions (§7.79) —
+the first work that made a pack's states load-bearing rather than decorative.
+Seven machines; three families of defect.
+
+**What shipped.** `credit.loan` and `credit.pool` onto Basel/EBA, IFRS 9, the
+GSE loan-level datasets and SIFMA UPM Ch. SF — conditions rather than events
+(`defaulted`, `in_foreclosure`), the cure edges the standards require including
+the EBA's probation-gated return to performing, and `days_past_due` as a field
+because a delinquency bucket is a counter reading and not a regime.
+`energy.facility` onto IEEE Std 762 as NERC GADS operationalises it, which
+restores the standard's distinction between AVAILABILITY and DISPATCH that
+`curtailed` had collapsed, and makes a derate a magnitude rather than a state.
+`cre.unit` gains `month_to_month` and loses `downtime` — the same condition as
+`vacant`, differing only in the path reached, which an edge's actions now
+carry. `cre.property` renames `operating` to `stabilized` and closes the
+returning cycle that earns it a machine at all. `opco.enterprise` is unbound:
+it encoded a transaction process and a capital structure at once, so the normal
+condition of every LBO could not be said.
+
+**One of this entry's three findings was wrong and is withdrawn.** "Declared
+states nothing can enter" misread the language: an entity declares its own
+opening state, so `predevelopment` on `cre.property` and `warehouse` on
+`credit.pool` are reachable as opening states rather than through an edge, and
+the declared `initial` should be — and was — the common case.
+
+**What it cost.** Nothing computed. Every pack transition was guard-less, so no
+machine fired on its own, and no benchmark gated on a state; the results
+goldens moved only on `model_hash` and on state names inside transition
+records, and all 43 benchmark cases passed unchanged.
+
 ### 7.83 An action kind the engine does not know is journaled, not refused
 
 *Recorded 2026-08-29, while retiring `activate contract` (§7.73).*

@@ -158,6 +158,32 @@ same-field conflicts journaling `overridden` per D5). This is what makes
 per-edge actions an extensibility surface rather than a pack-author
 convenience.
 
+**Storage, settled in phase 1.** The pack's and the model's actions share ONE
+list per state and per edge, ordered pack-first, and every action carries a
+REQUIRED `author` of `pack` or `model`. Three shapes were compared: author
+inferred from the presence of `generated_by`; this one; and a separate
+top-level `lifecycle_augmentations` node keyed by `lifecycle_id`.
+
+The inferred form was rejected on the §7.38 argument — a lowering path that
+forgot the stamp would journal a pack action as the model's, silently, and an
+`overridden` line that cannot name the author is the one thing the record
+exists to prevent. The separate node keeps the pack's `Lifecycle` node
+byte-identical to what the pack declared, which is the stronger guarantee,
+and it was rejected only on weight: the IR already flattens pack machines
+into `lifecycles` wholesale, so the seam it protects was already gone, and it
+costs a top-level concept plus a join in the engine's arrival path.
+
+A required discriminator buys what that seam was for — attribution that
+cannot be forgotten — at no structural cost. The additive rule stays
+enforceable: validation asserts every `pack` action precedes every `model`
+action in each list.
+
+**A model addresses a pack machine by qualified name.** `lifecycle
+opco.enterprise { … }` augments; a block naming no existing machine declares
+one. The grammar's `lifecycle_stmt` therefore takes a `qname`, not an
+`IDENT` — a gap found in phase 1, since a dotted pack machine could not be
+named at all.
+
 ### D3 — entry actions are first-class, and the primary domain spelling
 
 Both grains exist because both are real, and `cre.unit` shows the split.
@@ -251,9 +277,15 @@ Glossary and `docs/22`: **an event is something that happens; the journal
 is the event log; edges, event declarations and schedules are event
 sources; an anonymous event is described by the entity it impacts and the
 conditions that must be true.** `docs/01` §13's latch paragraphs are
-rewritten to rising-edge plus `once`; the "machine does not latch" doctrine
-survives with its conclusion stated plainly: nothing latches unless it says
-`once`.
+rewritten to rising-edge (D1). The "machine does not latch" doctrine
+survives with its conclusion stated plainly and generally: **nothing
+latches.** Once-ness is declared, never engine policy — a singular
+schedule or a topology with no way back, per D1.
+
+*Corrected during phase 1:* this decision previously read "rising-edge plus
+`once`" and "nothing latches unless it says `once`", written before D1
+settled. D1 rejects a `once` keyword explicitly and D6 agrees; the phrase
+was stale and is removed rather than reconciled.
 
 ---
 

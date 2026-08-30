@@ -720,6 +720,16 @@ pub struct JournalEntry {
     /// Why, when the outcome is not `applied`.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub note: Option<String>,
+    /// What this occurrence DID, when the occurrence and its effects are two
+    /// different things (`docs/34` D7).
+    ///
+    /// A transition is the event; its arrival actions are what it did. They
+    /// are children rather than siblings because the tie between them is real:
+    /// sharing a period and an entity only implies it, and a reader
+    /// reconstructing which `set` belonged to which arrival would be guessing
+    /// where several entities move in one period.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub children: Vec<JournalEntry>,
 }
 
 impl JournalEntry {
@@ -744,6 +754,7 @@ impl JournalEntry {
             pot_before: None,
             pot_after: None,
             note: None,
+            children: Vec::new(),
         }
     }
 
