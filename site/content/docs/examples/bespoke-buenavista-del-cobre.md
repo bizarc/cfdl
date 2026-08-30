@@ -415,14 +415,14 @@ stream mine.opex.accretion on entity asset.cu_mill outflow currency USD {
 
 stream mine.fiscal.duty on entity asset.cu_mill outflow currency USD {
   schedule every year start from 2025-01 to 2065-01
-  category operating.tax
+  category operating.income_tax.paid
   amount = inputs.duty_rate * (series_sum("mine.revenue.*", time.t, time.t)
                 + series_sum("mine.opex.*", time.t, time.t))
 }
 
 stream mine.fiscal.profit_share on entity asset.cu_mill outflow currency USD {
   schedule every year start from 2025-01 to 2065-01
-  category operating.tax
+  category operating.income_tax.paid
   amount = inputs.ptu_rate
              * max(0.0, (1.0 - inputs.duty_rate) * (series_sum("mine.revenue.*", time.t, time.t)
                 + series_sum("mine.opex.*", time.t, time.t))
@@ -431,7 +431,7 @@ stream mine.fiscal.profit_share on entity asset.cu_mill outflow currency USD {
 
 stream mine.fiscal.income_tax on entity asset.cu_mill outflow currency USD {
   schedule every year start from 2025-01 to 2065-01
-  category operating.tax
+  category operating.income_tax.paid
   amount = max(0.0,
                inputs.tax_rate
                  * ((1.0 - inputs.duty_rate) * (series_sum("mine.revenue.*", time.t, time.t)

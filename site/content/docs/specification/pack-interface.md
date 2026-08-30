@@ -373,7 +373,7 @@ is enforced on it.
 **Categories are the semantics; names are addresses.** Every stream a rule
 emits MUST carry a category, and aggregation reads the category — which is why
 decomposition never moves a total: the components fold where the netted line
-folded. A statement itemises by selecting streams; a subtotal folds by
+folded. A statement itemizes by selecting streams; a subtotal folds by
 category; both stay correct as the grain changes.
 
 **Every read of an instanceable family is globbed.** A rule whose stream name
@@ -532,7 +532,7 @@ leaves it uses in `pack.toml`:
 categories = [
   "operating.revenue.base_rent",
   "operating.expense.opex",
-  "financing.debt_service",
+  "financing.debt.service",
 ]
 ```
 
@@ -586,7 +586,7 @@ categories = ["operating.*"]
 id = "domain.cre.debt_service"
 kind = "money"
 op = "negated_sum"
-categories = ["financing.debt_service", "financing.mortgage_insurance"]
+categories = ["financing.debt.service", "financing.debt.mortgage_insurance"]
 
 [[subtotals]]
 id = "domain.cre.dscr"

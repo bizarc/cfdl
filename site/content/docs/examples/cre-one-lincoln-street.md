@@ -144,7 +144,7 @@ curve required_funding step {
 // Equity funds first, until the commitment is exhausted.
 stream equity.contribution on entity asset.tower inflow currency USD {
   schedule every quarter from 2000-01 to 2003-10
-  category financing.equity
+  category financing.equity.contribution
   amount = curve_value("required_funding", time.date)
            - min(curve_value("required_funding", time.date),
                  max(0, asset.tower.required_to_date - inputs.equity_commitment))
@@ -153,7 +153,7 @@ stream equity.contribution on entity asset.tower inflow currency USD {
 // The construction loan takes the balance.
 stream loan.construction_draw on entity asset.tower inflow currency USD {
   schedule every quarter from 2000-01 to 2003-10
-  category financing.debt_proceeds
+  category financing.debt.proceeds
   amount = min(curve_value("required_funding", time.date),
                max(0, asset.tower.required_to_date - inputs.equity_commitment))
 }
@@ -162,7 +162,7 @@ stream loan.construction_draw on entity asset.tower inflow currency USD {
 // Named to match what domain.cre.debt_service reads.
 stream loan.construction_interest on entity asset.tower outflow currency USD {
   schedule every quarter from 2000-01 to 2003-10
-  category financing.debt_service
+  category financing.debt.service
   amount = (max(0, asset.tower.required_to_date - curve_value("required_funding", time.date) - inputs.equity_commitment)
             + min(curve_value("required_funding", time.date),
                   max(0, asset.tower.required_to_date - inputs.equity_commitment)) / 2)

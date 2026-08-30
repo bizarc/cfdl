@@ -83,7 +83,7 @@ contract cre.exit_cap {
 // and states its own category — without one, no statement row can claim it.
 stream loan.construction_interest on entity asset.construction outflow currency USD {
   schedule every month from 2026-01 to 2027-06
-  category financing.debt_service
+  category financing.debt.service
   amount = 40000
 }
 
@@ -92,7 +92,7 @@ stream loan.construction_interest on entity asset.construction outflow currency 
 // amortization and change this example's numbers.
 stream loan.permanent_debt_service on entity asset.permanent outflow currency USD {
   schedule every month from 2027-07 to 2031-12
-  category financing.debt_service
+  category financing.debt.service
   amount = 55000
 }
 ```

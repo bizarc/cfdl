@@ -83,8 +83,8 @@ formula = "running total of principal collections"
 id = "domain.credit.original_balance"
 kind = "money"
 op = "negated_cumulative"
-categories = ["investing.purchase"]
-formula = "-cumulative(investing.purchase)"
+categories = ["investing.acquisition.purchase"]
+formula = "-cumulative(investing.acquisition.purchase)"
 
 # Principal paid to date, negated, so the subtraction below is a sum. `sum`
 # adds its referenced subtotals; there is no subtracting op, and adding a
@@ -155,6 +155,13 @@ depth = 1
 categories = ["operating.collection.penalty"]
 
 [[statements.rows]]
+kind = "line"
+label = "Income taxes"
+depth = 2
+categories = ["operating.income_tax.paid"]
+display = "positive"
+
+[[statements.rows]]
 kind = "subtotal"
 label = "Gross collections"
 depth = 0
@@ -180,7 +187,7 @@ kind = "spacer"
 kind = "line"
 label = "Pool purchase"
 depth = 1
-categories = ["investing.purchase"]
+categories = ["investing.acquisition.purchase"]
 display = "positive"
 
 # The same collections, annually. A pool is modeled monthly because that is
@@ -221,6 +228,13 @@ depth = 1
 categories = ["operating.collection.penalty"]
 
 [[statements.rows]]
+kind = "line"
+label = "Income taxes"
+depth = 2
+categories = ["operating.income_tax.paid"]
+display = "positive"
+
+[[statements.rows]]
 kind = "subtotal"
 label = "Gross collections"
 depth = 0
@@ -246,7 +260,7 @@ kind = "spacer"
 kind = "line"
 label = "Pool purchase"
 depth = 1
-categories = ["investing.purchase"]
+categories = ["investing.acquisition.purchase"]
 display = "positive"
 
 # ---------------------------------------------------------------------------
@@ -284,6 +298,13 @@ kind = "line"
 label = "Unscheduled principal"
 depth = 1
 categories = ["operating.collection.prepayment"]
+
+[[statements.rows]]
+kind = "line"
+label = "Income taxes"
+depth = 2
+categories = ["operating.income_tax.paid"]
+display = "positive"
 
 [[statements.rows]]
 kind = "subtotal"
@@ -335,7 +356,7 @@ kind = "spacer"
 kind = "line"
 label = "Pool purchase"
 depth = 1
-categories = ["investing.purchase"]
+categories = ["investing.acquisition.purchase"]
 display = "positive"
 
 # Direct lending / private credit. Yield first: cash interest and fees are one
@@ -355,6 +376,13 @@ kind = "line"
 label = "Fee income"
 depth = 1
 categories = ["operating.collection.penalty"]
+
+[[statements.rows]]
+kind = "line"
+label = "Income taxes"
+depth = 2
+categories = ["operating.income_tax.paid"]
+display = "positive"
 
 [[statements.rows]]
 kind = "subtotal"
@@ -406,5 +434,5 @@ kind = "spacer"
 kind = "line"
 label = "Investments funded"
 depth = 1
-categories = ["investing.purchase"]
+categories = ["investing.acquisition.purchase"]
 display = "positive"

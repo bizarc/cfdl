@@ -1,0 +1,31 @@
+version 0.1
+model "per-stream-category"
+use pack "cre" version "0.1.0"
+time calendar monthly from 2026-01 for 12
+
+// A CONTRACT LOWERS ONE OR MORE STREAMS, AND EACH CARRIES ITS OWN CATEGORY.
+//
+// The pack states what a permanent mortgage's interest, principal and proceeds
+// are, and is right about all three. Where a deal needs one of them classified
+// differently, the override names the stream: the other two keep the pack's
+// answer. A clause that could not name one would flatten all three.
+entity asset tower : CRE.Asset.RealProperty
+
+contract cre.permanent_debt on entity asset.tower {
+  term 2026-01..2026-12
+  category cre.debt.interest = operating.expense.interest
+  terms {
+    principal = 1000000
+    rate = 0.05
+    amort_months = 300
+  }
+}
+
+// The single-stream case needs no name: there is nothing to disambiguate.
+contract cre.opex_line.rooms on entity asset.tower {
+  term 2026-01..2026-12
+  category operating.expense.rooms
+  terms {
+    amount_year = 12000
+  }
+}

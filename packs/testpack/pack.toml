@@ -2,7 +2,19 @@ name = "testpack"
 version = "0.1.0"
 description = "Minimal pack for deterministic lowering smoke tests."
 
+# Every rule that emits a stream states its category, so the manifest
+# lists them.
+categories = [
+  "operating.expense.interest",
+  "operating.revenue.cadence_probe",
+  "operating.revenue.coupon",
+  "operating.revenue.fee",
+  "operating.revenue.lowered",
+  "operating.revenue.monthly_fee",
+]
+
 [entrypoints]
 aliases = "aliases.toml"
 templates = "templates.toml"
 lowering = "lowering/rules.toml"
+

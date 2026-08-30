@@ -189,25 +189,25 @@ w(f'''
 // dates differ (5/18 leasehold, 7/12 fee), which is why the press reported two.
 stream cre.aubrey_sale on entity asset.west inflow currency USD {{
   schedule on {ym(T_EXIT)}
-  category investing.reversion
+  category investing.disposal.reversion
   amount = {AUB_P:.2f}
 }}
 
 stream cre.evo_sale on entity asset.east inflow currency USD {{
   schedule on {ym(T_EXIT)}
-  category investing.reversion
+  category investing.disposal.reversion
   amount = {EVO_P:.2f}
 }}
 
 stream cre.sale_costs on entity asset.project outflow currency USD {{
   schedule on {ym(T_EXIT)}
-  category investing.selling_costs
+  category investing.disposal.selling_costs
   amount = {(AUB_P + EVO_P):.2f} * inputs.cost_of_sale
 }}
 
 stream cre.pierce_closings on entity asset.east inflow currency USD {{
   schedule every month start from {ym(lo)} to {ym(hi)}
-  category investing.reversion
+  category investing.disposal.reversion
   amount = curve_value("pierce_sellout", time.date) * (1.0 - inputs.condo_selling_cost)
 }}
 ''')
@@ -262,7 +262,7 @@ entity asset facility : Asset.Financial {
 // Interest is capitalized: it is repaid inside the principal repayment. That is the convention the reference workbook uses.
 stream cre.loan_draw on entity asset.project inflow currency USD {
   schedule every month start from %s to %s
-  category financing.debt_proceeds
+  category financing.debt.proceeds
   amount = asset.facility.draw
 }
 
@@ -272,23 +272,23 @@ stream cre.loan_draw on entity asset.project inflow currency USD {
 // and coverage during the build is measurable instead of absent.
 stream cre.loan_interest on entity asset.project outflow currency USD {
   schedule every month start from %s to %s
-  category financing.interest
+  category financing.debt.interest_paid
   amount = asset.facility.interest
 }
 
 stream cre.loan_interest_funding on entity asset.project inflow currency USD {
   schedule every month start from %s to %s
-  category financing.debt_proceeds
+  category financing.debt.proceeds
   amount = asset.facility.interest
 }
 
-// The payoff sits in the reversion. `financing.debt_principal` folds into
+// The payoff sits in the reversion. `financing.debt.principal` folds into
 // `domain.cre.debt_service`, and a balance retired out of sale proceeds is not
 // debt service — it would make every coverage ratio in the disposal period
 // meaningless. The cre pack says the same of a permanent loan's balloon.
 stream cre.loan_repayment on entity asset.project outflow currency USD {
   schedule every month start from %s to %s
-  category investing.reversion
+  category investing.disposal.reversion
   amount = asset.facility.repay
 }
 

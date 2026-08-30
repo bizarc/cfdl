@@ -1,6 +1,6 @@
 # CFDL — The category taxonomy
 
-Status: §3 implemented. §4 and the §2.4 renames are not; see §7.
+Status: implemented in full. See §7.
 
 A stream's `category` is the one thing that says what a flow *is*. Aggregation
 reads it, subtotals fold it, and statements present what it folds. This note
@@ -29,7 +29,7 @@ then valid or invalid depending on whether a pack is loaded:
 
 | category | pack-less | with `cre` |
 |---|---|---|
-| `investing.acquisition` | valid | **E5022** |
+| `investing.acquisition.purchase` | valid | **E5022** |
 | `operating.expense.rooms` | valid | **E5022** |
 
 That is one mechanism for the language and a second for packs, and it
@@ -64,7 +64,7 @@ a catch-all that silently swallows **every** token it does not recognise. Not
 just `category`: any misspelled clause, or one the grammar does not have,
 vanishes from a contract body without a diagnostic.
 
-### 1.3 An uncategorised stream is silently absent from every subtotal
+### 1.3 An uncategorized stream is silently absent from every subtotal
 
 With a pack active, a native stream carrying no `category` compiles and runs.
 Its cash is real — it reaches `model.total` and the entity roll-up — and it
@@ -80,10 +80,10 @@ only if a reader looks.
 ### 1.4 A model cannot report the instances it is encouraged to declare
 
 `docs/07` invites a modeller to instance `cre.opex_line` per expense. Every
-instance carries the same category, and the statement's itemised rows select by
+instance carries the same category, and the statement's itemized rows select by
 *stream name*. So a modeller who names their own instances gets correct
 subtotals and a statement that files them all under `Unclassified`
-(`W3500_STATEMENT_UNCLASSIFIED_STREAM`). The behaviour is documented and
+(`W3500_STATEMENT_UNCLASSIFIED_STREAM`). The behavior is documented and
 deliberate; whether it is acceptable is what this note asks.
 
 ---
@@ -179,7 +179,7 @@ Main business activity is a property of a domain, not of an individual deal, so
 | `energy` | none specified | `financing.interest_paid` | `investing.interest_received` |
 | `credit` | provides financing to customers | follows profit or loss | `operating.interest_received` |
 
-`cre`'s current `financing.interest` becomes *correct under the standard* rather
+`cre`'s current `financing.debt.interest_paid` becomes *correct under the standard* rather
 than one permitted option of three. `credit` is a real change: a lender's
 interest received is operating, not investing.
 
@@ -199,8 +199,12 @@ applies pack-less; the change is that loading a pack no longer narrows it.
 - A **model** states the category for a stream no pack owns — the custom stream
   case, which already works pack-less.
 - A **model** may override a pack instance where the pack's default is wrong for
-  the deal. `category` on a contract instance must take effect, and writing one
-  that is refused must be a diagnostic rather than silence (§1.2).
+  the deal, PER STREAM. A contract lowers one or more streams and its pack
+  states a category for each, so an override names which one it means:
+  `category <stream> = <path>`. The bare form is sugar for a contract lowering
+  exactly one stream and is refused where it would flatten several (`E5030`) —
+  a permanent mortgage whose interest, principal and proceeds all became one
+  category made every coverage ratio computed off them wrong, silently.
 
 **The pack's list demotes from gate to advice.** `categories = [...]` becomes a
 recommended vocabulary. A well-rooted category that is not on it is valid and
@@ -208,7 +212,7 @@ raises a warning naming the near match, so `operating.expence.opex` is still
 caught. Packs already ship conventional vocabulary as suggestion rather than law
 in `templates.toml`; this makes categories consistent with that.
 
-**An uncategorised stream warns** when a pack is active (§1.3). Silent exclusion
+**An uncategorized stream warns** when a pack is active (§1.3). Silent exclusion
 from every subtotal is worth money.
 
 ---
@@ -219,7 +223,7 @@ Opening the namespace fixes aggregation and not presentation. Thirteen
 `cre.opex_line.<name>` instances would fold correctly into `domain.cre.noi` and
 still render in the residual row, because statement rows select stream names.
 
-The complement is a row that **itemises a category subtree** — one line per leaf
+The complement is a row that **itemizes a category subtree** — one line per leaf
 under `operating.expense.*` — rather than a row per enumerated stream name. That
 is the same mechanism applied at the presentation layer, not a second grammar,
 and it is materially less surface than a model-declared statement.
@@ -277,38 +281,26 @@ Diagnostics and IR output quoted in §1 were reproduced against
 
 ---
 
-## 7. What shipped, and what has not
+## 7. What shipped
 
-§3 is implemented:
+All of it.
 
-- **One validity rule.** A pack no longer narrows the language's. `E5022` now
+- **One validity rule.** A pack no longer narrows the language's; `E5022`
   reports only a bad root, with the same text pack or no pack.
-- **`E5029_STREAM_MISSING_CATEGORY`.** An uncategorised stream is an error when
-  a pack is active, and stays legal when none is.
-- **Instance categories.** A contract may state the category its lowered streams
-  carry; it is validated against the roots and beats the rule's. The parser's
-  catch-all is closed for a bare identifier at body level, so a misspelled
-  clause now reports instead of vanishing.
-- **`W5023_UNRECOGNISED_PACK_CATEGORY`.** Reported in the statement's
-  diagnostics, beside `W3500`, naming a near match one edit away.
+- **`E5029_STREAM_MISSING_CATEGORY`.** An uncategorized stream is an error while
+  a pack is active and legal without one.
+- **Categories per lowered stream.** A rule that emits a stream states its
+  category, checked at pack load; a rule that lowers only a field is exempt,
+  because a field is not classified into a cash flow statement.
+- **Per-stream override,** `category <stream> = <path>`, with `E5030` refusing
+  the bare form where it would flatten several streams onto one category.
+- **`W5023_UNRECOGNIZED_PACK_CATEGORY`,** naming a near match one edit away.
+- **The vocabulary of §2.4,** thirteen renames onto the taxonomy's normalized
+  form, and `operating.income_tax.*` giving tax the home §2.3 says it needs.
+- **The stance of §2.5.** Each pack states its main business activity and the
+  treatment that follows: `cre`, `opco` and `energy` have none specified;
+  `credit` provides financing to customers, so its interest received is
+  operating rather than investing.
 
-  It was written first into `results.warnings`, following `W5022` — the
-  codebase's existing answer to a static, spelling-class advisory. The engine's
-  own golden corpus refused it, and was right to: that test strips
-  `domain_metrics` and `statements` as "sections the engine does not produce"
-  and compares `warnings`, so `warnings` is the engine's channel and the engine
-  has no pack. The statement's diagnostics are where a pack-aware post-engine
-  finding already lives. It is also the better home on the merits, because the
-  consequence of an unrecommended category is exactly a presentation one.
-
-  The trade, shared with every statement diagnostic: it appears on a run with a
-  pack that declares a statement, not on `cfdl compile`.
-
-Not implemented, and each its own change:
-
-- **§4, the category-subtree statement row.** Until it exists, instances that
-  carry distinct categories fold correctly and still render under
-  `Unclassified`, because statement rows select stream names. This feature is
-  not visible in a statement without it.
-- **§2.4 and §2.5, the IFRS-aligned renames** and the per-pack main business
-  activity stance. Wide and breaking; §5 enumerates the cost.
+Presentation is unchanged. `docs/13` §7.55's statement half is untouched and
+remains open.

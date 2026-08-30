@@ -182,8 +182,8 @@ Every stream this pack emits declares a `category` — a dotted path rooted in t
 cash flow statement's three sections — and aggregation reads that rather than
 pattern-matching the stream's name.
 
-`operating.revenue.energy`, `operating.expense.om`, `operating.tax_benefit`,
-`investing.capital.capex`, `financing.debt_service`.
+`operating.revenue.energy`, `operating.expense.om`, `operating.income_tax.benefit`,
+`investing.capital.capex`, `financing.debt.service`.
 
 Deliberately coarse. PPA, merchant, storage margin and capacity are all
 `operating.revenue.energy`, because a project's EBITDA does not care which

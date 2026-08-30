@@ -524,7 +524,7 @@ cap rate:
 ```cfdl
 stream cre.exit on entity asset.project inflow currency USD {
   schedule on 2037-06 end
-  category investing.reversion
+  category investing.disposal.reversion
   amount = series_sum("cre.noi", time.t + 1, time.t + 12) / inputs.cap_rate
 }
 ```
@@ -1749,6 +1749,12 @@ string_lit      = STRING ;
 number          = DECIMAL | INT ;
 bool_lit        = "true" | "false" ;
 date_lit        = DATE ;
+
+(* What a contract's lowered streams ARE, overriding the category its pack's
+   rule assigns. `category <stream> = <path>` names which lowered stream is
+   reclassified; the bare form is sugar for a contract lowering exactly one and
+   is refused (E5030) where it would flatten several. *)
+contract_category = "category" ( qname "=" qname | qname ) ;
 ```
 
 
@@ -5199,7 +5205,7 @@ is enforced on it.
 **Categories are the semantics; names are addresses.** Every stream a rule
 emits MUST carry a category, and aggregation reads the category — which is why
 decomposition never moves a total: the components fold where the netted line
-folded. A statement itemises by selecting streams; a subtotal folds by
+folded. A statement itemizes by selecting streams; a subtotal folds by
 category; both stay correct as the grain changes.
 
 **Every read of an instanceable family is globbed.** A rule whose stream name
@@ -5358,7 +5364,7 @@ leaves it uses in `pack.toml`:
 categories = [
   "operating.revenue.base_rent",
   "operating.expense.opex",
-  "financing.debt_service",
+  "financing.debt.service",
 ]
 ```
 
@@ -5412,7 +5418,7 @@ categories = ["operating.*"]
 id = "domain.cre.debt_service"
 kind = "money"
 op = "negated_sum"
-categories = ["financing.debt_service", "financing.mortgage_insurance"]
+categories = ["financing.debt.service", "financing.debt.mortgage_insurance"]
 
 [[subtotals]]
 id = "domain.cre.dscr"
@@ -6254,6 +6260,14 @@ see what is wrong with it.
   in net operating income takes a different root — and a coverage ratio that
   quietly excluded a stream is wrong and says so nowhere. Without a pack a
   category stays optional, because nothing folds.
+- `E5030_AMBIGUOUS_CONTRACT_CATEGORY` — a contract states one `category` and
+  lowers more than one stream. A contract lowers one or more streams and its
+  pack states a category for each, so a single clause cannot say which it
+  reclassifies: it would set all of them to the same value, and a coverage ratio
+  computed off a principal repayment reclassified as interest is wrong with
+  nothing to show for it. Name the stream — `category <stream> = <path>` — once
+  per stream. The bare form stays legal where the contract lowers exactly one,
+  because there is then nothing to disambiguate.
 
 - `W5022_UNKNOWN_SERIES_REFERENCE` — a `series_sum`/`series_avg` names a series
   no stream, contract or waterfall step produces, so it aggregates to zero and

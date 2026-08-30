@@ -264,9 +264,9 @@ cash flow statement's three sections — and aggregation reads that rather than
 pattern-matching the stream's name.
 
 `operating.revenue.recurring`, `operating.expense.opex`,
-`operating.working_capital`, `operating.tax`, `investing.capital.capex`,
-`investing.acquisition`, `investing.exit`, `financing.interest`,
-`financing.debt_principal`, `financing.debt_proceeds`.
+`operating.working_capital`, `operating.income_tax.paid`, `investing.capital.capex`,
+`investing.acquisition.purchase`, `investing.disposal.proceeds`, `financing.debt.interest_paid`,
+`financing.debt.principal`, `financing.debt.proceeds`.
 
 The split follows the two statements an operating company reports. `interest` is
 its own category rather than part of a `debt_service` blob because a P&L

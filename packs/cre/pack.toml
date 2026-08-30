@@ -12,7 +12,19 @@ description = "Commercial Real Estate pack v0.1 (deterministic lowering)."
 # W5023 naming the near match. A pack cannot enumerate every leaf a deal needs:
 # the leaf is not knowable by a pack that shipped before the deal. What this
 # list still buys is the domain's conventional spelling. See docs/35.
+# MAIN BUSINESS ACTIVITY: no specified main business activity.
+#
+# A property owner does not provide financing to customers or invest in assets
+# as a main business, so interest paid is financing and interest received is
+# investing.
+#
+# IFRS 18 removes the classification choice IAS 7 paragraphs 31-34 allowed,
+# for periods beginning on or after 1 January 2027. Classification is a
+# property of the domain rather than of a deal, so the pack states it once
+# and its lowering rules follow. See docs/35 section 2.5.
+
 categories = [
+  "operating.income_tax.paid",
   "operating.revenue.base_rent",
   "operating.revenue.other",
   "operating.revenue.percentage_rent",
@@ -23,14 +35,14 @@ categories = [
   "investing.capital.leasing",
   "investing.capital.construction",
   "investing.capital.capex",
-  "investing.reversion",
-  "investing.selling_costs",
-  "financing.debt_service",
-  "financing.interest",
-  "financing.debt_principal",
-  "financing.mortgage_insurance",
-  "financing.debt_proceeds",
-  "financing.equity",
+  "investing.disposal.reversion",
+  "investing.disposal.selling_costs",
+  "financing.debt.service",
+  "financing.debt.interest_paid",
+  "financing.debt.principal",
+  "financing.debt.mortgage_insurance",
+  "financing.debt.proceeds",
+  "financing.equity.contribution",
 ]
 
 

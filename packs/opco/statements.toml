@@ -50,8 +50,8 @@ formula = "sum(operating.*, investing.capital.capex)"
 id = "domain.opco.debt_service_periodic"
 kind = "money"
 op = "negated_sum"
-categories = ["financing.interest", "financing.debt_principal"]
-formula = "-sum(financing.interest, financing.debt_principal)"
+categories = ["financing.debt.interest_paid", "financing.debt.principal"]
+formula = "-sum(financing.debt.interest_paid, financing.debt.principal)"
 
 # Levered free cash flow: UFCF after the whole financing section, draws
 # included. The streams are signed, so adding `financing.*` subtracts interest
@@ -104,7 +104,7 @@ subtotal = "domain.opco.ebitda_periodic"
 kind = "line"
 label = "Cash taxes"
 depth = 1
-categories = ["operating.tax"]
+categories = ["operating.income_tax.paid"]
 display = "positive"
 
 [[statements.rows]]
@@ -133,21 +133,21 @@ kind = "spacer"
 kind = "line"
 label = "Interest"
 depth = 1
-categories = ["financing.interest"]
+categories = ["financing.debt.interest_paid"]
 display = "positive"
 
 [[statements.rows]]
 kind = "line"
 label = "Debt principal"
 depth = 1
-categories = ["financing.debt_principal"]
+categories = ["financing.debt.principal"]
 display = "positive"
 
 [[statements.rows]]
 kind = "line"
 label = "Debt proceeds"
 depth = 1
-categories = ["financing.debt_proceeds"]
+categories = ["financing.debt.proceeds"]
 
 [[statements.rows]]
 kind = "ratio"
@@ -168,20 +168,20 @@ kind = "spacer"
 kind = "line"
 label = "Acquisition"
 depth = 1
-categories = ["investing.acquisition"]
+categories = ["investing.acquisition.purchase"]
 display = "positive"
 
 [[statements.rows]]
 kind = "line"
 label = "Exit proceeds"
 depth = 1
-categories = ["investing.exit"]
+categories = ["investing.disposal.proceeds"]
 
 [[statements.rows]]
 kind = "line"
 label = "Less: selling costs"
 depth = 1
-categories = ["investing.selling_costs"]
+categories = ["investing.disposal.selling_costs"]
 display = "positive"
 
 # ---------------------------------------------------------------------------
@@ -244,14 +244,14 @@ label = "Sponsor cash flow"
 kind = "line"
 label = "Acquisition of the platform"
 depth = 1
-categories = ["investing.acquisition"]
+categories = ["investing.acquisition.purchase"]
 display = "positive"
 
 [[statements.rows]]
 kind = "line"
 label = "Debt drawn"
 depth = 1
-categories = ["financing.debt_proceeds"]
+categories = ["financing.debt.proceeds"]
 
 [[statements.rows]]
 kind = "spacer"
@@ -279,7 +279,7 @@ subtotal = "domain.opco.ebitda_periodic"
 kind = "line"
 label = "Cash taxes"
 depth = 1
-categories = ["operating.tax"]
+categories = ["operating.income_tax.paid"]
 display = "positive"
 
 [[statements.rows]]
@@ -305,14 +305,14 @@ subtotal = "domain.opco.cfads"
 kind = "line"
 label = "Cash interest"
 depth = 1
-categories = ["financing.interest"]
+categories = ["financing.debt.interest_paid"]
 display = "positive"
 
 [[statements.rows]]
 kind = "line"
 label = "Mandatory amortization and sweep"
 depth = 1
-categories = ["financing.debt_principal"]
+categories = ["financing.debt.principal"]
 display = "positive"
 
 [[statements.rows]]
@@ -334,13 +334,13 @@ kind = "spacer"
 kind = "line"
 label = "Exit proceeds"
 depth = 1
-categories = ["investing.exit"]
+categories = ["investing.disposal.proceeds"]
 
 [[statements.rows]]
 kind = "line"
 label = "Less: selling costs"
 depth = 1
-categories = ["investing.selling_costs"]
+categories = ["investing.disposal.selling_costs"]
 display = "positive"
 
 # The statement of cash flows, by activity — ASC 230-10-45 / IAS 7.10.
@@ -369,7 +369,7 @@ display = "positive"
 kind = "line"
 label = "Income taxes paid"
 depth = 1
-categories = ["operating.tax"]
+categories = ["operating.income_tax.paid"]
 display = "positive"
 
 [[statements.rows]]
@@ -398,20 +398,20 @@ display = "positive"
 kind = "line"
 label = "Acquisitions, net of cash acquired"
 depth = 1
-categories = ["investing.acquisition"]
+categories = ["investing.acquisition.purchase"]
 display = "positive"
 
 [[statements.rows]]
 kind = "line"
 label = "Proceeds from disposals"
 depth = 1
-categories = ["investing.exit"]
+categories = ["investing.disposal.proceeds"]
 
 [[statements.rows]]
 kind = "line"
 label = "Less: selling costs"
 depth = 1
-categories = ["investing.selling_costs"]
+categories = ["investing.disposal.selling_costs"]
 display = "positive"
 
 [[statements.rows]]
@@ -427,20 +427,20 @@ kind = "spacer"
 kind = "line"
 label = "Proceeds from borrowings"
 depth = 1
-categories = ["financing.debt_proceeds"]
+categories = ["financing.debt.proceeds"]
 
 [[statements.rows]]
 kind = "line"
 label = "Repayment of borrowings"
 depth = 1
-categories = ["financing.debt_principal"]
+categories = ["financing.debt.principal"]
 display = "positive"
 
 [[statements.rows]]
 kind = "line"
 label = "Interest paid"
 depth = 1
-categories = ["financing.interest"]
+categories = ["financing.debt.interest_paid"]
 display = "positive"
 
 [[statements.rows]]

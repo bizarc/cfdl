@@ -940,6 +940,7 @@ mod tests {
                         parties: vec![],
                         span: span(),
                         category: None,
+                        stream_categories: Default::default(),
                     }),
                 },
             ],

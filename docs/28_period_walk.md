@@ -205,7 +205,7 @@ nobody owes it. That is what keeps the model free of liabilities: what is
 still owed under the rules is not in any account, it is simply not yet
 allocated. Allocating is moving cash from the structure's account into a
 party's, which is also why this stays a record of ALLOCATION rather than of
-physical transfer — whether the cash ever leaves the deal is not modelled.
+physical transfer — whether the cash ever leaves the deal is not modeled.
 
 The balance law, applied at each period of the walk:
 
@@ -233,7 +233,7 @@ Three uses, all walk-legal:
 is what every waterfall already writes, and where the cash lands follows from
 what that party owns: into their account if they have one, and if they have
 none the step publishes its series and nothing accumulates — which is exactly
-today's behaviour, and what keeps every shipped waterfall untouched. The
+today's behavior, and what keeps every shipped waterfall untouched. The
 explicit form `pay <step> to account <name>` names the destination directly.
 
 **A party owns at most one account**, so "their account" always resolves. The
@@ -395,7 +395,7 @@ Forward reads live in the valuation plane. The two causal-plane constructs
 that read forward today migrate:
 
 - **The forward-income exit.** The sale is a causal event; the receipt is
-  causal cash in `investing.reversion`; only the **amount** is a valuation —
+  causal cash in `investing.disposal.reversion`; only the **amount** is a valuation —
   forward NOI against a cap rate. The priced exception: a valuation-plane
   value may set a causal amount **where the cell graph stays acyclic** — the
   NOI the reversion reads lies beyond the sale and is unaffected by it. This

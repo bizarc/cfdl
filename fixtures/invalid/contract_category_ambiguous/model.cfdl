@@ -1,0 +1,20 @@
+version 0.1
+model "contract-category-ambiguous"
+use pack "cre" version "0.1.0"
+time calendar monthly from 2026-01 for 12
+
+// A permanent mortgage lowers three streams — interest, principal and proceeds
+// — and the pack states a category for each. One bare `category` clause cannot
+// say which it reclassifies, so it would set all three to the same value and
+// make every coverage ratio computed off them wrong. E5030.
+entity asset tower : CRE.Asset.RealProperty
+
+contract cre.permanent_debt on entity asset.tower {
+  term 2026-01..2026-12
+  category financing.debt.interest_paid
+  terms {
+    principal = 1000000
+    rate = 0.05
+    amort_months = 300
+  }
+}

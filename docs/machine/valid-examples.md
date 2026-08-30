@@ -4,7 +4,7 @@
 
 CFDL 0.7.0. Every model below compiles, and its IR and
 results are byte-asserted against goldens in CI (`fixtures/valid/`,
-122 models.
+123 models.
 
 `gold/ir/`, `gold/results/`). Each is single-purpose: the directory name
 says what it exercises. This is what right looks like — positive few-shot
@@ -641,13 +641,13 @@ contract cre.exit_cap on entity asset.property {
 
 stream loan.construction_interest on entity asset.construction {
   schedule every month from 2026-01 to 2027-06
-  category financing.debt_service
+  category financing.debt.service
   amount = 40000
 }
 
 stream loan.permanent_debt_service on entity asset.permanent {
   schedule every month from 2027-07 to 2031-12
-  category financing.debt_service
+  category financing.debt.service
   amount = 55000
 }
 ```
@@ -705,7 +705,7 @@ contract cre.exit_cap on entity asset.property {
 // Construction IO interest: $12M loan @ 7.5% annual = $75,000/mo (months 0-35)
 stream loan.io_interest on entity asset.construction outflow currency USD {
   schedule every month from 2026-01 to 2028-12
-  category financing.debt_service
+  category financing.debt.service
   amount = 75000
 }
 
@@ -737,7 +737,7 @@ stream resi.base_rent on entity asset.property inflow currency USD {
 // $12M perm loan @ 6.5% / 25-yr amortization → ~$68,500/mo P&I
 stream loan.perm_debt_service on entity asset.permanent outflow currency USD {
   schedule every month from 2029-01 to 2033-12
-  category financing.debt_service
+  category financing.debt.service
   amount = 68500
 }
 ```
@@ -874,7 +874,7 @@ contract cre.exit_forward on entity asset.tower {
 // Permanent debt (25-year amortization, 10-year hold window).
 stream loan.permanent_debt_service on entity asset.tower outflow currency USD {
   schedule every month from 2026-01 to 2035-12
-  category financing.debt_service
+  category financing.debt.service
   amount = -pmt(0.055 / 12, 300, 6000000)
 }
 ```
@@ -3672,6 +3672,42 @@ contract energy.ppa.plant_a on entity asset.plant {
     escalation = 0.0
     degradation = 0.005
     availability = 1.0
+  }
+}
+```
+
+## per_stream_category
+
+```cfdl
+version 0.1
+model "per-stream-category"
+use pack "cre" version "0.1.0"
+time calendar monthly from 2026-01 for 12
+
+// A CONTRACT LOWERS ONE OR MORE STREAMS, AND EACH CARRIES ITS OWN CATEGORY.
+//
+// The pack states what a permanent mortgage's interest, principal and proceeds
+// are, and is right about all three. Where a deal needs one of them classified
+// differently, the override names the stream: the other two keep the pack's
+// answer. A clause that could not name one would flatten all three.
+entity asset tower : CRE.Asset.RealProperty
+
+contract cre.permanent_debt on entity asset.tower {
+  term 2026-01..2026-12
+  category cre.debt.interest = operating.expense.interest
+  terms {
+    principal = 1000000
+    rate = 0.05
+    amort_months = 300
+  }
+}
+
+// The single-stream case needs no name: there is nothing to disambiguate.
+contract cre.opex_line.rooms on entity asset.tower {
+  term 2026-01..2026-12
+  category operating.expense.rooms
+  terms {
+    amount_year = 12000
   }
 }
 ```

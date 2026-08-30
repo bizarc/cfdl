@@ -523,7 +523,7 @@ cap rate:
 ```cfdl
 stream cre.exit on entity asset.project inflow currency USD {
   schedule on 2037-06 end
-  category investing.reversion
+  category investing.disposal.reversion
   amount = series_sum("cre.noi", time.t + 1, time.t + 12) / inputs.cap_rate
 }
 ```
@@ -1746,6 +1746,12 @@ string_lit      = STRING ;
 number          = DECIMAL | INT ;
 bool_lit        = "true" | "false" ;
 date_lit        = DATE ;
+
+(* What a contract's lowered streams ARE, overriding the category its pack's
+   rule assigns. `category <stream> = <path>` names which lowered stream is
+   reclassified; the bare form is sugar for a contract lowering exactly one and
+   is refused (E5030) where it would flatten several. *)
+contract_category = "category" ( qname "=" qname | qname ) ;
 ```
 
 ---
@@ -5192,7 +5198,7 @@ is enforced on it.
 **Categories are the semantics; names are addresses.** Every stream a rule
 emits MUST carry a category, and aggregation reads the category — which is why
 decomposition never moves a total: the components fold where the netted line
-folded. A statement itemises by selecting streams; a subtotal folds by
+folded. A statement itemizes by selecting streams; a subtotal folds by
 category; both stay correct as the grain changes.
 
 **Every read of an instanceable family is globbed.** A rule whose stream name
@@ -5351,7 +5357,7 @@ leaves it uses in `pack.toml`:
 categories = [
   "operating.revenue.base_rent",
   "operating.expense.opex",
-  "financing.debt_service",
+  "financing.debt.service",
 ]
 ```
 
@@ -5405,7 +5411,7 @@ categories = ["operating.*"]
 id = "domain.cre.debt_service"
 kind = "money"
 op = "negated_sum"
-categories = ["financing.debt_service", "financing.mortgage_insurance"]
+categories = ["financing.debt.service", "financing.debt.mortgage_insurance"]
 
 [[subtotals]]
 id = "domain.cre.dscr"
@@ -6246,6 +6252,14 @@ see what is wrong with it.
   in net operating income takes a different root — and a coverage ratio that
   quietly excluded a stream is wrong and says so nowhere. Without a pack a
   category stays optional, because nothing folds.
+- `E5030_AMBIGUOUS_CONTRACT_CATEGORY` — a contract states one `category` and
+  lowers more than one stream. A contract lowers one or more streams and its
+  pack states a category for each, so a single clause cannot say which it
+  reclassifies: it would set all of them to the same value, and a coverage ratio
+  computed off a principal repayment reclassified as interest is wrong with
+  nothing to show for it. Name the stream — `category <stream> = <path>` — once
+  per stream. The bare form stays legal where the contract lowers exactly one,
+  because there is then nothing to disambiguate.
 
 - `W5022_UNKNOWN_SERIES_REFERENCE` — a `series_sum`/`series_avg` names a series
   no stream, contract or waterfall step produces, so it aggregates to zero and
@@ -7868,7 +7882,7 @@ Templates (starting points; the `skeleton` MCP tool assembles them into a compil
 
 CFDL 0.7.0. Every model below compiles, and its IR and
 results are byte-asserted against goldens in CI (`fixtures/valid/`,
-122 models.
+123 models.
 
 `gold/ir/`, `gold/results/`). Each is single-purpose: the directory name
 says what it exercises. This is what right looks like — positive few-shot
@@ -8505,13 +8519,13 @@ contract cre.exit_cap on entity asset.property {
 
 stream loan.construction_interest on entity asset.construction {
   schedule every month from 2026-01 to 2027-06
-  category financing.debt_service
+  category financing.debt.service
   amount = 40000
 }
 
 stream loan.permanent_debt_service on entity asset.permanent {
   schedule every month from 2027-07 to 2031-12
-  category financing.debt_service
+  category financing.debt.service
   amount = 55000
 }
 ```
@@ -8569,7 +8583,7 @@ contract cre.exit_cap on entity asset.property {
 // Construction IO interest: $12M loan @ 7.5% annual = $75,000/mo (months 0-35)
 stream loan.io_interest on entity asset.construction outflow currency USD {
   schedule every month from 2026-01 to 2028-12
-  category financing.debt_service
+  category financing.debt.service
   amount = 75000
 }
 
@@ -8601,7 +8615,7 @@ stream resi.base_rent on entity asset.property inflow currency USD {
 // $12M perm loan @ 6.5% / 25-yr amortization → ~$68,500/mo P&I
 stream loan.perm_debt_service on entity asset.permanent outflow currency USD {
   schedule every month from 2029-01 to 2033-12
-  category financing.debt_service
+  category financing.debt.service
   amount = 68500
 }
 ```
@@ -8738,7 +8752,7 @@ contract cre.exit_forward on entity asset.tower {
 // Permanent debt (25-year amortization, 10-year hold window).
 stream loan.permanent_debt_service on entity asset.tower outflow currency USD {
   schedule every month from 2026-01 to 2035-12
-  category financing.debt_service
+  category financing.debt.service
   amount = -pmt(0.055 / 12, 300, 6000000)
 }
 ```
@@ -11539,6 +11553,42 @@ contract energy.ppa.plant_a on entity asset.plant {
 }
 ```
 
+## per_stream_category
+
+```cfdl
+version 0.1
+model "per-stream-category"
+use pack "cre" version "0.1.0"
+time calendar monthly from 2026-01 for 12
+
+// A CONTRACT LOWERS ONE OR MORE STREAMS, AND EACH CARRIES ITS OWN CATEGORY.
+//
+// The pack states what a permanent mortgage's interest, principal and proceeds
+// are, and is right about all three. Where a deal needs one of them classified
+// differently, the override names the stream: the other two keep the pack's
+// answer. A clause that could not name one would flatten all three.
+entity asset tower : CRE.Asset.RealProperty
+
+contract cre.permanent_debt on entity asset.tower {
+  term 2026-01..2026-12
+  category cre.debt.interest = operating.expense.interest
+  terms {
+    principal = 1000000
+    rate = 0.05
+    amort_months = 300
+  }
+}
+
+// The single-stream case needs no name: there is nothing to disambiguate.
+contract cre.opex_line.rooms on entity asset.tower {
+  term 2026-01..2026-12
+  category operating.expense.rooms
+  terms {
+    amount_year = 12000
+  }
+}
+```
+
 ## phase_schedule_smoke
 
 ```cfdl
@@ -13602,14 +13652,14 @@ stream mine.opex.accretion on entity asset.cu_mill outflow currency USD {
 
 stream mine.fiscal.duty on entity asset.cu_mill outflow currency USD {
   schedule every year start from 2025-01 to 2065-01
-  category operating.tax
+  category operating.income_tax.paid
   amount = inputs.duty_rate * (series_sum("mine.revenue.*", time.t, time.t)
                 + series_sum("mine.opex.*", time.t, time.t))
 }
 
 stream mine.fiscal.profit_share on entity asset.cu_mill outflow currency USD {
   schedule every year start from 2025-01 to 2065-01
-  category operating.tax
+  category operating.income_tax.paid
   amount = inputs.ptu_rate
              * max(0.0, (1.0 - inputs.duty_rate) * (series_sum("mine.revenue.*", time.t, time.t)
                 + series_sum("mine.opex.*", time.t, time.t))
@@ -13618,7 +13668,7 @@ stream mine.fiscal.profit_share on entity asset.cu_mill outflow currency USD {
 
 stream mine.fiscal.income_tax on entity asset.cu_mill outflow currency USD {
   schedule every year start from 2025-01 to 2065-01
-  category operating.tax
+  category operating.income_tax.paid
   amount = max(0.0,
                inputs.tax_rate
                  * ((1.0 - inputs.duty_rate) * (series_sum("mine.revenue.*", time.t, time.t)
@@ -14010,7 +14060,7 @@ stream infra.funding.fees on entity asset.concession outflow currency USD {
 
 stream infra.funding.equity on entity asset.concession inflow currency USD {
   schedule every year from 2009-01 to 2012-01
-  category financing.equity
+  category financing.equity.contribution
   amount = inputs.equity_pct * inputs.construction_real
              * if(time.t == 1, 0.1, if(time.t == 2, 0.3, if(time.t == 3, 0.5, 0.1)))
              * pow(1.0 + inputs.inflation, time.t)
@@ -14121,7 +14171,7 @@ stream infra.opex.variable on entity asset.concession outflow currency USD {
 // accumulated to date, and settled the following year.
 stream infra.tax.corporate on entity asset.concession outflow currency USD {
   schedule every year from 2013-01 to 2058-01
-  category operating.tax
+  category operating.income_tax.paid
   amount = inputs.tax_rate
              * max(0.0, min(prev.asset.project.pbt, asset.project.cum_pbt))
 }
@@ -14176,37 +14226,37 @@ stream infra.subsidy.availability on entity asset.concession inflow currency USD
 
 stream infra.debt.interest_t1 on entity asset.concession outflow currency USD {
   schedule every year from 2013-01 to 2058-01
-  category financing.interest
+  category financing.debt.interest_paid
   amount = prev.asset.tranche1.balance * inputs.rate_t1
 }
 
 stream infra.debt.interest_t2 on entity asset.concession outflow currency USD {
   schedule every year from 2013-01 to 2058-01
-  category financing.interest
+  category financing.debt.interest_paid
   amount = prev.asset.tranche2.balance * inputs.rate_t2
 }
 
 stream infra.debt.interest_t3 on entity asset.concession outflow currency USD {
   schedule every year from 2013-01 to 2058-01
-  category financing.interest
+  category financing.debt.interest_paid
   amount = prev.asset.tranche3.balance * inputs.rate_t3
 }
 
 stream infra.debt.principal_t1 on entity asset.concession outflow currency USD {
   schedule every year from 2013-01 to 2058-01
-  category financing.debt_principal
+  category financing.debt.principal
   amount = prev.asset.tranche1.balance - asset.tranche1.balance
 }
 
 stream infra.debt.principal_t2 on entity asset.concession outflow currency USD {
   schedule every year from 2013-01 to 2058-01
-  category financing.debt_principal
+  category financing.debt.principal
   amount = prev.asset.tranche2.balance - asset.tranche2.balance
 }
 
 stream infra.debt.principal_t3 on entity asset.concession outflow currency USD {
   schedule every year from 2013-01 to 2058-01
-  category financing.debt_principal
+  category financing.debt.principal
   amount = prev.asset.tranche3.balance - asset.tranche3.balance
 }
 ```
@@ -15084,25 +15134,25 @@ stream cre.evo_tax on entity asset.east outflow currency USD {
 // dates differ (5/18 leasehold, 7/12 fee), which is why the press reported two.
 stream cre.aubrey_sale on entity asset.west inflow currency USD {
   schedule on 2022-05
-  category investing.reversion
+  category investing.disposal.reversion
   amount = 266455000.00
 }
 
 stream cre.evo_sale on entity asset.east inflow currency USD {
   schedule on 2022-05
-  category investing.reversion
+  category investing.disposal.reversion
   amount = 334642240.00
 }
 
 stream cre.sale_costs on entity asset.project outflow currency USD {
   schedule on 2022-05
-  category investing.selling_costs
+  category investing.disposal.selling_costs
   amount = 601097240.00 * inputs.cost_of_sale
 }
 
 stream cre.pierce_closings on entity asset.east inflow currency USD {
   schedule every month start from 2021-08 to 2024-06
-  category investing.reversion
+  category investing.disposal.reversion
   amount = curve_value("pierce_sellout", time.date) * (1.0 - inputs.condo_selling_cost)
 }
 
@@ -15300,7 +15350,7 @@ entity asset facility : Asset.Financial {
 // Interest is capitalized: it is repaid inside the principal repayment. That is the convention the reference workbook uses.
 stream cre.loan_draw on entity asset.project inflow currency USD {
   schedule every month start from 2011-09 to 2024-12
-  category financing.debt_proceeds
+  category financing.debt.proceeds
   amount = asset.facility.draw
 }
 
@@ -15310,23 +15360,23 @@ stream cre.loan_draw on entity asset.project inflow currency USD {
 // and coverage during the build is measurable instead of absent.
 stream cre.loan_interest on entity asset.project outflow currency USD {
   schedule every month start from 2011-09 to 2024-12
-  category financing.interest
+  category financing.debt.interest_paid
   amount = asset.facility.interest
 }
 
 stream cre.loan_interest_funding on entity asset.project inflow currency USD {
   schedule every month start from 2011-09 to 2024-12
-  category financing.debt_proceeds
+  category financing.debt.proceeds
   amount = asset.facility.interest
 }
 
-// The payoff sits in the reversion. `financing.debt_principal` folds into
+// The payoff sits in the reversion. `financing.debt.principal` folds into
 // `domain.cre.debt_service`, and a balance retired out of sale proceeds is not
 // debt service — it would make every coverage ratio in the disposal period
 // meaningless. The cre pack says the same of a permanent loan's balloon.
 stream cre.loan_repayment on entity asset.project outflow currency USD {
   schedule every month start from 2011-09 to 2024-12
-  category investing.reversion
+  category investing.disposal.reversion
   amount = asset.facility.repay
 }
 
@@ -17419,7 +17469,7 @@ entity asset tlb : Asset.Financial {
 
 stream opco.sponsor.investment on entity asset.target outflow currency USD {
   schedule on 2016-01
-  category investing.acquisition
+  category investing.acquisition.purchase
   amount = cfg.sponsor_equity
 }
 
@@ -17428,7 +17478,7 @@ stream opco.sponsor.investment on entity asset.target outflow currency USD {
 // in proportion to what each put in.
 stream opco.sponsor.proceeds on entity asset.target inflow currency USD {
   schedule on 2021-01
-  category investing.exit
+  category investing.disposal.proceeds
   amount = (inputs.exit_multiple * curve_value("ebitda", time.date)
             - (asset.tlb.balance + cfg.senior_size + asset.sub_notes.balance
                - inputs.cash_at_exit))
@@ -17621,13 +17671,13 @@ option mgmt_options_25_00 type Option.Equity {
 // exercised tranches pay in.
 stream opco.exit.equity_value on entity asset.target inflow currency USD {
   schedule every year from 2021-01 to 2021-01
-  category investing.exit
+  category investing.disposal.proceeds
   amount = asset.target.exit_equity
 }
 
 stream opco.exit.option_proceeds on entity asset.target inflow currency USD {
   schedule every year from 2021-01 to 2021-01
-  category investing.exit
+  category investing.disposal.proceeds
   amount = 44.500
 }
 
@@ -19792,25 +19842,25 @@ entity asset cloan : Asset.Financial {
 }
 
 stream cloan.advances on entity asset.cloan inflow currency USD {
-  category financing.debt_proceeds
+  category financing.debt.proceeds
   schedule every month from 2026-02 to 2027-06
   amount = 455000
 }
 
 stream cloan.interest on entity asset.cloan outflow currency USD {
-  category financing.debt_service
+  category financing.debt.service
   schedule every month from 2026-03 to 2028-06
   amount = prev.asset.cloan.balance * 0.075 / 12
 }
 
 stream cloan.payoff on entity asset.cloan outflow currency USD {
-  category financing.debt_proceeds
+  category financing.debt.proceeds
   schedule every month from 2028-07 to 2028-07
   amount = prev.asset.cloan.balance
 }
 ```
 
-The three categories are the chapter-20 discipline applied to a capital stack, and they are not interchangeable. Draws are `financing.debt_proceeds`. Interest is `financing.debt_service`; the pack classifies its own construction interest exactly so, because coverage during a build is measured on interest actually accruing. The payoff is *proceeds*, not service, for the same reason the balloon stays off below. One consequence worth expecting: with construction carry counted, the whole-deal coverage metric reads near 1.9 while the stabilized periods the statement shows read near 2.8. Different questions, different numbers.
+The three categories are the chapter-20 discipline applied to a capital stack, and they are not interchangeable. Draws are `financing.debt.proceeds`. Interest is `financing.debt.service`; the pack classifies its own construction interest exactly so, because coverage during a build is measured on interest actually accruing. The payoff is *proceeds*, not service, for the same reason the balloon stays off below. One consequence worth expecting: with construction carry counted, the whole-deal coverage metric reads near 1.9 while the stabilized periods the statement shows read near 2.8. Different questions, different numbers.
 
 Read it as three chapters of this course meeting. The **balance** is a rule field (chapter 8) on the loan's own entity — a fact about the facility, growing 455,000 per draw month, zeroed at takeout. **Interest** reads the balance *one period back*, as `prev.asset.cloan.balance`, because construction interest bills on the balance you carried into the month. The field is declared once and read at both ends — the average-balance machinery from chapter 8 in its simplest form.
 
@@ -19879,7 +19929,7 @@ contract cre.exit {
 // The permanent loan is repaid against the sale — the reversion carries the
 // payoff, not the debt service line (which is why the balloon is off).
 stream harbor.perm_payoff on entity asset.harbor outflow currency USD {
-  category financing.debt_proceeds
+  category financing.debt.proceeds
   schedule on 2030-12
   amount = 9500000
 }
@@ -20252,7 +20302,7 @@ Apply over stabilized operations only — during lease-up, vacancy is already in
 
 ## Debt
 
-**`cre.permanent_debt`** → `loan.permanent_debt_service` (financing.debt_service, outflow) — one combined stream, which is what the pack's DSCR metric selects. Interest-only while inside `io_months`, then the level payment struck on `amort_months`; maturity is the contract's term.
+**`cre.permanent_debt`** → `loan.permanent_debt_service` (financing.debt.service, outflow) — one combined stream, which is what the pack's DSCR metric selects. Interest-only while inside `io_months`, then the level payment struck on `amort_months`; maturity is the contract's term.
 
 | Term | Required | Default | Meaning |
 |---|---|---|---|
@@ -20267,9 +20317,9 @@ Apply over stabilized operations only — during lease-up, vacancy is already in
 
 Three forms, one decision: where does the NOI come from?
 
-**`cre.exit_cap`** → `cre.exit.sale` (investing.reversion, inflow) = `noi_value / exit_cap`. You state the NOI. | Required: `noi_value`, `exit_cap`.
+**`cre.exit_cap`** → `cre.exit.sale` (investing.disposal.reversion, inflow) = `noi_value / exit_cap`. You state the NOI. | Required: `noi_value`, `exit_cap`.
 
-**`cre.exit`** → `cre.exit.proceeds` = `noi_forward_year / exit_cap` **gross**, with `cre.exit.selling_costs` (investing.selling_costs, outflow) lowering beside it — gross less costs is the net, and the statement shows both. You state a *named forward window* — reconcile it against the modeled final year. | Required: `noi_forward_year`, `exit_cap`. Default: `selling_costs = 0`.
+**`cre.exit`** → `cre.exit.proceeds` = `noi_forward_year / exit_cap` **gross**, with `cre.exit.selling_costs` (investing.disposal.selling_costs, outflow) lowering beside it — gross less costs is the net, and the statement shows both. You state a *named forward window* — reconcile it against the modeled final year. | Required: `noi_forward_year`, `exit_cap`. Default: `selling_costs = 0`.
 
 **`cre.exit_forward`** → the same two streams, with forward NOI *derived* from the modeled streams over the twelve months after the sale date. It cannot drift and cannot be committee-edited, and it requires a projection tail so the window has data — with the operating terms extended through the tail, so the forward year exists to be read. | Required: `exit_cap`. Default: `selling_costs = 0`.
 

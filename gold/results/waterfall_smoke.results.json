@@ -1,6 +1,6 @@
 {
   "results_version": "0.5",
-  "model_hash": "e9ce2b3f0739e47d36d1328ecf8e9032ba68e8858addc1e26998b713030e5869",
+  "model_hash": "71967f8cd1b3ab712c001c7468dcaf9b647e99d3ff37eb7c6b1455e963db2660",
   "ledger_hash": "f01562c2831b2dbe86a0333adfc8ce42d694142c170a8ba71ec1117a7c222be3",
   "engine": {
     "name": "cfdl-engine",
@@ -1276,6 +1276,31 @@
             "total": 0.0
           },
           {
+            "kind": "line",
+            "label": "Income taxes",
+            "depth": 2,
+            "display_sign": -1.0,
+            "values": [
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              }
+            ],
+            "total": 0.0
+          },
+          {
             "kind": "subtotal",
             "label": "Gross collections",
             "depth": 0,
@@ -1468,6 +1493,19 @@
             "total": 0.0
           },
           {
+            "kind": "line",
+            "label": "Income taxes",
+            "depth": 2,
+            "display_sign": -1.0,
+            "values": [
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              }
+            ],
+            "total": 0.0
+          },
+          {
             "kind": "subtotal",
             "label": "Gross collections",
             "depth": 0,
@@ -1579,6 +1617,31 @@
             "label": "Unscheduled principal",
             "depth": 1,
             "display_sign": 1.0,
+            "values": [
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              }
+            ],
+            "total": 0.0
+          },
+          {
+            "kind": "line",
+            "label": "Income taxes",
+            "depth": 2,
+            "display_sign": -1.0,
             "values": [
               {
                 "amount": 0.0,
@@ -1856,6 +1919,31 @@
             "label": "Fee income",
             "depth": 1,
             "display_sign": 1.0,
+            "values": [
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              }
+            ],
+            "total": 0.0
+          },
+          {
+            "kind": "line",
+            "label": "Income taxes",
+            "depth": 2,
+            "display_sign": -1.0,
             "values": [
               {
                 "amount": 0.0,

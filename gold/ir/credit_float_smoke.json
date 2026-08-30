@@ -156,9 +156,9 @@
       "kind": "money",
       "op": "negated_cumulative",
       "categories": [
-        "investing.purchase"
+        "investing.acquisition.purchase"
       ],
-      "formula": "-cumulative(investing.purchase)"
+      "formula": "-cumulative(investing.acquisition.purchase)"
     },
     {
       "id": "domain.credit.principal_paid_negated",
@@ -501,7 +501,7 @@
       },
       "direction": "outflow",
       "currency": "USD",
-      "category": "investing.purchase",
+      "category": "investing.acquisition.purchase",
       "schedule": {
         "kind": "OnDate",
         "on": "2026-01-01"

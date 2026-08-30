@@ -308,14 +308,14 @@ stream mine.opex.accretion on entity asset.cu_mill outflow currency USD {
 
 stream mine.fiscal.duty on entity asset.cu_mill outflow currency USD {
   schedule every year start from 2025-01 to 2065-01
-  category operating.tax
+  category operating.income_tax.paid
   amount = inputs.duty_rate * (series_sum("mine.revenue.*", time.t, time.t)
                 + series_sum("mine.opex.*", time.t, time.t))
 }
 
 stream mine.fiscal.profit_share on entity asset.cu_mill outflow currency USD {
   schedule every year start from 2025-01 to 2065-01
-  category operating.tax
+  category operating.income_tax.paid
   amount = inputs.ptu_rate
              * max(0.0, (1.0 - inputs.duty_rate) * (series_sum("mine.revenue.*", time.t, time.t)
                 + series_sum("mine.opex.*", time.t, time.t))
@@ -324,7 +324,7 @@ stream mine.fiscal.profit_share on entity asset.cu_mill outflow currency USD {
 
 stream mine.fiscal.income_tax on entity asset.cu_mill outflow currency USD {
   schedule every year start from 2025-01 to 2065-01
-  category operating.tax
+  category operating.income_tax.paid
   amount = max(0.0,
                inputs.tax_rate
                  * ((1.0 - inputs.duty_rate) * (series_sum("mine.revenue.*", time.t, time.t)
@@ -716,7 +716,7 @@ stream infra.funding.fees on entity asset.concession outflow currency USD {
 
 stream infra.funding.equity on entity asset.concession inflow currency USD {
   schedule every year from 2009-01 to 2012-01
-  category financing.equity
+  category financing.equity.contribution
   amount = inputs.equity_pct * inputs.construction_real
              * if(time.t == 1, 0.1, if(time.t == 2, 0.3, if(time.t == 3, 0.5, 0.1)))
              * pow(1.0 + inputs.inflation, time.t)
@@ -827,7 +827,7 @@ stream infra.opex.variable on entity asset.concession outflow currency USD {
 // accumulated to date, and settled the following year.
 stream infra.tax.corporate on entity asset.concession outflow currency USD {
   schedule every year from 2013-01 to 2058-01
-  category operating.tax
+  category operating.income_tax.paid
   amount = inputs.tax_rate
              * max(0.0, min(prev.asset.project.pbt, asset.project.cum_pbt))
 }
@@ -882,37 +882,37 @@ stream infra.subsidy.availability on entity asset.concession inflow currency USD
 
 stream infra.debt.interest_t1 on entity asset.concession outflow currency USD {
   schedule every year from 2013-01 to 2058-01
-  category financing.interest
+  category financing.debt.interest_paid
   amount = prev.asset.tranche1.balance * inputs.rate_t1
 }
 
 stream infra.debt.interest_t2 on entity asset.concession outflow currency USD {
   schedule every year from 2013-01 to 2058-01
-  category financing.interest
+  category financing.debt.interest_paid
   amount = prev.asset.tranche2.balance * inputs.rate_t2
 }
 
 stream infra.debt.interest_t3 on entity asset.concession outflow currency USD {
   schedule every year from 2013-01 to 2058-01
-  category financing.interest
+  category financing.debt.interest_paid
   amount = prev.asset.tranche3.balance * inputs.rate_t3
 }
 
 stream infra.debt.principal_t1 on entity asset.concession outflow currency USD {
   schedule every year from 2013-01 to 2058-01
-  category financing.debt_principal
+  category financing.debt.principal
   amount = prev.asset.tranche1.balance - asset.tranche1.balance
 }
 
 stream infra.debt.principal_t2 on entity asset.concession outflow currency USD {
   schedule every year from 2013-01 to 2058-01
-  category financing.debt_principal
+  category financing.debt.principal
   amount = prev.asset.tranche2.balance - asset.tranche2.balance
 }
 
 stream infra.debt.principal_t3 on entity asset.concession outflow currency USD {
   schedule every year from 2013-01 to 2058-01
-  category financing.debt_principal
+  category financing.debt.principal
   amount = prev.asset.tranche3.balance - asset.tranche3.balance
 }
 ```
@@ -1795,25 +1795,25 @@ stream cre.evo_tax on entity asset.east outflow currency USD {
 // dates differ (5/18 leasehold, 7/12 fee), which is why the press reported two.
 stream cre.aubrey_sale on entity asset.west inflow currency USD {
   schedule on 2022-05
-  category investing.reversion
+  category investing.disposal.reversion
   amount = 266455000.00
 }
 
 stream cre.evo_sale on entity asset.east inflow currency USD {
   schedule on 2022-05
-  category investing.reversion
+  category investing.disposal.reversion
   amount = 334642240.00
 }
 
 stream cre.sale_costs on entity asset.project outflow currency USD {
   schedule on 2022-05
-  category investing.selling_costs
+  category investing.disposal.selling_costs
   amount = 601097240.00 * inputs.cost_of_sale
 }
 
 stream cre.pierce_closings on entity asset.east inflow currency USD {
   schedule every month start from 2021-08 to 2024-06
-  category investing.reversion
+  category investing.disposal.reversion
   amount = curve_value("pierce_sellout", time.date) * (1.0 - inputs.condo_selling_cost)
 }
 
@@ -2012,7 +2012,7 @@ entity asset facility : Asset.Financial {
 // Interest is capitalized: it is repaid inside the principal repayment. That is the convention the reference workbook uses.
 stream cre.loan_draw on entity asset.project inflow currency USD {
   schedule every month start from 2011-09 to 2024-12
-  category financing.debt_proceeds
+  category financing.debt.proceeds
   amount = asset.facility.draw
 }
 
@@ -2022,23 +2022,23 @@ stream cre.loan_draw on entity asset.project inflow currency USD {
 // and coverage during the build is measurable instead of absent.
 stream cre.loan_interest on entity asset.project outflow currency USD {
   schedule every month start from 2011-09 to 2024-12
-  category financing.interest
+  category financing.debt.interest_paid
   amount = asset.facility.interest
 }
 
 stream cre.loan_interest_funding on entity asset.project inflow currency USD {
   schedule every month start from 2011-09 to 2024-12
-  category financing.debt_proceeds
+  category financing.debt.proceeds
   amount = asset.facility.interest
 }
 
-// The payoff sits in the reversion. `financing.debt_principal` folds into
+// The payoff sits in the reversion. `financing.debt.principal` folds into
 // `domain.cre.debt_service`, and a balance retired out of sale proceeds is not
 // debt service — it would make every coverage ratio in the disposal period
 // meaningless. The cre pack says the same of a permanent loan's balloon.
 stream cre.loan_repayment on entity asset.project outflow currency USD {
   schedule every month start from 2011-09 to 2024-12
-  category investing.reversion
+  category investing.disposal.reversion
   amount = asset.facility.repay
 }
 
@@ -4134,7 +4134,7 @@ entity asset tlb : Asset.Financial {
 
 stream opco.sponsor.investment on entity asset.target outflow currency USD {
   schedule on 2016-01
-  category investing.acquisition
+  category investing.acquisition.purchase
   amount = cfg.sponsor_equity
 }
 
@@ -4143,7 +4143,7 @@ stream opco.sponsor.investment on entity asset.target outflow currency USD {
 // in proportion to what each put in.
 stream opco.sponsor.proceeds on entity asset.target inflow currency USD {
   schedule on 2021-01
-  category investing.exit
+  category investing.disposal.proceeds
   amount = (inputs.exit_multiple * curve_value("ebitda", time.date)
             - (asset.tlb.balance + cfg.senior_size + asset.sub_notes.balance
                - inputs.cash_at_exit))
@@ -4338,13 +4338,13 @@ option mgmt_options_25_00 type Option.Equity {
 // exercised tranches pay in.
 stream opco.exit.equity_value on entity asset.target inflow currency USD {
   schedule every year from 2021-01 to 2021-01
-  category investing.exit
+  category investing.disposal.proceeds
   amount = asset.target.exit_equity
 }
 
 stream opco.exit.option_proceeds on entity asset.target inflow currency USD {
   schedule every year from 2021-01 to 2021-01
-  category investing.exit
+  category investing.disposal.proceeds
   amount = 44.500
 }
 

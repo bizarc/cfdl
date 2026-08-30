@@ -19,25 +19,25 @@ entity asset cloan : Asset.Financial {
 }
 
 stream cloan.advances on entity asset.cloan inflow currency USD {
-  category financing.debt_proceeds
+  category financing.debt.proceeds
   schedule every month from 2026-02 to 2027-06
   amount = 455000
 }
 
 stream cloan.interest on entity asset.cloan outflow currency USD {
-  category financing.debt_service
+  category financing.debt.service
   schedule every month from 2026-03 to 2028-06
   amount = prev.asset.cloan.balance * 0.075 / 12
 }
 
 stream cloan.payoff on entity asset.cloan outflow currency USD {
-  category financing.debt_proceeds
+  category financing.debt.proceeds
   schedule every month from 2028-07 to 2028-07
   amount = prev.asset.cloan.balance
 }
 ```
 
-The three categories are the chapter-20 discipline applied to a capital stack, and they are not interchangeable. Draws are `financing.debt_proceeds`. Interest is `financing.debt_service`; the pack classifies its own construction interest exactly so, because coverage during a build is measured on interest actually accruing. The payoff is *proceeds*, not service, for the same reason the balloon stays off below. One consequence worth expecting: with construction carry counted, the whole-deal coverage metric reads near 1.9 while the stabilized periods the statement shows read near 2.8. Different questions, different numbers.
+The three categories are the chapter-20 discipline applied to a capital stack, and they are not interchangeable. Draws are `financing.debt.proceeds`. Interest is `financing.debt.service`; the pack classifies its own construction interest exactly so, because coverage during a build is measured on interest actually accruing. The payoff is *proceeds*, not service, for the same reason the balloon stays off below. One consequence worth expecting: with construction carry counted, the whole-deal coverage metric reads near 1.9 while the stabilized periods the statement shows read near 2.8. Different questions, different numbers.
 
 Read it as three chapters of this course meeting. The **balance** is a rule field (chapter 8) on the loan's own entity — a fact about the facility, growing 455,000 per draw month, zeroed at takeout. **Interest** reads the balance *one period back*, as `prev.asset.cloan.balance`, because construction interest bills on the balance you carried into the month. The field is declared once and read at both ends — the average-balance machinery from chapter 8 in its simplest form.
 

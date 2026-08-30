@@ -3136,7 +3136,7 @@ fn build_ir(
     // `investing` or `financing` (`cfdl_pack::CATEGORY_ROOTS`).
     //
     // A pack used to narrow it. Its `categories = [...]` was a closed list that
-    // REPLACED the language's rule, so `investing.acquisition` was valid with no
+    // REPLACED the language's rule, so `investing.acquisition.purchase` was valid with no
     // pack and E5022 with one — a language mechanism and a pack mechanism for a
     // single concept. IAS 7 settles the roots and stops there; the IFRS
     // Accounting Taxonomy carries no second level to borrow, and the leaf a
@@ -3158,6 +3158,41 @@ fn build_ir(
         let Stmt::Contract(contract) = &source_stmt.statement else {
             continue;
         };
+        // The bare form flattens, so it is only safe where there is nothing to
+        // flatten. A contract lowering several streams has a category per
+        // stream — the pack states each one — and one clause that cannot say
+        // which it means would set all of them to the same value, silently.
+        // That is exactly what it did before `category <stream> = <path>`
+        // existed: a permanent mortgage's interest, principal and proceeds all
+        // became `financing.debt.interest_paid`, and coverage computed off the result was
+        // wrong with nothing to show for it.
+        let emitted = active_pack
+            .map(|pack| pack.lowering_rules.as_slice())
+            .unwrap_or(&[])
+            .iter()
+            .filter(|rule| rule_matches_contract(&rule.contract_name, &contract.name))
+            .filter(|rule| !rule.stream_name.is_empty())
+            .count();
+        if contract.category.is_some() && emitted > 1 {
+            return Err(vec![Diagnostic {
+                code: "E5030_AMBIGUOUS_CONTRACT_CATEGORY".to_string(),
+                severity: "error".to_string(),
+                message: format!(
+                    "Contract '{}' states one category, and lowers {emitted} streams. Each \
+                     carries its own category, so one clause cannot say which it reclassifies.",
+                    contract.name
+                ),
+                file: Some(source_stmt.file.clone()),
+                span: Some(map_span(contract.span)),
+                path: None,
+                hint: Some(
+                    "Name the stream: `category <stream> = <path>`, once per stream you mean \
+                     to reclassify. The bare form is for a contract that lowers exactly one."
+                        .to_string(),
+                ),
+                notes: vec![],
+            }]);
+        }
         let Some(category) = contract.category.as_deref() else {
             continue;
         };
@@ -3248,7 +3283,7 @@ fn build_ir(
                     path: None,
                     hint: Some(
                         "State what the flow IS, as a path into the cash flow statement: \
-                         `category operating.revenue.rent`, `category financing.interest`. \
+                         `category operating.revenue.rent`, `category financing.debt.interest_paid`. \
                          A category is only optional when no pack is active, because then \
                          nothing folds."
                             .to_string(),
@@ -4885,9 +4920,19 @@ fn lower_contract_streams(
                     // somewhere its default does not (docs/35 §2.5). The
                     // instance's category is validated against the three roots
                     // before lowering; the rule's was validated at pack load.
+                    // Per-stream override, then the bare form, then the rule.
+                    //
+                    // A contract lowers one or more streams and its pack states
+                    // a category for each. `category <stream> = <path>` names
+                    // which one is being reclassified; the bare `category
+                    // <path>` is sugar for a contract that lowers exactly one,
+                    // and is refused where it would flatten several onto one
+                    // category (E5030).
                     category: contract
-                        .category
-                        .clone()
+                        .stream_categories
+                        .get(&expanded_rule.stream_name)
+                        .cloned()
+                        .or_else(|| contract.category.clone())
                         .or_else(|| (!rule.category.is_empty()).then(|| rule.category.clone())),
                     schedule,
                     amount: IrExpr {
@@ -6606,6 +6651,7 @@ mod pack_validation_parity_tests {
             term_end: term_range.then(|| "2026-06".to_string()),
             terms: map,
             category: None,
+            stream_categories: Default::default(),
             parties: vec![],
             span: span(),
         }

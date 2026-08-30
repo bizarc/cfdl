@@ -138,6 +138,6 @@ stream opco.sbc.fy2028 on entity asset.target outflow currency USD {
 // terminal-year figure, which is the convention fork this case exists to pin.
 stream opco.exit.value on entity asset.target inflow currency USD {
   schedule every month from 2028-12 to 2028-12
-  category investing.exit
+  category investing.disposal.proceeds
   amount = inputs.terminal_year_ufcf * inputs.terminal_ntm_multiple
 }

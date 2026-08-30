@@ -330,7 +330,7 @@ pattern-matching the stream's name.
 `operating.collection.interest`, `operating.collection.principal`,
 `operating.collection.prepayment`, `operating.collection.recovery`,
 `operating.collection.penalty`, `operating.expense.servicing`,
-`investing.purchase`.
+`investing.acquisition.purchase`.
 
 Collections sit under `operating`, not `financing`: for a lender, interest
 received is operating revenue rather than a financing flow. That is the same
