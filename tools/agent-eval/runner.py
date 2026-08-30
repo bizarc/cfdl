@@ -58,7 +58,10 @@ import urllib.request
 # line_buffering so a redirected long run (nohup ... > log) streams per-task
 # progress instead of flushing in 8 KB blocks.
 sys.stdout.reconfigure(encoding="utf-8", line_buffering=True)
-sys.stderr.reconfigure(encoding="utf-8")
+# stderr is line-buffered for the same reason stdout is: redirected to a log,
+# a block-buffered stream shows an EMPTY file for the first several minutes of
+# a healthy run, which is indistinguishable from a run that died on startup.
+sys.stderr.reconfigure(encoding="utf-8", line_buffering=True)
 
 try:
     import tomllib
@@ -93,6 +96,12 @@ SELF_TEST_REPAIR = ["missing_time", "stream_unknown_category", "term_expr_invali
 TEXT_SUFFIXES = {".md", ".py", ".txt", ".csv", ".json", ".toml"}
 MAX_REFERENCE_BYTES = 200_000
 
+# How long ONE task may run. Generous by default: an effectiveness measurement
+# asks what a model can do, not what it can do in a hurry — a ceiling that
+# truncates the work measures the ceiling. Lower it (CFDL_EVAL_TASK_TIMEOUT,
+# seconds) only when the question is throughput.
+TASK_TIMEOUT_SECONDS = int(os.environ.get("CFDL_EVAL_TASK_TIMEOUT", "7200"))
+
 
 # --- Tasks -------------------------------------------------------------------
 
@@ -102,6 +111,17 @@ def transcribe_tasks(benchmarks_dir: pathlib.Path, only: set[str] | None) -> lis
         case_dir = model.parent
         case_id = f"{case_dir.parent.name}/{case_dir.name}"
         if only is not None and case_id not in only:
+            continue
+        # A case under construction in another session has a model.cfdl before
+        # it has a spec. Skip it rather than crashing a two-hour run on a file
+        # that is simply not written yet.
+        required = ["CASE.md", "case.toml", "run.json", "expected.csv"]
+        missing = [f for f in required if not (case_dir / f).exists()]
+        if missing:
+            print(
+                f"[eval] skipping {case_id}: incomplete case (missing {', '.join(missing)})",
+                file=sys.stderr,
+            )
             continue
         case = tomllib.loads((case_dir / "case.toml").read_text(encoding="utf-8"))
         reference: dict[str, str] = {}
@@ -236,7 +256,7 @@ def call_agent(agent: str, task: dict, benchmarks_dir: pathlib.Path) -> dict:
             shell=True,
             input=payload,
             capture_output=True,
-            timeout=2700,
+            timeout=TASK_TIMEOUT_SECONDS,
         )
         if result.returncode == 3:
             # The adapter's fatal code: a rejected key, exhausted credit, or a
@@ -426,11 +446,53 @@ GRADERS = {"repair": grade_repair, "transcribe": grade_transcribe, "extend": gra
 
 # --- Runner ------------------------------------------------------------------
 
+def save_submission(out_path: str | None, task: dict, submission: dict | None) -> str | None:
+    """Keep what the agent actually wrote.
+
+    A score says a model failed; only the source says why. Grading happens in
+    a temporary directory that is deleted, so without this the artifact — the
+    one thing that makes a failure diagnosable — is lost even on a run that
+    completes.
+    """
+    if not out_path or not isinstance(submission, dict):
+        return None
+    files = submission.get("files")
+    if not isinstance(files, dict) or not files:
+        return None
+    root = pathlib.Path(out_path).with_suffix("")
+    target = root / task["tier"] / task["id"].replace("/", "__")
+    target.mkdir(parents=True, exist_ok=True)
+    for name, source in files.items():
+        if not isinstance(source, str):
+            continue
+        # Flatten any path separators an agent invents; this is an artifact
+        # directory, not a model root.
+        safe = pathlib.Path(name).name or "model.cfdl"
+        (target / safe).write_text(source, encoding="utf-8")
+    return str(target)
+
+
+def write_report(out_path: str | None, report: dict) -> None:
+    """Write the scorecard as it stands. Called after every task so an
+    interrupted run keeps its results — a long baseline that only writes at
+    the end loses everything to one Ctrl+C."""
+    if not out_path:
+        return
+    pathlib.Path(out_path).write_text(json.dumps(report, indent=2) + "\n", encoding="utf-8")
+def announce_start(tiers: list[str], agent: str, task_count: int) -> None:
+    """Say what is about to happen, before the first task's silence begins."""
+    print(
+        f"[eval] starting: {task_count} task(s) across {', '.join(tiers)} | agent={agent}",
+        file=sys.stderr,
+    )
+
+
 def run_eval(
     tiers: list[str],
     agent: str,
     benchmarks_dir: pathlib.Path,
     only: set[str] | None,
+    out_path: str | None = None,
 ) -> dict:
     tasks: list[dict] = []
     if "repair" in tiers:
@@ -439,6 +501,7 @@ def run_eval(
         tasks += transcribe_tasks(benchmarks_dir, only)
     if "extend" in tiers:
         tasks += extend_tasks(only)
+    announce_start(tiers, agent, len(tasks))
     results = []
     for task in tasks:
         submission = None
@@ -467,11 +530,19 @@ def run_eval(
         usage = (submission or {}).get("usage") if isinstance(submission, dict) else None
         if usage:
             row["usage"] = usage
+        saved = save_submission(out_path, task, submission)
+        if saved:
+            row["artifact"] = saved
         results.append(row)
+        write_report(out_path, {"agent": agent, "summary": summarize(results, tiers), "results": results})
         marker = "PASS" if score.get("matches") or (
             task["tier"] == "repair" and score["compiles"]
         ) else "fail"
         print(f"[eval][{marker}] {task['tier']}/{task['id']} partial={score['partial']}")
+    return {"agent": agent, "summary": summarize(results, tiers), "results": results}
+
+
+def summarize(results: list[dict], tiers: list[str]) -> dict:
     summary = {}
     for tier in tiers:
         rows = [r for r in results if r["tier"] == tier]
@@ -488,7 +559,7 @@ def run_eval(
             "cost_usd": round(cost, 4),
             "cost_per_task_usd": round(cost / len(rows), 4),
         }
-    return {"agent": agent, "summary": summary, "results": results}
+    return summary
 
 
 def main() -> int:
@@ -525,13 +596,11 @@ def main() -> int:
 
     tiers = ["repair", "transcribe", "extend"] if args.tier == "all" else [args.tier]
     only = set(args.cases.split(",")) if args.cases else None
-    report = run_eval(tiers, args.agent, benchmarks_dir, only)
+    report = run_eval(tiers, args.agent, benchmarks_dir, only, out_path=args.out)
     print(json.dumps(report["summary"], indent=2))
     if args.out:
-        pathlib.Path(args.out).write_text(
-            json.dumps(report, indent=2) + "\n", encoding="utf-8"
-        )
-        print(f"wrote {args.out}")
+        write_report(args.out, report)
+        print(f"wrote {args.out} (+ authored sources alongside it)")
     # The replay agent must be perfect on repair + transcribe; anything else
     # exits by its own judgment.
     if args.agent == "replay":
