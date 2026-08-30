@@ -14436,20 +14436,17 @@ A 160-month ground-up CRE development: land in 2011, a 39-month build on a parab
 | | |
 |---|---|
 | Pack | `cre` |
-| Declared | 4 curves, 8 entities, 28 streams, 1 waterfall, 8 field recurrences |
-| Language features | entity field recurrences (`init`/`next`/`prev`), `curve` lookups, a once-at-end `waterfall` drawing a cumulative pot with `series_sum`, `part of` roll-up, `start` placement |
+| Declared | 4 curves, 8 entities, 28 streams, 3 accounts, 1 waterfall, 7 tiers, 4 metrics, 8 field recurrences |
+| What the deal requires | carrying a balance across periods, a recorded schedule of closings, an ordered priority of payments, cash that accumulates between distributions, a return measured per partner, where in the period the cash falls |
 | Conventions | equity-first funding, capitalized construction interest, a facility retired out of disposal proceeds, sale in lease-up |
 
-The facility is five recurrences on one entity — `equity_funded`, `interest`,
-`draw`, `repay`, `balance` — each reading only `prev` and the cost curves, never
-a stream, which is what keeps it acyclic. It is hand-built rather than the
-pack's `cre.construction_loan` contract, and so does not use that contract's
-`capitalize_interest` election; the behavior is the same, the implementation
-independent.
+The facility carries five balances — equity funded, interest, draw, repayment
+and the outstanding balance — each advancing from the month before it, so every
+month resolves from one already settled. It is built directly rather than from
+the pack's construction loan, and the behavior is the same.
 
-Every cost curve declares **every** period, including the zeros. A step curve is
-flat-forward, so omitting the quiet months holds the last construction draw
-forward indefinitely and the balance never stops compounding.
+Every cost schedule states a value for **every** month, including the quiet
+ones, so a run of zeros is declared rather than inferred.
 
 ```cfdl
 version 0.1
@@ -15274,23 +15271,54 @@ entity asset jv : Asset.Financial {
                 + (prev.asset.facility.equity_funded - prev.asset.jv.funded_prev)
 }
 
+// ------------------------------------------------------- the venture's cash
+//
+// A development JV does not distribute while the deal is live, so cash
+// accumulates from inception and is allocated once, at the final closing. What
+// accumulates is the venture's whole cash position: the equity the partners
+// contributed, plus everything the deal earned on it, less every cost.
+account deal_cash {
+  from series_sum("cre.*", time.t, time.t)
+     + (min(inputs.equity_commitment, curve_value("dev_cost_cum", time.date))
+                - if(time.t == 0, 0.0,
+                     min(inputs.equity_commitment,
+                         curve_value("dev_cost_cum", edate(time.date, -1)))))
+}
+
+// WHAT EACH PARTNER PUT IN, so that what each partner got back can be measured
+// against it. The venture funds pro rata -- 90% Baupost, 10% Penzance, the
+// same share the tiers split on. Each partner's balance carries its capital out
+// on the dates the facility draws it, and its distributions back in when the
+// venture allocates.
+account baupost_capital {
+  owner party.baupost
+  from 0.0 - (min(inputs.equity_commitment, curve_value("dev_cost_cum", time.date))
+                - if(time.t == 0, 0.0,
+                     min(inputs.equity_commitment,
+                         curve_value("dev_cost_cum", edate(time.date, -1)))))
+             * (1.0 - inputs.sponsor_share)
+}
+
+account penzance_capital {
+  owner party.penzance
+  from 0.0 - (min(inputs.equity_commitment, curve_value("dev_cost_cum", time.date))
+                - if(time.t == 0, 0.0,
+                     min(inputs.equity_commitment,
+                         curve_value("dev_cost_cum", edate(time.date, -1)))))
+             * inputs.sponsor_share
+}
+
 // -------------------------------------------------------------- the JV split
 // Penzance / Baupost terms are not public; these tiers are stated assumptions.
-//
-// `available` is THIS period's netted cash, so on a once-at-end waterfall it
-// would draw only the final month. The pot is the streams' own running sum
-// since inception instead -- cumulative net cash, after every cost, every draw
-// and the facility payoff. The waterfall is named outside the `cre.` prefix so
-// the selector matches the deal's streams and no distribution step (E1342).
-//
-// There is no return-of-capital tier, and that is a property of the pot rather
-// than of the deal. Contributions are outflows inside the streams, so a running
-// sum of them has ALREADY recovered the capital: what survives to the end is
-// profit. Paying capital back out of profit would recover it a second time and
-// leave nothing for the promote -- which is exactly what it did.
 waterfall jv.distribution on entity asset.project {
   schedule on 2024-06 end
-  from series_sum("cre.*", 0, time.t)
+  from deal_cash
+
+  // Capital back first: each partner is repaid the capital it has not yet had
+  // returned, which is what its own balance carries. The preference is tracked
+  // separately, because it compounds.
+  pay capital_inv   to party.baupost  = min(0.0 - prev.baupost_capital, remaining)
+  pay capital_sp    to party.penzance = min(0.0 - prev.penzance_capital, remaining)
 
   pay preferred_inv to party.baupost  = (asset.jv.unreturned - asset.jv.capital) * (1.0 - inputs.sponsor_share)
   pay preferred_sp  to party.penzance = (asset.jv.unreturned - asset.jv.capital) * inputs.sponsor_share
@@ -15298,6 +15326,18 @@ waterfall jv.distribution on entity asset.project {
   pay residual_inv  to party.baupost  = remaining * (1.0 - inputs.sponsor_share)
   pay residual_sp   to party.penzance = remaining
 }
+
+// -------------------------------------------------------------- the returns
+// WHAT EACH PARTNER ACTUALLY EARNED, measured on that partner's own capital in
+// and distributions out.
+//
+// Penzance's figure is all-in: its preferred and residual as a 10% investor,
+// and the promote it earned as sponsor. Each tier is reported on its own, so
+// the promote can be read separately from the investor return.
+metric baupost_irr   = irr(party.baupost)
+metric baupost_moic  = moic(party.baupost)
+metric penzance_irr  = irr(party.penzance)
+metric penzance_moic = moic(party.penzance)
 ```
 
 ## credit/level_pay_pool

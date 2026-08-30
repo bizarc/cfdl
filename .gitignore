@@ -94,3 +94,8 @@ site/public/wasm/
 # Local research material — reference PDFs and scratch analysis, not repo content.
 research/REMIC example/
 eval-results/
+
+# Private CRE benchmark source material. These are third-party and
+# client-confidential workbooks used to derive benchmark cases; only the
+# anonymized case under benchmarks/cre/ is ever published.
+research/CRE Case Examples/

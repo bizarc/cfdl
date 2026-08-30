@@ -280,12 +280,14 @@
 
     <h3>An ordered priority of payments</h3>
     <p>
-      The model states the partners&rsquo; payment priority once, in order, and a named partner takes the residual.
+      The model states the partners&rsquo; payment priority once, in order, and a named partner takes the residual. Capital comes back first, then the preferred return, then the promote, then what is left.
     </p>
 <pre><code>waterfall jv.distribution on entity asset.project {
   schedule on 2024-06 end
-  from series_sum("cre.*", 0, time.t)
+  from deal_cash
 
+  pay capital_inv   to party.baupost  = min(0.0 - prev.baupost_capital, remaining)
+  pay capital_sp    to party.penzance = min(0.0 - prev.penzance_capital, remaining)
   pay preferred_inv to party.baupost  = (asset.jv.unreturned - asset.jv.capital) * (1.0 - inputs.sponsor_share)
   pay preferred_sp  to party.penzance = (asset.jv.unreturned - asset.jv.capital) * inputs.sponsor_share
   pay promote       to party.penzance = remaining * 0.20
@@ -294,7 +296,7 @@
 }</code></pre>
       <p class="note">
         The parties are the real ones: Penzance as sponsor, The Baupost Group as equity
-        partner, Mack Real Estate Credit Strategies as construction lender. The tier percentages are not. The partnership's economics appear in no public source. An 8% preferred return, a 90/10 split and a 20% promote stand in for them. The example shows the structure. Payments run in declared order. Each step takes what is left if the pot is short. A named claimant holds the residual.
+        partner, Mack Real Estate Credit Strategies as construction lender. The tier percentages are not. The partnership's economics appear in no public source. An 8% preferred return, a 90/10 split and a 20% promote stand in for them. The example shows the structure. Payments run in declared order. Each step takes what is left if the cash runs short. A named claimant holds the residual.
       </p>
 
     <h3>Where in the period the cash falls</h3>
@@ -356,12 +358,11 @@
       Cash accrues to the venture and is split once, when the last condominium closes in June 2024. The preferred return and the contributed capital are therefore cumulative balances. Each balance advances month by month. The model does not recompute them at the distribution.
     </p>
     <p>
-      Two properties of the model follow from how the pot is defined. CFDL supplies
-      <code>available</code> as the cash an entity produced <em>this period</em>. On a
-      once-at-end distribution that would be a single month, not the whole deal. The pot is
-      the streams&rsquo; own running sum since inception instead. There is also no
-      return-of-capital tier. Contributions are outflows inside those same streams, so the
-      running sum has already recovered the capital. What survives to the end is profit.
+      What is allocated is the venture&rsquo;s whole cash position at that date: the equity
+      the partners contributed, plus everything the deal earned on it, less every cost. Each
+      partner&rsquo;s capital is recorded as it is drawn and each partner&rsquo;s
+      distributions as they are made, so capital comes back before any profit is shared and
+      what each partner earned can be measured against what it put in.
     </p>
 
     <div class="scroll">
@@ -371,30 +372,34 @@
           <tr><th>Tier</th><th>Paid to</th><th class="num">Amount</th></tr>
         </thead>
         <tbody>
+          <tr><td><code>capital_inv</code></td><td>The Baupost Group</td><td class="num">167,620,752.53</td></tr>
+          <tr><td><code>capital_sp</code></td><td>Penzance</td><td class="num">18,624,528.06</td></tr>
           <tr><td><code>preferred_inv</code></td><td>The Baupost Group</td><td class="num">97,357,852.26</td></tr>
           <tr><td><code>preferred_sp</code></td><td>Penzance</td><td class="num">10,817,539.14</td></tr>
           <tr><td><code>promote</code></td><td>Penzance</td><td class="num">17,637,224.21</td></tr>
           <tr><td><code>residual_inv</code></td><td>The Baupost Group</td><td class="num">63,494,007.17</td></tr>
           <tr><td><code>residual_sp</code></td><td>Penzance</td><td class="num">7,054,889.69</td></tr>
-          <tr class="total"><td><strong>Total distributed</strong></td><td></td><td class="num"><strong>196,361,512.48</strong></td></tr>
+          <tr class="total"><td><strong>Total distributed</strong></td><td></td><td class="num"><strong>382,606,793.06</strong></td></tr>
         </tbody>
       </table>
     </div>
 
     <p>
-      The total is the deal&rsquo;s lifetime net cash to the dollar. The case does not assert that. It follows from the definition of the pot, so the distribution
-      cannot allocate more or less than the deal produced.
+      The total is the capital the partners contributed plus the deal&rsquo;s lifetime net
+      cash, to the dollar, and the distribution leaves nothing behind. The case does not
+      assert that: it follows from what the venture holds, so the distribution cannot
+      allocate more or less than the deal produced.
     </p>
 
     <div class="scroll">
       <table>
         <caption>By partner</caption>
         <thead>
-          <tr><th>Partner</th><th class="num">Capital</th><th class="num">Distribution</th><th class="num">Share of profit</th></tr>
+          <tr><th>Partner</th><th class="num">Capital</th><th class="num">Contributed</th><th class="num">Distributed</th><th class="num">Profit</th><th class="num">Share of profit</th><th class="num">Multiple</th><th class="num">Return</th></tr>
         </thead>
         <tbody>
-          <tr><td>The Baupost Group</td><td class="num">90%</td><td class="num">160,851,859.44</td><td class="num">81.92%</td></tr>
-          <tr><td>Penzance</td><td class="num">10%</td><td class="num">35,509,653.04</td><td class="num">18.08%</td></tr>
+          <tr><td>The Baupost Group</td><td class="num">90%</td><td class="num">167,620,752.53</td><td class="num">328,472,611.96</td><td class="num">160,851,859.43</td><td class="num">81.92%</td><td class="num">1.96x</td><td class="num">8.12%</td></tr>
+          <tr><td>Penzance</td><td class="num">10%</td><td class="num">18,624,528.06</td><td class="num">54,134,181.10</td><td class="num">35,509,653.04</td><td class="num">18.08%</td><td class="num">2.91x</td><td class="num">12.76%</td></tr>
         </tbody>
       </table>
     </div>
@@ -402,6 +407,12 @@
     <p>
       The sponsor earns 18.08% of the profit on a 10% share of the capital. That spread is
       the promote. It takes 10,817,539 as its pro-rata share of the preferred return. It takes 17,637,224 of promote on the profit above that return, and 7,054,889 as its share of what is left.
+    </p>
+    <p>
+      The two partners therefore earn different returns on the same deal. The venture returns
+      11.02% a year over the hold; the equity partner earns 8.12% and the sponsor 12.76%. The
+      whole of that difference is the promote, which is what the sponsor is paid for
+      assembling and delivering the project rather than for the capital it put up.
     </p>
 
     <div class="note">
@@ -528,7 +539,7 @@
       distribution. It runs as written. Four curves declare a value for every period of the 160-month grid. This listing abridges those runs of figures for length. The model itself carries them in full.
     </p>
     <details>
-      <summary>Show the model &mdash; 852 lines of CFDL</summary>
+      <summary>Show the model &mdash; 409 lines of CFDL</summary>
       <div class="scroll"><pre><code>version 0.1
 model &quot;penzance-highlands&quot; currency USD
 use pack &quot;cre&quot; version &quot;0.1.0&quot;
@@ -546,7 +557,7 @@ time calendar monthly from 2011-09 for 160
 // separable, which is the modeling problem this case addresses.
 //
 // Program, obligations, land basis, both sale prices and the whole condo
-// sellout are recorded fact — Arlington&#x27;s site-plan record, deed register,
+// sellout are recorded fact — Arlington's site-plan record, deed register,
 // assessment roll and Commercial Guidebook. Cost, debt pricing and the JV
 // split are stated assumptions. Provenance is in CASE.md.
 // ===========================================================================
@@ -565,7 +576,7 @@ assume pref_rate        = 0.08
 assume sponsor_share    = 0.10
 
 // Development cost per period and its running total. Declared as curves so
-// the facility&#x27;s recurrence can read them. Cost here is a pure function of
+// the facility's recurrence can read them. Cost here is a pure function of
 // time.
 //
 // EVERY period is declared, including the zeros. A step curve is
@@ -834,7 +845,7 @@ stream cre.loan_interest_funding on entity asset.project inflow currency USD {
 // The payoff sits in the reversion. `financing.debt_principal` folds into
 // `domain.cre.debt_service`, and a balance retired out of sale proceeds is not
 // debt service — it would make every coverage ratio in the disposal period
-// meaningless. The cre pack says the same of a permanent loan&#x27;s balloon.
+// meaningless. The cre pack says the same of a permanent loan's balloon.
 stream cre.loan_repayment on entity asset.project outflow currency USD {
   schedule every month start from 2011-09 to 2024-12
   category investing.reversion
@@ -856,7 +867,7 @@ stream cre.loan_repayment on entity asset.project outflow currency USD {
 // Compounding that $67M from 2011 instead consumes the entire promote, which
 // is how the assumption was identified.
 entity asset jv : Asset.Financial {
-  // The facility&#x27;s equity funding one period back, so a month&#x27;s contribution
+  // The facility's equity funding one period back, so a month's contribution
   // can be differenced without reaching two periods behind.
   funded_prev init 0.0
               next prev.asset.facility.equity_funded
@@ -870,30 +881,75 @@ entity asset jv : Asset.Financial {
                 + (prev.asset.facility.equity_funded - prev.asset.jv.funded_prev)
 }
 
+// ------------------------------------------------------- the venture's cash
+//
+// A development JV does not distribute while the deal is live, so cash
+// accumulates from inception and is allocated once, at the final closing. What
+// accumulates is the venture's whole cash position: the equity the partners
+// contributed, plus everything the deal earned on it, less every cost.
+account deal_cash {
+  from series_sum(&quot;cre.*&quot;, time.t, time.t)
+     + (min(inputs.equity_commitment, curve_value(&quot;dev_cost_cum&quot;, time.date))
+                - if(time.t == 0, 0.0,
+                     min(inputs.equity_commitment,
+                         curve_value(&quot;dev_cost_cum&quot;, edate(time.date, -1)))))
+}
+
+// WHAT EACH PARTNER PUT IN, so that what each partner got back can be measured
+// against it. The venture funds pro rata -- 90% Baupost, 10% Penzance, the
+// same share the tiers split on. Each partner's balance carries its capital out
+// on the dates the facility draws it, and its distributions back in when the
+// venture allocates.
+account baupost_capital {
+  owner party.baupost
+  from 0.0 - (min(inputs.equity_commitment, curve_value(&quot;dev_cost_cum&quot;, time.date))
+                - if(time.t == 0, 0.0,
+                     min(inputs.equity_commitment,
+                         curve_value(&quot;dev_cost_cum&quot;, edate(time.date, -1)))))
+             * (1.0 - inputs.sponsor_share)
+}
+
+account penzance_capital {
+  owner party.penzance
+  from 0.0 - (min(inputs.equity_commitment, curve_value(&quot;dev_cost_cum&quot;, time.date))
+                - if(time.t == 0, 0.0,
+                     min(inputs.equity_commitment,
+                         curve_value(&quot;dev_cost_cum&quot;, edate(time.date, -1)))))
+             * inputs.sponsor_share
+}
+
 // -------------------------------------------------------------- the JV split
 // Penzance / Baupost terms are not public; these tiers are stated assumptions.
-//
-// `available` is THIS period&#x27;s netted cash, so on a once-at-end waterfall it
-// would draw only the final month. The pot is the streams&#x27; own running sum
-// since inception instead -- cumulative net cash, after every cost, every draw
-// and the facility payoff. The waterfall is named outside the `cre.` prefix so
-// the selector matches the deal&#x27;s streams and no distribution step (E1342).
-//
-// There is no return-of-capital tier, and that is a property of the pot rather
-// than of the deal. Contributions are outflows inside the streams, so a running
-// sum of them has ALREADY recovered the capital: what survives to the end is
-// profit. Paying capital back out of profit would recover it a second time and
-// leave nothing for the promote -- which is exactly what it did.
 waterfall jv.distribution on entity asset.project {
   schedule on 2024-06 end
-  from series_sum(&quot;cre.*&quot;, 0, time.t)
+  from deal_cash
+
+  // Capital back first: each partner is repaid the capital it has not yet had
+  // returned, which is what its own balance carries. The preference is tracked
+  // separately, because it compounds.
+  pay capital_inv   to party.baupost  = min(0.0 - prev.baupost_capital, remaining)
+  pay capital_sp    to party.penzance = min(0.0 - prev.penzance_capital, remaining)
 
   pay preferred_inv to party.baupost  = (asset.jv.unreturned - asset.jv.capital) * (1.0 - inputs.sponsor_share)
   pay preferred_sp  to party.penzance = (asset.jv.unreturned - asset.jv.capital) * inputs.sponsor_share
   pay promote       to party.penzance = remaining * 0.20
   pay residual_inv  to party.baupost  = remaining * (1.0 - inputs.sponsor_share)
   pay residual_sp   to party.penzance = remaining
-}</code></pre></div>
+}
+
+// -------------------------------------------------------------- the returns
+// WHAT EACH PARTNER ACTUALLY EARNED, measured on that partner's own capital in
+// and distributions out.
+//
+// Penzance's figure is all-in: its preferred and residual as a 10% investor,
+// and the promote it earned as sponsor. Each tier is reported on its own, so
+// the promote can be read separately from the investor return.
+metric baupost_irr   = irr(party.baupost)
+metric baupost_moic  = moic(party.baupost)
+metric penzance_irr  = irr(party.penzance)
+metric penzance_moic = moic(party.penzance)
+
+</code></pre></div>
     </details>
   </section>
 

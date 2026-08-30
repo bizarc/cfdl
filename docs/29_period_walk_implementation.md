@@ -328,7 +328,9 @@ what flows in, checked.
 
 - Gate fixtures (§9): a reserve funded to target and released; the
   cumulative-sum identity; Highlands restated through an account, tied to the
-  same numbers.
+  same numbers — **done** 2026-08-29, `benchmarks/cre/penzance_highlands`, and
+  the restatement is what exposed that a contributions-netted pot cannot return
+  capital (`docs/13` §7.76).
 
 ## Phase 5 — the state machine (§6.1–6.2)
 

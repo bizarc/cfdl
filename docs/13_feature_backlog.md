@@ -1571,7 +1571,16 @@ recoverable-advances balance.
 **The ask, in three parts.** First, the migrations the shipped fleet already
 owes: the flip case's hand-carried pot (`docs/25` — the one case where
 revenue is computed a second time inside the distribution) and Highlands'
-cumulative window, both named gate shapes in `docs/29` phase 4. Second, a
+cumulative window, both named gate shapes in `docs/29` phase 4. **Highlands is
+done** (2026-08-29): `series_sum("cre.*", 0, time.t)` became
+`account deal_cash`, and the identity held to the byte — `model.total`,
+`model.irr`, `model.moic` and both payee totals unmoved on the first run. The
+conversion also found what a cumulative pot costs: the pot was net of
+contributions, so it could not return capital, and a party account carrying the
+contribution had no offsetting leg —
+`moic(party.baupost)` published 0.96 on a deal returning 2.05x. Grossing the pot
+up and adding two return-of-capital tiers moved both MoICs by exactly +1.0 and
+no split at all. The flip case is the remaining migration. Second, a
 reserve contract shape per pack where a document demands one — the DSRA
 funded to target with `dscr_periodic` gating the release, the replacement
 reserve of §7.5, the FF&E reserve — each as the `pay <step> to account`
@@ -1755,7 +1764,7 @@ loop the authoring contract needs. (`ste-allow:` rule ids are now
 validated against §3's rule tables; the tier mapping is the remaining
 unenforced half.)
 
-### 7.79 An action kind the engine does not know is journaled, not refused
+### 7.83 An action kind the engine does not know is journaled, not refused
 
 *Recorded 2026-08-29, while retiring `activate contract` (§7.73).*
 

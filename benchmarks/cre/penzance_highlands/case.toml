@@ -7,6 +7,16 @@
 # this model from the same frozen input set the workbook reads, so the two tie
 # by construction rather than by transcription).
 # Status: pending practitioner review.
+#
+# The JV split allocates from `account deal_cash` and both partners hold
+# party-owned accounts, so `irr`/`moic` per party are model output rather than
+# hand arithmetic (docs/31 W4 phase 3). The seven tier columns in expected.csv
+# and the two party totals are the MODEL's own numbers, not the workbook's --
+# the Penzance/Baupost terms are private and the tier percentages are stated
+# placeholders, so nothing external asserts them. They are pinned as regression
+# cover for the tier arithmetic, which is what the accounts conversion touched.
+# The workbook-referenced figures are the facility and cash series, and none of
+# them moved: see NOTES.md.
 summary = "A 160-month ground-up CRE development: land in 2011, a 39-month build on a parabolic draw curve, a $380M facility that funds equity first and capitalizes interest, two rental towers sold in lease-up, and a 34-month condominium sellout."
 pack = "cre"
 period_tolerance = 0.01
