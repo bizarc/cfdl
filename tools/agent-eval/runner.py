@@ -311,6 +311,23 @@ def grade_repair(task: dict, submission: dict) -> dict:
     }
 
 
+def name_independent(label: str) -> bool:
+    """Does this assertion survive an author choosing different names?
+
+    `net_cash_flow` is always the model total; `domain.*` metrics are computed
+    by the pack; `model.*` and `run.*` by the engine. Everything else — stream
+    columns, waterfall step names — is vocabulary the author invented, and a
+    correct model that names a step `promote_lp` where the reference wrote
+    `promote` misses the column while getting the deal exactly right.
+
+    Grading on these alone answers the question that matters: did it build the
+    right deal? The name-dependent columns still matter — a model whose lines
+    do not resolve is harder to read and cannot be diffed line by line — but
+    they measure agreement on labels, not on economics.
+    """
+    return label == "net_cash_flow" or label.startswith(("domain.", "model.", "run."))
+
+
 def asserted_labels(case_dir: pathlib.Path) -> set[str]:
     """The independent assertion groups a case carries, by the same labels
     the benchmark runner's structured failures use: each expected.csv column,
@@ -379,16 +396,25 @@ def grade_transcribe(task: dict, submission: dict) -> dict:
                 "failures": ["run failed"],
             }
     labels = asserted_labels(source_case)
+    failed = {group for group, _ in failures}
     # Partial credit by asserted group, on the runner's structured labels —
     # no prose parsing. A group with any failure counts as missed; meta
     # failures (warnings, resolution) fail the match without eating a group.
-    missed = len({group for group, _ in failures} & labels)
+    missed = len(failed & labels)
     matched = max(len(labels) - missed, 0)
+    # And the same measure over the assertions that do not depend on what the
+    # author named things — the honest read of whether the deal is right.
+    economic = {l for l in labels if name_independent(l)}
+    econ_missed = len(failed & economic)
+    econ_ok = max(len(economic) - econ_missed, 0)
     return {
         "compiles": True,
         "runs": True,
         "matches": not failures,
         "partial": round(matched / len(labels), 4) if labels else 0.0,
+        "economics": round(econ_ok / len(economic), 4) if economic else None,
+        "economics_groups": f"{econ_ok}/{len(economic)}" if economic else "0/0",
+        "naming_missed": len(failed & (labels - economic)),
         "failures": [text for _, text in failures],
     }
 
@@ -550,12 +576,17 @@ def summarize(results: list[dict], tiers: list[str]) -> dict:
             continue
         key = "compiles" if tier == "repair" else "matches"
         cost = sum(float((r.get("usage") or {}).get("cost", 0.0)) for r in rows)
+        econ = [r["score"]["economics"] for r in rows
+                if r["score"].get("economics") is not None]
         summary[tier] = {
             "tasks": len(rows),
             "passed": sum(1 for r in rows if r["score"][key]),
             "mean_partial": round(
                 sum(r["score"]["partial"] for r in rows) / len(rows), 4
             ),
+            # The headline for authoring: did the deal come out right,
+            # regardless of what the author called its lines.
+            "mean_economics": round(sum(econ) / len(econ), 4) if econ else None,
             "cost_usd": round(cost, 4),
             "cost_per_task_usd": round(cost / len(rows), 4),
         }
