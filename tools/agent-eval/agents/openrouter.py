@@ -14,6 +14,15 @@ Environment:
                        environment only and never logged
   CFDL_EVAL_MODEL      model slug (default "x-ai/grok-4"); any chat model on
                        the endpoint that supports tool calling
+  CFDL_EVAL_MODEL_<TIER>  per-tier override — CFDL_EVAL_MODEL_REPAIR,
+                       CFDL_EVAL_MODEL_TRANSCRIBE, CFDL_EVAL_MODEL_EXTEND.
+                       The tiers are not one problem: repairing a model
+                       against its own diagnostics is far easier than
+                       authoring one from prose, so a deployment can route
+                       the cheap work to a cheap model and reserve the
+                       expensive one for authoring. Setting these measures
+                       that routed configuration as if it were one model,
+                       which is what a product would actually ship.
   OPENROUTER_BASE_URL  default "https://openrouter.ai/api/v1"; point at any
                        OpenAI-compatible endpoint (e.g. https://api.x.ai/v1)
 
@@ -27,6 +36,7 @@ import os
 import pathlib
 import subprocess
 import sys
+import time
 import urllib.error
 import urllib.request
 
@@ -48,11 +58,20 @@ class FatalAgentError(RuntimeError):
 # Exit code the runner reads as "abort the whole run".
 FATAL_EXIT = 3
 
+# A git worktree has no build artifacts of its own; point at a built binary
+# elsewhere with CFDL_MCP_BIN rather than rebuilding the workspace per branch.
+MCP_BIN = os.environ.get("CFDL_MCP_BIN", str(ROOT / "target" / "debug" / "cfdl-mcp"))
+
 ALLOWED_TOOLS = ("compile", "run", "lookup", "skeleton", "explain")
-MAX_TURNS = 40
+MAX_TURNS = 100
 # A single task that has spent this much has lost the plot; stop paying for it
 # and let it answer with what it has. Override with CFDL_EVAL_MAX_COST.
-DEFAULT_TASK_COST_CAP = 1.50
+DEFAULT_TASK_COST_CAP = 10.00
+# Stop well before the runner's own per-task ceiling (45 min). A task killed
+# by the runner returns NOTHING — the draft the model spent forty minutes on
+# dies with it. Self-limiting means the loop always exits with whatever it
+# has, which is the difference between a diagnosable failure and a blank.
+DEFAULT_TASK_MINUTES = 110.0
 
 
 class ToolBridge:
@@ -60,7 +79,7 @@ class ToolBridge:
 
     def __init__(self):
         self.proc = subprocess.Popen(
-            [str(ROOT / "target" / "debug" / "cfdl-mcp"), "--packs", str(ROOT / "packs")],
+            [MCP_BIN, "--packs", str(ROOT / "packs")],
             stdin=subprocess.PIPE,
             stdout=subprocess.PIPE,
             stderr=subprocess.DEVNULL,
@@ -181,6 +200,18 @@ def chat(base_url: str, api_key: str, payload: dict) -> dict:
     raise RuntimeError(f"gave up after {RETRIES} attempts: {last}")
 
 
+def model_for_tier(tier: str) -> str:
+    """The model this tier routes to.
+
+    A per-tier override wins; otherwise every tier shares CFDL_EVAL_MODEL.
+    Routing exists because the tiers are different problems — see the module
+    docstring — and a scorecard records the model each task actually used, so
+    a routed run cannot be mistaken for a single-model one.
+    """
+    per_tier = os.environ.get(f"CFDL_EVAL_MODEL_{tier.upper()}") if tier else None
+    return per_tier or os.environ.get("CFDL_EVAL_MODEL", "x-ai/grok-4")
+
+
 def tool_calls_pending(choice: dict) -> bool:
     return bool(choice.get("tool_calls"))
 
@@ -197,12 +228,24 @@ def main() -> int:
     if not api_key:
         print("OPENROUTER_API_KEY is not set", file=sys.stderr)
         return 2
-    model = os.environ.get("CFDL_EVAL_MODEL", "x-ai/grok-4")
     base_url = os.environ.get("OPENROUTER_BASE_URL", "https://openrouter.ai/api/v1")
 
     task = json.load(sys.stdin)
+    model = model_for_tier(task.get("tier", ""))
     cost_cap = float(os.environ.get("CFDL_EVAL_MAX_COST", DEFAULT_TASK_COST_CAP))
-    spend = {"cost": 0.0, "prompt_tokens": 0, "completion_tokens": 0, "calls": 0}
+    minutes_cap = float(os.environ.get("CFDL_EVAL_MAX_MINUTES", DEFAULT_TASK_MINUTES))
+    started = time.monotonic()
+    # The last sources the model handed to compile/run. Even a loop that never
+    # produces a final answer block has been submitting drafts all along, and
+    # the newest one is its work product.
+    last_draft: dict | None = None
+    spend = {
+        "model": model,
+        "cost": 0.0,
+        "prompt_tokens": 0,
+        "completion_tokens": 0,
+        "calls": 0,
+    }
     bridge = ToolBridge()
     messages = [
         {"role": "system", "content": common.PROMPT_HEADER},
@@ -225,7 +268,8 @@ def main() -> int:
             spend["calls"] += 1
             choice = reply["choices"][0]["message"]
             messages.append(choice)
-            if spend["cost"] >= cost_cap and tool_calls_pending(choice):
+            over_time = (time.monotonic() - started) / 60.0 >= minutes_cap
+            if (spend["cost"] >= cost_cap or over_time) and tool_calls_pending(choice):
                 # Out of budget mid-loop: ask for the answer as it stands
                 # rather than abandoning the task with nothing.
                 messages.append({
@@ -233,7 +277,8 @@ def main() -> int:
                     "content": "Budget reached. Output your best answer now as "
                     'exactly one fenced json block: {"files": {"model.cfdl": "..."}}',
                 })
-                print(f"cost cap ${cost_cap} reached", file=sys.stderr)
+                why = "time cap" if over_time else f"cost cap ${cost_cap}"
+                print(f"{why} reached; asking for the answer as it stands", file=sys.stderr)
                 continue
             tool_calls = choice.get("tool_calls") or []
             if not tool_calls:
@@ -255,13 +300,25 @@ def main() -> int:
                     arguments = json.loads(function.get("arguments") or "{}")
                 except json.JSONDecodeError:
                     arguments = {}
+                files = arguments.get("files")
+                if isinstance(files, dict) and files:
+                    last_draft = files
                 messages.append({
                     "role": "tool",
                     "tool_call_id": call["id"],
                     "content": bridge.call(function["name"], arguments),
                 })
+        if last_draft:
+            print(
+                f"no final answer block; returning the last draft the model "
+                f"compiled (spent ${spend['cost']:.4f} over {spend['calls']} calls)",
+                file=sys.stderr,
+            )
+            spend["fell_back_to_draft"] = True
+            print(json.dumps({"files": last_draft, "usage": spend}))
+            return 0
         print(
-            f"agent hit the turn limit without a final answer "
+            f"agent hit the turn limit with no draft to return "
             f"(spent ${spend['cost']:.4f} over {spend['calls']} calls)",
             file=sys.stderr,
         )

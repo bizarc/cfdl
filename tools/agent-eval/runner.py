@@ -58,7 +58,10 @@ import urllib.request
 # line_buffering so a redirected long run (nohup ... > log) streams per-task
 # progress instead of flushing in 8 KB blocks.
 sys.stdout.reconfigure(encoding="utf-8", line_buffering=True)
-sys.stderr.reconfigure(encoding="utf-8")
+# stderr is line-buffered for the same reason stdout is: redirected to a log,
+# a block-buffered stream shows an EMPTY file for the first several minutes of
+# a healthy run, which is indistinguishable from a run that died on startup.
+sys.stderr.reconfigure(encoding="utf-8", line_buffering=True)
 
 try:
     import tomllib
@@ -93,6 +96,12 @@ SELF_TEST_REPAIR = ["missing_time", "stream_unknown_category", "term_expr_invali
 TEXT_SUFFIXES = {".md", ".py", ".txt", ".csv", ".json", ".toml"}
 MAX_REFERENCE_BYTES = 200_000
 
+# How long ONE task may run. Generous by default: an effectiveness measurement
+# asks what a model can do, not what it can do in a hurry — a ceiling that
+# truncates the work measures the ceiling. Lower it (CFDL_EVAL_TASK_TIMEOUT,
+# seconds) only when the question is throughput.
+TASK_TIMEOUT_SECONDS = int(os.environ.get("CFDL_EVAL_TASK_TIMEOUT", "7200"))
+
 
 # --- Tasks -------------------------------------------------------------------
 
@@ -102,6 +111,17 @@ def transcribe_tasks(benchmarks_dir: pathlib.Path, only: set[str] | None) -> lis
         case_dir = model.parent
         case_id = f"{case_dir.parent.name}/{case_dir.name}"
         if only is not None and case_id not in only:
+            continue
+        # A case under construction in another session has a model.cfdl before
+        # it has a spec. Skip it rather than crashing a two-hour run on a file
+        # that is simply not written yet.
+        required = ["CASE.md", "case.toml", "run.json", "expected.csv"]
+        missing = [f for f in required if not (case_dir / f).exists()]
+        if missing:
+            print(
+                f"[eval] skipping {case_id}: incomplete case (missing {', '.join(missing)})",
+                file=sys.stderr,
+            )
             continue
         case = tomllib.loads((case_dir / "case.toml").read_text(encoding="utf-8"))
         reference: dict[str, str] = {}
@@ -236,7 +256,7 @@ def call_agent(agent: str, task: dict, benchmarks_dir: pathlib.Path) -> dict:
             shell=True,
             input=payload,
             capture_output=True,
-            timeout=2700,
+            timeout=TASK_TIMEOUT_SECONDS,
         )
         if result.returncode == 3:
             # The adapter's fatal code: a rejected key, exhausted credit, or a
@@ -459,6 +479,12 @@ def write_report(out_path: str | None, report: dict) -> None:
     if not out_path:
         return
     pathlib.Path(out_path).write_text(json.dumps(report, indent=2) + "\n", encoding="utf-8")
+def announce_start(tiers: list[str], agent: str, task_count: int) -> None:
+    """Say what is about to happen, before the first task's silence begins."""
+    print(
+        f"[eval] starting: {task_count} task(s) across {', '.join(tiers)} | agent={agent}",
+        file=sys.stderr,
+    )
 
 
 def run_eval(
@@ -475,6 +501,7 @@ def run_eval(
         tasks += transcribe_tasks(benchmarks_dir, only)
     if "extend" in tiers:
         tasks += extend_tasks(only)
+    announce_start(tiers, agent, len(tasks))
     results = []
     for task in tasks:
         submission = None
