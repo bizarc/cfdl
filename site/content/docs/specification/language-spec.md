@@ -217,8 +217,9 @@ Three helpers resolve in SCHEDULE position (see §11):
 They are not expression functions. An expression reads the phase it is in as
 `time.phase`, the name of the phase covering the current period, so a guard
 gates on a phase with `active when time.phase == "operations"` and an event
-fires on entering one with `when time.phase == "operations"` — once, because an
-event latches (§13.1).
+fires on entering one with `when time.phase == "operations"` — once per entry,
+on the rising edge (§13.1). A phase entered once yields one occurrence because
+the phase occurs once, not because the event is latched.
 
 ---
 
@@ -341,6 +342,112 @@ Rules:
 - **Every transition is journaled** with the edge taken and the values its
   guard read, and published in `deterministic.transitions` as
   `lifecycle:<id>`.
+
+#### 7.3.1 Arrival actions
+
+A transition may carry behavior. Arriving somewhere is an occurrence, and
+per-arrival bookkeeping — reset a counter, record a shortfall, strike the
+prevailing rent — belongs on the arrival rather than in a separate event
+that has to restate the condition.
+
+```cfdl
+lifecycle unit {
+  initial vacant
+  state vacant, leased, downtime
+
+  on enter leased {
+    set months_in_state = 0
+  }
+
+  vacant   -> leased    when time.t >= 1
+  holdover -> leased    when inputs.renews {
+    set in_place_rent = prev.in_place_rent * (1 + inputs.bump)
+  }
+  downtime -> leased    when months_in_state >= inputs.downtime_months {
+    set in_place_rent = curve_value("cre.market_rent", time.date)
+  }
+}
+```
+
+There are two grains because both are real:
+
+- **Entry actions** (`on enter <state> { … }`) carry what is true of the
+  STATE, however it was reached. Resetting `months_in_state` on entering
+  `leased` holds for every edge that arrives there, including one added
+  later. This is the primary spelling, and a pack's `types.toml` machine
+  declares it once for every model using the type.
+- **Edge actions** (a block after the edge) carry what is true of the PATH
+  taken. A renewal and a re-let both land in `leased`, but the rent is
+  struck differently because of how you arrived. An entry action cannot
+  express that: it does not know which edge fired.
+
+Rules:
+- **Field names are entity-relative.** `set months_in_state`, not
+  `set asset.unit_a.months_in_state` — one lifecycle is bound by many
+  entities, and the behavior belongs to the entity that transitioned. The
+  field MUST be declared on that entity; an unknown name is a compile
+  error.
+- **`set` writes FIELDS only, never `status`.** An action writing status
+  would fire a second transition inside the same period, breaking
+  one-transition-per-entity-per-period and inviting same-period cascades. A
+  transition that should cause another transition is topology: an edge out
+  of the target state, taken next period. Status writes remain the named
+  event's privilege (§13.1), validated against the declared edge relation.
+- **`set` is the whole vocabulary.** Stream gating is already declarative
+  (`active in state`, §9.3) and schedule anchoring already follows entry
+  (`state_enter`, §11.7); an imperative `activate`/`deactivate` on an edge
+  would duplicate a declared pattern. `exercise option` stays with named
+  events.
+- **Actions run on every traversal, whatever took the edge** — its own
+  guard, or a named event's `status` write moving the entity across a
+  permission edge. A status write that moves an entity runs the target
+  state's entry actions exactly as the machine's own path would.
+- **Order on arrival is entry actions, then the taken edge's actions**, each
+  block in declaration order — the specific refines the general. A
+  same-field write journals the earlier value `overridden`.
+- **Actions evaluate in the guard's environment**: state as the period
+  opened, series strictly backward, `inputs`, curves, `time.*`. This is the
+  environment the walk already proves acyclic, so actions add no cycle risk.
+  A write settles the field for the period; the recurrence resumes from it
+  next period, and streams later in the same period read the settled value.
+
+#### 7.3.2 Augmenting a pack's machine
+
+A model MAY attach entry and edge actions to a machine its pack declared,
+**additively only**. It names the machine by its qualified name — a
+`lifecycle` block naming a machine that already exists augments it rather
+than redeclaring it:
+
+```cfdl
+use pack "opco"
+
+lifecycle opco.enterprise {
+  on enter acquired {
+    set months_held = inputs.prior_hold_months
+  }
+}
+```
+
+A block naming a machine that does not exist declares a new one, and is then
+required to carry `initial` and `state` as usual.
+
+An augmenting block cannot add or remove states or edges, alter the topology,
+or remove the pack's actions; the pack's machine stays the checkable
+contract. The model's actions run after the pack's for the same arrival, so a
+same-field conflict resolves the model's way and journals the pack's value
+`overridden`.
+
+Every action records **who wrote it**, and the journal names that author. A
+secondary buyout that carries the sponsor's prior holding period, against a
+pack whose machine resets the clock on `acquired`, reads as two journal rows
+against the same field — one `overridden`, one `applied` — each naming its
+author. Attribution is not optional metadata: an action that cannot say who
+wrote it is refused, because an unattributable `overridden` line is the one
+thing the record exists to prevent.
+
+This is what makes arrival actions an extensibility surface rather than a
+pack-author convenience: the common position is modeling ON a pack whose
+machine is right but whose actions stop short.
 
 ---
 
@@ -954,18 +1061,56 @@ event refi_if_rates_drop when curve_value("sofr", time.date) < 0.045 {
 }
 ```
 
+An event may also state WHEN it occurs in the schedule language, with or
+without a `when` condition:
+
+```cfdl
+event covenant_test schedule every quarter when domain.energy.dscr < 1.20 {
+  set entity project.plant.status = "trapped"
+}
+```
+
 Rules:
-- Events are evaluated **discretely** at each time step of the master timeline.
+- **An event is something that happens**, and nothing restricts it to
+  happening once. A unit that defaults, cures and defaults again has had
+  three events, and a model that can only record the first is wrong.
+- **An event fires on each occurrence — rising edge.** It fires each time
+  its conditions become true having been false, and re-arms when they fall.
+  A DSCR below trigger for twelve months is ONE breach event and twelve
+  breach-months; "the conditions hold" is a state, and `active in state`
+  (§9.3) and edge guards (§7.3) already express states.
+- **A schedule supplies the occurrences; `when` filters them.** An event may
+  carry a schedule clause, a `when` clause, or both. With both present it
+  fires at each scheduled occurrence where the condition holds — `schedule
+  every quarter when dscr < 1.20` is a quarterly covenant test, and four
+  consecutive failing tests are four breach events, because the model
+  declared quarterly testing. Rising-edge applies only where no schedule is
+  present, occurrences then coming from the condition's own dynamics. A
+  model wanting "only on entry into breach" has the honest spelling already:
+  an edge on a machine, which is what states are for.
+- **Time conditions belong in the schedule language.** The schedule
+  sub-language is already the language of when things occur — dates,
+  intervals, anchors including `state_enter`, roll conventions, calendars.
+  Write `schedule on 2027-03`, not `when time.t == 15`.
+- **There is no `once` keyword, and nothing latches.** Once-ness is a
+  property of the world the model declared, and it has two spellings: a
+  schedule whose occurrence is singular (`schedule on 2027-03` fires once
+  because the date occurs once), or a topology with no way back (a refinance
+  fires once not because the event is latched but because afterwards the
+  loan IS refinanced — `current -> refinanced` with no returning edge). If a
+  model declares a return edge, it has declared that re-firing is possible.
+- **Named and anonymous events work identically.** To describe an event
+  informally, use guard conditions on the machine (§7.3); to canonize one,
+  use `event`. Same firing semantics, same evaluation environment, same
+  journaling. The anonymous form suits entity-local conditions; the named
+  form suits occurrences worth canonizing — referenced from elsewhere, or
+  spanning entities.
 - `when` MUST be a boolean expression.
-- **Events LATCH.** An event fires at most once per run, at the first period its
-  condition holds. It does not re-fire if the condition becomes true again, and
-  there is no repeating or level-triggered form. ("Evaluated discretely at each
-  time step" describes when the condition is TESTED, not how often the event may
-  fire — a distinction this spec previously left to be discovered.)
-- **The machine does not latch — and needs no policy saying so.** A
-  condition that holds and clears and holds again is a lifecycle edge
-  (§7.3), where edge availability is the memory. The free-standing event
-  keeps its latched meaning; a regime that returns is the machine's job.
+- **Conditions are evaluated once per period**, in declaration order, in the
+  walk's state stage. An event fires at most once per period, and at most
+  one transition per entity per period is taken. Rising-edge detection
+  compares this period's evaluation against the last; nothing re-evaluates
+  within a period.
 - **A status write is validated against the machine.** `set … status` on an
   entity whose lifecycle declares edges is refused — with the edge named —
   where no declared edge permits the move; the refusal is journaled as
@@ -1007,8 +1152,11 @@ neither is `E1302`.
 
 ### 13.3 Event timing and the grid (normative)
 
-An event fires in the **first period whose condition holds**, evaluated once per
-period against the state as that period opened. It cannot fire between periods.
+An event fires at **each occurrence**, evaluated once per period against the
+state as that period opened. Where the event carries a schedule, the
+occurrences are the scheduled ones the `when` clause admits; where it does not,
+an occurrence is the period its condition becomes true having been false. It
+cannot fire between periods.
 
 The model calendar therefore bounds how precisely a condition can be met: a
 condition that becomes true partway through a period takes effect at that
