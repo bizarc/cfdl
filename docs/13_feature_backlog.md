@@ -1598,25 +1598,40 @@ Related: §7.5, §7.41, §7.72 (shipped), §7.74, `docs/25`, `docs/28` §5.1, `d
 
 ### 7.77 A covenant that is published but powerless: the DSCR cash trap
 
-*Roadmap: M2 (§7.78).*
+*Roadmap: M2 (§7.78). **The mechanism shipped 2026-08-30**; what remains is
+the benchmark against an external reference, which is `docs/20` §5.1's ask.*
 
 **What could not be expressed:** consequences. The energy pack publishes
 `dscr_periodic` per period (`packs/energy/statements.toml`, with its own
 argument that "a project finance covenant is tested EVERY PERIOD"), and
-`ppiaf_toll_highway` sizes a subsidy to hold 1.30x — but no model can say
+`ppiaf_toll_highway` sizes a subsidy to hold 1.30x — but no model could say
 what a real credit agreement says: below the trigger, distributions stop and
-cash traps in an account; at or above it for the cure period, the trap
-releases. The breach must be able to happen, and to end.
+cash traps in an account; at or above it **for the cure period**, the trap
+releases.
 
-**Why it waits on phase 5:** the trap is the repeatable machine (§7.36,
-`docs/28` §6) reading a settled ratio strictly backward, plus an account to
-hold what is trapped — the same pin as the credit trigger fixture in `docs/29`
-phase 5 ("trapped cash accumulating across a failed trigger and releasing on
-cure"), wearing project finance's vocabulary. When phase 5 lands, this is
-the energy/infrastructure case that proves it, and the benchmark ask is
-recorded in `docs/20` §5.
+**What shipped.** `fixtures/valid/dscr_cash_trap_cure_period` runs the whole
+covenant: NOI of 12,000 against 15,000 of debt service puts DSCR at 0.80
+against a 1.20 trigger, the machine reads settled cash strictly backward and
+traps at t=5, cash accumulates once NOI recovers (5,000 at t=7, 10,000 at
+t=8), and two consecutive good periods at t=9 release the trap in full.
 
-Related: §7.36, §7.74, `docs/28` §5.1 and §6, `docs/30` §2.
+**The cure period was the part that waited on §7.79**, and it is worth being
+precise about why. `trapped_cash_cure` has existed since the walk, and it
+cures on the *next* good period — which no credit agreement says. A cure
+period is a duration measured from the last breach, and a field recurrence
+counts consecutive good periods without any way to start over at each new
+one. `on enter trapped { set good_periods = 0 }` is the whole difference,
+and it is the same shape as the EBA probation the credit pack's machine
+carries (`docs/36` §2.1).
+
+**What remains: the external reference.** A fixture asserted against its own
+engine is the suite marking its own homework (`docs/20` §5.1). The mechanism
+is pinned; the covenant case wants a published credit agreement with a
+cash-trap schedule and figures to reconcile against, and none is vendored.
+That is a case-authoring ask with a sourcing problem, not a language gap.
+
+Related: §7.36, §7.74, §7.79, `docs/28` §5.1 and §6, `docs/30` §2,
+`docs/20` §5.1.
 
 ### 7.78 M2: what the walk unlocked, and what it retired
 

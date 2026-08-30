@@ -8208,7 +8208,7 @@ Templates (starting points; the `skeleton` MCP tool assembles them into a compil
 
 CFDL 0.7.0. Every model below compiles, and its IR and
 results are byte-asserted against goldens in CI (`fixtures/valid/`,
-126 models.
+127 models.
 
 `gold/ir/`, `gold/results/`). Each is single-purpose: the directory name
 says what it exercises. This is what right looks like — positive few-shot
@@ -9528,6 +9528,86 @@ stream ops.cost on entity asset.co outflow currency USD {
 metric gross_revenue = series_sum("ops.revenue", 0, 4)
 metric total_cost    = series_sum("ops.cost", 0, 4)
 metric margin        = metric.gross_revenue + metric.total_cost
+```
+
+## dscr_cash_trap_cure_period
+
+```cfdl
+version 0.1
+model "dscr-cash-trap-with-cure-period"
+time calendar monthly from 2026-01 for 18
+
+// A PROJECT FINANCE CASH TRAP, WITH THE CURE PERIOD A CREDIT AGREEMENT
+// ACTUALLY WRITES (`docs/13` §7.77). Below the trigger, distributions stop
+// and cash accumulates in the trap; the trap releases only after the ratio
+// has held AT OR ABOVE the trigger for the stated cure period. ONE GOOD
+// MONTH IS NOT A CURE, and that is the part `trapped_cash_cure` could not
+// say: it cures on the next good period, because a duration measured from
+// the last breach had no spelling until arrival actions (§7.79).
+//
+// `on enter trapped { set good_periods = 0 }` is what makes the cure period
+// expressible. A plain recurrence counts consecutive good periods, but it
+// has no way to start over at each new breach; the arrival does that.
+//
+// The pin: NOI drops to 12,000 against 15,000 of debt service at t=4..6, so
+// DSCR is 0.80 against a 1.20 trigger. The machine reads SETTLED cash
+// strictly backward, so it traps at t=5. Cash accumulates once NOI recovers
+// (5,000 at t=7, 10,000 at t=8) because the trapped months have nothing to
+// distribute. Two consecutive good periods land at t=9 and the trap
+// releases 10,000 in full.
+entity asset plant {
+  lifecycle covenant
+  // Consecutive periods at or above the trigger, on SETTLED cash. Reset to
+  // zero on every entry into `trapped`, so each breach starts its own clock.
+  good_periods init 0.0 next if(
+    series_sum("ops.noi", time.t - 1, time.t - 1) >= 1.20 * (0.0 - series_sum("debt.service", time.t - 1, time.t - 1)),
+    prev + 1.0,
+    0.0
+  )
+}
+
+entity party sponsor { name = "Sponsor" }
+
+account trap { }
+
+lifecycle covenant {
+  initial compliant
+  state compliant, trapped
+
+  on enter trapped { set good_periods = 0 }
+
+  compliant -> trapped when
+    series_sum("ops.noi", time.t - 1, time.t - 1) < 1.20 * (0.0 - series_sum("debt.service", time.t - 1, time.t - 1))
+
+  // The cure is the ratio held for two consecutive periods, not one.
+  trapped -> compliant when asset.plant.good_periods >= 2
+}
+
+stream ops.noi on entity asset.plant inflow currency USD {
+  schedule every month from 2026-01 to 2027-06
+  amount = if(time.t >= 4 and time.t <= 6, 12000, 20000)
+}
+
+stream debt.service on entity asset.plant outflow currency USD {
+  schedule every month from 2026-01 to 2027-06
+  amount = 15000
+}
+
+waterfall distribution on entity asset.plant {
+  schedule every month from 2026-01 to 2027-06
+  from available
+  pay trapped   to account trap    = if(asset.plant.status == "trapped", remaining, 0.0)
+  pay residual  to party.sponsor   = remaining
+}
+
+// The release: once the covenant is cured, the accumulated trap balance is
+// handed back. A second waterfall drawing FROM the account, because the trap
+// is a location cash sits in, not a step in the distribution.
+waterfall release on entity asset.plant {
+  schedule every month from 2026-01 to 2027-06
+  from trap
+  pay released to party.sponsor = if(asset.plant.status == "compliant", remaining, 0.0)
+}
 ```
 
 ## dscr_smoke
