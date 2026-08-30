@@ -7264,7 +7264,7 @@ A thing the model is about. An asset produces or consumes cash; a party contract
 
 **event**
 
-A construct that fires on a condition and changes model state.
+Something that happens. An event fires on each occurrence, and nothing restricts it to happening once.
 
 **fact field**
 
@@ -7713,8 +7713,9 @@ occurrences = 160          # as above
 [[technical_name]]
 term = "event"
 category = "language"
-definition = "A construct that fires on a condition and changes model state."
+definition = "Something that happens. An event fires on each occurrence, and nothing restricts it to happening once."
 occurrences = 76
+note = "docs/34 D1, D6. A schedule supplies the occurrences and `when` filters them; with no schedule an occurrence is the condition's rising edge. Once-ness is declared \u2014 a singular schedule, or a topology with no way back \u2014 never a latch. The named `event` and a machine's guarded edge are two spellings of one semantics."
 
 [[technical_name]]
 term = "option"
@@ -7748,7 +7749,7 @@ term = "lifecycle"
 category = "language"
 definition = "A declared finite state machine: enumerated states, an initial one, and guarded edges declared only as used. A core-language construct that packs tailor to domains."
 occurrences = 0
-note = "docs/28 §6.1. There is no latch: edge availability is the memory, and a re-entered state re-arms its edges."
+note = "docs/28 §6.1, docs/34. Edge availability is the memory, and a re-entered state re-arms its edges. A state may carry arrival actions: `on enter <state>` for what is true of the state however reached, and actions on an edge for what is true of the path taken."
 
 [[technical_name]]
 term = "priced amount"

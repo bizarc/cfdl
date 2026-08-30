@@ -7254,7 +7254,7 @@ A thing the model is about. An asset produces or consumes cash; a party contract
 
 **event**
 
-A construct that fires on a condition and changes model state.
+Something that happens. An event fires on each occurrence, and nothing restricts it to happening once.
 
 **fact field**
 
@@ -7702,8 +7702,9 @@ occurrences = 160          # as above
 [[technical_name]]
 term = "event"
 category = "language"
-definition = "A construct that fires on a condition and changes model state."
+definition = "Something that happens. An event fires on each occurrence, and nothing restricts it to happening once."
 occurrences = 76
+note = "docs/34 D1, D6. A schedule supplies the occurrences and `when` filters them; with no schedule an occurrence is the condition's rising edge. Once-ness is declared \u2014 a singular schedule, or a topology with no way back \u2014 never a latch. The named `event` and a machine's guarded edge are two spellings of one semantics."
 
 [[technical_name]]
 term = "option"
@@ -7737,7 +7738,7 @@ term = "lifecycle"
 category = "language"
 definition = "A declared finite state machine: enumerated states, an initial one, and guarded edges declared only as used. A core-language construct that packs tailor to domains."
 occurrences = 0
-note = "docs/28 §6.1. There is no latch: edge availability is the memory, and a re-entered state re-arms its edges."
+note = "docs/28 §6.1, docs/34. Edge availability is the memory, and a re-entered state re-arms its edges. A state may carry arrival actions: `on enter <state>` for what is true of the state however reached, and actions on an edge for what is true of the path taken."
 
 [[technical_name]]
 term = "priced amount"
@@ -19259,7 +19260,7 @@ Then, on your own:
 1. Convert the guarded model's percentage rent from a guard to an `if(…, …, 0)` amount, confirm identical totals, then convert it back. Write one sentence on which version you would want to review at 6 p.m. on a closing day, and why.
 2. Slip the composed example's operations phase by one quarter (edit only the phase line) and predict which streams move before running. The ones that *should* have moved and did not are date logic you failed to centralize — the exercise most worth repeating on your own models.
 ## Events and options
-_Discrete change and contingent claims: latch semantics, lifecycle fields, rule-based exercise, and why the model's turning points deserve their own construct._
+_Discrete change and contingent claims: when an event occurs, lifecycle fields, rule-based exercise, and why the model's turning points deserve their own construct._
 Everything so far varies *continuously* along the grid — amounts grow, ramps climb, balances amortize. But deals also turn: a loan refinances, a covenant trips, a tenant exercises a renewal, an asset sells. These are discrete, once-only changes of regime, and modeling them with arithmetic — flags multiplied into amounts, `if` pyramids keyed to hard-coded dates — is how spreadsheets bury their most consequential logic. The language gives turning points their own constructs: **events** for "when this happens, change these things," and **options** for "someone holds the right to make this happen."
 
 ## Events: when, then
@@ -19298,7 +19299,27 @@ event refi.trigger when time.t >= 12 {
 
 An event has a **condition** and a block of **actions**. The condition is an ordinary boolean expression. Here it is a date test, but it can read anything expressions read. "When cumulative revenue passes the threshold" and "when the balance falls below target" are conditions of the same shape.
 
-The semantics to internalize is the **latch**: an event fires *once*, at the first period its condition holds, and never again. It is a turning point, not a recurring rule — the deal refinances one time, even though `time.t >= 12` stays true forever after. If you find yourself wanting an event to fire repeatedly, what you want is either a stream with a guard (a recurring *amount*) or a **lifecycle edge** (a regime that returns): a declared machine's edges are checked each period the entity is in the edge's from-state, so a covenant that breaches and cures is the machine's topology walked twice, with no latch involved — edge availability is the memory.
+The semantics to internalize is the **occurrence**: an event fires each time its conditions become true having been false, and re-arms when they fall. An event is something that *happens*, and nothing restricts it to happening once — a unit that defaults, cures and defaults again has had three events, and a model that could record only the first would be wrong.
+
+So how does the refinance above fire only once? Not because the construct stops it. It fires once because **the world it describes happens once**: after the refinance the loan *is* refinanced, and `current -> refinanced` has no edge back. Once-ness is something a model declares, in one of two ways:
+
+- a **schedule whose occurrence is singular** — `schedule on 2027-03` fires once because the date occurs once;
+- a **topology with no way back** — the refinance above, where nothing returns the loan to `current`.
+
+If you declare a return edge, you have declared that re-firing is possible. The memory lives in the schedule or the machine — both of which a reader can see — rather than in a "has fired" flag inside the engine.
+
+An event may also say *when it is tested* rather than leaving that to its condition:
+
+```cfdl
+event covenant_test
+  schedule every quarter from 2026-01 to 2030-12
+  when domain.energy.dscr < 1.20
+{
+  set entity asset.plant.status = "trapped"
+}
+```
+
+The schedule **supplies** the occasions and `when` **filters** them. Four consecutive failing quarterly tests are four breach events, because the model declared quarterly testing — that is a different statement from "the DSCR was under trigger for a year", and the language lets you say which one you mean.
 
 The actions are a fixed vocabulary: `set` writes an entity field (chapter 8's third way a field changes), `activate` / `deactivate` switch a stream on or off, and `exercise` fires an option (below). Note the pattern the example uses, because it is the idiomatic one. The event writes a **lifecycle field** (`status`), and streams key their `active when` guards to it. `entity.status` is how a stream reads a field of the entity it is attached to. The event owns *when the regime changes*; each stream owns *which regime it belongs to*. When the refinance date moves, one condition changes and both loans follow — and the reviewer reads the deal's turning points as a short list of events rather than reverse-engineering them from flag arithmetic.
 
@@ -19339,7 +19360,7 @@ What this means in practice: you state the exercise policy, and policy alternati
 Then, on your own:
 
 1. Move the refinance trigger from a date test to an economic one: fire when cumulative NOI passes 250,000 (`series_sum("ops.noi", 0, time.t)`). Predict the firing month by hand first — you know the NOI per month.
-2. Add a second event that *reverses* nothing, by trying to write a "de-refinance." The latch means a free-standing event refuses to express regime flapping. Write down, in one sentence, why that refusal is a feature in a reviewed model — and then name the construct that DOES express a regime that returns (a lifecycle with a cure edge), and why declared edges make the flapping reviewable where a re-firing event would not.
+2. Try to express a regime that *flaps* — refinanced, then not, then refinanced again — using free-standing events alone. You will find you can write the events, but not the constraint: nothing stops the pair from firing in the same period, or in an order the deal could not take. Write down in one sentence what a **lifecycle** adds that two events cannot, and name the specific thing that makes the flapping reviewable (hint: an edge that does not exist cannot be taken, and every one that is taken is journalled).
 ## Waterfalls
 _Priority of payments as a first-class construct: pots, steps, owed and paid, the non-negative pot guarantee, and distribution structures written the way the documents state them._
 Every structured deal ends in the same question: *who gets paid, in what order, out of what?* A securitization's priority of payments, a fund's distribution clause, and a JV's promote are all the same shape: a pot of cash, and a sequence of claims, each taking what it is owed until the pot runs out. Spreadsheets model this shape with their most fragile machinery — chains of `MIN(MAX(...))` cells where one wrong reference pays a junior claim ahead of a senior one. The language makes the shape a construct: the **waterfall**.
@@ -19870,8 +19891,8 @@ Ask what the sentence you would say aloud *is about*, and the construct follows:
 - *"Cash moves on this pattern."* → a **stream**. The atom; when nothing below applies, this is the answer.
 - *"This quantity persists and evolves."* → a **field** — a fact or rule on the entity that owns it. Not cash: memory.
 - *"Cash accumulates here until the rules move it."* → an **account**. Not a quantity *about* the deal but a location *in* it; a field remembers, an account holds.
-- *"At some point, the regime changes — once."* → an **event**. A turning point, latched.
-- *"The regime changes and can change back."* → a **lifecycle**. Declared states, guarded edges, no latch — the breach that cures is topology, not a re-firing trigger.
+- *"At some point, the regime changes — once."* → an **event**. A turning point, and it happens once because the world happens once: a singular schedule, or a topology with no way back.
+- *"The regime changes and can change back."* → a **lifecycle**. Declared states and guarded edges — the breach that cures is topology walked twice, and edge availability is the memory.
 - *"Someone holds a right they may use."* → an **option**. The right's terms, apart from the prediction of its use.
 - *"A pot is divided by priority."* → a **waterfall**. Contested cash, document order.
 - *"This is a standard deal in a domain."* → a **contract** (next chapter): a pack's named economics, stated by its terms.
@@ -19906,7 +19927,7 @@ For review checklists — yours and your team's:
 4. **A field with a bailiff.** Balance field + paydown stream + implicit ordering against other claims: a waterfall built by hand.
 5. **Mirror streams.** Two streams that must always negate each other — one transfer written as two claims; usually one stream (or one waterfall step) attached to the right entities.
 6. **A cumulative window doing an account's job.** `series_sum("x.*", 0, time.t)` as a waterfall's pot, or a field accumulating cash a step then "pays down" — the accumulated-cash claim has its own construct, with a journaled balance the hand-rolled sum never gets.
-7. **A pair of events fighting over one field.** A set-and-unset pair, or a condition and its negation on the same status — a regime that returns, wearing two latches; it is one lifecycle with two edges.
+7. **A pair of events fighting over one field.** A set-and-unset pair, or a condition and its negation on the same status — that is a regime that returns, written without the construct that constrains it. It is one lifecycle with two edges, where the edges that do not exist are the deal terms you are relying on.
 8. **An expression that stops reading aloud.** The chapter-5 limit, which is really this chapter's question arriving early: three claims in a trench coat want three constructs.
 
 None of these is a compile error, and that is the point of Part III: the compiler guarantees the model computes what it says; only judgment guarantees it *says what the deal means*.
@@ -20557,7 +20578,7 @@ lifecycle <name> {                               -- a finite state machine
   initial <state>
   state <a>, <b>, <c>
   <from> -> <to> [when <boolean expr>]           -- guard: checked each period
-}                                                --   in <from>; no latch
+}                                                --   in <from>; re-entry re-arms
 account <name> {                                 -- cash that accumulates
   [owner <family>.<name>]                        -- a party owns at most one
   [from <expr>]                                  -- per-period inflow; no floor
@@ -20769,7 +20790,7 @@ A thirteen-week shape fits the material. Give one session each to chapters 1–3
 
 Per-chapter objectives compress well here; the prompts are where sessions live.
 
-**Streams and schedules** — timing is money. *Prompt:* "Find the working-capital hole" in the net-45 model; ask who has lived it. **Expressions** — expressions you can read aloud. *Prompt:* the `pmt` exercise's −1,356: two right answers, one convention gap. **Assumptions and inputs** — the assumption page as governance. *Prompt:* "Which numbers in your firm's template would fail the four tests?" **Curves** — interpolation as claim. *Prompt:* step versus linear on a policy rate, priced. **Fields and recurrence** — cycles unwritable; match the method. *Prompt:* the dollar of drift in the rounded-escalation exercise: when does a dollar matter? **Growth, ramps, guards** — the idiom kit composes. *Variant:* idiom golf — express a claim in the fewest legible clauses; penalize illegibility. **Events and options** — the latch; policy as scenario. *Prompt:* "Why does the model refuse to predict exercise?" — the best philosophy-of-modeling discussion in the course. **Waterfalls** — transcription is review. *Variant:* hand out a real (redacted) priority-of-payments clause; transcribe in document order. **Uncertainty** — forks versus wobbles. *Prompt:* the blended 81,700 that no future pays; ask for examples from the room's own underwriting. **Multi-file and style** — the checklist as review standard. *Variant:* swap models between teams for a checklist review; grade the *review*, not the model.
+**Streams and schedules** — timing is money. *Prompt:* "Find the working-capital hole" in the net-45 model; ask who has lived it. **Expressions** — expressions you can read aloud. *Prompt:* the `pmt` exercise's −1,356: two right answers, one convention gap. **Assumptions and inputs** — the assumption page as governance. *Prompt:* "Which numbers in your firm's template would fail the four tests?" **Curves** — interpolation as claim. *Prompt:* step versus linear on a policy rate, priced. **Fields and recurrence** — cycles unwritable; match the method. *Prompt:* the dollar of drift in the rounded-escalation exercise: when does a dollar matter? **Growth, ramps, guards** — the idiom kit composes. *Variant:* idiom golf — express a claim in the fewest legible clauses; penalize illegibility. **Events and options** — the occurrence and once-ness; policy as scenario. *Prompt:* "Why does the model refuse to predict exercise?" — the best philosophy-of-modeling discussion in the course. **Waterfalls** — transcription is review. *Variant:* hand out a real (redacted) priority-of-payments clause; transcribe in document order. **Uncertainty** — forks versus wobbles. *Prompt:* the blended 81,700 that no future pays; ask for examples from the room's own underwriting. **Multi-file and style** — the checklist as review standard. *Variant:* swap models between teams for a checklist review; grade the *review*, not the model.
 
 The two deep dives read well as homework before the judgment part; assign exercise 1 from each (the IR read, the diagnostics collection) and discuss findings for ten minutes.
 
@@ -20808,9 +20829,9 @@ The window ends at `time.t - 1`, and the bound is a rule, not a habit. Logic rea
 
 The one-period lag matches the world the model describes. A real delinquency flag also trails the missed payment: the servicer reports it after month-end. The model's lag and the world's lag agree.
 
-## The machine: edges instead of latches
+## The machine: topology instead of flags
 
-Chapter 10 said a regime that returns is not a re-firing event. This section shows what it is instead:
+Chapter 10 said an event happens as often as it happens, and that once-ness comes from the world rather than the construct. This section shows the other half: a regime that *returns*, and the construct that constrains it.
 
 ```cfdl
 version 0.1
@@ -20845,7 +20866,7 @@ Run the model and read the transitions in the results:
 - Rent resumes. Month 5 cures the breach.
 - Month 8 breaches again. Month 10 cures again.
 
-The topology was walked twice, and no latch was involved. An edge's condition is evaluated each period the entity is in the edge's *from* state, and only then. Taking the edge moves the machine, which disarms the edge. Re-entering the state re-arms it. Edge availability is the memory, which is what a finite state machine has always meant.
+The topology was walked twice. An edge's condition is evaluated each period the entity is in the edge's *from* state, and only then. Taking the edge moves the machine, which disarms the edge. Re-entering the state re-arms it. Edge availability is the memory, which is what a finite state machine has always meant.
 
 Four rules make the machine reviewable:
 
@@ -20855,6 +20876,95 @@ Four rules make the machine reviewable:
 - **Every transition is journaled**, with the edge taken and the values its condition read. A regime is never again a bare field whose changes the record cannot see.
 
 `active in state` closes the loop back to cash. A stream declared `active in state leased` turns off during delinquency and turns back on after the cure, with no further mechanism. State gates cash; cash moves state; both directions are declared.
+
+## Arrival actions: what happens when you get there
+
+A state can carry behavior. Arriving somewhere is an occurrence, and the
+bookkeeping that belongs to it — reset a counter, record a shortfall, strike a
+new rate — belongs on the arrival rather than in a separate event that has to
+restate the condition.
+
+Here is a loan that misses payments, defaults, resumes paying, and is restored
+to performing only after a **probation period**. That last requirement is why
+the counter has to exist: "three consecutive good months" is not a condition
+you can read off the calendar, and a plain recurrence counts up forever
+without ever going back to zero.
+
+```cfdl
+version 0.1
+model "a-loan-that-defaults-and-cures"
+time calendar monthly from 2026-01 for 14
+
+entity asset loan {
+  lifecycle servicing
+  paying init 1.0 next if(time.t >= 3 and time.t <= 6, 0.0, 1.0)
+  months_in_state init 0.0 next prev + 1.0
+}
+
+lifecycle servicing {
+  initial current
+  state current, delinquent, defaulted
+
+  // Every arrival restarts the clock. This is what makes "three months in
+  // this condition" sayable at all.
+  on enter current    { set months_in_state = 0 }
+  on enter delinquent { set months_in_state = 0 }
+  on enter defaulted  { set months_in_state = 0 }
+
+  current    -> delinquent when asset.loan.paying < 0.5
+  delinquent -> defaulted  when asset.loan.paying < 0.5 and asset.loan.months_in_state >= 2
+  delinquent -> current    when asset.loan.paying >= 0.5
+
+  // The cure is not a payment. It is a payment PLUS a probation period.
+  defaulted  -> current    when asset.loan.paying >= 0.5 and asset.loan.months_in_state >= 3
+}
+
+stream credit.payment on entity asset.loan inflow currency USD {
+  schedule every month from 2026-01 to 2027-02
+  amount = 1000 * asset.loan.paying
+}
+```
+
+Run it and read the transitions:
+
+```
+t=3   current    -> delinquent
+t=5   delinquent -> defaulted
+t=8   defaulted  -> current
+```
+
+Payments stop at month 3 and the loan goes delinquent immediately. Two months
+later it defaults. Payments resume at month 7 — and the loan is *still* in
+default, because paying once is not curing. The cure lands at month 8, three
+months after entering `defaulted`, which is exactly what the probation says.
+
+That gap between "started paying again" and "is performing again" is the whole
+point, and it is why supervisors write probation periods into the definition of
+default in the first place. Without arrival actions you cannot express it: the
+counter would still be climbing from whenever the model started.
+
+Two grains, and both are real:
+
+- **`on enter <state>`** carries what is true of the STATE however it was
+  reached. Resetting the clock holds for every edge that arrives, including one
+  you add later.
+- **an action on an edge** carries what is true of the PATH taken. A renewal
+  and a re-let both land in `leased`, but the rent is struck differently
+  because of how you arrived — and an entry action cannot say that, since it
+  does not know which edge fired.
+
+Entry actions run first, then the taken edge's: the state's own setup, then the
+path's refinement. If both write the same field the later one stands and the
+earlier is journalled `overridden`, naming who wrote it — so a pack's default
+and your override are distinguishable in the record rather than silently
+merged.
+
+Two rules worth knowing before you reach for them. An action writes **fields,
+never `status`**: a status write would fire a second transition inside the same
+period, and a transition that should cause another transition is an edge out of
+the target state, taken next period. And an action reads the same world its
+guard does — state as the period opened, settled cash strictly backward — so it
+cannot see this period's cash, which is what keeps the whole thing acyclic.
 
 ## The account: cash that waits
 
