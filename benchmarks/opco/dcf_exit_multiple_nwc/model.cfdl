@@ -1,0 +1,194 @@
+// A practitioner DCF template that computes its terminal value BOTH ways —
+// perpetuity growth and an LTM exit multiple — and publishes a 3x3 grid for
+// each. This case asserts the exit-multiple arm.
+//
+// WHY THIS SOURCE. Two opco contract types had no case:
+// `opco.working_capital` (the fixed variant, not the DSO/DPO policy) and
+// `opco.exit_multiple` (a stated base times a stated multiple, not the
+// stream-derived `opco.exit_ebitda`). Both need a source that PUBLISHES the
+// two figures rather than deriving them. Damodaran's engine — the other
+// candidate — cannot supply either: it folds working capital into
+// reinvestment through a sales-to-capital ratio, and its terminal value is
+// Gordon growth by doctrine. This template states an `Increase in NWC` line
+// year by year and applies an explicit LTM EBITDA multiple.
+//
+// WHY THE EXIT-MULTIPLE ARM AND NOT PERPETUITY. The template discounts its
+// two terminal values differently, and the difference is in the formulas
+// rather than the prose: the exit-multiple terminal uses discount period 5.0
+// and the perpetuity terminal uses 4.5. `opco.exit_multiple` lowers to
+// `on_date` with `schedule_placement = "end"` — the full holding period, 5.0.
+// So the exit-multiple arm is the one the contract can spell, and the
+// perpetuity arm is not reachable through it. That is the same position
+// packs/opco/lowering/rules.toml already takes: a terminal value is a price
+// struck at a point in time and discounts whole.
+//
+// TIMING. The valuation date is 31 December 2017 and flows are discounted
+// MID-YEAR: 0.5, 1.5, 2.5, 3.5, 4.5. CFDL calendars are uniform, so a monthly
+// grid carries the convention and each year's cash is placed as a one-shot on
+// the month whose close lands on the right exponent. A single-period `every`
+// is an ordinary annuity, so it falls at the period's END:
+//
+//     FY2018   end of month index  5    6/12 = 0.5
+//     FY2019   end of month index 17   18/12 = 1.5
+//     FY2020   end of month index 29   30/12 = 2.5
+//     FY2021   end of month index 41   42/12 = 3.5
+//     FY2022   end of month index 53   54/12 = 4.5
+//     terminal end of month index 59   60/12 = 5.0
+//
+// No flow needs `mid` — every exponent is a month boundary here, unlike
+// benchmarks/opco/banker_dcf_conventions where the stub was not.
+//
+// D&A IS NOT A CASH LINE. The published build subtracts D&A to reach EBIT,
+// taxes that, then adds D&A straight back — so it touches cash only through
+// the tax. `opco.cash_taxes` carries it as `da_monthly` for exactly this
+// reason, which is why nothing below books a depreciation flow.
+//
+// WHAT IS ASSERTED. The center-left cell of the published exit-multiple grid:
+// 10.0% WACC, 7.0x LTM EBITDA, enterprise value 338.3661574792812. The other
+// eight cells need a different discount rate or multiple per run and live in
+// NOTES.md, the same shape as banker_dcf_conventions.
+
+version 0.1
+model "dcf-exit-multiple-nwc"
+use pack "opco" version "0.1.0"
+time calendar monthly from 2018-01 for 60
+
+entity asset firm : OpCo.Asset.Enterprise
+
+// --------------------------------------------------------------------- FY2018
+// Cash opex is revenue less Adj. EBITDA, both published; the template does not
+// print the subtotal, so it is stated here as the difference and nothing else.
+contract opco.revenue_line.fy2018 on entity asset.firm {
+  term 2018-06..2018-06
+  terms { amount = 121.0 }
+}
+contract opco.opex_line.fy2018 on entity asset.firm {
+  term 2018-06..2018-06
+  terms { amount = 78.0 }
+}
+contract opco.cash_taxes.fy2018 on entity asset.firm {
+  term 2018-06..2018-06
+  terms {
+    tax_rate   = 0.38
+    da_monthly = 6.0
+  }
+}
+contract opco.capex_line.fy2018 on entity asset.firm {
+  term 2018-06..2018-06
+  terms { amount = 7.0 }
+}
+contract opco.working_capital.fy2018 on entity asset.firm {
+  term 2018-06..2018-06
+  terms { amount = 3.0 }
+}
+
+// --------------------------------------------------------------------- FY2019
+contract opco.revenue_line.fy2019 on entity asset.firm {
+  term 2019-06..2019-06
+  terms { amount = 129.47 }
+}
+contract opco.opex_line.fy2019 on entity asset.firm {
+  term 2019-06..2019-06
+  terms { amount = 82.47 }
+}
+contract opco.cash_taxes.fy2019 on entity asset.firm {
+  term 2019-06..2019-06
+  terms {
+    tax_rate   = 0.38
+    da_monthly = 6.300000000000001
+  }
+}
+contract opco.capex_line.fy2019 on entity asset.firm {
+  term 2019-06..2019-06
+  terms { amount = 7.3500000000000005 }
+}
+contract opco.working_capital.fy2019 on entity asset.firm {
+  term 2019-06..2019-06
+  terms { amount = 3.2099999999999995 }
+}
+
+// --------------------------------------------------------------------- FY2020
+contract opco.revenue_line.fy2020 on entity asset.firm {
+  term 2020-06..2020-06
+  terms { amount = 139.82760000000002 }
+}
+contract opco.opex_line.fy2020 on entity asset.firm {
+  term 2020-06..2020-06
+  terms { amount = 88.82760000000002 }
+}
+contract opco.cash_taxes.fy2020 on entity asset.firm {
+  term 2020-06..2020-06
+  terms {
+    tax_rate   = 0.38
+    da_monthly = 6.615000000000001
+  }
+}
+contract opco.capex_line.fy2020 on entity asset.firm {
+  term 2020-06..2020-06
+  terms { amount = 7.717500000000001 }
+}
+contract opco.working_capital.fy2020 on entity asset.firm {
+  term 2020-06..2020-06
+  terms { amount = 3.4667999999999997 }
+}
+
+// --------------------------------------------------------------------- FY2021
+contract opco.revenue_line.fy2021 on entity asset.firm {
+  term 2021-06..2021-06
+  terms { amount = 148.21725600000002 }
+}
+contract opco.opex_line.fy2021 on entity asset.firm {
+  term 2021-06..2021-06
+  terms { amount = 93.21725600000002 }
+}
+contract opco.cash_taxes.fy2021 on entity asset.firm {
+  term 2021-06..2021-06
+  terms {
+    tax_rate   = 0.38
+    da_monthly = 6.945750000000001
+  }
+}
+contract opco.capex_line.fy2021 on entity asset.firm {
+  term 2021-06..2021-06
+  terms { amount = 8.103375000000002 }
+}
+contract opco.working_capital.fy2021 on entity asset.firm {
+  term 2021-06..2021-06
+  terms { amount = 3.6748079999999996 }
+}
+
+// --------------------------------------------------------------------- FY2022
+contract opco.revenue_line.fy2022 on entity asset.firm {
+  term 2022-06..2022-06
+  terms { amount = 154.14594624000003 }
+}
+contract opco.opex_line.fy2022 on entity asset.firm {
+  term 2022-06..2022-06
+  terms { amount = 96.80365423872001 }
+}
+contract opco.cash_taxes.fy2022 on entity asset.firm {
+  term 2022-06..2022-06
+  terms {
+    tax_rate   = 0.38
+    da_monthly = 7.293037500000001
+  }
+}
+contract opco.capex_line.fy2022 on entity asset.firm {
+  term 2022-06..2022-06
+  terms { amount = 8.508543750000001 }
+}
+contract opco.working_capital.fy2022 on entity asset.firm {
+  term 2022-06..2022-06
+  terms { amount = 3.82180032 }
+}
+
+// -------------------------------------------------------------------- terminal
+// LTM EBITDA is the terminal column's Adj. EBITDA, which the template holds
+// flat at FY2022. 7.0x is the low end of the published 7.0x/8.0x/9.0x row.
+contract opco.exit_multiple.terminal on entity asset.firm {
+  term 2022-12..2022-12
+  terms {
+    base_value    = 57.34229200128001
+    exit_multiple = 7.0
+  }
+}

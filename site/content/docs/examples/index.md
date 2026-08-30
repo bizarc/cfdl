@@ -78,6 +78,7 @@ Complete models for every pack, each checked period by period against an indepen
 
 - [OpCo: banker DCF conventions](/docs/examples/opco-banker-dcf-conventions) — An operating company discounted cash flow built to standard banking conventions, from revenue through unlevered free cash flow to enterprise value.
 - [OpCo: free cash flow to firm](/docs/examples/opco-damodaran-fcff) — A free cash flow to firm valuation following Damodaran's published method, with reinvestment driven by growth and return on capital.
+- [OpCo: working capital and a terminal exit multiple](/docs/examples/opco-dcf-exit-multiple-nwc) — An operating company discounted cash flow with an explicit working-capital line and a terminal value struck as a multiple of trailing EBITDA.
 - [OpCo: stable-growth dividend discount](/docs/examples/opco-gordon-growth-coned) — A Gordon growth valuation of a regulated utility, where a perpetual dividend growing at a constant rate collapses to a closed form.
 - [OpCo: leveraged buyout](/docs/examples/opco-lbo-buyout) — A leveraged buyout: entry at a stated multiple, debt paid down out of operating cash flow, and an exit that returns the sponsor's equity.
 - [OpCo: LBO debt schedule with average-balance interest](/docs/examples/opco-lbo-circular-interest) — A leveraged buyout's debt schedule, where interest accrues on the average balance and every dollar of free cash flow sweeps against the term loan.
