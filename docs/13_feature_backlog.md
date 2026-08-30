@@ -1835,9 +1835,67 @@ of the period containing it. So the fix is not to the placement: it is that a
 multiple needs contributions and distributions identified as such, which the
 per-period net cannot recover once two flows share a period.
 
-`penzance_highlands` measures a per-partner `moic(party.baupost)` instead,
-which partitions by party rather than by period and does not have this shape —
-worth reading before changing the model-level metric.
+**The party-level metric has the same defect, and is not a counter-example.**
+`moic(party.X)` folds that party's account the same way — build a per-period
+flow vector, sum the positives, sum the negatives, divide. `penzance_highlands`
+reproduces exactly (baupost 1.959618, penzance 2.906607) only because its
+contributions land in periods 0-91 and its single distribution at period 153,
+so nothing ever shares a period. Verified from its journal: the overlap is
+empty. Any fund that distributes while it is still calling capital — recycling,
+an early income distribution — trips it at party level too.
+
+**What the metric is.** MOIC is a multiple ON INVESTED CAPITAL: the total value
+returned divided by the capital put in. The denominator is defined by what was
+contributed and the numerator by what came back, and the two are partitioned by
+KIND, not by when they happened. A.CRE — the publisher of the reference this
+case is built on — states it as total capital inflows over total capital
+outflows, inflows being distributions and outflows contributions. Its fund-level
+cousin TVPI differs only in the denominator, being paid-in capital rather than
+capital invested in a deal; MOIC is normally quoted gross of fund fees and
+carry, TVPI net of them. Neither difference touches this entry: both denominators
+are cumulative amounts contributed.
+
+**What the standards say.** GIPS 2020 defines paid-in capital as capital
+inflows to the fund, being "committed capital drawn down through capital calls
+and distributions that are subsequently recalled". Two things follow, and both
+contradict the fold above. Paid-in capital is defined by the EVENT — a capital
+call — and not by the sign of any period. And a distribution that is recalled
+*increases* paid-in capital: the same dollar going out and coming back raises
+both the numerator and the denominator. The engine does the reverse, reducing
+the denominator when a distribution shares a period with a call. GIPS also
+requires since-inception paid-in capital and since-inception distributions to
+be presented as separate figures, and defines TVPI as total value over
+since-inception paid-in capital and DPI as since-inception distributions over
+the same denominator — three ratios that all presuppose the two quantities were
+never netted.
+
+The accounting side agrees by analogy rather than by definition, since no IFRS
+standard defines an investment multiple. IAS 7 makes gross presentation the
+rule for investing and financing cash flows — major classes of gross receipts
+and gross payments reported separately — and allows netting only in two narrow
+cases: flows collected on behalf of customers that reflect the customer's
+activity, and items whose turnover is quick, amounts large and maturities
+short. A fund's capital calls and distributions are neither. `docs/26`'s
+category taxonomy is already settled against IAS 7, so the repository has taken
+this position elsewhere.
+
+**There is one legitimate alternative denominator, and it is not this one.**
+Some real estate practice measures the multiple on PEAK equity — the maximum
+capital outstanding at any point — rather than on cumulative contributions,
+which suits a deal whose later contributions are funded out of its own cash.
+A.CRE records it and calls the two equivalent. They are equivalent only while
+every contribution precedes every distribution, which is the same condition
+that hides the defect here. Either way peak equity is a CUMULATIVE measure with
+a defensible meaning; the engine's per-period sign test is neither, and reads
+differently on a monthly grain than an annual one for the same deal.
+
+So the fix is not a tolerance or a placement: contributions and distributions
+have to be identified as what they are, which a per-period net cannot recover
+once two of them share a period. Whichever denominator is chosen — cumulative
+contributions or peak equity — it has to be accumulated across the life, not
+inferred one period at a time.
 
 Provenance: found building `basic_acquisition_exit_cap`, 30 August 2026,
-against a published equity multiple the case could not assert.
+against a published equity multiple the case could not assert. The party-level
+reading and the standards check were added the same day, after the first
+write-up of this entry wrongly called the party metric structurally different.
