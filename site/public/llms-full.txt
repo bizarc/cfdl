@@ -5355,8 +5355,16 @@ categories = [
 ]
 ```
 
-Keeping the set closed is what stops two models in the same pack spelling the
-same idea two ways.
+The list is a recommendation, not a gate. The three roots are what the language
+validates, with or without a pack, so a model may name a leaf the pack never
+enumerated — a departmental operating expense, an acquisition basis — and it
+folds exactly as a listed one does. A well-rooted category the pack does not
+list raises `W5023` naming the near match, which is what keeps two models in one
+pack from spelling the same idea two ways.
+
+A pack cannot enumerate every leaf a deal needs, because the leaf is not
+knowable by a pack that shipped before the deal. What the list carries is the
+domain's conventional spelling.
 
 #### Step 2 — classify at the point of emission
 
@@ -6230,6 +6238,14 @@ Warnings:
 Statement completeness. These are warnings rather
 than errors: the statement still renders, and the point is that the reader can
 see what is wrong with it.
+- `E5029_STREAM_MISSING_CATEGORY` — a stream declares no `category` while a pack
+  is active. Its cash still reaches `model.total` and the entity roll-up and
+  folds into no subtotal at all, so every domain metric is computed as though
+  the stream were not there. An error rather than a warning because with a pack
+  loaded there is always a right answer available — a flow that does not belong
+  in net operating income takes a different root — and a coverage ratio that
+  quietly excluded a stream is wrong and says so nowhere. Without a pack a
+  category stays optional, because nothing folds.
 
 - `W5022_UNKNOWN_SERIES_REFERENCE` — a `series_sum`/`series_avg` names a series
   no stream, contract or waterfall step produces, so it aggregates to zero and
@@ -6250,6 +6266,18 @@ see what is wrong with it.
   that looks entirely plausible.
 - `W3502_STATEMENT_BOTTOM_LINE_RESIDUAL` — the statement's rows do not sum to
   `model.total` within half a cent. Asserted, never corrected.
+
+- `W5023_UNRECOGNISED_PACK_CATEGORY` — a stream's category is well-rooted and
+  valid, and is not one the active pack recommends. The three roots are the only
+  gate: a pack's `categories` list is the domain's conventional spelling, not
+  permission, because a pack cannot enumerate every leaf a deal needs. Reported
+  in the statement's diagnostics rather than in `results.warnings`, beside
+  `W3500`, for two reasons: the consequence of an unrecommended category is a
+  presentation one — no row of a pack statement claims it, so it lands in the
+  residual — and `results.warnings` belongs to the engine, which has no pack.
+  Names a near match when one is a single edit away, the bar the compiler
+  already uses for a misspelled term. Reported once per distinct category:
+  thirteen expense lines sharing one misspelling are one mistake.
 
 - `E5022_UNKNOWN_STREAM_CATEGORY` — a stream declares `category <path>` that
   the active pack does not list in its manifest `categories`. A category is a
@@ -7840,7 +7868,7 @@ Templates (starting points; the `skeleton` MCP tool assembles them into a compil
 
 CFDL 0.7.0. Every model below compiles, and its IR and
 results are byte-asserted against goldens in CI (`fixtures/valid/`,
-121 models.
+122 models.
 
 `gold/ir/`, `gold/results/`). Each is single-purpose: the directory name
 says what it exercises. This is what right looks like — positive few-shot
@@ -9858,8 +9886,11 @@ event flip when asset.interest.investor_npv_closed >= 0.0 {
 
 // Operating cash is ACTIVITY, so it is a stream; the waterfall allocates the
 // interest's available cash rather than recomputing revenue inside the pot.
+// A NET figure — PPA revenue less O&M — carried on one stream, so it is
+// categorised as energy revenue and EBITDA reads it whole.
 stream interest.operating_cash on entity asset.interest inflow currency USD {
   schedule every month from 2026-02 to 2051-12
+  category operating.revenue.energy
   amount = ( inputs.energy_year_one * inputs.ppa_price
               * pow(1.0 + inputs.ppa_escalation, asset.interest.operating_year - 1.0)
               * pow(1.0 - inputs.degradation, asset.interest.operating_year - 1.0)
@@ -9913,6 +9944,53 @@ stream cre.opex.building on entity asset.tower outflow currency USD {
   schedule every year from 2026-01 to 2028-01
   category operating.expense.opex
   amount = 30
+}
+```
+
+## instance_categories
+
+```cfdl
+version 0.1
+model "instance-categories"
+use pack "cre" version "0.1.0"
+time calendar annual from 2026-01 for 2
+
+// A PACK STATES WHAT ITS CONTRACTS ARE. IT CANNOT STATE EVERY LEAF.
+//
+// `cre.opex_line` lowers to `operating.expense.opex` — one category however
+// many instances a model declares, which is right for a pack that cannot know
+// the deal. A hotel's statement is departmental, so these three instances say
+// what they are and the pack's default gives way.
+//
+// The three roots are the only gate, so `operating.expense.rooms` is valid
+// without the pack listing it. It is not the pack's conventional spelling, so
+// the run reports W5023 naming it. Both facts are the point of this fixture.
+
+entity asset hotel : CRE.Asset.RealProperty
+
+contract cre.opex_line.rooms on entity asset.hotel {
+  term 2026-01..2027-01
+  category operating.expense.rooms
+  terms {
+    amount = 1000
+  }
+}
+
+contract cre.opex_line.food_beverage on entity asset.hotel {
+  term 2026-01..2027-01
+  category operating.expense.food_beverage
+  terms {
+    amount = 400
+  }
+}
+
+// No override: takes the rule's `operating.expense.opex`, which is what the
+// pack's own vocabulary recommends.
+contract cre.opex_line.property_tax on entity asset.hotel {
+  term 2026-01..2027-01
+  terms {
+    amount = 200
+  }
 }
 ```
 
@@ -12049,10 +12127,14 @@ stream cre.unit.base_rent.a on entity asset.tower inflow currency USD {
   amount = 1000
 }
 
-// NOT classified. No row can claim it, so the statement must SHOW it rather
-// than quietly come up 750 short.
+// Classified, and claimed by no ROW. That is the residual case that remains
+// reachable: `E5029` makes an uncategorised stream an error while a pack is
+// active, so a residual can no longer be produced by saying nothing. It is
+// produced by saying something the statement has no row for — which is the
+// case a modeller actually hits, naming their own instance (docs/35 §1.4).
 stream misc.windfall on entity asset.tower inflow currency USD {
   schedule every year from 2026-01 to 2028-01
+  category operating.revenue.windfall
   amount = 250
 }
 ```
@@ -12431,8 +12513,11 @@ assume oc_target       = 940000000.0
 // schedule, so the amounts are stated here as a stream — the trust's cash,
 // which `available` hands the waterfall. The decay stands in for a pool
 // amortizing; the capital structure above is the transaction's own.
+// Undifferentiated collections, categorised as principal: the waterfall retires
+// notes with them.
 stream trust.collections on entity asset.trust inflow currency USD {
   schedule every month from 2017-02 to 2017-07
+  category operating.collection.principal
   amount = 12500000.0 * pow(0.97, time.t)
 }
 
@@ -13174,8 +13259,11 @@ entity party certificate : Credit.Party.Investor { name = "Certificateholder" }
 // The pot is the cash the trust receives. `available` binds it — the trust's
 // netted stream cash for the period — so the waterfall consumes a result
 // rather than a hand-maintained field.
+// Undifferentiated collections, categorised as principal because that is what
+// the waterfall below retires with them.
 stream trust.collections on entity asset.trust inflow currency USD {
   schedule every month from 2017-02 to 2017-05
+  category operating.collection.principal
   amount = 1000.0
 }
 
