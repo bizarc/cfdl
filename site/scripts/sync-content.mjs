@@ -650,6 +650,7 @@ const benchmarkTitles = {
   "energy/wind_ptc_macrs": "Energy: wind with PTC and MACRS",
   "opco/banker_dcf_conventions": "OpCo: banker DCF conventions",
   "opco/damodaran_fcff": "OpCo: free cash flow to firm",
+  "opco/dcf_exit_multiple_nwc": "OpCo: working capital and a terminal exit multiple",
   "opco/gordon_growth_coned": "OpCo: stable-growth dividend discount",
   "opco/lbo_buyout": "OpCo: leveraged buyout",
   "opco/lbo_circular_interest": "OpCo: LBO debt schedule with average-balance interest",

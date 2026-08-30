@@ -1,0 +1,28 @@
+# Benchmark case: a practitioner DCF template that computes its terminal value
+# both ways and publishes a 3x3 output grid for each method.
+#
+# WHY THIS ONE. It exists to close the last two unexercised opco contract
+# types (docs/13 7.3): `opco.working_capital` — the fixed variant, not the
+# DSO/DPO policy that `lbo_buyout` already covers — and `opco.exit_multiple`,
+# the stated-base form, as distinct from the stream-derived `opco.exit_ebitda`.
+# Both need a source that PUBLISHES the figure rather than deriving it, which
+# is what ruled out the other candidate: Damodaran's engine folds working
+# capital into reinvestment through a sales-to-capital ratio and takes its
+# terminal value by Gordon growth.
+#
+# There is deliberately no reference_gen.py. Every figure in expected.csv is
+# the template's own, transcribed from its cells; cash opex is the one derived
+# line, and it is revenue less Adj. EBITDA, both published.
+#
+# THE ASSERTED CELL is 10.0% WACC and a 7.0x LTM EBITDA multiple: published
+# enterprise value 338.3661574792812. The other eight cells of the grid need a
+# different discount rate or multiple per run and are recorded in NOTES.md.
+#
+# tolerance 1e-5 on the metric. Unlike banker_dcf_conventions, whose filing
+# rounded to whole millions, this source carries full float precision, so the
+# tolerance is set by the results document's own 6dp rounding and nothing else.
+#
+# Units are $mm throughout, matching the template.
+summary = "An operating company discounted cash flow with an explicit working-capital line and a terminal value struck as a multiple of trailing EBITDA."
+pack = "opco"
+period_tolerance = 0.001

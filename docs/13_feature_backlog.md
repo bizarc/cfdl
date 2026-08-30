@@ -232,8 +232,8 @@ is an optimizer, not a declarative cash-flow model.
 
 *Belongs with no single pack — it is about the validation programme.*
 
-**Re-measured 2026-08-27** across all 42 registered cases (2 bespoke, 8 cre,
-18 credit, 6 energy, 8 opco), counting a pack contract type as *exercised*
+**Re-measured 2026-08-30** across all 43 registered cases (2 bespoke, 8 cre,
+18 credit, 6 energy, 9 opco), counting a pack contract type as *exercised*
 when at least one case declares it. When first measured (six cases, headline
 "the external cases route around the packs they should be validating") the
 counts were energy 9/10, credit 1/4, cre 1/12, opco 0/10 — for cre and opco
@@ -245,7 +245,7 @@ the domain logic. That circularity is now broken:
 | energy | **10 / 10** (see caveat) | — |
 | credit | **4 / 4** | — |
 | cre | 9 / 14 | `lease`, `percentage_rent_expected`, `revenue_line`, `construction_stub`, `exit_cap` |
-| opco | 9 / 11 | `working_capital`, `exit_multiple` |
+| opco | **11 / 11** | — |
 
 (The cre and opco rosters have grown since the first measure — 12→14 and
 10→11 — so the denominators moved too.)
@@ -256,7 +256,12 @@ through the pack (`lease_unit`, `rollover`, `vacancy_loss`, `opex_line`,
 `exit`, `one_lincoln_street_contract` proves `construction_loan` against the
 native twin, `float_bridge_pool` and `io_bullet_loan` close credit, and
 `lbo_buyout` plus `damodaran_fcff` take opco from zero to nine — the
-driver-disclosing sources the first measure asked for.
+driver-disclosing sources the first measure asked for. `dcf_exit_multiple_nwc`
+closes the remaining two, against a template that states an increase in net
+working capital line by line and strikes its terminal value on an LTM EBITDA
+multiple — the two figures Damodaran's engine cannot supply, because it folds
+working capital into reinvestment through a sales-to-capital ratio and takes
+its terminal value by Gordon growth.
 
 **Exercised is not the same as validated.** One caveat stands: `storage_arbitrage`
 is declared by `solar_ppa_microgrid`, but that case reconciles the reduced-form
@@ -283,7 +288,6 @@ What remains, and it is now narrow:
 - **cre:** five types unexercised. `exit_cap` and `revenue_line` look like
   case-conversions of existing sources; `lease` (non-unit grain),
   `percentage_rent_expected` and `construction_stub` may want a new case each.
-- **opco:** `working_capital` (the non-policy variant) and `exit_multiple`.
 - **energy:** the dispatch comparison that would move `storage_arbitrage` from
   exercised to validated.
 
