@@ -1,25 +1,26 @@
 version 0.1
 model "lifecycle-augment-topology"
-use pack "opco" version "0.1.0"
-time calendar monthly from 2026-01 for 12
+use pack "cre" version "0.1.0"
+time calendar annual from 2026-01 for 5
 
-entity asset target : OpCo.Asset.Enterprise
+entity asset suite : CRE.Asset.Unit {
+  rentable_area = 10000
+  months_in_state = 0
+}
 
 // A model may add arrival actions to a pack's machine and nothing else. The
-// pack's machine is the checkable contract; a model needing different
-// topology declares a separate machine under its own name.
-lifecycle opco.enterprise {
-  initial operating
-  state operating, acquired
-  on enter acquired {
-    set months_held = 0.0
+// pack's machine is the checkable contract; a model needing different topology
+// declares a separate machine under its own name.
+lifecycle cre.unit {
+  initial vacant
+  state vacant, leased
+  on enter leased {
+    set months_in_state = 0
   }
 }
 
-contract opco.revenue_line on entity asset.target {
-  term 2026-01..2026-12
-  terms {
-    amount = 1000000
-    growth_rate = 0.0
-  }
+stream cre.rent on entity asset.suite inflow currency USD {
+  schedule every year from 2026-01 to 2030-01
+  category operating.revenue.base_rent
+  amount = 100
 }

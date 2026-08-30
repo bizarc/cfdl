@@ -48,58 +48,13 @@
           }
         }
       },
-      "state": {},
-      "lifecycle": "opco.enterprise"
+      "state": {}
     }
   ],
   "assumptions": {
     "constants": {},
     "random": {}
   },
-  "lifecycles": [
-    {
-      "id": "opco.enterprise",
-      "initial": "operating",
-      "states": [
-        "operating",
-        "under_offer",
-        "acquired",
-        "levered",
-        "deleveraged",
-        "exited"
-      ],
-      "edges": [
-        {
-          "from": "operating",
-          "to": "under_offer"
-        },
-        {
-          "from": "under_offer",
-          "to": "acquired"
-        },
-        {
-          "from": "acquired",
-          "to": "levered"
-        },
-        {
-          "from": "levered",
-          "to": "deleveraged"
-        },
-        {
-          "from": "levered",
-          "to": "exited"
-        },
-        {
-          "from": "deleveraged",
-          "to": "exited"
-        },
-        {
-          "from": "operating",
-          "to": "exited"
-        }
-      ]
-    }
-  ],
   "subtotals": [
     {
       "id": "domain.opco.revenue_periodic",

@@ -2,12 +2,12 @@
   {
     "code": "E1357_LIFECYCLE_AUGMENT_TOPOLOGY",
     "severity": "error",
-    "message": "Lifecycle 'opco.enterprise' is declared by a pack, and this block states initial and state.",
+    "message": "Lifecycle 'cre.unit' is declared by a pack, and this block states initial and state.",
     "file": "model.cfdl",
     "span": {
-      "start_line": 11,
+      "start_line": 14,
       "start_col": 1,
-      "end_line": 17,
+      "end_line": 20,
       "end_col": 1
     },
     "path": null,
