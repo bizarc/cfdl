@@ -215,7 +215,7 @@ stream holder.payment on entity legal.holder inflow currency USD {
 
 
 @check("a fully-amortizing loan discounted at its own rate is worth its principal")
-def amortising_loan() -> tuple[float, float]:
+def amortizing_loan() -> tuple[float, float]:
     # 100,000 over 60 months at 6%. Level payments from pmt(); discounted at
     # the loan rate the payments are worth exactly the amount advanced.
     src = """version 0.1
@@ -1021,7 +1021,7 @@ stream cre.unit.base_rent.a on entity asset.tower inflow currency USD {
 
 stream loan.permanent_debt_service on entity asset.tower outflow currency USD {
   schedule every month from 2026-01 to 2026-12
-  category financing.debt_service
+  category financing.debt.service
   amount = if(time.t < 6, 20000, 5000)
 }
 """

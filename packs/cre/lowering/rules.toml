@@ -68,7 +68,7 @@ contract_name = "cre.exit_cap"
 stream_name = "cre.exit.sale"
 owner_entity = "${subject}"
 direction = "inflow"
-category = "investing.reversion"
+category = "investing.disposal.reversion"
 amount_expr = "{{contract.noi_value}} / {{contract.exit_cap}}"
 # A disposal is taken at the END of the holding period, so it discounts
 # the full n periods. `on_date` alone would settle it at the period's
@@ -225,7 +225,7 @@ schedule_from = "{{contract.term_start}}"
 schedule_to = "{{contract.term_end}}"
 
 # THE operating expense contract. One rule spans a single blended figure and a
-# full itemised schedule; the grain is chosen by how many instances a model
+# full itemized schedule; the grain is chosen by how many instances a model
 # declares, and the LEVEL by the entity each hangs on (`part_of` rolls them up).
 # It replaced `cre.property_opex` and `cre.ops_expense`, which differed only in
 # escalation and in whether they could be instanced — and, confusingly, the one
@@ -273,7 +273,7 @@ contract_name = "cre.exit"
 stream_name = "cre.exit.selling_costs"
 owner_entity = "${subject}"
 direction = "outflow"
-category = "investing.selling_costs"
+category = "investing.disposal.selling_costs"
 # The transaction cost as its own line: gross less costs is the old net, so
 # net cash flow is unchanged and the statement can show both.
 amount_expr = "{{contract.noi_forward_year}} / {{contract.exit_cap}} * {{contract.selling_costs}}"
@@ -291,7 +291,7 @@ contract_name = "cre.exit"
 stream_name = "cre.exit.proceeds"
 owner_entity = "${subject}"
 direction = "inflow"
-category = "investing.reversion"
+category = "investing.disposal.reversion"
 # Sale at term_start: forward-12-month NOI / exit cap, GROSS. Selling costs
 # lower as their own stream, so gross less costs is the old net.
 amount_expr = "{{contract.noi_forward_year}} / {{contract.exit_cap}}"
@@ -374,7 +374,7 @@ contract_name = "cre.exit_forward"
 stream_name = "cre.exit.proceeds"
 owner_entity = "${subject}"
 direction = "inflow"
-category = "investing.reversion"
+category = "investing.disposal.reversion"
 # Forward NOI derived from the modeled streams over the 12 months AFTER the
 # sale date (expense streams are signed negative, so adding them nets NOI).
 # Requires a projection tail (`time ... project 12`) so the window has data.
@@ -411,7 +411,7 @@ contract_name = "cre.exit_forward"
 stream_name = "cre.exit.selling_costs"
 owner_entity = "${subject}"
 direction = "outflow"
-category = "investing.selling_costs"
+category = "investing.disposal.selling_costs"
 amount_expr = "(series_sum(\"cre.unit.base_rent.*\", time.t + 1, time.t + {{model.periods_per_year}}) + series_sum(\"cre.unit.recoveries.*\", time.t + 1, time.t + {{model.periods_per_year}}) + series_sum(\"cre.rollover.rent.*\", time.t + 1, time.t + {{model.periods_per_year}}) + series_sum(\"cre.pct_rent.overage.*\", time.t + 1, time.t + {{model.periods_per_year}}) + series_sum(\"cre.lease.base_rent\", time.t + 1, time.t + {{model.periods_per_year}}) + series_sum(\"cre.revenue.line.*\", time.t + 1, time.t + {{model.periods_per_year}}) + series_sum(\"cre.vacancy.loss\", time.t + 1, time.t + {{model.periods_per_year}}) + series_sum(\"cre.opex.line.*\", time.t + 1, time.t + {{model.periods_per_year}})) / {{contract.exit_cap}} * {{contract.selling_costs}}"
 schedule_kind = "on_date"
 schedule_placement = "end"
@@ -480,7 +480,7 @@ contract_name = "cre.permanent_debt"
 stream_name = "cre.debt.proceeds{{contract.dot_suffix}}"
 owner_entity = "${subject}"
 direction = "inflow"
-category = "financing.debt_proceeds"
+category = "financing.debt.proceeds"
 amount_expr = "{{contract.principal}} * {{contract.funded_at_close}}"
 schedule_kind = "on_date"
 schedule_from = "{{contract.term_start}}"
@@ -495,7 +495,7 @@ contract_name = "cre.permanent_debt"
 stream_name = "cre.debt.interest{{contract.dot_suffix}}"
 owner_entity = "${subject}"
 direction = "outflow"
-category = "financing.interest"
+category = "financing.debt.interest_paid"
 # Interest-only while p < io_months, then the interest leg of the level
 # payment. Accrual and amortization keep their own divisors: an Actual/360
 # loan accrues on real days while its payment is struck on a 30/360 schedule.
@@ -515,7 +515,7 @@ contract_name = "cre.permanent_debt"
 stream_name = "cre.debt.principal{{contract.dot_suffix}}"
 owner_entity = "${subject}"
 direction = "outflow"
-category = "financing.debt_principal"
+category = "financing.debt.principal"
 # Scheduled amortization, plus the balloon when opted in — off by default,
 # because folding the unamortized balance into the final period makes that
 # period's coverage ratio meaningless; a sale usually repays it instead.
@@ -586,7 +586,7 @@ contract_name = "cre.construction_loan"
 stream_name = "cre.construction.equity_draw{{contract.dot_suffix}}"
 owner_entity = "${subject}"
 direction = "inflow"
-category = "financing.equity"
+category = "financing.equity.contribution"
 # CAPITALIZE OR PAY. `capitalize_interest = 1` rolls each period's accrued
 # interest into the balance it accrues on, which is the ordinary construction
 # structure: the asset has no income during the build, so the lender funds its
@@ -628,7 +628,7 @@ contract_name = "cre.construction_loan"
 stream_name = "cre.construction.loan_draw{{contract.dot_suffix}}"
 owner_entity = "${subject}"
 direction = "inflow"
-category = "financing.debt_proceeds"
+category = "financing.debt.proceeds"
 # Nothing until cumulative funding passes the commitment; the balance after.
 amount_expr = "min((curve_value(\"{{contract.draw_curve}}\", time.date) / {{model.periods_per_year}}), max(0, field.cre_construction_funded{{contract.suffix_ident}} - {{contract.equity_commitment}}))"
 field_name = "cre_construction_funded{{contract.suffix_ident}}"
@@ -654,9 +654,9 @@ contract_name = "cre.construction_loan"
 stream_name = "cre.construction.interest{{contract.dot_suffix}}"
 owner_entity = "${subject}"
 direction = "outflow"
-# `financing.debt_service` so `domain.cre.debt_service` counts it: coverage
+# `financing.debt.service` so `domain.cre.debt_service` counts it: coverage
 # during a build is measured on interest actually accruing.
-category = "financing.debt_service"
+category = "financing.debt.service"
 # `draw_accrual_fraction` is the market convention for WHEN in the period the
 # money lands, and it genuinely varies: 0.5 for funding drawn ratably through
 # the period (the default, and what a monthly-requisition build does), 0 for

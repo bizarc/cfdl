@@ -143,7 +143,7 @@ entity asset tlb : Asset.Financial {
 
 stream opco.sponsor.investment on entity asset.target outflow currency USD {
   schedule on 2016-01
-  category investing.acquisition
+  category investing.acquisition.purchase
   amount = cfg.sponsor_equity
 }
 
@@ -152,7 +152,7 @@ stream opco.sponsor.investment on entity asset.target outflow currency USD {
 // in proportion to what each put in.
 stream opco.sponsor.proceeds on entity asset.target inflow currency USD {
   schedule on 2021-01
-  category investing.exit
+  category investing.disposal.proceeds
   amount = (inputs.exit_multiple * curve_value("ebitda", time.date)
             - (asset.tlb.balance + cfg.senior_size + asset.sub_notes.balance
                - inputs.cash_at_exit))

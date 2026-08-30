@@ -1,6 +1,6 @@
 {
   "results_version": "0.5",
-  "model_hash": "c3c467140ef15435ef40822b7d33bae89cb2901d82a0d0d3eb9be463dbdd5a67",
+  "model_hash": "e231bc38febe9975f9bc49cc86f5066536834cadda02597efb158dabdf0106c1",
   "ledger_hash": "025b83a90c80602c1322abb77c87f045d183d8115064fefafac5dadd4c0de26d",
   "engine": {
     "name": "cfdl-engine",
@@ -420,6 +420,27 @@
             "label": "Expense reimbursements",
             "depth": 1,
             "display_sign": 1.0,
+            "values": [
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              }
+            ],
+            "total": 0.0
+          },
+          {
+            "kind": "line",
+            "label": "Income taxes",
+            "depth": 2,
+            "display_sign": -1.0,
             "values": [
               {
                 "amount": 0.0,
@@ -1108,6 +1129,27 @@
             "label": "Expense reimbursements",
             "depth": 1,
             "display_sign": 1.0,
+            "values": [
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              }
+            ],
+            "total": 0.0
+          },
+          {
+            "kind": "line",
+            "label": "Income taxes",
+            "depth": 2,
+            "display_sign": -1.0,
             "values": [
               {
                 "amount": 0.0,

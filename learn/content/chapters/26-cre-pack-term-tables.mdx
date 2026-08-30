@@ -82,7 +82,7 @@ Apply over stabilized operations only — during lease-up, vacancy is already in
 
 ## Debt
 
-**`cre.permanent_debt`** → `loan.permanent_debt_service` (financing.debt_service, outflow) — one combined stream, which is what the pack's DSCR metric selects. Interest-only while inside `io_months`, then the level payment struck on `amort_months`; maturity is the contract's term.
+**`cre.permanent_debt`** → `loan.permanent_debt_service` (financing.debt.service, outflow) — one combined stream, which is what the pack's DSCR metric selects. Interest-only while inside `io_months`, then the level payment struck on `amort_months`; maturity is the contract's term.
 
 | Term | Required | Default | Meaning |
 |---|---|---|---|
@@ -97,9 +97,9 @@ Apply over stabilized operations only — during lease-up, vacancy is already in
 
 Three forms, one decision: where does the NOI come from?
 
-**`cre.exit_cap`** → `cre.exit.sale` (investing.reversion, inflow) = `noi_value / exit_cap`. You state the NOI. | Required: `noi_value`, `exit_cap`.
+**`cre.exit_cap`** → `cre.exit.sale` (investing.disposal.reversion, inflow) = `noi_value / exit_cap`. You state the NOI. | Required: `noi_value`, `exit_cap`.
 
-**`cre.exit`** → `cre.exit.proceeds` = `noi_forward_year / exit_cap` **gross**, with `cre.exit.selling_costs` (investing.selling_costs, outflow) lowering beside it — gross less costs is the net, and the statement shows both. You state a *named forward window* — reconcile it against the modeled final year. | Required: `noi_forward_year`, `exit_cap`. Default: `selling_costs = 0`.
+**`cre.exit`** → `cre.exit.proceeds` = `noi_forward_year / exit_cap` **gross**, with `cre.exit.selling_costs` (investing.disposal.selling_costs, outflow) lowering beside it — gross less costs is the net, and the statement shows both. You state a *named forward window* — reconcile it against the modeled final year. | Required: `noi_forward_year`, `exit_cap`. Default: `selling_costs = 0`.
 
 **`cre.exit_forward`** → the same two streams, with forward NOI *derived* from the modeled streams over the twelve months after the sale date. It cannot drift and cannot be committee-edited, and it requires a projection tail so the window has data — with the operating terms extended through the tail, so the forward year exists to be read. | Required: `exit_cap`. Default: `selling_costs = 0`.
 

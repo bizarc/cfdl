@@ -455,7 +455,7 @@ stream infra.funding.fees on entity asset.concession outflow currency USD {
 
 stream infra.funding.equity on entity asset.concession inflow currency USD {
   schedule every year from 2009-01 to 2012-01
-  category financing.equity
+  category financing.equity.contribution
   amount = inputs.equity_pct * inputs.construction_real
              * if(time.t == 1, 0.1, if(time.t == 2, 0.3, if(time.t == 3, 0.5, 0.1)))
              * pow(1.0 + inputs.inflation, time.t)
@@ -566,7 +566,7 @@ stream infra.opex.variable on entity asset.concession outflow currency USD {
 // accumulated to date, and settled the following year.
 stream infra.tax.corporate on entity asset.concession outflow currency USD {
   schedule every year from 2013-01 to 2058-01
-  category operating.tax
+  category operating.income_tax.paid
   amount = inputs.tax_rate
              * max(0.0, min(prev.asset.project.pbt, asset.project.cum_pbt))
 }
@@ -621,37 +621,37 @@ stream infra.subsidy.availability on entity asset.concession inflow currency USD
 
 stream infra.debt.interest_t1 on entity asset.concession outflow currency USD {
   schedule every year from 2013-01 to 2058-01
-  category financing.interest
+  category financing.debt.interest_paid
   amount = prev.asset.tranche1.balance * inputs.rate_t1
 }
 
 stream infra.debt.interest_t2 on entity asset.concession outflow currency USD {
   schedule every year from 2013-01 to 2058-01
-  category financing.interest
+  category financing.debt.interest_paid
   amount = prev.asset.tranche2.balance * inputs.rate_t2
 }
 
 stream infra.debt.interest_t3 on entity asset.concession outflow currency USD {
   schedule every year from 2013-01 to 2058-01
-  category financing.interest
+  category financing.debt.interest_paid
   amount = prev.asset.tranche3.balance * inputs.rate_t3
 }
 
 stream infra.debt.principal_t1 on entity asset.concession outflow currency USD {
   schedule every year from 2013-01 to 2058-01
-  category financing.debt_principal
+  category financing.debt.principal
   amount = prev.asset.tranche1.balance - asset.tranche1.balance
 }
 
 stream infra.debt.principal_t2 on entity asset.concession outflow currency USD {
   schedule every year from 2013-01 to 2058-01
-  category financing.debt_principal
+  category financing.debt.principal
   amount = prev.asset.tranche2.balance - asset.tranche2.balance
 }
 
 stream infra.debt.principal_t3 on entity asset.concession outflow currency USD {
   schedule every year from 2013-01 to 2058-01
-  category financing.debt_principal
+  category financing.debt.principal
   amount = prev.asset.tranche3.balance - asset.tranche3.balance
 }
 ```

@@ -219,12 +219,12 @@ stream cre.opex.line on entity asset.home_project outflow currency USD {
 // discards belongs to the P&I leg, which is the leg the workbook rounded.
 stream loan.permanent_debt_service on entity asset.home_project outflow currency USD {
   schedule every year from 2024-01 to 2037-01
-  category financing.debt_service
+  category financing.debt.service
   amount = round_to(inputs.pi_mip_monthly * 12, 1) - inputs.first_mortgage * inputs.mip_rate
 }
 
 stream loan.mortgage_insurance on entity asset.home_project outflow currency USD {
   schedule every year from 2024-01 to 2037-01
-  category financing.mortgage_insurance
+  category financing.debt.mortgage_insurance
   amount = inputs.first_mortgage * inputs.mip_rate
 }

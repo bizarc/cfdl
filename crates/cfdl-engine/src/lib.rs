@@ -2547,7 +2547,7 @@ mod tests {
     ///
     /// Worth stating as a test rather than trusting the golden suite to notice.
     /// A golden diff says "this document changed"; it cannot say whether the
-    /// change was a real behavioural difference or a run-to-run wobble, and a
+    /// change was a real behavioral difference or a run-to-run wobble, and a
     /// wobble would surface as a flapping test rather than as the defect it is.
     /// The property the whole decoupling exists for: the same cash, modeled
     /// at two different grains, values the same when valued at one convention.
@@ -2560,7 +2560,7 @@ mod tests {
     /// discounting at the annual rate is the same arithmetic whichever grain
     /// the cash was modeled on, and this asserts exactly that.
     #[test]
-    fn the_same_cash_values_the_same_at_one_convention_whatever_grain_it_was_modelled_on() {
+    fn the_same_cash_values_the_same_at_one_convention_whatever_grain_it_was_modeled_on() {
         use super::*;
         let annual_line: Vec<Date> = (0..3)
             .map(|i| Date {
@@ -2745,7 +2745,7 @@ mod tests {
                     {{"id": "s2", "name": "probe.debt",
                       "owner": {{"symbol": "legal.co"}},
                       "direction": "outflow", "currency": "USD",
-                      "category": "financing.debt_service",
+                      "category": "financing.debt.service",
                       "schedule": {{"kind": "Every", "every": "monthly",
                                    "from": "2026-01-01", "to": "2027-12-01"}},
                       "amount": {{"lang": "cfdl", "src": "15000"}},
@@ -2761,7 +2761,7 @@ mod tests {
             {"id": "domain.p.noi", "kind": "money", "op": "sum",
              "categories": ["operating.*"]},
             {"id": "domain.p.ds", "kind": "money", "op": "negated_sum",
-             "categories": ["financing.debt_service"]},
+             "categories": ["financing.debt.service"]},
             {"id": "domain.p.dscr", "kind": "number", "op": "ratio",
              "numerator": "domain.p.noi", "denominator": "domain.p.ds"}
         "#));

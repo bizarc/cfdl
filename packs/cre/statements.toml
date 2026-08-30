@@ -72,7 +72,7 @@ formula = "sum(operating.*)"
 # A `line` row may select by `streams` instead, and the pack loader resolves each
 # selector to the category of the rule that emits that family — so these rows
 # satisfy the completeness check below exactly as a category row would. The
-# category row they replaced cannot be kept alongside them: every itemised
+# category row they replaced cannot be kept alongside them: every itemized
 # stream also carries `operating.expense.opex`, and claiming it twice is checked
 # for, statically here and per stream by the evaluator.
 #
@@ -107,12 +107,12 @@ op = "negated_sum"
 # to the digit. `debt_service` remains for instruments that genuinely pay one
 # line, such as construction-loan interest.
 categories = [
-  "financing.debt_service",
-  "financing.interest",
-  "financing.debt_principal",
-  "financing.mortgage_insurance",
+  "financing.debt.service",
+  "financing.debt.interest_paid",
+  "financing.debt.principal",
+  "financing.debt.mortgage_insurance",
 ]
-formula = "-sum(financing.debt_service, financing.interest, financing.debt_principal, financing.mortgage_insurance)"
+formula = "-sum(financing.debt.service, financing.debt.interest_paid, financing.debt.principal, financing.debt.mortgage_insurance)"
 
 # Debt service coverage, per period. This is the row backlog 1.4 is about: a
 # lifetime ratio of 1.4 can contain a year at 0.9 and report nothing.
@@ -199,6 +199,13 @@ depth = 1
 categories = ["operating.revenue.recovery"]
 
 [[statements.rows]]
+kind = "line"
+label = "Income taxes"
+depth = 2
+categories = ["operating.income_tax.paid"]
+display = "positive"
+
+[[statements.rows]]
 kind = "subtotal"
 label = "Effective gross income"
 depth = 0
@@ -208,7 +215,7 @@ subtotal = "domain.cre.egi"
 kind = "line"
 label = "Operating expenses"
 depth = 2
-streams = ["cre.opex.line"]  # series-allow: claims ONLY the unsuffixed blended line; the itemised rows below claim the named instances, and `.*` here would claim theirs too
+streams = ["cre.opex.line"]  # series-allow: claims ONLY the unsuffixed blended line; the itemized rows below claim the named instances, and `.*` here would claim theirs too
 display = "positive"
 
 [[statements.rows]]
@@ -308,28 +315,28 @@ display = "positive"
 kind = "line"
 label = "Debt service"
 depth = 1
-categories = ["financing.debt_service"]
+categories = ["financing.debt.service"]
 display = "positive"
 
 [[statements.rows]]
 kind = "line"
 label = "Interest"
 depth = 1
-categories = ["financing.interest"]
+categories = ["financing.debt.interest_paid"]
 display = "positive"
 
 [[statements.rows]]
 kind = "line"
 label = "Principal amortization"
 depth = 1
-categories = ["financing.debt_principal"]
+categories = ["financing.debt.principal"]
 display = "positive"
 
 [[statements.rows]]
 kind = "line"
 label = "Mortgage insurance"
 depth = 1
-categories = ["financing.mortgage_insurance"]
+categories = ["financing.debt.mortgage_insurance"]
 display = "positive"
 
 [[statements.rows]]
@@ -345,25 +352,25 @@ kind = "spacer"
 kind = "line"
 label = "Loan proceeds"
 depth = 1
-categories = ["financing.debt_proceeds"]
+categories = ["financing.debt.proceeds"]
 
 [[statements.rows]]
 kind = "line"
 label = "Equity contributions"
 depth = 1
-categories = ["financing.equity"]
+categories = ["financing.equity.contribution"]
 
 [[statements.rows]]
 kind = "line"
 label = "Sale proceeds"
 depth = 1
-categories = ["investing.reversion"]
+categories = ["investing.disposal.reversion"]
 
 [[statements.rows]]
 kind = "line"
 label = "Less: selling costs"
 depth = 1
-categories = ["investing.selling_costs"]
+categories = ["investing.disposal.selling_costs"]
 display = "positive"
 
 # The same cash, reported annually. Grain belongs to the OUTPUT, so this
@@ -420,6 +427,13 @@ depth = 1
 categories = ["operating.revenue.recovery"]
 
 [[statements.rows]]
+kind = "line"
+label = "Income taxes"
+depth = 2
+categories = ["operating.income_tax.paid"]
+display = "positive"
+
+[[statements.rows]]
 kind = "subtotal"
 label = "Effective gross income"
 depth = 0
@@ -429,7 +443,7 @@ subtotal = "domain.cre.egi"
 kind = "line"
 label = "Operating expenses"
 depth = 2
-streams = ["cre.opex.line"]  # series-allow: claims ONLY the unsuffixed blended line; the itemised rows below claim the named instances, and `.*` here would claim theirs too
+streams = ["cre.opex.line"]  # series-allow: claims ONLY the unsuffixed blended line; the itemized rows below claim the named instances, and `.*` here would claim theirs too
 display = "positive"
 
 [[statements.rows]]
@@ -529,28 +543,28 @@ display = "positive"
 kind = "line"
 label = "Debt service"
 depth = 1
-categories = ["financing.debt_service"]
+categories = ["financing.debt.service"]
 display = "positive"
 
 [[statements.rows]]
 kind = "line"
 label = "Interest"
 depth = 1
-categories = ["financing.interest"]
+categories = ["financing.debt.interest_paid"]
 display = "positive"
 
 [[statements.rows]]
 kind = "line"
 label = "Principal amortization"
 depth = 1
-categories = ["financing.debt_principal"]
+categories = ["financing.debt.principal"]
 display = "positive"
 
 [[statements.rows]]
 kind = "line"
 label = "Mortgage insurance"
 depth = 1
-categories = ["financing.mortgage_insurance"]
+categories = ["financing.debt.mortgage_insurance"]
 display = "positive"
 
 [[statements.rows]]
@@ -566,23 +580,23 @@ kind = "spacer"
 kind = "line"
 label = "Loan proceeds"
 depth = 1
-categories = ["financing.debt_proceeds"]
+categories = ["financing.debt.proceeds"]
 
 [[statements.rows]]
 kind = "line"
 label = "Equity contributions"
 depth = 1
-categories = ["financing.equity"]
+categories = ["financing.equity.contribution"]
 
 [[statements.rows]]
 kind = "line"
 label = "Sale proceeds"
 depth = 1
-categories = ["investing.reversion"]
+categories = ["investing.disposal.reversion"]
 
 [[statements.rows]]
 kind = "line"
 label = "Less: selling costs"
 depth = 1
-categories = ["investing.selling_costs"]
+categories = ["investing.disposal.selling_costs"]
 display = "positive"

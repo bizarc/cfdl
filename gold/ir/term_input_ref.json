@@ -135,11 +135,11 @@
       "kind": "money",
       "op": "negated_sum",
       "categories": [
-        "financing.debt_service",
-        "financing.interest",
-        "financing.debt_principal"
+        "financing.debt.service",
+        "financing.debt.interest_paid",
+        "financing.debt.principal"
       ],
-      "formula": "-sum(financing.debt_service, financing.interest, financing.debt_principal)"
+      "formula": "-sum(financing.debt.service, financing.debt.interest_paid, financing.debt.principal)"
     },
     {
       "id": "domain.energy.dscr_periodic",

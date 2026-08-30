@@ -1,0 +1,17 @@
+[
+  {
+    "code": "E5030_AMBIGUOUS_CONTRACT_CATEGORY",
+    "severity": "error",
+    "message": "Contract 'cre.permanent_debt' states one category, and lowers 3 streams. Each carries its own category, so one clause cannot say which it reclassifies.",
+    "file": "model.cfdl",
+    "span": {
+      "start_line": 12,
+      "start_col": 1,
+      "end_line": 20,
+      "end_col": 1
+    },
+    "path": null,
+    "hint": "Name the stream: `category <stream> = <path>`, once per stream you mean to reclassify. The bare form is for a contract that lowers exactly one.",
+    "notes": []
+  }
+]

@@ -367,6 +367,14 @@ see what is wrong with it.
   in net operating income takes a different root — and a coverage ratio that
   quietly excluded a stream is wrong and says so nowhere. Without a pack a
   category stays optional, because nothing folds.
+- `E5030_AMBIGUOUS_CONTRACT_CATEGORY` — a contract states one `category` and
+  lowers more than one stream. A contract lowers one or more streams and its
+  pack states a category for each, so a single clause cannot say which it
+  reclassifies: it would set all of them to the same value, and a coverage ratio
+  computed off a principal repayment reclassified as interest is wrong with
+  nothing to show for it. Name the stream — `category <stream> = <path>` — once
+  per stream. The bare form stays legal where the contract lowers exactly one,
+  because there is then nothing to disambiguate.
 
 - `W5022_UNKNOWN_SERIES_REFERENCE` — a `series_sum`/`series_avg` names a series
   no stream, contract or waterfall step produces, so it aggregates to zero and

@@ -59,7 +59,7 @@ One contract spans the whole range:
 
 - **A single blended figure.** One unsuffixed instance: `amount_year`, maybe
   `escalation`.
-- **An itemised schedule.** One instance per expense —
+- **An itemized schedule.** One instance per expense —
   `cre.opex_line.property_tax`, `cre.opex_line.utilities` — each with its own
   escalation and its own fixed share. `templates.toml` ships the conventional
   set as editor snippets; a modeller can name their own.
@@ -84,8 +84,8 @@ through the term itself; there are no curve-selector twin terms.
 A construction facility funded behind an equity commitment. Equity draws first;
 the loan takes the balance once the commitment is exhausted; interest accrues on
 the drawn balance through the build. Emits three streams — the equity draw
-(`financing.equity`), the loan draw (`financing.debt_proceeds`) and interest
-(`financing.debt_service`, so coverage during a build counts it).
+(`financing.equity.contribution`), the loan draw (`financing.debt.proceeds`) and interest
+(`financing.debt.service`, so coverage during a build counts it).
 
 | term | | |
 |---|---|---|
@@ -130,11 +130,11 @@ A commercial mortgage on a stabilized property. Emits three streams — the
 whole instrument, per the contract design rules:
 
 - `cre.debt.proceeds{.<id>}` — the draw at closing
-  (`financing.debt_proceeds`)
+  (`financing.debt.proceeds`)
 - `cre.debt.interest{.<id>}` — the interest leg
-  (`financing.interest`)
+  (`financing.debt.interest_paid`)
 - `cre.debt.principal{.<id>}` — scheduled amortization, plus the
-  balloon when opted in (`financing.debt_principal`)
+  balloon when opted in (`financing.debt.principal`)
 
 Interest plus principal reproduce the level payment exactly (`ipmt + ppmt =
 pmt`), and both fold into `domain.cre.debt_service`, so coverage is what it
@@ -272,7 +272,7 @@ time.date)`), not model years.
 | `cre.lease_unit.<id>` | `rent_year` | `free_rent_months` (0), `escalation` (0), `expense_stop_year`/`opex_year`/`opex_escalation`/`pro_rata_share` (0 — recoveries off), `ti_total`/`lc_total` (0) |
 | `cre.rollover.<id>` | `renewal_probability`, `renewal_rent_year`, `market_rent_year` | `market_escalation` (0), `downtime_months` (0), `renewal_ti_lc`/`new_ti_lc` (0). Term starts AT EXPIRY. |
 | `cre.vacancy_loss` | `rate`, `potential_gross_year` | — |
-| `cre.opex_line{.<id>}` | `amount` or `amount_year` | `escalation` (0), `pct_fixed` (1), `occupancy` (1) — expressions welcome. Instance it per expense for an itemised schedule; the entity it hangs on sets the level. |
+| `cre.opex_line{.<id>}` | `amount` or `amount_year` | `escalation` (0), `pct_fixed` (1), `occupancy` (1) — expressions welcome. Instance it per expense for an itemized schedule; the entity it hangs on sets the level. |
 | `cre.exit` | `noi_forward_year`, `exit_cap` | `selling_costs` (0); fires at `term_start` |
 | `cre.exit_forward` | `exit_cap` | `selling_costs` (0); NOI derived via `series_sum` over the 12 months after sale |
 | `cre.percentage_rent.<id>` | `sales_year`, `breakpoint_year`, `overage_pct` | `sales_growth` (0) — retail overage rent above the breakpoint |
@@ -466,8 +466,8 @@ sections, so a subtotal is a prefix query over the same selector streams use:
 | `investing.capital.leasing` | TI and leasing commissions |
 | `investing.capital.construction` | construction draws |
 | `investing.capital.capex` | general capital improvements |
-| `investing.reversion` | sale proceeds at the end of the hold |
-| `financing.debt_service` | principal and interest |
+| `investing.disposal.reversion` | sale proceeds at the end of the hold |
+| `financing.debt.service` | principal and interest |
 
 So net operating income is everything under `operating.*`, effective gross
 income is `operating.revenue.*` plus `operating.deduction.*`, and the leasing

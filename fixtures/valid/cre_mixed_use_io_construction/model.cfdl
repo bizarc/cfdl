@@ -29,7 +29,7 @@ contract cre.exit_cap on entity asset.property {
 // Construction IO interest: $12M loan @ 7.5% annual = $75,000/mo (months 0-35)
 stream loan.io_interest on entity asset.construction outflow currency USD {
   schedule every month from 2026-01 to 2028-12
-  category financing.debt_service
+  category financing.debt.service
   amount = 75000
 }
 
@@ -61,6 +61,6 @@ stream resi.base_rent on entity asset.property inflow currency USD {
 // $12M perm loan @ 6.5% / 25-yr amortization → ~$68,500/mo P&I
 stream loan.perm_debt_service on entity asset.permanent outflow currency USD {
   schedule every month from 2029-01 to 2033-12
-  category financing.debt_service
+  category financing.debt.service
   amount = 68500
 }

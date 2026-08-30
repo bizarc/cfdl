@@ -243,13 +243,13 @@ option mgmt_options_25_00 type Option.Equity {
 // exercised tranches pay in.
 stream opco.exit.equity_value on entity asset.target inflow currency USD {
   schedule every year from 2021-01 to 2021-01
-  category investing.exit
+  category investing.disposal.proceeds
   amount = asset.target.exit_equity
 }
 
 stream opco.exit.option_proceeds on entity asset.target inflow currency USD {
   schedule every year from 2021-01 to 2021-01
-  category investing.exit
+  category investing.disposal.proceeds
   amount = 44.500
 }
 

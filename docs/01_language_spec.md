@@ -504,7 +504,7 @@ cap rate:
 ```cfdl
 stream cre.exit on entity asset.project inflow currency USD {
   schedule on 2037-06 end
-  category investing.reversion
+  category investing.disposal.reversion
   amount = series_sum("cre.noi", time.t + 1, time.t + 12) / inputs.cap_rate
 }
 ```

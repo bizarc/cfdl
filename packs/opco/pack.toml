@@ -12,18 +12,28 @@ description = "Operating Business pack v0.1 (deterministic lowering + E7xxx chec
 # W5023 naming the near match. A pack cannot enumerate every leaf a deal needs:
 # the leaf is not knowable by a pack that shipped before the deal. What this
 # list still buys is the domain's conventional spelling. See docs/35.
+# MAIN BUSINESS ACTIVITY: no specified main business activity.
+#
+# An operating company does not provide financing to customers as a main
+# business, so interest paid is financing and interest received is investing.
+#
+# IFRS 18 removes the classification choice IAS 7 paragraphs 31-34 allowed,
+# for periods beginning on or after 1 January 2027. Classification is a
+# property of the domain rather than of a deal, so the pack states it once
+# and its lowering rules follow. See docs/35 section 2.5.
+
 categories = [
   "operating.revenue.recurring",
   "operating.expense.opex",
   "operating.working_capital",
-  "operating.tax",
+  "operating.income_tax.paid",
   "investing.capital.capex",
-  "investing.acquisition",
-  "investing.exit",
-  "investing.selling_costs",
-  "financing.interest",
-  "financing.debt_principal",
-  "financing.debt_proceeds",
+  "investing.acquisition.purchase",
+  "investing.disposal.proceeds",
+  "investing.disposal.selling_costs",
+  "financing.debt.interest_paid",
+  "financing.debt.principal",
+  "financing.debt.proceeds",
 ]
 
 

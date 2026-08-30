@@ -391,3 +391,9 @@ string_lit      = STRING ;
 number          = DECIMAL | INT ;
 bool_lit        = "true" | "false" ;
 date_lit        = DATE ;
+
+(* What a contract's lowered streams ARE, overriding the category its pack's
+   rule assigns. `category <stream> = <path>` names which lowered stream is
+   reclassified; the bare form is sugar for a contract lowering exactly one and
+   is refused (E5030) where it would flatten several. *)
+contract_category = "category" ( qname "=" qname | qname ) ;

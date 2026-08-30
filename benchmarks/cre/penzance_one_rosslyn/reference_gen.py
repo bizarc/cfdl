@@ -262,7 +262,7 @@ stream cre.opex on entity asset.project outflow currency USD {{
 // anchored to, and no Rosslyn condominium of that size has traded recently.
 stream cre.condo_closings on entity asset.project inflow currency USD {{
   schedule every month start from {ym(0)} to {ym(N-1)}
-  category investing.reversion
+  category investing.disposal.reversion
   amount = curve_value("condo_proceeds", time.date)
 }}
 
@@ -301,7 +301,7 @@ entity asset facility : Asset.Financial {{
 
 stream cre.loan_draw on entity asset.project inflow currency USD {{
   schedule every month start from {ym(0)} to {ym(N-1)}
-  category financing.debt_proceeds
+  category financing.debt.proceeds
   amount = asset.facility.draw
 }}
 
@@ -309,13 +309,13 @@ stream cre.loan_draw on entity asset.project inflow currency USD {{
 // coverage stays measurable. The two legs net to zero in cash.
 stream cre.loan_interest on entity asset.project outflow currency USD {{
   schedule every month start from {ym(0)} to {ym(N-1)}
-  category financing.interest
+  category financing.debt.interest_paid
   amount = asset.facility.interest
 }}
 
 stream cre.loan_interest_funding on entity asset.project inflow currency USD {{
   schedule every month start from {ym(0)} to {ym(N-1)}
-  category financing.debt_proceeds
+  category financing.debt.proceeds
   amount = asset.facility.interest
 }}
 
@@ -324,14 +324,14 @@ stream cre.loan_interest_funding on entity asset.project inflow currency USD {{
 // meaningless. The cre pack says the same of a permanent loan's balloon.
 stream cre.loan_repayment on entity asset.project outflow currency USD {{
   schedule every month start from {ym(0)} to {ym(N-1)}
-  category investing.reversion
+  category investing.disposal.reversion
   amount = asset.facility.repay
 }}
 
 // ----------------------------------------------------- scenario A: the sale
 stream cre.exit_a on entity asset.project inflow currency USD {{
   schedule on {ym(A_EXIT)} end
-  category investing.reversion
+  category investing.disposal.reversion
   amount = {A_VALUE:.2f} * inputs.market_factor * (1.0 - inputs.scenario_b)
 }}
 
@@ -341,19 +341,19 @@ stream cre.exit_a on entity asset.project inflow currency USD {{
 // stabilized value, amortizing over 30 years.
 stream cre.refinance on entity asset.project inflow currency USD {{
   schedule on {ym(B_REFI)} end
-  category financing.debt_proceeds
+  category financing.debt.proceeds
   amount = {PERM_PRINCIPAL:.2f} * inputs.scenario_b
 }}
 
 stream cre.perm_debt_service on entity asset.project outflow currency USD {{
   schedule every month end from {ym(B_REFI + 1)} to {ym(B_EXIT)}
-  category financing.debt_service
+  category financing.debt.service
   amount = {PERM_PMT:.2f} * inputs.scenario_b
 }}
 
 stream cre.exit_b on entity asset.project inflow currency USD {{
   schedule on {ym(B_EXIT)} end
-  category investing.reversion
+  category investing.disposal.reversion
   amount = (series_sum("cre.rent", time.t + 1, time.t + 12)
           + series_sum("cre.parking", time.t + 1, time.t + 12)
           + series_sum("cre.opex", time.t + 1, time.t + 12))
@@ -362,7 +362,7 @@ stream cre.exit_b on entity asset.project inflow currency USD {{
 
 stream cre.perm_payoff on entity asset.project outflow currency USD {{
   schedule on {ym(B_EXIT)} end
-  category investing.reversion
+  category investing.disposal.reversion
   amount = {PERM_PAYOFF:.2f} * inputs.scenario_b
 }}
 '''.replace("{DRAW_EXPR}",

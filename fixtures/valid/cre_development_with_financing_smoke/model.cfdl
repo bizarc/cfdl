@@ -45,12 +45,12 @@ contract cre.exit_cap on entity asset.property {
 
 stream loan.construction_interest on entity asset.construction {
   schedule every month from 2026-01 to 2027-06
-  category financing.debt_service
+  category financing.debt.service
   amount = 40000
 }
 
 stream loan.permanent_debt_service on entity asset.permanent {
   schedule every month from 2027-07 to 2031-12
-  category financing.debt_service
+  category financing.debt.service
   amount = 55000
 }

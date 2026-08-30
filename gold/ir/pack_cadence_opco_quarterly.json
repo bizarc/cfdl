@@ -144,10 +144,10 @@
       "kind": "money",
       "op": "negated_sum",
       "categories": [
-        "financing.interest",
-        "financing.debt_principal"
+        "financing.debt.interest_paid",
+        "financing.debt.principal"
       ],
-      "formula": "-sum(financing.interest, financing.debt_principal)"
+      "formula": "-sum(financing.debt.interest_paid, financing.debt.principal)"
     },
     {
       "id": "domain.opco.lfcf_periodic",
@@ -442,7 +442,7 @@
       },
       "direction": "outflow",
       "currency": "USD",
-      "category": "operating.tax",
+      "category": "operating.income_tax.paid",
       "schedule": {
         "kind": "Every",
         "every": "quarterly",

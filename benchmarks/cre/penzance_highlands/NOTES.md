@@ -75,7 +75,7 @@ compounding preference. Accounts hold the capital record; the recurrence holds
 the preference.
 
 **Two contribution timelines, one period apart.** The accounts use the true
-funding dates. `asset.jv.capital` recognises the same dollars one period later
+funding dates. `asset.jv.capital` recognizes the same dollars one period later
 — its increment is `prev.asset.facility.equity_funded - prev.asset.jv.funded_prev`,
 which is period *t−1*'s funding, because a field's `next` can only read `prev`.
 The totals are identical and both have long converged by the 2024-06
@@ -100,7 +100,7 @@ both correct for what they measure.
 
 The obvious tidy-up is to declare the equity contribution as a stream, which
 would let `deal_cash` read it through `series_sum` and drop the gross-up. It was
-tried in scratch (category `financing.equity` — `financing.equity_contribution`
+tried in scratch (category `financing.equity.contribution` — `financing.equity_contribution`
 is refused by `E5022`; the pack's category list is the authority) and it is
 wrong, decisively:
 

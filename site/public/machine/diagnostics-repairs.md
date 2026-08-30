@@ -11,7 +11,7 @@ Diagnostics are the repair signal: read the `code`, `message`, `span`, and
 `hint`, change the model, recompile. The catalog is how an agent learns what
 each code looks like in the flesh before it meets one.
 
-**Coverage:** 197 codes in the docs/08 §7 register; 86 exemplified here; 70 of 89 examples carry a recorded fix.
+**Coverage:** 198 codes in the docs/08 §7 register; 87 exemplified here; 70 of 90 examples carry a recorded fix.
 
 ## active_in_unknown_state — E1332_UNKNOWN_ACTIVE_STATE
 
@@ -200,6 +200,38 @@ stream debt.principal on entity asset.borrower {
   amount = 100
 }
 ```
+
+## contract_category_ambiguous — E5030_AMBIGUOUS_CONTRACT_CATEGORY
+
+Failing example:
+
+```cfdl
+version 0.1
+model "contract-category-ambiguous"
+use pack "cre" version "0.1.0"
+time calendar monthly from 2026-01 for 12
+
+// A permanent mortgage lowers three streams — interest, principal and proceeds
+// — and the pack states a category for each. One bare `category` clause cannot
+// say which it reclassifies, so it would set all three to the same value and
+// make every coverage ratio computed off them wrong. E5030.
+entity asset tower : CRE.Asset.RealProperty
+
+contract cre.permanent_debt on entity asset.tower {
+  term 2026-01..2026-12
+  category financing.debt.interest_paid
+  terms {
+    principal = 1000000
+    rate = 0.05
+    amort_months = 300
+  }
+}
+```
+
+- `E5030_AMBIGUOUS_CONTRACT_CATEGORY` (error): Contract 'cre.permanent_debt' states one category, and lowers 3 streams. Each carries its own category, so one clause cannot say which it reclassifies.
+  - hint: Name the stream: `category <stream> = <path>`, once per stream you mean to reclassify. The bare form is for a contract that lowers exactly one.
+
+Fix: not yet recorded.
 
 ## contract_category_bad_root — E5022_UNKNOWN_STREAM_CATEGORY
 
@@ -3076,7 +3108,7 @@ stream misc.windfall on entity asset.tower inflow currency USD {
 ```
 
 - `E5029_STREAM_MISSING_CATEGORY` (error): Stream 'misc.windfall' declares no category, and pack 'cre' is active. Its cash would reach model.total and fold into no subtotal — invisible to every domain metric, silently.
-  - hint: State what the flow IS, as a path into the cash flow statement: `category operating.revenue.rent`, `category financing.interest`. A category is only optional when no pack is active, because then nothing folds.
+  - hint: State what the flow IS, as a path into the cash flow statement: `category operating.revenue.rent`, `category financing.debt.interest_paid`. A category is only optional when no pack is active, because then nothing folds.
 
 Fix: not yet recorded.
 

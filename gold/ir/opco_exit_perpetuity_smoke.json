@@ -112,10 +112,10 @@
       "kind": "money",
       "op": "negated_sum",
       "categories": [
-        "financing.interest",
-        "financing.debt_principal"
+        "financing.debt.interest_paid",
+        "financing.debt.principal"
       ],
-      "formula": "-sum(financing.interest, financing.debt_principal)"
+      "formula": "-sum(financing.debt.interest_paid, financing.debt.principal)"
     },
     {
       "id": "domain.opco.lfcf_periodic",
@@ -245,7 +245,7 @@
       },
       "direction": "outflow",
       "currency": "USD",
-      "category": "investing.selling_costs",
+      "category": "investing.disposal.selling_costs",
       "schedule": {
         "kind": "OnDate",
         "on": "2030-01-01",
@@ -284,7 +284,7 @@
       },
       "direction": "inflow",
       "currency": "USD",
-      "category": "investing.exit",
+      "category": "investing.disposal.proceeds",
       "schedule": {
         "kind": "OnDate",
         "on": "2030-01-01",

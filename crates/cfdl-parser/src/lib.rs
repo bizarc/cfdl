@@ -353,6 +353,11 @@ pub struct ContractStmt {
     /// (docs/35 §2.5). Validated against the three roots like any other.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub category: Option<String>,
+    /// Per-stream overrides: lowered stream name -> category. A contract lowers
+    /// one or more streams and its pack states a category for each, so an
+    /// override has to say which one it means.
+    #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
+    pub stream_categories: BTreeMap<String, String>,
     /// Who the contract is between, by role. `parties` has been a reserved
     /// keyword since v0.1 and was never parsed — a contract could not say who
     /// it was with.
@@ -1377,6 +1382,7 @@ impl<'a> Parser<'a> {
         let mut payment_net = None;
         let mut terms = BTreeMap::new();
         let mut category: Option<String> = None;
+        let mut stream_categories: BTreeMap<String, String> = BTreeMap::new();
         let mut end_span = start.span;
         let mut depth = 0usize;
 
@@ -1489,7 +1495,32 @@ impl<'a> Parser<'a> {
                         TokenKind::Qname(name) | TokenKind::Ident(name) => {
                             let _ = self.bump();
                             end_span = value_tok.span;
-                            category = Some(name.clone());
+                            let first = name.clone();
+                            // `category <stream> = <path>` names WHICH lowered
+                            // stream is being reclassified. A contract lowers
+                            // one or more streams and the pack states a
+                            // category for each; an override that could not say
+                            // which one it meant flattened all of them onto the
+                            // same category, silently.
+                            if matches!(self.peek().kind, TokenKind::Punct(Punct::Equal)) {
+                                let _ = self.bump();
+                                let target = self.peek().clone();
+                                match &target.kind {
+                                    TokenKind::Qname(path) | TokenKind::Ident(path) => {
+                                        let _ = self.bump();
+                                        end_span = target.span;
+                                        stream_categories.insert(first, path.clone());
+                                    }
+                                    _ => self.push_expected(
+                                        target.span,
+                                        "Expected a category path after '=', as in \
+                                         `category cre.debt.interest = financing.debt.interest_paid`."
+                                            .to_string(),
+                                    ),
+                                }
+                            } else {
+                                category = Some(first);
+                            }
                         }
                         _ => {
                             self.push_expected(
@@ -1503,7 +1534,7 @@ impl<'a> Parser<'a> {
                 }
                 TokenKind::Punct(Punct::LBrace) => depth += 1,
                 TokenKind::Punct(Punct::RBrace) => depth = depth.saturating_sub(1),
-                // AN UNRECOGNISED CLAUSE IS AN ERROR, NOT A SHRUG.
+                // AN UNRECOGNIZED CLAUSE IS AN ERROR, NOT A SHRUG.
                 //
                 // This arm was `_ => {}`, which swallowed every token it did not
                 // recognise. A misspelled clause, or one the grammar does not
@@ -1548,6 +1579,7 @@ impl<'a> Parser<'a> {
             term_end,
             terms,
             category,
+            stream_categories,
             parties,
             span: merge_spans(start.span, end_span),
         })

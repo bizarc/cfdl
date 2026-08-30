@@ -55,8 +55,8 @@ kind = "money"
 op = "negated_sum"
 # The interest and principal legs fold where the netted payment folded, so
 # coverage is unchanged by the decomposition.
-categories = ["financing.debt_service", "financing.interest", "financing.debt_principal"]
-formula = "-sum(financing.debt_service, financing.interest, financing.debt_principal)"
+categories = ["financing.debt.service", "financing.debt.interest_paid", "financing.debt.principal"]
+formula = "-sum(financing.debt.service, financing.debt.interest_paid, financing.debt.principal)"
 
 # The covenant. Undefined once the debt matures, which is published as `null`
 # rather than as a zero — a period with no debt service has no coverage ratio,
@@ -99,7 +99,7 @@ subtotal = "domain.energy.ebitda"
 kind = "line"
 label = "Tax credits and benefits"
 depth = 1
-categories = ["operating.tax_benefit"]
+categories = ["operating.income_tax.benefit"]
 
 [[statements.rows]]
 kind = "subtotal"
@@ -121,28 +121,28 @@ display = "positive"
 kind = "line"
 label = "Debt service"
 depth = 1
-categories = ["financing.debt_service"]
+categories = ["financing.debt.service"]
 display = "positive"
 
 [[statements.rows]]
 kind = "line"
 label = "Interest"
 depth = 1
-categories = ["financing.interest"]
+categories = ["financing.debt.interest_paid"]
 display = "positive"
 
 [[statements.rows]]
 kind = "line"
 label = "Principal amortization"
 depth = 1
-categories = ["financing.debt_principal"]
+categories = ["financing.debt.principal"]
 display = "positive"
 
 [[statements.rows]]
 kind = "line"
 label = "Loan proceeds"
 depth = 1
-categories = ["financing.debt_proceeds"]
+categories = ["financing.debt.proceeds"]
 
 [[statements.rows]]
 kind = "ratio"
@@ -180,7 +180,7 @@ subtotal = "domain.energy.ebitda"
 kind = "line"
 label = "Tax credits and benefits"
 depth = 1
-categories = ["operating.tax_benefit"]
+categories = ["operating.income_tax.benefit"]
 
 [[statements.rows]]
 kind = "subtotal"
@@ -202,28 +202,28 @@ display = "positive"
 kind = "line"
 label = "Debt service"
 depth = 1
-categories = ["financing.debt_service"]
+categories = ["financing.debt.service"]
 display = "positive"
 
 [[statements.rows]]
 kind = "line"
 label = "Interest"
 depth = 1
-categories = ["financing.interest"]
+categories = ["financing.debt.interest_paid"]
 display = "positive"
 
 [[statements.rows]]
 kind = "line"
 label = "Principal amortization"
 depth = 1
-categories = ["financing.debt_principal"]
+categories = ["financing.debt.principal"]
 display = "positive"
 
 [[statements.rows]]
 kind = "line"
 label = "Loan proceeds"
 depth = 1
-categories = ["financing.debt_proceeds"]
+categories = ["financing.debt.proceeds"]
 
 [[statements.rows]]
 kind = "ratio"

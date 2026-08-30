@@ -11,7 +11,7 @@
       "end_col": 1
     },
     "path": null,
-    "hint": "State what the flow IS, as a path into the cash flow statement: `category operating.revenue.rent`, `category financing.interest`. A category is only optional when no pack is active, because then nothing folds.",
+    "hint": "State what the flow IS, as a path into the cash flow statement: `category operating.revenue.rent`, `category financing.debt.interest_paid`. A category is only optional when no pack is active, because then nothing folds.",
     "notes": []
   }
 ]

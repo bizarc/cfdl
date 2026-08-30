@@ -92,7 +92,7 @@ stream opco.ufcf.fy29 on entity asset.target inflow currency USD {
 
 stream opco.exit.value on entity asset.target inflow currency USD {
   schedule every month from 2029-06 to 2029-06
-  category investing.exit
+  category investing.disposal.proceeds
   amount = inputs.terminal_year_ufcf * inputs.terminal_ntm_multiple
            * (1 - inputs.dilution_term)
 }

@@ -121,12 +121,12 @@
       "kind": "money",
       "op": "negated_sum",
       "categories": [
-        "financing.debt_service",
-        "financing.interest",
-        "financing.debt_principal",
-        "financing.mortgage_insurance"
+        "financing.debt.service",
+        "financing.debt.interest_paid",
+        "financing.debt.principal",
+        "financing.debt.mortgage_insurance"
       ],
-      "formula": "-sum(financing.debt_service, financing.interest, financing.debt_principal, financing.mortgage_insurance)"
+      "formula": "-sum(financing.debt.service, financing.debt.interest_paid, financing.debt.principal, financing.debt.mortgage_insurance)"
     },
     {
       "id": "domain.cre.dscr",
@@ -327,7 +327,7 @@
       },
       "direction": "inflow",
       "currency": "USD",
-      "category": "investing.reversion",
+      "category": "investing.disposal.reversion",
       "schedule": {
         "kind": "OnDate",
         "on": "2031-12-01",
@@ -486,7 +486,7 @@
       },
       "direction": "outflow",
       "currency": "USD",
-      "category": "financing.debt_service",
+      "category": "financing.debt.service",
       "schedule": {
         "kind": "Every",
         "every": "monthly",
@@ -519,7 +519,7 @@
       },
       "direction": "outflow",
       "currency": "USD",
-      "category": "financing.debt_service",
+      "category": "financing.debt.service",
       "schedule": {
         "kind": "Every",
         "every": "monthly",

@@ -144,10 +144,10 @@
       "kind": "money",
       "op": "negated_sum",
       "categories": [
-        "financing.interest",
-        "financing.debt_principal"
+        "financing.debt.interest_paid",
+        "financing.debt.principal"
       ],
-      "formula": "-sum(financing.interest, financing.debt_principal)"
+      "formula": "-sum(financing.debt.interest_paid, financing.debt.principal)"
     },
     {
       "id": "domain.opco.lfcf_periodic",
@@ -426,7 +426,7 @@
       },
       "direction": "outflow",
       "currency": "USD",
-      "category": "investing.acquisition",
+      "category": "investing.acquisition.purchase",
       "schedule": {
         "kind": "OnDate",
         "on": "2026-01-01"
@@ -504,7 +504,7 @@
       },
       "direction": "outflow",
       "currency": "USD",
-      "category": "financing.interest",
+      "category": "financing.debt.interest_paid",
       "schedule": {
         "kind": "Every",
         "every": "monthly",
@@ -544,7 +544,7 @@
       },
       "direction": "outflow",
       "currency": "USD",
-      "category": "financing.debt_principal",
+      "category": "financing.debt.principal",
       "schedule": {
         "kind": "Every",
         "every": "monthly",
@@ -584,7 +584,7 @@
       },
       "direction": "inflow",
       "currency": "USD",
-      "category": "financing.debt_proceeds",
+      "category": "financing.debt.proceeds",
       "schedule": {
         "kind": "OnDate",
         "on": "2026-01-01"
@@ -622,7 +622,7 @@
       },
       "direction": "outflow",
       "currency": "USD",
-      "category": "investing.selling_costs",
+      "category": "investing.disposal.selling_costs",
       "schedule": {
         "kind": "OnDate",
         "on": "2027-12-01",
@@ -661,7 +661,7 @@
       },
       "direction": "inflow",
       "currency": "USD",
-      "category": "investing.exit",
+      "category": "investing.disposal.proceeds",
       "schedule": {
         "kind": "OnDate",
         "on": "2027-12-01",
@@ -780,7 +780,7 @@
       },
       "direction": "outflow",
       "currency": "USD",
-      "category": "operating.tax",
+      "category": "operating.income_tax.paid",
       "schedule": {
         "kind": "Every",
         "every": "monthly",

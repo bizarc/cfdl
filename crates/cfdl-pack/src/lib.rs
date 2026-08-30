@@ -56,7 +56,7 @@ pub struct PackManifest {
     /// operating.revenue.base_rent
     /// operating.deduction.vacancy
     /// investing.capital.leasing
-    /// financing.debt_service
+    /// financing.debt.service
     /// ```
     ///
     /// Hierarchical rather than flat because every system that solves this
@@ -2385,7 +2385,26 @@ fn validate_rule_categories(
     source: &str,
 ) -> Result<(), PackLoadError> {
     for rule in rules {
-        if rule.category.is_empty() || categories.iter().any(|c| c == &rule.category) {
+        // A RULE THAT EMITS A STREAM STATES ITS CATEGORY.
+        //
+        // A contract lowers one or more streams, and the pack is the thing that
+        // knows what each of them IS. A rule that says nothing emits cash with
+        // no category: real money in `model.total`, absent from every subtotal,
+        // and not reachable by `E5029`, which sees only what the MODEL declared.
+        //
+        // Scoped to stream-emitting rules on purpose. A rule may lower a FIELD
+        // rather than cash — every pool in `credit` carries one for its balance
+        // — and a field is not classified into a cash flow statement, so
+        // demanding a category of it would be asking the wrong question.
+        if !rule.stream_name.is_empty() && rule.category.is_empty() {
+            return Err(PackLoadError {
+                message: format!(
+                    "Lowering rule '{}' in '{source}' declares no category, so the stream it                      emits would fold into no subtotal. A contract lowers one or more streams                      and the pack states what each one is.",
+                    rule.id
+                ),
+            });
+        }
+        if categories.iter().any(|c| c == &rule.category) {
             continue;
         }
         let known = if categories.is_empty() {
@@ -2578,6 +2597,7 @@ mod tests {
             pack_dir.join("pack.toml"),
             r#"name = "testpack"
 version = "0.1.0"
+categories = ["operating.revenue.other"]
 [entrypoints]
 aliases = "aliases.toml"
 templates = "templates.toml"
@@ -2615,6 +2635,7 @@ contract_name = "lease_contract"
 stream_name = "pack.stream"
 owner_entity = "legal.borrower"
 direction = "inflow"
+category = "operating.revenue.other"
 currency = "USD"
 amount_expr = "1"
 schedule_kind = "every"
@@ -2663,6 +2684,7 @@ schedule_to = "2026-12"
             pack_dir.join("pack.toml"),
             r#"name = "testpack"
 version = "0.1.0"
+categories = ["operating.revenue.other"]
 [entrypoints]
 lowering = "lowering/rules.toml"
 "#,
@@ -2676,6 +2698,7 @@ contract_name = "lease_contract"
 stream_name = "flatname"
 owner_entity = "legal.borrower"
 direction = "inflow"
+category = "operating.revenue.other"
 currency = "USD"
 amount_expr = "1"
 schedule_kind = "every"
@@ -2908,6 +2931,7 @@ contract_name = "{name}"
 stream_name = "t.stream"
 owner_entity = "${{subject}}"
 direction = "inflow"
+category = "operating.revenue.other"
 amount_expr = "1"
 schedule_kind = "every"
 schedule_from = "2026-01"

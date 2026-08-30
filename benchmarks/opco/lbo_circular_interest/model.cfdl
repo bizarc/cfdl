@@ -143,7 +143,7 @@ entity asset tlb : Asset.Financial {
 // exists to make computable without iterating.
 stream opco.interest.term_loan on entity asset.target outflow currency USD {
   schedule every year from 2017-01 to 2020-01
-  category financing.interest
+  category financing.debt.interest_paid
   amount = (curve_value("libor", time.date) + 0.03)
            * (prev.asset.tlb.balance + asset.tlb.balance) / 2
 }
@@ -153,7 +153,7 @@ stream opco.interest.term_loan on entity asset.target outflow currency USD {
 // disagree. Once PIK ends it is cash interest on a flat balance.
 stream opco.interest.sub_notes on entity asset.target outflow currency USD {
   schedule every year from 2017-01 to 2020-01
-  category financing.interest
+  category financing.debt.interest_paid
   amount = if(time.t <= 3,
               asset.sub_notes.balance - prev.asset.sub_notes.balance,
               0.085 * asset.sub_notes.balance)
@@ -162,7 +162,7 @@ stream opco.interest.sub_notes on entity asset.target outflow currency USD {
 // $175 of senior notes at a fixed 7.0%.
 stream opco.interest.senior_notes on entity asset.target outflow currency USD {
   schedule every year from 2017-01 to 2020-01
-  category financing.interest
+  category financing.debt.interest_paid
   amount = 12.25
 }
 
@@ -170,7 +170,7 @@ stream opco.interest.senior_notes on entity asset.target outflow currency USD {
 // the line is the commitment fee alone.
 stream opco.interest.undrawn_revolver on entity asset.target outflow currency USD {
   schedule every year from 2017-01 to 2020-01
-  category financing.interest
+  category financing.debt.interest_paid
   amount = 0.35
 }
 
@@ -178,6 +178,6 @@ stream opco.interest.undrawn_revolver on entity asset.target outflow currency US
 // term loan balance: all of it sweeps, mandatory amortization included.
 stream opco.debt.repayment on entity asset.target outflow currency USD {
   schedule every year from 2017-01 to 2020-01
-  category financing.debt_principal
+  category financing.debt.principal
   amount = prev.asset.tlb.balance - asset.tlb.balance
 }
