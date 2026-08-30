@@ -1574,8 +1574,8 @@ reserves among what the reference zeroed out to be comparable. §7.5 carries
 is one accumulating FF&E reserve. Servicer advancing (§7.74) is a
 recoverable-advances balance.
 
-**The ask, in three parts** — the third is done, the first is half done, and
-the second is open. First, the migrations the shipped fleet already
+**The ask, in three parts** — the first is half done, and the second and third
+are open, the third for a reason worth reading. First, the migrations the shipped fleet already
 owes: the flip case's hand-carried pot (`docs/25` — the one case where
 revenue is computed a second time inside the distribution) and Highlands'
 cumulative window, both named gate shapes in `docs/29` phase 4. **Highlands is
@@ -1591,18 +1591,37 @@ no split at all. The flip case is the remaining migration. Second, a
 reserve contract shape per pack where a document demands one — the DSRA
 funded to target with `dscr_periodic` gating the release, the replacement
 reserve of §7.5, the FF&E reserve — each as the `pay <step> to account`
-pattern rather than a bespoke contract. Third, interest ON a reserve balance — **done 2026-08-30**,
-`fixtures/valid/reserve_interest_on_balance`, and the entry's own phrasing was
-wrong about how. A stream's amount may NOT read `prev.<account>`: that is
-`E1123_PREV_OUTSIDE_NEXT`, because `prev` outside a `next` means nothing.
-`docs/03` is precise about where a balance is readable — rules, guards and step
-expressions — and a field's `next` is a rule, so the field carries the balance
-forward and the stream reads the field. The pin funds a reserve toward 3,000
-and accrues 0.5% on the PRIOR balance: 5.00 on the first 1,000, 10.03 on 2,005,
-then 15.00 a month once the target holds. Reading strictly backward is what
-keeps the reserve and the interest it earns from being mutually circular. The
-CREST reconciliation line is closed as a mechanism; the case that reconciles
-against CREST's own ~$4,606 still wants the reference.
+pattern rather than a bespoke contract. Third, interest ON a reserve balance — **attempted 2026-08-30 and withdrawn;
+it is blocked, and the entry was wrong twice about why.**
+
+The entry called this "a stream whose amount reads `prev.<account>`, legal
+under §4's backward rule". That spelling is refused —
+`E1123_PREV_OUTSIDE_NEXT`, because `prev` outside a `next` means nothing — and
+`docs/03` is precise that a balance is readable in rules, guards and step
+expressions. A field's `next` is a rule, so the obvious repair is to have a
+field carry the balance forward and a stream read the field. That compiles,
+runs, and produces the right numbers under the walk: a reserve funding toward
+3,000 earns 5.00 on the first 1,000, 10.03 on 2,005, then 15.00 a month.
+
+**It also breaks the collapse property**, which is why it is not shipped.
+`walk_matches_the_column_order` compares both evaluation orders over every
+blessed model, and the two disagree on exactly this shape:
+
+    reserve_interest_on_balance: 'ops.reserve_interest' period 2:
+      column 0, walk 5
+
+The column order evaluates a field's whole column before any waterfall has
+settled an account, so `prev.<account>` reads zero there while the walk reads
+the settled balance. The walk is production and its answer is the right one —
+but `docs/29` phase 2 rests on the claim that the two orders agree, and a
+model that breaks it is a model that claim does not cover.
+
+So the blocker is not the spelling. **A field rule reading an account balance
+is not order-independent**, and closing this needs one of: the column
+evaluator settling accounts before field columns, or such models excluded the
+way forward-readers already are — a decision about what `docs/29` phase 2
+claims, not a fixture. Recorded rather than worked around, because adding the
+fixture to an exclusion list would be the suite marking its own homework.
 
 Related: §7.5, §7.41, §7.72 (shipped), §7.74, `docs/25`, `docs/28` §5.1, `docs/30` §1.
 
