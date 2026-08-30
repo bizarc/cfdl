@@ -16,11 +16,33 @@
     "tolerance": 1.0
   },
   "entity.party.baupost.total": {
-    "value": 160851859.44,
-    "tolerance": 1.0
+    "value": 328472611.96,
+    "tolerance": 1.0,
+    "source": "capital_inv 167,620,752.53 + preferred_inv 97,357,852.26 + residual_inv 63,494,007.17"
   },
   "entity.party.penzance.total": {
-    "value": 35509653.04,
-    "tolerance": 1.0
+    "value": 54134181.1,
+    "tolerance": 1.0,
+    "source": "capital_sp 18,624,528.06 + preferred_sp 10,817,539.14 + promote 17,637,224.21 + residual_sp 7,054,889.69"
+  },
+  "metric.baupost_irr": {
+    "value": 0.081203,
+    "tolerance": 1e-05,
+    "source": "irr(party.baupost) over the party's own account"
+  },
+  "metric.baupost_moic": {
+    "value": 1.959618,
+    "tolerance": 0.0001,
+    "source": "328,472,611.96 distributed on 167,620,752.53 contributed"
+  },
+  "metric.penzance_irr": {
+    "value": 0.127552,
+    "tolerance": 1e-05,
+    "source": "irr(party.penzance) over the party's own account, promote included"
+  },
+  "metric.penzance_moic": {
+    "value": 2.906607,
+    "tolerance": 0.0001,
+    "source": "54,134,181.10 distributed on 18,624,528.06 contributed"
   }
 }
