@@ -465,17 +465,18 @@ impl StateWalk {
                 to: to.clone(),
                 event: format!("lifecycle:{lifecycle_id}"),
             });
-            self.journal.push(
-                JournalEntry::new(
-                    t,
-                    &date.to_string(),
-                    format!("lifecycle:{lifecycle_id}"),
-                    "transition",
-                    format!("{symbol}: {from} -> {to}"),
-                    "applied",
-                )
-                .with_note(note),
-            );
+            // The transition is the EVENT; its arrival actions are what it
+            // DID, so they are gathered as its children rather than pushed
+            // beside it (`docs/34` D7). Held back until they are known.
+            let mut transition_entry = JournalEntry::new(
+                t,
+                &date.to_string(),
+                format!("lifecycle:{lifecycle_id}"),
+                "transition",
+                format!("{symbol}: {from} -> {to}"),
+                "applied",
+            )
+            .with_note(note);
 
             // ARRIVAL ACTIONS. Entry actions first — the state's own setup,
             // true however it was reached — then the taken edge's, which know
@@ -557,7 +558,7 @@ impl StateWalk {
                     }
                 }
                 if let Some(loser) = written_here.get(&action.field) {
-                    self.journal.push(
+                    transition_entry.children.push(
                         JournalEntry::new(
                             t,
                             &date.to_string(),
@@ -570,7 +571,7 @@ impl StateWalk {
                     );
                 }
                 written_here.insert(action.field.clone(), action.author.clone());
-                self.journal.push(
+                transition_entry.children.push(
                     JournalEntry::new(
                         t,
                         &date.to_string(),
@@ -587,6 +588,7 @@ impl StateWalk {
                     .with_note(format!("on {grain} into {to}: {} = {}", action.src, series[t])),
                 );
             }
+            self.journal.push(transition_entry);
         }
 
         for (event_idx, event) in ir.events.iter().enumerate() {
