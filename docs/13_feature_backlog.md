@@ -2395,7 +2395,26 @@ leaf's declaration of a name wins), the compiler validates models against
 the effective roster (E1312 required, E1313 near-miss and its declared-list
 hint), and redeclaration is strengthen-only — a rule the shipped packs
 dictated, since `CRE.Asset.Unit` already strengthens `rentable_area` from
-optional to required. The CONTRACT side still waits on a prior question:
-`OntologyContract` carries no field schema at all — terms are validated
-through templates and lowering rules — so contract-field inheritance first
-needs a decision on where a contract's term schema lives.
+optional to required. The CONTRACT side's
+prior question is now settled in direction (31 August 2026): **terms are
+fields.** There is no second member construct — the schema options first
+drafted (ontology-owned term schema vs template-synthesized vs collapse)
+framed the wrong choice, because today's "term schema" is not a schema at
+all: it is the union of what rules consume, templates render and
+validations bound. The settled shape is ONE member model across node
+families. Every family has a core that makes a thing that family — a
+contract: its parties in roles, its effective dates (the `term` range),
+its subject, and its fields (`principal`, `rate`); a party: a name; an
+asset: a class — declared on the family's masters, inherited through
+`refines` exactly as entity fields already are, and enhanced, aliased or
+extended by packs. Implementation: `OntologyContract` gains `fields`
+(`OntologyField`, unchanged), `effective_fields` covers both rosters,
+masters declare their cores (mined from what the four packs' rules
+actually consume, then argued), and pack load validates that a concrete
+type's rules and templates satisfy what its masters promise. **Lowering is
+untouched, explicitly** (decided 31 August 2026): rules keep consuming
+terms (`{{contract.principal}}`), templates keep rendering defaults,
+validations keep bounding values, `inputs.` deferral keeps its rules.
+Unifying the member model changes what a contract type DECLARES, never how
+a contract LOWERS — bounds, defaults and deferral are validations and
+consumers OF fields, not a different kind of member.

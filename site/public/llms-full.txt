@@ -19106,7 +19106,7 @@ entity asset tower : Asset.Real
 entity party lender : Party
 ```
 
-The **family** (`asset`, `party`, or `container` for a grouping such as a fund) and the **name** (`tower`, `lender`) combine into the reference you use everywhere else: `asset.tower`, `party.lender`. The **type** after the colon (`Asset.Real`, `Party`) says what kind of thing this is in a vocabulary the tooling understands — real assets, financial assets, intangibles, parties to a transaction. When you later adopt an industry pack, the pack extends this vocabulary with domain types and checks your entities against it. Contracts, in turn, check that they attach to an entity of a type that makes sense. A lease on a `Party` is a nonsense the compiler can refuse only because the model said what things *are*, not just what they are called.
+The **family** (`asset`, `party`, or `container` for a grouping such as a fund) and the **name** (`tower`, `lender`) combine into the reference you use everywhere else: `asset.tower`, `party.lender`. The **type** after the colon (`Asset.Real`, `Party`) says what kind of thing this is in a vocabulary the tooling understands — real assets, financial assets, intangibles, parties to a transaction. When you later adopt an industry pack, the pack extends this vocabulary with domain types and checks your entities against it — and each pack type states what it specializes (`CRE.Asset.RealProperty` refines `Asset.Real`), so "is a" is a recorded fact rather than a naming convention. Contracts, in turn, check that they attach to an entity of a type that makes sense. A lease on a `Party` is a nonsense the compiler can refuse only because the model said what things *are*, not just what they are called.
 
 Entities can also nest — a building that is `part of` a portfolio, a unit that is `part of` a building — which gives roll-ups something real to roll up along. The capstone uses this; for now just know the structure is there.
 
@@ -19247,6 +19247,10 @@ A run produces one document with a consistent anatomy, whether the model is this
 **Annual rollup.** The same cash regrouped by calendar year — the view a committee actually reads, and the bridge to how results are compared against a source document that reports annually.
 
 **Metrics.** NPV, IRR, and — once packs are involved — domain metrics like coverage ratios. Each metric carries its inputs in the output (the discount rate used, the as-of date), so a metric is never a bare number you have to reconstruct context for.
+
+**The graph, and who owns what.** A top-level `graph` lists every entity — its symbol, family, type, `part of` parent, and (when the model carries one) its stable `id`. Each stream series states its owning `entity` and its `category` beside the values. Together these mean the document stands alone: you can attribute any stream's cash to the thing that owns it without the model open in another window.
+
+**Slices.** A model that declares slices publishes each one: the selection it stated, the streams it matched, a net series, and total/NPV/IRR over the match. A slice never carries a reconciliation block — it is partial by design, and the document shows it as partial.
 
 ## Discounting: the two knobs that change everything
 
@@ -20734,7 +20738,7 @@ Everything in this course so far has been **packless**: models built from the co
 
 ## What a pack is
 
-A pack is a domain's modeling knowledge, versioned and declared in one line:
+A pack is a domain's modeling knowledge, versioned and declared in one line — and its types are refinements of the language's own masters: `CRE.Contract.PermanentDebt` states `refines = "Contract.Debt"`, so anything written against the master (a slice, a validation) reaches the pack's types without naming them. Declared in one line:
 
 ```cfdl
 use pack "cre" version "0.1.0"
@@ -21241,7 +21245,7 @@ One time grid per model; header statements live in the root file only. Everythin
 
 ```text
 entity <family> <name> : <Type>                  -- family: asset | party |
-entity <family> <name> : <Type> {                --         contract | reference
+entity <family> <name> : <Type> {                --         container
   <field> = <literal>                            -- a fact: literal only
   <field> init <expr>                            -- a rule: the recurrence
           next <expr>                            --   `prev` = own prior value
@@ -21344,6 +21348,14 @@ waterfall <a>.<b> on entity <ref> {
   schedule <as streams>
   from <expr>                                -- the pot; fields and series work
   pay <step> to <family>.<name> = <expr>     -- receives min(max(0,owed),remaining)
+}
+
+slice <name> {                               -- a named partial selection
+  entity <family>.<name>                     -- plus its part-of descendants
+  type <TypeId>                              -- matches through refines
+  category "<path or path.*>"                -- quoted; series_sum's dialect
+  stream "<selector>"
+  except stream "<selector>"                 -- kinds intersect; excepts subtract
 }
 ```
 
