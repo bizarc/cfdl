@@ -733,8 +733,9 @@ fn roll_convention(arg: &Arg) -> Result<RollConvention, CalcError> {
     }
 }
 
-/// `series_sum(name, from_t, to_t)` / `series_avg(...)`: cross-stream series
-/// aggregation resolved by the host via `Env::series_aggregate`.
+/// `series_sum` / `series_avg` / `series_max` / `series_min` / `series_prod` /
+/// `series_count`, each `(name, from_t, to_t)`: a cross-stream reduction
+/// resolved by the host via `Env::series_aggregate`.
 pub(crate) fn series_call(
     name: &str,
     args: &[Arg],
@@ -755,14 +756,31 @@ pub(crate) fn series_call(
         }
     };
     let (from, to) = (int(from)?, int(to)?);
-    let mean = name == "series_avg";
-    env.series_aggregate(&series_name, from, to, mean)
+    let reduce = crate::eval::SeriesReduction::of(name)
+        .ok_or_else(|| CalcError::new(format!("unknown series function `{name}`"), Some(span)))?;
+    env.series_aggregate(&series_name, from, to, reduce)
         .map(Value::Number)
         .ok_or_else(|| {
-            CalcError::new(
-                format!("{name}: series `{series_name}` is not available in this context"),
-                Some(series.1),
-            )
+            // A MAXIMUM OF NOTHING IS NOT ZERO. The host returns None both
+            // when it has no series at all (a plain expression context) and
+            // when `series_max`/`series_min` were given a selection that
+            // matched nothing, and the second deserves its own sentence:
+            // returning 0 there would state a peak that no period reached.
+            use crate::eval::SeriesReduction as R;
+            match reduce {
+                R::Max | R::Min => CalcError::new(
+                    format!(
+                        "{name}: series `{series_name}` selects nothing in this window, and \
+                         nothing has no maximum or minimum. A `.*` selector may match nothing; \
+                         a fold over it cannot."
+                    ),
+                    Some(series.1),
+                ),
+                _ => CalcError::new(
+                    format!("{name}: series `{series_name}` is not available in this context"),
+                    Some(series.1),
+                ),
+            }
         })
 }
 

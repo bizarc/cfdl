@@ -87,11 +87,9 @@ current build accepts.
 
 **Curves** — `curve_value`
 
-**Series folds** — `series_sum`, `series_avg`
-
 **Other** — `irr`, `moic`, `quantile_at`, `quantile_mean`, `quantile_of`
 
-*42 functions.*
+*40 functions.*
 <!-- /cfdl:generated expression-builtins -->
 
 ## Related

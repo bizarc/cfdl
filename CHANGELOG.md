@@ -8,6 +8,46 @@ This project follows Semantic Versioning: https://semver.org/
 
 ## [Unreleased]
 
+### Added: four more reductions over a series (§7.86)
+
+`series_sum` and `series_avg` were the whole reduction vocabulary, and the
+miss looked like a hit: `min`/`max`/`sum`/`avg` are variadic SCALAR folds, so
+`max(series_sum("dbt.*", 0, 11))` compiles, runs, and returns the lifetime net
+as a one-element fold, silently labelled as a peak.
+
+`series_max`, `series_min`, `series_prod` and `series_count` join the pair —
+same signature, same selector dialect, same window semantics, same contexts.
+
+- **Every fold reads the PER-PERIOD AGGREGATE.** A selector matching several
+  streams adds them together within each period, and the fold runs over that
+  one series. Addition is associative so the order never showed for a sum; for
+  a maximum it decides the answer, and only the aggregate reading is what
+  "peak outstanding" means. No golden moved, which is the evidence that
+  `series_sum` and `series_avg` still compute what they computed.
+- **A selection matching nothing** sums to 0, multiplies to 1 and counts 0;
+  `series_max`/`series_min` refuse it, because nothing has no maximum and a
+  zero there would state a peak no period reached.
+- **`series_prod` retires a workaround.** `exp(series_sum(helper, 0, t))`
+  needs a helper stream carrying `ln(1 + r_t)`, and a stream must be `inflow`
+  or `outflow` — so the helper IS cash — while `ln`/`exp` escape to f64.
+  `series_prod` needs neither and stays decimal.
+
+The six function names are now defined ONCE, as `SERIES_FUNCTIONS`, instead of
+being written out at five call sites; adding a reduction wires it into the
+dependency edges, the strictly-backward check, `W5022` and `E1365` together.
+
+Peak outstanding debt is `series_max` over the series that CARRIES the balance
+— an entity field, which a metric could not read until §7.85. The two land
+together, and `valid/series_reductions` shows both readings: 6,000 as the
+largest flow, 10,000 as the peak balance. It also pins the trap, so the
+one-element fold cannot return silently.
+
+Not closed, and recorded as §7.94: a reduction over a TRANSFORMED series (a
+breach count, a maximum drawdown) and the position-returning forms. The first
+is blocked on §7.55 rather than on a reduction — a model cannot declare the
+per-period line to fold — and building `series_count_if` before that decision
+would be the wrong language.
+
 ### Added: a metric can read what the valuation plane publishes (§7.85)
 
 `docs/01` §15.3 has said in normative text since metrics entered the spec that

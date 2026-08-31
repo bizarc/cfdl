@@ -1399,8 +1399,11 @@ The expression environment MUST support:
 - `ref.<name>` is reserved for ontology references (not in the v0.1 dialect)
 
 **Cross-stream series**
-- `series_sum(<pattern>, <window>)` / `series_avg(...)` — cross-stream
-  references (dependency-ordered waves; cycles rejected)
+- `series_sum(<pattern>, <window>)` / `series_avg` / `series_max` /
+  `series_min` / `series_prod` / `series_count` — cross-stream reductions
+  (dependency-ordered waves; cycles rejected). Every one folds the per-period
+  aggregate of the matched streams; `series_max`/`series_min` refuse a
+  selection that matches nothing, where the others return their identity
 
 **Math and finance**
 - Standard arithmetic `+ - * / ^`, comparisons, `and/or/not`, `if(cond, a, b)`
@@ -1410,7 +1413,8 @@ The expression environment MUST support:
 - `year_frac/eomonth/edate/date/parse_date/months_between`
 - `is_business_day/roll/add_business_days` with named holiday calendars
 - `macrs_rate`, `cpr_to_smm`
-- `curve_value`, `series_sum`, `series_avg`
+- `curve_value`, `series_sum`, `series_avg`, `series_max`, `series_min`,
+  `series_prod`, `series_count`
 - `quantile_at`, `quantile_mean`, `quantile_of` (lookups into a declared
   `quantile`; see §12.6)
 - The authoritative function catalog is `03_expression_environment.md`
