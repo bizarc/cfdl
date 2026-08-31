@@ -528,6 +528,10 @@ pub struct Results {
     /// model declaring no entities.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub graph: Option<ResultsGraph>,
+    /// Declared slices and what each came to (docs/13 §7.90). Absent when
+    /// the model declares none.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub slices: Option<Vec<SliceResult>>,
 }
 
 #[derive(Debug, Clone, Serialize)]
@@ -908,6 +912,48 @@ impl SeriesValue {
             SeriesValue::Number(_) | SeriesValue::Null => None,
         }
     }
+}
+
+/// A slice's published result (docs/13 §7.90): a named, deliberately
+/// partial selection and what it came to. NO reconciliation block, by
+/// design — the absence is what the declaration means. A partial number
+/// must not dress as a complete one, so a slice never publishes a residual
+/// and never claims the model's total.
+#[derive(Debug, Clone, Serialize)]
+pub struct SliceResult {
+    pub id: String,
+    /// The selection as declared — the lineage. Kinds intersect, values
+    /// within a kind union, excepts subtract.
+    pub selection: SliceSelection,
+    /// Every stream the selection matched, by name. Empty is published, not
+    /// omitted: a slice that matched nothing should be seen matching
+    /// nothing.
+    pub streams: Vec<String>,
+    /// The selection's net cash per period — a fold OF the matched streams,
+    /// never counted as cash anywhere else.
+    pub net: Series,
+    /// total / npv / irr over the matched streams, on the same axis the
+    /// model's own figures use. `irr` is absent when the flows never change
+    /// sign.
+    pub metrics: BTreeMap<String, Scalar>,
+}
+
+#[derive(Debug, Clone, Serialize)]
+pub struct SliceSelection {
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub entities: Vec<String>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub types: Vec<String>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub categories: Vec<String>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub streams: Vec<String>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub except_streams: Vec<String>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub except_categories: Vec<String>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub except_entities: Vec<String>,
 }
 
 /// The model's entity graph, published so a consumer holding results alone

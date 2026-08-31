@@ -30,6 +30,7 @@ pub enum Stmt {
     Entity(EntityStmt),
     Assume(AssumeStmt),
     Metric(MetricStmt),
+    Slice(SliceStmt),
     Curve(CurveStmt),
     Quantile(QuantileStmt),
     Contract(ContractStmt),
@@ -323,6 +324,25 @@ pub struct MetricStmt {
     /// The expression, as raw source. Evaluated once in the valuation plane,
     /// after the walk has settled every series it can read.
     pub expr: String,
+    pub span: Span,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, serde::Serialize)]
+pub struct SliceStmt {
+    pub name: String,
+    /// Entity references — each selects the entity AND its `part of`
+    /// descendants. Unquoted, because a party is a reference and so is this.
+    pub entities: Vec<String>,
+    /// Ontology types, matched transitively through `refines` — `type
+    /// Contract.Debt` selects streams lowered from anything that is_a Debt.
+    pub types: Vec<String>,
+    /// Category selectors, quoted — the same dialect `series_sum` reads.
+    pub categories: Vec<String>,
+    /// Stream-name selectors, quoted — same dialect.
+    pub streams: Vec<String>,
+    pub except_streams: Vec<String>,
+    pub except_categories: Vec<String>,
+    pub except_entities: Vec<String>,
     pub span: Span,
 }
 
@@ -851,6 +871,7 @@ impl<'a> Parser<'a> {
             TokenKind::Keyword(Keyword::Entity) => self.parse_entity_stmt().map(Stmt::Entity),
             TokenKind::Keyword(Keyword::Assume) => self.parse_assume_stmt().map(Stmt::Assume),
             TokenKind::Keyword(Keyword::Metric) => self.parse_metric_stmt().map(Stmt::Metric),
+            TokenKind::Keyword(Keyword::Slice) => self.parse_slice_stmt().map(Stmt::Slice),
             TokenKind::Keyword(Keyword::Curve) => self.parse_curve_stmt().map(Stmt::Curve),
             TokenKind::Keyword(Keyword::Quantile) => self.parse_quantile_stmt().map(Stmt::Quantile),
             // A value that changes over time belongs to the thing it
@@ -3628,6 +3649,157 @@ impl<'a> Parser<'a> {
         })
     }
 
+    /// `slice <name> { ... }` — a named, deliberately partial selection
+    /// (docs/13 §7.90). Clause KINDS intersect, values within a kind union,
+    /// `except` subtracts last. A slice carries no reconciliation: the
+    /// absence is what the declaration means — a partial number must not
+    /// dress as a complete one.
+    fn parse_slice_stmt(&mut self) -> Option<SliceStmt> {
+        let start = self.expect_keyword(Keyword::Slice, "'slice'")?;
+        let name_tok = self.bump();
+        let name = match name_tok.kind {
+            TokenKind::Ident(ref s) => s.clone(),
+            TokenKind::Keyword(_) => {
+                let word = self.slice_source(name_tok.span);
+                self.push_expected(
+                    name_tok.span,
+                    format!(
+                        "Expected identifier after 'slice', found the reserved word '{word}'. Reserved words are listed in section 18 of the language specification; choose another name."
+                    ),
+                );
+                return None;
+            }
+            _ => {
+                self.push_expected(
+                    name_tok.span,
+                    "Expected identifier after 'slice'.".to_string(),
+                );
+                return None;
+            }
+        };
+        let _ = self.expect_punct(Punct::LBrace, "'{'")?;
+        let mut stmt = SliceStmt {
+            name,
+            entities: Vec::new(),
+            types: Vec::new(),
+            categories: Vec::new(),
+            streams: Vec::new(),
+            except_streams: Vec::new(),
+            except_categories: Vec::new(),
+            except_entities: Vec::new(),
+            span: start.span,
+        };
+        loop {
+            let tok = self.bump();
+            match tok.kind {
+                TokenKind::Punct(Punct::RBrace) => {
+                    stmt.span = merge_spans(start.span, tok.span);
+                    break;
+                }
+                TokenKind::Eof => {
+                    self.push_expected(
+                        tok.span,
+                        "Expected '}' to close the slice block.".to_string(),
+                    );
+                    return None;
+                }
+                TokenKind::Keyword(Keyword::Entity) => {
+                    let value = self.parse_slice_entity_ref()?;
+                    stmt.entities.push(value);
+                }
+                TokenKind::Keyword(Keyword::Type) => {
+                    let value = self.parse_slice_type_ref()?;
+                    stmt.types.push(value);
+                }
+                TokenKind::Keyword(Keyword::Stream) => {
+                    let value = self.parse_slice_selector("stream")?;
+                    stmt.streams.push(value);
+                }
+                TokenKind::Ident(ref ident) if ident == "category" => {
+                    let value = self.parse_slice_selector("category")?;
+                    stmt.categories.push(value);
+                }
+                TokenKind::Keyword(Keyword::Except) => {
+                    let kind_tok = self.bump();
+                    match kind_tok.kind {
+                        TokenKind::Keyword(Keyword::Stream) => {
+                            let value = self.parse_slice_selector("except stream")?;
+                            stmt.except_streams.push(value);
+                        }
+                        TokenKind::Ident(ref ident) if ident == "category" => {
+                            let value = self.parse_slice_selector("except category")?;
+                            stmt.except_categories.push(value);
+                        }
+                        TokenKind::Keyword(Keyword::Entity) => {
+                            let value = self.parse_slice_entity_ref()?;
+                            stmt.except_entities.push(value);
+                        }
+                        _ => {
+                            self.push_expected(
+                                kind_tok.span,
+                                "Expected 'stream', 'category' or 'entity' after 'except' in a slice.".to_string(),
+                            );
+                            return None;
+                        }
+                    }
+                }
+                _ => {
+                    self.push_expected(
+                        tok.span,
+                        "Expected 'entity', 'type', 'stream', 'category', 'except' or '}' in a slice block.".to_string(),
+                    );
+                    return None;
+                }
+            }
+        }
+        Some(stmt)
+    }
+
+    fn parse_slice_entity_ref(&mut self) -> Option<String> {
+        let tok = self.bump();
+        match &tok.kind {
+            TokenKind::Qname(value) => Some(value.clone()),
+            _ => {
+                self.push_expected(
+                    tok.span,
+                    "Expected an entity reference (e.g. asset.loan_a) — a slice selects by reference, not by text.".to_string(),
+                );
+                None
+            }
+        }
+    }
+
+    fn parse_slice_type_ref(&mut self) -> Option<String> {
+        let tok = self.bump();
+        match &tok.kind {
+            TokenKind::Qname(value) => Some(value.clone()),
+            TokenKind::Ident(value) => Some(value.clone()),
+            _ => {
+                self.push_expected(
+                    tok.span,
+                    "Expected an ontology type after 'type' (e.g. Contract.Debt).".to_string(),
+                );
+                None
+            }
+        }
+    }
+
+    fn parse_slice_selector(&mut self, clause: &str) -> Option<String> {
+        let tok = self.bump();
+        match &tok.kind {
+            TokenKind::String(value) => Some(value.clone()),
+            _ => {
+                self.push_expected(
+                    tok.span,
+                    format!(
+                        "Expected a quoted selector after '{clause}' — the dialect `series_sum` reads, e.g. \"pool.loan_a.*\"."
+                    ),
+                );
+                None
+            }
+        }
+    }
+
     fn parse_assume_stmt(&mut self) -> Option<AssumeStmt> {
         let start = self.expect_keyword(Keyword::Assume, "'assume'")?;
         let name_tok = self.bump();
@@ -4120,6 +4292,7 @@ impl<'a> Parser<'a> {
                 | TokenKind::Keyword(Keyword::Entity)
                 | TokenKind::Keyword(Keyword::Assume)
                 | TokenKind::Keyword(Keyword::Metric)
+                | TokenKind::Keyword(Keyword::Slice)
                 | TokenKind::Keyword(Keyword::Curve)
                 | TokenKind::Keyword(Keyword::Quantile)
                 | TokenKind::Keyword(Keyword::State)
@@ -4330,6 +4503,7 @@ fn statement_span(stmt: &Stmt) -> Span {
         Stmt::Lifecycle(s) => s.span,
         Stmt::Assume(s) => s.span,
         Stmt::Metric(s) => s.span,
+        Stmt::Slice(s) => s.span,
         Stmt::Curve(s) => s.span,
         Stmt::Quantile(s) => s.span,
         Stmt::Run(s) => s.span,
@@ -4397,6 +4571,7 @@ fn keyword_text(keyword: Keyword) -> &'static str {
         Keyword::Entity => "entity",
         Keyword::Assume => "assume",
         Keyword::Metric => "metric",
+        Keyword::Slice => "slice",
         Keyword::Contract => "contract",
         Keyword::On => "on",
         Keyword::Term => "term",
@@ -4492,6 +4667,7 @@ fn is_statement_start(token: &Token) -> bool {
             | TokenKind::Keyword(Keyword::Entity)
             | TokenKind::Keyword(Keyword::Assume)
             | TokenKind::Keyword(Keyword::Metric)
+            | TokenKind::Keyword(Keyword::Slice)
             | TokenKind::Keyword(Keyword::Curve)
             | TokenKind::Keyword(Keyword::Quantile)
             | TokenKind::Keyword(Keyword::Contract)

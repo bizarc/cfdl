@@ -8,6 +8,34 @@ This project follows Semantic Versioning: https://semver.org/
 
 ## [Unreleased]
 
+### Added: slices — a named, deliberately partial selection (§7.90; results_version 0.8)
+
+"Isolate one loan in a pool", "one artist's royalties", "the portfolio
+minus a product line" had no home: a statement reconciles or it is not a
+statement, and partial numbers dressed as complete ones are the failure
+mode reporting exists to prevent. A `slice` is the complementary
+declaration — partial BY DESIGN, and seen to be: it publishes its selection
+as lineage, the streams it matched, a net series and total/npv/irr, and no
+reconciliation block, ever.
+
+```cfdl
+slice artist_a_royalties {
+  entity asset.artist_a
+  category "operating.revenue.royalty"
+}
+slice debt { type Contract.Debt }
+```
+
+Clause kinds intersect, values within a kind union, `except` subtracts.
+Entities are references (E1362 refuses an unknown one) selecting their
+`part of` descendants, so a container's slice is its members'. `type`
+matches transitively through the recorded refinement — the master-type
+payoff — expanded at compile because the engine is pack-free (E1363 for an
+unknown type). Category and stream selectors are quoted, in `series_sum`'s
+dialect (E1364 for an unrooted category). `slice` joins the reserved words
+(§18.1, 87 in use); E1361 refuses a duplicate name.
+
+
 ### Added: the results plane carries the graph (results_version 0.7; §7.43, §7.91)
 
 A series entry carried `index`, `offset` and `values`, and nothing else — so

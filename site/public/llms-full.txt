@@ -1297,6 +1297,48 @@ The three namespaces stay distinct, and the prefix says who minted the number:
 `model.*` is the engine's, `domain.*` is the active pack's, `metric.*` is this
 model's.
 
+### 15.4 Slices (normative)
+
+A model MAY declare a slice — a named, deliberately partial selection of its
+own streams, with figures computed over the selection:
+
+```cfdl
+slice artist_a_royalties {
+  entity asset.artist_a
+  category "operating.revenue.royalty"
+}
+
+slice label_ex_merch {
+  entity container.label
+  except category "operating.revenue.merchandise"
+}
+
+slice debt {
+  type Contract.Debt
+}
+```
+
+Rules:
+- A slice name MUST be unique within the model (`E1361`).
+- Clause KINDS intersect; values within a kind union; `except` subtracts
+  last. A kind that is absent does not constrain, so a slice of nothing but
+  excepts reads "everything minus these".
+- `entity` and `except entity` take REFERENCES — an undeclared entity is
+  refused (`E1362`) — and select the entity together with its `part of`
+  descendants, so a container's slice is its members'.
+- `type` names an ontology type, matched transitively through `refines`:
+  `type Contract.Debt` selects every stream lowered from a contract whose
+  type is_a `Contract.Debt`, and streams owned by entities of a conforming
+  type. An unknown type is refused with the known types named (`E1363`).
+- `category` and `stream` take QUOTED selectors — the dialect `series_sum`
+  reads, exact or one trailing `.*` — and a category selector must be rooted
+  in a statement section (`E1364`).
+- Results publish each slice's selection (the lineage), the streams it
+  matched, its net per-period series, and `total`/`npv`/`irr` over the
+  matched streams on the model's own axis. A slice carries **no
+  reconciliation block**: it is partial by design, and must be seen to be —
+  a slice never publishes a residual and never claims the model's total.
+
 See the Pack Interface specification for details on how packs define output categories, aggregations, and metrics.
 
 ---
@@ -1392,7 +1434,7 @@ These MUST compile to typed values in IR.
 A reserved word cannot be used as an identifier. The list is exhaustive and is
 checked against the lexer, so a word added to one appears in the other.
 
-### 18.1 In use (86)
+### 18.1 In use (87)
 
 Read by a production of the grammar:
 
@@ -1401,7 +1443,7 @@ Read by a production of the grammar:
 `every`, `except`, `exercisable`, `exercise`, `false`, `following`, `for`, `from`, `import`, `in`, `inflow`,
 `LogNormal`, `metric`, `mid`, `model`, `modified_following`, `modified_preceding`, `monte_carlo`, `month`, `monthly`, `months`, `net`, `none`,
 `Normal`, `on`, `option`, `owner`, `outflow`, `pack`, `parties`, `payment`, `payoff`, `phase`, `phase_end`, `phase_enter`,
-`phase_start`, `preceding`, `quantile`, `quarter`, `quarterly`, `run`, `schedule`, `seed`, `set`, `state`, `start`, `stream`, `stub`,
+`phase_start`, `preceding`, `quantile`, `quarter`, `quarterly`, `run`, `schedule`, `seed`, `set`, `slice`, `state`, `start`, `stream`, `stub`,
 `term`, `terms`, `time`, `to`, `trials`, `Triangular`, `true`, `type`, `Uniform`, `use`, `version`,
 `waterfall`, `week`, `when`, `year`.
 
@@ -2504,6 +2546,14 @@ against it by `make ir-schema`.
         "$ref": "#/$defs/Metric"
       },
       "description": "Reserved. Metrics are computed at run time by the engine and by the active pack, so a compile output does not carry them; no compiler emits this field."
+    },
+    "slices": {
+      "type": "array",
+      "minItems": 0,
+      "items": {
+        "$ref": "#/$defs/Slice"
+      },
+      "description": "Declared slices — named, deliberately partial selections (docs/01 §15.4). Clause kinds intersect, values within a kind union, excepts subtract. `type_streams` is the compiler's expansion of the `type` clauses, resolved at compile because only the compiler holds the ontology the transitive match walks. Omitted when a model declares none."
     },
     "waterfalls": {
       "type": "array",
@@ -4102,6 +4152,75 @@ against it by `make ir-schema`.
           }
         }
       }
+    },
+    "Slice": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "provenance"
+      ],
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "entities": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Entity references; each selects the entity and its part_of descendants."
+        },
+        "types": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Ontology types, matched transitively through refines."
+        },
+        "categories": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Category selectors — series_sum's dialect."
+        },
+        "streams": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Stream-name selectors — same dialect."
+        },
+        "except_streams": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "except_categories": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "except_entities": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "type_streams": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "The streams the type clauses matched — the compiler's expansion, read by the engine."
+        },
+        "provenance": {
+          "$ref": "#/$defs/NodeProvenance"
+        }
+      }
     }
   }
 }
@@ -4145,8 +4264,8 @@ against it by `make results-schema`.
   "properties": {
     "results_version": {
       "type": "string",
-      "const": "0.7",
-      "description": "Schema version of this document. 0.7 publishes the model's entity graph (`graph`) and attributes each stream series to its owning entity and category — what lets a consumer holding results alone say whose cash and what kind. 0.6 nests an act's own acts under it as `children`, which is what a transition and its arrival actions are. 0.5 added the machine's `transition` journal action. 0.4 added the account journal actions `inflow`, `allocate_in` and `allocate_out`. 0.3 added `ledger_hash` and the optional `inputs` section, and `category` on IR streams upstream of it."
+      "const": "0.8",
+      "description": "Schema version of this document. 0.8 adds `slices` — declared partial selections with their matched streams, net series and figures, and no reconciliation block by design. 0.7 publishes the model's entity graph (`graph`) and attributes each stream series to its owning entity and category. 0.6 nests an act's own acts under it as `children`. 0.5 added the machine's `transition` journal action. 0.4 added the account journal actions. 0.3 added `ledger_hash`, the optional `inputs` section, and `category` on IR streams."
     },
     "model_hash": {
       "type": "string",
@@ -4204,6 +4323,12 @@ against it by `make results-schema`.
     },
     "graph": {
       "$ref": "#/$defs/ResultsGraph"
+    },
+    "slices": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/SliceResult"
+      }
     }
   },
   "$defs": {
@@ -5169,6 +5294,89 @@ against it by `make results-schema`.
           "type": "array",
           "items": {
             "$ref": "#/$defs/GraphEntity"
+          }
+        }
+      }
+    },
+    "SliceSelection": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "entities": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "types": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "categories": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "streams": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "except_streams": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "except_categories": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "except_entities": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "SliceResult": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "selection",
+        "streams",
+        "net",
+        "metrics"
+      ],
+      "description": "A declared slice and what it came to (docs/01 §15.4): the selection as lineage, every stream it matched (empty is published, not omitted), the net per-period series, and total/npv/irr over the matched streams on the model's own axis. NO reconciliation block, by design — a slice is partial, and must be seen to be.",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "selection": {
+          "$ref": "#/$defs/SliceSelection"
+        },
+        "streams": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "net": {
+          "$ref": "#/$defs/Series"
+        },
+        "metrics": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/$defs/Scalar"
           }
         }
       }
@@ -6614,6 +6822,10 @@ Fields that move:
 - `E1358_ARRIVAL_ACTION_SETS_STATUS` — an `on enter` or edge action writes `status`. An arrival action sets FIELDS on the entity that transitioned; a status write would fire a second transition inside the same period, breaking one-transition-per-entity-per-period. A transition that should cause another transition is topology — an edge out of the target state, taken next period — and status writes remain the named event's privilege (`docs/34` D4).
 - `E1359_ARRIVAL_ACTION_UNKNOWN_FIELD` — an `on enter` or edge action sets a field the entity bound to that machine does not have. The name is entity-relative, so it resolves against every entity bound to the machine and all of them need the field; the set is the union of what the model's entity block declares and what its ontology type contributes. Refused because a misspelled field is a write that lands nowhere — the silent-substitution shape `docs/13` §7.38 records for a misspelled series.
 - `E1360_DUPLICATE_ENTITY_ID` — two entities declare the same literal field `id`. The id is a stable identity for the layer above the model — engine-opaque, published in the results graph (`docs/06`) — and a consumer joining on it would merge two things into one. Uniqueness within the model is the one thing the language can check about a value it must not interpret (`docs/13` §7.91).
+- `E1361_DUPLICATE_SLICE` — two slices share a name. Same rule as a metric: one name, one selection.
+- `E1362_SLICE_UNKNOWN_ENTITY` — a slice's `entity` (or `except entity`) names an entity the model does not declare. A slice selects by reference, and a reference is what the compiler can check — refused rather than silently matching nothing.
+- `E1363_SLICE_UNKNOWN_TYPE` — a slice's `type` names an ontology type the active ontology does not define. The hint lists the known contract types; a master type (`Contract.Debt`) matches transitively through `refines`.
+- `E1364_SLICE_CATEGORY_ROOT` — a slice's category selector is not rooted in operating, investing or financing. A selector that could never match anything is a typo, not a choice.
 - `E1304_UNRESOLVED_OPTION_REF` — an event exercises an option that is not declared. Checked in the compiler rather than the resolver, because options are not in the symbol tables.
 - `E1310_ENTITY_BLOCK_WITHOUT_TYPE` — an entity uses a block but declares no type, so there is nothing to check the block against.
 - `E1311_UNKNOWN_ENTITY_TYPE` — an entity declares a type the active ontology does not define. The known types are listed.
@@ -7452,6 +7664,10 @@ A named set of overrides applied to a run.
 
 The set of dates on which a stream pays.
 
+**slice**
+
+A named, deliberately partial selection of a model's streams, with figures computed over the selection.
+
 **statement**
 
 A per-period report published from the model's results.
@@ -7930,6 +8146,12 @@ definition = "A derived summary figure over the model's cash flows."
 occurrences = 98
 
 [[technical_name]]
+term = "slice"
+category = "language"
+definition = "A named, deliberately partial selection of a model's streams, with figures computed over the selection."
+note = "A slice carries no reconciliation block: partial by design, and seen to be. Contrast statement, whose defining property is completeness."
+
+[[technical_name]]
 term = "container"
 category = "language"
 definition = "An entity family for a grouping that scopes cash without producing it — a fund, a portfolio, an SPV, a transaction."
@@ -8377,7 +8599,7 @@ Templates (starting points; the `skeleton` MCP tool assembles them into a compil
 
 CFDL 0.7.0. Every model below compiles, and its IR and
 results are byte-asserted against goldens in CI (`fixtures/valid/`,
-131 models.
+133 models.
 
 `gold/ir/`, `gold/results/`). Each is single-purpose: the directory name
 says what it exercises. This is what right looks like — positive few-shot
@@ -12906,6 +13128,99 @@ stream mid.cumulative on entity asset.co inflow currency USD {
 stream top.cumulative on entity asset.co inflow currency USD {
   schedule every year from 2026-01 to 2028-01
   amount = series_sum("mid.cumulative", 0, time.t)
+}
+```
+
+## slice_by_type
+
+```cfdl
+version 0.1
+model "slice-by-type"
+use pack "cre" version "0.1.0"
+time calendar monthly from 2026-01 for 60
+
+// BASE-TYPE SELECTION, THE REFINEMENT'S PAYOFF (docs/13 §7.92, §7.90).
+// `type Contract.Debt` names a MASTER; the compiler expands it through the
+// recorded refinement — CRE.Contract.PermanentDebt is_a Contract.Debt — to
+// every stream that contract lowers. The slice survives a new pack
+// unchanged, because it names what the thing IS, not how a pack spells it.
+
+entity asset tower : CRE.Asset.RealProperty
+
+contract cre.permanent_debt on entity asset.tower {
+  term 2026-01..2030-12
+  terms {
+    principal = 6000000
+    rate = 0.055
+    amort_months = 300
+    io_months = 24
+    balloon_at_maturity = 1
+  }
+}
+
+stream ops.noi on entity asset.tower inflow currency USD {
+  schedule every month from 2026-01 to 2030-12
+  category operating.revenue.other
+  amount = 55000
+}
+
+slice debt {
+  type Contract.Debt
+}
+```
+
+## slices
+
+```cfdl
+version 0.1
+model "slices"
+time calendar annual from 2026-01 for 3
+
+// A SLICE IS A NAMED, DELIBERATELY PARTIAL SELECTION (docs/13 §7.90).
+// Clause kinds intersect, values within a kind union, `except` subtracts —
+// and a slice carries NO reconciliation block, because the absence is what
+// the declaration means: a partial number must not dress as a complete one.
+//
+// Two artists under one label. Slicing is the question the results plane
+// could not answer before the graph: one artist's cash, one artist's
+// royalties only, and the label minus a discontinued line.
+
+entity container label : Container.Portfolio
+entity asset artist_a : Asset.Intangible { part of container.label }
+entity asset artist_b : Asset.Intangible { part of container.label }
+
+stream a.royalties on entity asset.artist_a inflow currency USD {
+  schedule every year from 2026-01 to 2028-01
+  category operating.revenue.royalty
+  amount = 100
+}
+stream a.merch on entity asset.artist_a inflow currency USD {
+  schedule every year from 2026-01 to 2028-01
+  category operating.revenue.merchandise
+  amount = 40
+}
+stream b.royalties on entity asset.artist_b inflow currency USD {
+  schedule every year from 2026-01 to 2028-01
+  category operating.revenue.royalty
+  amount = 70
+}
+
+// All of artist A: entity clause selects the entity and its descendants.
+slice artist_a {
+  entity asset.artist_a
+}
+
+// Artist A's royalties only: kinds intersect.
+slice artist_a_royalties {
+  entity asset.artist_a
+  category "operating.revenue.royalty"
+}
+
+// The whole label, minus merchandise: include by entity, subtract by
+// category. The label is a container; its scope arrives through part_of.
+slice label_ex_merch {
+  entity container.label
+  except category "operating.revenue.merchandise"
 }
 ```
 

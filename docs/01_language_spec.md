@@ -1278,6 +1278,48 @@ The three namespaces stay distinct, and the prefix says who minted the number:
 `model.*` is the engine's, `domain.*` is the active pack's, `metric.*` is this
 model's.
 
+### 15.4 Slices (normative)
+
+A model MAY declare a slice — a named, deliberately partial selection of its
+own streams, with figures computed over the selection:
+
+```cfdl
+slice artist_a_royalties {
+  entity asset.artist_a
+  category "operating.revenue.royalty"
+}
+
+slice label_ex_merch {
+  entity container.label
+  except category "operating.revenue.merchandise"
+}
+
+slice debt {
+  type Contract.Debt
+}
+```
+
+Rules:
+- A slice name MUST be unique within the model (`E1361`).
+- Clause KINDS intersect; values within a kind union; `except` subtracts
+  last. A kind that is absent does not constrain, so a slice of nothing but
+  excepts reads "everything minus these".
+- `entity` and `except entity` take REFERENCES — an undeclared entity is
+  refused (`E1362`) — and select the entity together with its `part of`
+  descendants, so a container's slice is its members'.
+- `type` names an ontology type, matched transitively through `refines`:
+  `type Contract.Debt` selects every stream lowered from a contract whose
+  type is_a `Contract.Debt`, and streams owned by entities of a conforming
+  type. An unknown type is refused with the known types named (`E1363`).
+- `category` and `stream` take QUOTED selectors — the dialect `series_sum`
+  reads, exact or one trailing `.*` — and a category selector must be rooted
+  in a statement section (`E1364`).
+- Results publish each slice's selection (the lineage), the streams it
+  matched, its net per-period series, and `total`/`npv`/`irr` over the
+  matched streams on the model's own axis. A slice carries **no
+  reconciliation block**: it is partial by design, and must be seen to be —
+  a slice never publishes a residual and never claims the model's total.
+
 See the Pack Interface specification for details on how packs define output categories, aggregations, and metrics.
 
 ---
@@ -1373,7 +1415,7 @@ These MUST compile to typed values in IR.
 A reserved word cannot be used as an identifier. The list is exhaustive and is
 checked against the lexer, so a word added to one appears in the other.
 
-### 18.1 In use (86)
+### 18.1 In use (87)
 
 Read by a production of the grammar:
 
@@ -1382,7 +1424,7 @@ Read by a production of the grammar:
 `every`, `except`, `exercisable`, `exercise`, `false`, `following`, `for`, `from`, `import`, `in`, `inflow`,
 `LogNormal`, `metric`, `mid`, `model`, `modified_following`, `modified_preceding`, `monte_carlo`, `month`, `monthly`, `months`, `net`, `none`,
 `Normal`, `on`, `option`, `owner`, `outflow`, `pack`, `parties`, `payment`, `payoff`, `phase`, `phase_end`, `phase_enter`,
-`phase_start`, `preceding`, `quantile`, `quarter`, `quarterly`, `run`, `schedule`, `seed`, `set`, `state`, `start`, `stream`, `stub`,
+`phase_start`, `preceding`, `quantile`, `quarter`, `quarterly`, `run`, `schedule`, `seed`, `set`, `slice`, `state`, `start`, `stream`, `stub`,
 `term`, `terms`, `time`, `to`, `trials`, `Triangular`, `true`, `type`, `Uniform`, `use`, `version`,
 `waterfall`, `week`, `when`, `year`.
 

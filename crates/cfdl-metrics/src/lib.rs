@@ -326,7 +326,7 @@ mod tests {
             );
         }
         Results {
-            results_version: "0.7".to_string(),
+            results_version: "0.8".to_string(),
             model_hash: "test".to_string(),
             ledger_hash: "test".to_string(),
             engine: EngineInfo {
@@ -363,6 +363,7 @@ mod tests {
             domain_metrics: None,
             statements: None,
             graph: None,
+            slices: None,
         }
     }
 

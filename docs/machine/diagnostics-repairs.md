@@ -11,7 +11,7 @@ Diagnostics are the repair signal: read the `code`, `message`, `span`, and
 `hint`, change the model, recompile. The catalog is how an agent learns what
 each code looks like in the flesh before it meets one.
 
-**Coverage:** 202 codes in the docs/08 §7 register; 91 exemplified here; 70 of 96 examples carry a recorded fix.
+**Coverage:** 206 codes in the docs/08 §7 register; 95 exemplified here; 70 of 100 examples carry a recorded fix.
 
 ## active_in_unknown_state — E1332_UNKNOWN_ACTIVE_STATE
 
@@ -949,6 +949,30 @@ entity asset co : Asset.Financial
 ```
 
 - `E1004_DUPLICATE_PHASE` (error): Duplicate phase 'build'.
+
+Fix: not yet recorded.
+
+## duplicate_slice — E1361_DUPLICATE_SLICE
+
+Failing example:
+
+```cfdl
+version 0.1
+model "duplicate-slice"
+time calendar annual from 2026-01 for 2
+
+entity asset a : Asset.Financial
+
+stream a.x on entity asset.a inflow currency USD {
+  schedule every year from 2026-01 to 2027-01
+  amount = 1
+}
+
+slice s { entity asset.a }
+slice s { stream "a.*" }
+```
+
+- `E1361_DUPLICATE_SLICE` (error): Duplicate slice 's'.
 
 Fix: not yet recorded.
 
@@ -3261,6 +3285,81 @@ event vacate when series_sum("cre.rent", time.t - 1, time.t - 1) < 50 {
   set entity asset.suite.status = "vacant"
 }
 ```
+
+## slice_bad_category_root — E1364_SLICE_CATEGORY_ROOT
+
+Failing example:
+
+```cfdl
+version 0.1
+model "slice-bad-category-root"
+time calendar annual from 2026-01 for 2
+
+entity asset a : Asset.Financial
+
+stream a.x on entity asset.a inflow currency USD {
+  schedule every year from 2026-01 to 2027-01
+  amount = 1
+}
+
+// A selector that could never match anything is a typo, not a choice.
+slice s { category "revenue.royalty" }
+```
+
+- `E1364_SLICE_CATEGORY_ROOT` (error): Slice 's' selects category 'revenue.royalty', whose root 'revenue' is not one of operating, investing, financing.
+  - hint: A category is a path into the cash flow statement; a selector that could never match anything is a typo, not a choice.
+
+Fix: not yet recorded.
+
+## slice_unknown_entity — E1362_SLICE_UNKNOWN_ENTITY
+
+Failing example:
+
+```cfdl
+version 0.1
+model "slice-unknown-entity"
+time calendar annual from 2026-01 for 2
+
+entity asset a : Asset.Financial
+
+stream a.x on entity asset.a inflow currency USD {
+  schedule every year from 2026-01 to 2027-01
+  amount = 1
+}
+
+// A slice selects by REFERENCE, and a reference is what the compiler can
+// check — a misspelled entity is refused, not silently matched to nothing.
+slice s { entity asset.nonesuch }
+```
+
+- `E1362_SLICE_UNKNOWN_ENTITY` (error): Slice 's' selects entity 'asset.nonesuch', which is not declared.
+  - hint: A slice selects by reference, and a reference is what the compiler can check — correct the name or declare the entity.
+
+Fix: not yet recorded.
+
+## slice_unknown_type — E1363_SLICE_UNKNOWN_TYPE
+
+Failing example:
+
+```cfdl
+version 0.1
+model "slice-unknown-type"
+time calendar annual from 2026-01 for 2
+
+entity asset a : Asset.Financial
+
+stream a.x on entity asset.a inflow currency USD {
+  schedule every year from 2026-01 to 2027-01
+  amount = 1
+}
+
+slice s { type Contract.Imaginary }
+```
+
+- `E1363_SLICE_UNKNOWN_TYPE` (error): Slice 's' selects type 'Contract.Imaginary', which the active ontology does not define.
+  - hint: Known contract types: Contract.Construction, Contract.Debt, Contract.Derivative, Contract.Insurance, Contract.Lease, Contract.Offtake, Contract.Option, Contract.Purchase, Contract.Sale, Contract.Service, Contract.Tax.
+
+Fix: not yet recorded.
 
 ## stream_active_not_bool — E2202_STREAM_ACTIVE_NOT_BOOL
 

@@ -100,6 +100,10 @@ A named set of overrides applied to a run.
 
 The set of dates on which a stream pays.
 
+**slice**
+
+A named, deliberately partial selection of a model's streams, with figures computed over the selection.
+
 **statement**
 
 A per-period report published from the model's results.
