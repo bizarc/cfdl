@@ -223,6 +223,97 @@ collections under clause 18 and the redemption price under clause 20. The
 model's reading is right — the receivables still pay that month — so the
 reference now does the same.
 
+## The reserve account, and the two bugs it found
+
+Clause 19 is a reserve of 2.0% of the initial pool, funded at closing. It is
+never drawn here — no losses are assumed — but it is not inert: the
+overcollateralization target is stated *against* it. The Required Pro Forma
+Note Balance is 14.75% of the pool "less the amount required on deposit in the
+reserve account", so the reserve sets how far the turbo runs, and through that
+it sets every class's retirement date.
+
+The model carried it as a literal — 20,239,398.59, written out **twenty-eight
+times**, once in each of the seven balance recurrences and twenty-one times
+across the waterfall's steps — and clause 19 itself was
+`pay reserve_topup to party.certificate = 0.0`: the right amount, to the wrong
+payee, for no stated reason. It is now `account reserve`, funded at closing by
+the account's own `from` inflow, and clause 19 is the top-up
+`max(0.0, inputs.reserve_required - prev.reserve)`. It still pays nothing, but
+it pays nothing *because the balance is at target*, which is what the clause
+says. Were the reserve ever drawn, the step would restore it.
+
+**Funded at closing is not a distribution.** The reserve comes out of note
+proceeds before the first collection period, so it cannot be funded from the
+waterfall — the waterfall allocates collections, and taking the reserve out of
+them would spend cash the deal never spent. The account's `from` clause is the
+inflow that is not an allocation, and it fires once, at period 0.
+
+The reserve is also now *auditable*, which a literal never was. The journal
+carries the closing inflow as its own act —
+`period 0, actor account:reserve, action inflow, 0.0 -> 20239398.5856` — and
+then clause 19 applying $0.00 at each of the 62 distributions, with the balance
+before and after. Twenty-eight copies of a number produce no such record.
+
+**The conversion moved nothing.** Measured with the literal's own value held —
+the rounding is a separate change, below — all 177 series agree with the
+pre-conversion run at every period with zero difference: not within tolerance,
+identical. That is the assertion. The reserve was already load-bearing, so
+restating it as the balance it is has to leave the deal alone, and anything
+else would have meant the two spellings were not the same reserve.
+
+### Two bugs, both found by trying to declare it
+
+**The account was silently swallowed.** `assume <name> = <expr>` has no
+terminator, so the parser scans to the next top-level statement, and
+`is_statement_start` is the list that says where that is. `account` was missing
+from it. An account declared after an assumption did not exist — no diagnostic
+where it was swallowed, only `E1347_UNRESOLVED_ACCOUNT_REF` at whatever
+referred to it later, and nothing at all if nothing did. `lifecycle` was
+missing from the same list for the same reason and is contextual rather than a
+keyword, so it failed loudly and misleadingly instead, reporting an unexpected
+`{` three lines from the cause. Both are fixed; both are pinned
+(`fixtures/valid/account_after_assume`, `fixtures/valid/lifecycle_after_assume`).
+The list's own comment already records a `metric` declared after a contract
+vanishing this way, so `account` and `lifecycle` are the second and third
+instances of one omission — which is the argument for the invariant now stated
+at the function: every arm of the statement dispatch appears in the list.
+
+**A conditional window bound was read as forward, and that cost the account its
+balance.** The first distribution draws two collection periods — six of the
+twelve assumed pools have a January cutoff and six a February one — so the pot
+is bounded below by `if(time.t == 1.0, 0.0, time.t)`. `window_bound_is_backward`
+reads bound source text and recognised literals, `time.t` plus signed literals,
+and `max`/`min` of those; it did not recognise `if`. So a bound that is
+backward down both branches was called forward, the model kept the **column
+order**, and the column order has no periods to carry a balance through. The
+account compiled, published no balance, and every `prev.reserve` read as zero —
+which collapsed the notes to zero at period 2.
+
+The engine said so rather than publishing zeros quietly ("this model declares
+accounts, but a forward-reaching read keeps it on the column order"), and the
+benchmark runner fails on warnings, so it could not have shipped. `if` now
+joins `max` and `min` as "the value is one of these operands, so it is backward
+when all of them are" — the condition is not examined and need not be.
+
+This case is therefore also the first evidence that the corpus's most intricate
+waterfall gives the same answer under the period walk as under the column
+order: 177 series, 63 periods, zero difference.
+
+### What the rounding was worth
+
+The literal was 20,239,398.59. The deal is 2.0% of 1,011,969,929.28, which is
+20,239,398.5856, and the reference computes the product
+(`reference_gen.py`, `RESERVE = 0.02 * POOL0`). Stating the rule rather than the
+rounded number moves **260 cells**, by at most **0.0044 dollars**, on figures of
+about twelve million — the model moving onto the reference's own arithmetic.
+The published assertions are unaffected at the case's tolerance.
+
+The same shape remains in two other places and is deliberately left alone:
+5,059,849.65 is 0.50% of the initial pool (the step-down floor) and
+101,196,992.93 is 10% of it (the clean-up call), each still written out
+twenty-eight times. `assume initial_pool` now exists, so both are one edit
+away; this change was the reserve.
+
 ## What the model does not carry
 
 - **The final scheduled distribution dates are written but inert.** With no

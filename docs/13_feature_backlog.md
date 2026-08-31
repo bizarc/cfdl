@@ -1582,8 +1582,8 @@ reserves among what the reference zeroed out to be comparable. §7.5 carries
 is one accumulating FF&E reserve. Servicer advancing (§7.74) is a
 recoverable-advances balance.
 
-**The ask, in three parts** — the third is done, the first is half done, and
-the second is open. First, the migrations the shipped fleet already
+**The ask, in three parts** — the first and third are done, and the second
+is open. First, the migrations the shipped fleet already
 owes: the flip case's hand-carried pot (`docs/25` — the one case where
 revenue is computed a second time inside the distribution) and Highlands'
 cumulative window, both named gate shapes in `docs/29` phase 4. **Highlands is
@@ -1595,11 +1595,58 @@ contributions, so it could not return capital, and a party account carrying the
 contribution had no offsetting leg —
 `moic(party.baupost)` published 0.96 on a deal returning 2.05x. Grossing the pot
 up and adding two return-of-capital tiers moved both MoICs by exactly +1.0 and
-no split at all. The flip case is the remaining migration. Second, a
+no split at all. **The flip case is done as a twin** (2026-08-30,
+`benchmarks/energy/tax_equity_flip_account`): the original states what it was
+waiting for, so the rebuild is carried alongside it rather than replacing it,
+and both reconcile against the same external anchors at the same one-cent
+tolerance — against the original's own output the twin is within tolerance on
+50 of 50 cells, largest difference 0.0047 dollars on figures of about four
+million. The residual is reassociation, not modeling: the original reconciles
+to 1.0e-6 against the reference and the twin to 4.7e-3, the same quantities
+summed through the ledger rather than inside one field expression. Whether the
+original retires is left open deliberately, since it is the suite's tightest
+external reconciliation. Second, a
 reserve contract shape per pack where a document demands one — the DSRA
 funded to target with `dscr_periodic` gating the release, the replacement
 reserve of §7.5, the FF&E reserve — each as the `pay <step> to account`
-pattern rather than a bespoke contract. Third, interest ON a reserve balance — **done 2026-08-30**,
+pattern rather than a bespoke contract. **The credit pack's is done**
+(2026-08-31, `benchmarks/credit/americredit_2017_1`): clause 19's reserve, 2.0%
+of the initial pool funded at closing, was a literal written out twenty-eight
+times and a step `pay reserve_topup to party.certificate = 0.0` — the right
+amount to the wrong payee. It is now `account reserve` funded by its own `from`
+inflow at closing, with clause 19 as the top-up
+`max(0.0, inputs.reserve_required - prev.reserve)`, and the
+overcollateralization target reading the balance the prospectus states it
+against. All 177 series unmoved at every period, zero difference.
+
+**The energy pack's is not, and this entry was wrong about why.** It reads
+above as though CREST is the near-done one — "the case that reconciles against
+CREST's own ~$4,606 still wants the reference". What CREST wants is not a
+reference for the interest; it is the reserve SCHEDULE the interest is earned
+on, and that is the one thing not in the repo: the port is unlicensed, was run
+once outside it, and only its output numbers were carried across. The ~$4,606
+is a single rounded year-one aggregate against three unknowns — balance,
+funding rule, rate — and the conventional structures do not fit it (6mo debt
+service + 6mo opex implies 2.1368%, 6mo debt service alone 2.9417%, 12mo
+1.4709%). Fitting one is numerology, and CREST is the suite's tightest external
+reconciliation. There is a second, independent blocker: CREST funds reserves at
+close, and the case deliberately has no close period — `funded_at_close = 0`,
+and `model.cfdl` records that a period 0 would shift every escalation exponent
+by one. Energy's reserve wants the port re-run, which is a sourcing step; the
+choice to take it is open.
+
+**What doing it in the credit pack found**, both of them prerequisites rather
+than by-products. `account` was missing from the parser's `is_statement_start`,
+so an account declared after an `assume` was silently swallowed — the same bug
+that list's own comment already records once, a `metric` declared after a
+contract vanishing the same way; `lifecycle` was missing too, making three
+instances of one omission. And `window_bound_is_backward` did not recognise `if`, so the
+AmeriCredit pot's `if(time.t == 1.0, 0.0, time.t)` lower bound — the first
+distribution draws two collection periods — was read as forward, keeping the
+model on the column order, where account balances are not computed at all. `if`
+now joins `max` and `min`. That change also produced the first evidence that
+the corpus's most intricate waterfall agrees period-for-period under the walk
+and under the column order. Third, interest ON a reserve balance — **done 2026-08-30**,
 `fixtures/valid/reserve_interest_on_balance`. The entry was wrong about the
 spelling, and the first attempt was withdrawn for a reason that turned out to
 be wrong too; both are recorded because the second one is the interesting one.
@@ -1740,6 +1787,20 @@ entered the spec — the compiler had been inventing a first-period default
 against its own specification, and the engine's every-period branch, which no
 compiler output could reach, is gone.
 
+**Closed since.** §7.79 (an event fired once, and a transition could not
+act) is fixed — the milestone's settled first priority, and the mechanism
+three other entries were waiting to spell. #235 landed `docs/34` phases 1–4
+(rising-edge occurrence, no latch, arrival actions, augmentation, the redrawn
+pack machines of §7.84) and #236 phase 5. It paid out the same day: #238
+built §7.77's cash trap whose cure is a period (`on enter trapped
+{ set good_periods = 0 }` is the whole difference) and §7.76's interest on a
+reserve balance, and shipped the flip case's pot as an account twin — so of
+the table below, §7.77 remains only as an external-reference benchmark and
+§7.76 only as part two, the reserve contract shape per pack where a document
+demands one — and part two is now down to the packs other than credit, whose
+reserve shipped 2026-08-31 on `americredit_2017_1`. Energy's is blocked on
+sourcing rather than on language: see the entry.
+
 **What M2 is**, all of it standing on the walk, the machine and the account
 (`docs/28` §4–§6):
 
@@ -1755,9 +1816,23 @@ compiler output could reach, is gone.
 participant-level returns (§7.72) are M4 — both since shipped — and `docs/31` W4 pulled the first forward on the
 commercial path rather than the roadmap's. Pack coverage (§7.3) is M3.
 
-Re-derived 2026-08-28. Related: `docs/28` §10, `docs/29`.
+Re-derived 2026-08-28; §7.79's closure and its consequences recorded
+2026-08-31. The full five-milestone roadmap this entry re-derives M2 from —
+M3 validation coverage, M4 polish, M5 release mechanics included — is now
+committed as `docs/37_v1_roadmap.md`. Related: `docs/28` §10, `docs/29`.
 
 ### 7.79 An event is restricted to firing once, and a transition cannot act
+
+*Closed 2026-08-30. Phases 1–4 of `docs/34` landed as #235 — rising-edge
+firing, no latch, `on enter` and edge actions, model-side augmentation of
+pack machines, `results_version` 0.6 — and phase 5 as #236; phase 6's
+surfaces (`docs/10` rows, `terminology.toml`) followed. The migration audit
+answered itself: no event's condition re-rises anywhere in the corpus, and
+across the 123 pre-existing results goldens the only changed line was the
+version stamp. What consumed it shipped next — §7.77's cure counter and
+§7.76's reserve interest (#238). The residue is not this entry's: the
+chained-rollover re-strike showcase is `docs/33` Item 1's case, and it is
+what will force `cre.unit`'s declared actions (`docs/34` phase 5 note).*
 
 *Belongs with the language and engine (section 5). Roadmap: M2 (§7.78).
 Scoped in `docs/34_events_and_the_machine.md`; found by the Argus parity

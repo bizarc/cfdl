@@ -8,6 +8,47 @@ This project follows Semantic Versioning: https://semver.org/
 
 ## [Unreleased]
 
+### Fixed: an account declared after an assumption, and a conditional window bound (§7.76 part 2)
+
+Two parser/engine bugs, both found by giving `americredit_2017_1` the reserve
+account clause 19 describes.
+
+`assume <name> = <expr>` has no terminator, so the parser scans to the next
+top-level statement. `account` was missing from `is_statement_start`, so an
+account declared after an assumption was **silently swallowed** — no diagnostic
+where it vanished, only `E1347_UNRESOLVED_ACCOUNT_REF` at some later reference,
+and nothing at all if nothing referred to it. `lifecycle` was missing from the
+same list; being a contextual identifier rather than a keyword, it failed loudly
+and misleadingly instead (`E3001` on a `{` lines from the cause). The list's own
+comment already recorded a `metric` after a `contract` vanishing this way.
+
+`window_bound_is_backward` decides whether a series window can reach past the
+current period, and a model that can reach forward keeps the column order —
+where account balances are not computed at all. It recognised numeric literals,
+`time.t` plus signed literals, and `max`/`min` of those, but not `if`. So
+AmeriCredit's pot bound `if(time.t == 1.0, 0.0, time.t)` — the first
+distribution draws two collection periods — was read as forward, and an account
+on that model could be declared and could never carry a balance. `if` now joins
+`max` and `min`: the value is one of the operands, so the bound is backward when
+every branch is. The condition is not examined and need not be.
+
+Moving that model onto the walk changed **nothing**: 177 series across 63
+periods, zero difference against the column order — the first such evidence on
+the corpus's most intricate waterfall.
+
+### Changed: the AmeriCredit reserve is an account (§7.76 part 2)
+
+Clause 19's reserve — 2.0% of the initial pool, funded at closing — was a
+literal written out twenty-eight times, with clause 19 itself spelled
+`pay reserve_topup to party.certificate = 0.0`: the right amount, to the wrong
+payee, for no stated reason. It is now `account reserve`, funded at closing by
+the account's own `from` inflow rather than out of the waterfall (which
+allocates collections, and never funded it), with clause 19 as the top-up
+`max(0.0, inputs.reserve_required - prev.reserve)` and the overcollateralization
+target reading the balance the prospectus states it against. All 177 series
+unmoved. Stating the reserve as the rule rather than the rounded number moves
+260 cells by at most $0.0044, onto the reference's own arithmetic.
+
 ### Added: slices — a named, deliberately partial selection (§7.90; results_version 0.8)
 
 "Isolate one loan in a pool", "one artist's royalties", "the portfolio
