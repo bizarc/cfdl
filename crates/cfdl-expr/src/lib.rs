@@ -14,6 +14,7 @@
 //!   plumbed for the benchmark harness via `eval_with_mode`.
 
 pub use cfdl_calc::Mode;
+use cfdl_calc::SeriesReduction;
 use rust_decimal::prelude::{FromPrimitive, ToPrimitive};
 use rust_decimal::Decimal;
 use std::collections::BTreeMap;
@@ -307,8 +308,28 @@ pub fn participant_return_parties(compiled: &CompiledExpr) -> Vec<String> {
     out
 }
 
+/// EVERY REDUCTION OVER A SERIES, in one place.
+///
+/// This list was written out five times — `uses_series`, `has_computed_series_name`,
+/// `series_call`, `series_references` and the backward-read scan — and each copy
+/// was a place a sixth reduction could be forgotten. The repo has paid for that
+/// shape twice already (#222's fourth list, and the `container` family's four
+/// enumerations that `FIELD_FAMILIES` now settles), so the set is defined once
+/// and consumed everywhere.
+///
+/// Adding a reduction here wires it into the scheduler's dependency edges, the
+/// strictly-backward check, `W5022` and `E1365` at the same time.
+pub const SERIES_FUNCTIONS: &[&str] = &[
+    "series_sum",
+    "series_avg",
+    "series_max",
+    "series_min",
+    "series_prod",
+    "series_count",
+];
+
 pub fn uses_series(compiled: &CompiledExpr) -> bool {
-    cfdl_calc::expr_calls_any(&compiled.expr, &["series_sum", "series_avg"])
+    cfdl_calc::expr_calls_any(&compiled.expr, SERIES_FUNCTIONS)
 }
 
 /// Does any series call compute its name at runtime instead of naming it as a
@@ -316,7 +337,7 @@ pub fn uses_series(compiled: &CompiledExpr) -> bool {
 /// engine schedules the stream after every literally-named one — and refuses
 /// to let anything read it, since its own position cannot be reasoned about.
 pub fn has_computed_series_name(compiled: &CompiledExpr) -> bool {
-    cfdl_calc::has_computed_call_name(&compiled.expr, &["series_sum", "series_avg"])
+    cfdl_calc::has_computed_call_name(&compiled.expr, SERIES_FUNCTIONS)
 }
 
 /// Every `<root>.<segment>` an expression names, as written.
@@ -366,7 +387,7 @@ pub fn root_references(src: &str, root: &str) -> Vec<String> {
 /// `series_references` below: one scanner, so the compiler and the engine
 /// cannot drift into disagreeing about what a model says.
 pub fn series_call(src: &str) -> Option<&'static str> {
-    for func in ["series_sum", "series_avg"] {
+    for func in SERIES_FUNCTIONS.iter().copied() {
         let mut from = 0usize;
         while let Some(rel) = src[from..].find(func) {
             let at = from + rel;
@@ -442,7 +463,7 @@ pub fn window_bound_is_strictly_backward(src: &str) -> bool {
 pub fn series_references(src: &str) -> Vec<String> {
     let mut out = Vec::new();
     let bytes = src.as_bytes();
-    for func in ["series_sum", "series_avg"] {
+    for func in SERIES_FUNCTIONS.iter().copied() {
         let mut from = 0usize;
         while let Some(rel) = src[from..].find(func) {
             let after = from + rel + func.len();
@@ -760,15 +781,23 @@ impl cfdl_calc::Env for EnvAdapter<'_> {
         }
     }
 
-    fn series_aggregate(&self, name: &str, from: i64, to: i64, mean: bool) -> Option<Decimal> {
+    fn series_aggregate(
+        &self,
+        name: &str,
+        from: i64,
+        to: i64,
+        reduce: SeriesReduction,
+    ) -> Option<Decimal> {
         if self.env.series.is_empty() {
             return None;
         }
         let matched = self.matching_series(name);
         if matched.is_empty() {
-            // Unknown series name: aggregate over nothing = 0 (streams that
-            // never lowered contribute nothing, mirroring metric sums).
-            return Decimal::from_f64(0.0);
+            // A selection that matched nothing: streams that never lowered
+            // contribute nothing. Each fold has its own honest answer and
+            // `Max`/`Min` have none, which is why this asks rather than
+            // returning zero for everything.
+            return reduce.empty_selection().and_then(Decimal::from_f64);
         }
         // Inclusive window, clamped to available periods (projection tail
         // included). The divisor for series_avg is the REQUESTED window
@@ -794,20 +823,51 @@ impl cfdl_calc::Env for EnvAdapter<'_> {
                 return None;
             }
         }
-        let mut total = 0.0_f64;
-        for series in matched {
-            let lo = from.max(0) as usize;
+        // THE PER-PERIOD AGGREGATE FIRST, then the fold over it (`docs/13`
+        // §7.86). Summing the matched streams within a period and then across
+        // periods is what `series_sum` always did — addition is associative,
+        // so the order was invisible and the code could flatten. A maximum is
+        // not associative that way: the peak of the combined position and the
+        // largest single cell are different numbers, and only the first is
+        // what "peak outstanding debt" means. Building the aggregate
+        // explicitly makes every fold read the same one conceptual series,
+        // and leaves `series_sum` and `series_avg` computing exactly what they
+        // computed before.
+        let lo = from.max(0) as usize;
+        let mut per_period: Vec<f64> = Vec::new();
+        for series in &matched {
             let hi = to.min(series.len() as i64 - 1);
             if hi < lo as i64 {
                 continue;
             }
-            total += series[lo..=hi as usize].iter().sum::<f64>();
+            let window = &series[lo..=hi as usize];
+            if per_period.len() < window.len() {
+                per_period.resize(window.len(), 0.0);
+            }
+            for (slot, value) in per_period.iter_mut().zip(window) {
+                *slot += value;
+            }
         }
-        if mean {
-            let window = (to - from + 1).max(1);
-            total /= window as f64;
+        // Every matched series ended before the window: nothing was reduced.
+        if per_period.is_empty() {
+            return reduce.empty_selection().and_then(Decimal::from_f64);
         }
-        Decimal::from_f64(total)
+        let folded = match reduce {
+            SeriesReduction::Sum => per_period.iter().sum::<f64>(),
+            // THE DIVISOR IS THE REQUESTED WINDOW, not the periods that
+            // happened to carry data — the shipped rule, kept: a window
+            // extending past the data averages the available amounts over the
+            // full window. `Max` has no equivalent knob and simply ignores the
+            // absent cells, so the two treat the tail differently by design.
+            SeriesReduction::Mean => per_period.iter().sum::<f64>() / (to - from + 1).max(1) as f64,
+            SeriesReduction::Max => per_period.iter().copied().fold(f64::NEG_INFINITY, f64::max),
+            SeriesReduction::Min => per_period.iter().copied().fold(f64::INFINITY, f64::min),
+            SeriesReduction::Product => per_period.iter().product::<f64>(),
+            SeriesReduction::CountNonZero => {
+                per_period.iter().filter(|v| **v != 0.0).count() as f64
+            }
+        };
+        Decimal::from_f64(folded)
     }
 
     fn curve_value(&self, name: &str, date: cfdl_calc::CalcDate) -> Option<Decimal> {
@@ -1042,6 +1102,63 @@ mod tests {
     // The quantile hooks are trait methods, so the trait must be in scope for
     // a test to call them on the adapter directly.
     use cfdl_calc::Env as _;
+
+    /// Every reduction folds the PER-PERIOD AGGREGATE, and a selection that
+    /// matches nothing has an answer only for the folds that have an identity.
+    #[test]
+    fn reductions_fold_the_per_period_aggregate() {
+        use cfdl_calc::SeriesReduction as R;
+        let mut series: BTreeMap<String, Vec<f64>> = BTreeMap::new();
+        // Two streams under one prefix. Per period they aggregate to
+        // 6, 4, -3, -3 — note the LARGEST SINGLE CELL is 7, in a period whose
+        // aggregate is only 4, so a flattened fold and an aggregate fold give
+        // different maxima and this pins which one ships.
+        series.insert("dbt.draw".to_string(), vec![6.0, 7.0, 0.0, 0.0]);
+        series.insert("dbt.repay".to_string(), vec![0.0, -3.0, -3.0, -3.0]);
+        let env = ExprEnv {
+            series: Arc::new(series),
+            ..ExprEnv::empty()
+        };
+        let adapter = EnvAdapter { env: &env };
+        let fold = |r| adapter.series_aggregate("dbt.*", 0, 3, r).and_then(to_f64);
+
+        assert_eq!(fold(R::Sum), Some(4.0));
+        assert_eq!(
+            fold(R::Max),
+            Some(6.0),
+            "the aggregate's peak, not the 7 cell"
+        );
+        assert_eq!(fold(R::Min), Some(-3.0));
+        assert_eq!(fold(R::CountNonZero), Some(4.0));
+
+        // A SELECTION THAT MATCHES NOTHING. Sum and count have an identity,
+        // a product has one, and a maximum does not — returning 0 there would
+        // state a peak no period reached, which is the failure §7.86 ends.
+        let empty = |r| adapter.series_aggregate("nothing.*", 0, 3, r);
+        assert_eq!(empty(R::Sum).and_then(to_f64), Some(0.0));
+        assert_eq!(empty(R::CountNonZero).and_then(to_f64), Some(0.0));
+        assert_eq!(empty(R::Product).and_then(to_f64), Some(1.0));
+        assert!(empty(R::Max).is_none());
+        assert!(empty(R::Min).is_none());
+    }
+
+    /// A varying growth path is a product, and `pow` is not it.
+    #[test]
+    fn product_compounds_a_varying_rate() {
+        use cfdl_calc::SeriesReduction as R;
+        let mut series: BTreeMap<String, Vec<f64>> = BTreeMap::new();
+        series.insert("g".to_string(), vec![1.05, 1.03, 1.03, 1.03]);
+        let env = ExprEnv {
+            series: Arc::new(series),
+            ..ExprEnv::empty()
+        };
+        let adapter = EnvAdapter { env: &env };
+        let product = to_f64(adapter.series_aggregate("g", 0, 3, R::Product).unwrap()).unwrap();
+        assert!((product - 1.05 * 1.03 * 1.03 * 1.03).abs() < 1e-9);
+        // pow(1.03, 4) applies one period's rate as though it had held
+        // throughout, which is the mistake this exists to avoid.
+        assert!((product - 1.03_f64.powi(4)).abs() > 1e-3);
+    }
 
     #[test]
     fn selector_glob_matches_the_bare_prefix_and_its_children() {
@@ -1443,7 +1560,7 @@ pub struct SeriesWindow {
 pub fn series_windows(src: &str) -> Vec<SeriesWindow> {
     let mut out = Vec::new();
     let bytes = src.as_bytes();
-    for func in ["series_sum", "series_avg"] {
+    for func in SERIES_FUNCTIONS.iter().copied() {
         let mut from = 0usize;
         while let Some(rel) = src[from..].find(func) {
             let after = from + rel + func.len();

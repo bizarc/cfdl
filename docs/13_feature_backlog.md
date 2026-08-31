@@ -2170,6 +2170,51 @@ clause names — and belong in the same pass.
 Provenance: found asking what a metric could do with a running balance,
 30 August 2026; every workaround above was run, not reasoned about.
 
+**Status, 31 August 2026 — shipped, and wider than the entry proposed.** Four
+reductions, not two: `series_max`, `series_min`, `series_prod` and
+`series_count`, beside the existing pair. Same signature, same selector
+dialect, same window semantics, same contexts, projection-tail rules
+unchanged.
+
+**The decision the entry did not anticipate: EVERY FOLD READS THE PER-PERIOD
+AGGREGATE.** When a selector matches several streams they are added together
+within each period first, and the fold runs over that one series. Addition is
+associative, so for `series_sum` the order was invisible and the shipped code
+flattened stream-by-stream. A maximum is not associative that way: the peak of
+the combined position and the largest single cell are different numbers, and
+only the first is what "peak outstanding" means. Pinned by a unit test whose
+data makes the two answers differ (a cell of 7 in a period whose aggregate is
+4). No golden moved, which is the evidence that `series_sum` and `series_avg`
+still compute what they computed.
+
+**A selection matching nothing** sums to 0, multiplies to 1 and counts 0.
+`series_max`/`series_min` REFUSE it rather than returning 0 — nothing has no
+maximum, and a zero there would state a peak no period reached, which is this
+entry's own lesson applied to its own fix.
+
+**And the entry's headline example needed correcting.** "Peak outstanding
+debt" is NOT `series_max` over the debt streams: that is the largest per-period
+NET FLOW, a different and also useful question. A peak balance is a fold over
+the series that CARRIES the balance — an entity field — which a metric could
+not read until §7.85 bound it. The two entries close this together, and the
+fixture shows both readings side by side: `series_max("dbt.*")` = 6,000, the
+largest flow; `series_max("asset.tlb.balance")` = 10,000, the peak the entry
+asked for.
+
+`series_prod` retires a documented workaround rather than duplicating one:
+`exp(series_sum(helper, 0, t))` with a helper stream carrying `ln(1 + r_t)`
+needs the helper to be `inflow` or `outflow`, so it IS cash, and both `ln` and
+`exp` escape to f64. `series_prod` needs no helper and stays decimal.
+
+Fixture: `valid/series_reductions`, which also pins the TRAP — `peak_wrong =
+max(series_sum("dbt.*", 0, 3))` and `lifetime` publish the same number, so the
+one-element fold cannot come back silently.
+
+**What this does NOT close** is §7.94: a reduction over a TRANSFORMED series
+(a count of breach periods, a maximum drawdown), and the position-returning
+forms. Both were part of this entry's "same pass" and neither is a reduction —
+see the entry for why they separated.
+
 ---
 
 ### 7.87 A Monte Carlo trial discards every metric but model.npv
@@ -2618,3 +2663,65 @@ emitted and unregistered), so the two should be settled in one pass.
 
 Provenance: found reading the CLI's error mapping while checking that
 §7.85's new refusal surfaced legibly, 31 August 2026.
+
+---
+
+### 7.94 A reduction reads a series, never a transformed one — and cannot say WHERE
+
+*Belongs with the language and engine (section 5). Split from §7.86 when its
+four reductions shipped and these two did not.*
+
+`series_max` answers "what was the peak". Two neighbouring questions it does
+not answer, and neither is a reduction:
+
+**1. A reduction over a TRANSFORMED series.** "How many periods was DSCR below
+1.20", "what was the maximum drawdown", "the sum of the absolute movements" —
+each folds a series that does not exist. `series_count(name, from, to)` counts
+periods whose aggregate is non-zero, which is a real question and not this one;
+the covenant question needs a per-period predicate, and there is nowhere to put
+it. Every reduction takes a series NAME — a text selector — so no expression
+can sit between the series and the fold.
+
+Three shapes, in rising order of language cost:
+
+- **A predicate argument**: `series_count_if(name, from, to, "<", 1.20)`,
+  passing a comparison operator as a STRING. Cheap and ugly, and unlike
+  anything else in the language.
+- **A predicate expression**, which means lambdas or first-class expressions.
+  Out of scope; the language has no construct that takes one.
+- **A DECLARED per-period line**, which is §7.55 — a model cannot declare a
+  subtotal, and a field's `next` reads no stream series (`docs/14` §3.1), so
+  there is no legal place to compute an indicator. If §7.55 shipped, an
+  indicator line declared once and `series_count` over it answers the covenant
+  question WITH NO NEW SYNTAX AT ALL.
+
+That last is the reason this entry exists rather than a `series_count_if`: the
+missing thing is not a reduction, it is the line to reduce. **Do not build the
+predicate argument before §7.55 is decided.**
+
+**2. WHERE, not what.** `series_argmax`, and "the first period DSCR crossed
+1.20". Three decisions, which is why it did not ride along with §7.86:
+
+- **The return type.** A period index composes with the windows every
+  reduction already takes; a DATE is what a covenant clause names. And the
+  registry has no `period -> date` function, so an index cannot be turned into
+  the date the clause wants — whichever is returned, the other needs a second
+  function built beside it.
+- **Ties.** First or last occurrence of the maximum. First is conventional and
+  should be stated rather than emergent.
+- **Nothing to point at.** An empty selection has no position, the same
+  argument that makes `series_max` refuse it — so these inherit that refusal.
+
+A first-crossing form additionally needs the predicate of part 1, so the two
+halves of this entry are not independent: settle §7.55, and both get simpler.
+
+**Also unbuilt, and related: a cumulative scan.** A peak balance is a fold over
+a series that CARRIES the balance, and §7.86's fixture shows that working
+because the model declares the balance as a field. A model that has only flows
+cannot synthesise the running total to fold — that is a scan (a series in, a
+series out), not a reduction, and it is the same missing capability as part 1
+seen from another side.
+
+Provenance: split out of §7.86 on 31 August 2026, when its four reductions
+shipped and these did not. The `period -> date` gap and the §7.55 dependency
+were both found while scoping that work, not before it.

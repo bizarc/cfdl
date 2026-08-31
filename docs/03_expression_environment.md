@@ -331,9 +331,34 @@ quantile is an evaluation error, and so is passing a curve to these or a
 quantile to `curve_value`: the two are on different axes and neither resolves
 against the other.
 
-Cross-stream series: `series_sum(name, from_t, to_t)` /
-`series_avg(name, from_t, to_t)` aggregate another stream's signed per-period
-amounts over an inclusive period window (`prefix.*` wildcards supported).
+Cross-stream series: `series_sum`, `series_avg`, `series_max`, `series_min`,
+`series_prod` and `series_count`, each `(name, from_t, to_t)`, reduce another
+stream's signed per-period amounts over an inclusive period window (`prefix.*`
+wildcards supported).
+
+**Every one of them folds the PER-PERIOD AGGREGATE.** When a selector matches
+several streams they are added together within each period first, and the fold
+runs over the resulting single series. For a sum the order never mattered —
+addition is associative — but for a maximum it decides the answer: the peak of
+the combined position and the largest single cell are different numbers, and
+the first is what "peak outstanding" means. `series_count` counts the periods
+whose aggregate is non-zero.
+
+**A selection that matches nothing** sums to 0, multiplies to 1 and counts 0 —
+each fold's own identity. `series_max` and `series_min` REFUSE it: nothing has
+no maximum, and returning 0 would state a value no period reached.
+
+**The window and the data.** `series_avg` divides by the REQUESTED window
+length, so a window extending past the data averages the available amounts over
+the full window. The other folds have no such knob and simply ignore the absent
+cells, so the two treat the tail differently by design.
+
+**A peak balance is a fold over the balance, not over the flows.**
+`series_max("dbt.*", 0, 11)` is the largest per-period NET FLOW. Peak
+outstanding debt is `series_max` over the series that carries the balance —
+an entity field, which a metric reads under the key results publishes it under
+(`docs/01` §15.3). A running total synthesised from flows alone is a scan
+rather than a reduction, and there is no scan.
 Streams evaluate in dependency order — waves. A stream that reads no series is
 wave 0; a reader evaluates one wave past the deepest stream it reads, against
 a store in which everything it names is already finished, to any depth. A
@@ -353,6 +378,13 @@ throughout. Since `series_sum` aggregates a stream over a window,
 `ln(1 + r_t)`. Both escape to float64, as `pow` already does for fractional
 exponents, so they are **not decimal-exact**; prefer a closed form where one
 exists.
+
+**`series_prod` is the direct route, and the better one.** It multiplies the
+per-period aggregate over the window with no helper stream — which matters
+beyond convenience, because a helper carrying `ln(1 + r_t)` must be declared
+`inflow` or `outflow`, so it IS cash and lands in `model.total`. The `ln`/`exp`
+identity remains correct and remains documented; reach for it when the factors
+live in a stream you already have.
 
 Dates: `date(y, m, d)`, `parse_date(text)` (ISO `YYYY-MM-DD` or `YYYY-MM`),
 `edate(d, months)`, `eomonth(d, months)`, `months_between(d1, d2)`,

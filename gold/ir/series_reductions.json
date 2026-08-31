@@ -1,0 +1,280 @@
+{
+  "ir_version": "0.1",
+  "model": {
+    "name": "series-reductions",
+    "currency": "USD"
+  },
+  "time": {
+    "calendar": "annual",
+    "start": "2026-01-01",
+    "periods": 4
+  },
+  "phases": [],
+  "entities": [
+    {
+      "id": "49dec5444fb12a44e18ed639397fe1a1",
+      "symbol": "asset.tlb",
+      "type": "Asset.Financial",
+      "fields": {},
+      "rules": {
+        "balance": {
+          "init": {
+            "lang": "cfdl",
+            "src": "6000.0"
+          },
+          "next": {
+            "lang": "cfdl",
+            "src": "max(0.0, prev + if(time.t == 1, 4000.0, 0.0) - if(time.t >= 2, 3500.0, 0.0))"
+          }
+        },
+        "growth": {
+          "init": {
+            "lang": "cfdl",
+            "src": "1.05"
+          },
+          "next": {
+            "lang": "cfdl",
+            "src": "1.03"
+          }
+        }
+      },
+      "state": {}
+    }
+  ],
+  "assumptions": {
+    "constants": {},
+    "random": {}
+  },
+  "metrics": [
+    {
+      "name": "lifetime",
+      "expr": {
+        "lang": "cfdl",
+        "src": "series_sum(\"dbt.*\", 0.0, 3.0)"
+      },
+      "provenance": {
+        "source_file": "model.cfdl",
+        "source_span": {
+          "start_line": 46,
+          "start_col": 1,
+          "end_line": 46,
+          "end_col": 45
+        }
+      }
+    },
+    {
+      "name": "peak_wrong",
+      "expr": {
+        "lang": "cfdl",
+        "src": "max(series_sum(\"dbt.*\", 0.0, 3.0))"
+      },
+      "provenance": {
+        "source_file": "model.cfdl",
+        "source_span": {
+          "start_line": 47,
+          "start_col": 1,
+          "end_line": 47,
+          "end_col": 50
+        }
+      }
+    },
+    {
+      "name": "peak_debt",
+      "expr": {
+        "lang": "cfdl",
+        "src": "series_max(\"asset.tlb.balance\", 0.0, 3.0)"
+      },
+      "provenance": {
+        "source_file": "model.cfdl",
+        "source_span": {
+          "start_line": 50,
+          "start_col": 1,
+          "end_line": 50,
+          "end_col": 58
+        }
+      }
+    },
+    {
+      "name": "trough_debt",
+      "expr": {
+        "lang": "cfdl",
+        "src": "series_min(\"asset.tlb.balance\", 0.0, 3.0)"
+      },
+      "provenance": {
+        "source_file": "model.cfdl",
+        "source_span": {
+          "start_line": 51,
+          "start_col": 1,
+          "end_line": 51,
+          "end_col": 58
+        }
+      }
+    },
+    {
+      "name": "largest_flow",
+      "expr": {
+        "lang": "cfdl",
+        "src": "series_max(\"dbt.*\", 0.0, 3.0)"
+      },
+      "provenance": {
+        "source_file": "model.cfdl",
+        "source_span": {
+          "start_line": 55,
+          "start_col": 1,
+          "end_line": 55,
+          "end_col": 48
+        }
+      }
+    },
+    {
+      "name": "smallest_flow",
+      "expr": {
+        "lang": "cfdl",
+        "src": "series_min(\"dbt.*\", 0.0, 3.0)"
+      },
+      "provenance": {
+        "source_file": "model.cfdl",
+        "source_span": {
+          "start_line": 56,
+          "start_col": 1,
+          "end_line": 56,
+          "end_col": 48
+        }
+      }
+    },
+    {
+      "name": "compounded",
+      "expr": {
+        "lang": "cfdl",
+        "src": "series_prod(\"asset.tlb.growth\", 0.0, 3.0)"
+      },
+      "provenance": {
+        "source_file": "model.cfdl",
+        "source_span": {
+          "start_line": 61,
+          "start_col": 1,
+          "end_line": 61,
+          "end_col": 57
+        }
+      }
+    },
+    {
+      "name": "draw_periods",
+      "expr": {
+        "lang": "cfdl",
+        "src": "series_count(\"dbt.draw\", 0.0, 3.0)"
+      },
+      "provenance": {
+        "source_file": "model.cfdl",
+        "source_span": {
+          "start_line": 65,
+          "start_col": 1,
+          "end_line": 65,
+          "end_col": 52
+        }
+      }
+    },
+    {
+      "name": "busy_periods",
+      "expr": {
+        "lang": "cfdl",
+        "src": "series_count(\"dbt.*\", 0.0, 3.0)"
+      },
+      "provenance": {
+        "source_file": "model.cfdl",
+        "source_span": {
+          "start_line": 66,
+          "start_col": 1,
+          "end_line": 66,
+          "end_col": 49
+        }
+      }
+    }
+  ],
+  "contracts": [],
+  "streams": [
+    {
+      "id": "f83422cbd371b00ddb76c73582b8158b",
+      "name": "dbt.draw",
+      "owner": {
+        "symbol": "asset.tlb"
+      },
+      "direction": "inflow",
+      "currency": "USD",
+      "schedule": {
+        "kind": "Every",
+        "every": "annual",
+        "from": "2026-01-01",
+        "to": "2027-01-01"
+      },
+      "amount": {
+        "lang": "cfdl",
+        "src": "if(time.t == 0.0, 6000.0, 4000.0)"
+      },
+      "active_when": {
+        "lang": "cfdl",
+        "src": "true"
+      },
+      "provenance": {
+        "source_file": "model.cfdl",
+        "source_span": {
+          "start_line": 35,
+          "start_col": 1,
+          "end_line": 38,
+          "end_col": 1
+        }
+      }
+    },
+    {
+      "id": "05afcb0ec560d6edfa87a4d6d98a8349",
+      "name": "dbt.repay",
+      "owner": {
+        "symbol": "asset.tlb"
+      },
+      "direction": "outflow",
+      "currency": "USD",
+      "schedule": {
+        "kind": "Every",
+        "every": "annual",
+        "from": "2028-01-01",
+        "to": "2029-01-01"
+      },
+      "amount": {
+        "lang": "cfdl",
+        "src": "3500.0"
+      },
+      "active_when": {
+        "lang": "cfdl",
+        "src": "true"
+      },
+      "provenance": {
+        "source_file": "model.cfdl",
+        "source_span": {
+          "start_line": 40,
+          "start_col": 1,
+          "end_line": 43,
+          "end_col": 1
+        }
+      }
+    }
+  ],
+  "events": [],
+  "options": [],
+  "runs": [
+    {
+      "kind": "deterministic"
+    }
+  ],
+  "required_observables": [],
+  "required_refs": [],
+  "provenance": {
+    "sources": [
+      "model.cfdl"
+    ],
+    "compiler": {
+      "name": "cfdl",
+      "version": "0.7.0",
+      "hash": "d80f4c40398fe75b55a6788a2be14aac"
+    }
+  }
+}

@@ -26,16 +26,72 @@ pub enum Mode {
     ExcelCompat,
 }
 
+/// How a series reduction folds the per-period aggregate it is given.
+///
+/// EVERY REDUCTION FOLDS THE PER-PERIOD AGGREGATE, never the flattened cells.
+/// `series_sum("dbt.*", …)` adds the matched streams within a period and then
+/// across periods, and because addition is associative the order was invisible.
+/// It is NOT invisible for a maximum: the peak of the combined position and the
+/// largest single cell are different numbers, and only the first is what "peak
+/// outstanding debt" means. So the host aggregates within each period first,
+/// and this says what to do with the resulting vector (`docs/13` §7.86).
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum SeriesReduction {
+    Sum,
+    Mean,
+    Max,
+    Min,
+    Product,
+    /// How many periods in the window carry a non-zero aggregate.
+    CountNonZero,
+}
+
+impl SeriesReduction {
+    pub fn of(name: &str) -> Option<Self> {
+        match name {
+            "series_sum" => Some(Self::Sum),
+            "series_avg" => Some(Self::Mean),
+            "series_max" => Some(Self::Max),
+            "series_min" => Some(Self::Min),
+            "series_prod" => Some(Self::Product),
+            "series_count" => Some(Self::CountNonZero),
+            _ => None,
+        }
+    }
+
+    /// What an EMPTY SELECTION reduces to, when there is an answer at all.
+    ///
+    /// A `.*` selector may legitimately match nothing, and each fold has its
+    /// own honest answer: nothing sums to 0 and multiplies to 1, and no period
+    /// carries a non-zero aggregate. A maximum is different — nothing has no
+    /// maximum, and returning 0 would state a value where there is none, which
+    /// is the exact failure §7.86 exists to end.
+    pub fn empty_selection(self) -> Option<f64> {
+        match self {
+            Self::Sum | Self::Mean | Self::CountNonZero => Some(0.0),
+            Self::Product => Some(1.0),
+            Self::Max | Self::Min => None,
+        }
+    }
+}
+
 /// Variable resolution: dotted paths like `time.t` or `contract.term_months`.
 pub trait Env {
     fn lookup(&self, path: &str) -> Option<Value>;
 
-    /// Host hook for cross-stream series aggregation (`series_sum` /
-    /// `series_avg`). `name` may be an exact stream name or a `prefix.*`
-    /// wildcard; the period window [from, to] is inclusive and clamped by the
-    /// host. Returns None when the host provides no series (e.g. plain
-    /// expression contexts), which surfaces as an evaluation error.
-    fn series_aggregate(&self, _name: &str, _from: i64, _to: i64, _mean: bool) -> Option<Decimal> {
+    /// Host hook for cross-stream series reduction. `name` may be an exact
+    /// stream name or a `prefix.*` wildcard; the period window [from, to] is
+    /// inclusive and clamped by the host. Returns None when the host provides
+    /// no series (e.g. plain expression contexts), which surfaces as an
+    /// evaluation error — and, for `Max`/`Min`, when the selection is empty,
+    /// because nothing has no maximum.
+    fn series_aggregate(
+        &self,
+        _name: &str,
+        _from: i64,
+        _to: i64,
+        _reduce: SeriesReduction,
+    ) -> Option<Decimal> {
         None
     }
 
@@ -176,7 +232,7 @@ pub fn eval(expr: &Expr, env: &dyn Env, mode: Mode) -> Result<Value, CalcError> 
             for arg in args {
                 values.push((eval(arg, env, mode)?, arg.span));
             }
-            if name == "series_sum" || name == "series_avg" {
+            if SeriesReduction::of(name).is_some() {
                 return funcs::series_call(name, &values, expr.span, env);
             }
             if name == "curve_value" {
