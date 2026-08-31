@@ -399,8 +399,8 @@ fn compute_results(ir: &Ir, model_hash: String, config: RunConfig) -> Result<Res
             // one-entry map instead, so the figure a stochastic case exists to
             // assert existed in no trial.
             //
-            // `entity.*.total` is the join the results-plane graph was built
-            // for: a trial row keys `entity.asset.tower.total`, and
+            // `entity.*.total` is the join the published entity graph was
+            // built for: a trial row keys `entity.asset.tower.total`, and
             // `graph.entities[].symbol` is `asset.tower`, so a per-entity
             // distribution is now readable from results alone — the ownership
             // axis of §7.43, worn stochastically.

@@ -34,7 +34,7 @@ a stochastic case exists to assert existed in no trial (backlog §7.87).
   be taken over (a string, or a kind that changed between trials) is carried
   per trial and left out of the summary.
 
-A trial row keys `entity.<symbol>.total` and the results-plane graph
+A trial row keys `entity.<symbol>.total` and the published entity graph
 (`results_version` 0.7) keys `graph.entities[].symbol`, so a per-entity
 distribution is now readable from results alone.
 
@@ -136,7 +136,7 @@ dialect (E1364 for an unrooted category). `slice` joins the reserved words
 (§18.1, 87 in use); E1361 refuses a duplicate name.
 
 
-### Added: the results plane carries the graph (results_version 0.7; §7.43, §7.91)
+### Added: the valuation plane publishes the entity graph (results_version 0.7; §7.43, §7.91)
 
 A series entry carried `index`, `offset` and `values`, and nothing else — so
 a consumer holding results.json alone could not attribute a stream to the
