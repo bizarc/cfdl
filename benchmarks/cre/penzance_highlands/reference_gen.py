@@ -105,16 +105,16 @@ w("}\n")
 
 w(f'''
 // ---------------------------------------------------------------- structure
-entity asset project : CRE.Asset.Portfolio
-entity asset east : CRE.Asset.RealProperty {{ asset_class = "mixed_use"  part of asset.project }}
-entity asset west : CRE.Asset.RealProperty {{ asset_class = "multifamily"  part of asset.project }}
+entity container project : CRE.Container.Portfolio
+entity asset east : CRE.Asset.RealProperty {{ asset_class = "mixed_use"  part of container.project }}
+entity asset west : CRE.Asset.RealProperty {{ asset_class = "multifamily"  part of container.project }}
 
 entity party penzance : CRE.Party.Sponsor  {{ name = "Penzance" }}
 entity party baupost  : CRE.Party.Investor {{ name = "The Baupost Group" }}
 entity party mack     : CRE.Party.Lender   {{ name = "Mack Real Estate Credit Strategies" }}
 
 // ------------------------------------------------------------------ capital
-stream cre.land on entity asset.project outflow currency USD {{
+stream cre.land on entity container.project outflow currency USD {{
   schedule on {ym(0)}
   category investing.capital.capex
   amount = {LAND:.2f}
@@ -123,7 +123,7 @@ stream cre.land on entity asset.project outflow currency USD {{
 
 for name, total in COSTS.items():
     w(f'''
-stream cre.{name} on entity asset.project outflow currency USD {{
+stream cre.{name} on entity container.project outflow currency USD {{
   schedule every month start from {ym(T_C0)} to {ym(T_C1)}
   category investing.capital.construction
   amount = {total:.2f} * (time.t - {T_C0 - 1}.0) * ({T_C1 + 1}.0 - time.t) / {WSUM}.0
@@ -133,13 +133,13 @@ w(f'''
 
 // SP #445 conditions: utility undergrounding and TDM at permit; public art,
 // green building and affordable housing at certificate of occupancy.
-stream cre.obligations_permit on entity asset.project outflow currency USD {{
+stream cre.obligations_permit on entity container.project outflow currency USD {{
   schedule on {ym(T_C0)}
   category investing.capital.construction
   amount = {OBLIG[T_C0]:.2f}
 }}
 
-stream cre.obligations_co on entity asset.project outflow currency USD {{
+stream cre.obligations_co on entity container.project outflow currency USD {{
   schedule on {ym(T_EVO)}
   category investing.capital.construction
   amount = {OBLIG[T_EVO]:.2f}
@@ -199,7 +199,7 @@ stream cre.evo_sale on entity asset.east inflow currency USD {{
   amount = {EVO_P:.2f}
 }}
 
-stream cre.sale_costs on entity asset.project outflow currency USD {{
+stream cre.sale_costs on entity container.project outflow currency USD {{
   schedule on {ym(T_EXIT)}
   category investing.disposal.selling_costs
   amount = {(AUB_P + EVO_P):.2f} * inputs.cost_of_sale
@@ -260,7 +260,7 @@ entity asset facility : Asset.Financial {
 }
 
 // Interest is capitalized: it is repaid inside the principal repayment. That is the convention the reference workbook uses.
-stream cre.loan_draw on entity asset.project inflow currency USD {
+stream cre.loan_draw on entity container.project inflow currency USD {
   schedule every month start from %s to %s
   category financing.debt.proceeds
   amount = asset.facility.draw
@@ -270,13 +270,13 @@ stream cre.loan_draw on entity asset.project inflow currency USD {
 // net to zero in cash while the balance grows. Stated GROSS rather than folded
 // into the balance silently, so `domain.cre.debt_service` sees real interest
 // and coverage during the build is measurable instead of absent.
-stream cre.loan_interest on entity asset.project outflow currency USD {
+stream cre.loan_interest on entity container.project outflow currency USD {
   schedule every month start from %s to %s
   category financing.debt.interest_paid
   amount = asset.facility.interest
 }
 
-stream cre.loan_interest_funding on entity asset.project inflow currency USD {
+stream cre.loan_interest_funding on entity container.project inflow currency USD {
   schedule every month start from %s to %s
   category financing.debt.proceeds
   amount = asset.facility.interest
@@ -286,7 +286,7 @@ stream cre.loan_interest_funding on entity asset.project inflow currency USD {
 // `domain.cre.debt_service`, and a balance retired out of sale proceeds is not
 // debt service — it would make every coverage ratio in the disposal period
 // meaningless. The cre pack says the same of a permanent loan's balloon.
-stream cre.loan_repayment on entity asset.project outflow currency USD {
+stream cre.loan_repayment on entity container.project outflow currency USD {
   schedule every month start from %s to %s
   category investing.disposal.reversion
   amount = asset.facility.repay
@@ -360,7 +360,7 @@ account penzance_capital {
 
 // -------------------------------------------------------------- the JV split
 // Penzance / Baupost terms are not public; these tiers are stated assumptions.
-waterfall jv.distribution on entity asset.project {
+waterfall jv.distribution on entity container.project {
   schedule on %s end
   from deal_cash
 

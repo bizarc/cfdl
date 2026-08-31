@@ -66,13 +66,10 @@ field_type = "string"
 required = false
 
 [[entities]]
-type_id = "CRE.Asset.Portfolio"
-family = "asset"
-class = "real"
-# A portfolio is a grouping that scopes cash, not a thing that produces it —
-# migrates to the `container` family when docs/13 §7.88 lands.
-refines = "Asset.Real"
-description = "A grouping of properties modeled as one."
+type_id = "CRE.Container.Portfolio"
+family = "container"
+refines = "Container.Portfolio"
+description = "A grouping of properties modeled as one. Cash attached directly to it is deal-level cash — a land purchase, a development budget — aggregated with its members' by the relation."
 
 [[entities]]
 type_id = "CRE.Asset.EquityInterest"

@@ -267,10 +267,12 @@ entity party acme : CRE.Party.Tenant { name = "Acme Corp" }
 
 - The **family** is the first identifier: `asset` for something that produces or
   consumes cash, `party` for someone who contracts, owns, lends or invests,
-  `container` for a grouping that scopes cash without producing it — a fund, a
+  `container` for a grouping that scopes cash — a fund, a
   portfolio, an SPV, a transaction. Containment reuses `part of`: a container
-  parent's cash is aggregated from its members by the relation, exactly as an
-  asset parent's is, and counts as cash nowhere.
+  parent's aggregate is folded from its members by the relation, exactly as an
+  asset parent's is, and counts as cash nowhere. Cash MAY attach directly to a
+  container — a land purchase, a development budget, a fund-level fee is
+  deal-level cash, and it is real cash, aggregated with the members'.
 - The **type** is checked against the active ontology. With no pack active a
   model still has the language's own vocabulary — `Asset.Real`,
   `Asset.Financial`, `Asset.Intangible`, `Party`, `Container.Fund`,
@@ -5356,8 +5358,9 @@ Rules, checked at pack load:
 plus `contract` and `reference`, which are nodes (relation endpoints,
 identity-bearing) though they are declared with `contract` and
 `curve`/`quantile` rather than `entity`. A container groups and scopes — a
-fund, a portfolio, an SPV, a transaction; it holds cash-producers and does
-not produce. Only assets carry a `class`. The language base ships
+fund, a portfolio, an SPV, a transaction. It holds cash-producers; cash
+attached directly to it is deal-level cash, real and aggregated with its
+members'. Only assets carry a `class`. The language base ships
 `Container.Fund`, `Container.Portfolio`, `Container.SPV` and
 `Container.Transaction` for packs to refine.
 

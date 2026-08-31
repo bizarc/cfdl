@@ -213,10 +213,10 @@ for name, when, amount, note in [
 
 w(f'''
 // ---------------------------------------------------------------- structure
-entity asset project : CRE.Asset.Portfolio
-entity asset ne : CRE.Asset.RealProperty {{ asset_class = "condominium"  part of asset.project }}
-entity asset nw : CRE.Asset.RealProperty {{ asset_class = "multifamily"  part of asset.project }}
-entity asset south : CRE.Asset.RealProperty {{ asset_class = "multifamily"  part of asset.project }}
+entity container project : CRE.Container.Portfolio
+entity asset ne : CRE.Asset.RealProperty {{ asset_class = "condominium"  part of container.project }}
+entity asset nw : CRE.Asset.RealProperty {{ asset_class = "multifamily"  part of container.project }}
+entity asset south : CRE.Asset.RealProperty {{ asset_class = "multifamily"  part of container.project }}
 
 entity party penzance : CRE.Party.Sponsor  {{ name = "Penzance" }}
 entity party baupost  : CRE.Party.Investor {{ name = "The Baupost Group" }}
@@ -225,7 +225,7 @@ entity party baupost  : CRE.Party.Investor {{ name = "The Baupost Group" }}
 // so the price is the aggregate across all three parcels. The County's own
 // guideline land value for Metro high-rise is $78,000 per rental unit, putting
 // 772 rental units at $60,216,000: the site was bought 13.6% below guideline.
-stream cre.development on entity asset.project outflow currency USD {{
+stream cre.development on entity container.project outflow currency USD {{
   schedule every month start from {ym(0)} to {ym(N-1)}
   category investing.capital.capex
   amount = curve_value("dev_cost", time.date)
@@ -236,21 +236,21 @@ stream cre.development on entity asset.project outflow currency USD {{
 // gives the assessor's own NOI; add back guideline expenses and gross up for
 // vacancy. Escalated from the Guidebook's 2026-07 vintage, NOT frozen there --
 // this project delivers in 2030 and freezing 2026 dollars would understate it.
-stream cre.rent on entity asset.project inflow currency USD {{
+stream cre.rent on entity container.project inflow currency USD {{
   schedule every month start from {ym(0)} to {ym(N - 1 + PROJECT)}
   category operating.revenue.base_rent
   amount = curve_value("units_occupied", time.date) * inputs.rent_per_unit
          * pow(1.0 + inputs.growth, (time.t - {BASE_T}) / 12.0) * {HELD}
 }}
 
-stream cre.parking on entity asset.project inflow currency USD {{
+stream cre.parking on entity container.project inflow currency USD {{
   schedule every month start from {ym(0)} to {ym(N - 1 + PROJECT)}
   category operating.revenue.other
   amount = curve_value("units_occupied", time.date) * inputs.parking_per_space * 0.5
          * pow(1.0 + inputs.growth, (time.t - {BASE_T}) / 12.0) * {HELD}
 }}
 
-stream cre.opex on entity asset.project outflow currency USD {{
+stream cre.opex on entity container.project outflow currency USD {{
   schedule every month start from {ym(0)} to {ym(N - 1 + PROJECT)}
   category operating.expense.opex
   amount = curve_value("units_occupied", time.date) * inputs.expenses_per_unit / 12.0
@@ -260,7 +260,7 @@ stream cre.opex on entity asset.project outflow currency USD {{
 // The weakest input in the case, and it carries the most weight: the NE tower's
 // 73 units average 2,273 sq ft, far larger than the Pierce units this is
 // anchored to, and no Rosslyn condominium of that size has traded recently.
-stream cre.condo_closings on entity asset.project inflow currency USD {{
+stream cre.condo_closings on entity container.project inflow currency USD {{
   schedule every month start from {ym(0)} to {ym(N-1)}
   category investing.disposal.reversion
   amount = curve_value("condo_proceeds", time.date)
@@ -299,7 +299,7 @@ entity asset facility : Asset.Financial {{
                                    + curve_value("refi_proceeds", time.date) * inputs.scenario_b)))
 }}
 
-stream cre.loan_draw on entity asset.project inflow currency USD {{
+stream cre.loan_draw on entity container.project inflow currency USD {{
   schedule every month start from {ym(0)} to {ym(N-1)}
   category financing.debt.proceeds
   amount = asset.facility.draw
@@ -307,13 +307,13 @@ stream cre.loan_draw on entity asset.project inflow currency USD {{
 
 // Interest capitalizes: stated GROSS, an outflow against a matching draw, so
 // coverage stays measurable. The two legs net to zero in cash.
-stream cre.loan_interest on entity asset.project outflow currency USD {{
+stream cre.loan_interest on entity container.project outflow currency USD {{
   schedule every month start from {ym(0)} to {ym(N-1)}
   category financing.debt.interest_paid
   amount = asset.facility.interest
 }}
 
-stream cre.loan_interest_funding on entity asset.project inflow currency USD {{
+stream cre.loan_interest_funding on entity container.project inflow currency USD {{
   schedule every month start from {ym(0)} to {ym(N-1)}
   category financing.debt.proceeds
   amount = asset.facility.interest
@@ -322,14 +322,14 @@ stream cre.loan_interest_funding on entity asset.project inflow currency USD {{
 // A balance retired out of disposal proceeds is a reversion, not debt service:
 // folding it into debt service makes every coverage ratio in the period
 // meaningless. The cre pack says the same of a permanent loan's balloon.
-stream cre.loan_repayment on entity asset.project outflow currency USD {{
+stream cre.loan_repayment on entity container.project outflow currency USD {{
   schedule every month start from {ym(0)} to {ym(N-1)}
   category investing.disposal.reversion
   amount = asset.facility.repay
 }}
 
 // ----------------------------------------------------- scenario A: the sale
-stream cre.exit_a on entity asset.project inflow currency USD {{
+stream cre.exit_a on entity container.project inflow currency USD {{
   schedule on {ym(A_EXIT)} end
   category investing.disposal.reversion
   amount = {A_VALUE:.2f} * inputs.market_factor * (1.0 - inputs.scenario_b)
@@ -339,19 +339,19 @@ stream cre.exit_a on entity asset.project inflow currency USD {{
 // Permanent debt at stabilization: the 10-year Treasury at 2026-08-24 was
 // 4.70% (FRED) and the spread over it is a projection. Sized at 60% of the
 // stabilized value, amortizing over 30 years.
-stream cre.refinance on entity asset.project inflow currency USD {{
+stream cre.refinance on entity container.project inflow currency USD {{
   schedule on {ym(B_REFI)} end
   category financing.debt.proceeds
   amount = {PERM_PRINCIPAL:.2f} * inputs.scenario_b
 }}
 
-stream cre.perm_debt_service on entity asset.project outflow currency USD {{
+stream cre.perm_debt_service on entity container.project outflow currency USD {{
   schedule every month end from {ym(B_REFI + 1)} to {ym(B_EXIT)}
   category financing.debt.service
   amount = {PERM_PMT:.2f} * inputs.scenario_b
 }}
 
-stream cre.exit_b on entity asset.project inflow currency USD {{
+stream cre.exit_b on entity container.project inflow currency USD {{
   schedule on {ym(B_EXIT)} end
   category investing.disposal.reversion
   amount = (series_sum("cre.rent", time.t + 1, time.t + 12)
@@ -360,7 +360,7 @@ stream cre.exit_b on entity asset.project inflow currency USD {{
          / inputs.cap_rate * inputs.market_factor * inputs.scenario_b
 }}
 
-stream cre.perm_payoff on entity asset.project outflow currency USD {{
+stream cre.perm_payoff on entity container.project outflow currency USD {{
   schedule on {ym(B_EXIT)} end
   category investing.disposal.reversion
   amount = {PERM_PAYOFF:.2f} * inputs.scenario_b

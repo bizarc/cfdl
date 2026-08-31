@@ -230,8 +230,9 @@ Rules, checked at pack load:
 plus `contract` and `reference`, which are nodes (relation endpoints,
 identity-bearing) though they are declared with `contract` and
 `curve`/`quantile` rather than `entity`. A container groups and scopes — a
-fund, a portfolio, an SPV, a transaction; it holds cash-producers and does
-not produce. Only assets carry a `class`. The language base ships
+fund, a portfolio, an SPV, a transaction. It holds cash-producers; cash
+attached directly to it is deal-level cash, real and aggregated with its
+members'. Only assets carry a `class`. The language base ships
 `Container.Fund`, `Container.Portfolio`, `Container.SPV` and
 `Container.Transaction` for packs to refine.
 
