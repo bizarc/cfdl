@@ -608,6 +608,17 @@ fn resolve_quantile_call(
     })
 }
 
+/// The node families a `<family>.<entity>.<field>` read may start with —
+/// one definition, consumed by the evaluator's family alias and by the
+/// compiler's and validator's field-path scans. A family present in one
+/// list and not another is how `container.fund.x` failed a run while
+/// `entity container fund` compiled (spec audit, 31 August 2026) — the
+/// fourth-list defect #222 already named. Kept in this crate because it is
+/// the lowest layer all three consumers share; `cfdl_pack::NODE_FAMILIES`
+/// states the same roster for pack loading and cannot be imported from
+/// here without inverting the dependency.
+pub const FIELD_FAMILIES: &[&str] = &["asset", "party", "container", "contract", "reference"];
+
 pub fn selector_matches(pattern: &str, name: &str) -> bool {
     match pattern.strip_suffix(".*") {
         Some(prefix) => name == prefix || name.starts_with(&format!("{prefix}.")),
@@ -701,7 +712,7 @@ impl cfdl_calc::Env for EnvAdapter<'_> {
         //
         // Only a declared family is aliased, and only when that family is
         // actually bound, so no other root changes meaning.
-        let family_alias = matches!(root, "asset" | "party" | "contract" | "reference")
+        let family_alias = FIELD_FAMILIES.contains(&root)
             && matches!(self.env.entity.get(root), Some(Value::Map(_)));
 
         let (map, first) = if family_alias {

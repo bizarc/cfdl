@@ -29,6 +29,13 @@ import sys
 REPO_ROOT = pathlib.Path(__file__).resolve().parent.parent
 SCHEMA_PATH = REPO_ROOT / "docs" / "schemas" / "run.schema.json"
 
+# The published copy the site serves. The run-config reference page drifted
+# for as long as this schema was never staged to the site (spec audit,
+# 31 August 2026) — an unchecked copy is how the results and IR schemas
+# drifted before their gates grew --write. Same cure here: the gate
+# byte-compares, and --write propagates.
+SITE_COPY = REPO_ROOT / "site" / "public" / "schemas" / "CFDL_v0_1_Run.schema.json"
+
 # Every directory a run config can live in. Kept explicit rather than globbing
 # the repository, so a stray fixture somewhere unexpected is a decision rather
 # than an accident.
@@ -59,6 +66,18 @@ def main() -> int:
     schema = json.loads(SCHEMA_PATH.read_text(encoding="utf-8"))
     Draft202012Validator.check_schema(schema)
     validator = Draft202012Validator(schema)
+
+    source_bytes = SCHEMA_PATH.read_bytes()
+    if "--write" in sys.argv[1:]:
+        SITE_COPY.write_bytes(source_bytes)
+        print(f"check-run-schema: wrote {SITE_COPY.relative_to(REPO_ROOT)}")
+    elif not SITE_COPY.exists() or SITE_COPY.read_bytes() != source_bytes:
+        print(
+            "check-run-schema: the site's published copy differs from the source schema.\n"
+            "                  python3 tools/check-run-schema.py --write",
+            file=sys.stderr,
+        )
+        return 1
 
     configs = sorted(
         path
