@@ -1,0 +1,17 @@
+[
+  {
+    "code": "E1365_METRIC_UNKNOWN_SERIES",
+    "severity": "error",
+    "message": "Metric 'typo' folds series 'total.nonsense.xyz', which this model does not publish.",
+    "file": "model.cfdl",
+    "span": {
+      "start_line": 23,
+      "start_col": 1,
+      "end_line": 23,
+      "end_col": 52
+    },
+    "path": null,
+    "hint": "Check the spelling. A metric may fold any series this model publishes: a stream by its own name or as `stream.<name>`, a waterfall step, `entity.<symbol>.net_cash_flow`, `account.<name>`, an entity field, a money subtotal, or `model.net_cash_flow`. A selector ending in `.*` states that matching nothing is intended.",
+    "notes": []
+  }
+]

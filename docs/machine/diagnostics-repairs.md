@@ -11,7 +11,7 @@ Diagnostics are the repair signal: read the `code`, `message`, `span`, and
 `hint`, change the model, recompile. The catalog is how an agent learns what
 each code looks like in the flesh before it meets one.
 
-**Coverage:** 206 codes in the docs/08 §7 register; 95 exemplified here; 70 of 100 examples carry a recorded fix.
+**Coverage:** 207 codes in the docs/08 §7 register; 96 exemplified here; 70 of 101 examples carry a recorded fix.
 
 ## active_in_unknown_state — E1332_UNKNOWN_ACTIVE_STATE
 
@@ -1982,6 +1982,41 @@ metric running = metric.running + 1.0
 
 - `E1354_METRIC_FORWARD_REF` (error): Metric 'running' reads itself.
   - hint: A metric is a fold over the finished projection, not a recurrence; carry a running quantity as a field the walk advances.
+
+Fix: not yet recorded.
+
+## metric_unknown_series — E1365_METRIC_UNKNOWN_SERIES
+
+Failing example:
+
+```cfdl
+version 0.1
+model "metric-unknown-series"
+time calendar annual from 2026-01 for 3
+
+// A NAME NOTHING BINDS IS REFUSED, NOT READ AS ZERO.
+//
+// `docs/13` §7.85: `series_sum` returns 0.0 for a selector that matches
+// nothing, which is right for a `.*` selector — matching nothing is a stated
+// possibility there — and wrong for a name spelled out in full. In a stream
+// the miss is a warning (`W5022`), because the series it produces is there to
+// be looked at. In a metric there is nothing to look at: a fold publishes ONE
+// number, under a name the author chose, and a wrong one is indistinguishable
+// from a right one. `series_sum("total.nonsense.xyz", 0, 11)` published 0 with
+// no diagnostic at all.
+
+entity asset proj : Asset.Financial
+
+stream ops.rev on entity asset.proj inflow currency USD {
+  schedule every year from 2026-01 to 2028-01
+  amount = 100
+}
+
+metric typo = series_sum("total.nonsense.xyz", 0, 2)
+```
+
+- `E1365_METRIC_UNKNOWN_SERIES` (error): Metric 'typo' folds series 'total.nonsense.xyz', which this model does not publish.
+  - hint: Check the spelling. A metric may fold any series this model publishes: a stream by its own name or as `stream.<name>`, a waterfall step, `entity.<symbol>.net_cash_flow`, `account.<name>`, an entity field, a money subtotal, or `model.net_cash_flow`. A selector ending in `.*` states that matching nothing is intended.
 
 Fix: not yet recorded.
 

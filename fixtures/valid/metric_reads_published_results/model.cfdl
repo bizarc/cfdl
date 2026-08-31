@@ -1,0 +1,51 @@
+version 0.1
+model "metric-reads-published-results"
+time calendar annual from 2026-01 for 3
+
+// A METRIC CAN READ WHAT THE VALUATION PLANE PUBLISHES — INCLUDING ITS OWN
+// AGGREGATES.
+//
+// `docs/13` §7.85. `docs/01` §15.3 has said in normative text since metrics
+// entered the spec that a metric's expression MAY read series, ENTITY FIELDS,
+// `inputs`, `cfg` and the engine's `model.*`. Entity fields it could not read:
+// the metric environment was built from stream and waterfall series and
+// nothing else, and `bind_states` — called for streams, distributions and
+// state evaluation alike — was never called for it.
+//
+// The same absence hid every computed aggregate. `entity.<symbol>.net_cash_flow`
+// is computed, published, and was unreachable; so was a field's own series, an
+// account balance, and a pack's money subtotal. Each read as ZERO, in silence,
+// because `series_sum` returns 0.0 for a selector that matches nothing.
+//
+// Worse, the two dialects disagreed about the same cash: `ops.rev` read 300
+// while `stream.ops.rev` — the key the results document publishes — read 0.
+// Both spellings now name the same series. The metric environment is the only
+// place this binding is added: a pot's window and a guard's read are untouched,
+// because a metric reads the FINISHED projection and they read the walk.
+
+entity asset proj : Asset.Financial {
+  drawn init 10000.0 next prev + 1000.0
+}
+
+stream ops.rev on entity asset.proj inflow currency USD {
+  schedule every year from 2026-01 to 2028-01
+  amount = 100
+}
+
+// An entity field, both spellings, read at the HORIZON: 10,000 then two
+// increments of 1,000.
+metric field_bare  = asset.proj.drawn
+metric field_long  = entity.asset.proj.drawn
+
+// The same field as a SERIES, under the key results publishes it under.
+metric field_at_t2 = series_sum("asset.proj.drawn", 2, 2)
+
+// The two dialects for one stream's cash. These must agree.
+metric bare        = series_sum("ops.rev", 0, 2)
+metric qualified   = series_sum("stream.ops.rev", 0, 2)
+metric agree       = metric.bare - metric.qualified
+
+// The aggregates the valuation plane computes beside the metric and could not
+// hand to it: the entity rollup and the model's own net cash flow.
+metric entity_cash = series_sum("entity.asset.proj.net_cash_flow", 0, 2)
+metric model_cash  = series_sum("model.net_cash_flow", 0, 2)

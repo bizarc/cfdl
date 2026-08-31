@@ -1,0 +1,222 @@
+{
+  "ir_version": "0.1",
+  "model": {
+    "name": "metric-reads-published-results",
+    "currency": "USD"
+  },
+  "time": {
+    "calendar": "annual",
+    "start": "2026-01-01",
+    "periods": 3
+  },
+  "phases": [],
+  "entities": [
+    {
+      "id": "8db04f0afbe4134177a20eff12dbb43e",
+      "symbol": "asset.proj",
+      "type": "Asset.Financial",
+      "fields": {},
+      "rules": {
+        "drawn": {
+          "init": {
+            "lang": "cfdl",
+            "src": "10000.0"
+          },
+          "next": {
+            "lang": "cfdl",
+            "src": "prev + 1000.0"
+          }
+        }
+      },
+      "state": {}
+    }
+  ],
+  "assumptions": {
+    "constants": {},
+    "random": {}
+  },
+  "metrics": [
+    {
+      "name": "field_bare",
+      "expr": {
+        "lang": "cfdl",
+        "src": "asset.proj.drawn"
+      },
+      "provenance": {
+        "source_file": "model.cfdl",
+        "source_span": {
+          "start_line": 37,
+          "start_col": 1,
+          "end_line": 37,
+          "end_col": 37
+        }
+      }
+    },
+    {
+      "name": "field_long",
+      "expr": {
+        "lang": "cfdl",
+        "src": "entity.asset.proj.drawn"
+      },
+      "provenance": {
+        "source_file": "model.cfdl",
+        "source_span": {
+          "start_line": 38,
+          "start_col": 1,
+          "end_line": 38,
+          "end_col": 44
+        }
+      }
+    },
+    {
+      "name": "field_at_t2",
+      "expr": {
+        "lang": "cfdl",
+        "src": "series_sum(\"asset.proj.drawn\", 2.0, 2.0)"
+      },
+      "provenance": {
+        "source_file": "model.cfdl",
+        "source_span": {
+          "start_line": 41,
+          "start_col": 1,
+          "end_line": 41,
+          "end_col": 57
+        }
+      }
+    },
+    {
+      "name": "bare",
+      "expr": {
+        "lang": "cfdl",
+        "src": "series_sum(\"ops.rev\", 0.0, 2.0)"
+      },
+      "provenance": {
+        "source_file": "model.cfdl",
+        "source_span": {
+          "start_line": 44,
+          "start_col": 1,
+          "end_line": 44,
+          "end_col": 48
+        }
+      }
+    },
+    {
+      "name": "qualified",
+      "expr": {
+        "lang": "cfdl",
+        "src": "series_sum(\"stream.ops.rev\", 0.0, 2.0)"
+      },
+      "provenance": {
+        "source_file": "model.cfdl",
+        "source_span": {
+          "start_line": 45,
+          "start_col": 1,
+          "end_line": 45,
+          "end_col": 55
+        }
+      }
+    },
+    {
+      "name": "agree",
+      "expr": {
+        "lang": "cfdl",
+        "src": "metric.bare - metric.qualified"
+      },
+      "provenance": {
+        "source_file": "model.cfdl",
+        "source_span": {
+          "start_line": 46,
+          "start_col": 1,
+          "end_line": 46,
+          "end_col": 51
+        }
+      }
+    },
+    {
+      "name": "entity_cash",
+      "expr": {
+        "lang": "cfdl",
+        "src": "series_sum(\"entity.asset.proj.net_cash_flow\", 0.0, 2.0)"
+      },
+      "provenance": {
+        "source_file": "model.cfdl",
+        "source_span": {
+          "start_line": 50,
+          "start_col": 1,
+          "end_line": 50,
+          "end_col": 72
+        }
+      }
+    },
+    {
+      "name": "model_cash",
+      "expr": {
+        "lang": "cfdl",
+        "src": "series_sum(\"model.net_cash_flow\", 0.0, 2.0)"
+      },
+      "provenance": {
+        "source_file": "model.cfdl",
+        "source_span": {
+          "start_line": 51,
+          "start_col": 1,
+          "end_line": 51,
+          "end_col": 60
+        }
+      }
+    }
+  ],
+  "contracts": [],
+  "streams": [
+    {
+      "id": "6117db71752e7c303c862c00a9c0f38f",
+      "name": "ops.rev",
+      "owner": {
+        "symbol": "asset.proj"
+      },
+      "direction": "inflow",
+      "currency": "USD",
+      "schedule": {
+        "kind": "Every",
+        "every": "annual",
+        "from": "2026-01-01",
+        "to": "2028-01-01"
+      },
+      "amount": {
+        "lang": "cfdl",
+        "src": "100.0"
+      },
+      "active_when": {
+        "lang": "cfdl",
+        "src": "true"
+      },
+      "provenance": {
+        "source_file": "model.cfdl",
+        "source_span": {
+          "start_line": 30,
+          "start_col": 1,
+          "end_line": 33,
+          "end_col": 1
+        }
+      }
+    }
+  ],
+  "events": [],
+  "options": [],
+  "runs": [
+    {
+      "kind": "deterministic"
+    }
+  ],
+  "required_observables": [],
+  "required_refs": [],
+  "provenance": {
+    "sources": [
+      "model.cfdl"
+    ],
+    "compiler": {
+      "name": "cfdl",
+      "version": "0.7.0",
+      "hash": "d80f4c40398fe75b55a6788a2be14aac"
+    }
+  }
+}

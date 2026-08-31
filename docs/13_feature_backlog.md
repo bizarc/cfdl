@@ -2087,6 +2087,52 @@ Provenance: found probing the metric environment against `docs/01` §15.3,
 30 August 2026. Six probe models; every number above reproduced from a run
 rather than read from the source.
 
+**Status, 31 August 2026 — shipped, in three pieces.**
+
+1. **Entity fields bind.** `bind_states` is called for the metric environment
+   at the horizon, which is the normative §15.3 promise that was simply
+   absent. `asset.proj.drawn` in a metric was `EXPR_UNKNOWN_NAME`; it now
+   reads the field's value at the horizon, in both spellings.
+
+2. **The published keys bind too, and the two dialects agree.** Every series
+   the valuation plane publishes is visible to a metric under the key the
+   results document uses: `stream.<name>`, `entity.<symbol>.net_cash_flow`,
+   `account.<name>`, a field's own series, a money subtotal, and
+   `model.net_cash_flow` — beside the bare expression names, which keep their
+   meaning exactly. The entry feared this "reopens the August 2026 naming
+   ambiguity" and the measurement says the opposite: the ambiguity IS that
+   `ops.rev` read 300 while `stream.ops.rev` read 0, and binding both
+   dissolves it. The binding is added to the METRIC environment only — a
+   pot's window and a guard's read are untouched, because a metric reads the
+   finished projection and they read the walk.
+
+3. **A name nothing publishes is refused** — `E1365_METRIC_UNKNOWN_SERIES`,
+   at compile time, walking the ASSEMBLED IR because the vocabulary is the
+   whole document (lowered streams, waterfall steps, entity rollups,
+   accounts, fields, pack subtotals) and half of it does not exist where
+   metrics are read. `series_sum("total.nonsense.xyz", 0, 11)` published 0
+   with no diagnostic; it is now a compile error. A `.*` selector may still
+   match nothing, because matching nothing is what a selector states at its
+   call site.
+
+**One thing deliberately left unbound: a RATIO subtotal.** Its undefined
+periods publish as `null` rather than zero — a coverage ratio in a period with
+no debt service — so a fold over it must decide what `null` means, and that
+decision belongs with the reductions of §7.86. Naming one is refused with its
+own hint rather than folded as though `null` were nothing. That is not the old
+behaviour: before, it read zero and said nothing.
+
+Fixtures: `valid/metric_reads_published_results` (both field spellings, the
+field's own series, the two stream dialects proved equal by a third metric
+that subtracts them, the entity rollup and the model aggregate) and
+`invalid/metric_unknown_series` (E1365). No golden value moved and all 45
+benchmark cases hold — nothing in the corpus was relying on a silent zero.
+
+The vocabulary now exists in two places, the compiler's check and the engine's
+binding, and they must agree. Both derive from the same published-series
+rules and the two fixtures pin the pairing from both ends; a third place would
+be the point to extract it.
+
 ---
 
 ### 7.86 Sum and mean are the only reductions over a series
@@ -2534,3 +2580,41 @@ validations keep bounding values, `inputs.` deferral keeps its rules.
 Unifying the member model changes what a contract type DECLARES, never how
 a contract LOWERS — bounds, defaults and deferral are validations and
 consumers OF fields, not a different kind of member.
+
+---
+
+### 7.93 Every engine run failure reports as an IR schema violation
+
+*Belongs with the CLI and diagnostics (section 5). Found shipping §7.85.*
+
+`EngineError` has variants for genuinely different failures — an unresolved
+name, a metric that does not compile, a metric folding a series nothing
+publishes — and `crates/cfdl-cli/src/main.rs` maps every one of them to
+`E5002_IR_SCHEMA_VALIDATION_FAILED` at three call sites. So a run that failed
+because a metric named a series wrongly told the author its IR violated the
+published schema, which it did not: the IR was valid, the compiler wrote it,
+and `check-ir-schema` would have passed it.
+
+Measured while building §7.85's refusal:
+
+```
+ERROR[E5002_IR_SCHEMA_VALIDATION_FAILED] Run failed while reading IR
+'ir.json': unresolved name: Metric 'nonsense' names series
+'total.nonsense.xyz', which this run does not publish.
+```
+
+The message underneath is precise and the code above it is false, which is the
+worst arrangement: a reader who trusts codes over prose goes looking at the
+schema, and a tool that routes on the code routes wrongly. §7.85's own check
+moved to compile time and got a real code (`E1365`), so the example above no
+longer reproduces from that path — the mis-mapping is untouched and every
+other engine failure still goes through it.
+
+Shape: `EngineError` variants map to distinct runtime codes, registered in
+`docs/08` the way the compiler's are, with `E5002` kept for what it names —
+an IR that genuinely fails the schema. The register already carries runtime
+codes (§7.81 is the sibling entry: `EXPR_EVAL` and `EXPR_UNKNOWN_NAME` are
+emitted and unregistered), so the two should be settled in one pass.
+
+Provenance: found reading the CLI's error mapping while checking that
+§7.85's new refusal surfaced legibly, 31 August 2026.

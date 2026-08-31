@@ -1,0 +1,23 @@
+version 0.1
+model "metric-unknown-series"
+time calendar annual from 2026-01 for 3
+
+// A NAME NOTHING BINDS IS REFUSED, NOT READ AS ZERO.
+//
+// `docs/13` §7.85: `series_sum` returns 0.0 for a selector that matches
+// nothing, which is right for a `.*` selector — matching nothing is a stated
+// possibility there — and wrong for a name spelled out in full. In a stream
+// the miss is a warning (`W5022`), because the series it produces is there to
+// be looked at. In a metric there is nothing to look at: a fold publishes ONE
+// number, under a name the author chose, and a wrong one is indistinguishable
+// from a right one. `series_sum("total.nonsense.xyz", 0, 11)` published 0 with
+// no diagnostic at all.
+
+entity asset proj : Asset.Financial
+
+stream ops.rev on entity asset.proj inflow currency USD {
+  schedule every year from 2026-01 to 2028-01
+  amount = 100
+}
+
+metric typo = series_sum("total.nonsense.xyz", 0, 2)
