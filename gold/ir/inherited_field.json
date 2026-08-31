@@ -1,0 +1,202 @@
+{
+  "ir_version": "0.1",
+  "model": {
+    "name": "inherited-field",
+    "currency": "USD"
+  },
+  "time": {
+    "calendar": "annual",
+    "start": "2026-01-01",
+    "periods": 2
+  },
+  "phases": [],
+  "entities": [
+    {
+      "id": "74bc83da92847424713e6c3b3fbc005e",
+      "symbol": "asset.suite",
+      "type": "CRE.Asset.Unit",
+      "fields": {
+        "rentable_area": "1200.0",
+        "year_built": "1987.0"
+      },
+      "state": {},
+      "lifecycle": "cre.unit"
+    }
+  ],
+  "assumptions": {
+    "constants": {},
+    "random": {}
+  },
+  "lifecycles": [
+    {
+      "id": "cre.unit",
+      "initial": "vacant",
+      "states": [
+        "vacant",
+        "leased",
+        "holdover",
+        "month_to_month"
+      ],
+      "edges": [
+        {
+          "from": "vacant",
+          "to": "leased"
+        },
+        {
+          "from": "leased",
+          "to": "holdover"
+        },
+        {
+          "from": "leased",
+          "to": "month_to_month"
+        },
+        {
+          "from": "leased",
+          "to": "vacant"
+        },
+        {
+          "from": "holdover",
+          "to": "leased"
+        },
+        {
+          "from": "holdover",
+          "to": "vacant"
+        },
+        {
+          "from": "month_to_month",
+          "to": "leased"
+        },
+        {
+          "from": "month_to_month",
+          "to": "vacant"
+        }
+      ]
+    }
+  ],
+  "subtotals": [
+    {
+      "id": "domain.cre.pgr",
+      "kind": "money",
+      "op": "sum",
+      "categories": [
+        "operating.revenue.*"
+      ],
+      "formula": "sum(operating.revenue.*)"
+    },
+    {
+      "id": "domain.cre.egi",
+      "kind": "money",
+      "op": "sum",
+      "categories": [
+        "operating.revenue.*",
+        "operating.deduction.*"
+      ],
+      "formula": "potential gross revenue less vacancy and abatements"
+    },
+    {
+      "id": "domain.cre.opex_total",
+      "kind": "money",
+      "op": "sum",
+      "categories": [
+        "operating.expense.*"
+      ],
+      "formula": "sum(operating.expense.*)"
+    },
+    {
+      "id": "domain.cre.noi",
+      "kind": "money",
+      "op": "sum",
+      "categories": [
+        "operating.*"
+      ],
+      "formula": "sum(operating.*)"
+    },
+    {
+      "id": "domain.cre.debt_service",
+      "kind": "money",
+      "op": "negated_sum",
+      "categories": [
+        "financing.debt.service",
+        "financing.debt.interest_paid",
+        "financing.debt.principal",
+        "financing.debt.mortgage_insurance"
+      ],
+      "formula": "-sum(financing.debt.service, financing.debt.interest_paid, financing.debt.principal, financing.debt.mortgage_insurance)"
+    },
+    {
+      "id": "domain.cre.dscr",
+      "kind": "number",
+      "op": "ratio",
+      "numerator": "domain.cre.noi",
+      "denominator": "domain.cre.debt_service",
+      "formula": "domain.cre.noi / domain.cre.debt_service"
+    },
+    {
+      "id": "domain.cre.leasing_costs",
+      "kind": "money",
+      "op": "negated_sum",
+      "categories": [
+        "investing.capital.leasing"
+      ],
+      "formula": "-sum(investing.capital.leasing)"
+    }
+  ],
+  "contracts": [],
+  "streams": [
+    {
+      "id": "0c2f5cc66c9e53a31d2a1b1468c8111f",
+      "name": "unit.age_probe",
+      "owner": {
+        "symbol": "asset.suite"
+      },
+      "direction": "inflow",
+      "currency": "USD",
+      "category": "operating.revenue.other",
+      "schedule": {
+        "kind": "Every",
+        "every": "annual",
+        "from": "2026-01-01",
+        "to": "2027-01-01"
+      },
+      "amount": {
+        "lang": "cfdl",
+        "src": "2026.0 - asset.suite.year_built"
+      },
+      "active_when": {
+        "lang": "cfdl",
+        "src": "true"
+      },
+      "provenance": {
+        "source_file": "model.cfdl",
+        "source_span": {
+          "start_line": 20,
+          "start_col": 1,
+          "end_line": 24,
+          "end_col": 1
+        }
+      }
+    }
+  ],
+  "events": [],
+  "options": [],
+  "runs": [
+    {
+      "kind": "deterministic"
+    }
+  ],
+  "required_observables": [],
+  "required_refs": [],
+  "provenance": {
+    "sources": [
+      "model.cfdl"
+    ],
+    "compiler": {
+      "name": "cfdl",
+      "version": "0.7.0",
+      "hash": "d8d1db56ad202b16b86131b737550b9c",
+      "notes": [
+        "active_pack=cre@0.1.0"
+      ]
+    }
+  }
+}

@@ -3109,13 +3109,16 @@ fn check_entity_types(
         };
 
         // A required field is required because the type cannot be underwritten
-        // without it.
+        // without it. EFFECTIVE fields — the masters' included (docs/13
+        // §7.92): a field learned from `Asset.Real` holds on everything that
+        // is one.
+        let effective = ontology.effective_fields(type_name);
         let given: BTreeSet<&str> = entity
             .literal_fields
             .iter()
             .map(|a| a.name.as_str())
             .collect();
-        for field in ty.fields.iter().filter(|f| f.required) {
+        for field in effective.iter().filter(|f| f.required) {
             if !given.contains(field.name.as_str()) {
                 diagnostics.push(Diagnostic {
                     code: "E1312_MISSING_REQUIRED_FIELD".to_string(),
@@ -3148,11 +3151,11 @@ fn check_entity_types(
         // `seniority` is a typo, and allowing it would make the value a field
         // nobody reads — the quiet kind of wrong this project keeps closing.
         for attr in &entity.literal_fields {
-            let declared = ty.fields.iter().any(|f| f.name == attr.name);
+            let declared = effective.iter().any(|f| f.name == attr.name);
             let near_miss =
-                !declared && ty.fields.iter().any(|f| is_near_miss(&f.name, &attr.name));
+                !declared && effective.iter().any(|f| is_near_miss(&f.name, &attr.name));
             if near_miss {
-                let mut known: Vec<&str> = ty.fields.iter().map(|f| f.name.as_str()).collect();
+                let mut known: Vec<&str> = effective.iter().map(|f| f.name.as_str()).collect();
                 known.sort_unstable();
                 diagnostics.push(Diagnostic {
                     code: "E1313_UNKNOWN_ENTITY_FIELD".to_string(),

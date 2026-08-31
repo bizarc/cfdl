@@ -8,6 +8,23 @@ This project follows Semantic Versioning: https://semver.org/
 
 ## [Unreleased]
 
+### Added: entity fields inherit down the refinement chain (§7.92 piece 3)
+
+A refinement carried its master's identity but not its fields:
+`CRE.Asset.Unit` is a `CRE.Asset.RealProperty`, and yet `year_built` — the
+master's field — was invisible on a unit, so a typo of it sailed through as
+"the modeller's own field" and a required master field would have bound
+nobody. Fields now inherit: the compiler checks a model against the
+EFFECTIVE roster, masters' fields included, in the required check, the
+near-miss check, and the declared-fields hint.
+
+Redeclaring an inherited name is strengthen-only — optional may become
+required (the move `CRE.Asset.Unit` already makes on `rentable_area`);
+retyping, re-uniting or weakening is refused at pack load. Fixtures:
+`valid/inherited_field` (a unit reads the master's `year_built`),
+`invalid/inherited_field_near_miss` (`yearbuilt` is now caught).
+
+
 ### Changed (breaking): the Portfolio types are containers (§7.88)
 
 `CRE.Asset.Portfolio` and `Energy.Asset.Portfolio` were typed falsely —

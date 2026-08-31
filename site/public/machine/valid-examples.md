@@ -4,7 +4,7 @@
 
 CFDL 0.7.0. Every model below compiles, and its IR and
 results are byte-asserted against goldens in CI (`fixtures/valid/`,
-129 models.
+130 models.
 
 `gold/ir/`, `gold/results/`). Each is single-purpose: the directory name
 says what it exercises. This is what right looks like — positive few-shot
@@ -2294,6 +2294,35 @@ stream cre.opex.building on entity asset.tower outflow currency USD {
   schedule every year from 2026-01 to 2028-01
   category operating.expense.opex
   amount = 30
+}
+```
+
+## inherited_field
+
+```cfdl
+version 0.1
+model "inherited-field"
+use pack "cre" version "0.1.0"
+time calendar annual from 2026-01 for 2
+
+// A FIELD LEARNED FROM THE MASTER HOLDS ON EVERYTHING THAT IS ONE.
+//
+// `year_built` is declared by CRE.Asset.RealProperty. A Unit refines
+// RealProperty (docs/13 §7.92), so a unit carries the field without the
+// Unit type restating it — and a reader who learned the field from the
+// master is not lied to by the refinement. `rentable_area` shows the other
+// direction: the master declares it optional, the Unit strengthens it to
+// required, and this model must state it.
+
+entity asset suite : CRE.Asset.Unit {
+  rentable_area = 1200.0
+  year_built = 1987.0
+}
+
+stream unit.age_probe on entity asset.suite inflow currency USD {
+  schedule every year from 2026-01 to 2027-01
+  category operating.revenue.other
+  amount = 2026.0 - asset.suite.year_built
 }
 ```
 

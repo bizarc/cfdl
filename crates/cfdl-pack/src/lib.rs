@@ -371,6 +371,38 @@ impl PackOntology {
         false
     }
 
+    /// The fields `type_id` carries, its masters' included — the inheritance
+    /// docs/13 §7.92 piece 3 adds. Walked root-down so the most refined
+    /// declaration of a name wins, which is how `CRE.Asset.Unit` strengthens
+    /// its master's optional `rentable_area` to required. Call on
+    /// `merged_with_base()`, like `is_a`.
+    pub fn effective_fields(&self, type_id: &str) -> Vec<OntologyField> {
+        // Chain leaf -> root, bounded like is_a.
+        let mut chain: Vec<&OntologyEntity> = Vec::new();
+        let mut current = type_id;
+        for _ in 0..=self.entities.len() {
+            let Some(entity) = self.entities.iter().find(|e| e.type_id == current) else {
+                break;
+            };
+            chain.push(entity);
+            match entity.refines.as_deref() {
+                Some(next) => current = next,
+                None => break,
+            }
+        }
+        let mut fields: Vec<OntologyField> = Vec::new();
+        for entity in chain.iter().rev() {
+            for field in &entity.fields {
+                if let Some(existing) = fields.iter_mut().find(|f| f.name == field.name) {
+                    *existing = field.clone();
+                } else {
+                    fields.push(field.clone());
+                }
+            }
+        }
+        fields
+    }
+
     /// A pack's vocabulary on top of the language's. Pack types win on a
     /// collision, so a pack may refine `Asset.Real` into `CRE.Asset.RealProperty`
     /// without the base disappearing.
@@ -1886,6 +1918,7 @@ fn parse_ontology(raw: &str, source: &str, pack_name: &str) -> Result<PackOntolo
     // broken vocabulary is the pack author's bug, not the modeller's.
     {
         let base = PackOntology::language_base();
+        let merged_view = ontology.merged_with_base();
         for entity in &ontology.entities {
             let Some(parent_id) = &entity.refines else {
                 continue;
@@ -1919,6 +1952,45 @@ fn parse_ontology(raw: &str, source: &str, pack_name: &str) -> Result<PackOntolo
                         message: format!(
                             "Ontology '{source}': entity '{}' has class '{child_class}' but refines '{parent_id}', whose class is '{parent_class}'. A specialization keeps its master's class.",
                             entity.type_id
+                        ),
+                    });
+                }
+            }
+            // FIELDS INHERIT DOWN THE CHAIN (docs/13 §7.92 piece 3), so a
+            // redeclared name is the same fact restated. A refinement may
+            // STRENGTHEN — an optional master field becomes required, the
+            // move `CRE.Asset.Unit` already makes on `rentable_area` — and
+            // may not retype, re-unit, or weaken: a reader who learned the
+            // field from the master must not be lied to by the refinement.
+            let inherited = merged_view.effective_fields(parent_id);
+            for own in &entity.fields {
+                let Some(master_field) = inherited.iter().find(|f| f.name == own.name) else {
+                    continue;
+                };
+                if own.field_type != master_field.field_type {
+                    return Err(PackLoadError {
+                        message: format!(
+                            "Ontology '{source}': entity '{}' redeclares inherited field '{}' as {}, but '{parent_id}' declares it as {}. A refinement may strengthen a field, not retype it.",
+                            entity.type_id, own.name, own.field_type, master_field.field_type
+                        ),
+                    });
+                }
+                if own.unit.is_some()
+                    && master_field.unit.is_some()
+                    && own.unit != master_field.unit
+                {
+                    return Err(PackLoadError {
+                        message: format!(
+                            "Ontology '{source}': entity '{}' redeclares inherited field '{}' in {:?}, but '{parent_id}' declares it in {:?}.",
+                            entity.type_id, own.name, own.unit, master_field.unit
+                        ),
+                    });
+                }
+                if master_field.required && !own.required {
+                    return Err(PackLoadError {
+                        message: format!(
+                            "Ontology '{source}': entity '{}' redeclares inherited field '{}' as optional, but '{parent_id}' requires it. A refinement may strengthen a field, never weaken it.",
+                            entity.type_id, own.name
                         ),
                     });
                 }
@@ -3346,6 +3418,89 @@ schedule_to = "2026-01"
         parse_lowering_rules(&raw, "test")
             .expect("minimal rule parses")
             .remove(0)
+    }
+
+    #[test]
+    fn fields_inherit_down_the_chain_and_the_leaf_wins() {
+        let raw = r#"
+[[entities]]
+type_id = "T.Asset.Building"
+family = "asset"
+class = "real"
+refines = "Asset.Real"
+[[entities.fields]]
+name = "year_built"
+field_type = "integer"
+[[entities.fields]]
+name = "area"
+field_type = "decimal"
+
+[[entities]]
+type_id = "T.Asset.Suite"
+family = "asset"
+class = "real"
+refines = "T.Asset.Building"
+[[entities.fields]]
+name = "area"
+field_type = "decimal"
+required = true
+"#;
+        let o = parse_ontology(raw, "test", "t").expect("strengthening parses");
+        let merged = o.merged_with_base();
+        let fields = merged.effective_fields("T.Asset.Suite");
+        let names: Vec<&str> = fields.iter().map(|f| f.name.as_str()).collect();
+        assert!(names.contains(&"year_built"), "inherited from the master");
+        let area = fields.iter().find(|f| f.name == "area").unwrap();
+        assert!(area.required, "the leaf's strengthening wins");
+    }
+
+    #[test]
+    fn a_refinement_may_not_retype_an_inherited_field() {
+        let raw = r#"
+[[entities]]
+type_id = "T.Asset.Building"
+family = "asset"
+class = "real"
+[[entities.fields]]
+name = "area"
+field_type = "decimal"
+
+[[entities]]
+type_id = "T.Asset.Suite"
+family = "asset"
+class = "real"
+refines = "T.Asset.Building"
+[[entities.fields]]
+name = "area"
+field_type = "string"
+"#;
+        let err = parse_ontology(raw, "test", "t").expect_err("retype refused");
+        assert!(err.message.contains("retype"), "{}", err.message);
+    }
+
+    #[test]
+    fn a_refinement_may_not_weaken_an_inherited_field() {
+        let raw = r#"
+[[entities]]
+type_id = "T.Asset.Building"
+family = "asset"
+class = "real"
+[[entities.fields]]
+name = "area"
+field_type = "decimal"
+required = true
+
+[[entities]]
+type_id = "T.Asset.Suite"
+family = "asset"
+class = "real"
+refines = "T.Asset.Building"
+[[entities.fields]]
+name = "area"
+field_type = "decimal"
+"#;
+        let err = parse_ontology(raw, "test", "t").expect_err("weakening refused");
+        assert!(err.message.contains("weaken"), "{}", err.message);
     }
 
     #[test]

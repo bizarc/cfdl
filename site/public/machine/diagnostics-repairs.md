@@ -11,7 +11,7 @@ Diagnostics are the repair signal: read the `code`, `message`, `span`, and
 `hint`, change the model, recompile. The catalog is how an agent learns what
 each code looks like in the flesh before it meets one.
 
-**Coverage:** 201 codes in the docs/08 §7 register; 90 exemplified here; 70 of 94 examples carry a recorded fix.
+**Coverage:** 201 codes in the docs/08 §7 register; 90 exemplified here; 70 of 95 examples carry a recorded fix.
 
 ## active_in_unknown_state — E1332_UNKNOWN_ACTIVE_STATE
 
@@ -1506,6 +1506,38 @@ Minimal fix (compiles) — outside.cfdl:
 // Fix: the previously-external module now lives inside the model root.
 entity asset a : Asset.Real
 ```
+
+## inherited_field_near_miss — E1313_UNKNOWN_ENTITY_FIELD
+
+Failing example:
+
+```cfdl
+version 0.1
+model "inherited-field-near-miss"
+use pack "cre" version "0.1.0"
+time calendar annual from 2026-01 for 2
+
+// `yearbuilt` is a near miss of `year_built` — a field the Unit type does
+// not declare itself but INHERITS from CRE.Asset.RealProperty. Before
+// inheritance the typo sailed through as "the modeller's own field"; a
+// value nobody reads is the quiet kind of wrong this project keeps closing.
+
+entity asset suite : CRE.Asset.Unit {
+  rentable_area = 1200.0
+  yearbuilt = 1987.0
+}
+
+stream unit.rent on entity asset.suite inflow currency USD {
+  schedule every year from 2026-01 to 2027-01
+  category operating.revenue.other
+  amount = 100
+}
+```
+
+- `E1313_UNKNOWN_ENTITY_FIELD` (error): Entity 'asset.suite' of type 'CRE.Asset.Unit' sets 'yearbuilt', which the type does not declare.
+  - hint: Declared fields: asset_class, rentable_area, use, year_built.
+
+Fix: not yet recorded.
 
 ## invalid_date_literal — E0005_INVALID_DATE_LITERAL
 

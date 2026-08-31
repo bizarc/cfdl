@@ -5352,6 +5352,14 @@ Rules, checked at pack load:
   master's **class**: what a thing is does not change by specializing it.
 - Single parent, no cycles. A chain ends at a type that refines nothing —
   a master type.
+- **Fields inherit down the chain.** A refinement carries every master
+  field without restating it, and the compiler checks a model against the
+  EFFECTIVE roster — required fields, near-miss detection and the declared
+  list all include the masters'. A redeclared name is the same fact
+  restated: a refinement MAY strengthen it (an optional master field
+  becomes required — the move `CRE.Asset.Unit` makes on `rentable_area`)
+  and MUST NOT retype, re-unit, or weaken it. A reader who learned a field
+  from the master must not be lied to by the refinement.
 
 **Families.** An `entity` declaration takes one of three families — `asset`,
 `party`, `container` — and the graph holds five node families: those three

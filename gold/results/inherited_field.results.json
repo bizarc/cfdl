@@ -1,0 +1,212 @@
+{
+  "results_version": "0.6",
+  "model_hash": "37bf660042fd158f75f27b551d2a1c3174f3a89d2d00d6b1de8fa57bef2fdbaf",
+  "ledger_hash": "e35c30669a2787de48f4c51f993835bdfe951a37d46ce6cb887e57a21e9cfcf4",
+  "engine": {
+    "name": "cfdl-engine",
+    "version": "0.7.0"
+  },
+  "warnings": [],
+  "deterministic": {
+    "status": "ok",
+    "metrics": {
+      "entity.asset.suite.total": {
+        "amount": 78.0,
+        "currency": "USD"
+      },
+      "model.npv": {
+        "amount": 78.0,
+        "currency": "USD"
+      },
+      "model.total": {
+        "amount": 78.0,
+        "currency": "USD"
+      },
+      "model.wal_years": 1.5,
+      "run.annual_discount_rate": 0.0,
+      "run.periods_per_year": 1.0,
+      "stream.unit.age_probe.total": {
+        "amount": 78.0,
+        "currency": "USD"
+      }
+    },
+    "series": {
+      "domain.cre.debt_service": {
+        "index": {
+          "calendar": "annual",
+          "start": "2026-01-01",
+          "periods": 2
+        },
+        "values": [
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          }
+        ]
+      },
+      "domain.cre.dscr": {
+        "index": {
+          "calendar": "annual",
+          "start": "2026-01-01",
+          "periods": 2
+        },
+        "values": [
+          null,
+          null
+        ]
+      },
+      "domain.cre.egi": {
+        "index": {
+          "calendar": "annual",
+          "start": "2026-01-01",
+          "periods": 2
+        },
+        "values": [
+          {
+            "amount": 39.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 39.0,
+            "currency": "USD"
+          }
+        ]
+      },
+      "domain.cre.leasing_costs": {
+        "index": {
+          "calendar": "annual",
+          "start": "2026-01-01",
+          "periods": 2
+        },
+        "values": [
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          }
+        ]
+      },
+      "domain.cre.noi": {
+        "index": {
+          "calendar": "annual",
+          "start": "2026-01-01",
+          "periods": 2
+        },
+        "values": [
+          {
+            "amount": 39.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 39.0,
+            "currency": "USD"
+          }
+        ]
+      },
+      "domain.cre.opex_total": {
+        "index": {
+          "calendar": "annual",
+          "start": "2026-01-01",
+          "periods": 2
+        },
+        "values": [
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          }
+        ]
+      },
+      "domain.cre.pgr": {
+        "index": {
+          "calendar": "annual",
+          "start": "2026-01-01",
+          "periods": 2
+        },
+        "values": [
+          {
+            "amount": 39.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 39.0,
+            "currency": "USD"
+          }
+        ]
+      },
+      "entity.asset.suite.net_cash_flow": {
+        "index": {
+          "calendar": "annual",
+          "start": "2026-01-01",
+          "periods": 2
+        },
+        "values": [
+          {
+            "amount": 39.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 39.0,
+            "currency": "USD"
+          }
+        ]
+      },
+      "model.net_cash_flow": {
+        "index": {
+          "calendar": "annual",
+          "start": "2026-01-01",
+          "periods": 2
+        },
+        "values": [
+          {
+            "amount": 39.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 39.0,
+            "currency": "USD"
+          }
+        ]
+      },
+      "stream.unit.age_probe": {
+        "index": {
+          "calendar": "annual",
+          "start": "2026-01-01",
+          "periods": 2
+        },
+        "offset": 1.0,
+        "values": [
+          {
+            "amount": 39.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 39.0,
+            "currency": "USD"
+          }
+        ]
+      }
+    }
+  },
+  "scenarios": {
+    "status": "not_run",
+    "summaries": []
+  },
+  "monte_carlo": {
+    "status": "not_run",
+    "trials": 1,
+    "seed": 0,
+    "metrics": {},
+    "trial_summaries": []
+  }
+}
