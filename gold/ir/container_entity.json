@@ -1,0 +1,130 @@
+{
+  "ir_version": "0.1",
+  "model": {
+    "name": "container-entity",
+    "currency": "USD"
+  },
+  "time": {
+    "calendar": "annual",
+    "start": "2026-01-01",
+    "periods": 3
+  },
+  "phases": [],
+  "entities": [
+    {
+      "id": "5f8170c00c7e7794c68ccde5c5aa63cd",
+      "symbol": "asset.alpha",
+      "type": "Asset.Financial",
+      "fields": {},
+      "state": {},
+      "parent": "container.fund"
+    },
+    {
+      "id": "94519a64567ea102ae8188f8835cb2ca",
+      "symbol": "asset.beta",
+      "type": "Asset.Financial",
+      "fields": {},
+      "state": {},
+      "parent": "container.fund"
+    },
+    {
+      "id": "fac8939144583da91b3c41819b3e919a",
+      "symbol": "container.fund",
+      "type": "Container.Fund",
+      "fields": {},
+      "state": {}
+    }
+  ],
+  "assumptions": {
+    "constants": {},
+    "random": {}
+  },
+  "contracts": [],
+  "streams": [
+    {
+      "id": "52d62aeda62efeeefdd19cf72a4808ab",
+      "name": "alpha.income",
+      "owner": {
+        "symbol": "asset.alpha"
+      },
+      "direction": "inflow",
+      "currency": "USD",
+      "category": "operating.revenue.other",
+      "schedule": {
+        "kind": "Every",
+        "every": "annual",
+        "from": "2026-01-01",
+        "to": "2028-01-01"
+      },
+      "amount": {
+        "lang": "cfdl",
+        "src": "100.0"
+      },
+      "active_when": {
+        "lang": "cfdl",
+        "src": "true"
+      },
+      "provenance": {
+        "source_file": "model.cfdl",
+        "source_span": {
+          "start_line": 24,
+          "start_col": 1,
+          "end_line": 28,
+          "end_col": 1
+        }
+      }
+    },
+    {
+      "id": "bbce86185f34cd9fe1f01f8769d86b7d",
+      "name": "beta.income",
+      "owner": {
+        "symbol": "asset.beta"
+      },
+      "direction": "inflow",
+      "currency": "USD",
+      "category": "operating.revenue.other",
+      "schedule": {
+        "kind": "Every",
+        "every": "annual",
+        "from": "2026-01-01",
+        "to": "2028-01-01"
+      },
+      "amount": {
+        "lang": "cfdl",
+        "src": "40.0"
+      },
+      "active_when": {
+        "lang": "cfdl",
+        "src": "true"
+      },
+      "provenance": {
+        "source_file": "model.cfdl",
+        "source_span": {
+          "start_line": 30,
+          "start_col": 1,
+          "end_line": 34,
+          "end_col": 1
+        }
+      }
+    }
+  ],
+  "events": [],
+  "options": [],
+  "runs": [
+    {
+      "kind": "deterministic"
+    }
+  ],
+  "required_observables": [],
+  "required_refs": [],
+  "provenance": {
+    "sources": [
+      "model.cfdl"
+    ],
+    "compiler": {
+      "name": "cfdl",
+      "version": "0.7.0",
+      "hash": "d80f4c40398fe75b55a6788a2be14aac"
+    }
+  }
+}

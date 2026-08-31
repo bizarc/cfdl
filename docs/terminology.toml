@@ -327,6 +327,23 @@ definition = "A derived summary figure over the model's cash flows."
 occurrences = 98
 
 [[technical_name]]
+term = "container"
+category = "language"
+definition = "An entity family for a grouping that scopes cash without producing it — a fund, a portfolio, an SPV, a transaction."
+note = "Containment reuses part of; a container's cash is a fold of its members' and never counts as cash."
+
+[[technical_name]]
+term = "master type"
+category = "language"
+definition = "A base type in the language's ontology that pack types refine — what a thing is, before a domain specializes it."
+note = "A master contract type is abstract: it binds no lowering rule and cannot be instantiated."
+
+[[technical_name]]
+term = "refinement"
+category = "language"
+definition = "The recorded is-a edge from a pack type to the type it specializes, declared with refines."
+
+[[technical_name]]
 term = "schedule"
 category = "language"
 definition = "The set of dates on which a stream pays."

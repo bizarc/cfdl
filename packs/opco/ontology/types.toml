@@ -25,6 +25,7 @@ version = "0.1.0"
 type_id = "OpCo.Asset.Enterprise"
 family = "asset"
 class = "financial"
+refines = "Asset.Financial"
 description = "A going concern valued on its cash flows."
 
 [[entities.fields]]
@@ -42,12 +43,14 @@ description = "Month of the fiscal year end. Matters because a valuation date th
 type_id = "OpCo.Asset.BusinessSegment"
 family = "asset"
 class = "financial"
+refines = "Asset.Financial"
 description = "A division modeled separately. Use only when the grain is the segment; a consolidated model needs none."
 
 [[entities]]
 type_id = "OpCo.Asset.EquityInterest"
 family = "asset"
 class = "financial"
+refines = "Asset.Financial"
 description = "A claim on the enterprise's equity — sponsor, rollover, preferred, or an option pool."
 
 [[entities.fields]]
@@ -68,6 +71,7 @@ unit = "shares"
 type_id = "OpCo.Asset.IntangibleRight"
 family = "asset"
 class = "intangible"
+refines = "Asset.Intangible"
 description = "A royalty, license or contractual right valued on its own cash flows."
 
 [[entities.fields]]
@@ -88,6 +92,7 @@ required = false
 [[entities]]
 type_id = "OpCo.Party.Sponsor"
 family = "party"
+refines = "Party"
 description = "Acquires and controls the business."
 
 [[entities.fields]]
@@ -98,6 +103,7 @@ required = false
 [[entities]]
 type_id = "OpCo.Party.Management"
 family = "party"
+refines = "Party"
 description = "Runs the business; commonly rolls equity and holds options."
 
 [[entities.fields]]
@@ -108,6 +114,7 @@ required = false
 [[entities]]
 type_id = "OpCo.Party.Lender"
 family = "party"
+refines = "Party"
 
 [[entities.fields]]
 name = "name"
@@ -123,6 +130,7 @@ description = "revolver | term_loan | senior_notes | subordinated_notes"
 [[entities]]
 type_id = "OpCo.Party.Shareholder"
 family = "party"
+refines = "Party"
 
 [[entities.fields]]
 name = "name"
@@ -132,6 +140,7 @@ required = false
 [[entities]]
 type_id = "OpCo.Party.Counterparty"
 family = "party"
+refines = "Party"
 description = "A customer or supplier named when a contract depends on one."
 
 [[entities.fields]]
@@ -197,36 +206,42 @@ description = "Days-based policy — receivables, payables, inventory — rather
 
 [[contracts]]
 type_id = "OpCo.Contract.TermDebt"
+refines = "Contract.Debt"
 contract_name = "opco.term_debt"
 subject_family = "asset"
 parties = ["borrower", "lender"]
 
 [[contracts]]
 type_id = "OpCo.Contract.CashTaxes"
+refines = "Contract.Tax"
 contract_name = "opco.cash_taxes"
 subject_family = "asset"
 parties = ["taxpayer"]
 
 [[contracts]]
 type_id = "OpCo.Contract.Acquisition"
+refines = "Contract.Purchase"
 contract_name = "opco.acquisition"
 subject_family = "asset"
 parties = ["buyer", "seller"]
 
 [[contracts]]
 type_id = "OpCo.Contract.ExitAtMultiple"
+refines = "Contract.Sale"
 contract_name = "opco.exit_multiple"
 subject_family = "asset"
 parties = ["seller"]
 
 [[contracts]]
 type_id = "OpCo.Contract.ExitAtEbitdaMultiple"
+refines = "Contract.Sale"
 contract_name = "opco.exit_ebitda"
 subject_family = "asset"
 parties = ["seller"]
 
 [[contracts]]
 type_id = "OpCo.Contract.ExitAtPerpetuity"
+refines = "Contract.Sale"
 contract_name = "opco.exit_perpetuity"
 subject_family = "asset"
 parties = ["seller"]
@@ -238,6 +253,7 @@ parties = ["seller"]
 
 [[contracts]]
 type_id = "OpCo.Contract.EquityOption"
+refines = "Contract.Option"
 subject_family = "asset"
 parties = ["grantor", "holder"]
 description = "A management or investor option over the enterprise's equity, struck at a stated price."

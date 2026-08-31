@@ -1057,7 +1057,7 @@ stream cre.rent on entity asset.tower inflow currency USD {
 ```
 
 - `E1311_UNKNOWN_ENTITY_TYPE` (error): Entity 'asset.tower' declares type 'CRE.Asset.RealProprty', which the active ontology does not define.
-  - hint: Known types: Asset.Financial, Asset.Intangible, Asset.Real, CRE.Asset.EquityInterest, CRE.Asset.Portfolio, CRE.Asset.RealProperty, CRE.Asset.Unit, CRE.Party.Investor, CRE.Party.Lender, CRE.Party.PropertyManager, CRE.Party.Sponsor, CRE.Party.Tenant, Party.
+  - hint: Known types: Asset.Financial, Asset.Intangible, Asset.Real, CRE.Asset.EquityInterest, CRE.Asset.Portfolio, CRE.Asset.RealProperty, CRE.Asset.Unit, CRE.Party.Investor, CRE.Party.Lender, CRE.Party.PropertyManager, CRE.Party.Sponsor, CRE.Party.Tenant, Container.Fund, Container.Portfolio, Container.SPV, Container.Transaction, Party.
 
 Minimal fix (compiles):
 

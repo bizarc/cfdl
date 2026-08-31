@@ -1,0 +1,187 @@
+{
+  "results_version": "0.6",
+  "model_hash": "22d2ef7985fdb20426289eaf9fabda1967cb39afcc990a28dd083f1e2eb88975",
+  "ledger_hash": "4cbee31bdd72301a59020bb006c7b3d8804281df46ffa74d105182087a639351",
+  "engine": {
+    "name": "cfdl-engine",
+    "version": "0.7.0"
+  },
+  "warnings": [],
+  "deterministic": {
+    "status": "ok",
+    "metrics": {
+      "entity.asset.alpha.total": {
+        "amount": 300.0,
+        "currency": "USD"
+      },
+      "entity.asset.beta.total": {
+        "amount": 120.0,
+        "currency": "USD"
+      },
+      "entity.container.fund.total": {
+        "amount": 420.0,
+        "currency": "USD"
+      },
+      "model.npv": {
+        "amount": 420.0,
+        "currency": "USD"
+      },
+      "model.total": {
+        "amount": 420.0,
+        "currency": "USD"
+      },
+      "model.wal_years": 2.0,
+      "run.annual_discount_rate": 0.0,
+      "run.periods_per_year": 1.0,
+      "stream.alpha.income.total": {
+        "amount": 300.0,
+        "currency": "USD"
+      },
+      "stream.beta.income.total": {
+        "amount": 120.0,
+        "currency": "USD"
+      }
+    },
+    "series": {
+      "entity.asset.alpha.net_cash_flow": {
+        "index": {
+          "calendar": "annual",
+          "start": "2026-01-01",
+          "periods": 3
+        },
+        "values": [
+          {
+            "amount": 100.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 100.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 100.0,
+            "currency": "USD"
+          }
+        ]
+      },
+      "entity.asset.beta.net_cash_flow": {
+        "index": {
+          "calendar": "annual",
+          "start": "2026-01-01",
+          "periods": 3
+        },
+        "values": [
+          {
+            "amount": 40.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 40.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 40.0,
+            "currency": "USD"
+          }
+        ]
+      },
+      "entity.container.fund.net_cash_flow": {
+        "index": {
+          "calendar": "annual",
+          "start": "2026-01-01",
+          "periods": 3
+        },
+        "values": [
+          {
+            "amount": 140.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 140.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 140.0,
+            "currency": "USD"
+          }
+        ]
+      },
+      "model.net_cash_flow": {
+        "index": {
+          "calendar": "annual",
+          "start": "2026-01-01",
+          "periods": 3
+        },
+        "values": [
+          {
+            "amount": 140.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 140.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 140.0,
+            "currency": "USD"
+          }
+        ]
+      },
+      "stream.alpha.income": {
+        "index": {
+          "calendar": "annual",
+          "start": "2026-01-01",
+          "periods": 3
+        },
+        "offset": 1.0,
+        "values": [
+          {
+            "amount": 100.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 100.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 100.0,
+            "currency": "USD"
+          }
+        ]
+      },
+      "stream.beta.income": {
+        "index": {
+          "calendar": "annual",
+          "start": "2026-01-01",
+          "periods": 3
+        },
+        "offset": 1.0,
+        "values": [
+          {
+            "amount": 40.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 40.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 40.0,
+            "currency": "USD"
+          }
+        ]
+      }
+    }
+  },
+  "scenarios": {
+    "status": "not_run",
+    "summaries": []
+  },
+  "monte_carlo": {
+    "status": "not_run",
+    "trials": 1,
+    "seed": 0,
+    "metrics": {},
+    "trial_summaries": []
+  }
+}

@@ -266,12 +266,19 @@ entity party acme : CRE.Party.Tenant { name = "Acme Corp" }
 ```
 
 - The **family** is the first identifier: `asset` for something that produces or
-  consumes cash, `party` for someone who contracts, owns, lends or invests.
+  consumes cash, `party` for someone who contracts, owns, lends or invests,
+  `container` for a grouping that scopes cash without producing it — a fund, a
+  portfolio, an SPV, a transaction. Containment reuses `part of`: a container
+  parent's cash is aggregated from its members by the relation, exactly as an
+  asset parent's is, and counts as cash nowhere.
 - The **type** is checked against the active ontology. With no pack active a
   model still has the language's own vocabulary — `Asset.Real`,
-  `Asset.Financial`, `Asset.Intangible`, `Party` — because an ontology is a
-  language capability that packs supply defaults for, not one they own. A pack's
-  types are added to those and cannot remove them.
+  `Asset.Financial`, `Asset.Intangible`, `Party`, `Container.Fund`,
+  `Container.Portfolio`, `Container.SPV`, `Container.Transaction` — because an
+  ontology is a language capability that packs supply defaults for, not one
+  they own. A pack's types are added to those and cannot remove them. A pack
+  type states the master it specializes (`refines`, Pack Interface §6.1), so
+  "is a" is a recorded fact rather than a naming convention.
 - Attribute values are **literals**, checked against the type's declared fields.
 - `part of` declares hierarchy and is **always optional, at every grain**. A
   pool models collective behavior perfectly well with no loans under it; a
@@ -5315,6 +5322,65 @@ Type registry semantics:
 - Packs MAY extend fields.
 - Packs MAY provide documentation strings and examples.
 
+**Refinement (`refines`).** A pack type MAY declare the master type it
+specializes — the language base's, or another type in the same pack:
+
+```toml
+[[entities]]
+type_id = "CRE.Asset.RealProperty"
+family = "asset"
+class = "real"
+refines = "Asset.Real"
+
+[[entities]]
+type_id = "CRE.Asset.Unit"
+family = "asset"
+class = "real"
+refines = "CRE.Asset.RealProperty"   # chains are fine; they end at a master
+```
+
+Recorded rather than conventional, so "is a" is a fact the system can read:
+selection by a base type reaches every refinement transitively
+(`PackOntology::is_a`, called on the base-merged view), and a metric or
+validation written against `Asset.Real` survives a new pack unchanged.
+
+Rules, checked at pack load:
+- The target MUST exist — in this pack or the language base.
+- A refinement stays in its **family**, and an asset refinement keeps its
+  master's **class**: what a thing is does not change by specializing it.
+- Single parent, no cycles. A chain ends at a type that refines nothing —
+  a master type.
+
+**Families.** An `entity` declaration takes one of three families — `asset`,
+`party`, `container` — and the graph holds five node families: those three
+plus `contract` and `reference`, which are nodes (relation endpoints,
+identity-bearing) though they are declared with `contract` and
+`curve`/`quantile` rather than `entity`. A container groups and scopes — a
+fund, a portfolio, an SPV, a transaction; it holds cash-producers and does
+not produce. Only assets carry a `class`. The language base ships
+`Container.Fund`, `Container.Portfolio`, `Container.SPV` and
+`Container.Transaction` for packs to refine.
+
+**Relations.** An endpoint names one node family or a list
+(`from_family = ["asset", "container"]`); a listed pair is a cross product.
+The base vocabulary: `part_of`/`contains` (hierarchy AND containment — one
+concept, widened endpoints), `owns`/`owned_by`,
+`secured_by`/`secures` (contract→asset, collateral),
+`guarantees`/`guaranteed_by` and `is_counterparty_to`/`has_counterparty`
+(party→contract). Base relations are declarative today: validated,
+published, no engine semantics.
+
+Contract types take the same field, and the language base ships the abstract
+masters they refine (`docs/13` §7.92): `Contract.Debt`, `Contract.Lease`,
+`Contract.Purchase`, `Contract.Sale`, `Contract.Offtake`, `Contract.Service`,
+`Contract.Tax`, `Contract.Option`, `Contract.Construction`,
+`Contract.Derivative`, `Contract.Insurance`. A master is `abstract = true`:
+it exists to be refined, binds no lowering rule (refused at load if it
+does), and — since a model reaches a contract type only through its rule —
+cannot be instantiated. The roster is indicator-based and extensible;
+absence of a refinement in today's packs is not evidence a master is
+unneeded.
+
 **Lifecycles.** A type MAY declare a lifecycle — the same finite state
 machine a model declares with a `lifecycle` block (`docs/28` §6.1): the core
 has the full functionality, and a pack tailors it to its domain. In
@@ -7250,6 +7316,10 @@ A declared input to the model, constant or stochastic. Declared with `assume`.
 
 The `cfg.<path>` expression binding, which reads scenario knobs from the run configuration. Distinct from the run configuration itself.
 
+**container**
+
+An entity family for a grouping that scopes cash without producing it — a fund, a portfolio, an SPV, a transaction.
+
 **contract**
 
 A first-class agreement carrying terms and effects.
@@ -7278,6 +7348,10 @@ How finely the model slices time and things. Timeline grain and entity grain are
 
 A declared finite state machine: enumerated states, an initial one, and guarded edges declared only as used. A core-language construct that packs tailor to domains.
 
+**master type**
+
+A base type in the language's ontology that pack types refine — what a thing is, before a domain specializes it.
+
 **metric**
 
 A derived summary figure over the model's cash flows.
@@ -7297,6 +7371,10 @@ A stream amount whose series window reaches forward: a valuation setting a causa
 **quantile**
 
 A named series of values indexed by cumulative share.
+
+**refinement**
+
+The recorded is-a edge from a pack type to the type it specializes, declared with refines.
 
 **rule field**
 
@@ -7787,6 +7865,23 @@ term = "metric"
 category = "language"
 definition = "A derived summary figure over the model's cash flows."
 occurrences = 98
+
+[[technical_name]]
+term = "container"
+category = "language"
+definition = "An entity family for a grouping that scopes cash without producing it — a fund, a portfolio, an SPV, a transaction."
+note = "Containment reuses part of; a container's cash is a fold of its members' and never counts as cash."
+
+[[technical_name]]
+term = "master type"
+category = "language"
+definition = "A base type in the language's ontology that pack types refine — what a thing is, before a domain specializes it."
+note = "A master contract type is abstract: it binds no lowering rule and cannot be instantiated."
+
+[[technical_name]]
+term = "refinement"
+category = "language"
+definition = "The recorded is-a edge from a pack type to the type it specializes, declared with refines."
 
 [[technical_name]]
 term = "schedule"

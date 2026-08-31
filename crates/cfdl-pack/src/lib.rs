@@ -112,14 +112,27 @@ pub struct PackEntrypoints {
 // what the model is ABOUT, which nothing said before: an entity was a two-part
 // name, and the namespace half was doing informal typing badly.
 //
-// FOUR FAMILIES, fixed here and filled in per pack: `asset` produces or
-// consumes cash, `party` contracts and owns, `contract` is an agreement
-// between parties attached to an asset, `reference` is a market observable.
+// FIVE NODE FAMILIES, fixed here and filled in per pack: `asset` produces or
+// consumes cash, `party` contracts and owns, `container` groups and scopes
+// (a fund, a portfolio, an SPV, a transaction — it holds cash-producers, it
+// does not produce), `contract` is an agreement between parties attached to
+// an asset, `reference` is a market observable.
+//
+// THE GRAPH IS UNIFIED; THE SYNTAX IS PER-KIND. All five are node families —
+// identity-bearing, valid relation endpoints (`NODE_FAMILIES`). Three are
+// declared with `entity` (`ENTITY_FAMILIES`); a contract is declared with
+// `contract` and lowers, a reference with `curve`/`quantile` and is observed.
+// docs/13 §7.88 records the restoration of this roster to its own comment.
 // ---------------------------------------------------------------------------
 
-/// The families an entity type may belong to. Closed, because the language —
-/// not the pack — decides what kinds of thing a model contains.
-pub const ENTITY_FAMILIES: &[&str] = &["asset", "party"];
+/// The families an `entity` declaration may take. Closed, because the
+/// language — not the pack — decides what kinds of thing a model contains.
+pub const ENTITY_FAMILIES: &[&str] = &["asset", "party", "container"];
+
+/// Every kind of node the ontology graph holds — the families a relation may
+/// join. A superset of `ENTITY_FAMILIES`: contracts and references are nodes
+/// (a guarantee points at a contract; nothing points at a spelling).
+pub const NODE_FAMILIES: &[&str] = &["asset", "party", "container", "contract", "reference"];
 
 /// The classes an asset may take. The split every asset taxonomy starts from,
 /// and the one that decides how an asset is underwritten: a turbine is real, a
@@ -154,9 +167,32 @@ impl PackOntology {
                 type_id: type_id.to_string(),
                 family: "asset".to_string(),
                 class: Some(class.to_string()),
+                refines: None,
                 lifecycle: None,
                 description: Some(description.to_string()),
                 fields: Vec::new(),
+            }
+        }
+        fn container(type_id: &str, description: &str) -> OntologyEntity {
+            OntologyEntity {
+                type_id: type_id.to_string(),
+                family: "container".to_string(),
+                class: None,
+                refines: None,
+                lifecycle: None,
+                description: Some(description.to_string()),
+                fields: Vec::new(),
+            }
+        }
+        fn master(type_id: &str, parties: &[&str], d: &str) -> OntologyContract {
+            OntologyContract {
+                type_id: type_id.to_string(),
+                contract_name: None,
+                subject_family: None,
+                refines: None,
+                is_abstract: true,
+                parties: parties.iter().map(|p| p.to_string()).collect(),
+                description: Some(d.to_string()),
             }
         }
         fn relation(
@@ -169,8 +205,8 @@ impl PackOntology {
         ) -> OntologyRelation {
             OntologyRelation {
                 relation_id: id.to_string(),
-                from_family: from.to_string(),
-                to_family: to.to_string(),
+                from_family: from.split('|').map(str::to_string).collect(),
+                to_family: to.split('|').map(str::to_string).collect(),
                 cardinality: card.to_string(),
                 inverse: inverse.to_string(),
                 description: Some(d.to_string()),
@@ -193,10 +229,27 @@ impl PackOntology {
                     "intangible",
                     "A right without a physical form — a royalty, a license, a patent.",
                 ),
+                container(
+                    "Container.Fund",
+                    "A pooled vehicle — capital called, invested, distributed.",
+                ),
+                container(
+                    "Container.Portfolio",
+                    "A grouping for analysis or management — it scopes, it does not transact.",
+                ),
+                container(
+                    "Container.SPV",
+                    "A special-purpose vehicle — a legal wrapper around assets and their debt.",
+                ),
+                container(
+                    "Container.Transaction",
+                    "A deal being analyzed — the scope one valuation runs over.",
+                ),
                 OntologyEntity {
                     type_id: "Party".to_string(),
                     family: "party".to_string(),
                     class: None,
+                    refines: None,
                     lifecycle: None,
                     description: Some(
                         "Someone who contracts, owns, lends or invests. A pack names roles more precisely; this is the generic one."
@@ -211,28 +264,111 @@ impl PackOntology {
                     }],
                 },
             ],
-            contracts: Vec::new(),
+            contracts: vec![
+                master("Contract.Debt", &["lender", "borrower"],
+                    "Borrowed money and its service — a loan, a facility, a note, a pool of them."),
+                master("Contract.Lease", &["lessor", "lessee"],
+                    "Use of an asset in exchange for rent, and the rent's own mechanics."),
+                master("Contract.Purchase", &["buyer", "seller"],
+                    "Acquiring the asset itself."),
+                master("Contract.Sale", &["seller", "buyer"],
+                    "Disposing of the asset itself — an exit, a disposition, a takeout."),
+                master("Contract.Offtake", &["seller", "offtaker"],
+                    "Sale of an asset's output — a PPA, a merchant sale, a capacity payment."),
+                master("Contract.Service", &["provider", "recipient"],
+                    "Work done on or for the asset — management, operations and maintenance, servicing."),
+                master("Contract.Tax", &["taxpayer", "authority"],
+                    "A tax obligation or attribute — cash taxes, a credit, a depreciation shield."),
+                master("Contract.Option", &["grantor", "holder"],
+                    "An election — cash the holder chooses to take. Every pack's elections refine this."),
+                // The three below have no refinement in the alpha packs yet.
+                // The packs are indicators, not a sample of their domains:
+                // construction contracts, hedges and insurance are standard
+                // deal furniture, and a master that exists before its first
+                // refinement costs nothing — it is abstract.
+                master("Contract.Construction", &["owner", "contractor"],
+                    "Building or improving the asset — an EPC or construction contract."),
+                master("Contract.Derivative", &["party", "counterparty"],
+                    "A hedge or exchange of exposures — a swap, a rate cap, a collar."),
+                master("Contract.Insurance", &["insurer", "insured"],
+                    "Premiums against losses — property, title, business interruption."),
+            ],
             lifecycles: Vec::new(),
             references: Vec::new(),
             relations: vec![
                 relation(
                     "part_of",
-                    "asset",
-                    "asset",
+                    "asset|container",
+                    "asset|container",
                     "many_to_one",
                     "contains",
-                    "Optional hierarchy. Never required: the modeller chooses the grain, and an asset stands alone unless grouped.",
+                    "Optional hierarchy. Never required: the modeller chooses the grain, and an asset stands alone unless grouped. Containment reuses this relation — an asset in a fund, an SPV in a fund — rather than adding a second hierarchy concept (docs/13 §7.88).",
                 ),
                 relation(
                     "owns",
                     "party",
-                    "asset",
+                    "asset|container",
                     "many_to_many",
                     "owned_by",
-                    "Who holds the asset.",
+                    "Who holds the asset — or the fund.",
+                ),
+                relation(
+                    "secured_by",
+                    "contract",
+                    "asset",
+                    "many_to_many",
+                    "secures",
+                    "Collateral. A mortgage names its property; LTV, recovery and release provisions read this edge (docs/13 §7.89).",
+                ),
+                relation(
+                    "guarantees",
+                    "party",
+                    "contract",
+                    "many_to_many",
+                    "guaranteed_by",
+                    "The guarantee obligation recourse analysis needs.",
+                ),
+                relation(
+                    "is_counterparty_to",
+                    "party",
+                    "contract",
+                    "many_to_many",
+                    "has_counterparty",
+                    "Who is on the other side — recorded, not recovered from a contract's terms.",
                 ),
             ],
         }
+    }
+
+    /// Does `type_id` refine (transitively) `base`, in THIS ontology's view?
+    ///
+    /// Call on `merged_with_base()` — a pack file alone cannot see the
+    /// language-base types its `refines` entries point at. A type is_a
+    /// itself; the walk is bounded by the entity count, so a cycle that
+    /// escaped load-time validation terminates rather than spins.
+    pub fn is_a(&self, type_id: &str, base: &str) -> bool {
+        let mut current = type_id;
+        for _ in 0..=self.entities.len() + self.contracts.len() {
+            if current == base {
+                return true;
+            }
+            let parent = self
+                .entities
+                .iter()
+                .find(|e| e.type_id == current)
+                .and_then(|e| e.refines.as_deref())
+                .or_else(|| {
+                    self.contracts
+                        .iter()
+                        .find(|c| c.type_id == current)
+                        .and_then(|c| c.refines.as_deref())
+                });
+            match parent {
+                Some(next) => current = next,
+                None => return false,
+            }
+        }
+        false
     }
 
     /// A pack's vocabulary on top of the language's. Pack types win on a
@@ -256,7 +392,12 @@ impl PackOntology {
             .retain(|r| !pack_relations.contains(r.relation_id.as_str()));
         merged.relations.extend(self.relations.iter().cloned());
 
-        merged.contracts = self.contracts.clone();
+        let pack_contracts: BTreeSet<&str> =
+            self.contracts.iter().map(|c| c.type_id.as_str()).collect();
+        merged
+            .contracts
+            .retain(|c| !pack_contracts.contains(c.type_id.as_str()));
+        merged.contracts.extend(self.contracts.iter().cloned());
         merged.lifecycles = self.lifecycles.clone();
         merged.references = self.references.clone();
         merged
@@ -297,6 +438,14 @@ pub struct OntologyEntity {
     /// Required for `asset`, absent for `party` — only an asset has a class.
     #[serde(default)]
     pub class: Option<String>,
+    /// The master type this type specializes — `CRE.Asset.RealProperty`
+    /// refines `Asset.Real`. Recorded rather than conventional, so "is a"
+    /// is a fact the system can read: selection by a base type reaches every
+    /// refinement, and a metric written against `Asset.Real` survives a new
+    /// pack unchanged. Single parent, same family, acyclic — validated at
+    /// pack load (docs/13 §7.92).
+    #[serde(default)]
+    pub refines: Option<String>,
     /// The lifecycle this type moves through. Absent means the type has no
     /// states; present means it is ALWAYS in exactly one of them.
     #[serde(default)]
@@ -337,6 +486,21 @@ pub struct OntologyContract {
     pub contract_name: Option<String>,
     #[serde(default)]
     pub subject_family: Option<String>,
+    /// The master contract type this type specializes (docs/13 §7.92). Same
+    /// contract as `OntologyEntity::refines`: recorded, single-parent,
+    /// acyclic, validated at load. Distinct from `contract_name` being
+    /// absent, which marks an election — refinement says what a type IS,
+    /// the rule binding says how it lowers.
+    #[serde(default)]
+    pub refines: Option<String>,
+    /// A master type: exists to be refined, never instantiated. A master
+    /// does not lower, so it binds no rule — and the marker is what keeps
+    /// that distinct from `contract_name: None` meaning an election. Today a
+    /// model reaches a contract type only through its rule, so a master is
+    /// uninstantiable by construction; the marker records the intent and
+    /// guards any future instance-level type naming.
+    #[serde(rename = "abstract", default)]
+    pub is_abstract: bool,
     /// Role names, not entity references — a party fills a role per contract,
     /// so the same party can be lessor in one and lender in another.
     #[serde(default)]
@@ -446,12 +610,32 @@ pub struct OntologyReference {
 #[serde(deny_unknown_fields)]
 pub struct OntologyRelation {
     pub relation_id: String,
-    pub from_family: String,
-    pub to_family: String,
+    /// One node family or a list of them — `"asset"` and `["asset",
+    /// "container"]` both parse, so every pack file written before widening
+    /// still loads. The pair is a cross product: any listed from-family may
+    /// relate to any listed to-family.
+    #[serde(deserialize_with = "one_or_many")]
+    pub from_family: Vec<String>,
+    #[serde(deserialize_with = "one_or_many")]
+    pub to_family: Vec<String>,
     pub cardinality: String,
     pub inverse: String,
     #[serde(default)]
     pub description: Option<String>,
+}
+
+/// Accept `"asset"` or `["asset", "container"]` for a relation endpoint.
+fn one_or_many<'de, D: serde::Deserializer<'de>>(d: D) -> Result<Vec<String>, D::Error> {
+    #[derive(Deserialize)]
+    #[serde(untagged)]
+    enum OneOrMany {
+        One(String),
+        Many(Vec<String>),
+    }
+    Ok(match OneOrMany::deserialize(d)? {
+        OneOrMany::One(v) => vec![v],
+        OneOrMany::Many(v) => v,
+    })
 }
 
 #[derive(Debug, Deserialize)]
@@ -1673,10 +1857,10 @@ fn parse_ontology(raw: &str, source: &str, pack_name: &str) -> Result<PackOntolo
                     ),
                 });
             }
-            ("party", Some(class)) => {
+            (family, Some(class)) if family != "asset" => {
                 return Err(PackLoadError {
                     message: format!(
-                        "Ontology '{source}': party '{}' declares class '{class}'. Only assets have a class.",
+                        "Ontology '{source}': {family} '{}' declares class '{class}'. Only assets have a class.",
                         entity.type_id
                     ),
                 });
@@ -1691,6 +1875,108 @@ fn parse_ontology(raw: &str, source: &str, pack_name: &str) -> Result<PackOntolo
                         entity.type_id
                     ),
                 });
+            }
+        }
+    }
+
+    // REFINEMENT IS A FACT, SO IT IS CHECKED WHERE FACTS ARE (docs/13 §7.92).
+    // A `refines` must name a type that exists — in this pack or the language
+    // base — in the same family, with an agreeing class, and the chain must
+    // not loop. Checked at load for the same reason as everything above: a
+    // broken vocabulary is the pack author's bug, not the modeller's.
+    {
+        let base = PackOntology::language_base();
+        for entity in &ontology.entities {
+            let Some(parent_id) = &entity.refines else {
+                continue;
+            };
+            let parent = ontology
+                .entities
+                .iter()
+                .find(|e| e.type_id == *parent_id)
+                .or_else(|| base.entities.iter().find(|e| e.type_id == *parent_id));
+            let Some(parent) = parent else {
+                return Err(PackLoadError {
+                    message: format!(
+                        "Ontology '{source}': entity '{}' refines '{parent_id}', which is not a declared entity type in this pack or the language base.",
+                        entity.type_id
+                    ),
+                });
+            };
+            if parent.family != entity.family {
+                return Err(PackLoadError {
+                    message: format!(
+                        "Ontology '{source}': entity '{}' ({}) refines '{parent_id}' ({}). A refinement stays in its family — what a thing is does not change by specializing it.",
+                        entity.type_id, entity.family, parent.family
+                    ),
+                });
+            }
+            if let (Some(child_class), Some(parent_class)) =
+                (entity.class.as_deref(), parent.class.as_deref())
+            {
+                if child_class != parent_class {
+                    return Err(PackLoadError {
+                        message: format!(
+                            "Ontology '{source}': entity '{}' has class '{child_class}' but refines '{parent_id}', whose class is '{parent_class}'. A specialization keeps its master's class.",
+                            entity.type_id
+                        ),
+                    });
+                }
+            }
+        }
+        for contract in &ontology.contracts {
+            if contract.is_abstract && contract.contract_name.is_some() {
+                return Err(PackLoadError {
+                    message: format!(
+                        "Ontology '{source}': contract '{}' is abstract but binds rule '{}'. A master type exists to be refined; the refinements lower.",
+                        contract.type_id,
+                        contract.contract_name.as_deref().unwrap_or_default()
+                    ),
+                });
+            }
+            let Some(parent_id) = &contract.refines else {
+                continue;
+            };
+            let known = ontology.contracts.iter().any(|c| c.type_id == *parent_id)
+                || base.contracts.iter().any(|c| c.type_id == *parent_id);
+            if !known {
+                return Err(PackLoadError {
+                    message: format!(
+                        "Ontology '{source}': contract '{}' refines '{parent_id}', which is not a declared contract type in this pack or the language base.",
+                        contract.type_id
+                    ),
+                });
+            }
+        }
+        // A cycle can only form among this pack's own types — a base type
+        // refines nothing — so the walk is over the file being loaded.
+        let parent_of: BTreeMap<&str, &str> = ontology
+            .entities
+            .iter()
+            .filter_map(|e| e.refines.as_deref().map(|r| (e.type_id.as_str(), r)))
+            .chain(
+                ontology
+                    .contracts
+                    .iter()
+                    .filter_map(|c| c.refines.as_deref().map(|r| (c.type_id.as_str(), r))),
+            )
+            .collect();
+        for start in parent_of.keys() {
+            let mut current = *start;
+            let mut hops = 0usize;
+            while let Some(next) = parent_of.get(current) {
+                current = next;
+                hops += 1;
+                if current == *start {
+                    return Err(PackLoadError {
+                        message: format!(
+                            "Ontology '{source}': type '{start}' refines itself through a cycle. A refinement chain must end at a master type."
+                        ),
+                    });
+                }
+                if hops > parent_of.len() {
+                    break;
+                }
             }
         }
     }
@@ -1804,18 +2090,23 @@ fn parse_ontology(raw: &str, source: &str, pack_name: &str) -> Result<PackOntolo
     // A relation reads from both ends, so both ends have to name a family that
     // exists, and the inverse is what makes the other direction sayable.
     for relation in &ontology.relations {
-        for (label, family) in [
+        for (label, families) in [
             ("from_family", &relation.from_family),
             ("to_family", &relation.to_family),
         ] {
-            if !ENTITY_FAMILIES.contains(&family.as_str()) {
-                return Err(PackLoadError {
-                    message: format!(
-                        "Ontology '{source}': relation '{}' has {label} '{family}', which is not one of {}.",
-                        relation.relation_id,
-                        ENTITY_FAMILIES.join(", ")
-                    ),
-                });
+            for family in families {
+                // NODE families, not entity families: a relation may point at
+                // a contract or a reference — they are nodes in the graph even
+                // though no `entity` declaration produces one.
+                if !NODE_FAMILIES.contains(&family.as_str()) {
+                    return Err(PackLoadError {
+                        message: format!(
+                            "Ontology '{source}': relation '{}' has {label} '{family}', which is not one of {}.",
+                            relation.relation_id,
+                            NODE_FAMILIES.join(", ")
+                        ),
+                    });
+                }
             }
         }
         if relation.inverse.trim().is_empty() {
@@ -3055,6 +3346,252 @@ schedule_to = "2026-01"
         parse_lowering_rules(&raw, "test")
             .expect("minimal rule parses")
             .remove(0)
+    }
+
+    #[test]
+    fn a_container_type_parses_and_a_class_on_it_is_refused() {
+        let ok = r#"
+[[entities]]
+type_id = "T.Container.Fund"
+family = "container"
+refines = "Container.Fund"
+"#;
+        let o = parse_ontology(ok, "test", "t").expect("container family parses");
+        assert!(o
+            .merged_with_base()
+            .is_a("T.Container.Fund", "Container.Fund"));
+
+        let bad = r#"
+[[entities]]
+type_id = "T.Container.Fund"
+family = "container"
+class = "real"
+"#;
+        let err = parse_ontology(bad, "test", "t").expect_err("only assets have a class");
+        assert!(err.message.contains("class"), "{}", err.message);
+    }
+
+    #[test]
+    fn a_relation_may_point_at_a_contract_and_widened_endpoints_parse() {
+        let raw = r#"
+[[relations]]
+relation_id = "guaranteed_locally"
+from_family = "party"
+to_family = "contract"
+cardinality = "many_to_many"
+inverse = "locally_guaranteed_by"
+
+[[relations]]
+relation_id = "grouped_in"
+from_family = ["asset", "container"]
+to_family = "container"
+cardinality = "many_to_one"
+inverse = "groups"
+"#;
+        let o =
+            parse_ontology(raw, "test", "t").expect("contract endpoint and list endpoints parse");
+        assert_eq!(o.relations[1].from_family, vec!["asset", "container"]);
+
+        let bad = r#"
+[[relations]]
+relation_id = "r"
+from_family = "party"
+to_family = "spelling"
+cardinality = "many_to_many"
+inverse = "x"
+"#;
+        let err = parse_ontology(bad, "test", "t").expect_err("unknown node family refused");
+        assert!(err.message.contains("spelling"), "{}", err.message);
+    }
+
+    #[test]
+    fn the_base_ships_the_relation_vocabulary_and_containers() {
+        let base = PackOntology::language_base();
+        for id in [
+            "part_of",
+            "owns",
+            "secured_by",
+            "guarantees",
+            "is_counterparty_to",
+        ] {
+            assert!(
+                base.relations.iter().any(|r| r.relation_id == id),
+                "missing {id}"
+            );
+        }
+        let part_of = base
+            .relations
+            .iter()
+            .find(|r| r.relation_id == "part_of")
+            .unwrap();
+        assert!(part_of.to_family.contains(&"container".to_string()));
+        for id in [
+            "Container.Fund",
+            "Container.Portfolio",
+            "Container.SPV",
+            "Container.Transaction",
+        ] {
+            assert!(
+                base.entities
+                    .iter()
+                    .any(|e| e.type_id == id && e.family == "container"),
+                "missing {id}"
+            );
+        }
+    }
+
+    #[test]
+    fn a_refinement_of_a_base_type_parses_and_is_a_walks_the_chain() {
+        let raw = r#"
+[[entities]]
+type_id = "T.Asset.Building"
+family = "asset"
+class = "real"
+refines = "Asset.Real"
+
+[[entities]]
+type_id = "T.Asset.Tower"
+family = "asset"
+class = "real"
+refines = "T.Asset.Building"
+"#;
+        let o = parse_ontology(raw, "test", "t").expect("refinement of a base type parses");
+        let merged = o.merged_with_base();
+        assert!(merged.is_a("T.Asset.Tower", "T.Asset.Building"));
+        assert!(
+            merged.is_a("T.Asset.Tower", "Asset.Real"),
+            "is_a is transitive"
+        );
+        assert!(
+            merged.is_a("T.Asset.Tower", "T.Asset.Tower"),
+            "a type is_a itself"
+        );
+        assert!(!merged.is_a("T.Asset.Tower", "Asset.Financial"));
+        assert!(
+            !merged.is_a("Asset.Real", "T.Asset.Tower"),
+            "is_a is not symmetric"
+        );
+    }
+
+    #[test]
+    fn a_refinement_must_name_a_declared_type() {
+        let raw = r#"
+[[entities]]
+type_id = "T.Asset.Building"
+family = "asset"
+class = "real"
+refines = "Asset.Imaginary"
+"#;
+        let err = parse_ontology(raw, "test", "t").expect_err("unknown master refused");
+        assert!(err.message.contains("Asset.Imaginary"), "{}", err.message);
+    }
+
+    #[test]
+    fn a_refinement_stays_in_its_family() {
+        let raw = r#"
+[[entities]]
+type_id = "T.Party.Landlord"
+family = "party"
+refines = "Asset.Real"
+"#;
+        let err = parse_ontology(raw, "test", "t").expect_err("cross-family refused");
+        assert!(err.message.contains("family"), "{}", err.message);
+    }
+
+    #[test]
+    fn a_refinement_keeps_its_masters_class() {
+        let raw = r#"
+[[entities]]
+type_id = "T.Asset.Royalty"
+family = "asset"
+class = "intangible"
+refines = "Asset.Real"
+"#;
+        let err = parse_ontology(raw, "test", "t").expect_err("class disagreement refused");
+        assert!(err.message.contains("class"), "{}", err.message);
+    }
+
+    #[test]
+    fn a_refinement_cycle_is_refused() {
+        let raw = r#"
+[[entities]]
+type_id = "T.Asset.A"
+family = "asset"
+class = "real"
+refines = "T.Asset.B"
+
+[[entities]]
+type_id = "T.Asset.B"
+family = "asset"
+class = "real"
+refines = "T.Asset.A"
+"#;
+        let err = parse_ontology(raw, "test", "t").expect_err("cycle refused");
+        assert!(err.message.contains("cycle"), "{}", err.message);
+    }
+
+    #[test]
+    fn a_contract_refines_a_master_and_is_a_walks_the_chain() {
+        let raw = r#"
+[[contracts]]
+type_id = "T.Contract.Mortgage"
+contract_name = "t.mortgage"
+parties = ["lender", "borrower"]
+refines = "Contract.Debt"
+"#;
+        let o = parse_ontology(raw, "test", "t").expect("a master in the base resolves");
+        let merged = o.merged_with_base();
+        assert!(merged.is_a("T.Contract.Mortgage", "Contract.Debt"));
+        assert!(!merged.is_a("T.Contract.Mortgage", "Contract.Lease"));
+    }
+
+    #[test]
+    fn a_contract_refinement_must_name_a_declared_contract() {
+        let raw = r#"
+[[contracts]]
+type_id = "T.Contract.Mortgage"
+parties = ["lender", "borrower"]
+refines = "Contract.Imaginary"
+"#;
+        let err = parse_ontology(raw, "test", "t").expect_err("unknown master refused");
+        assert!(
+            err.message.contains("Contract.Imaginary"),
+            "{}",
+            err.message
+        );
+    }
+
+    #[test]
+    fn an_abstract_contract_must_not_bind_a_rule() {
+        let raw = r#"
+[[contracts]]
+type_id = "T.Contract.AbstractDebt"
+abstract = true
+contract_name = "t.debt"
+parties = ["lender", "borrower"]
+"#;
+        let err = parse_ontology(raw, "test", "t").expect_err("a master does not lower");
+        assert!(err.message.contains("abstract"), "{}", err.message);
+    }
+
+    #[test]
+    fn the_base_masters_survive_a_pack_merge() {
+        let raw = r#"
+[[contracts]]
+type_id = "T.Contract.Deal"
+contract_name = "t.deal"
+parties = ["buyer", "seller"]
+"#;
+        let o = parse_ontology(raw, "test", "t").expect("parses");
+        let merged = o.merged_with_base();
+        assert!(merged
+            .contracts
+            .iter()
+            .any(|c| c.type_id == "Contract.Debt" && c.is_abstract));
+        assert!(merged
+            .contracts
+            .iter()
+            .any(|c| c.type_id == "T.Contract.Deal"));
     }
 
     #[test]

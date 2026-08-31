@@ -4,7 +4,7 @@
 
 CFDL 0.7.0. Every model below compiles, and its IR and
 results are byte-asserted against goldens in CI (`fixtures/valid/`,
-128 models.
+129 models.
 
 `gold/ir/`, `gold/results/`). Each is single-purpose: the directory name
 says what it exercises. This is what right looks like — positive few-shot
@@ -426,6 +426,45 @@ stream saas.infra_cost on entity asset.product outflow currency USD {
   schedule every month from 2026-01 to 2028-12
   amount = 2000 + time.t * 50
   active when time.t >= 6
+}
+```
+
+## container_entity
+
+```cfdl
+version 0.1
+model "container-entity"
+time calendar annual from 2026-01 for 3
+
+// A CONTAINER GROUPS AND SCOPES; IT DOES NOT PRODUCE.
+//
+// A fund is not an asset — `Asset.Financial` claims "a claim on cash," which
+// a grouping is not. The `container` family says what the thing IS, and the
+// language base ships the types (`Container.Fund`, `Container.Portfolio`,
+// `Container.SPV`, `Container.Transaction`) for a model to use pack-free and
+// for a pack to refine (docs/13 §7.88).
+//
+// Containment reuses `part_of` — one hierarchy concept, widened endpoints —
+// so the parent's cash aggregates BY THE RELATION, exactly as an asset
+// parent's does: `entity.container.fund.net_cash_flow` below carries both
+// holdings' cash, and counts as cash nowhere, because a fold of the cash
+// never counts AS cash.
+
+entity container fund : Container.Fund
+
+entity asset alpha : Asset.Financial { part of container.fund }
+entity asset beta  : Asset.Financial { part of container.fund }
+
+stream alpha.income on entity asset.alpha inflow currency USD {
+  schedule every year from 2026-01 to 2028-01
+  category operating.revenue.other
+  amount = 100
+}
+
+stream beta.income on entity asset.beta inflow currency USD {
+  schedule every year from 2026-01 to 2028-01
+  category operating.revenue.other
+  amount = 40
 }
 ```
 

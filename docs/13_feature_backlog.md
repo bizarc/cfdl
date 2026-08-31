@@ -1946,3 +1946,415 @@ against a published equity multiple. Two earlier drafts of this entry
 overreached — the first called the party metric structurally different, the
 second proposed a taxonomy node and a `cre.acquisition` contract as though the
 language could not express the multiple. It can, and does.
+
+---
+
+### 7.85 The valuation plane cannot read what the results plane publishes
+
+*Belongs with the language and engine (section 5). Found with §7.86 and §7.87
+in one investigation; the three are separable and this is the widest.*
+
+`docs/01` §15.3 is normative: a metric's expression MAY read series, **entity
+fields**, `inputs`, `cfg` and the engine's `model.*`. Entity fields it cannot
+read. `metric x = asset.proj.drawn` is `EXPR_UNKNOWN_NAME`;
+`series_sum("asset.proj.drawn", 11, 11)` returns 0 while the published series
+holds 10,000. The metric environment is built from `stream_series` plus
+`waterfall_series` and nothing else (`crates/cfdl-engine/src/lib.rs`, the
+declared-metrics block), and `bind_states` — called for streams, distributions
+and state evaluation alike — is never called there. That is a missing binding,
+not a design: the restrictions the block does argue (horizon pinning,
+declaration order, folds never counting as cash) are documented at length, and
+this one appears nowhere.
+
+The same absence hides every computed aggregate. `entity.<symbol>.net_cash_flow`
+is computed, published, and unreachable: a two-loan pool probe reads loan A as
+3,600 by stream prefix and 0 by entity aggregate, silently. `domain.*`
+subtotals, `entity.*.total`, `run.*` scalars — all dropped, the last because the
+scalar binding filters on the `model.` prefix alone.
+
+**Every failure above is a silent zero.** `check_series_names` walks stream
+amounts, guards, waterfall sources and field rules — not metric expressions —
+so `series_sum("total.nonsense.xyz", 0, 11)` publishes 0 with no warning. The
+engine's own stance is that a metric that fails to evaluate is fatal, because
+"a missing key reads as 'not run' rather than 'not defined'"; a metric reading
+a name nothing binds deserves the same severity, and today gets none.
+
+**The fix must not recreate the August 2026 naming ambiguity.** Expression
+names and results names are different dialects (`ops.rev` vs
+`stream.ops.rev`), and `docs/03` records what happened when documentation
+conflated them: "a model that followed it got an empty pot rather than a
+diagnostic." Merging results keys into `env.series` reopens that. A distinct
+results-plane accessor keeps the plane explicit at the call site and leaves
+every existing metric meaning what it meant.
+
+Related: §7.43 (ownership is the other half of reaching results from an
+expression), §7.55 (the declaration surface these reads would serve), §7.84
+(another figure the valuation plane computes that the engine got wrong first).
+
+Provenance: found probing the metric environment against `docs/01` §15.3,
+30 August 2026. Six probe models; every number above reproduced from a run
+rather than read from the source.
+
+---
+
+### 7.86 Sum and mean are the only reductions over a series
+
+*Belongs with the language and engine (section 5). Split from §7.85.*
+
+`series_sum` and `series_avg` are the whole reduction vocabulary. Peak
+outstanding debt, maximum drawdown, the period a balance peaked, the first
+period DSCR crosses a threshold, a count of breach periods — none is
+expressible over a series.
+
+**The trap is that the miss looks like a hit.** `min`/`max`/`sum`/`avg` are
+variadic scalar folds, so `max(series_sum("dbt.*", 0, 11))` compiles, runs,
+and returns the net lifetime figure — a one-element fold — silently labelled
+as a peak. Probed: draws of 6,000 and 4,000 with a 7,000 repayment publish
+`peak_naive` = 3,000 against a true peak of 10,000, no diagnostic. The
+hand-unrolled alternative (`max` over one cumulative window per period) is
+correct and O(horizon) of source text that silently under-measures if the
+horizon grows.
+
+**The two workarounds each poison something.** A helper stream carrying a
+running balance can read other series in a later wave, but a stream must be
+`inflow` or `outflow`, so the helper is cash: the probe corrupted
+`model.total` from 3,000 to 78,000 and `model.moic` to 20.5. A field
+recurrence is non-cash but its `next` reads no stream series at all
+(`docs/14` §3.1), so the schedule must be restated by hand and the two
+statements drift.
+
+Shape: `series_max` / `series_min` beside the existing pair — same signature,
+same selector dialect, same window semantics, projection-tail rules
+unchanged. Position-returning forms (argmax, first crossing) need one design
+decision — a period index is trivially comparable, a date is what a covenant
+clause names — and belong in the same pass.
+
+Provenance: found asking what a metric could do with a running balance,
+30 August 2026; every workaround above was run, not reasoned about.
+
+---
+
+### 7.87 A Monte Carlo trial discards every metric but model.npv
+
+*Belongs with the language and engine (section 5).*
+
+Each trial executes a complete deterministic run — journal, streams, every
+declared and domain metric. What survives into `trial_summaries` is a map
+built fresh with one entry, `model.npv`. The scenario path, one function up,
+does it right: `scenario_metrics = scenario_run.metrics` carries the whole
+map, which is why §15.3 can promise a declared metric in every scenario
+column. The trial loop has `trial_run.metrics` in scope and does not use it.
+
+Consequences, in order of cost. A declared metric gets no distribution — the
+figure a case exists to assert exists in no trial. `moic`, `irr`, every
+`domain.*` KPI: no distribution. The section-level `MetricSummary` schema
+defines p01 through p99; the engine fills mean, stdev, min, max, p50 and
+hard-codes the rest `None`. And because per-trial series are (reasonably) not
+retained, the metric map is the only window into a trial — whatever was not
+declared before the run is unrecoverable after it.
+
+The narrow fix is nearly free: carry `trial_run.metrics` into the summary and
+extend the aggregation to every key present, percentiles included. The volume
+question that makes per-trial *series* expensive does not arise for scalars.
+
+Related: §7.23 — the scenario plane has the mirror-image gap (metrics but no
+per-period series), and a decision about stochastic exports should cover both.
+
+Provenance: found checking the claim "the deterministic results are exported
+for each MC trial" against the trial loop, 30 August 2026. The claim is
+false today and one line from true.
+
+---
+
+### 7.88 A container is not a kind of asset
+
+*Belongs with the language and engine (section 5).*
+
+`ENTITY_FAMILIES` is closed to `asset` and `party`, and the closure is right —
+"the language, not the pack, decides what kinds of thing a model contains."
+The roster is one family short. A fund, a portfolio, an SPV, a transaction is
+a grouping that *scopes* cash, not a thing that produces or consumes it.
+Modelling one as an `asset` with `part_of` children types it falsely, and the
+falsehood is load-bearing: `Asset.Financial` claims "a claim on cash," which a
+portfolio is not, and every validation built on families inherits the lie.
+
+Shape: a `container` family in the language base, with core types the platform
+layer above already specifies (Transaction, Portfolio, Fund, SPV) as pack- or
+base-supplied subtypes. `contains` already exists as the inverse of `part_of`;
+a container adds `container -> asset` and plausibly `container -> contract`
+edges. The rollup machinery is indifferent —
+`entity.<symbol>.net_cash_flow` follows `part_of` today and would follow a
+container edge identically — so the engine change is small; the change is to
+what a model may *say*.
+
+This is the standalone fraction of "model linking" (deferred past v1): one
+model, many assets, fund-level cash and fund-level metrics, no cross-model
+plumbing. What it does not cover — one model consuming another's published
+results — stays deferred.
+
+**Sequencing note: families are a closed vocabulary and results keys embed the
+family** (`<family>.<entity>.<field>`). Adding a family after 1.0 is a
+breaking change to every consumer that switches on it; adding it before is
+additive. This belongs in the release candidate, not after it.
+
+Provenance: raised comparing the language base against the platform ontology
+specification above it, 30 August 2026.
+
+---
+
+**Addendum, 30 August 2026 — this is a restoration, not an addition.** The
+comment above `ENTITY_FAMILIES` declares "FOUR FAMILIES, fixed here": asset,
+party, contract, reference. The constant beneath it implements two. Contract
+and reference are already first-class rosters in the ontology
+(`OntologyContract`, `OntologyReference`) with their own declaration keywords
+— what was never finished is treating them as NODE families: identity-bearing,
+valid endpoints for relations. So the entry's real shape is: restore the
+roster to its own comment, add `container` as the fifth, and unify the GRAPH
+while leaving the syntax per-kind (`entity` declares asset/party/container;
+`contract` declares contracts; `curve`/`quantile` declare references).
+
+**Status, 30 August 2026 — shipped in cfdl-pack.** `ENTITY_FAMILIES` is
+asset/party/container; `NODE_FAMILIES` (asset, party, container, contract,
+reference) is the new superset relations validate against — the graph
+unified, the syntax per-kind, exactly as the addendum below specifies. Four
+container base types ship (`Container.Fund`/`Portfolio`/`SPV`/`Transaction`),
+`part_of` and `owns` endpoints widened to include containers (endpoints now
+accept one family or a list; every pre-widening pack file still parses). The
+engine needed nothing: `entity container fund` already compiled — the model
+namespace was never family-gated — and the rollup already follows `parent`
+regardless of family, verified with a probe whose container aggregated its
+child's cash. What remains: migrating `CRE.Asset.Portfolio` and
+`Energy.Asset.Portfolio` to the container family (touches two published
+penzance benchmarks, so it goes with a golden re-run, not a vocabulary
+change); and deciding whether a model-level `entity` namespace should be
+validated against `ENTITY_FAMILIES` at all — today `entity carpark x` is
+legal and silently untyped, which is a finding of this work, not a change
+it made.
+
+**`part_of` is untouched, and containment reuses it.** Unit-in-building and
+loan-in-pool are asset→asset hierarchy and stay exactly as they are. A
+container's containment is the same relation with widened endpoint families
+(`container → asset`, plausibly `container → contract`), not a parallel edge:
+one hierarchy concept, and `contains` is already its registered inverse. The
+rollup machinery follows the relation and is indifferent to the family.
+
+---
+
+### 7.89 Two relations are not a relation vocabulary
+
+*Belongs with the language and engine (section 5). Pairs with §7.88.*
+
+The language base declares `part_of` and `owns`. The machinery around them is
+complete — cardinality, inverse names, per-pack extension, the CRE pack adds
+`occupies` and `manages` — but the base vocabulary stops before the relations
+deal models actually turn on:
+
+- `secured_by` (contract -> asset): collateral. Loans and the assets securing
+  them are both modelled today with no way to bind one to the other, so LTV
+  is a hand-paired input, a release provision has no structure to read, and
+  nothing can validate that a mortgage names its property.
+- `guarantees` (party -> contract): the guarantee obligation recourse
+  analysis needs.
+- `is_counterparty_to` (party -> contract): who is on the other side —
+  today recoverable only by reading a contract's terms.
+
+First increment: declarative only. The relations exist, are validated
+(endpoint families, cardinality), and are published; no engine semantics
+change. That alone unlocks the "search-around" selection pattern the
+ontology's inspiration (Palantir's object sets) treats as primary: start at a
+party, traverse `guarantees` to contracts, `secured_by` to assets, and name
+the resulting cash — which is what "isolate one artist's royalties" or "one
+guarantor's exposure" actually is. Whether any relation later acquires engine
+semantics (does `secured_by` feed a recovery calculation?) is a separate
+decision per relation.
+
+Related: §7.43 — relational selection over results requires results to carry
+the graph; publishing ownership is the first edge of that.
+
+Provenance: raised comparing the language base against the platform ontology
+specification above it, 30 August 2026.
+
+---
+
+**Status, 30 August 2026 — shipped with §7.88.** `secured_by`
+(contract→asset), `guarantees` (party→contract) and `is_counterparty_to`
+(party→contract) are in the language base, declarative as specified —
+validated, published with the ontology, no engine semantics. They typecheck
+because relation endpoints now range over `NODE_FAMILIES`, which is the
+contract-as-node dependency the addendum below records.
+
+**Addendum, 30 August 2026 — depends on §7.88's restoration.** `guarantees`
+and `is_counterparty_to` are party→CONTRACT edges. They can only typecheck
+once a contract is a node family, which is §7.88's graph unification. The two
+entries are one change wearing two numbers, and should land together.
+
+---
+
+### 7.90 A slice: selection with a name, and no pretence of completeness
+
+*Belongs with the language and engine (section 5). Related: §7.55, §7.43.*
+
+A statement's defining property is completeness — every category in exactly
+one line row, a reconciliation block, a `residual` row for cash nothing
+claimed, `E5029` for cash outside every fold. The complementary thing has no
+name and no surface: a *deliberately partial* selection — one loan out of a
+pool, one artist's royalties, the portfolio with a product line removed — with
+metrics computed over the selection.
+
+Two design commitments, both load-bearing:
+
+**A slice must not inherit the reconciliation machinery.** A filtered total
+that publishes a residual invites reading a partial number as a complete one.
+The absence of the reconciliation block is what the declaration *means*; it is
+the difference between a slice and a statement, and the reason "a statement
+with a filter" is the wrong construction.
+
+**A slice is a selection, not a copy.** It names entities, categories,
+relations (once §7.89 lands) or stream patterns; everything computed over it
+carries the selection in its lineage the way a metric carries its formula.
+The precedent is Palantir's object set — a saved, composable, named selection
+that functions and views consume — which is the concept the platform layer's
+"ontology slice" already borrows for packages; this brings the same idea to
+the results plane. The EVS spelling ("slice: a subset of the graph relevant
+to a specific valuation... portable and self-contained") is the right one and
+the word should be registered in `docs/terminology.toml` beside `statement`
+and `metric` when this lands — noting that `subtotal` and `category`, both
+load-bearing, were never registered at all.
+
+Depends on: §7.43 (results must attribute streams to entities before a slice
+can select on them), §7.88/§7.89 (the vocabulary worth selecting with).
+Category- and pattern-scoped slices are expressible with nothing else landing
+first.
+
+Provenance: raised working out why "remove certain products and recompute" has
+no home in the language, 30 August 2026. The naming (`slice`, not `view`) was
+settled against the platform vocabulary the same day.
+
+---
+
+### 7.91 An entity may carry a stable identity, and results repeat it
+
+*Belongs with the language and engine (section 5). Related: §7.43, §7.88–§7.90.*
+
+An entity is a symbol scoped to one model. The governance layer above the
+language assigns canonical identifiers to real-world things — the same
+building, borrower or fund referenced across many deals — and its identity
+contract reads "CFDL references those IDs, never invents ambiguous entities."
+That contract has no CFDL half: an entity declaration has nowhere to carry an
+external identifier, and results publish none, so a consumer joining two
+packages on "the same asset" is joining on symbol names and hope.
+
+Shape: an optional `id "<opaque string>"` on an entity declaration. The engine
+ignores it entirely — no semantics, no resolution, no network anything.
+Validation is uniqueness within the model and nothing else, because the
+language cannot know what the string means and must not pretend to. It rides
+the IR with the entity's provenance and is published in results wherever the
+entity's symbol appears, which today means beside the rollup keys and — once
+§7.43 lands — beside each stream's owner.
+
+The standalone cost is near zero; that is the point. A model that carries no
+ids loses nothing. A layer above that assigns them gets the one hook it needs
+to make a package's numbers attributable to canonical things, without the
+language growing an opinion about identity.
+
+**Sequencing: pre-1.0, for the same reason as §7.88.** Adding an optional
+field is additive; retrofitting identity into published results after
+consumers exist forces a version switch on all of them. Reserving the
+declaration surface now costs one optional token.
+
+Provenance: raised from the platform layer's identity-contract gap analysis
+(H.3), 30 August 2026, which found the binding missing on both sides —
+and scoped here to the half the language can supply alone.
+
+---
+
+### 7.92 Master types: the refinement the ontology promises but does not record
+
+*Belongs with the language and engine (section 5). Related: §7.88, §7.89,
+§7.90; subsumes the interface question raised against it. The largest single
+item to come out of the 30 August 2026 ontology review.*
+
+The pack loader's own comment states the design: "a pack may refine
+`Asset.Real` into `CRE.Asset.RealProperty` without the base disappearing."
+Nothing records the refinement. `OntologyEntity` carries `type_id`, `family`,
+`class`, `fields` — no parent — so "CRE.Asset.RealProperty IS an Asset.Real"
+is a naming convention the system cannot read. The consequence is that
+nothing can select across packs: `cre.permanent_debt`, `credit.loan`,
+`energy.project_debt` and `opco.term_loan` are all debt, and no metric,
+slice or validation can say "all debt" — each must name concrete pack types
+and breaks when a fifth pack adds one.
+
+Three pieces finish the mechanism the comment promises:
+
+**1. A recorded refinement edge.** `refines = "<type_id>"` on a pack's entity
+and contract types. Single parent, validated to name an existing type in the
+same family, acyclic. One field; it turns the convention into a queryable
+tree, and `is_a(type, base)` becomes answerable.
+
+**2. Abstract base contract types in the language base.**
+`language_base().contracts` is empty because a contract type binds to a
+lowering rule and rules are pack things. A master type does not lower — it
+exists to be refined. So the base gains abstract types (`Contract.Debt`,
+`Contract.Lease`, `Contract.Purchase`, `Contract.Management`,
+`Contract.Construction` — the roster to be vetted once against what the four
+packs actually lower, not adopted wholesale). Declaring an instance of an
+abstract type is refused with the concrete refinements named. NOTE an
+implementation trap: `OntologyContract.contract_name = None` already means
+"an election — an option, resolved by the engine." Abstract needs its own
+marker; overloading the absent rule would conflate a master type with an
+option.
+
+**3. Field inheritance along the edge.** The base declares the common
+elements — what ALL of a kind have — refinements inherit and add, and pack
+load validates the inheritance. First cut of the common cores, to be argued
+per family when each lands:
+
+- every CONTRACT: its parties in roles, the entity it is on, a term
+  (dates), a typed terms map, the category vocabulary of what it lowers;
+  concrete ones add the lowering binding.
+- every PARTY: a name; roles arrive by relation (`owns`, `guarantees`,
+  `is_counterparty_to`), not by field.
+- every REFERENCE: a kind and a unit; how it resolves at run.
+- every ASSET: a class (real/financial/intangible), optional lifecycle,
+  optional `part_of`, facts and rule fields.
+- every CONTAINER (§7.88): a kind (Transaction/Portfolio/Fund/SPV) and what
+  it contains.
+
+The specialized layer is the packs': domain fields (`sqft` on a property,
+`original_balance` on a tranche), domain lifecycles, per-type term schemas,
+domain categories. The split is exactly "common elements, extended or
+specialized" — master types answer WHAT a thing is; the pack answers what
+this domain's version of it carries.
+
+**Selection is the payoff.** A base type in a slice, metric selector or
+validation matches every refinement transitively. That is what §7.90's
+slices select with, what §7.89's relations type against, and what lets a
+statement row or metric survive a new pack unchanged.
+
+**Interfaces are explicitly deferred, not rejected.** Master types cover
+classification-with-common-elements, which is every case raised so far. An
+interface earns its place only when one thing genuinely needs two orthogonal
+classifications (a ground lease as contract and asset-like; a tax-equity
+interest) — worth a case before it is designed.
+
+Provenance: settled in discussion 30 August 2026, from the observation that
+the four-family comment, the two-family constant, and the "pack types win on
+a collision" refinement note are three fragments of one unimplemented
+design. The name "master types" is the platform layer's; the mechanism is
+the language's.
+
+**Status, 30 August 2026 — pieces 1 and 2 shipped.** `refines` on entity and
+contract types with load validation (exists in pack ∪ base, same family,
+class agreement, acyclic); `PackOntology::is_a` on the base-merged view;
+eleven abstract contract masters in the language base (`abstract = true`,
+rule binding refused, uninstantiable today since a model reaches a contract
+type only through its rule); all four packs declare their refinements — 33
+entity, 33 contract. Two principles fixed during adoption: the packs are
+INDICATORS of their domains, not a sample — a master standard in practice
+(Construction, Derivative, Insurance) exists without waiting for its first
+refinement, and absence from an alpha pack vetoes nothing; and the "line"
+contract types (opex/revenue/capex/working-capital lines) refine nothing
+yet — they are statement-line generators rather than counterparty
+agreements, and whether they get a master of their own is an open question,
+not an oversight. Field inheritance (piece 3) remains: `OntologyContract`
+carries no field schema today, so it starts with entities.
