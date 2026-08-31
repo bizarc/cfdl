@@ -2188,9 +2188,31 @@ data makes the two answers differ (a cell of 7 in a period whose aggregate is
 still compute what they computed.
 
 **A selection matching nothing** sums to 0, multiplies to 1 and counts 0.
-`series_max`/`series_min` REFUSE it rather than returning 0 — nothing has no
-maximum, and a zero there would state a peak no period reached, which is this
-entry's own lesson applied to its own fix.
+`series_max`/`series_min` publish NULL — nothing has no maximum, and a zero
+there would state a peak no period reached, which is this entry's own lesson
+applied to its own fix.
+
+Null rather than an evaluation error, decided after the first shipping and
+changed: null is already the language's word for absent (an entity state no
+event has set is one; a ratio's undefined period publishes as one), it carries
+the guard rails — `null == null` compares while ordering and arithmetic on it
+are errors, so an absence cannot quietly become a number — and unlike an error
+it leaves a model able to SAY a selector may legitimately be empty:
+`if(series_count("x.*", 0, t) == 0, 0, series_max("x.*", 0, t))`. The results
+schema has always permitted a null scalar, so this needed no version bump; what
+it needed was a `Scalar::Null`, because the catch-all arm was stringifying the
+absence as `"null"` and making it look like a value of type text. There is no
+`null` LITERAL in the dialect, so emptiness is tested through `series_count`.
+
+**Three outcomes, not two — and collapsing two of them was measured.** A
+selection that matched nothing and a window the walk has not reached both used
+to arrive at the caller as `None`, so the first attempt at the null change
+turned every REFUSED read into a null: a cash-trap guard that had said "series
+`ops.noi` is not available in this context" started saying "cannot apply Sub to
+number and null". Four goldens caught it inside one run. `SeriesFold` now
+distinguishes `NoAnswer` — a fact about the DATA — from `Unavailable`, a fact
+about the CONTEXT, which is `docs/28` §4's refusal to clamp a forward read and
+must stay an error. A unit test pins both.
 
 **And the entry's headline example needed correcting.** "Peak outstanding
 debt" is NOT `series_max` over the debt streams: that is the largest per-period
@@ -2715,6 +2737,15 @@ predicate argument before §7.55 is decided.**
 A first-crossing form additionally needs the predicate of part 1, so the two
 halves of this entry are not independent: settle §7.55, and both get simpler.
 
+**Why the position-returning forms are not urgent.** Results publish the full
+per-period series in `deterministic.series`, so an analyst holding results has
+everything argmax and first-crossing need and can take them in pandas. That is
+a reason to sequence them late, not a reason they are unnecessary: a figure
+computed outside the model is not asserted by the model, carries no lineage,
+and cannot appear in a scenario column or a Monte Carlo distribution. Recorded
+so a later reader knows this was decided rather than overlooked (31 August
+2026).
+
 **Also unbuilt, and related: a cumulative scan.** A peak balance is a fold over
 a series that CARRIES the balance, and §7.86's fixture shows that working
 because the model declares the balance as a field. A model that has only flows
@@ -2725,3 +2756,65 @@ seen from another side.
 Provenance: split out of §7.86 on 31 August 2026, when its four reductions
 shipped and these did not. The `period -> date` gap and the §7.55 dependency
 were both found while scoping that work, not before it.
+
+---
+
+### 7.95 Undefined is not zero, and a series cannot say so
+
+*Belongs with the language and engine (section 5). The design is SETTLED below
+and not built; §7.85 deferred it and §7.86 sharpened it.*
+
+A ratio subtotal publishes `null` for the periods where it is genuinely
+undefined — a coverage ratio in a period with no debt service — and no
+reduction can fold it. `E1365` refuses the name with a hint saying why, which
+is honest and not an answer: `series_max("domain.dscr", 0, 11)` is the covenant
+question, and the covenant question is the reason ratios exist.
+
+**The cause is the representation.** A metric's visible series are
+`BTreeMap<String, Vec<f64>>`, in which "undefined" has no spelling. Binding a
+ratio there would have to write SOMETHING in the undefined periods, and every
+candidate is a lie: 0 is a value the ratio never had, and it is the exact
+failure §7.86 exists to end.
+
+**Two things look like "missing" and are not the same thing.** Conflating them
+is the trap this entry exists to avoid, and §7.86 already paid once for
+conflating a neighbouring pair:
+
+- **Past the end of the data** — the window runs into the projection tail or
+  past a short series. The CELL DOES NOT EXIST. `series_avg` pads here: the
+  numerator sums the cells that exist and the divisor is the REQUESTED window,
+  so a window past the data averages over the full window. Shipped,
+  deliberate, documented, and staying.
+- **Genuinely undefined** — the period exists and the quantity does not. This
+  is what a ratio's `null` says, and nothing handles it.
+
+**The settled design:**
+
+1. **Bind ratio series in the METRIC environment only**, as an optional-valued
+   series. The causal plane reads `env.series` too — streams, guards, field
+   rules — and has no ratio subtotals to read, so widening it would take the
+   blast radius for no gain. Narrow first; widen if a document forces it.
+2. **Every fold SKIPS the undefined periods.** They are not observations.
+   `series_max`/`series_min` over the defined ones, `series_sum` adds them,
+   `series_prod` multiplies them, `series_count` counts the defined non-zero.
+3. **`series_avg`'s divisor counts the periods it actually folded.** This
+   sounds like a change to the shipped rule and is not one: a CASH series has
+   no undefined periods, so its divisor is the requested window exactly as
+   today. The rule follows the SERIES, not the function, and that sentence has
+   to be in the spec or it will be rediscovered as a bug.
+4. **An all-undefined window** gives null for max, min and avg, and 0 for sum
+   and count. A mean of nothing is not zero.
+
+Note what this inherits: §7.86 already made `series_max` publish null for an
+empty selection, so the value shape and the `Scalar::Null` publication exist
+and the results schema already permits them. What remains is the
+representation and the skip rule.
+
+Related: §7.86 (the reductions), §7.85 (which bound everything else a metric
+can read), §7.94 (the transformed-series reductions, which need this decided
+first — a breach indicator over a ratio is exactly a series with undefined
+periods).
+
+Provenance: deferred out of §7.85 on 31 August 2026, sharpened while building
+§7.86's four reductions, and settled the same day rather than left as an open
+question — the decision is cheap to record now and expensive to re-derive.

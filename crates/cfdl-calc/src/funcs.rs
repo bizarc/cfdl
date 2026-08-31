@@ -758,30 +758,20 @@ pub(crate) fn series_call(
     let (from, to) = (int(from)?, int(to)?);
     let reduce = crate::eval::SeriesReduction::of(name)
         .ok_or_else(|| CalcError::new(format!("unknown series function `{name}`"), Some(span)))?;
-    env.series_aggregate(&series_name, from, to, reduce)
-        .map(Value::Number)
-        .ok_or_else(|| {
-            // A MAXIMUM OF NOTHING IS NOT ZERO. The host returns None both
-            // when it has no series at all (a plain expression context) and
-            // when `series_max`/`series_min` were given a selection that
-            // matched nothing, and the second deserves its own sentence:
-            // returning 0 there would state a peak that no period reached.
-            use crate::eval::SeriesReduction as R;
-            match reduce {
-                R::Max | R::Min => CalcError::new(
-                    format!(
-                        "{name}: series `{series_name}` selects nothing in this window, and \
-                         nothing has no maximum or minimum. A `.*` selector may match nothing; \
-                         a fold over it cannot."
-                    ),
-                    Some(series.1),
-                ),
-                _ => CalcError::new(
-                    format!("{name}: series `{series_name}` is not available in this context"),
-                    Some(series.1),
-                ),
-            }
-        })
+    match env.series_aggregate(&series_name, from, to, reduce) {
+        crate::eval::SeriesFold::Value(v) => Ok(Value::Number(v)),
+        // A MAXIMUM OF NOTHING IS NOT ZERO, AND NOT AN ERROR EITHER. The
+        // language already has a word for absent: null compares but does not
+        // order or add, so it cannot quietly become a number, and unlike an
+        // error it leaves the model able to say a selector may be empty.
+        crate::eval::SeriesFold::NoAnswer => Ok(Value::Null),
+        // No series in this context, or a window past what the walk has
+        // settled. Not an empty answer — a question that cannot be asked here.
+        crate::eval::SeriesFold::Unavailable => Err(CalcError::new(
+            format!("{name}: series `{series_name}` is not available in this context"),
+            Some(series.1),
+        )),
+    }
 }
 
 /// `curve_value(name, date)`: named curve lookup resolved by the host via

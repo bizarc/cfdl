@@ -189,6 +189,70 @@
           "end_col": 49
         }
       }
+    },
+    {
+      "name": "empty_max",
+      "expr": {
+        "lang": "cfdl",
+        "src": "series_max(\"nothing.*\", 0.0, 3.0)"
+      },
+      "provenance": {
+        "source_file": "model.cfdl",
+        "source_span": {
+          "start_line": 81,
+          "start_col": 1,
+          "end_line": 81,
+          "end_col": 50
+        }
+      }
+    },
+    {
+      "name": "empty_sum",
+      "expr": {
+        "lang": "cfdl",
+        "src": "series_sum(\"nothing.*\", 0.0, 3.0)"
+      },
+      "provenance": {
+        "source_file": "model.cfdl",
+        "source_span": {
+          "start_line": 82,
+          "start_col": 1,
+          "end_line": 82,
+          "end_col": 50
+        }
+      }
+    },
+    {
+      "name": "empty_count",
+      "expr": {
+        "lang": "cfdl",
+        "src": "series_count(\"nothing.*\", 0.0, 3.0)"
+      },
+      "provenance": {
+        "source_file": "model.cfdl",
+        "source_span": {
+          "start_line": 83,
+          "start_col": 1,
+          "end_line": 83,
+          "end_col": 52
+        }
+      }
+    },
+    {
+      "name": "guarded",
+      "expr": {
+        "lang": "cfdl",
+        "src": "if(series_count(\"nothing.*\", 0.0, 3.0) == 0.0, 0.0, series_max(\"nothing.*\", 0.0, 3.0))"
+      },
+      "provenance": {
+        "source_file": "model.cfdl",
+        "source_span": {
+          "start_line": 84,
+          "start_col": 1,
+          "end_line": 84,
+          "end_col": 95
+        }
+      }
     }
   ],
   "contracts": [],

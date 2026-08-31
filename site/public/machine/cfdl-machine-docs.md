@@ -2402,8 +2402,24 @@ the first is what "peak outstanding" means. `series_count` counts the periods
 whose aggregate is non-zero.
 
 **A selection that matches nothing** sums to 0, multiplies to 1 and counts 0 —
-each fold's own identity. `series_max` and `series_min` REFUSE it: nothing has
-no maximum, and returning 0 would state a value no period reached.
+each fold's own identity. `series_max` and `series_min` have none, and publish
+**null**: nothing has no maximum, and returning 0 would state a value no period
+reached.
+
+Null rather than an evaluation error, because null is already the language's
+word for absent — an entity state no event has set is one, and a ratio's
+undefined period publishes as one — and it carries the guard rails this needs:
+`null == null` compares, while ordering and arithmetic on a null are errors, so
+an absence can never quietly become a number. An error would be equally safe
+and strictly less expressive: it leaves the model no way to SAY that a selector
+may legitimately be empty. `if(series_count("x.*", 0, t) == 0, 0,
+series_max("x.*", 0, t))` is that sentence. (There is no `null` LITERAL in the
+dialect, so the emptiness is tested through `series_count` rather than by
+comparing to null directly.)
+
+Asking for a series where no series exist at all — a plain expression context —
+remains an evaluation error. "You cannot ask that here" and "nothing matched"
+are different answers.
 
 **The window and the data.** `series_avg` divides by the REQUESTED window
 length, so a window extending past the data averages the available amounts over

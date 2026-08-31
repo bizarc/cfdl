@@ -2470,6 +2470,7 @@ fn run_deterministic(
                             currency: m.currency.clone(),
                         }),
                         Scalar::String(v) => ExprValue::String(v.clone()),
+                        Scalar::Null => ExprValue::Optional(None),
                     };
                     env.model.insert(rest.to_string(), bound);
                 }
@@ -2529,6 +2530,13 @@ fn run_deterministic(
                             Scalar::String(format!("{:04}-{:02}-{:02}", d.year, d.month, d.day))
                         }
                         ExprValue::String(v) => Scalar::String(v.clone()),
+                        // NULL PUBLISHES AS NULL, not as the text "null". A
+                        // metric that folded a selection with nothing in it has
+                        // no answer, and the results schema has always
+                        // permitted a null scalar; the catch-all below would
+                        // have made that absence look like a value of type
+                        // text (`docs/13` §7.86).
+                        ExprValue::Optional(None) => Scalar::Null,
                         other => Scalar::String(describe_value(other)),
                     };
                     metrics.insert(format!("metric.{}", metric.name), published);
