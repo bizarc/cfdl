@@ -1,0 +1,141 @@
+{
+  "results_version": "0.9",
+  "model_hash": "4945c2c2bbeafc6b83933536757e80a5a585f89db45d1e4da920c8181beccfad",
+  "ledger_hash": "e708bc19cbb94fa253aeb5c6b2ccc0ba84f9fdb80381d9bc700903f79918be80",
+  "engine": {
+    "name": "cfdl-engine",
+    "version": "0.7.0"
+  },
+  "warnings": [],
+  "deterministic": {
+    "status": "ok",
+    "metrics": {
+      "entity.asset.proj.total": {
+        "amount": 300.0,
+        "currency": "USD"
+      },
+      "metric.agree": 0.0,
+      "metric.bare": 300.0,
+      "metric.entity_cash": 300.0,
+      "metric.field_at_t2": 12000.0,
+      "metric.field_bare": 12000.0,
+      "metric.field_long": 12000.0,
+      "metric.model_cash": 300.0,
+      "metric.qualified": 300.0,
+      "model.npv": {
+        "amount": 248.685199,
+        "currency": "USD"
+      },
+      "model.total": {
+        "amount": 300.0,
+        "currency": "USD"
+      },
+      "model.wal_years": 2.0,
+      "run.annual_discount_rate": 0.1,
+      "run.periods_per_year": 1.0,
+      "stream.ops.rev.total": {
+        "amount": 300.0,
+        "currency": "USD"
+      }
+    },
+    "series": {
+      "asset.proj.drawn": {
+        "index": {
+          "calendar": "annual",
+          "start": "2026-01-01",
+          "periods": 3
+        },
+        "values": [
+          10000.0,
+          11000.0,
+          12000.0
+        ]
+      },
+      "entity.asset.proj.net_cash_flow": {
+        "index": {
+          "calendar": "annual",
+          "start": "2026-01-01",
+          "periods": 3
+        },
+        "values": [
+          {
+            "amount": 100.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 100.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 100.0,
+            "currency": "USD"
+          }
+        ]
+      },
+      "model.net_cash_flow": {
+        "index": {
+          "calendar": "annual",
+          "start": "2026-01-01",
+          "periods": 3
+        },
+        "values": [
+          {
+            "amount": 100.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 100.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 100.0,
+            "currency": "USD"
+          }
+        ]
+      },
+      "stream.ops.rev": {
+        "index": {
+          "calendar": "annual",
+          "start": "2026-01-01",
+          "periods": 3
+        },
+        "offset": 1.0,
+        "entity": "asset.proj",
+        "values": [
+          {
+            "amount": 100.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 100.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 100.0,
+            "currency": "USD"
+          }
+        ]
+      }
+    }
+  },
+  "scenarios": {
+    "status": "not_run",
+    "summaries": []
+  },
+  "monte_carlo": {
+    "status": "not_run",
+    "trials": 1,
+    "seed": 0,
+    "metrics": {},
+    "trial_summaries": []
+  },
+  "graph": {
+    "entities": [
+      {
+        "symbol": "asset.proj",
+        "family": "asset",
+        "type": "Asset.Financial"
+      }
+    ]
+  }
+}

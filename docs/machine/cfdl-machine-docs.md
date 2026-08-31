@@ -1286,6 +1286,17 @@ Rules:
   a forward-looking figure needs), entity fields, `inputs`, `cfg`, the
   engine's `model.*` metrics, and `metric.<name>` for any metric DECLARED
   ABOVE IT.
+- **The series it may fold are the ones this model PUBLISHES**, in either
+  spelling: a stream by its own name (`ops.rev`) or by its published key
+  (`stream.ops.rev`), a waterfall step, `entity.<symbol>.net_cash_flow`,
+  `account.<name>`, an entity field's own series, a money subtotal, and
+  `model.net_cash_flow`. The two spellings of one stream name the same cash.
+  A ratio subtotal is NOT foldable: its undefined periods publish as `null`
+  rather than zero, and what a fold should do with `null` is not yet decided.
+- A metric that folds a name this model does not publish is REFUSED
+  (`E1365`), not read as zero. A selector ending in `.*` may still match
+  nothing, because matching nothing is what a selector states at its call
+  site.
 - Metrics compose in declaration order — the same rule waterfalls follow
   (§10.5) — so the dependency is an order rather than a graph. A forward or
   circular reference is refused (`E1354`).
@@ -6900,6 +6911,7 @@ Fields that move:
 - `E1362_SLICE_UNKNOWN_ENTITY` — a slice's `entity` (or `except entity`) names an entity the model does not declare. A slice selects by reference, and a reference is what the compiler can check — refused rather than silently matching nothing.
 - `E1363_SLICE_UNKNOWN_TYPE` — a slice's `type` names an ontology type the active ontology does not define. The hint lists the known contract types; a master type (`Contract.Debt`) matches transitively through `refines`.
 - `E1364_SLICE_CATEGORY_ROOT` — a slice's category selector is not rooted in operating, investing or financing. A selector that could never match anything is a typo, not a choice.
+- `E1365_METRIC_UNKNOWN_SERIES` — a metric folds a series name this model does not publish. `series_sum`/`series_avg` return 0.0 for a selector that matches nothing, which is right for a `.*` selector and wrong for a name spelled out in full; in a metric it is worse than wrong, because a fold publishes ONE number under a name the author chose, with no series beside it to show the zero (`docs/13` §7.85). A metric may fold any series the valuation plane publishes: a stream by its own name or as `stream.<name>`, a waterfall step, `entity.<symbol>.net_cash_flow`, `account.<name>`, an entity field, a money subtotal, or `model.net_cash_flow`. A RATIO subtotal is refused with its own hint — its undefined periods publish as null rather than zero, and what a fold should do with null has not been decided.
 - `E1304_UNRESOLVED_OPTION_REF` — an event exercises an option that is not declared. Checked in the compiler rather than the resolver, because options are not in the symbol tables.
 - `E1310_ENTITY_BLOCK_WITHOUT_TYPE` — an entity uses a block but declares no type, so there is nothing to check the block against.
 - `E1311_UNKNOWN_ENTITY_TYPE` — an entity declares a type the active ontology does not define. The known types are listed.

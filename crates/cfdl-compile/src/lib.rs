@@ -3963,6 +3963,9 @@ fn build_ir(
     // A forward or circular reference is refused here, so the engine's fold
     // always finds a value already computed.
     let mut ir_metrics: Vec<IrMetric> = Vec::new();
+    // Where each metric was written, kept so the check after IR assembly can
+    // point at the declaration rather than at the document.
+    let mut metric_spans: BTreeMap<String, (String, cfdl_parser::Span)> = BTreeMap::new();
     {
         let mut declared_above: BTreeSet<&str> = BTreeSet::new();
         let mut metric_diagnostics: Vec<Diagnostic> = Vec::new();
@@ -4002,6 +4005,7 @@ fn build_ir(
                 });
             }
             declared_above.insert(metric.name.as_str());
+            metric_spans.insert(metric.name.clone(), (source_stmt.file.clone(), metric.span));
             ir_metrics.push(IrMetric {
                 name: metric.name.clone(),
                 expr: IrExpr {
@@ -4301,6 +4305,19 @@ fn build_ir(
     // expression reaches these no matter which construct carries it — a
     // stream amount, a field's `next`, an event guard, a waterfall step —
     // and a construct added later is covered without touching this.
+    // A METRIC NAMES A SERIES THIS MODEL DOES NOT PUBLISH (`docs/13` §7.85).
+    //
+    // Walked here rather than in the metric block above, because the
+    // vocabulary is the WHOLE assembled document — lowered streams, waterfall
+    // steps, entity rollups, accounts, fields, pack subtotals — and half of it
+    // does not exist yet where metrics are read.
+    let metric_series_diagnostics = check_metric_series_names(&ir, &metric_spans);
+    if !metric_series_diagnostics.is_empty() {
+        let mut diagnostics = metric_series_diagnostics;
+        sort_compile_diagnostics(&mut diagnostics);
+        return Err(diagnostics);
+    }
+
     let quantile_defs = ir_quantile_defs_for_provenance(&ir.quantiles);
     ir.quantile_inputs = collect_quantile_inputs(&ir, &quantile_defs);
     ir.required_refs = ir
@@ -4312,6 +4329,121 @@ fn build_ir(
         .collect();
 
     Ok(ir)
+}
+
+/// Every series name a metric may fold over: the vocabulary the valuation
+/// plane actually publishes, in both dialects.
+///
+/// `docs/13` §7.85. `series_sum` returns 0.0 for a selector that matches
+/// nothing, which is right for a `.*` selector and wrong for a name spelled
+/// out in full — and in a metric it is worse than wrong, because a fold
+/// publishes ONE number under a name the author chose, with no series beside
+/// it to show the zero. A typo, a published aggregate the metric environment
+/// did not bind, and a correct answer were indistinguishable.
+///
+/// The vocabulary here MUST match what the engine binds into a metric's
+/// environment. Both are derived from the same published-series rules; the
+/// fixtures pin the pairing from both ends.
+fn metric_series_vocabulary(ir: &Ir) -> BTreeSet<String> {
+    let mut known = BTreeSet::new();
+    // A stream, in the expression dialect and under its published key.
+    for stream in &ir.streams {
+        known.insert(stream.name.clone());
+        known.insert(format!("stream.{}", stream.name));
+    }
+    // A waterfall step is a stream, and publishes under the same prefix.
+    for waterfall in &ir.waterfalls {
+        for step in &waterfall.steps {
+            let name = format!("{}.{}", waterfall.name, step.name);
+            known.insert(format!("stream.{name}"));
+            known.insert(name);
+        }
+    }
+    // The aggregate over an entity and everything `part of` it — the figure
+    // §7.43 published and a metric could not reach.
+    for entity in &ir.entities {
+        known.insert(format!("entity.{}.net_cash_flow", entity.symbol));
+        // A field publishes as a series under the thing that owns it.
+        for field in entity.rules.keys() {
+            known.insert(format!("{}.{field}", entity.symbol));
+        }
+    }
+    for account in &ir.accounts {
+        known.insert(format!("account.{}", account.name));
+    }
+    // A MONEY SUBTOTAL ONLY. A ratio has periods that are genuinely undefined
+    // — a coverage ratio in a period with no debt service — which is why it
+    // publishes `null` rather than zero, and a fold over it needs a decision
+    // (skip the undefined periods, or refuse the fold) that belongs with the
+    // reductions of §7.86. Naming one is refused here, with a hint that says
+    // so, rather than folded as though `null` were nothing.
+    for subtotal in &ir.subtotals {
+        if subtotal.kind == "money" {
+            known.insert(subtotal.id.clone());
+        }
+    }
+    known.insert("model.net_cash_flow".to_string());
+    known
+}
+
+fn check_metric_series_names(
+    ir: &Ir,
+    spans: &BTreeMap<String, (String, cfdl_parser::Span)>,
+) -> Vec<Diagnostic> {
+    if ir.metrics.is_empty() {
+        return Vec::new();
+    }
+    let known = metric_series_vocabulary(ir);
+    let ratio_subtotals: BTreeSet<&str> = ir
+        .subtotals
+        .iter()
+        .filter(|s| s.kind != "money")
+        .map(|s| s.id.as_str())
+        .collect();
+    let mut diagnostics = Vec::new();
+    let mut seen: BTreeSet<(String, String)> = BTreeSet::new();
+    for metric in &ir.metrics {
+        for referenced in cfdl_expr::series_references(&metric.expr.src) {
+            // A `.*` SELECTOR MAY MATCH NOTHING, and says so at the call site.
+            if referenced.ends_with(".*") || known.contains(&referenced) {
+                continue;
+            }
+            if !seen.insert((metric.name.clone(), referenced.clone())) {
+                continue;
+            }
+            let hint = if ratio_subtotals.contains(referenced.as_str()) {
+                "'{}' is a RATIO subtotal. Its undefined periods publish as null rather than \
+                 zero, so a sum or a mean over it would have to decide what null means; that \
+                 decision has not been made. Fold the money subtotals it is built from."
+                    .replace("{}", &referenced)
+            } else {
+                "Check the spelling. A metric may fold any series this model publishes: a \
+                 stream by its own name or as `stream.<name>`, a waterfall step, \
+                 `entity.<symbol>.net_cash_flow`, `account.<name>`, an entity field, a money \
+                 subtotal, or `model.net_cash_flow`. A selector ending in `.*` states that \
+                 matching nothing is intended."
+                    .to_string()
+            };
+            let (file, span) = spans
+                .get(&metric.name)
+                .map(|(f, s)| (Some(f.clone()), Some(map_span(*s))))
+                .unwrap_or((None, None));
+            diagnostics.push(Diagnostic {
+                code: "E1365_METRIC_UNKNOWN_SERIES".to_string(),
+                severity: "error".to_string(),
+                message: format!(
+                    "Metric '{}' folds series '{}', which this model does not publish.",
+                    metric.name, referenced
+                ),
+                file,
+                span,
+                path: None,
+                hint: Some(hint),
+                notes: vec![],
+            });
+        }
+    }
+    diagnostics
 }
 
 /// The quantile definitions in the shape `cfdl_expr` resolves against, so the

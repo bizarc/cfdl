@@ -8,6 +8,39 @@ This project follows Semantic Versioning: https://semver.org/
 
 ## [Unreleased]
 
+### Added: a metric can read what the valuation plane publishes (§7.85)
+
+`docs/01` §15.3 has said in normative text since metrics entered the spec that
+a metric's expression MAY read series, ENTITY FIELDS, `inputs`, `cfg` and the
+engine's `model.*`. Entity fields it could not read: the metric environment
+was built from stream and waterfall series and nothing else, and `bind_states`
+— called for streams, distributions and state evaluation alike — was never
+called for it. The same absence hid every computed aggregate, and each one
+read as ZERO in silence.
+
+- **Entity fields bind**, at the horizon, in both spellings.
+- **The published keys bind too.** Every series the run publishes is visible
+  to a metric under the key the results document uses — `stream.<name>`,
+  `entity.<symbol>.net_cash_flow`, `account.<name>`, a field's own series, a
+  money subtotal, `model.net_cash_flow` — beside the bare expression names,
+  which keep their meaning exactly. The two dialects had disagreed about the
+  same cash: `ops.rev` folded to 300 while `stream.ops.rev` folded to 0. They
+  now name the same series. The binding is added to the METRIC environment
+  only; a pot's window and a guard's read are untouched.
+- **A name nothing publishes is refused** — `E1365_METRIC_UNKNOWN_SERIES`, at
+  compile time. `series_sum("total.nonsense.xyz", 0, 11)` published 0 with no
+  diagnostic at all; a fold publishes one number under a name the author
+  chose, with no series beside it to show the zero. A `.*` selector may still
+  match nothing.
+
+A RATIO subtotal stays unbound on purpose: its undefined periods publish as
+`null`, and what a fold should do with `null` belongs with §7.86's reductions.
+Naming one is refused with its own hint.
+
+Fixtures: `valid/metric_reads_published_results`,
+`invalid/metric_unknown_series`. No golden value moved and all 45 benchmark
+cases hold — nothing in the corpus relied on a silent zero.
+
 ### Added: every Monte Carlo metric gets a distribution — `results_version` 0.9
 
 A trial is a complete deterministic run — journal, streams, every declared

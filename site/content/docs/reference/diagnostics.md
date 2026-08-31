@@ -111,6 +111,7 @@ register, so it cannot fall behind the language.
 | `E1362_SLICE_UNKNOWN_ENTITY` | Symbols and references | a slice's `entity` (or `except entity`) names an entity the model does not declare. A slice selects by reference, and a reference is what the compiler can check — refused rather than silently matching nothing. |
 | `E1363_SLICE_UNKNOWN_TYPE` | Symbols and references | a slice's `type` names an ontology type the active ontology does not define. The hint lists the known contract types; a master type (`Contract.Debt`) matches transitively through `refines`. |
 | `E1364_SLICE_CATEGORY_ROOT` | Symbols and references | a slice's category selector is not rooted in operating, investing or financing. A selector that could never match anything is a typo, not a choice. |
+| `E1365_METRIC_UNKNOWN_SERIES` | Symbols and references | a metric folds a series name this model does not publish. `series_sum`/`series_avg` return 0.0 for a selector that matches nothing, which is right for a `.*` selector and wrong for a name spelled out in full; in a metric it is worse than wrong, because a fold publishes ONE number under a name the author chose, with no series beside it to show the zero (`docs/13` §7.85). A metric may fold any series the valuation plane publishes: a stream by its own name or as `stream.<name>`, a waterfall step, `entity.<symbol>.net_cash_flow`, `account.<name>`, an entity field, a money subtotal, or `model.net_cash_flow`. A RATIO subtotal is refused with its own hint — its undefined periods publish as null rather than zero, and what a fold should do with null has not been decided. |
 | `E1304_UNRESOLVED_OPTION_REF` | Symbols and references | an event exercises an option that is not declared. Checked in the compiler rather than the resolver, because options are not in the symbol tables. |
 | `E1310_ENTITY_BLOCK_WITHOUT_TYPE` | Symbols and references | an entity uses a block but declares no type, so there is nothing to check the block against. |
 | `E1311_UNKNOWN_ENTITY_TYPE` | Symbols and references | an entity declares a type the active ontology does not define. The known types are listed. |
@@ -258,7 +259,7 @@ register, so it cannot fall behind the language.
 | `E9019_CREDIT_INVALID_AGE_MONTHS` | Pack domain validations | `age_months` is the pool's weighted average age at closing. PSA, SDA and the ABS model are all indexed from ORIGINATION, so a seasoned pool starts part-way up the ramp; leaving it at the default 0 on a seasoned pool understates prepayment. Non-negative integer. |
 | `E9020_CREDIT_RATE_FLOOR_ABOVE_CAP` | Pack domain validations |  |
 
-*206 codes.*
+*207 codes.*
 <!-- /cfdl:generated diagnostics-catalog -->
 
 ## Related

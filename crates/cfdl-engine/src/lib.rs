@@ -2385,14 +2385,76 @@ fn run_deterministic(
             .get(horizon)
             .cloned()
             .unwrap_or_else(|| timeline[0].clone());
+        // WHAT A METRIC CAN SEE (`docs/13` §7.85).
+        //
+        // The expression dialect first — a stream is `ops.rev`, a waterfall
+        // step is `<waterfall>.<step>` — because that is what every existing
+        // metric is written against and none of it may change meaning.
         let mut visible: BTreeMap<String, Vec<f64>> = stream_series.clone();
         for (name, values) in &waterfall_series {
             visible.insert(name.clone(), values.clone());
         }
+        // THEN THE KEYS THE RUN ACTUALLY PUBLISHES, under the same names the
+        // results document uses. Without this a metric could read a stream's
+        // cash and nothing else the valuation plane computed: an aggregate
+        // over an entity, a pack's subtotal, an account's balance, a field's
+        // whole series — each published, each reading zero IN SILENCE, and
+        // `stream.ops.rev` reading zero while the bare `ops.rev` beside it
+        // read the same cash correctly.
+        //
+        // `docs/03` records the August 2026 ambiguity as an argument for
+        // keeping the two dialects apart, and the measurement says the
+        // opposite: the ambiguity IS one spelling working while the other
+        // silently returns nothing. Binding both dissolves it, and only here —
+        // a pot's window and a guard's read are untouched, because a metric
+        // reads the FINISHED projection and they read the walk.
+        for (name, values) in &stream_series {
+            visible.insert(format!("stream.{name}"), values.clone());
+        }
+        for (name, values) in &waterfall_series {
+            visible.insert(format!("stream.{name}"), values.clone());
+        }
+        for (symbol, values) in &entity_rollup {
+            visible.insert(format!("entity.{symbol}.net_cash_flow"), values.clone());
+        }
+        for (name, values) in &account_balances {
+            visible.insert(format!("account.{name}"), values.clone());
+        }
+        for (name, values) in &state_values {
+            // A field publishes under the thing that owns it, a model-level
+            // state under `state.` — the same rule the results map applies.
+            let key = if name.matches('.').count() == 2 {
+                name.clone()
+            } else {
+                format!("state.{name}")
+            };
+            visible.insert(key, values[..periods.min(values.len())].to_vec());
+        }
+        for (id, values) in &subtotal_money {
+            visible.insert(id.clone(), values[..periods.min(values.len())].to_vec());
+        }
+        // RATIO SUBTOTALS ARE DELIBERATELY NOT BOUND. A ratio has periods that
+        // are genuinely undefined — a coverage ratio in a period with no debt
+        // service — which is why it publishes `null` rather than zero, and a
+        // fold over it needs a decision (skip the undefined periods, or refuse
+        // the fold) that belongs with the reductions of §7.86. Leaving it
+        // unbound is not the old behaviour: the check below refuses the name
+        // outright, where before it read zero and said nothing.
+        visible.insert("model.net_cash_flow".to_string(), model_series.clone());
         let shared = Arc::new(visible);
         for metric in &ir.metrics {
             let mut env = build_expr_env(ir, None, config, horizon, &date, &base_inputs);
             env.series = Arc::clone(&shared);
+            // ENTITY FIELDS, AT THE HORIZON (`docs/13` §7.85). `docs/01` §15.3
+            // has promised these in normative text since metrics entered the
+            // spec, and the binding was simply absent: `bind_states` is called
+            // for streams, distributions and state evaluation, and was never
+            // called here, so `asset.proj.drawn` in a metric was
+            // EXPR_UNKNOWN_NAME. A metric is a fold over the finished
+            // projection, so the horizon is the period it reads — the field's
+            // whole series is reachable beside it, under the key the results
+            // document publishes it under.
+            bind_states(&mut env, &state_values, horizon);
             env.party_returns = party_returns.clone();
             // A metric is a fold over the FINISHED projection, so every period
             // is readable — including the tail, which is what a forward-looking
@@ -2424,6 +2486,34 @@ fn run_deterministic(
                     )));
                 }
             };
+            // A NAME NOTHING BINDS IS REFUSED, NOT READ AS ZERO
+            // (`docs/13` §7.85).
+            //
+            // `series_sum`/`series_avg` return 0.0 for a selector that matches
+            // nothing, which is right for a `.*` selector — matching nothing is
+            // a stated possibility there — and wrong for a spelled-out name. In
+            // a stream that miss is a warning (`W5022`), because the series it
+            // produces is there to be looked at. In a metric there is nothing
+            // to look at: a fold publishes ONE number, under a name the author
+            // chose, and a wrong one is indistinguishable from a right one.
+            //
+            // The engine's own stance is that a metric which fails to evaluate
+            // is fatal, "because a missing key reads as 'not run' rather than
+            // 'not defined'". A metric that evaluates against a name nothing
+            // binds is the same failure, one step earlier.
+            for referenced in cfdl_expr::series_references(&metric.expr.src) {
+                if referenced.ends_with(".*") || shared.contains_key(&referenced) {
+                    continue;
+                }
+                return Err(EngineError::UnknownName(format!(
+                    "Metric '{}' names series '{}', which this run does not \
+                     publish. It would fold to zero, and a metric is one number \
+                     with no series beside it to show the zero. Check the \
+                     spelling; a selector ending in `.*` states that matching \
+                     nothing is intended.",
+                    metric.name, referenced
+                )));
+            }
             match cfdl_expr::eval(&compiled, &env) {
                 Ok(value) => {
                     declared_metrics.insert(metric.name.clone(), value.clone());

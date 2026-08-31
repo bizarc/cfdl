@@ -1266,6 +1266,17 @@ Rules:
   a forward-looking figure needs), entity fields, `inputs`, `cfg`, the
   engine's `model.*` metrics, and `metric.<name>` for any metric DECLARED
   ABOVE IT.
+- **The series it may fold are the ones this model PUBLISHES**, in either
+  spelling: a stream by its own name (`ops.rev`) or by its published key
+  (`stream.ops.rev`), a waterfall step, `entity.<symbol>.net_cash_flow`,
+  `account.<name>`, an entity field's own series, a money subtotal, and
+  `model.net_cash_flow`. The two spellings of one stream name the same cash.
+  A ratio subtotal is NOT foldable: its undefined periods publish as `null`
+  rather than zero, and what a fold should do with `null` is not yet decided.
+- A metric that folds a name this model does not publish is REFUSED
+  (`E1365`), not read as zero. A selector ending in `.*` may still match
+  nothing, because matching nothing is what a selector states at its call
+  site.
 - Metrics compose in declaration order — the same rule waterfalls follow
   (§10.5) — so the dependency is an order rather than a graph. A forward or
   circular reference is refused (`E1354`).
