@@ -281,6 +281,11 @@ entity party acme : CRE.Party.Tenant { name = "Acme Corp" }
   type states the master it specializes (`refines`, Pack Interface §6.1), so
   "is a" is a recorded fact rather than a naming convention.
 - Attribute values are **literals**, checked against the type's declared fields.
+- The literal field `id` is a **stable identity**: an opaque string a layer
+  above the model assigns to the real-world thing this entity refers to. The
+  engine never interprets it — it is validated for uniqueness within the
+  model (`E1360`) and republished in the results graph, so a consumer can
+  join a package's numbers to canonical things instead of to symbol names.
 - `part of` declares hierarchy and is **always optional, at every grain**. A
   pool models collective behavior perfectly well with no loans under it; a
   building needs no units. The modeller chooses the grain and the language does
@@ -4140,8 +4145,8 @@ against it by `make results-schema`.
   "properties": {
     "results_version": {
       "type": "string",
-      "const": "0.6",
-      "description": "Schema version of this document. 0.6 nests an act's own acts under it as `children`, which is what a transition and its arrival actions are. 0.5 added the machine's `transition` journal action. 0.4 added the account journal actions `inflow`, `allocate_in` and `allocate_out`. 0.3 added `ledger_hash` and the optional `inputs` section, and `category` on IR streams upstream of it."
+      "const": "0.7",
+      "description": "Schema version of this document. 0.7 publishes the model's entity graph (`graph`) and attributes each stream series to its owning entity and category — what lets a consumer holding results alone say whose cash and what kind. 0.6 nests an act's own acts under it as `children`, which is what a transition and its arrival actions are. 0.5 added the machine's `transition` journal action. 0.4 added the account journal actions `inflow`, `allocate_in` and `allocate_out`. 0.3 added `ledger_hash` and the optional `inputs` section, and `category` on IR streams upstream of it."
     },
     "model_hash": {
       "type": "string",
@@ -4196,6 +4201,9 @@ against it by `make results-schema`.
     },
     "statements": {
       "$ref": "#/$defs/StatementsSection"
+    },
+    "graph": {
+      "$ref": "#/$defs/ResultsGraph"
     }
   },
   "$defs": {
@@ -4306,6 +4314,14 @@ against it by `make results-schema`.
         "offset": {
           "description": "Where in each period this series' cash falls: 0.0 at the period's open (an annuity due, or a one-shot on its date), 1.0 at its close (an ordinary annuity, the default), 0.5 for the mid-period convention. The same offset used to discount the series, and the axis `model.wal_years` and `model.payback_years` are measured on — so an ordinary annuity's first monthly collection is at 1/12 of a year, not 0. Absent on aggregates (`model.net_cash_flow`, the annual rollup), which sum streams whose placements differ. See 12_payment_timing.md. Absent on field series, which are not paid and so sit nowhere in their period.",
           "type": "number"
+        },
+        "entity": {
+          "type": "string",
+          "description": "The entity this stream is attached to (`asset.tower`, `container.fund`). Present on stream series only — a subtotal spans owners and an aggregate has none. With `graph`, this is what lets a consumer attribute cash to a thing without the IR: name inspection is not a substitute, because a pack-lowered stream's name does not contain its owner's symbol."
+        },
+        "category": {
+          "type": "string",
+          "description": "The stream's declared category (`operating.revenue.base_rent`). Present on categorized stream series only. Ownership says whose cash; category says what kind — the two axes a selection needs."
         }
       }
     },
@@ -5110,6 +5126,52 @@ against it by `make results-schema`.
         }
       },
       "description": "One act, and what became of it. An act that DID something composite carries what it did as `children` — a transition is the occurrence, its arrival actions are its effects."
+    },
+    "GraphEntity": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "symbol",
+        "family"
+      ],
+      "properties": {
+        "symbol": {
+          "type": "string",
+          "description": "The reference the model uses everywhere — `asset.tower`."
+        },
+        "family": {
+          "type": "string",
+          "description": "The symbol's first segment: asset, party, or container."
+        },
+        "type": {
+          "type": "string",
+          "description": "The ontology type the declaration states, when it states one."
+        },
+        "id": {
+          "type": "string",
+          "description": "The stable identity the model carries for a layer above it — the literal field `id`, engine-opaque, unique within the model (E1360)."
+        },
+        "parent": {
+          "type": "string",
+          "description": "The `part of` parent, when the model groups this entity."
+        }
+      }
+    },
+    "ResultsGraph": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "entities"
+      ],
+      "description": "The model's entity graph, published so a consumer holding results alone can build the hierarchy view — who is part of what, what each thing is, and the stable identity a governance layer assigned. Values, not vocabulary: the pack's type roster lives in the pack; this is the graph THIS model declared.",
+      "properties": {
+        "entities": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/GraphEntity"
+          }
+        }
+      }
     }
   }
 }
@@ -6551,6 +6613,7 @@ Fields that move:
 - `E1357_LIFECYCLE_AUGMENT_TOPOLOGY` — a `lifecycle` block names a machine the PACK declared and also states `initial`, `state`, or an edge. A model may add arrival actions to a pack's machine and nothing else (`docs/34` D2a): the pack's machine is the checkable contract, and a model needing different topology declares a separate machine under its own name. The states and edges are refused rather than ignored — silently dropping them would leave the model saying one thing and the machine doing another.
 - `E1358_ARRIVAL_ACTION_SETS_STATUS` — an `on enter` or edge action writes `status`. An arrival action sets FIELDS on the entity that transitioned; a status write would fire a second transition inside the same period, breaking one-transition-per-entity-per-period. A transition that should cause another transition is topology — an edge out of the target state, taken next period — and status writes remain the named event's privilege (`docs/34` D4).
 - `E1359_ARRIVAL_ACTION_UNKNOWN_FIELD` — an `on enter` or edge action sets a field the entity bound to that machine does not have. The name is entity-relative, so it resolves against every entity bound to the machine and all of them need the field; the set is the union of what the model's entity block declares and what its ontology type contributes. Refused because a misspelled field is a write that lands nowhere — the silent-substitution shape `docs/13` §7.38 records for a misspelled series.
+- `E1360_DUPLICATE_ENTITY_ID` — two entities declare the same literal field `id`. The id is a stable identity for the layer above the model — engine-opaque, published in the results graph (`docs/06`) — and a consumer joining on it would merge two things into one. Uniqueness within the model is the one thing the language can check about a value it must not interpret (`docs/13` §7.91).
 - `E1304_UNRESOLVED_OPTION_REF` — an event exercises an option that is not declared. Checked in the compiler rather than the resolver, because options are not in the symbol tables.
 - `E1310_ENTITY_BLOCK_WITHOUT_TYPE` — an entity uses a block but declares no type, so there is nothing to check the block against.
 - `E1311_UNKNOWN_ENTITY_TYPE` — an entity declares a type the active ontology does not define. The known types are listed.
@@ -8314,7 +8377,7 @@ Templates (starting points; the `skeleton` MCP tool assembles them into a compil
 
 CFDL 0.7.0. Every model below compiles, and its IR and
 results are byte-asserted against goldens in CI (`fixtures/valid/`,
-130 models.
+131 models.
 
 `gold/ir/`, `gold/results/`). Each is single-purpose: the directory name
 says what it exercises. This is what right looks like — positive few-shot
@@ -12843,6 +12906,37 @@ stream mid.cumulative on entity asset.co inflow currency USD {
 stream top.cumulative on entity asset.co inflow currency USD {
   schedule every year from 2026-01 to 2028-01
   amount = series_sum("mid.cumulative", 0, time.t)
+}
+```
+
+## stable_identity
+
+```cfdl
+version 0.1
+model "stable-identity"
+time calendar annual from 2026-01 for 2
+
+// A STABLE IDENTITY IS CARRIED, NEVER INTERPRETED (docs/13 §7.91). The
+// layer above the model assigns canonical ids to real-world things; the
+// literal field `id` is where a model carries one. The engine ignores it
+// entirely and republishes it in the results graph, which is what makes a
+// package's numbers attributable to canonical things — a consumer joins on
+// the id, not on symbol names and hope.
+//
+// The graph beside it is §7.43's answer: symbol, family, type, parent —
+// the hierarchy view derivable from results alone.
+
+entity container fund : Container.Fund { id = "evs:container/fund-274" }
+
+entity asset alpha : Asset.Financial {
+  id = "evs:asset/alpha-91"
+  part of container.fund
+}
+
+stream alpha.income on entity asset.alpha inflow currency USD {
+  schedule every year from 2026-01 to 2027-01
+  category operating.revenue.other
+  amount = 100
 }
 ```
 

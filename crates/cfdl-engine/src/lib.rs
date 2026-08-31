@@ -533,8 +533,26 @@ fn compute_results(ir: &Ir, model_hash: String, config: RunConfig) -> Result<Res
         .then_some(section)
     };
 
+    // THE MODEL'S GRAPH, republished from the IR so results stand alone
+    // (docs/13 §7.43, §7.91): symbol, family, type, the stable id a layer
+    // above assigned, and the part_of parent. What a consumer needed the IR
+    // for — attributing a stream to a thing — it now has beside the values.
+    let graph = (!ir.entities.is_empty()).then(|| ResultsGraph {
+        entities: ir
+            .entities
+            .iter()
+            .map(|e| GraphEntity {
+                symbol: e.symbol.clone(),
+                family: e.symbol.split('.').next().unwrap_or_default().to_string(),
+                type_id: e.type_id.clone(),
+                id: e.fields.get("id").cloned(),
+                parent: e.parent.clone(),
+            })
+            .collect(),
+    });
+
     Ok(Results {
-        results_version: "0.6".to_string(),
+        results_version: "0.7".to_string(),
         model_hash,
         ledger_hash,
         engine: EngineInfo {
@@ -549,6 +567,7 @@ fn compute_results(ir: &Ir, model_hash: String, config: RunConfig) -> Result<Res
         monte_carlo,
         domain_metrics: None,
         statements: None,
+        graph,
     })
 }
 
@@ -1843,18 +1862,33 @@ fn run_deterministic(
     };
 
     let mut series_map = BTreeMap::new();
+    // Ownership and category, published beside the values (docs/13 §7.43):
+    // a consumer holding results alone can attribute a stream to the thing
+    // that owns it and the kind of cash it is.
+    let stream_attribution: BTreeMap<&str, (&str, Option<&str>)> = ir
+        .streams
+        .iter()
+        .map(|s| {
+            (
+                s.name.as_str(),
+                (s.owner.symbol.as_str(), s.category.as_deref()),
+            )
+        })
+        .collect();
     for (name, values) in &stream_series {
-        series_map.insert(
-            format!("stream.{name}"),
-            Series::from_values(
-                &ir.time.calendar,
-                &ir.time.start,
-                periods as u32,
-                &ir.model.currency,
-                stream_offsets.get(name).copied(),
-                values,
-            ),
+        let mut series = Series::from_values(
+            &ir.time.calendar,
+            &ir.time.start,
+            periods as u32,
+            &ir.model.currency,
+            stream_offsets.get(name).copied(),
+            values,
         );
+        if let Some((owner, category)) = stream_attribution.get(name.as_str()) {
+            series.entity = Some((*owner).to_string());
+            series.category = category.map(str::to_string);
+        }
+        series_map.insert(format!("stream.{name}"), series);
     }
     // AN ACCOUNT IS A LOCATION, NOT A FLOW. Its balance publishes as a bare
     // number under its own prefix — never as cash and never into a total —
@@ -1869,18 +1903,25 @@ fn run_deterministic(
     // Each waterfall step is a stream, so a priority of payments publishes
     // under the same prefix everything else pays under and needs no special
     // handling downstream.
+    let waterfall_entity: BTreeMap<&str, &str> = ir
+        .waterfalls
+        .iter()
+        .map(|w| (w.name.as_str(), w.entity.as_str()))
+        .collect();
     for (name, values) in &waterfall_series {
-        series_map.insert(
-            format!("stream.{name}"),
-            Series::from_values(
-                &ir.time.calendar,
-                &ir.time.start,
-                periods as u32,
-                &ir.model.currency,
-                None,
-                values,
-            ),
+        let mut series = Series::from_values(
+            &ir.time.calendar,
+            &ir.time.start,
+            periods as u32,
+            &ir.model.currency,
+            None,
+            values,
         );
+        // A step's series belongs to the waterfall's attached entity.
+        if let Some(owner) = name.split('.').next().and_then(|w| waterfall_entity.get(w)) {
+            series.entity = Some((*owner).to_string());
+        }
+        series_map.insert(format!("stream.{name}"), series);
     }
     // States and fields, published for inspection and never counted as cash.
     //

@@ -1,7 +1,7 @@
 {
-  "results_version": "0.6",
+  "results_version": "0.7",
   "model_hash": "f15929dbfebdb4f069abfde37e3fdae31764afad8fd8a7c8d69cb748be56d7ae",
-  "ledger_hash": "c1f389d82da83fd75fae8e50b262130664811077c841b1a33dca63150cf3a052",
+  "ledger_hash": "ae9207d3ec4754e199d1a598b9fc432da0aa7b15d5ea143a6dedea3a307403c1",
   "engine": {
     "name": "cfdl-engine",
     "version": "0.7.0"
@@ -372,6 +372,8 @@
           "periods": 4
         },
         "offset": 1.0,
+        "entity": "asset.tlb",
+        "category": "operating.collection.principal",
         "values": [
           {
             "amount": 275.0,
@@ -398,6 +400,8 @@
           "periods": 4
         },
         "offset": 1.0,
+        "entity": "asset.tlb",
+        "category": "operating.collection.principal",
         "values": [
           {
             "amount": -25.0,
@@ -429,5 +433,19 @@
     "seed": 0,
     "metrics": {},
     "trial_summaries": []
+  },
+  "graph": {
+    "entities": [
+      {
+        "symbol": "asset.tlb",
+        "family": "asset",
+        "type": "Credit.Asset.Tranche"
+      },
+      {
+        "symbol": "party.lender",
+        "family": "party",
+        "type": "Party"
+      }
+    ]
   }
 }

@@ -1,7 +1,7 @@
 {
-  "results_version": "0.6",
+  "results_version": "0.7",
   "model_hash": "e5403952b7570932419387f9c1d7bd2d96d8bd12ac2ac5991380de05bebdcb32",
-  "ledger_hash": "0351c1a9d77b14525a8dca45483c21913992bfa831c4880e888e79954a2d5a60",
+  "ledger_hash": "70949846b638787515b52b9550716d6a375f679134902194a45b5a5bfec85ac3",
   "engine": {
     "name": "cfdl-engine",
     "version": "0.7.0"
@@ -1040,6 +1040,8 @@
           "periods": 24
         },
         "offset": 1.0,
+        "entity": "asset.first_entity",
+        "category": "operating.expense.opex",
         "values": [
           {
             "amount": -12000.0,
@@ -1302,5 +1304,19 @@
     "seed": 0,
     "metrics": {},
     "trial_summaries": []
+  },
+  "graph": {
+    "entities": [
+      {
+        "symbol": "asset.first_entity",
+        "family": "asset",
+        "type": "CRE.Asset.RealProperty"
+      },
+      {
+        "symbol": "asset.second_entity",
+        "family": "asset",
+        "type": "CRE.Asset.RealProperty"
+      }
+    ]
   }
 }

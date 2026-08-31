@@ -266,6 +266,10 @@ pub(crate) struct IrFieldRule {
 #[derive(Debug, Deserialize)]
 pub(crate) struct IrEntityDecl {
     pub(crate) symbol: String,
+    /// The ontology type the declaration states, republished into the
+    /// results graph (docs/13 §7.43).
+    #[serde(rename = "type", default)]
+    pub(crate) type_id: Option<String>,
     /// Declared attributes — `rentable_area = 30000`.
     ///
     /// These were parsed, validated against the ontology, and carried into the

@@ -1,7 +1,7 @@
 {
-  "results_version": "0.6",
+  "results_version": "0.7",
   "model_hash": "9d242a68c792b17cb186d764fb99eecb448ff4bbe5cc602a9143fcc91835d814",
-  "ledger_hash": "4a77a2baf251373125c1c2365cda2bfc9d2a69f7753eba1c6fd4a2ec54370c41",
+  "ledger_hash": "3880db801afac973f1de338004878fe97234aecf0641640feb84d054da0cc6a5",
   "engine": {
     "name": "cfdl-engine",
     "version": "0.7.0"
@@ -4277,6 +4277,8 @@
           "periods": 120
         },
         "offset": 1.0,
+        "entity": "asset.tower",
+        "category": "investing.disposal.reversion",
         "values": [
           {
             "amount": 0.0,
@@ -4767,6 +4769,8 @@
           "periods": 120
         },
         "offset": 1.0,
+        "entity": "asset.tower",
+        "category": "investing.disposal.selling_costs",
         "values": [
           {
             "amount": 0.0,
@@ -5257,6 +5261,8 @@
           "periods": 120
         },
         "offset": 1.0,
+        "entity": "asset.tower",
+        "category": "operating.expense.opex",
         "values": [
           {
             "amount": -25000.0,
@@ -5747,6 +5753,8 @@
           "periods": 120
         },
         "offset": 1.0,
+        "entity": "asset.tower",
+        "category": "operating.revenue.base_rent",
         "values": [
           {
             "amount": 0.0,
@@ -6237,6 +6245,8 @@
           "periods": 120
         },
         "offset": 1.0,
+        "entity": "asset.tower",
+        "category": "investing.capital.leasing",
         "values": [
           {
             "amount": 0.0,
@@ -6727,6 +6737,8 @@
           "periods": 120
         },
         "offset": 1.0,
+        "entity": "asset.tower",
+        "category": "operating.deduction.abatement",
         "values": [
           {
             "amount": -40000.0,
@@ -7217,6 +7229,8 @@
           "periods": 120
         },
         "offset": 1.0,
+        "entity": "asset.tower",
+        "category": "operating.deduction.abatement",
         "values": [
           {
             "amount": 0.0,
@@ -7707,6 +7721,8 @@
           "periods": 120
         },
         "offset": 1.0,
+        "entity": "asset.tower",
+        "category": "operating.revenue.base_rent",
         "values": [
           {
             "amount": 40000.0,
@@ -8197,6 +8213,8 @@
           "periods": 120
         },
         "offset": 1.0,
+        "entity": "asset.tower",
+        "category": "operating.revenue.base_rent",
         "values": [
           {
             "amount": 0.0,
@@ -8687,6 +8705,8 @@
           "periods": 120
         },
         "offset": 1.0,
+        "entity": "asset.tower",
+        "category": "operating.revenue.recovery",
         "values": [
           {
             "amount": 0.0,
@@ -9177,6 +9197,8 @@
           "periods": 120
         },
         "offset": 1.0,
+        "entity": "asset.tower",
+        "category": "operating.revenue.recovery",
         "values": [
           {
             "amount": 0.0,
@@ -9667,6 +9689,8 @@
           "periods": 120
         },
         "offset": 0.0,
+        "entity": "asset.tower",
+        "category": "investing.capital.leasing",
         "values": [
           {
             "amount": -200000.0,
@@ -10157,6 +10181,8 @@
           "periods": 120
         },
         "offset": 0.0,
+        "entity": "asset.tower",
+        "category": "investing.capital.leasing",
         "values": [
           {
             "amount": 0.0,
@@ -10647,6 +10673,8 @@
           "periods": 120
         },
         "offset": 1.0,
+        "entity": "asset.tower",
+        "category": "operating.deduction.vacancy",
         "values": [
           {
             "amount": -1500.0,
@@ -11137,6 +11165,8 @@
           "periods": 120
         },
         "offset": 1.0,
+        "entity": "asset.tower",
+        "category": "financing.debt.service",
         "values": [
           {
             "amount": -36845.249537,
@@ -29324,6 +29354,15 @@
           "model_total": 3009646.651045,
           "residual": -0.000024
         }
+      }
+    ]
+  },
+  "graph": {
+    "entities": [
+      {
+        "symbol": "asset.tower",
+        "family": "asset",
+        "type": "CRE.Asset.RealProperty"
       }
     ]
   }

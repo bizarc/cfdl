@@ -1,7 +1,7 @@
 {
-  "results_version": "0.6",
+  "results_version": "0.7",
   "model_hash": "67b2f33b35c93d5a4383e75d3bb0d5be069a05985a1204474a020a39c9d4b4f1",
-  "ledger_hash": "e892b80d7c14f2078dee7e05fa69e2dfa88a193f24d7183bf896dd96acdba3ff",
+  "ledger_hash": "217b5962f0350cb048879d9c7cc20253a53a2f784cfe1a2fbddea367f9a15702",
   "engine": {
     "name": "cfdl-engine",
     "version": "0.7.0"
@@ -1696,6 +1696,8 @@
           "periods": 6
         },
         "offset": 1.0,
+        "entity": "asset.trust",
+        "category": "operating.collection.principal",
         "values": [
           {
             "amount": 12500000.0,
@@ -3441,5 +3443,79 @@
     "seed": 0,
     "metrics": {},
     "trial_summaries": []
+  },
+  "graph": {
+    "entities": [
+      {
+        "symbol": "asset.class_a1",
+        "family": "asset",
+        "type": "Credit.Asset.Tranche"
+      },
+      {
+        "symbol": "asset.class_a2a",
+        "family": "asset",
+        "type": "Credit.Asset.Tranche"
+      },
+      {
+        "symbol": "asset.class_a2b",
+        "family": "asset",
+        "type": "Credit.Asset.Tranche"
+      },
+      {
+        "symbol": "asset.class_a3",
+        "family": "asset",
+        "type": "Credit.Asset.Tranche"
+      },
+      {
+        "symbol": "asset.class_b",
+        "family": "asset",
+        "type": "Credit.Asset.Tranche"
+      },
+      {
+        "symbol": "asset.class_c",
+        "family": "asset",
+        "type": "Credit.Asset.Tranche"
+      },
+      {
+        "symbol": "asset.class_d",
+        "family": "asset",
+        "type": "Credit.Asset.Tranche"
+      },
+      {
+        "symbol": "asset.class_e",
+        "family": "asset",
+        "type": "Credit.Asset.Tranche"
+      },
+      {
+        "symbol": "asset.reserve",
+        "family": "asset",
+        "type": "Credit.Asset.Tranche"
+      },
+      {
+        "symbol": "asset.trust",
+        "family": "asset",
+        "type": "Credit.Asset.LoanPool"
+      },
+      {
+        "symbol": "party.certificate",
+        "family": "party",
+        "type": "Credit.Party.Investor"
+      },
+      {
+        "symbol": "party.servicer",
+        "family": "party",
+        "type": "Credit.Party.Servicer"
+      },
+      {
+        "symbol": "party.sponsor",
+        "family": "party",
+        "type": "Credit.Party.Issuer"
+      },
+      {
+        "symbol": "party.trustee",
+        "family": "party",
+        "type": "Credit.Party.Issuer"
+      }
+    ]
   }
 }

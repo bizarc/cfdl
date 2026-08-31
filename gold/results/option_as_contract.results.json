@@ -1,7 +1,7 @@
 {
-  "results_version": "0.6",
+  "results_version": "0.7",
   "model_hash": "d890d3df2cb1c92cd3c76d58d06a3fae5054e7946c96d8ee58e451b845e9c1a3",
-  "ledger_hash": "f8fe61ac203eef77b893b949ee21ade1ce7b77cd799c63b8c71e2cb9f4e444e9",
+  "ledger_hash": "713d8ad4657248d402e55b82fa1379651fb79d826d268add7ad7031139fefdfd",
   "engine": {
     "name": "cfdl-engine",
     "version": "0.7.0"
@@ -299,6 +299,8 @@
           "periods": 2
         },
         "offset": 1.0,
+        "entity": "asset.target",
+        "category": "operating.revenue.recurring",
         "values": [
           {
             "amount": 1000.0,
@@ -351,5 +353,24 @@
     "seed": 0,
     "metrics": {},
     "trial_summaries": []
+  },
+  "graph": {
+    "entities": [
+      {
+        "symbol": "asset.target",
+        "family": "asset",
+        "type": "OpCo.Asset.Enterprise"
+      },
+      {
+        "symbol": "party.mgmt",
+        "family": "party",
+        "type": "OpCo.Party.Management"
+      },
+      {
+        "symbol": "party.sponsor",
+        "family": "party",
+        "type": "OpCo.Party.Sponsor"
+      }
+    ]
   }
 }

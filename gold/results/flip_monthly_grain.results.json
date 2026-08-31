@@ -1,7 +1,7 @@
 {
-  "results_version": "0.6",
+  "results_version": "0.7",
   "model_hash": "5fb323234c1c30caf16cd8817970975e3529c899d47d3e4df34d249e75a79bd0",
-  "ledger_hash": "8c1bf8a294ede1815bb5a2cb15665e7c7ddd6f16ba5a44262569f4344ad03eaa",
+  "ledger_hash": "b05c9c1f924599dafb29eb366d155d8afaa40d40cc14d062cc00a63e801a9312",
   "engine": {
     "name": "cfdl-engine",
     "version": "0.7.0"
@@ -15178,6 +15178,8 @@
           "periods": 312
         },
         "offset": 1.0,
+        "entity": "asset.interest",
+        "category": "operating.revenue.energy",
         "values": [
           {
             "amount": 0.0,
@@ -24136,5 +24138,24 @@
     "seed": 0,
     "metrics": {},
     "trial_summaries": []
+  },
+  "graph": {
+    "entities": [
+      {
+        "symbol": "asset.interest",
+        "family": "asset",
+        "type": "Energy.Asset.ProjectInterest"
+      },
+      {
+        "symbol": "party.sponsor",
+        "family": "party",
+        "type": "Party"
+      },
+      {
+        "symbol": "party.tax_investor",
+        "family": "party",
+        "type": "Party"
+      }
+    ]
   }
 }

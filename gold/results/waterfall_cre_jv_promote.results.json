@@ -1,7 +1,7 @@
 {
-  "results_version": "0.6",
+  "results_version": "0.7",
   "model_hash": "e95ee57d5c0b052534c8380f28e2a2e35358121563d3f09d531a35ea1203c09c",
-  "ledger_hash": "c7d0959bce19a86870ad2f432f4e6cdd57f107fc3d5046a2e05fab224dbb3842",
+  "ledger_hash": "01b3700e4afa21d6bf2f9fedd4c01eae34e7fda99e3a9603f726035b05d189bb",
   "engine": {
     "name": "cfdl-engine",
     "version": "0.7.0"
@@ -346,6 +346,7 @@
           "periods": 4
         },
         "offset": 1.0,
+        "entity": "asset.jv",
         "values": [
           {
             "amount": -17500000.0,
@@ -372,6 +373,7 @@
           "periods": 4
         },
         "offset": 1.0,
+        "entity": "asset.jv",
         "values": [
           {
             "amount": -157500000.0,
@@ -398,6 +400,7 @@
           "periods": 4
         },
         "offset": 0.0,
+        "entity": "asset.jv",
         "values": [
           {
             "amount": 0.0,
@@ -535,5 +538,29 @@
     "seed": 0,
     "metrics": {},
     "trial_summaries": []
+  },
+  "graph": {
+    "entities": [
+      {
+        "symbol": "asset.jv",
+        "family": "asset",
+        "type": "Asset.Financial"
+      },
+      {
+        "symbol": "party.cpa",
+        "family": "party",
+        "type": "Party"
+      },
+      {
+        "symbol": "party.msgw",
+        "family": "party",
+        "type": "Party"
+      },
+      {
+        "symbol": "party.strs",
+        "family": "party",
+        "type": "Party"
+      }
+    ]
   }
 }

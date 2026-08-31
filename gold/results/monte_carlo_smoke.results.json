@@ -1,7 +1,7 @@
 {
-  "results_version": "0.6",
+  "results_version": "0.7",
   "model_hash": "2734e6e72271cdf24bf0918e8e0aaa62b922c5abb64946be37de0df4b57df42a",
-  "ledger_hash": "c009a8795a6f144bededda11fb072f90e61d3557d98cf7df081caff6101db739",
+  "ledger_hash": "efb39e7c52a6f452b31a637f7c11064e9f569ac65e2ec01268655054b4851bc4",
   "engine": {
     "name": "cfdl-engine",
     "version": "0.7.0"
@@ -103,6 +103,7 @@
           "periods": 6
         },
         "offset": 1.0,
+        "entity": "asset.borrower",
         "values": [
           {
             "amount": -1000.0,
@@ -295,5 +296,14 @@
         "p_negative": 1.0
       }
     }
+  },
+  "graph": {
+    "entities": [
+      {
+        "symbol": "asset.borrower",
+        "family": "asset",
+        "type": "Asset.Financial"
+      }
+    ]
   }
 }

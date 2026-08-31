@@ -1,7 +1,7 @@
 {
-  "results_version": "0.6",
+  "results_version": "0.7",
   "model_hash": "0465b8f9f23c513716e07fe2555e9c62592070364d9d963e23ae6455e9df88b1",
-  "ledger_hash": "a90522df9f5e85c83ba6dac296310b90aa055b5c2020d00aada809adb93fca6f",
+  "ledger_hash": "19086a5794e165c48a1954ff5a653234ef22bef8b7c375eab1075a0133c1b936",
   "engine": {
     "name": "cfdl-engine",
     "version": "0.7.0"
@@ -31906,6 +31906,8 @@
           "periods": 1095
         },
         "offset": 1.0,
+        "entity": "asset.microgrid",
+        "category": "operating.revenue.energy",
         "values": [
           {
             "amount": 164.383562,
@@ -36296,6 +36298,8 @@
           "periods": 1095
         },
         "offset": 1.0,
+        "entity": "asset.microgrid",
+        "category": "operating.expense.om",
         "values": [
           {
             "amount": -131.506849,
@@ -40686,6 +40690,8 @@
           "periods": 1095
         },
         "offset": 1.0,
+        "entity": "asset.microgrid",
+        "category": "operating.revenue.energy",
         "values": [
           {
             "amount": 978.082192,
@@ -45286,5 +45292,14 @@
     "seed": 0,
     "metrics": {},
     "trial_summaries": []
+  },
+  "graph": {
+    "entities": [
+      {
+        "symbol": "asset.microgrid",
+        "family": "asset",
+        "type": "Energy.Asset.GenerationFacility"
+      }
+    ]
   }
 }

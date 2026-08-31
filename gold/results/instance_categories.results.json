@@ -1,7 +1,7 @@
 {
-  "results_version": "0.6",
+  "results_version": "0.7",
   "model_hash": "3628ea45cb262a19cf349369665a5718f4306988c2cec7027def0c03d1dcb3ce",
-  "ledger_hash": "6f6aa75fa9bae493984fef5dae9b8e7e74df9f7add0964ff755cb628ca0979d3",
+  "ledger_hash": "9b8cb579027c8ca70508b26e0074bad3edf7a4a33458fea138a4ca01ab66becf",
   "engine": {
     "name": "cfdl-engine",
     "version": "0.7.0"
@@ -247,6 +247,8 @@
           "periods": 2
         },
         "offset": 1.0,
+        "entity": "asset.hotel",
+        "category": "operating.expense.food_beverage",
         "values": [
           {
             "amount": -400.0,
@@ -265,6 +267,8 @@
           "periods": 2
         },
         "offset": 1.0,
+        "entity": "asset.hotel",
+        "category": "operating.expense.opex",
         "values": [
           {
             "amount": -200.0,
@@ -283,6 +287,8 @@
           "periods": 2
         },
         "offset": 1.0,
+        "entity": "asset.hotel",
+        "category": "operating.expense.rooms",
         "values": [
           {
             "amount": -1000.0,
@@ -1495,6 +1501,15 @@
             "message": "2 stream(s) are in no row of statement 'operating_annual', so the bottom line is short by -2800.00: cre.opex.line.food_beverage, cre.opex.line.rooms. Classify them, or give the statement a row that claims them."
           }
         ]
+      }
+    ]
+  },
+  "graph": {
+    "entities": [
+      {
+        "symbol": "asset.hotel",
+        "family": "asset",
+        "type": "CRE.Asset.RealProperty"
       }
     ]
   }

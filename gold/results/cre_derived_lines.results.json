@@ -1,7 +1,7 @@
 {
-  "results_version": "0.6",
+  "results_version": "0.7",
   "model_hash": "2b1e8218ce5aec69453fdbdd0e234925d197a5de7f064e9ae2d849969bd43b43",
-  "ledger_hash": "67f27438fe72675de5422b87d885973c23bdd9e3d92696282a04a03867c93932",
+  "ledger_hash": "8794ef0b3ae998139c0bb5f0c946c0b50372ceb7fd9069f941c80df9ca1d0b3b",
   "engine": {
     "name": "cfdl-engine",
     "version": "0.7.0"
@@ -3022,6 +3022,8 @@
           "periods": 84
         },
         "offset": 1.0,
+        "entity": "asset.strip_center",
+        "category": "investing.disposal.reversion",
         "values": [
           {
             "amount": 0.0,
@@ -3368,6 +3370,8 @@
           "periods": 84
         },
         "offset": 1.0,
+        "entity": "asset.strip_center",
+        "category": "investing.disposal.selling_costs",
         "values": [
           {
             "amount": 0.0,
@@ -3714,6 +3718,8 @@
           "periods": 84
         },
         "offset": 1.0,
+        "entity": "asset.strip_center",
+        "category": "operating.expense.opex",
         "values": [
           {
             "amount": -20000.0,
@@ -4060,6 +4066,8 @@
           "periods": 84
         },
         "offset": 1.0,
+        "entity": "asset.strip_center",
+        "category": "operating.expense.opex",
         "values": [
           {
             "amount": -1746.0,
@@ -4406,6 +4414,8 @@
           "periods": 84
         },
         "offset": 1.0,
+        "entity": "asset.strip_center",
+        "category": "operating.deduction.abatement",
         "values": [
           {
             "amount": 0.0,
@@ -4752,6 +4762,8 @@
           "periods": 84
         },
         "offset": 1.0,
+        "entity": "asset.strip_center",
+        "category": "operating.revenue.base_rent",
         "values": [
           {
             "amount": 45000.0,
@@ -5098,6 +5110,8 @@
           "periods": 84
         },
         "offset": 1.0,
+        "entity": "asset.strip_center",
+        "category": "operating.revenue.recovery",
         "values": [
           {
             "amount": 0.0,
@@ -5444,6 +5458,8 @@
           "periods": 84
         },
         "offset": 0.0,
+        "entity": "asset.strip_center",
+        "category": "investing.capital.leasing",
         "values": [
           {
             "amount": -210000.0,
@@ -5790,6 +5806,8 @@
           "periods": 84
         },
         "offset": 1.0,
+        "entity": "asset.strip_center",
+        "category": "operating.deduction.vacancy",
         "values": [
           {
             "amount": -1350.0,
@@ -6753,5 +6771,14 @@
     "seed": 0,
     "metrics": {},
     "trial_summaries": []
+  },
+  "graph": {
+    "entities": [
+      {
+        "symbol": "asset.strip_center",
+        "family": "asset",
+        "type": "CRE.Asset.RealProperty"
+      }
+    ]
   }
 }

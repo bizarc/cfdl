@@ -40,8 +40,8 @@ against it by `make results-schema`.
   "properties": {
     "results_version": {
       "type": "string",
-      "const": "0.6",
-      "description": "Schema version of this document. 0.6 nests an act's own acts under it as `children`, which is what a transition and its arrival actions are. 0.5 added the machine's `transition` journal action. 0.4 added the account journal actions `inflow`, `allocate_in` and `allocate_out`. 0.3 added `ledger_hash` and the optional `inputs` section, and `category` on IR streams upstream of it."
+      "const": "0.7",
+      "description": "Schema version of this document. 0.7 publishes the model's entity graph (`graph`) and attributes each stream series to its owning entity and category — what lets a consumer holding results alone say whose cash and what kind. 0.6 nests an act's own acts under it as `children`, which is what a transition and its arrival actions are. 0.5 added the machine's `transition` journal action. 0.4 added the account journal actions `inflow`, `allocate_in` and `allocate_out`. 0.3 added `ledger_hash` and the optional `inputs` section, and `category` on IR streams upstream of it."
     },
     "model_hash": {
       "type": "string",
@@ -96,6 +96,9 @@ against it by `make results-schema`.
     },
     "statements": {
       "$ref": "#/$defs/StatementsSection"
+    },
+    "graph": {
+      "$ref": "#/$defs/ResultsGraph"
     }
   },
   "$defs": {
@@ -206,6 +209,14 @@ against it by `make results-schema`.
         "offset": {
           "description": "Where in each period this series' cash falls: 0.0 at the period's open (an annuity due, or a one-shot on its date), 1.0 at its close (an ordinary annuity, the default), 0.5 for the mid-period convention. The same offset used to discount the series, and the axis `model.wal_years` and `model.payback_years` are measured on — so an ordinary annuity's first monthly collection is at 1/12 of a year, not 0. Absent on aggregates (`model.net_cash_flow`, the annual rollup), which sum streams whose placements differ. See 12_payment_timing.md. Absent on field series, which are not paid and so sit nowhere in their period.",
           "type": "number"
+        },
+        "entity": {
+          "type": "string",
+          "description": "The entity this stream is attached to (`asset.tower`, `container.fund`). Present on stream series only — a subtotal spans owners and an aggregate has none. With `graph`, this is what lets a consumer attribute cash to a thing without the IR: name inspection is not a substitute, because a pack-lowered stream's name does not contain its owner's symbol."
+        },
+        "category": {
+          "type": "string",
+          "description": "The stream's declared category (`operating.revenue.base_rent`). Present on categorized stream series only. Ownership says whose cash; category says what kind — the two axes a selection needs."
         }
       }
     },
@@ -1010,6 +1021,52 @@ against it by `make results-schema`.
         }
       },
       "description": "One act, and what became of it. An act that DID something composite carries what it did as `children` — a transition is the occurrence, its arrival actions are its effects."
+    },
+    "GraphEntity": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "symbol",
+        "family"
+      ],
+      "properties": {
+        "symbol": {
+          "type": "string",
+          "description": "The reference the model uses everywhere — `asset.tower`."
+        },
+        "family": {
+          "type": "string",
+          "description": "The symbol's first segment: asset, party, or container."
+        },
+        "type": {
+          "type": "string",
+          "description": "The ontology type the declaration states, when it states one."
+        },
+        "id": {
+          "type": "string",
+          "description": "The stable identity the model carries for a layer above it — the literal field `id`, engine-opaque, unique within the model (E1360)."
+        },
+        "parent": {
+          "type": "string",
+          "description": "The `part of` parent, when the model groups this entity."
+        }
+      }
+    },
+    "ResultsGraph": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "entities"
+      ],
+      "description": "The model's entity graph, published so a consumer holding results alone can build the hierarchy view — who is part of what, what each thing is, and the stable identity a governance layer assigned. Values, not vocabulary: the pack's type roster lives in the pack; this is the graph THIS model declared.",
+      "properties": {
+        "entities": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/GraphEntity"
+          }
+        }
+      }
     }
   }
 }

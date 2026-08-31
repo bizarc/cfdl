@@ -1,7 +1,7 @@
 {
-  "results_version": "0.6",
+  "results_version": "0.7",
   "model_hash": "960536cb48d8ae81dbb9fec486a7eb9acc67478671f956cad48a7da0fb6a1c39",
-  "ledger_hash": "0a53c6f768a6567164b6e28b9eccbdefb45d9045d4c73230945094841bc1f15b",
+  "ledger_hash": "32a82ca8fa26a47f45458736e509eeb23b34b2a1a06292435297a2d8667700d1",
   "engine": {
     "name": "cfdl-engine",
     "version": "0.7.0"
@@ -3901,6 +3901,8 @@
           "periods": 72
         },
         "offset": 1.0,
+        "entity": "asset.business",
+        "category": "investing.disposal.proceeds",
         "values": [
           {
             "amount": 0.0,
@@ -4199,6 +4201,8 @@
           "periods": 72
         },
         "offset": 1.0,
+        "entity": "asset.business",
+        "category": "operating.expense.opex",
         "values": [
           {
             "amount": -70000.0,
@@ -4497,6 +4501,8 @@
           "periods": 72
         },
         "offset": 1.0,
+        "entity": "asset.business",
+        "category": "operating.revenue.recurring",
         "values": [
           {
             "amount": 120000.0,
@@ -4795,6 +4801,8 @@
           "periods": 72
         },
         "offset": 1.0,
+        "entity": "asset.business",
+        "category": "operating.working_capital",
         "values": [
           {
             "amount": -3000.0,
@@ -5612,5 +5620,14 @@
     "seed": 0,
     "metrics": {},
     "trial_summaries": []
+  },
+  "graph": {
+    "entities": [
+      {
+        "symbol": "asset.business",
+        "family": "asset",
+        "type": "OpCo.Asset.Enterprise"
+      }
+    ]
   }
 }

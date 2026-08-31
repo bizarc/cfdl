@@ -1,7 +1,7 @@
 {
-  "results_version": "0.6",
+  "results_version": "0.7",
   "model_hash": "3ac330d3bac128b344024e7a52f153e8cda630071a75fb8936f5522369f84641",
-  "ledger_hash": "c5c9aaafe4ea1f9431289c56e6586911652cc6dd9d3c58a9a198ddf980bb0bd3",
+  "ledger_hash": "1bb248a92ce6114e65c0d4a252eb6c28a8b08003ab930160bed3aab1bf5595b3",
   "engine": {
     "name": "cfdl-engine",
     "version": "0.7.0"
@@ -237,6 +237,7 @@
           "periods": 6
         },
         "offset": 0.0,
+        "entity": "asset.deal",
         "values": [
           {
             "amount": 0.0,
@@ -410,5 +411,29 @@
     "seed": 0,
     "metrics": {},
     "trial_summaries": []
+  },
+  "graph": {
+    "entities": [
+      {
+        "symbol": "asset.deal",
+        "family": "asset",
+        "type": "Asset.Financial"
+      },
+      {
+        "symbol": "party.lp",
+        "family": "party",
+        "type": "Party"
+      },
+      {
+        "symbol": "party.mgmt",
+        "family": "party",
+        "type": "Party"
+      },
+      {
+        "symbol": "party.sponsor",
+        "family": "party",
+        "type": "Party"
+      }
+    ]
   }
 }

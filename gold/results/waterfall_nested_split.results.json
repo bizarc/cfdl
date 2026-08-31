@@ -1,7 +1,7 @@
 {
-  "results_version": "0.6",
+  "results_version": "0.7",
   "model_hash": "773b9dddb059171535fb0b5296368bee436bcf1af4a1d721be24723b2c02b7c3",
-  "ledger_hash": "2ec1d90003ff7d75485d05691d6a8fb6be4cc2f227438d85e5d3675b4c5c79f8",
+  "ledger_hash": "cfb7777841f854b256c6f6f79f8b9cdc78d572b99bfe1e801d7a6d1a167f0251",
   "engine": {
     "name": "cfdl-engine",
     "version": "0.7.0"
@@ -616,6 +616,7 @@
           "periods": 6
         },
         "offset": 0.0,
+        "entity": "asset.fund",
         "values": [
           {
             "amount": 0.0,
@@ -745,5 +746,44 @@
     "seed": 0,
     "metrics": {},
     "trial_summaries": []
+  },
+  "graph": {
+    "entities": [
+      {
+        "symbol": "asset.fund",
+        "family": "asset",
+        "type": "Asset.Financial"
+      },
+      {
+        "symbol": "asset.mgmt_co",
+        "family": "asset",
+        "type": "Asset.Financial"
+      },
+      {
+        "symbol": "party.founders",
+        "family": "party",
+        "type": "Party"
+      },
+      {
+        "symbol": "party.gp",
+        "family": "party",
+        "type": "Party"
+      },
+      {
+        "symbol": "party.lp",
+        "family": "party",
+        "type": "Party"
+      },
+      {
+        "symbol": "party.stakes",
+        "family": "party",
+        "type": "Party"
+      },
+      {
+        "symbol": "party.team",
+        "family": "party",
+        "type": "Party"
+      }
+    ]
   }
 }

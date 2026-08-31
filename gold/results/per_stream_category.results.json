@@ -1,7 +1,7 @@
 {
-  "results_version": "0.6",
+  "results_version": "0.7",
   "model_hash": "3f7d668bedb0430d76ad87c6a65ec35e7a0a7ed7d35346690a0a84e50bf07bc0",
-  "ledger_hash": "81279cb1313a25069c7a31e6e6614a164b61161a2c6b9ce2b1440c2ce87ad433",
+  "ledger_hash": "a6d0b8871ec54d0cc9c556e2cda36b76334e937b45a9b36f059ad99630a76771",
   "engine": {
     "name": "cfdl-engine",
     "version": "0.7.0"
@@ -587,6 +587,8 @@
           "periods": 12
         },
         "offset": 1.0,
+        "entity": "asset.tower",
+        "category": "operating.expense.interest",
         "values": [
           {
             "amount": -4166.666667,
@@ -645,6 +647,8 @@
           "periods": 12
         },
         "offset": 1.0,
+        "entity": "asset.tower",
+        "category": "financing.debt.principal",
         "values": [
           {
             "amount": -1679.233748,
@@ -703,6 +707,8 @@
           "periods": 12
         },
         "offset": 0.0,
+        "entity": "asset.tower",
+        "category": "financing.debt.proceeds",
         "values": [
           {
             "amount": 1000000.0,
@@ -761,6 +767,8 @@
           "periods": 12
         },
         "offset": 1.0,
+        "entity": "asset.tower",
+        "category": "operating.expense.rooms",
         "values": [
           {
             "amount": -1000.0,
@@ -3331,6 +3339,15 @@
             "message": "2 stream(s) are in no row of statement 'operating_annual', so the bottom line is short by -61531.74: cre.debt.interest, cre.opex.line.rooms. Classify them, or give the statement a row that claims them."
           }
         ]
+      }
+    ]
+  },
+  "graph": {
+    "entities": [
+      {
+        "symbol": "asset.tower",
+        "family": "asset",
+        "type": "CRE.Asset.RealProperty"
       }
     ]
   }

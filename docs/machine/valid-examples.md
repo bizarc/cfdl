@@ -4,7 +4,7 @@
 
 CFDL 0.7.0. Every model below compiles, and its IR and
 results are byte-asserted against goldens in CI (`fixtures/valid/`,
-130 models.
+131 models.
 
 `gold/ir/`, `gold/results/`). Each is single-purpose: the directory name
 says what it exercises. This is what right looks like — positive few-shot
@@ -4534,6 +4534,37 @@ stream mid.cumulative on entity asset.co inflow currency USD {
 stream top.cumulative on entity asset.co inflow currency USD {
   schedule every year from 2026-01 to 2028-01
   amount = series_sum("mid.cumulative", 0, time.t)
+}
+```
+
+## stable_identity
+
+```cfdl
+version 0.1
+model "stable-identity"
+time calendar annual from 2026-01 for 2
+
+// A STABLE IDENTITY IS CARRIED, NEVER INTERPRETED (docs/13 §7.91). The
+// layer above the model assigns canonical ids to real-world things; the
+// literal field `id` is where a model carries one. The engine ignores it
+// entirely and republishes it in the results graph, which is what makes a
+// package's numbers attributable to canonical things — a consumer joins on
+// the id, not on symbol names and hope.
+//
+// The graph beside it is §7.43's answer: symbol, family, type, parent —
+// the hierarchy view derivable from results alone.
+
+entity container fund : Container.Fund { id = "evs:container/fund-274" }
+
+entity asset alpha : Asset.Financial {
+  id = "evs:asset/alpha-91"
+  part of container.fund
+}
+
+stream alpha.income on entity asset.alpha inflow currency USD {
+  schedule every year from 2026-01 to 2027-01
+  category operating.revenue.other
+  amount = 100
 }
 ```
 

@@ -1,7 +1,7 @@
 {
-  "results_version": "0.6",
+  "results_version": "0.7",
   "model_hash": "7d06eb7a8c3936edfd57b7e0c73b63a1428e3bcc0165dee55c5dabbeeb2d8ad6",
-  "ledger_hash": "01b7a2faf15624e6df792b796dabfb85f9b33255383b24b825d8beed22e42ab1",
+  "ledger_hash": "a2e039a9dafe014206880a5a3f5607f2608511ed808e170b3fa53bb9171e68c3",
   "engine": {
     "name": "cfdl-engine",
     "version": "0.7.0"
@@ -685,6 +685,8 @@
           "periods": 6
         },
         "offset": 1.0,
+        "entity": "asset.pool",
+        "category": "operating.collection.interest",
         "values": [
           {
             "amount": 6000.0,
@@ -719,6 +721,8 @@
           "periods": 6
         },
         "offset": 1.0,
+        "entity": "asset.pool",
+        "category": "operating.collection.penalty",
         "values": [
           {
             "amount": 0.0,
@@ -753,6 +757,8 @@
           "periods": 6
         },
         "offset": 1.0,
+        "entity": "asset.pool",
+        "category": "operating.collection.prepayment",
         "values": [
           {
             "amount": 0.0,
@@ -787,6 +793,8 @@
           "periods": 6
         },
         "offset": 1.0,
+        "entity": "asset.pool",
+        "category": "operating.collection.recovery",
         "values": [
           {
             "amount": 0.0,
@@ -821,6 +829,8 @@
           "periods": 6
         },
         "offset": 1.0,
+        "entity": "asset.pool",
+        "category": "operating.collection.principal",
         "values": [
           {
             "amount": 197514.546773,
@@ -855,6 +865,8 @@
           "periods": 6
         },
         "offset": 1.0,
+        "entity": "asset.pool",
+        "category": "operating.expense.servicing",
         "values": [
           {
             "amount": 0.0,
@@ -1282,5 +1294,25 @@
     "seed": 0,
     "metrics": {},
     "trial_summaries": []
+  },
+  "graph": {
+    "entities": [
+      {
+        "symbol": "asset.pool",
+        "family": "asset",
+        "type": "Credit.Asset.LoanPool",
+        "parent": "asset.trust"
+      },
+      {
+        "symbol": "asset.trust",
+        "family": "asset",
+        "type": "Credit.Asset.LoanPool"
+      },
+      {
+        "symbol": "party.holders",
+        "family": "party",
+        "type": "Credit.Party.Investor"
+      }
+    ]
   }
 }
