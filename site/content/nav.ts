@@ -156,6 +156,12 @@ export const NAV: NavSection[] = [
     ],
   },
   {
+    title: "Technique",
+    items: [
+      { title: "Algebra instead of solvers", slug: "/docs/algebra-not-solvers" },
+    ],
+  },
+  {
     title: "About",
     items: [
       { title: "FAQ", slug: "/docs/faq" },
