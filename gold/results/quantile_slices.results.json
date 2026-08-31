@@ -1,7 +1,7 @@
 {
-  "results_version": "0.6",
+  "results_version": "0.7",
   "model_hash": "84cd09ed0d9eedc42f7de655e76edb42f958995ce26436f4bab6ad100ab3d7c1",
-  "ledger_hash": "a6c292f41aa269512e31f51ab4faed0831cd9835088d655c8047b65ccd895d81",
+  "ledger_hash": "a446b0eb4cfc9e71b1a66ec6a2267927f6dd5f82dc83fa8c00677b993756ed7e",
   "engine": {
     "name": "cfdl-engine",
     "version": "0.7.0"
@@ -147,6 +147,8 @@
           "periods": 3
         },
         "offset": 1.0,
+        "entity": "asset.battery",
+        "category": "operating.revenue.energy",
         "values": [
           {
             "amount": 40305.882353,
@@ -169,6 +171,8 @@
           "periods": 3
         },
         "offset": 1.0,
+        "entity": "asset.battery",
+        "category": "operating.revenue.energy",
         "values": [
           {
             "amount": 1100.0,
@@ -191,6 +195,8 @@
           "periods": 3
         },
         "offset": 1.0,
+        "entity": "asset.battery",
+        "category": "operating.revenue.energy",
         "values": [
           {
             "amount": 3364.0,
@@ -213,6 +219,8 @@
           "periods": 3
         },
         "offset": 1.0,
+        "entity": "asset.battery",
+        "category": "operating.revenue.energy",
         "values": [
           {
             "amount": 528.0,
@@ -309,5 +317,14 @@
     "seed": 0,
     "metrics": {},
     "trial_summaries": []
+  },
+  "graph": {
+    "entities": [
+      {
+        "symbol": "asset.battery",
+        "family": "asset",
+        "type": "Asset.Financial"
+      }
+    ]
   }
 }

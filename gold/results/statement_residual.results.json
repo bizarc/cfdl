@@ -1,7 +1,7 @@
 {
-  "results_version": "0.6",
+  "results_version": "0.7",
   "model_hash": "2e644c5b66ca7d31bfe8aecad32256ad51e4d5fe00ee8a53a6c6d69bc76bb025",
-  "ledger_hash": "025b83a90c80602c1322abb77c87f045d183d8115064fefafac5dadd4c0de26d",
+  "ledger_hash": "3fe22812ccfe307c853f28b606bd2ba1101c7e82a4c71c12a8855ae4697c138f",
   "engine": {
     "name": "cfdl-engine",
     "version": "0.7.0"
@@ -222,6 +222,8 @@
           "periods": 3
         },
         "offset": 1.0,
+        "entity": "asset.tower",
+        "category": "operating.revenue.base_rent",
         "values": [
           {
             "amount": 1000.0,
@@ -244,6 +246,8 @@
           "periods": 3
         },
         "offset": 1.0,
+        "entity": "asset.tower",
+        "category": "operating.revenue.windfall",
         "values": [
           {
             "amount": 250.0,
@@ -1706,6 +1710,15 @@
             "message": "1 stream(s) are in no row of statement 'operating_annual', so the bottom line is short by 750.00: misc.windfall. Classify them, or give the statement a row that claims them."
           }
         ]
+      }
+    ]
+  },
+  "graph": {
+    "entities": [
+      {
+        "symbol": "asset.tower",
+        "family": "asset",
+        "type": "CRE.Asset.RealProperty"
       }
     ]
   }

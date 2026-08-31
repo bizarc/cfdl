@@ -1,7 +1,7 @@
 {
-  "results_version": "0.6",
+  "results_version": "0.7",
   "model_hash": "8e31481fbad7d54401bcecdfeeca805b988b232f963015a7e663231b07139198",
-  "ledger_hash": "2ea7c47e3b19fe7abceb697910d9b9801270b46543f2ea0d0aafdc38680ac9ce",
+  "ledger_hash": "c88334947cb2968add3f20cdbf85e186e1164643bbc15a3f8d3f3acf1bd77e65",
   "engine": {
     "name": "cfdl-engine",
     "version": "0.7.0"
@@ -657,6 +657,7 @@
           "start": "2026-01-01",
           "periods": 12
         },
+        "entity": "asset.suite",
         "values": [
           {
             "amount": 0.0,
@@ -714,6 +715,7 @@
           "start": "2026-01-01",
           "periods": 12
         },
+        "entity": "asset.suite",
         "values": [
           {
             "amount": 0.0,
@@ -771,6 +773,7 @@
           "start": "2026-01-01",
           "periods": 12
         },
+        "entity": "asset.suite",
         "values": [
           {
             "amount": 0.0,
@@ -829,6 +832,8 @@
           "periods": 12
         },
         "offset": 1.0,
+        "entity": "asset.suite",
+        "category": "operating.revenue.base_rent",
         "values": [
           {
             "amount": 1000.0,
@@ -886,6 +891,7 @@
           "start": "2026-01-01",
           "periods": 12
         },
+        "entity": "asset.suite",
         "values": [
           {
             "amount": 0.0,
@@ -943,6 +949,7 @@
           "start": "2026-01-01",
           "periods": 12
         },
+        "entity": "asset.suite",
         "values": [
           {
             "amount": 0.0,
@@ -1000,6 +1007,7 @@
           "start": "2026-01-01",
           "periods": 12
         },
+        "entity": "asset.suite",
         "values": [
           {
             "amount": 0.0,
@@ -1392,5 +1400,24 @@
     "seed": 0,
     "metrics": {},
     "trial_summaries": []
+  },
+  "graph": {
+    "entities": [
+      {
+        "symbol": "asset.suite",
+        "family": "asset",
+        "type": "CRE.Asset.Unit"
+      },
+      {
+        "symbol": "party.investor",
+        "family": "party",
+        "type": "Party"
+      },
+      {
+        "symbol": "party.sponsor",
+        "family": "party",
+        "type": "Party"
+      }
+    ]
   }
 }

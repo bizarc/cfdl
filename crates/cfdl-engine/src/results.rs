@@ -524,6 +524,10 @@ pub struct Results {
     /// Rendered statements. Present only when the active pack declares one.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub statements: Option<StatementsSection>,
+    /// The model's entity graph (docs/13 §7.43, §7.91). Absent only for a
+    /// model declaring no entities.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub graph: Option<ResultsGraph>,
 }
 
 #[derive(Debug, Clone, Serialize)]
@@ -906,6 +910,34 @@ impl SeriesValue {
     }
 }
 
+/// The model's entity graph, published so a consumer holding results alone
+/// can build the hierarchy view — who is part of what, what each thing is,
+/// and the stable identity a governance layer assigned (docs/13 §7.43,
+/// §7.91). Values, not vocabulary: the pack's type ROSTER lives in the pack;
+/// this is the graph THIS model declared.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ResultsGraph {
+    pub entities: Vec<GraphEntity>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct GraphEntity {
+    /// The reference the model uses everywhere — `asset.tower`.
+    pub symbol: String,
+    /// The symbol's first segment: asset, party, or container.
+    pub family: String,
+    /// The ontology type, when the declaration states one.
+    #[serde(rename = "type", skip_serializing_if = "Option::is_none")]
+    pub type_id: Option<String>,
+    /// The stable identity the model carries for a layer above it — the
+    /// literal field `id`, engine-opaque, unique within the model (E1360).
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub id: Option<String>,
+    /// The `part of` parent, when the model groups this entity.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub parent: Option<String>,
+}
+
 #[derive(Debug, Clone, Serialize)]
 pub struct Series {
     pub index: SeriesIndex,
@@ -916,6 +948,20 @@ pub struct Series {
     /// placements differ and so have no single position.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub offset: Option<f64>,
+    /// The entity this stream is attached to (`asset.tower`,
+    /// `container.fund`). Present on stream series only: a subtotal spans
+    /// owners and an aggregate has none. This is what lets a consumer holding
+    /// results alone attribute cash to a thing — the gap docs/13 §7.43
+    /// records: name inspection is not a substitute, because a pack-lowered
+    /// stream's name does not contain the symbol of the entity that owns it.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub entity: Option<String>,
+    /// The stream's declared category (`operating.revenue.base_rent`).
+    /// Present on categorized stream series only. Beside `entity`, the other
+    /// axis a selection needs: ownership says whose cash, category says what
+    /// kind.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub category: Option<String>,
     pub values: Vec<SeriesValue>,
 }
 
@@ -935,6 +981,8 @@ impl Series {
                 periods,
             },
             offset,
+            entity: None,
+            category: None,
             values: values
                 .iter()
                 .map(|amount| {
@@ -978,6 +1026,8 @@ impl Series {
                 periods,
             },
             offset: None,
+            entity: None,
+            category: None,
             values: values
                 .iter()
                 .map(|v| match v {
@@ -996,6 +1046,8 @@ impl Series {
                 periods,
             },
             offset: None,
+            entity: None,
+            category: None,
             values: values.iter().map(|v| SeriesValue::Number(*v)).collect(),
         }
     }

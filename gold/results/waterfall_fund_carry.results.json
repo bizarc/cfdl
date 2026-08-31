@@ -1,7 +1,7 @@
 {
-  "results_version": "0.6",
+  "results_version": "0.7",
   "model_hash": "dae0ed2f69344dd9e01fee1a3c885a34bcbb0d3b980b151598eac1df280198b7",
-  "ledger_hash": "6156f9fcc8c219e88c3f42a0f98c465309d033b6cccbcdb12cfceb3f448784eb",
+  "ledger_hash": "505495a8da446641e2a5b5fcb6ff7b4a68a865c31e384c09afe9ad8494376ecc",
   "engine": {
     "name": "cfdl-engine",
     "version": "0.7.0"
@@ -334,6 +334,7 @@
           "periods": 6
         },
         "offset": 0.0,
+        "entity": "asset.fund",
         "values": [
           {
             "amount": 0.0,
@@ -484,5 +485,24 @@
     "seed": 0,
     "metrics": {},
     "trial_summaries": []
+  },
+  "graph": {
+    "entities": [
+      {
+        "symbol": "asset.fund",
+        "family": "asset",
+        "type": "Asset.Financial"
+      },
+      {
+        "symbol": "party.gp",
+        "family": "party",
+        "type": "Party"
+      },
+      {
+        "symbol": "party.lp",
+        "family": "party",
+        "type": "Party"
+      }
+    ]
   }
 }

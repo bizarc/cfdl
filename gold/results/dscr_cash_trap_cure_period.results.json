@@ -1,7 +1,7 @@
 {
-  "results_version": "0.6",
+  "results_version": "0.7",
   "model_hash": "e2ef3d153946d90e5f2a0ed64fcd72c835099883105f308adc45110f9742f973",
-  "ledger_hash": "13b5e97b4493711e4614411e012b6a351617ca4fc66ad3827303e09a86ef681a",
+  "ledger_hash": "9c4dbbf9509bcfc4ef517dc862ef06d9bdde2a6ea2e11711eed8a9d8ada09ce3",
   "engine": {
     "name": "cfdl-engine",
     "version": "0.7.0"
@@ -431,6 +431,7 @@
           "periods": 18
         },
         "offset": 1.0,
+        "entity": "asset.plant",
         "values": [
           {
             "amount": -15000.0,
@@ -512,6 +513,7 @@
           "start": "2026-01-01",
           "periods": 18
         },
+        "entity": "asset.plant",
         "values": [
           {
             "amount": 5000.0,
@@ -593,6 +595,7 @@
           "start": "2026-01-01",
           "periods": 18
         },
+        "entity": "asset.plant",
         "values": [
           {
             "amount": 0.0,
@@ -675,6 +678,7 @@
           "periods": 18
         },
         "offset": 1.0,
+        "entity": "asset.plant",
         "values": [
           {
             "amount": 20000.0,
@@ -756,6 +760,7 @@
           "start": "2026-01-01",
           "periods": 18
         },
+        "entity": "asset.plant",
         "values": [
           {
             "amount": 0.0,
@@ -1576,5 +1581,19 @@
     "seed": 0,
     "metrics": {},
     "trial_summaries": []
+  },
+  "graph": {
+    "entities": [
+      {
+        "symbol": "asset.plant",
+        "family": "asset",
+        "type": "core.Entity"
+      },
+      {
+        "symbol": "party.sponsor",
+        "family": "party",
+        "type": "core.Entity"
+      }
+    ]
   }
 }

@@ -1,0 +1,16 @@
+version 0.1
+model "duplicate-entity-id"
+time calendar annual from 2026-01 for 2
+
+// An id names ONE thing for the layer above the model. Two entities
+// claiming the same one would merge under any consumer that joins on it —
+// so the duplicate is refused, the one check the language can make about a
+// value it must not interpret.
+
+entity asset alpha : Asset.Financial { id = "evs:asset/91" }
+entity asset beta  : Asset.Financial { id = "evs:asset/91" }
+
+stream alpha.income on entity asset.alpha inflow currency USD {
+  schedule every year from 2026-01 to 2027-01
+  amount = 100
+}

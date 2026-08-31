@@ -1,7 +1,7 @@
 {
-  "results_version": "0.6",
+  "results_version": "0.7",
   "model_hash": "f9f68295fb39c594a38293457e24202578c27981436e9e5d1d83dad7e3161259",
-  "ledger_hash": "64cbef84633c37911bac9ba72e66430df30c9c3db7e91d87adf8a555300ae564",
+  "ledger_hash": "0095e636969d7ccaa00ee8e46cad557358e7fcd4d8b13208257c47efb47041e7",
   "engine": {
     "name": "cfdl-engine",
     "version": "0.7.0"
@@ -365,6 +365,7 @@
           "periods": 24
         },
         "offset": 1.0,
+        "entity": "asset.prop",
         "values": [
           {
             "amount": -10000.0,
@@ -471,6 +472,7 @@
           "periods": 24
         },
         "offset": 1.0,
+        "entity": "asset.prop",
         "values": [
           {
             "amount": 30000.0,
@@ -577,6 +579,7 @@
           "periods": 24
         },
         "offset": 1.0,
+        "entity": "asset.permanent",
         "values": [
           {
             "amount": -15000.0,
@@ -4336,6 +4339,20 @@
             "message": "3 stream(s) are in no row of statement 'operating_annual', so the bottom line is short by 120000.00: cre.opex.line, cre.ops.revenue, loan.permanent_debt_service. Classify them, or give the statement a row that claims them."
           }
         ]
+      }
+    ]
+  },
+  "graph": {
+    "entities": [
+      {
+        "symbol": "asset.permanent",
+        "family": "asset",
+        "type": "Asset.Financial"
+      },
+      {
+        "symbol": "asset.prop",
+        "family": "asset",
+        "type": "Asset.Real"
       }
     ]
   }

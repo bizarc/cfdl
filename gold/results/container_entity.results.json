@@ -1,7 +1,7 @@
 {
-  "results_version": "0.6",
+  "results_version": "0.7",
   "model_hash": "22d2ef7985fdb20426289eaf9fabda1967cb39afcc990a28dd083f1e2eb88975",
-  "ledger_hash": "4cbee31bdd72301a59020bb006c7b3d8804281df46ffa74d105182087a639351",
+  "ledger_hash": "ffb93665b951a2c007a535a618a350b54fca8723e9ab6426f00fc2c2ba2d6dc9",
   "engine": {
     "name": "cfdl-engine",
     "version": "0.7.0"
@@ -134,6 +134,8 @@
           "periods": 3
         },
         "offset": 1.0,
+        "entity": "asset.alpha",
+        "category": "operating.revenue.other",
         "values": [
           {
             "amount": 100.0,
@@ -156,6 +158,8 @@
           "periods": 3
         },
         "offset": 1.0,
+        "entity": "asset.beta",
+        "category": "operating.revenue.other",
         "values": [
           {
             "amount": 40.0,
@@ -183,5 +187,26 @@
     "seed": 0,
     "metrics": {},
     "trial_summaries": []
+  },
+  "graph": {
+    "entities": [
+      {
+        "symbol": "asset.alpha",
+        "family": "asset",
+        "type": "Asset.Financial",
+        "parent": "container.fund"
+      },
+      {
+        "symbol": "asset.beta",
+        "family": "asset",
+        "type": "Asset.Financial",
+        "parent": "container.fund"
+      },
+      {
+        "symbol": "container.fund",
+        "family": "container",
+        "type": "Container.Fund"
+      }
+    ]
   }
 }

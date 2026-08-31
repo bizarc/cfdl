@@ -1,0 +1,139 @@
+{
+  "results_version": "0.7",
+  "model_hash": "eaabb5359339320332926468ed97688b4e604b469fe73a3506b33e6daa908fcc",
+  "ledger_hash": "17ee96493e135a2d618a75458ae018dd6dbca43a2de442e09c6680e78948c828",
+  "engine": {
+    "name": "cfdl-engine",
+    "version": "0.7.0"
+  },
+  "warnings": [],
+  "deterministic": {
+    "status": "ok",
+    "metrics": {
+      "entity.asset.alpha.total": {
+        "amount": 200.0,
+        "currency": "USD"
+      },
+      "entity.container.fund.total": {
+        "amount": 200.0,
+        "currency": "USD"
+      },
+      "model.npv": {
+        "amount": 200.0,
+        "currency": "USD"
+      },
+      "model.total": {
+        "amount": 200.0,
+        "currency": "USD"
+      },
+      "model.wal_years": 1.5,
+      "run.annual_discount_rate": 0.0,
+      "run.periods_per_year": 1.0,
+      "stream.alpha.income.total": {
+        "amount": 200.0,
+        "currency": "USD"
+      }
+    },
+    "series": {
+      "entity.asset.alpha.net_cash_flow": {
+        "index": {
+          "calendar": "annual",
+          "start": "2026-01-01",
+          "periods": 2
+        },
+        "values": [
+          {
+            "amount": 100.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 100.0,
+            "currency": "USD"
+          }
+        ]
+      },
+      "entity.container.fund.net_cash_flow": {
+        "index": {
+          "calendar": "annual",
+          "start": "2026-01-01",
+          "periods": 2
+        },
+        "values": [
+          {
+            "amount": 100.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 100.0,
+            "currency": "USD"
+          }
+        ]
+      },
+      "model.net_cash_flow": {
+        "index": {
+          "calendar": "annual",
+          "start": "2026-01-01",
+          "periods": 2
+        },
+        "values": [
+          {
+            "amount": 100.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 100.0,
+            "currency": "USD"
+          }
+        ]
+      },
+      "stream.alpha.income": {
+        "index": {
+          "calendar": "annual",
+          "start": "2026-01-01",
+          "periods": 2
+        },
+        "offset": 1.0,
+        "entity": "asset.alpha",
+        "category": "operating.revenue.other",
+        "values": [
+          {
+            "amount": 100.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 100.0,
+            "currency": "USD"
+          }
+        ]
+      }
+    }
+  },
+  "scenarios": {
+    "status": "not_run",
+    "summaries": []
+  },
+  "monte_carlo": {
+    "status": "not_run",
+    "trials": 1,
+    "seed": 0,
+    "metrics": {},
+    "trial_summaries": []
+  },
+  "graph": {
+    "entities": [
+      {
+        "symbol": "asset.alpha",
+        "family": "asset",
+        "type": "Asset.Financial",
+        "id": "evs:asset/alpha-91",
+        "parent": "container.fund"
+      },
+      {
+        "symbol": "container.fund",
+        "family": "container",
+        "type": "Container.Fund",
+        "id": "evs:container/fund-274"
+      }
+    ]
+  }
+}

@@ -1,0 +1,17 @@
+[
+  {
+    "code": "E1360_DUPLICATE_ENTITY_ID",
+    "severity": "error",
+    "message": "Entity 'asset.beta' declares id \"evs:asset/91\", which 'asset.alpha' already carries.",
+    "file": "model.cfdl",
+    "span": {
+      "start_line": 11,
+      "start_col": 40,
+      "end_line": 11,
+      "end_col": 58
+    },
+    "path": null,
+    "hint": "An id names one thing for the layer above the model; a consumer joining on it would merge the two entities into one.",
+    "notes": []
+  }
+]

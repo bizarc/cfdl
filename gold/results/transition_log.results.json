@@ -1,7 +1,7 @@
 {
-  "results_version": "0.6",
+  "results_version": "0.7",
   "model_hash": "bd67717e117bd2d2076ab9b3ba0f82b9350055828f6f1bb86792e79760a8bd51",
-  "ledger_hash": "72991c94884d44b3b9a75282b256971c7ed475dd68f814d9ef8e632e63b0a0c7",
+  "ledger_hash": "3959d38997db7ceef85dc199bdfd4cc1e5c8c9ad127af81ed352a0785896cbc9",
   "engine": {
     "name": "cfdl-engine",
     "version": "0.7.0"
@@ -284,6 +284,8 @@
           "periods": 5
         },
         "offset": 1.0,
+        "entity": "asset.tower",
+        "category": "operating.revenue.base_rent",
         "values": [
           {
             "amount": 100.0,
@@ -342,5 +344,14 @@
     "seed": 0,
     "metrics": {},
     "trial_summaries": []
+  },
+  "graph": {
+    "entities": [
+      {
+        "symbol": "asset.tower",
+        "family": "asset",
+        "type": "CRE.Asset.RealProperty"
+      }
+    ]
   }
 }

@@ -1,7 +1,7 @@
 {
-  "results_version": "0.6",
+  "results_version": "0.7",
   "model_hash": "f57ba2698f23a41954a6924ad573a7a1d5db6822698dd0e5fc9a53d4dbb7cf93",
-  "ledger_hash": "fbf60f57241eec1f1ac86833ca05fb05592ece2ddc104a5c34fb2d7f24a8b054",
+  "ledger_hash": "a1d7a5ee15dc9ff632513d58418651dd9174946551989d537b472ebcc6ce2603",
   "engine": {
     "name": "cfdl-engine",
     "version": "0.7.0"
@@ -598,6 +598,8 @@
           "periods": 13
         },
         "offset": 1.0,
+        "entity": "asset.property",
+        "category": "investing.disposal.reversion",
         "values": [
           {
             "amount": 0.0,
@@ -660,6 +662,8 @@
           "periods": 13
         },
         "offset": 1.0,
+        "entity": "asset.property",
+        "category": "operating.expense.opex",
         "values": [
           {
             "amount": -2000.0,
@@ -722,6 +726,8 @@
           "periods": 13
         },
         "offset": 1.0,
+        "entity": "asset.property",
+        "category": "operating.revenue.other",
         "values": [
           {
             "amount": 5000.0,
@@ -974,5 +980,14 @@
     "seed": 0,
     "metrics": {},
     "trial_summaries": []
+  },
+  "graph": {
+    "entities": [
+      {
+        "symbol": "asset.property",
+        "family": "asset",
+        "type": "CRE.Asset.RealProperty"
+      }
+    ]
   }
 }

@@ -1,7 +1,7 @@
 {
-  "results_version": "0.6",
+  "results_version": "0.7",
   "model_hash": "57fc1a57c0f654ef51211aefac043af7a17079d7133b37d39541fd1151cf7df7",
-  "ledger_hash": "f54c89ec4bafc8cbb1f832fc449cf74d7bc742e345f0a49e23806878460fe8f1",
+  "ledger_hash": "939390653eaf50c36fe8e337a0b0f5189485c21a934ee2bde255a2a85419b57a",
   "engine": {
     "name": "cfdl-engine",
     "version": "0.7.0"
@@ -1589,6 +1589,8 @@
           "periods": 24
         },
         "offset": 0.0,
+        "entity": "asset.target",
+        "category": "investing.acquisition.purchase",
         "values": [
           {
             "amount": -5000000.0,
@@ -1695,6 +1697,8 @@
           "periods": 24
         },
         "offset": 1.0,
+        "entity": "asset.target",
+        "category": "investing.capital.capex",
         "values": [
           {
             "amount": -9000.0,
@@ -1801,6 +1805,8 @@
           "periods": 24
         },
         "offset": 1.0,
+        "entity": "asset.target",
+        "category": "financing.debt.interest_paid",
         "values": [
           {
             "amount": -22500.0,
@@ -1907,6 +1913,8 @@
           "periods": 24
         },
         "offset": 1.0,
+        "entity": "asset.target",
+        "category": "financing.debt.principal",
         "values": [
           {
             "amount": 0.0,
@@ -2013,6 +2021,8 @@
           "periods": 24
         },
         "offset": 0.0,
+        "entity": "asset.target",
+        "category": "financing.debt.proceeds",
         "values": [
           {
             "amount": 3000000.0,
@@ -2119,6 +2129,8 @@
           "periods": 24
         },
         "offset": 1.0,
+        "entity": "asset.target",
+        "category": "investing.disposal.selling_costs",
         "values": [
           {
             "amount": 0.0,
@@ -2225,6 +2237,8 @@
           "periods": 24
         },
         "offset": 1.0,
+        "entity": "asset.target",
+        "category": "investing.disposal.proceeds",
         "values": [
           {
             "amount": 0.0,
@@ -2331,6 +2345,8 @@
           "periods": 24
         },
         "offset": 1.0,
+        "entity": "asset.target",
+        "category": "operating.expense.opex",
         "values": [
           {
             "amount": -120000.0,
@@ -2437,6 +2453,8 @@
           "periods": 24
         },
         "offset": 1.0,
+        "entity": "asset.target",
+        "category": "operating.revenue.recurring",
         "values": [
           {
             "amount": 200000.0,
@@ -2543,6 +2561,8 @@
           "periods": 24
         },
         "offset": 1.0,
+        "entity": "asset.target",
+        "category": "operating.income_tax.paid",
         "values": [
           {
             "amount": -9375.0,
@@ -2649,6 +2669,8 @@
           "periods": 24
         },
         "offset": 1.0,
+        "entity": "asset.target",
+        "category": "operating.working_capital",
         "values": [
           {
             "amount": -223561.643836,
@@ -7993,6 +8015,15 @@
           "model_total": 3477085.354431,
           "residual": -0.0
         }
+      }
+    ]
+  },
+  "graph": {
+    "entities": [
+      {
+        "symbol": "asset.target",
+        "family": "asset",
+        "type": "OpCo.Asset.Enterprise"
       }
     ]
   }

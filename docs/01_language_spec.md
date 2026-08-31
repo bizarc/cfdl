@@ -262,6 +262,11 @@ entity party acme : CRE.Party.Tenant { name = "Acme Corp" }
   type states the master it specializes (`refines`, Pack Interface §6.1), so
   "is a" is a recorded fact rather than a naming convention.
 - Attribute values are **literals**, checked against the type's declared fields.
+- The literal field `id` is a **stable identity**: an opaque string a layer
+  above the model assigns to the real-world thing this entity refers to. The
+  engine never interprets it — it is validated for uniqueness within the
+  model (`E1360`) and republished in the results graph, so a consumer can
+  join a package's numbers to canonical things instead of to symbol names.
 - `part of` declares hierarchy and is **always optional, at every grain**. A
   pool models collective behavior perfectly well with no loans under it; a
   building needs no units. The modeller chooses the grain and the language does

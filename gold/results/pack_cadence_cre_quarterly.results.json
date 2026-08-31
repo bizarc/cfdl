@@ -1,7 +1,7 @@
 {
-  "results_version": "0.6",
+  "results_version": "0.7",
   "model_hash": "6980cd4fefee99b58802dcab22e73d5e8ba94092596ee461781874b05083dd9f",
-  "ledger_hash": "18225c7201482abfbb8a2845cd83757dc42fb31aace9aee3eac9d161c3be133c",
+  "ledger_hash": "13bd37e59cef2d899249b6d9b30a7b1b629e7d233a2b34a46b5c8e6325a56b7c",
   "engine": {
     "name": "cfdl-engine",
     "version": "0.7.0"
@@ -620,6 +620,8 @@
           "periods": 12
         },
         "offset": 1.0,
+        "entity": "asset.tower",
+        "category": "investing.disposal.reversion",
         "values": [
           {
             "amount": 0.0,
@@ -678,6 +680,8 @@
           "periods": 12
         },
         "offset": 1.0,
+        "entity": "asset.tower",
+        "category": "investing.disposal.selling_costs",
         "values": [
           {
             "amount": 0.0,
@@ -736,6 +740,8 @@
           "periods": 12
         },
         "offset": 1.0,
+        "entity": "asset.tower",
+        "category": "operating.expense.opex",
         "values": [
           {
             "amount": -75000.0,
@@ -794,6 +800,8 @@
           "periods": 12
         },
         "offset": 1.0,
+        "entity": "asset.tower",
+        "category": "operating.deduction.abatement",
         "values": [
           {
             "amount": -120000.0,
@@ -852,6 +860,8 @@
           "periods": 12
         },
         "offset": 1.0,
+        "entity": "asset.tower",
+        "category": "operating.revenue.base_rent",
         "values": [
           {
             "amount": 120000.0,
@@ -910,6 +920,8 @@
           "periods": 12
         },
         "offset": 1.0,
+        "entity": "asset.tower",
+        "category": "operating.revenue.recovery",
         "values": [
           {
             "amount": 0.0,
@@ -968,6 +980,8 @@
           "periods": 12
         },
         "offset": 0.0,
+        "entity": "asset.tower",
+        "category": "investing.capital.leasing",
         "values": [
           {
             "amount": 0.0,
@@ -1341,5 +1355,14 @@
     "seed": 0,
     "metrics": {},
     "trial_summaries": []
+  },
+  "graph": {
+    "entities": [
+      {
+        "symbol": "asset.tower",
+        "family": "asset",
+        "type": "CRE.Asset.RealProperty"
+      }
+    ]
   }
 }

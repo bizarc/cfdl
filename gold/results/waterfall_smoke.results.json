@@ -1,7 +1,7 @@
 {
-  "results_version": "0.6",
+  "results_version": "0.7",
   "model_hash": "e477355cb87dc55af67cc0352355b6f1d00b58e554af97930d9d7a09ff1c794c",
-  "ledger_hash": "f01562c2831b2dbe86a0333adfc8ce42d694142c170a8ba71ec1117a7c222be3",
+  "ledger_hash": "280aeafcd7bced4230a18f969260e7c2de96f9fbd22413df8c72f74b70063646",
   "engine": {
     "name": "cfdl-engine",
     "version": "0.7.0"
@@ -605,6 +605,8 @@
           "periods": 4
         },
         "offset": 1.0,
+        "entity": "asset.trust",
+        "category": "operating.collection.principal",
         "values": [
           {
             "amount": 1000.0,
@@ -2178,6 +2180,35 @@
           "model_total": 4000.0,
           "residual": 0.0
         }
+      }
+    ]
+  },
+  "graph": {
+    "entities": [
+      {
+        "symbol": "asset.class_a",
+        "family": "asset",
+        "type": "Credit.Asset.Tranche"
+      },
+      {
+        "symbol": "asset.trust",
+        "family": "asset",
+        "type": "Credit.Asset.LoanPool"
+      },
+      {
+        "symbol": "party.certificate",
+        "family": "party",
+        "type": "Credit.Party.Investor"
+      },
+      {
+        "symbol": "party.servicer",
+        "family": "party",
+        "type": "Credit.Party.Servicer"
+      },
+      {
+        "symbol": "party.trustee",
+        "family": "party",
+        "type": "Credit.Party.Issuer"
       }
     ]
   }

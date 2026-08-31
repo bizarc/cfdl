@@ -1,7 +1,7 @@
 {
-  "results_version": "0.6",
+  "results_version": "0.7",
   "model_hash": "ea40b5d94dff3c216d11a8a397f9f64104c44d858636d892003640db4d172ab0",
-  "ledger_hash": "048e118065e75e66491ab6f0888da102cd56848037fb308a1c7614379ff1f245",
+  "ledger_hash": "5fa4729367daa1ae4606f1e026fb7b77c5437aef6e6f6172697b3a786c01d746",
   "engine": {
     "name": "cfdl-engine",
     "version": "0.7.0"
@@ -2149,6 +2149,8 @@
           "periods": 60
         },
         "offset": 1.0,
+        "entity": "asset.tower",
+        "category": "financing.debt.interest_paid",
         "values": [
           {
             "amount": -27500.0,
@@ -2399,6 +2401,8 @@
           "periods": 60
         },
         "offset": 1.0,
+        "entity": "asset.tower",
+        "category": "financing.debt.principal",
         "values": [
           {
             "amount": 0.0,
@@ -2649,6 +2653,8 @@
           "periods": 60
         },
         "offset": 0.0,
+        "entity": "asset.tower",
+        "category": "financing.debt.proceeds",
         "values": [
           {
             "amount": 6000000.0,
@@ -3230,5 +3236,14 @@
     "seed": 0,
     "metrics": {},
     "trial_summaries": []
+  },
+  "graph": {
+    "entities": [
+      {
+        "symbol": "asset.tower",
+        "family": "asset",
+        "type": "CRE.Asset.RealProperty"
+      }
+    ]
   }
 }

@@ -1,7 +1,7 @@
 {
-  "results_version": "0.6",
+  "results_version": "0.7",
   "model_hash": "a0e644ff74dfb334b4ea8794d618c7669f59defa2b41f29f277764c1e22e807f",
-  "ledger_hash": "fccdef5915b2bfed6364e5bd40f908616e5fa1bb087499790c6aa4a173af217c",
+  "ledger_hash": "0267039b5c442a5be520814b4e5d2024a0b9a12c2d1589bfdfc8fdaa28af015b",
   "engine": {
     "name": "cfdl-engine",
     "version": "0.7.0"
@@ -4138,6 +4138,8 @@
           "periods": 96
         },
         "offset": 1.0,
+        "entity": "asset.property",
+        "category": "investing.disposal.reversion",
         "values": [
           {
             "amount": 0.0,
@@ -4532,6 +4534,8 @@
           "periods": 96
         },
         "offset": 1.0,
+        "entity": "asset.property",
+        "category": "operating.expense.opex",
         "values": [
           {
             "amount": 0.0,
@@ -4926,6 +4930,8 @@
           "periods": 96
         },
         "offset": 1.0,
+        "entity": "asset.construction",
+        "category": "financing.debt.service",
         "values": [
           {
             "amount": -75000.0,
@@ -5320,6 +5326,8 @@
           "periods": 96
         },
         "offset": 1.0,
+        "entity": "asset.permanent",
+        "category": "financing.debt.service",
         "values": [
           {
             "amount": 0.0,
@@ -5714,6 +5722,8 @@
           "periods": 96
         },
         "offset": 1.0,
+        "entity": "asset.property",
+        "category": "operating.revenue.base_rent",
         "values": [
           {
             "amount": 0.0,
@@ -6108,6 +6118,8 @@
           "periods": 96
         },
         "offset": 1.0,
+        "entity": "asset.property",
+        "category": "operating.revenue.base_rent",
         "values": [
           {
             "amount": 0.0,
@@ -6502,6 +6514,8 @@
           "periods": 96
         },
         "offset": 1.0,
+        "entity": "asset.property",
+        "category": "operating.revenue.base_rent",
         "values": [
           {
             "amount": 0.0,
@@ -7496,5 +7510,24 @@
     "seed": 0,
     "metrics": {},
     "trial_summaries": []
+  },
+  "graph": {
+    "entities": [
+      {
+        "symbol": "asset.construction",
+        "family": "asset",
+        "type": "Asset.Financial"
+      },
+      {
+        "symbol": "asset.permanent",
+        "family": "asset",
+        "type": "Asset.Financial"
+      },
+      {
+        "symbol": "asset.property",
+        "family": "asset",
+        "type": "CRE.Asset.RealProperty"
+      }
+    ]
   }
 }

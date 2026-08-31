@@ -1,7 +1,7 @@
 {
-  "results_version": "0.6",
+  "results_version": "0.7",
   "model_hash": "fef498a8032d54fa62c607b4894e7631dc721a97fdea625dde7fe934060da566",
-  "ledger_hash": "01e4d7ed5adff215152ec1f66ea818e078892bc9ef0a516f711ae5832b0798f6",
+  "ledger_hash": "6036841a1cb285ccc10a11d8febefab362ef8a935966009917bc085967047bef",
   "engine": {
     "name": "cfdl-engine",
     "version": "0.7.0"
@@ -219,6 +219,8 @@
           "periods": 3
         },
         "offset": 1.0,
+        "entity": "asset.plant",
+        "category": "operating.income_tax.benefit",
         "values": [
           {
             "amount": 7000000.0,
@@ -246,5 +248,14 @@
     "seed": 0,
     "metrics": {},
     "trial_summaries": []
+  },
+  "graph": {
+    "entities": [
+      {
+        "symbol": "asset.plant",
+        "family": "asset",
+        "type": "Energy.Asset.GenerationFacility"
+      }
+    ]
   }
 }

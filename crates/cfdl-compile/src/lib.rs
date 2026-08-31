@@ -3049,6 +3049,42 @@ fn check_entity_types(
         })
         .collect();
 
+    // A STABLE IDENTITY IS A FACT ABOUT ONE THING (docs/13 §7.91). The
+    // literal field `id` is engine-opaque and published in the results
+    // graph; the one thing the language can check is that two entities do
+    // not claim the same one, because a consumer joining on it would merge
+    // two things into one.
+    let mut seen_ids: BTreeMap<String, String> = BTreeMap::new();
+    for source_stmt in &resolve_output.source_statements {
+        let Stmt::Entity(entity) = &source_stmt.statement else {
+            continue;
+        };
+        let Some(id_field) = entity.literal_fields.iter().find(|f| f.name == "id") else {
+            continue;
+        };
+        let value = id_field.value.trim().trim_matches('"').to_string();
+        if let Some(holder) = seen_ids.get(&value) {
+            diagnostics.push(Diagnostic {
+                code: "E1360_DUPLICATE_ENTITY_ID".to_string(),
+                severity: "error".to_string(),
+                message: format!(
+                    "Entity '{}' declares id \"{value}\", which '{holder}' already carries.",
+                    entity.symbol()
+                ),
+                file: Some(source_stmt.file.clone()),
+                span: Some(map_span(id_field.span)),
+                path: None,
+                hint: Some(
+                    "An id names one thing for the layer above the model; a consumer joining on it would merge the two entities into one."
+                        .to_string(),
+                ),
+                notes: vec![],
+            });
+        } else {
+            seen_ids.insert(value, entity.symbol());
+        }
+    }
+
     for source_stmt in &resolve_output.source_statements {
         let Stmt::Entity(entity) = &source_stmt.statement else {
             continue;

@@ -1,7 +1,7 @@
 {
-  "results_version": "0.6",
+  "results_version": "0.7",
   "model_hash": "efbcd77ca138ff748435315ca242516c19f21cbbd5d4de5fc110b7241723261b",
-  "ledger_hash": "3fe4d7d381cdcdbde68bba2b907cda78b65d184a4e6124498d6b3a4a803233f8",
+  "ledger_hash": "0e02a529a12e4c361edf4ad33e75bad77e6f835faeb631fb2f39916b8b486e7a",
   "engine": {
     "name": "cfdl-engine",
     "version": "0.7.0"
@@ -2575,6 +2575,8 @@
           "periods": 72
         },
         "offset": 1.0,
+        "entity": "asset.property",
+        "category": "investing.capital.construction",
         "values": [
           {
             "amount": -45000.0,
@@ -2873,6 +2875,8 @@
           "periods": 72
         },
         "offset": 1.0,
+        "entity": "asset.property",
+        "category": "investing.disposal.reversion",
         "values": [
           {
             "amount": 0.0,
@@ -3171,6 +3175,8 @@
           "periods": 72
         },
         "offset": 1.0,
+        "entity": "asset.property",
+        "category": "operating.revenue.base_rent",
         "values": [
           {
             "amount": 0.0,
@@ -3469,6 +3475,8 @@
           "periods": 72
         },
         "offset": 1.0,
+        "entity": "asset.property",
+        "category": "operating.expense.opex",
         "values": [
           {
             "amount": 0.0,
@@ -3767,6 +3775,8 @@
           "periods": 72
         },
         "offset": 1.0,
+        "entity": "asset.property",
+        "category": "operating.revenue.other",
         "values": [
           {
             "amount": 0.0,
@@ -4574,5 +4584,14 @@
     "seed": 0,
     "metrics": {},
     "trial_summaries": []
+  },
+  "graph": {
+    "entities": [
+      {
+        "symbol": "asset.property",
+        "family": "asset",
+        "type": "CRE.Asset.RealProperty"
+      }
+    ]
   }
 }

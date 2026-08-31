@@ -1,7 +1,7 @@
 {
-  "results_version": "0.6",
+  "results_version": "0.7",
   "model_hash": "55ec5c28679f8fe5d5c622ba821c8414efb6ac807f70f19f8d23fb937268e713",
-  "ledger_hash": "5a2be950e3e69e583324b4a993fb8f338e83621e37d1e2bed335c05b407dbdde",
+  "ledger_hash": "df617ff2ba14896fef425ad977afa224723bd8551414158cae12eec64360dba2",
   "engine": {
     "name": "cfdl-engine",
     "version": "0.7.0"
@@ -931,6 +931,8 @@
           "periods": 13
         },
         "offset": 1.0,
+        "entity": "asset.buyer",
+        "category": "operating.collection.principal",
         "values": [
           {
             "amount": 0.0,
@@ -993,6 +995,8 @@
           "periods": 13
         },
         "offset": 1.0,
+        "entity": "asset.buyer",
+        "category": "operating.collection.interest",
         "values": [
           {
             "amount": 6200.0,
@@ -1055,6 +1059,8 @@
           "periods": 13
         },
         "offset": 1.0,
+        "entity": "asset.buyer",
+        "category": "operating.collection.penalty",
         "values": [
           {
             "amount": 0.0,
@@ -1117,6 +1123,8 @@
           "periods": 13
         },
         "offset": 1.0,
+        "entity": "asset.buyer",
+        "category": "operating.collection.prepayment",
         "values": [
           {
             "amount": 0.0,
@@ -1179,6 +1187,8 @@
           "periods": 13
         },
         "offset": 1.0,
+        "entity": "asset.buyer",
+        "category": "operating.collection.recovery",
         "values": [
           {
             "amount": 0.0,
@@ -1241,6 +1251,8 @@
           "periods": 13
         },
         "offset": 1.0,
+        "entity": "asset.buyer",
+        "category": "operating.expense.servicing",
         "values": [
           {
             "amount": 0.0,
@@ -1595,5 +1607,14 @@
     "seed": 0,
     "metrics": {},
     "trial_summaries": []
+  },
+  "graph": {
+    "entities": [
+      {
+        "symbol": "asset.buyer",
+        "family": "asset",
+        "type": "Credit.Asset.LoanPool"
+      }
+    ]
   }
 }

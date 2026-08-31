@@ -1,7 +1,7 @@
 {
-  "results_version": "0.6",
+  "results_version": "0.7",
   "model_hash": "3555a2df0e774f146c23d3052d21f1a8f5ff2a2bd2e3e57a90f93844efa10185",
-  "ledger_hash": "546c1498bcd5ae67ebd0b8251a33db38865ab130fe72ff324ca1a58e1f18128d",
+  "ledger_hash": "fb2d6c4462b08b1370bbbe169c313be95f548ddb1128a72b3328f48efd09168e",
   "engine": {
     "name": "cfdl-engine",
     "version": "0.7.0"
@@ -434,6 +434,8 @@
           "periods": 5
         },
         "offset": 1.0,
+        "entity": "asset.firm",
+        "category": "operating.revenue.recurring",
         "values": [
           {
             "amount": 1000.0,
@@ -464,6 +466,8 @@
           "periods": 5
         },
         "offset": 1.0,
+        "entity": "asset.firm",
+        "category": "investing.disposal.selling_costs",
         "values": [
           {
             "amount": 0.0,
@@ -494,6 +498,8 @@
           "periods": 5
         },
         "offset": 1.0,
+        "entity": "asset.firm",
+        "category": "investing.disposal.proceeds",
         "values": [
           {
             "amount": 0.0,
@@ -529,5 +535,14 @@
     "seed": 0,
     "metrics": {},
     "trial_summaries": []
+  },
+  "graph": {
+    "entities": [
+      {
+        "symbol": "asset.firm",
+        "family": "asset",
+        "type": "OpCo.Asset.Enterprise"
+      }
+    ]
   }
 }

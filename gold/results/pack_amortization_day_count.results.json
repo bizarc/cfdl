@@ -1,7 +1,7 @@
 {
-  "results_version": "0.6",
+  "results_version": "0.7",
   "model_hash": "1fa469aa79ac91312e429dbedcf6c6283ea4da5c96575de36f119138a28f302c",
-  "ledger_hash": "4d625369d6346082f42160ed1476b06280a18f0e6f0d5f38cf7a4b1b35706c4f",
+  "ledger_hash": "18fdb595fd5d42fde058e24ce29af9ef28bb1d701332cbac15bbf4bc9d92da9d",
   "engine": {
     "name": "cfdl-engine",
     "version": "0.7.0"
@@ -936,6 +936,8 @@
           "periods": 13
         },
         "offset": 1.0,
+        "entity": "asset.buyer",
+        "category": "operating.collection.interest",
         "values": [
           {
             "amount": 688888.888889,
@@ -998,6 +1000,8 @@
           "periods": 13
         },
         "offset": 1.0,
+        "entity": "asset.buyer",
+        "category": "operating.collection.penalty",
         "values": [
           {
             "amount": 0.0,
@@ -1060,6 +1064,8 @@
           "periods": 13
         },
         "offset": 1.0,
+        "entity": "asset.buyer",
+        "category": "operating.collection.prepayment",
         "values": [
           {
             "amount": 0.0,
@@ -1122,6 +1128,8 @@
           "periods": 13
         },
         "offset": 1.0,
+        "entity": "asset.buyer",
+        "category": "operating.collection.recovery",
         "values": [
           {
             "amount": 0.0,
@@ -1184,6 +1192,8 @@
           "periods": 13
         },
         "offset": 1.0,
+        "entity": "asset.buyer",
+        "category": "operating.collection.principal",
         "values": [
           {
             "amount": 44875.68499,
@@ -1246,6 +1256,8 @@
           "periods": 13
         },
         "offset": 1.0,
+        "entity": "asset.buyer",
+        "category": "operating.expense.servicing",
         "values": [
           {
             "amount": 0.0,
@@ -1600,5 +1612,14 @@
     "seed": 0,
     "metrics": {},
     "trial_summaries": []
+  },
+  "graph": {
+    "entities": [
+      {
+        "symbol": "asset.buyer",
+        "family": "asset",
+        "type": "Credit.Asset.LoanPool"
+      }
+    ]
   }
 }

@@ -803,6 +803,14 @@ Provenance: found sectioning `benchmarks/credit/americredit_2017_1` into a
 pack-free model, August 2026. Rewritten August 2026 after probing the own-cash
 claim, which does not hold — the parent's streams are published individually and
 the rollup arithmetic closes — and finding the ownership gap underneath it.
+
+**Status, 31 August 2026 — shipped, and wider than the entry asked.**
+results_version 0.7 publishes a `graph` section — every entity's symbol,
+family, type, `part of` parent, and stable id — and attributes each stream
+series to its owning entity AND its category. A consumer holding
+results.json alone can now build the hierarchy view, attribute any stream's
+cash to the thing that owns it, and select by kind. The schema carries the
+descriptions; `docs/06` regenerated.
 ---
 
 ### 7.44 The engine's stages are modules, not crates
@@ -2270,6 +2278,12 @@ declaration surface now costs one optional token.
 Provenance: raised from the platform layer's identity-contract gap analysis
 (H.3), 30 August 2026, which found the binding missing on both sides —
 and scoped here to the half the language can supply alone.
+
+**Status, 31 August 2026 — shipped.** The literal field `id` is the
+carrier: engine-opaque, unique within the model (`E1360`, with the
+join-would-merge reasoning in the hint), republished per entity in the
+results graph. `fixtures/valid/stable_identity` pins the round trip;
+`invalid/duplicate_entity_id` pins the refusal.
 
 ---
 

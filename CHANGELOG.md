@@ -8,6 +8,27 @@ This project follows Semantic Versioning: https://semver.org/
 
 ## [Unreleased]
 
+### Added: the results plane carries the graph (results_version 0.7; §7.43, §7.91)
+
+A series entry carried `index`, `offset` and `values`, and nothing else — so
+a consumer holding results.json alone could not attribute a stream to the
+entity that owns it, and name inspection is not a substitute: a pack-lowered
+stream's name does not contain its owner's symbol.
+
+results_version 0.7 closes that. Each stream series states its `entity` and
+its `category` — whose cash, and what kind. A top-level `graph` publishes
+every entity's symbol, family, ontology type, `part of` parent, and — new —
+its stable identity: the literal field `id`, an opaque string a layer above
+the model assigns to the real-world thing. The engine never interprets an
+id; it checks exactly one thing, uniqueness within the model (`E1360`),
+because a consumer joining on a duplicated id would merge two things into
+one.
+
+Fixtures: `valid/stable_identity` (id and hierarchy round-trip into the
+graph), `invalid/duplicate_entity_id`. Every results golden re-blessed for
+the version bump and the new attribution — values unchanged throughout.
+
+
 ### Added: entity fields inherit down the refinement chain (§7.92 piece 3)
 
 A refinement carried its master's identity but not its fields:

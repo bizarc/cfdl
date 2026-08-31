@@ -1,7 +1,7 @@
 {
-  "results_version": "0.6",
+  "results_version": "0.7",
   "model_hash": "cf3446aa4747cf8384180d34126775f14ce0cde0fe5089bd522321975a119d1b",
-  "ledger_hash": "42ce7c2ba7ccf3ba3f1a00a1ad5f3528057f35ac9393855e5932be42c152a20a",
+  "ledger_hash": "0a4aa6c00035986d9b9571551a05f390e29fd51a8d220cd1d55598037ede3adc",
   "engine": {
     "name": "cfdl-engine",
     "version": "0.7.0"
@@ -1063,6 +1063,7 @@
           "periods": 60
         },
         "offset": 1.0,
+        "entity": "asset.drillco",
         "values": [
           {
             "amount": -250000.0,
@@ -1313,6 +1314,7 @@
           "periods": 60
         },
         "offset": 0.0,
+        "entity": "asset.drillco",
         "values": [
           {
             "amount": -3500000.0,
@@ -1563,6 +1565,7 @@
           "periods": 60
         },
         "offset": 1.0,
+        "entity": "asset.opco",
         "values": [
           {
             "amount": -12000.0,
@@ -1813,6 +1816,7 @@
           "periods": 60
         },
         "offset": 1.0,
+        "entity": "asset.opco",
         "values": [
           {
             "amount": 0.0,
@@ -2063,6 +2067,7 @@
           "periods": 60
         },
         "offset": 1.0,
+        "entity": "asset.asset",
         "values": [
           {
             "amount": 0.0,
@@ -2313,6 +2318,7 @@
           "periods": 60
         },
         "offset": 1.0,
+        "entity": "asset.asset",
         "values": [
           {
             "amount": 0.0,
@@ -2883,5 +2889,24 @@
     "seed": 0,
     "metrics": {},
     "trial_summaries": []
+  },
+  "graph": {
+    "entities": [
+      {
+        "symbol": "asset.asset",
+        "family": "asset",
+        "type": "Asset.Real"
+      },
+      {
+        "symbol": "asset.drillco",
+        "family": "asset",
+        "type": "Asset.Financial"
+      },
+      {
+        "symbol": "asset.opco",
+        "family": "asset",
+        "type": "Asset.Financial"
+      }
+    ]
   }
 }

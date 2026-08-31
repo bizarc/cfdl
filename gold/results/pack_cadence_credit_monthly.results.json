@@ -1,7 +1,7 @@
 {
-  "results_version": "0.6",
+  "results_version": "0.7",
   "model_hash": "f25106875698178c48684a9eef1a3a659f2d784b96a2b5a018f77b8f46e6beab",
-  "ledger_hash": "cae6d7b3514f33785b79c043cde17d2af070d99932516b39da37f46ec2e7b64e",
+  "ledger_hash": "b598bc466a6c00a900570efbeb0c79717b35b1e453c6c4af8b07c053eaed5daa",
   "engine": {
     "name": "cfdl-engine",
     "version": "0.7.0"
@@ -2158,6 +2158,8 @@
           "periods": 39
         },
         "offset": 1.0,
+        "entity": "asset.buyer",
+        "category": "operating.collection.interest",
         "values": [
           {
             "amount": 5984.789708,
@@ -2324,6 +2326,8 @@
           "periods": 39
         },
         "offset": 1.0,
+        "entity": "asset.buyer",
+        "category": "operating.collection.penalty",
         "values": [
           {
             "amount": 0.0,
@@ -2490,6 +2494,8 @@
           "periods": 39
         },
         "offset": 1.0,
+        "entity": "asset.buyer",
+        "category": "operating.collection.prepayment",
         "values": [
           {
             "amount": 10223.258721,
@@ -2656,6 +2662,8 @@
           "periods": 39
         },
         "offset": 1.0,
+        "entity": "asset.buyer",
+        "category": "operating.collection.recovery",
         "values": [
           {
             "amount": 0.0,
@@ -2822,6 +2830,8 @@
           "periods": 39
         },
         "offset": 1.0,
+        "entity": "asset.buyer",
+        "category": "operating.collection.principal",
         "values": [
           {
             "amount": 30428.989925,
@@ -2988,6 +2998,8 @@
           "periods": 39
         },
         "offset": 1.0,
+        "entity": "asset.buyer",
+        "category": "operating.expense.servicing",
         "values": [
           {
             "amount": 0.0,
@@ -3576,5 +3588,14 @@
     "seed": 0,
     "metrics": {},
     "trial_summaries": []
+  },
+  "graph": {
+    "entities": [
+      {
+        "symbol": "asset.buyer",
+        "family": "asset",
+        "type": "Credit.Asset.LoanPool"
+      }
+    ]
   }
 }

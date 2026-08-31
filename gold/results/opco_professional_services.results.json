@@ -1,7 +1,7 @@
 {
-  "results_version": "0.6",
+  "results_version": "0.7",
   "model_hash": "1034021aa5c0c4a89cc8c2b80e48dd2a55ce1af1173fb40c7d797959a7b4cc6a",
-  "ledger_hash": "eb12aba419999f4f80de7f1bcaba3a0d4a42de4a8399bf146baba9e8a1e20c22",
+  "ledger_hash": "29c7be4ef28742246f3a54cbebf26a8d89fea383e3559785c333477d9704f10f",
   "engine": {
     "name": "cfdl-engine",
     "version": "0.7.0"
@@ -821,6 +821,7 @@
           "periods": 60
         },
         "offset": 0.0,
+        "entity": "asset.equity",
         "values": [
           {
             "amount": 0.0,
@@ -1071,6 +1072,7 @@
           "periods": 60
         },
         "offset": 1.0,
+        "entity": "asset.firm",
         "values": [
           {
             "amount": -230000.0,
@@ -1321,6 +1323,7 @@
           "periods": 60
         },
         "offset": 1.0,
+        "entity": "asset.firm",
         "values": [
           {
             "amount": -22000.0,
@@ -1571,6 +1574,7 @@
           "periods": 60
         },
         "offset": 1.0,
+        "entity": "asset.firm",
         "values": [
           {
             "amount": -45000.0,
@@ -1821,6 +1825,7 @@
           "periods": 60
         },
         "offset": 1.0,
+        "entity": "asset.firm",
         "values": [
           {
             "amount": -18000.0,
@@ -2071,6 +2076,7 @@
           "periods": 60
         },
         "offset": 1.0,
+        "entity": "asset.firm",
         "values": [
           {
             "amount": -14000.0,
@@ -2321,6 +2327,7 @@
           "periods": 60
         },
         "offset": 1.0,
+        "entity": "asset.firm",
         "values": [
           {
             "amount": 45000.0,
@@ -2571,6 +2578,7 @@
           "periods": 60
         },
         "offset": 1.0,
+        "entity": "asset.firm",
         "values": [
           {
             "amount": 95000.0,
@@ -2821,6 +2829,7 @@
           "periods": 60
         },
         "offset": 1.0,
+        "entity": "asset.firm",
         "values": [
           {
             "amount": 280000.0,
@@ -3551,5 +3560,19 @@
     "seed": 0,
     "metrics": {},
     "trial_summaries": []
+  },
+  "graph": {
+    "entities": [
+      {
+        "symbol": "asset.equity",
+        "family": "asset",
+        "type": "Asset.Financial"
+      },
+      {
+        "symbol": "asset.firm",
+        "family": "asset",
+        "type": "Asset.Financial"
+      }
+    ]
   }
 }

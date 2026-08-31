@@ -11,7 +11,7 @@ Diagnostics are the repair signal: read the `code`, `message`, `span`, and
 `hint`, change the model, recompile. The catalog is how an agent learns what
 each code looks like in the flesh before it meets one.
 
-**Coverage:** 201 codes in the docs/08 §7 register; 90 exemplified here; 70 of 95 examples carry a recorded fix.
+**Coverage:** 202 codes in the docs/08 §7 register; 91 exemplified here; 70 of 96 examples carry a recorded fix.
 
 ## active_in_unknown_state — E1332_UNKNOWN_ACTIVE_STATE
 
@@ -824,6 +824,34 @@ contract cre.opex_line on entity asset.tower {
 ```
 
 - `E1002_DUPLICATE_CONTRACT` (error): Duplicate contract 'cre.opex_line'. Give one a suffix to keep them separable.
+
+Fix: not yet recorded.
+
+## duplicate_entity_id — E1360_DUPLICATE_ENTITY_ID
+
+Failing example:
+
+```cfdl
+version 0.1
+model "duplicate-entity-id"
+time calendar annual from 2026-01 for 2
+
+// An id names ONE thing for the layer above the model. Two entities
+// claiming the same one would merge under any consumer that joins on it —
+// so the duplicate is refused, the one check the language can make about a
+// value it must not interpret.
+
+entity asset alpha : Asset.Financial { id = "evs:asset/91" }
+entity asset beta  : Asset.Financial { id = "evs:asset/91" }
+
+stream alpha.income on entity asset.alpha inflow currency USD {
+  schedule every year from 2026-01 to 2027-01
+  amount = 100
+}
+```
+
+- `E1360_DUPLICATE_ENTITY_ID` (error): Entity 'asset.beta' declares id "evs:asset/91", which 'asset.alpha' already carries.
+  - hint: An id names one thing for the layer above the model; a consumer joining on it would merge the two entities into one.
 
 Fix: not yet recorded.
 

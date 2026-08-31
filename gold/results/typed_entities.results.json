@@ -1,7 +1,7 @@
 {
-  "results_version": "0.6",
+  "results_version": "0.7",
   "model_hash": "2d21e88bc05bc15018e94c8be91b33002a19a7d5c4f3bf89fedaeba5fcf7fae4",
-  "ledger_hash": "56c5e47ea54268aab4395a78356d5b73cb66b738cc82e1c734f1a6b04ee3a004",
+  "ledger_hash": "e9c335f3c85e5c189f92351774c20901079aaed1532921435d8aef34b32403e1",
   "engine": {
     "name": "cfdl-engine",
     "version": "0.7.0"
@@ -293,6 +293,8 @@
           "periods": 3
         },
         "offset": 1.0,
+        "entity": "asset.tower",
+        "category": "operating.revenue.base_rent",
         "values": [
           {
             "amount": 100000.0,
@@ -320,5 +322,30 @@
     "seed": 0,
     "metrics": {},
     "trial_summaries": []
+  },
+  "graph": {
+    "entities": [
+      {
+        "symbol": "asset.legacy",
+        "family": "asset",
+        "type": "CRE.Asset.RealProperty"
+      },
+      {
+        "symbol": "asset.suite_a",
+        "family": "asset",
+        "type": "CRE.Asset.Unit",
+        "parent": "asset.tower"
+      },
+      {
+        "symbol": "asset.tower",
+        "family": "asset",
+        "type": "CRE.Asset.RealProperty"
+      },
+      {
+        "symbol": "party.acme",
+        "family": "party",
+        "type": "CRE.Party.Tenant"
+      }
+    ]
   }
 }

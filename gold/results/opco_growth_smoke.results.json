@@ -1,7 +1,7 @@
 {
-  "results_version": "0.6",
+  "results_version": "0.7",
   "model_hash": "ebb4c2113910bfe7b7f01e717bf0f2b52070d9c13e086573799c43d7da1898ab",
-  "ledger_hash": "a9b857664c85a06dc70afcbf7e4e203160e7cdbafa5571cd6601981657c32ef7",
+  "ledger_hash": "b2432227d0563c77bf9a18bd776510cc26c8f19aaae5099b49961ea85b586bd2",
   "engine": {
     "name": "cfdl-engine",
     "version": "0.7.0"
@@ -1430,6 +1430,8 @@
           "periods": 24
         },
         "offset": 1.0,
+        "entity": "asset.business",
+        "category": "operating.expense.opex",
         "values": [
           {
             "amount": -60000.0,
@@ -1536,6 +1538,8 @@
           "periods": 24
         },
         "offset": 1.0,
+        "entity": "asset.business",
+        "category": "operating.revenue.recurring",
         "values": [
           {
             "amount": 100000.0,
@@ -1883,5 +1887,14 @@
     "seed": 0,
     "metrics": {},
     "trial_summaries": []
+  },
+  "graph": {
+    "entities": [
+      {
+        "symbol": "asset.business",
+        "family": "asset",
+        "type": "OpCo.Asset.Enterprise"
+      }
+    ]
   }
 }

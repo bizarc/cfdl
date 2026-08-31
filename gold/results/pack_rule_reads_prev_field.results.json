@@ -1,7 +1,7 @@
 {
-  "results_version": "0.6",
+  "results_version": "0.7",
   "model_hash": "af1c41d80ac88680a093e5dee535296ea38a3d32aeed66c419c8d4fcbb264b2e",
-  "ledger_hash": "691a6f8632effbe99ccf1fedc0ecd78bfdbdb5449bec9b362f7fec17af3efb5b",
+  "ledger_hash": "cbf0f29f13d185e810c451667f6cc5c6db40b4ac542d5ab35d143dc82475ce97",
   "engine": {
     "name": "cfdl-engine",
     "version": "0.7.0"
@@ -112,6 +112,8 @@
           "periods": 4
         },
         "offset": 1.0,
+        "entity": "asset.borrower",
+        "category": "operating.expense.interest",
         "values": [
           {
             "amount": 0.0,
@@ -173,5 +175,14 @@
     "seed": 0,
     "metrics": {},
     "trial_summaries": []
+  },
+  "graph": {
+    "entities": [
+      {
+        "symbol": "asset.borrower",
+        "family": "asset",
+        "type": "Asset.Financial"
+      }
+    ]
   }
 }

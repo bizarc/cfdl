@@ -1,7 +1,7 @@
 {
-  "results_version": "0.6",
+  "results_version": "0.7",
   "model_hash": "f8db6639b6ce09888ca0a879ff35eb1f1eedfd9a28297cf6be7e7167de1a441a",
-  "ledger_hash": "7ba21f6ebcee67369c32c76fa04afa91103c8c945804e8ad3562b1603c420e0e",
+  "ledger_hash": "db27cc2763f1f7e9f390f78baccc07c7db32ee9d7bd03cc0f551220ec710eeb1",
   "engine": {
     "name": "cfdl-engine",
     "version": "0.7.0"
@@ -251,6 +251,8 @@
           "periods": 3
         },
         "offset": 1.0,
+        "entity": "asset.tower",
+        "category": "operating.expense.opex",
         "values": [
           {
             "amount": -1000.0,
@@ -273,6 +275,8 @@
           "periods": 3
         },
         "offset": 1.0,
+        "entity": "asset.suite",
+        "category": "operating.revenue.base_rent",
         "values": [
           {
             "amount": 36000.0,
@@ -295,6 +299,8 @@
           "periods": 3
         },
         "offset": 1.0,
+        "entity": "asset.tower",
+        "category": "operating.revenue.base_rent",
         "values": [
           {
             "amount": 75000.0,
@@ -322,5 +328,20 @@
     "seed": 0,
     "metrics": {},
     "trial_summaries": []
+  },
+  "graph": {
+    "entities": [
+      {
+        "symbol": "asset.suite",
+        "family": "asset",
+        "type": "CRE.Asset.Unit",
+        "parent": "asset.tower"
+      },
+      {
+        "symbol": "asset.tower",
+        "family": "asset",
+        "type": "CRE.Asset.RealProperty"
+      }
+    ]
   }
 }
