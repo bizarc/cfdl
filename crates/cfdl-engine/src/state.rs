@@ -99,6 +99,9 @@ struct PreparedMachine {
     /// Edges in declaration order — the order that resolves two guards
     /// holding in one period, the same rule waterfall steps follow.
     edges: Vec<PreparedEdge>,
+    /// State -> its entry actions. What is true of the STATE however it was
+    /// reached, so it runs before the taken edge's own actions.
+    entry_actions: BTreeMap<String, Vec<PreparedAction>>,
 }
 
 struct PreparedEdge {
@@ -108,6 +111,46 @@ struct PreparedEdge {
     /// never fired by the machine on its own.
     guard: Option<cfdl_expr::CompiledExpr>,
     guard_src: String,
+    /// What is true of the PATH taken, run on every traversal.
+    actions: Vec<PreparedAction>,
+}
+
+/// One arrival action, compiled once (`docs/34` D2/D3).
+struct PreparedAction {
+    field: String,
+    /// `pack` or `model`, carried from the IR and named in the journal so a
+    /// same-field conflict records WHOSE value was overridden.
+    author: String,
+    /// `None` when the value failed to compile; the action is then skipped
+    /// with a warning rather than writing something arbitrary.
+    expr: Option<cfdl_expr::CompiledExpr>,
+    src: String,
+}
+
+/// Compile one arrival action's value.
+fn prepare_actions(
+    actions: &[crate::ir::IrStateAction],
+    what: &str,
+    warnings: &mut Vec<String>,
+) -> Vec<PreparedAction> {
+    actions
+        .iter()
+        .map(|action| PreparedAction {
+            field: action.field.clone(),
+            author: action.author.clone(),
+            expr: match cfdl_expr::compile_expr(&action.value.src) {
+                Ok(compiled) => Some(compiled),
+                Err(err) => {
+                    warnings.push(format!(
+                        "{what} action `set {}` compile failed [{}]: {}; action skipped.",
+                        action.field, err.code, err.message
+                    ));
+                    None
+                }
+            },
+            src: action.value.src.clone(),
+        })
+        .collect()
 }
 
 /// The lifecycle state an entity OPENS in: its own `state` clause, or its
@@ -159,7 +202,12 @@ pub(crate) struct StateWalk {
     option_cash: BTreeMap<String, Vec<f64>>,
     transitions: Vec<TransitionRecord>,
     journal: Vec<JournalEntry>,
-    event_fired: Vec<bool>,
+    /// Last period's value of each event's condition — the rising edge's
+    /// memory, and the only memory an event has.
+    event_prev_condition: Vec<bool>,
+    /// Per event, which periods its schedule supplies as occurrences. `None`
+    /// when it has no schedule.
+    event_scheduled: Vec<Option<Vec<bool>>>,
     option_exercised: Vec<bool>,
     forced_exercise: Vec<String>,
     compiled_events: Vec<Option<cfdl_expr::CompiledExpr>>,
@@ -207,6 +255,129 @@ impl StateWalk {
     /// two-way.
     pub(crate) fn settled(&self) -> SettledState<'_> {
         (&self.values, &self.entity_state, &self.stream_active)
+    }
+
+    /// Run a state's entry actions and then the taken edge's, on ARRIVAL.
+    ///
+    /// Shared by both paths that move an entity, because `docs/34` D2 says the
+    /// actions run every time the edge is taken, WHATEVER TOOK IT: the
+    /// machine's own guard, or a named event's `status` write crossing a
+    /// permission edge. A status write reaching the state without running its
+    /// entry actions would make the same arrival mean two different things
+    /// depending on what caused it.
+    ///
+    /// Evaluation is split from application so the machine can be read while
+    /// the field store is written: everything is evaluated against the frozen
+    /// pre-state first, then applied in order.
+    #[allow(clippy::too_many_arguments)]
+    fn run_arrival_actions(
+        &mut self,
+        symbol: &str,
+        lifecycle_id: &str,
+        to: &str,
+        edge_idx: Option<usize>,
+        t: usize,
+        date: &Date,
+        env: &cfdl_expr::ExprEnv,
+        warnings: &mut Vec<String>,
+    ) -> Vec<JournalEntry> {
+        // Evaluate first, holding only an immutable borrow of the machine.
+        let mut planned: Vec<(String, String, String, ExprValue, &'static str)> = Vec::new();
+        {
+            let Some(machine) = self.machines.get(symbol) else {
+                return Vec::new();
+            };
+            let entry = machine.entry_actions.get(to).into_iter().flatten();
+            let edge = edge_idx
+                .and_then(|i| machine.edges.get(i))
+                .map(|e| &e.actions)
+                .into_iter()
+                .flatten();
+            for (action, grain) in entry.map(|a| (a, "enter")).chain(edge.map(|a| (a, "edge"))) {
+                let Some(expr) = &action.expr else {
+                    continue;
+                };
+                match cfdl_expr::eval(expr, env) {
+                    Ok(v) => planned.push((
+                        action.field.clone(),
+                        action.author.clone(),
+                        action.src.clone(),
+                        v,
+                        grain,
+                    )),
+                    Err(err) => warnings.push(format!(
+                        "Lifecycle '{lifecycle_id}' {grain} action `set {}` failed [{}]: {}; skipped.",
+                        action.field, err.code, err.message
+                    )),
+                }
+            }
+        }
+
+        let actor = |author: &str| match author {
+            "pack" => format!("lifecycle:{lifecycle_id}"),
+            _ => "model".to_string(),
+        };
+        let mut children: Vec<JournalEntry> = Vec::new();
+        // What THIS arrival has already written, and who wrote it. Only a
+        // losing write from the same arrival is `overridden`; the value a field
+        // simply held coming in was never a competing write, and reporting it
+        // as one would make every action look like a conflict.
+        let mut written_here: BTreeMap<String, String> = BTreeMap::new();
+        for (field, author, src, value, grain) in planned {
+            // ONE VALUE PER PATH, the shipped event-`set` law: the write
+            // settles the FIELD STORE and the recurrence resumes from it next
+            // period. It does not enter the entity-state record — that would be
+            // a second copy, free to go stale.
+            let rule_key = format!("{symbol}.{field}");
+            let Some(series) = self.values.get_mut(&rule_key) else {
+                warnings.push(format!(
+                    "Lifecycle '{lifecycle_id}' {grain} action `set {field}` names no field store; skipped."
+                ));
+                continue;
+            };
+            let before = series[t];
+            match &value {
+                ExprValue::Decimal(d) => series[t] = *d,
+                ExprValue::Int(i) => series[t] = *i as f64,
+                other => {
+                    warnings.push(format!(
+                        "Lifecycle '{lifecycle_id}' {grain} action `set {field}` produced {other:?}, which is not a number; skipped."
+                    ));
+                    continue;
+                }
+            }
+            let settled = series[t];
+            if let Some(loser) = written_here.get(&field) {
+                children.push(
+                    JournalEntry::new(
+                        t,
+                        &date.to_string(),
+                        actor(loser),
+                        "set",
+                        rule_key.clone(),
+                        "overridden",
+                    )
+                    .with_note(format!("{before} superseded on arrival in {to}")),
+                );
+            }
+            written_here.insert(field.clone(), author.clone());
+            children.push(
+                JournalEntry::new(
+                    t,
+                    &date.to_string(),
+                    // The AUTHOR, not the construct: a pack's machine and a
+                    // model's augmentation of it are different actors writing
+                    // one field, and an `overridden` line that cannot say which
+                    // is the one thing this record exists to prevent.
+                    actor(&author),
+                    "set",
+                    rule_key,
+                    "applied",
+                )
+                .with_note(format!("on {grain} into {to}: {src} = {settled}")),
+            );
+        }
+        children
     }
 
     /// Settle one period: this period's field candidates, then the events and
@@ -347,7 +518,7 @@ impl StateWalk {
         // per period is taken. There is no latch — the from-state gate is the
         // memory, and a self-edge is a real transition. The write is visible
         // to this period's streams, the timing every event write has.
-        let machine_moves: Vec<(String, String, String, String, String)> = self
+        let machine_moves: Vec<(String, String, String, String, String, usize)> = self
             .machines
             .iter()
             .filter_map(|(symbol, machine)| {
@@ -355,7 +526,7 @@ impl StateWalk {
                     Some(ExprValue::String(state)) => state.clone(),
                     _ => return None,
                 };
-                for edge in &machine.edges {
+                for (edge_position, edge) in machine.edges.iter().enumerate() {
                     if edge.from != from {
                         continue;
                     }
@@ -373,6 +544,7 @@ impl StateWalk {
                     ) {
                         continue;
                     }
+                    let edge_idx = edge_position;
                     // The values the guard read, for the journal (§6.1 rule
                     // 4): each series it names at the settled watermark, and
                     // the period itself.
@@ -396,12 +568,13 @@ impl StateWalk {
                         edge.from.clone(),
                         edge.to.clone(),
                         format!("when {} — read {}", edge.guard_src, reads.join(", ")),
+                        edge_idx,
                     ));
                 }
                 None
             })
             .collect();
-        for (symbol, lifecycle_id, from, to, note) in machine_moves {
+        for (symbol, lifecycle_id, from, to, note, edge_idx) in machine_moves {
             self.current_state
                 .entry(symbol.clone())
                 .or_default()
@@ -415,30 +588,77 @@ impl StateWalk {
                 to: to.clone(),
                 event: format!("lifecycle:{lifecycle_id}"),
             });
-            self.journal.push(
-                JournalEntry::new(
-                    t,
-                    &date.to_string(),
-                    format!("lifecycle:{lifecycle_id}"),
-                    "transition",
-                    format!("{symbol}: {from} -> {to}"),
-                    "applied",
-                )
-                .with_note(note),
+            // The transition is the EVENT; its arrival actions are what it
+            // DID, so they are gathered as its children rather than pushed
+            // beside it (`docs/34` D7). Held back until they are known.
+            let mut transition_entry = JournalEntry::new(
+                t,
+                &date.to_string(),
+                format!("lifecycle:{lifecycle_id}"),
+                "transition",
+                format!("{symbol}: {from} -> {to}"),
+                "applied",
+            )
+            .with_note(note);
+
+            // ARRIVAL ACTIONS. Entry actions first — the state's own setup,
+            // true however it was reached — then the taken edge's, which know
+            // the path. The specific refines the general (`docs/34` D3), so a
+            // same-field write journals the earlier value `overridden` and the
+            // later one stands.
+            //
+            // Both run in the guard's environment, which the walk already
+            // proves acyclic: state as the period opened, series strictly
+            // backward. The write settles the field for this period, so a
+            // stream later in the same period reads the settled value and the
+            // recurrence resumes from it next period.
+            let children = self.run_arrival_actions(
+                &symbol,
+                &lifecycle_id,
+                &to,
+                Some(edge_idx),
+                t,
+                date,
+                &env,
+                warnings,
             );
+            transition_entry.children = children;
+            self.journal.push(transition_entry);
         }
 
         for (event_idx, event) in ir.events.iter().enumerate() {
-            if self.event_fired[event_idx] {
-                continue;
-            }
-            let Some(when) = &self.compiled_events[event_idx] else {
-                continue;
+            // AN EVENT IS SOMETHING THAT HAPPENS, and nothing restricts it to
+            // happening once (`docs/34` D1). A schedule SUPPLIES occurrences
+            // and `when` FILTERS them; with no schedule, an occurrence is the
+            // condition's rising edge — true having been false, re-arming when
+            // it falls.
+            //
+            // A condition that fails to compile disables the event, which is
+            // the shipped behavior: `None` here means no occurrence, never an
+            // unconditional one.
+            let condition = match &self.compiled_events[event_idx] {
+                Some(when) => eval_bool_expr(when, &env, "Event", &event.name, "when", warnings),
+                // No `when` at all: every scheduled occurrence fires. An event
+                // that failed to compile is a different case and is caught by
+                // the `when.is_some()` test below.
+                None => event.when.is_none(),
             };
-            if !eval_bool_expr(when, &env, "Event", &event.name, "when", warnings) {
+            let disabled = event.when.is_some() && self.compiled_events[event_idx].is_none();
+            let fires = match &self.event_scheduled[event_idx] {
+                // Scheduled: the calendar says WHEN it is tested, the
+                // condition says whether it fires. Four consecutive failing
+                // quarterly tests are four breach events, because the model
+                // declared quarterly testing.
+                Some(mask) => mask.get(t).copied().unwrap_or(false) && condition,
+                // Unscheduled: the condition's own rising edge.
+                None => condition && !self.event_prev_condition[event_idx],
+            };
+            // Recorded whatever happened, so the edge is measured against the
+            // condition and not against whether the event fired.
+            self.event_prev_condition[event_idx] = condition;
+            if disabled || !fires {
                 continue;
             }
-            self.event_fired[event_idx] = true;
             for action in &event.actions {
                 match action.kind.as_str() {
                     "SetEntityField" => {
@@ -569,17 +789,45 @@ impl StateWalk {
                                     to: after.clone(),
                                     event: event.name.clone(),
                                 });
-                                self.journal.push(
-                                    JournalEntry::new(
-                                        t,
-                                        &date.to_string(),
-                                        format!("event:{}", event.name),
-                                        "set",
-                                        format!("{}.{}", entity.symbol, field),
-                                        "applied",
-                                    )
-                                    .with_change(before, after),
-                                );
+                                let mut entry = JournalEntry::new(
+                                    t,
+                                    &date.to_string(),
+                                    format!("event:{}", event.name),
+                                    "set",
+                                    format!("{}.{}", entity.symbol, field),
+                                    "applied",
+                                )
+                                .with_change(before.clone(), after.clone());
+                                // A `status` write that MOVES the entity is an
+                                // arrival like any other, and runs the target
+                                // state's entry actions and the taken edge's
+                                // (`docs/34` D2, D6). Without this the same
+                                // arrival would mean two different things
+                                // depending on what caused it.
+                                if field == "status" && before.as_deref() != Some(after.as_str()) {
+                                    let plan = self.machines.get(&entity.symbol).map(|m| {
+                                        (
+                                            m.lifecycle_id.clone(),
+                                            m.edges.iter().position(|e| {
+                                                Some(e.from.as_str()) == before.as_deref()
+                                                    && e.to == after
+                                            }),
+                                        )
+                                    });
+                                    if let Some((lifecycle_id, edge_idx)) = plan {
+                                        entry.children = self.run_arrival_actions(
+                                            &entity.symbol,
+                                            &lifecycle_id,
+                                            &after,
+                                            edge_idx,
+                                            t,
+                                            date,
+                                            &env,
+                                            warnings,
+                                        );
+                                    }
+                                }
+                                self.journal.push(entry);
                             }
                             Err(err) => {
                                 warnings.push(format!(
@@ -936,6 +1184,28 @@ pub(crate) fn prepare_state_walk(
                     }
                 }),
                 guard_src: edge.guard.as_ref().map(|g| g.src.clone()).unwrap_or_default(),
+                actions: prepare_actions(
+                    &edge.actions,
+                    &format!(
+                        "Lifecycle '{}' edge '{} -> {}'",
+                        machine.id, edge.from, edge.to
+                    ),
+                    warnings,
+                ),
+            })
+            .collect();
+        let entry_actions: BTreeMap<String, Vec<PreparedAction>> = machine
+            .entry_actions
+            .iter()
+            .map(|entry| {
+                (
+                    entry.state.clone(),
+                    prepare_actions(
+                        &entry.actions,
+                        &format!("Lifecycle '{}' entry into '{}'", machine.id, entry.state),
+                        warnings,
+                    ),
+                )
             })
             .collect();
         machines.insert(
@@ -943,6 +1213,7 @@ pub(crate) fn prepare_state_walk(
             PreparedMachine {
                 lifecycle_id: machine.id.clone(),
                 edges,
+                entry_actions,
             },
         );
     }
@@ -951,21 +1222,53 @@ pub(crate) fn prepare_state_walk(
     let option_cash: BTreeMap<String, Vec<f64>> = BTreeMap::new();
     let transitions: Vec<TransitionRecord> = Vec::new();
     let journal: Vec<JournalEntry> = Vec::new();
-    let event_fired = vec![false; ir.events.len()];
+    // WAS `event_fired`, the latch. It is now last period's CONDITION, which
+    // is what a rising edge compares against (`docs/34` D1). The latch was a
+    // hidden state — "has fired" — living outside the machine, unjournaled and
+    // undeclarable; this carries no memory of its own beyond one period.
+    let event_prev_condition = vec![false; ir.events.len()];
+    // Which periods a scheduled event is TESTED at. `None` for an event with
+    // no schedule, whose occurrences come from its condition's own dynamics.
+    let event_scheduled: Vec<Option<Vec<bool>>> = ir
+        .events
+        .iter()
+        .map(|event| {
+            let schedule = event.schedule.as_ref()?;
+            let mut slots: Vec<Vec<usize>> = vec![Vec::new(); timeline.len()];
+            match crate::timeline::apply_schedule_indices(schedule, timeline, &mut slots) {
+                Ok(()) => Some(slots.iter().map(|s| !s.is_empty()).collect()),
+                Err(err) => {
+                    warnings.push(format!(
+                        "Event '{}' schedule failed: {err}; event disabled.",
+                        event.name
+                    ));
+                    // Every period false: a schedule that could not be read
+                    // supplies no occurrences, rather than silently becoming
+                    // an unscheduled event that fires on its condition.
+                    Some(vec![false; timeline.len()])
+                }
+            }
+        })
+        .collect();
     let option_exercised = vec![false; ir.options.len()];
     let forced_exercise: Vec<String> = Vec::new();
 
     let compiled_events: Vec<Option<cfdl_expr::CompiledExpr>> = ir
         .events
         .iter()
-        .map(|event| match cfdl_expr::compile_expr(&event.when.src) {
-            Ok(compiled) => Some(compiled),
-            Err(err) => {
-                warnings.push(format!(
-                    "Event '{}' trigger compile failed [{}]: {}; event disabled.",
-                    event.name, err.code, err.message
-                ));
-                None
+        .map(|event| {
+            // An event with no `when` is purely scheduled: there is nothing to
+            // compile, and every scheduled occurrence fires.
+            let when = event.when.as_ref()?;
+            match cfdl_expr::compile_expr(&when.src) {
+                Ok(compiled) => Some(compiled),
+                Err(err) => {
+                    warnings.push(format!(
+                        "Event '{}' trigger compile failed [{}]: {}; event disabled.",
+                        event.name, err.code, err.message
+                    ));
+                    None
+                }
             }
         })
         .collect();
@@ -999,7 +1302,8 @@ pub(crate) fn prepare_state_walk(
         option_cash,
         transitions,
         journal,
-        event_fired,
+        event_prev_condition,
+        event_scheduled,
         option_exercised,
         forced_exercise,
         compiled_events,

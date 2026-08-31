@@ -296,11 +296,17 @@ history walks it — today they must be bare fields, unchecked and absent from
 the transition record (`docs/13` §7.36, closed by this milestone). The walk
 made the checked form buildable, and this milestone built it.
 
-The free-standing `event <name> when <expr>` keeps its shipped, latched
-meaning untouched, per §5.2's rule: for a pure side-effect event — no state
-moved — dropping the latch would change what a cumulative `set` means under
-a condition that stays true. The machine needs no such policy, and no
-keyword carries one.
+*Amended by `docs/34` (backlog §7.79).* This section originally kept the
+free-standing `event <name> when <expr>` on its shipped, latched meaning,
+reasoning that for a pure side-effect event — no state moved — dropping the
+latch would change what a cumulative `set` means under a condition that
+stays true. That reasoning held the latch in place for a case the schedule
+language answers better: an event that should act on a cadence says so with
+a schedule clause, and one that should act on a change of regime is a
+rising edge. The latch is therefore removed rather than preserved, and the
+named and anonymous spellings of an event now agree about what an
+occurrence is. The machine still needs no policy, and no keyword carries
+one — there is no `once`.
 
 Timing is unchanged and is worth stating: an event's write at `t` is visible
 to period `t`'s streams (step 1 before step 2), which is the shipped behavior

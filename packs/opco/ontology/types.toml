@@ -26,7 +26,6 @@ type_id = "OpCo.Asset.Enterprise"
 family = "asset"
 class = "financial"
 refines = "Asset.Financial"
-lifecycle = "opco.enterprise"
 description = "A going concern valued on its cash flows."
 
 [[entities.fields]]
@@ -153,41 +152,22 @@ required = false
 # Lifecycles
 # ---------------------------------------------------------------------------
 
-[[lifecycles]]
-lifecycle_id = "opco.enterprise"
-initial = "operating"
-states = ["operating", "under_offer", "acquired", "levered", "deleveraged", "exited"]
-description = "Initial state is `operating` because a valuation starts with a business that already runs; a buyout model transitions it."
-
-[[lifecycles.transitions]]
-from = "operating"
-to = "under_offer"
-
-[[lifecycles.transitions]]
-from = "under_offer"
-to = "acquired"
-description = "Transaction closes; sources and uses land."
-
-[[lifecycles.transitions]]
-from = "acquired"
-to = "levered"
-
-[[lifecycles.transitions]]
-from = "levered"
-to = "deleveraged"
-description = "Debt paid down to a target — commonly what makes an exit possible."
-
-[[lifecycles.transitions]]
-from = "levered"
-to = "exited"
-
-[[lifecycles.transitions]]
-from = "deleveraged"
-to = "exited"
-
-[[lifecycles.transitions]]
-from = "operating"
-to = "exited"
+# No lifecycle.
+#
+# An enterprise has no regime a model gates behavior on. The machine that
+# stood here encoded two orthogonal concerns — a transaction process
+# (under_offer -> acquired) and a capital structure (levered -> deleveraged)
+# — and an entity is in exactly one state, so the normal condition of every
+# LBO, levered AND operating, could not be said. Its declared path also left
+# `operating` at close, so a stream gated `active in state "operating"` would
+# have stopped paying the moment the deal funded.
+#
+# A transaction closing is a one-time occurrence: an event with a no-return
+# topology. Leverage is a magnitude: a field. Neither is a regime.
+#
+# What DOES warrant a machine here is the financing, not the enterprise —
+# compliant / in_breach / forborne / accelerated, a regime that returns and
+# gates cash. It is not declared until a case forces it (`docs/36` §5.1).
 
 # ---------------------------------------------------------------------------
 # Contracts

@@ -81,7 +81,7 @@ lifecycle <name> {                               -- a finite state machine
   initial <state>
   state <a>, <b>, <c>
   <from> -> <to> [when <boolean expr>]           -- guard: checked each period
-}                                                --   in <from>; no latch
+}                                                --   in <from>; re-entry re-arms
 account <name> {                                 -- cash that accumulates
   [owner <family>.<name>]                        -- a party owns at most one
   [from <expr>]                                  -- per-period inflow; no floor

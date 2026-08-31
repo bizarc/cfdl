@@ -1,0 +1,242 @@
+{
+  "ir_version": "0.1",
+  "model": {
+    "name": "dscr-cash-trap-with-cure-period",
+    "currency": "USD"
+  },
+  "time": {
+    "calendar": "monthly",
+    "start": "2026-01-01",
+    "periods": 18
+  },
+  "phases": [],
+  "entities": [
+    {
+      "id": "8ca71b46277588990b2687beb5fc6196",
+      "symbol": "asset.plant",
+      "type": "core.Entity",
+      "fields": {},
+      "rules": {
+        "good_periods": {
+          "init": {
+            "lang": "cfdl",
+            "src": "0.0"
+          },
+          "next": {
+            "lang": "cfdl",
+            "src": "if(     series_sum(\"ops.noi\", time.t - 1, time.t - 1) >= 1.20 * (0.0 - series_sum(\"debt.service\", time.t - 1, time.t - 1)),     prev + 1.0,     0.0   )"
+          }
+        }
+      },
+      "state": {},
+      "lifecycle": "covenant"
+    },
+    {
+      "id": "24a62c472a43f2095bc8f47536162f83",
+      "symbol": "party.sponsor",
+      "type": "core.Entity",
+      "fields": {
+        "name": "Sponsor"
+      },
+      "state": {}
+    }
+  ],
+  "assumptions": {
+    "constants": {},
+    "random": {}
+  },
+  "accounts": [
+    {
+      "name": "trap"
+    }
+  ],
+  "lifecycles": [
+    {
+      "id": "covenant",
+      "initial": "compliant",
+      "states": [
+        "compliant",
+        "trapped"
+      ],
+      "edges": [
+        {
+          "from": "compliant",
+          "to": "trapped",
+          "guard": {
+            "lang": "cfdl",
+            "src": "series_sum(\"ops.noi\", time.t - 1.0, time.t - 1.0) < 1.20 * (0.0 - series_sum(\"debt.service\", time.t - 1.0, time.t - 1.0))"
+          }
+        },
+        {
+          "from": "trapped",
+          "to": "compliant",
+          "guard": {
+            "lang": "cfdl",
+            "src": "asset.plant.good_periods >= 2.0"
+          }
+        }
+      ],
+      "entry_actions": [
+        {
+          "state": "trapped",
+          "actions": [
+            {
+              "kind": "SetField",
+              "author": "model",
+              "field": "good_periods",
+              "value": {
+                "lang": "cfdl",
+                "src": "0.0"
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "waterfalls": [
+    {
+      "name": "distribution",
+      "entity": "asset.plant",
+      "schedule": {
+        "kind": "Every",
+        "every": "monthly",
+        "from": "2026-01-01",
+        "to": "2027-06-01"
+      },
+      "source": {
+        "lang": "cfdl",
+        "src": "available"
+      },
+      "steps": [
+        {
+          "name": "trapped",
+          "payee": "trap",
+          "payee_is_account": true,
+          "amount": {
+            "lang": "cfdl",
+            "src": "if(asset.plant.status == \"trapped\", remaining, 0.0)"
+          }
+        },
+        {
+          "name": "residual",
+          "payee": "party.sponsor",
+          "amount": {
+            "lang": "cfdl",
+            "src": "remaining"
+          }
+        }
+      ]
+    },
+    {
+      "name": "release",
+      "entity": "asset.plant",
+      "schedule": {
+        "kind": "Every",
+        "every": "monthly",
+        "from": "2026-01-01",
+        "to": "2027-06-01"
+      },
+      "source": {
+        "lang": "cfdl",
+        "src": "trap"
+      },
+      "steps": [
+        {
+          "name": "released",
+          "payee": "party.sponsor",
+          "amount": {
+            "lang": "cfdl",
+            "src": "if(asset.plant.status == \"compliant\", remaining, 0.0)"
+          }
+        }
+      ]
+    }
+  ],
+  "contracts": [],
+  "streams": [
+    {
+      "id": "f196f6f21aa31a9982548ca327491a72",
+      "name": "debt.service",
+      "owner": {
+        "symbol": "asset.plant"
+      },
+      "direction": "outflow",
+      "currency": "USD",
+      "schedule": {
+        "kind": "Every",
+        "every": "monthly",
+        "from": "2026-01-01",
+        "to": "2027-06-01"
+      },
+      "amount": {
+        "lang": "cfdl",
+        "src": "15000.0"
+      },
+      "active_when": {
+        "lang": "cfdl",
+        "src": "true"
+      },
+      "provenance": {
+        "source_file": "model.cfdl",
+        "source_span": {
+          "start_line": 56,
+          "start_col": 1,
+          "end_line": 59,
+          "end_col": 1
+        }
+      }
+    },
+    {
+      "id": "ca61fbec0cbf9a44c2d5ff65fee8ff71",
+      "name": "ops.noi",
+      "owner": {
+        "symbol": "asset.plant"
+      },
+      "direction": "inflow",
+      "currency": "USD",
+      "schedule": {
+        "kind": "Every",
+        "every": "monthly",
+        "from": "2026-01-01",
+        "to": "2027-06-01"
+      },
+      "amount": {
+        "lang": "cfdl",
+        "src": "if(time.t >= 4.0 and time.t <= 6.0, 12000.0, 20000.0)"
+      },
+      "active_when": {
+        "lang": "cfdl",
+        "src": "true"
+      },
+      "provenance": {
+        "source_file": "model.cfdl",
+        "source_span": {
+          "start_line": 51,
+          "start_col": 1,
+          "end_line": 54,
+          "end_col": 1
+        }
+      }
+    }
+  ],
+  "events": [],
+  "options": [],
+  "runs": [
+    {
+      "kind": "deterministic"
+    }
+  ],
+  "required_observables": [],
+  "required_refs": [],
+  "provenance": {
+    "sources": [
+      "model.cfdl"
+    ],
+    "compiler": {
+      "name": "cfdl",
+      "version": "0.7.0",
+      "hash": "d80f4c40398fe75b55a6788a2be14aac"
+    }
+  }
+}

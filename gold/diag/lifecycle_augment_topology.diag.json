@@ -1,0 +1,17 @@
+[
+  {
+    "code": "E1357_LIFECYCLE_AUGMENT_TOPOLOGY",
+    "severity": "error",
+    "message": "Lifecycle 'cre.unit' is declared by a pack, and this block states initial and state.",
+    "file": "model.cfdl",
+    "span": {
+      "start_line": 14,
+      "start_col": 1,
+      "end_line": 20,
+      "end_col": 1
+    },
+    "path": null,
+    "hint": "A model may add arrival actions to a pack's machine — `on enter <state>` and actions on an existing edge — and nothing else. To change the states or the edges, declare a separate machine under its own name and bind the entity to that instead.",
+    "notes": []
+  }
+]

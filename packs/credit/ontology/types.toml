@@ -77,6 +77,15 @@ field_type = "integer"
 required = false
 unit = "months"
 
+[[entities.fields]]
+name = "days_past_due"
+field_type = "number"
+required = false
+description = """How far past due the loan is. A FIELD, not a state: the industry \
+reports delinquency in buckets (30-59, 60-89, 90+) and a bucket is a reading of \
+this counter rather than a regime. The 90-day default threshold is a guard on \
+it (`docs/36` §2.1)."""
+
 [[entities]]
 type_id = "Credit.Asset.Tranche"
 family = "asset"
@@ -154,30 +163,54 @@ required = false
 [[lifecycles]]
 lifecycle_id = "credit.pool"
 initial = "amortizing"
-states = ["warehouse", "amortizing", "called", "retired"]
+states = ["warehouse", "revolving", "amortizing", "rapid_amortization", "retired"]
+description = """A pool's structural regime (`docs/36` §2.2). `revolving` is the \
+reinvestment period and `rapid_amortization` is early amortization on a trigger \
+breach — both universal ABS/CLO regimes with their own cash mechanics. A \
+clean-up call is NOT a state: it is an occurrence, and it drives \
+`amortizing -> retired` as an event with a no-return topology."""
+
+[[lifecycles.transitions]]
+from = "warehouse"
+to = "revolving"
 
 [[lifecycles.transitions]]
 from = "warehouse"
 to = "amortizing"
-description = "Securitization closes."
+
+[[lifecycles.transitions]]
+from = "revolving"
+to = "amortizing"
+description = "The reinvestment period ends and principal begins paying down."
+
+[[lifecycles.transitions]]
+from = "revolving"
+to = "rapid_amortization"
 
 [[lifecycles.transitions]]
 from = "amortizing"
-to = "called"
-description = "Clean-up call exercised."
+to = "rapid_amortization"
+description = "An early amortization trigger breaches."
 
 [[lifecycles.transitions]]
 from = "amortizing"
 to = "retired"
 
 [[lifecycles.transitions]]
-from = "called"
+from = "rapid_amortization"
 to = "retired"
 
 [[lifecycles]]
 lifecycle_id = "credit.loan"
 initial = "current"
-states = ["current", "delinquent", "default", "foreclosure", "liquidated", "prepaid", "matured"]
+states = ["current", "delinquent", "defaulted", "in_foreclosure", "liquidated", "prepaid", "matured", "repurchased"]
+description = """A loan's condition, named as the standards name it (`docs/36` §2.1). \
+Basel BCBS d403 and the EBA guidelines describe a DEFAULTED EXPOSURE, entered \
+at 90 days past due OR on unlikeliness-to-pay independently of any day count; \
+the MBA's phrasing for enforcement is `in the process of foreclosure`. Both \
+are conditions the loan is in, which is why neither is spelled as the event \
+that starts it. Delinquency BUCKETS (30-59, 60-89, 90+) are readings of the \
+`days_past_due` field, not states."""
 
 [[lifecycles.transitions]]
 from = "current"
@@ -186,18 +219,31 @@ to = "delinquent"
 [[lifecycles.transitions]]
 from = "delinquent"
 to = "current"
-description = "Cure."
+description = "Cure. No probation applies below the default threshold."
 
 [[lifecycles.transitions]]
 from = "delinquent"
-to = "default"
+to = "defaulted"
+description = "90 days past due, or unlikeliness to pay at any day count."
 
 [[lifecycles.transitions]]
-from = "default"
-to = "foreclosure"
+from = "defaulted"
+to = "current"
+description = """Cure out of default. The EBA requires a MINIMUM PROBATION PERIOD \
+before an exposure returns to performing, so this edge is guarded on a dwell \
+counter rather than on payment alone — `on enter defaulted` resets it."""
 
 [[lifecycles.transitions]]
-from = "foreclosure"
+from = "defaulted"
+to = "in_foreclosure"
+
+[[lifecycles.transitions]]
+from = "in_foreclosure"
+to = "current"
+description = "Reinstatement before sale, which is ordinary in US practice."
+
+[[lifecycles.transitions]]
+from = "in_foreclosure"
 to = "liquidated"
 description = "Recovery lands, net of severity and after the recovery lag."
 
@@ -206,8 +252,35 @@ from = "current"
 to = "prepaid"
 
 [[lifecycles.transitions]]
+from = "delinquent"
+to = "prepaid"
+description = "A late borrower can still pay off."
+
+[[lifecycles.transitions]]
+from = "defaulted"
+to = "prepaid"
+
+[[lifecycles.transitions]]
 from = "current"
 to = "matured"
+
+[[lifecycles.transitions]]
+from = "delinquent"
+to = "matured"
+description = "Stated maturity arrives whether or not the borrower is current."
+
+[[lifecycles.transitions]]
+from = "current"
+to = "repurchased"
+description = "Fannie Mae zero-balance code 06; a real termination, not a default outcome."
+
+[[lifecycles.transitions]]
+from = "delinquent"
+to = "repurchased"
+
+[[lifecycles.transitions]]
+from = "defaulted"
+to = "repurchased"
 
 # ---------------------------------------------------------------------------
 # Contracts

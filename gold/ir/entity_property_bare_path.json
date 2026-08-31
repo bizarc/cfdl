@@ -51,25 +51,38 @@
       "initial": "amortizing",
       "states": [
         "warehouse",
+        "revolving",
         "amortizing",
-        "called",
+        "rapid_amortization",
         "retired"
       ],
       "edges": [
         {
           "from": "warehouse",
+          "to": "revolving"
+        },
+        {
+          "from": "warehouse",
           "to": "amortizing"
         },
         {
+          "from": "revolving",
+          "to": "amortizing"
+        },
+        {
+          "from": "revolving",
+          "to": "rapid_amortization"
+        },
+        {
           "from": "amortizing",
-          "to": "called"
+          "to": "rapid_amortization"
         },
         {
           "from": "amortizing",
           "to": "retired"
         },
         {
-          "from": "called",
+          "from": "rapid_amortization",
           "to": "retired"
         }
       ]

@@ -36,4 +36,6 @@ The formal EBNF grammar is maintained as a standalone file for use with grammar 
 3. `DATE` accepts `YYYY-MM` and `YYYY-MM-DD`; normalize `YYYY-MM` to `YYYY-MM-01` during parsing.
 4. `schedule_opts` are order-independent; parsers should accept any order.
 5. `activate contract` / `deactivate contract` were removed: a contract is a collection of streams, and one switch cannot express forbearance or an early termination. Gate the streams a contract produced by name, or with `active in state`.
+6. The **event latch was removed**. An event fires on each occurrence (rising edge), and a schedule clause supplies occurrences that `when` then filters. There is no `once` keyword: once-ness is declared, as a singular schedule or a topology with no way back. Implementations MUST NOT carry a hidden "has fired" flag — the latch was memory living outside the machine, unjournaled and undeclarable.
+7. **Arrival actions** are `set` on entity-relative FIELD names only, never `status`. Entry actions (`on enter <state>`) run before the taken edge's actions, and both run on every traversal — including one caused by a named event's status write.
 

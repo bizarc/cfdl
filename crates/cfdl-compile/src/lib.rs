@@ -612,6 +612,10 @@ struct IrLifecycle {
     /// machine is unconstrained — `permits()`'s shipped empty-means-open rule.
     #[serde(skip_serializing_if = "Vec::is_empty")]
     edges: Vec<IrLifecycleEdge>,
+    /// What is true of a STATE however it was reached. Runs BEFORE the taken
+    /// edge's actions — the state's own setup, then the path's refinement.
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    entry_actions: Vec<IrStateEntry>,
 }
 
 #[derive(Debug, Serialize)]
@@ -622,6 +626,42 @@ struct IrLifecycleEdge {
     /// permission an event's write may take, never fired by the machine.
     #[serde(skip_serializing_if = "Option::is_none")]
     guard: Option<IrExpr>,
+    /// What is true of the PATH taken, on every traversal.
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    actions: Vec<IrStateAction>,
+}
+
+/// One state's arrival actions.
+#[derive(Debug, Serialize)]
+struct IrStateEntry {
+    state: String,
+    actions: Vec<IrStateAction>,
+}
+
+/// One arrival action. `author` is emitted always, never inferred: the
+/// journal names it, and an `overridden` line that cannot say who wrote the
+/// losing value is the one thing the record exists to prevent.
+#[derive(Debug, Serialize)]
+struct IrStateAction {
+    kind: &'static str,
+    author: &'static str,
+    field: String,
+    value: IrExpr,
+}
+
+fn ir_state_action(action: &ActionDef) -> IrStateAction {
+    IrStateAction {
+        kind: "SetField",
+        author: match action.author {
+            cfdl_parser::ActionAuthor::Pack => "pack",
+            cfdl_parser::ActionAuthor::Model => "model",
+        },
+        field: action.field.clone(),
+        value: IrExpr {
+            lang: "cfdl".to_string(),
+            src: coerce_numeric_literals(&action.value),
+        },
+    }
 }
 
 #[derive(Debug, Serialize)]
@@ -998,7 +1038,14 @@ fn check_constant_expressions(
             Stmt::Event(event) => {
                 let span = map_span(event.span);
                 let what = format!("Event '{}' guard", event.name);
-                if let Some(value) = ill_typed(&event.when, what, &file, &span, &mut diagnostics) {
+                // A purely scheduled event has no guard to type-check: its
+                // occurrences come from the calendar, not from a condition.
+                let guard_src = event.when.as_deref().unwrap_or_default();
+                if let Some(value) = event
+                    .when
+                    .as_deref()
+                    .and_then(|when| ill_typed(when, what, &file, &span, &mut diagnostics))
+                {
                     if !matches!(value, cfdl_expr::Value::Bool(_)) {
                         diagnostics.push(Diagnostic {
                             code: "E2201_EVENT_WHEN_NOT_BOOL".to_string(),
@@ -1006,7 +1053,7 @@ fn check_constant_expressions(
                             message: format!(
                                 "Event '{}' fires `when {}`, which is not a condition.",
                                 event.name,
-                                event.when.trim()
+                                guard_src.trim()
                             ),
                             file: Some(file.clone()),
                             span: Some(span.clone()),
@@ -1209,14 +1256,10 @@ fn check_participant_returns(
                 }
             }
             Stmt::Event(event) => {
-                let what = format!("Event '{}' guard", event.name);
-                refuse(
-                    &event.when,
-                    what,
-                    &file,
-                    map_span(event.span),
-                    &mut diagnostics,
-                );
+                if let Some(when) = event.when.as_deref() {
+                    let what = format!("Event '{}' guard", event.name);
+                    refuse(when, what, &file, map_span(event.span), &mut diagnostics);
+                }
             }
             Stmt::Waterfall(waterfall) => {
                 let span = map_span(waterfall.span);
@@ -1357,12 +1400,9 @@ fn check_field_paths(resolve_output: &cfdl_resolver::ResolveOutput) -> Result<()
                 }
             }
             Stmt::Event(event) => {
-                check(
-                    &event.when,
-                    event.span,
-                    &file,
-                    &format!("Event '{}'", event.name),
-                );
+                if let Some(when) = event.when.as_deref() {
+                    check(when, event.span, &file, &format!("Event '{}'", event.name));
+                }
             }
             Stmt::Waterfall(w) => {
                 if let Some(from) = &w.source {
@@ -1710,6 +1750,19 @@ fn reads_prev_field(src: &str) -> bool {
     .any(|p| src.contains(p))
 }
 
+/// A pack-declared arrival action, stamped `Pack`.
+///
+/// This is the only place `ActionAuthor::Pack` is produced. Until a pack
+/// declared actions the author field had one reachable value, which is why the
+/// pack surface and the author stamp belong to the same change.
+fn pack_action(action: &cfdl_pack::OntologyAction) -> ActionDef {
+    ActionDef {
+        field: action.set.clone(),
+        value: action.value.clone(),
+        author: cfdl_parser::ActionAuthor::Pack,
+    }
+}
+
 /// One resolved machine, wherever it was declared (`docs/28` §6.1).
 ///
 /// A pack's `types.toml` lifecycle and a model's `lifecycle` block resolve to
@@ -1722,9 +1775,38 @@ struct MachineDef {
     id: String,
     initial: Option<String>,
     states: Vec<String>,
-    /// (from, to, guard source). Empty means the machine is unconstrained —
-    /// `permits()`'s shipped empty-means-open rule.
-    edges: Vec<(String, String, Option<String>)>,
+    /// Empty means the machine is unconstrained — `permits()`'s shipped
+    /// empty-means-open rule.
+    edges: Vec<EdgeDef>,
+    /// State name -> its arrival actions, pack's first and the model's after
+    /// (`docs/34` D2a). The order IS the resolution rule: the model's write
+    /// lands last and wins, and the pack's is what journals `overridden`.
+    entry_actions: BTreeMap<String, Vec<ActionDef>>,
+    /// Whether a PACK declared this machine. An augmenting model block is
+    /// only reachable for one that did — a model's own machine carries its
+    /// actions inline and has nothing to augment.
+    from_pack: bool,
+}
+
+/// One edge and what it does on traversal.
+#[derive(Debug, Clone)]
+struct EdgeDef {
+    from: String,
+    to: String,
+    guard: Option<String>,
+    actions: Vec<ActionDef>,
+}
+
+/// One arrival action, carrying WHO WROTE IT.
+///
+/// The author is stored, never inferred: a pack action whose stamp was
+/// forgotten would journal as the model's, and an `overridden` line that
+/// cannot name its author is the one thing the record exists to prevent.
+#[derive(Debug, Clone)]
+struct ActionDef {
+    field: String,
+    value: String,
+    author: cfdl_parser::ActionAuthor,
 }
 
 impl MachineDef {
@@ -1743,37 +1825,26 @@ fn resolve_machines(
 ) -> (BTreeMap<String, MachineDef>, BTreeMap<String, String>) {
     let mut machines: BTreeMap<String, MachineDef> = BTreeMap::new();
     let mut by_entity: BTreeMap<String, String> = BTreeMap::new();
-    for source_stmt in &resolve_output.source_statements {
-        if let Stmt::Lifecycle(lc) = &source_stmt.statement {
-            machines
-                .entry(lc.name.clone())
-                .or_insert_with(|| MachineDef {
-                    id: lc.name.clone(),
-                    initial: lc.initial.clone(),
-                    states: lc.states.clone(),
-                    edges: lc
-                        .edges
-                        .iter()
-                        .map(|e| {
-                            (
-                                e.from.clone(),
-                                e.to.clone(),
-                                e.guard.as_ref().map(|g| g.src.clone()),
-                            )
-                        })
-                        .collect(),
-                });
-        }
-    }
+
+    // THE ORDER OF THESE PASSES IS THE D2a RULE, and it is dependency rather
+    // than precedence: a model's actions attach to a pack's machine, so the
+    // machine has to exist before they can. The MODEL still wins where the
+    // two write the same field — its actions are appended after the pack's
+    // and land last (`docs/34` D2a, D5).
+    //
+    // Reversing these two passes is what the shipped code did, and with
+    // `or_insert_with` it meant a model block naming a pack machine REPLACED
+    // it. Under D2a that is worse than a collision: an augmenting block
+    // carries no `initial` and no `state`, so the replacement was an empty
+    // machine and the augmentation deleted what it meant to extend.
+
+    // Pass A — the pack's machines, reached through the entity types that
+    // bind them. These are the base layer.
     for source_stmt in &resolve_output.source_statements {
         let Stmt::Entity(entity) = &source_stmt.statement else {
             continue;
         };
-        if let Some(bound) = &entity.lifecycle {
-            if machines.contains_key(bound) {
-                by_entity.insert(entity.symbol(), bound.clone());
-            }
-            // An unknown binding is validate's E1349; nothing to resolve.
+        if entity.lifecycle.is_some() {
             continue;
         }
         let from_type = entity
@@ -1792,13 +1863,292 @@ fn resolve_machines(
                     edges: lifecycle
                         .transitions
                         .iter()
-                        .map(|t| (t.from.clone(), t.to.clone(), t.guard.clone()))
+                        .map(|t| EdgeDef {
+                            from: t.from.clone(),
+                            to: t.to.clone(),
+                            guard: t.guard.clone(),
+                            actions: t.actions.iter().map(pack_action).collect(),
+                        })
                         .collect(),
+                    // The pack's own arrival actions, stamped as its own. A
+                    // model's augmentation is appended AFTER these, so the
+                    // model's write lands last and wins (`docs/34` D2a).
+                    entry_actions: lifecycle
+                        .entry_actions
+                        .iter()
+                        .map(|entry| {
+                            (
+                                entry.state.clone(),
+                                entry.actions.iter().map(pack_action).collect(),
+                            )
+                        })
+                        .collect(),
+                    from_pack: true,
                 });
+        }
+    }
+
+    // Pass B — the model's own blocks. A name that already resolves to a
+    // pack machine AUGMENTS it; any other name DECLARES one. Nothing is
+    // inferred from what the block omits: augmentation is reachable only for
+    // a pack machine, because a model's own machine carries its actions
+    // inline and has nothing to augment.
+    for source_stmt in &resolve_output.source_statements {
+        let Stmt::Lifecycle(lc) = &source_stmt.statement else {
+            continue;
+        };
+        let entry_actions = |author| {
+            let mut map: BTreeMap<String, Vec<ActionDef>> = BTreeMap::new();
+            for entry in &lc.entry_actions {
+                map.entry(entry.state.clone())
+                    .or_default()
+                    .extend(entry.actions.iter().map(|a| ActionDef {
+                        field: a.field.clone(),
+                        value: a.value.src.clone(),
+                        author,
+                    }));
+            }
+            map
+        };
+        match machines.get_mut(&lc.name) {
+            // Augmenting: contribute actions, and nothing else. A block that
+            // also states topology is refused in validation (`E1303`); the
+            // states and edges are ignored here so a refused model cannot
+            // also corrupt the machine it named.
+            Some(existing) if existing.from_pack => {
+                for (state, actions) in entry_actions(cfdl_parser::ActionAuthor::Model) {
+                    existing
+                        .entry_actions
+                        .entry(state)
+                        .or_default()
+                        .extend(actions);
+                }
+                for edge in &lc.edges {
+                    if let Some(target) = existing
+                        .edges
+                        .iter_mut()
+                        .find(|e| e.from == edge.from && e.to == edge.to)
+                    {
+                        target
+                            .actions
+                            .extend(edge.actions.iter().map(|a| ActionDef {
+                                field: a.field.clone(),
+                                value: a.value.src.clone(),
+                                author: cfdl_parser::ActionAuthor::Model,
+                            }));
+                    }
+                }
+            }
+            // Declaring: the model's own machine, actions inline.
+            _ => {
+                machines
+                    .entry(lc.name.clone())
+                    .or_insert_with(|| MachineDef {
+                        id: lc.name.clone(),
+                        initial: lc.initial.clone(),
+                        states: lc.states.clone(),
+                        edges: lc
+                            .edges
+                            .iter()
+                            .map(|e| EdgeDef {
+                                from: e.from.clone(),
+                                to: e.to.clone(),
+                                guard: e.guard.as_ref().map(|g| g.src.clone()),
+                                actions: e
+                                    .actions
+                                    .iter()
+                                    .map(|a| ActionDef {
+                                        field: a.field.clone(),
+                                        value: a.value.src.clone(),
+                                        author: cfdl_parser::ActionAuthor::Model,
+                                    })
+                                    .collect(),
+                            })
+                            .collect(),
+                        entry_actions: entry_actions(cfdl_parser::ActionAuthor::Model),
+                        from_pack: false,
+                    });
+            }
+        }
+    }
+
+    // Pass C — bindings, once every machine of either origin is resolvable.
+    for source_stmt in &resolve_output.source_statements {
+        let Stmt::Entity(entity) = &source_stmt.statement else {
+            continue;
+        };
+        if let Some(bound) = &entity.lifecycle {
+            if machines.contains_key(bound) {
+                by_entity.insert(entity.symbol(), bound.clone());
+            }
+            // An unknown binding is validate's E1349; nothing to resolve.
+            continue;
+        }
+        let from_type = entity
+            .type_name
+            .as_deref()
+            .and_then(|ty| ontology.entity(ty))
+            .and_then(|ty| ty.lifecycle.as_deref())
+            .and_then(|id| ontology.lifecycle(id));
+        if let Some(lifecycle) = from_type {
             by_entity.insert(entity.symbol(), lifecycle.lifecycle_id.clone());
         }
     }
+
     (machines, by_entity)
+}
+
+/// An arrival action writes a field the ENTITY THAT TRANSITIONED actually has.
+///
+/// The name is entity-relative, so it resolves against every entity bound to
+/// the machine rather than against one named target — and a machine bound by
+/// several entities has to satisfy all of them. Checked here rather than in
+/// validation because the field set is the union of what the model's block
+/// declares and what the ontology type contributes, and only this side has the
+/// ontology.
+///
+/// Without this a misspelled field is a write that lands nowhere: the same
+/// silent-substitution shape `docs/13` §7.38 records for a misspelled series.
+fn check_arrival_action_fields(
+    resolve_output: &cfdl_resolver::ResolveOutput,
+    machines: &BTreeMap<String, MachineDef>,
+    machines_by_entity: &BTreeMap<String, String>,
+    ontology: &cfdl_pack::PackOntology,
+) -> Result<(), Vec<Diagnostic>> {
+    let mut diagnostics: Vec<Diagnostic> = Vec::new();
+    for source_stmt in &resolve_output.source_statements {
+        let Stmt::Entity(entity) = &source_stmt.statement else {
+            continue;
+        };
+        let symbol = entity.symbol();
+        let Some(machine_id) = machines_by_entity.get(&symbol) else {
+            continue;
+        };
+        let Some(machine) = machines.get(machine_id) else {
+            continue;
+        };
+        let mut known: BTreeSet<&str> = entity.fields.iter().map(|f| f.name.as_str()).collect();
+        known.extend(entity.literal_fields.iter().map(|f| f.name.as_str()));
+        if let Some(ty) = entity
+            .type_name
+            .as_deref()
+            .and_then(|ty| ontology.entity(ty))
+        {
+            known.extend(ty.fields.iter().map(|f| f.name.as_str()));
+        }
+        let mut report = |action: &ActionDef, where_: String| {
+            if known.contains(action.field.as_str()) {
+                return;
+            }
+            let mut names: Vec<&str> = known.iter().copied().collect();
+            names.sort_unstable();
+            let declared = if names.is_empty() {
+                "it declares none".to_string()
+            } else {
+                format!("declared: {}", names.join(", "))
+            };
+            diagnostics.push(Diagnostic {
+                code: "E1359_ARRIVAL_ACTION_UNKNOWN_FIELD".to_string(),
+                severity: "error".to_string(),
+                message: format!(
+                    "Lifecycle '{machine_id}' {where_} sets '{}', which entity '{symbol}' does not have — {declared}.",
+                    action.field,
+                ),
+                file: Some(source_stmt.file.clone()),
+                span: Some(map_span(entity.span)),
+                path: None,
+                hint: Some(
+                    "An arrival action names a field on the entity that transitioned, and one \
+                     machine may be bound by several entities — every one of them needs the \
+                     field. Declare it on the entity, or correct the name."
+                        .to_string(),
+                ),
+                notes: vec![],
+            });
+        };
+        for (state, actions) in &machine.entry_actions {
+            for action in actions {
+                report(action, format!("entry into '{state}'"));
+            }
+        }
+        for edge in &machine.edges {
+            for action in &edge.actions {
+                report(action, format!("edge '{} -> {}'", edge.from, edge.to));
+            }
+        }
+    }
+    if diagnostics.is_empty() {
+        Ok(())
+    } else {
+        Err(diagnostics)
+    }
+}
+
+/// A model block naming a PACK machine ENHANCES it; it never replaces it.
+///
+/// D2a's "additively only" has to be refused rather than ignored. Dropping the
+/// states an augmenting block wrote would leave a model saying one thing and
+/// the machine doing another — the silent-substitution shape `docs/13` §7.38
+/// records, one construct over. A model that needs different topology declares
+/// its own machine under its own name, which is a declaration and not an
+/// augmentation at all.
+fn check_lifecycle_augmentations(
+    resolve_output: &cfdl_resolver::ResolveOutput,
+    machines: &BTreeMap<String, MachineDef>,
+) -> Result<(), Vec<Diagnostic>> {
+    let mut diagnostics: Vec<Diagnostic> = Vec::new();
+    for source_stmt in &resolve_output.source_statements {
+        let Stmt::Lifecycle(lc) = &source_stmt.statement else {
+            continue;
+        };
+        // Only a pack's machine can be augmented: a model's own carries its
+        // actions inline and has nothing to augment.
+        if !machines.get(&lc.name).is_some_and(|m| m.from_pack) {
+            continue;
+        }
+        let mut stated: Vec<&str> = Vec::new();
+        if lc.initial.is_some() {
+            stated.push("initial");
+        }
+        if !lc.states.is_empty() {
+            stated.push("state");
+        }
+        if lc
+            .edges
+            .iter()
+            .any(|e| e.guard.is_some() || e.actions.is_empty())
+        {
+            stated.push("an edge");
+        }
+        if stated.is_empty() {
+            continue;
+        }
+        diagnostics.push(Diagnostic {
+            code: "E1357_LIFECYCLE_AUGMENT_TOPOLOGY".to_string(),
+            severity: "error".to_string(),
+            message: format!(
+                "Lifecycle '{}' is declared by a pack, and this block states {}.",
+                lc.name,
+                stated.join(" and "),
+            ),
+            file: Some(source_stmt.file.clone()),
+            span: Some(map_span(lc.span)),
+            path: None,
+            hint: Some(
+                "A model may add arrival actions to a pack's machine — `on enter <state>` and \
+                 actions on an existing edge — and nothing else. To change the states or the \
+                 edges, declare a separate machine under its own name and bind the entity to \
+                 that instead."
+                    .to_string(),
+            ),
+            notes: vec![],
+        });
+    }
+    if diagnostics.is_empty() {
+        Ok(())
+    } else {
+        Err(diagnostics)
+    }
 }
 
 /// The compile-statable half of `docs/28` §6.1 rule 3: where an event writes
@@ -1862,7 +2212,7 @@ fn check_status_writes(
                 });
                 continue;
             }
-            if !machine.edges.is_empty() && !machine.edges.iter().any(|(_, to, _)| to == target) {
+            if !machine.edges.is_empty() && !machine.edges.iter().any(|e| e.to == *target) {
                 diagnostics.push(Diagnostic {
                     code: "E1353_UNREACHABLE_STATE_WRITE".to_string(),
                     severity: "error".to_string(),
@@ -1915,8 +2265,11 @@ fn check_state_guards(
         if model_declared.contains(&machine.id) {
             continue;
         }
-        for (from, to, guard) in &machine.edges {
-            let Some(guard) = guard else { continue };
+        for edge in &machine.edges {
+            let (from, to) = (&edge.from, &edge.to);
+            let Some(guard) = edge.guard.as_deref() else {
+                continue;
+            };
             let forward = cfdl_expr::series_windows(guard).iter().any(|w| {
                 !(cfdl_expr::window_bound_is_strictly_backward(&w.from_src)
                     && cfdl_expr::window_bound_is_strictly_backward(&w.to_src))
@@ -3016,6 +3369,8 @@ fn build_ir(
     check_participant_returns(resolve_output)?;
     check_field_paths(resolve_output)?;
     let (machines, machines_by_entity) = resolve_machines(resolve_output, &ontology);
+    check_lifecycle_augmentations(resolve_output, &machines)?;
+    check_arrival_action_fields(resolve_output, &machines, &machines_by_entity, &ontology)?;
     check_status_writes(resolve_output, &machines, &machines_by_entity)?;
 
     let mut entities: Vec<((String, String), IrEntity)> = resolve_output
@@ -3459,7 +3814,14 @@ fn build_ir(
         return Err(diagnostics);
     }
 
-    let (ir_events, ir_options, event_diags) = lower_events_options(resolve_output, &id_seed);
+    let (ir_events, ir_options, event_diags) = lower_events_options(
+        resolve_output,
+        &id_seed,
+        &time_calendar,
+        &time_start,
+        &timeline_end,
+        &phase_map,
+    );
     if !event_diags.is_empty() {
         let mut diagnostics = event_diags;
         sort_compile_diagnostics(&mut diagnostics);
@@ -3502,13 +3864,25 @@ fn build_ir(
                 edges: m
                     .edges
                     .iter()
-                    .map(|(from, to, guard)| IrLifecycleEdge {
-                        from: from.clone(),
-                        to: to.clone(),
-                        guard: guard.as_ref().map(|src| IrExpr {
+                    .map(|e| IrLifecycleEdge {
+                        from: e.from.clone(),
+                        to: e.to.clone(),
+                        guard: e.guard.as_ref().map(|src| IrExpr {
                             lang: "cfdl".to_string(),
                             src: coerce_numeric_literals(src),
                         }),
+                        actions: e.actions.iter().map(ir_state_action).collect(),
+                    })
+                    .collect(),
+                // BTreeMap iteration is by state name, which makes the IR
+                // byte-stable across runs; within a state the vector order is
+                // the resolution order — pack's actions, then the model's.
+                entry_actions: m
+                    .entry_actions
+                    .iter()
+                    .map(|(state, actions)| IrStateEntry {
+                        state: state.clone(),
+                        actions: actions.iter().map(ir_state_action).collect(),
                     })
                     .collect(),
             })
@@ -3976,17 +4350,56 @@ fn filter_pack_aware_validation(
         })
         .collect();
 
+    // A `lifecycle <pack machine>` block ENHANCES that machine rather than
+    // declaring one (`docs/34` D2a), so the requirements on a DECLARATION do
+    // not apply to it: it states no `initial` and no `state` because the pack
+    // already did, and an edge it names for its actions is the pack's edge.
+    //
+    // Validation is pack-unaware by construction, which is the same position
+    // `E2002_CONTRACT_MISSING_EFFECTS` is in above — a contract with no
+    // `effects` is an error until you know a pack rule lowers it. The answer
+    // is the same too: validate reports what it can see, and the caller, which
+    // HAS the pack, drops what the pack accounts for. Nothing here teaches
+    // validation about packs, and no diagnostic is waived on a name that does
+    // not actually resolve to a machine the pack declares.
+    let augmenting_blocks: Vec<(String, cfdl_parser::Span)> = resolve_output
+        .source_statements
+        .iter()
+        .filter_map(|source_stmt| {
+            let Stmt::Lifecycle(lc) = &source_stmt.statement else {
+                return None;
+            };
+            pack.ontology
+                .lifecycle(&lc.name)
+                .map(|_| (source_stmt.file.clone(), lc.span))
+        })
+        .collect();
+    let inside_augmenting_block = |diag: &cfdl_validate::ValidationDiagnostic| {
+        augmenting_blocks.iter().any(|(file, span)| {
+            *file == diag.file
+                && diag.span.start_line >= span.start_line
+                && diag.span.start_line <= span.end_line
+        })
+    };
+
     diagnostics
         .into_iter()
         .filter(|diag| {
-            if diag.code != "E2002_CONTRACT_MISSING_EFFECTS" {
-                return true;
+            match diag.code {
+                "E2002_CONTRACT_MISSING_EFFECTS" => {
+                    !lowered_contract_anchors.iter().any(|(file, span)| {
+                        *file == diag.file
+                            && span.start_line == diag.span.start_line
+                            && span.start_col == diag.span.start_col
+                    })
+                }
+                // The pack declared the opening state and the state set; an
+                // enhancing block restates neither.
+                "E1351_LIFECYCLE_NO_INITIAL" | "E1316_UNKNOWN_LIFECYCLE_STATE" => {
+                    !inside_augmenting_block(diag)
+                }
+                _ => true,
             }
-            !lowered_contract_anchors.iter().any(|(file, span)| {
-                *file == diag.file
-                    && span.start_line == diag.span.start_line
-                    && span.start_col == diag.span.start_col
-            })
         })
         .collect()
 }
@@ -5494,6 +5907,10 @@ type EventOptionMaps = (
 fn lower_events_options(
     resolve_output: &cfdl_resolver::ResolveOutput,
     id_seed: &str,
+    time_calendar: &str,
+    time_start: &str,
+    timeline_end: &str,
+    phase_map: &BTreeMap<String, (String, String)>,
 ) -> EventOptionMaps {
     let mut events = Vec::new();
     let mut options = Vec::new();
@@ -5512,10 +5929,32 @@ fn lower_events_options(
                     hint: None,
                     notes: vec![format!("event '{}'", event.name)],
                 };
-                if let Err(err) = cfdl_expr::compile_expr(&event.when) {
-                    diags.push(diag(&err.code, err.message));
-                    continue;
+                // A purely scheduled event has no condition to compile.
+                if let Some(when) = event.when.as_deref() {
+                    if let Err(err) = cfdl_expr::compile_expr(when) {
+                        diags.push(diag(&err.code, err.message));
+                        continue;
+                    }
                 }
+                // The event's occurrences, lowered through the SAME path a
+                // stream's schedule takes — one schedule sub-language, one
+                // lowering, so the two cannot drift.
+                let event_schedule = match event.schedule.as_ref() {
+                    Some(spec) => match lower_schedule(
+                        Some(spec),
+                        time_calendar,
+                        time_start,
+                        timeline_end,
+                        phase_map,
+                    ) {
+                        Ok(sched) => Some(sched),
+                        Err(msg) => {
+                            diags.push(diag("E5005_PHASE_NOT_FOUND", msg));
+                            continue;
+                        }
+                    },
+                    None => None,
+                };
                 let mut actions = Vec::new();
                 let mut bad = false;
                 for action in &event.actions {
@@ -5554,16 +5993,35 @@ fn lower_events_options(
                     continue;
                 }
                 let stable = stable_key(&source_stmt.file, &event.name);
-                events.push(serde_json::json!({
+                let mut node = serde_json::json!({
                     "id": deterministic_id("Event", &stable, id_seed),
                     "name": event.name,
-                    "when": { "lang": "cfdl", "src": event.when },
                     "actions": actions,
                     "provenance": {
                         "source_file": source_stmt.file,
                         "source_span": map_span(event.span),
                     },
-                }));
+                });
+                // Both clauses are optional and at least one is present, so
+                // each is emitted only when the model wrote it — an absent
+                // `when` means every scheduled occurrence fires, and an absent
+                // schedule means the condition's own rising edges are the
+                // occurrences. Emitting a placeholder for either would make
+                // the IR claim the model said something it did not.
+                let obj = node.as_object_mut().expect("event node is an object");
+                if let Some(sched) = event_schedule {
+                    obj.insert(
+                        "schedule".to_string(),
+                        serde_json::to_value(sched).expect("schedule serializes"),
+                    );
+                }
+                if let Some(when) = event.when.as_deref() {
+                    obj.insert(
+                        "when".to_string(),
+                        serde_json::json!({ "lang": "cfdl", "src": when }),
+                    );
+                }
+                events.push(node);
             }
             Stmt::Option(option) => {
                 let diag = |code: &str, message: String| Diagnostic {

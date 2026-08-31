@@ -92,8 +92,9 @@ assume pi_mip_monthly     = 1165.7819   // sizing tab, monthly P+I+MIP
 // switch fires one year earlier than that label reads — see NOTES.md.
 //
 // THE EVENT BELOW IS WHY THAT DISCREPANCY IS NOW AUDITABLE rather than only
-// explained in a comment. Events latch — at most one fire per run — which is
-// exactly a restriction that expires: it happens once and does not come back.
+// explained in a comment. The restriction expires once and does not come back,
+// and the topology says so: nothing returns the entity to the restricted
+// state, which is how once-ness is declared.
 // The run publishes the transition, so the period and date the reversion took
 // effect are in the results and can be checked against the source workbook
 // instead of re-derived from a `<` in an expression.

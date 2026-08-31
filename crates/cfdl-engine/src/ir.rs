@@ -96,7 +96,14 @@ pub(crate) struct IrQuantilePoint {
 #[derive(Debug, Deserialize)]
 pub(crate) struct IrEvent {
     pub(crate) name: String,
-    pub(crate) when: IrExpr,
+    /// The occurrences this event is tested at (`docs/34` D1a). Absent means
+    /// the condition's own rising edges supply them.
+    #[serde(default)]
+    pub(crate) schedule: Option<IrSchedule>,
+    /// Absent means every scheduled occurrence fires. At least one of
+    /// `schedule` and `when` is present, which the compiler enforces.
+    #[serde(default)]
+    pub(crate) when: Option<IrExpr>,
     #[serde(default)]
     pub(crate) actions: Vec<IrAction>,
 }
@@ -176,6 +183,10 @@ pub(crate) struct IrLifecycle {
     pub(crate) states: Vec<String>,
     #[serde(default)]
     pub(crate) edges: Vec<IrLifecycleEdge>,
+    /// What is true of a STATE however it was reached. Runs BEFORE the taken
+    /// edge's actions — the state's own setup, then the path's refinement.
+    #[serde(default)]
+    pub(crate) entry_actions: Vec<IrStateEntry>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -184,6 +195,28 @@ pub(crate) struct IrLifecycleEdge {
     pub(crate) to: String,
     #[serde(default)]
     pub(crate) guard: Option<IrExpr>,
+    /// What is true of the PATH taken, on every traversal.
+    #[serde(default)]
+    pub(crate) actions: Vec<IrStateAction>,
+}
+
+/// One state's arrival actions.
+#[derive(Debug, Deserialize)]
+pub(crate) struct IrStateEntry {
+    pub(crate) state: String,
+    #[serde(default)]
+    pub(crate) actions: Vec<IrStateAction>,
+}
+
+/// One arrival action, carrying who wrote it. The journal names the author,
+/// so a same-field conflict records whose value was `overridden`.
+#[derive(Debug, Deserialize)]
+pub(crate) struct IrStateAction {
+    #[allow(dead_code)]
+    pub(crate) kind: String,
+    pub(crate) author: String,
+    pub(crate) field: String,
+    pub(crate) value: IrExpr,
 }
 
 #[derive(Debug, Deserialize)]

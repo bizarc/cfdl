@@ -96,8 +96,10 @@ entity asset suite {
 
 A guarded edge is evaluated each period the entity is in the edge's
 from-state — and only then. Taking the edge moves the machine, which disarms
-it; re-entering the state re-arms it. There is no latch: a unit that goes
-delinquent and cures and goes delinquent again is the topology walked twice.
+it; re-entering the state re-arms it. Edge availability is the memory, so a
+unit that goes delinquent, cures and goes delinquent again is the topology
+walked twice. Nothing anywhere latches: an event fires on each occurrence too,
+and once-ness is declared rather than enforced by the engine.
 A guard reads state as the period opened and the model's own **settled cash**
 strictly backward — at or before the previous period — which is how "the
 rent stopped arriving" becomes a condition rather than a narration.
@@ -109,7 +111,7 @@ the same optional guards:
 [[lifecycles]]
 lifecycle_id = "cre.unit"
 initial = "vacant"
-states = ["vacant", "leased", "holdover", "downtime"]
+states = ["vacant", "leased", "holdover", "month_to_month"]
 
 [[lifecycles.transitions]]
 from = "vacant"
@@ -123,6 +125,57 @@ time with the declared set in the message. Edges are declared only as used:
 an edge you did not declare does not exist, and a machine that declares no
 edges leaves events unconstrained.
 
+### Arrival actions
+
+A state can carry behavior. Arriving somewhere is an occurrence, and the
+bookkeeping that belongs to it — resetting a counter, recording a shortfall,
+striking a new rate — belongs on the arrival rather than in a separate event
+that restates the condition.
+
+```cfdl
+lifecycle servicing {
+  initial current
+  state current, delinquent, defaulted
+
+  on enter defaulted { set months_in_state = 0 }
+
+  current    -> delinquent when asset.loan.paying < 0.5
+  delinquent -> defaulted  when asset.loan.paying < 0.5 and asset.loan.months_in_state >= 2
+
+  // The cure is not a payment. It is a payment plus a probation period.
+  defaulted  -> current    when asset.loan.paying >= 0.5 and asset.loan.months_in_state >= 3
+}
+```
+
+The counter is what makes "three months in this condition" sayable: a plain
+recurrence climbs forever, so a duration measured from the last *arrival*
+needs the arrival to reset it. That gap between a borrower starting to pay
+again and the loan being performing again is not an artefact — it is what
+supervisors mean when they write a probation period into the definition of
+default.
+
+There are two grains, and both are real:
+
+- **`on enter <state>`** carries what is true of the STATE however it was
+  reached, so it holds for every edge that arrives, including one added later.
+  This is what a pack declares once for its domain types.
+- **An action on an edge** carries what is true of the PATH taken. A renewal
+  and a re-let both land in `leased` and strike rent differently; an entry
+  action cannot say that, because it does not know which edge fired.
+
+Entry actions run first, then the taken edge's — the state's own setup, then
+the path's refinement. A same-field write journals the earlier value
+`overridden`, naming its author, so a pack's default and a model's override
+are distinguishable in the record rather than silently merged. Both run on
+every traversal, including one an event causes by writing `status` across a
+permission edge.
+
+An action writes **fields, never `status`**: a status write would fire a
+second transition inside the same period, and a transition that should cause
+another transition is an edge out of the target state, taken next period. An
+action reads the same world its guard does — state as the period opened,
+settled cash strictly backward — which is what keeps the whole thing acyclic.
+
 A schedule can anchor to a state entry —
 `schedule every month from state_enter(asset.suite, building) for 18 periods`
 — opening a fresh window at each entry, which is what "eighteen months of
@@ -135,7 +188,7 @@ its condition holds, once.
 
 ```cfdl
 event expiry when time.t >= 2 {
-  set entity asset.suite.status = "downtime"
+  set entity asset.suite.status = "vacant"
 }
 ```
 

@@ -14,7 +14,7 @@ The engine settles each period in a fixed order: state first, then the period's 
 
 ```cfdl
 event delinquency.flag when series_sum("ops.rent", time.t - 1, time.t - 1) < 50 {
-  set entity asset.suite.status = "downtime"
+  set entity asset.suite.status = "vacant"
 }
 ```
 
@@ -22,9 +22,9 @@ The window ends at `time.t - 1`, and the bound is a rule, not a habit. Logic rea
 
 The one-period lag matches the world the model describes. A real delinquency flag also trails the missed payment: the servicer reports it after month-end. The model's lag and the world's lag agree.
 
-## The machine: edges instead of latches
+## The machine: topology instead of flags
 
-Chapter 10 said a regime that returns is not a re-firing event. This section shows what it is instead:
+Chapter 10 said an event happens as often as it happens, and that once-ness comes from the world rather than the construct. This section shows the other half: a regime that *returns*, and the construct that constrains it.
 
 ```cfdl
 version 0.1
@@ -59,7 +59,7 @@ Run the model and read the transitions in the results:
 - Rent resumes. Month 5 cures the breach.
 - Month 8 breaches again. Month 10 cures again.
 
-The topology was walked twice, and no latch was involved. An edge's condition is evaluated each period the entity is in the edge's *from* state, and only then. Taking the edge moves the machine, which disarms the edge. Re-entering the state re-arms it. Edge availability is the memory, which is what a finite state machine has always meant.
+The topology was walked twice. An edge's condition is evaluated each period the entity is in the edge's *from* state, and only then. Taking the edge moves the machine, which disarms the edge. Re-entering the state re-arms it. Edge availability is the memory, which is what a finite state machine has always meant.
 
 Four rules make the machine reviewable:
 
@@ -69,6 +69,95 @@ Four rules make the machine reviewable:
 - **Every transition is journaled**, with the edge taken and the values its condition read. A regime is never again a bare field whose changes the record cannot see.
 
 `active in state` closes the loop back to cash. A stream declared `active in state leased` turns off during delinquency and turns back on after the cure, with no further mechanism. State gates cash; cash moves state; both directions are declared.
+
+## Arrival actions: what happens when you get there
+
+A state can carry behavior. Arriving somewhere is an occurrence, and the
+bookkeeping that belongs to it — reset a counter, record a shortfall, strike a
+new rate — belongs on the arrival rather than in a separate event that has to
+restate the condition.
+
+Here is a loan that misses payments, defaults, resumes paying, and is restored
+to performing only after a **probation period**. That last requirement is why
+the counter has to exist: "three consecutive good months" is not a condition
+you can read off the calendar, and a plain recurrence counts up forever
+without ever going back to zero.
+
+```cfdl
+version 0.1
+model "a-loan-that-defaults-and-cures"
+time calendar monthly from 2026-01 for 14
+
+entity asset loan {
+  lifecycle servicing
+  paying init 1.0 next if(time.t >= 3 and time.t <= 6, 0.0, 1.0)
+  months_in_state init 0.0 next prev + 1.0
+}
+
+lifecycle servicing {
+  initial current
+  state current, delinquent, defaulted
+
+  // Every arrival restarts the clock. This is what makes "three months in
+  // this condition" sayable at all.
+  on enter current    { set months_in_state = 0 }
+  on enter delinquent { set months_in_state = 0 }
+  on enter defaulted  { set months_in_state = 0 }
+
+  current    -> delinquent when asset.loan.paying < 0.5
+  delinquent -> defaulted  when asset.loan.paying < 0.5 and asset.loan.months_in_state >= 2
+  delinquent -> current    when asset.loan.paying >= 0.5
+
+  // The cure is not a payment. It is a payment PLUS a probation period.
+  defaulted  -> current    when asset.loan.paying >= 0.5 and asset.loan.months_in_state >= 3
+}
+
+stream credit.payment on entity asset.loan inflow currency USD {
+  schedule every month from 2026-01 to 2027-02
+  amount = 1000 * asset.loan.paying
+}
+```
+
+Run it and read the transitions:
+
+```
+t=3   current    -> delinquent
+t=5   delinquent -> defaulted
+t=8   defaulted  -> current
+```
+
+Payments stop at month 3 and the loan goes delinquent immediately. Two months
+later it defaults. Payments resume at month 7 — and the loan is *still* in
+default, because paying once is not curing. The cure lands at month 8, three
+months after entering `defaulted`, which is exactly what the probation says.
+
+That gap between "started paying again" and "is performing again" is the whole
+point, and it is why supervisors write probation periods into the definition of
+default in the first place. Without arrival actions you cannot express it: the
+counter would still be climbing from whenever the model started.
+
+Two grains, and both are real:
+
+- **`on enter <state>`** carries what is true of the STATE however it was
+  reached. Resetting the clock holds for every edge that arrives, including one
+  you add later.
+- **an action on an edge** carries what is true of the PATH taken. A renewal
+  and a re-let both land in `leased`, but the rent is struck differently
+  because of how you arrived — and an entry action cannot say that, since it
+  does not know which edge fired.
+
+Entry actions run first, then the taken edge's: the state's own setup, then the
+path's refinement. If both write the same field the later one stands and the
+earlier is journalled `overridden`, naming who wrote it — so a pack's default
+and your override are distinguishable in the record rather than silently
+merged.
+
+Two rules worth knowing before you reach for them. An action writes **fields,
+never `status`**: a status write would fire a second transition inside the same
+period, and a transition that should cause another transition is an edge out of
+the target state, taken next period. And an action reads the same world its
+guard does — state as the period opened, settled cash strictly backward — so it
+cannot see this period's cash, which is what keeps the whole thing acyclic.
 
 ## The account: cash that waits
 

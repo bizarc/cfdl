@@ -1,6 +1,6 @@
 {
-  "results_version": "0.5",
-  "model_hash": "ec97097639b3dab516fc8e326fa37a98ff3674b63ded6369aee40ae716e46768",
+  "results_version": "0.6",
+  "model_hash": "a1e86e7eccc1d23ae0fc16090fdc2abeda88f773e3d12d08ec30c2b97bf10db7",
   "ledger_hash": "dabe3b267b1926cf61c19191851c48af4d65ee37e870ff28f7cd1296fe2ea72f",
   "engine": {
     "name": "cfdl-engine",
@@ -315,7 +315,7 @@
         "entity": "asset.suite",
         "field": "status",
         "from": "leased",
-        "to": "downtime",
+        "to": "vacant",
         "event": "expiry"
       },
       {
@@ -323,7 +323,7 @@
         "date": "2030-01-01",
         "entity": "asset.suite",
         "field": "status",
-        "from": "downtime",
+        "from": "vacant",
         "to": "leased",
         "event": "reletting"
       }
@@ -337,7 +337,7 @@
         "target": "asset.suite.status",
         "outcome": "applied",
         "from": "leased",
-        "to": "downtime"
+        "to": "vacant"
       },
       {
         "period": 4,
@@ -346,7 +346,7 @@
         "action": "set",
         "target": "asset.suite.status",
         "outcome": "applied",
-        "from": "downtime",
+        "from": "vacant",
         "to": "leased"
       }
     ]

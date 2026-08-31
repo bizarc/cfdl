@@ -1,0 +1,17 @@
+[
+  {
+    "code": "E1134_SERIES_READ_IN_LOGIC",
+    "severity": "error",
+    "message": "lifecycle 'unit' edge 'leased -> delinquent' action reads `core.rent` over a window ending at `time.t`, which is this period or later. Logic settles BEFORE this period's cash exists, so only history it can already see is readable: end the window at `time.t - 1` or earlier. A stream, a waterfall and the results layer do see the current period.",
+    "file": "model.cfdl",
+    "span": {
+      "start_line": 11,
+      "start_col": 16,
+      "end_line": 11,
+      "end_col": 56
+    },
+    "path": null,
+    "hint": null,
+    "notes": []
+  }
+]

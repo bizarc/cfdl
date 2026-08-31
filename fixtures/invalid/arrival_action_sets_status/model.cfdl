@@ -1,0 +1,25 @@
+version 0.1
+model "arrival-action-sets-status"
+time calendar monthly from 2026-01 for 6
+
+// An arrival action writes FIELDS. A `status` write would fire a second
+// transition inside the same period; a transition that should cause another
+// transition is topology, taken next period.
+lifecycle unit {
+  initial leased
+  state leased, delinquent
+  on enter delinquent {
+    set status = "leased"
+  }
+  leased -> delinquent when time.t >= 2
+}
+
+entity asset suite {
+  lifecycle unit
+  marker init 0.0 next prev
+}
+
+stream core.rent on entity asset.suite inflow currency USD {
+  schedule every month from 2026-01 to 2026-06
+  amount = 100
+}

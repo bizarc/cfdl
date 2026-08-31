@@ -239,8 +239,8 @@ lifecycle unit {
 ```
 
 An entity binds it with `lifecycle unit` in its block. A guard is evaluated
-each period the entity is in the edge's from-state — there is no latch; edge
-availability is the memory — and it reads settled series strictly backward,
+each period the entity is in the edge's from-state — edge availability is the
+memory — and it reads settled series strictly backward,
 so realized cash drives state. `active in state leased` on a stream closes
 the loop back to cash. A schedule can hang a window off an entry:
 `from state_enter(asset.site, building) for 18 periods`. See

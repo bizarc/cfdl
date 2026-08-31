@@ -4,7 +4,7 @@
 
 CFDL 0.7.0. Every model below compiles, and its IR and
 results are byte-asserted against goldens in CI (`fixtures/valid/`,
-124 models.
+129 models.
 
 `gold/ir/`, `gold/results/`). Each is single-purpose: the directory name
 says what it exercises. This is what right looks like — positive few-shot
@@ -175,7 +175,7 @@ entity asset suite : CRE.Asset.Unit {
 }
 
 event expiry when time.t >= 2 {
-  set entity asset.suite.status = "downtime"
+  set entity asset.suite.status = "vacant"
 }
 
 event reletting when time.t >= 4 {
@@ -213,6 +213,44 @@ stream bonus.fee on entity asset.co inflow currency USD {
   schedule every year from 2026-01 to 2028-01
   active when series_sum("base.revenue", 0, time.t) > 150
   amount = 25
+}
+```
+
+## arrival_actions_entry_and_edge
+
+```cfdl
+version 0.1
+model "arrival-actions-entry-and-edge"
+time calendar monthly from 2026-01 for 8
+
+// Both grains, and the conflict between them. `on enter` carries what is true
+// of the STATE however reached; the edge carries what is true of the PATH.
+// Entry runs first and the edge refines it, so the entry's value is
+// journalled `overridden` and the edge's stands.
+//
+// The write settles the field store, so the stream reads 1200 in the SAME
+// period the transition fires, and the recurrence resumes from it after.
+lifecycle unit {
+  initial vacant
+  state vacant, leased
+
+  on enter leased {
+    set in_place_rent = 1000.0
+  }
+
+  vacant -> leased when time.t >= 2 {
+    set in_place_rent = 1200.0
+  }
+}
+
+entity asset suite {
+  lifecycle unit
+  in_place_rent init 900.0 next prev
+}
+
+stream core.rent on entity asset.suite inflow currency USD {
+  schedule every month from 2026-01 to 2026-08
+  amount = asset.suite.in_place_rent
 }
 ```
 
@@ -1327,6 +1365,86 @@ metric total_cost    = series_sum("ops.cost", 0, 4)
 metric margin        = metric.gross_revenue + metric.total_cost
 ```
 
+## dscr_cash_trap_cure_period
+
+```cfdl
+version 0.1
+model "dscr-cash-trap-with-cure-period"
+time calendar monthly from 2026-01 for 18
+
+// A PROJECT FINANCE CASH TRAP, WITH THE CURE PERIOD A CREDIT AGREEMENT
+// ACTUALLY WRITES (`docs/13` §7.77). Below the trigger, distributions stop
+// and cash accumulates in the trap; the trap releases only after the ratio
+// has held AT OR ABOVE the trigger for the stated cure period. ONE GOOD
+// MONTH IS NOT A CURE, and that is the part `trapped_cash_cure` could not
+// say: it cures on the next good period, because a duration measured from
+// the last breach had no spelling until arrival actions (§7.79).
+//
+// `on enter trapped { set good_periods = 0 }` is what makes the cure period
+// expressible. A plain recurrence counts consecutive good periods, but it
+// has no way to start over at each new breach; the arrival does that.
+//
+// The pin: NOI drops to 12,000 against 15,000 of debt service at t=4..6, so
+// DSCR is 0.80 against a 1.20 trigger. The machine reads SETTLED cash
+// strictly backward, so it traps at t=5. Cash accumulates once NOI recovers
+// (5,000 at t=7, 10,000 at t=8) because the trapped months have nothing to
+// distribute. Two consecutive good periods land at t=9 and the trap
+// releases 10,000 in full.
+entity asset plant {
+  lifecycle covenant
+  // Consecutive periods at or above the trigger, on SETTLED cash. Reset to
+  // zero on every entry into `trapped`, so each breach starts its own clock.
+  good_periods init 0.0 next if(
+    series_sum("ops.noi", time.t - 1, time.t - 1) >= 1.20 * (0.0 - series_sum("debt.service", time.t - 1, time.t - 1)),
+    prev + 1.0,
+    0.0
+  )
+}
+
+entity party sponsor { name = "Sponsor" }
+
+account trap { }
+
+lifecycle covenant {
+  initial compliant
+  state compliant, trapped
+
+  on enter trapped { set good_periods = 0 }
+
+  compliant -> trapped when
+    series_sum("ops.noi", time.t - 1, time.t - 1) < 1.20 * (0.0 - series_sum("debt.service", time.t - 1, time.t - 1))
+
+  // The cure is the ratio held for two consecutive periods, not one.
+  trapped -> compliant when asset.plant.good_periods >= 2
+}
+
+stream ops.noi on entity asset.plant inflow currency USD {
+  schedule every month from 2026-01 to 2027-06
+  amount = if(time.t >= 4 and time.t <= 6, 12000, 20000)
+}
+
+stream debt.service on entity asset.plant outflow currency USD {
+  schedule every month from 2026-01 to 2027-06
+  amount = 15000
+}
+
+waterfall distribution on entity asset.plant {
+  schedule every month from 2026-01 to 2027-06
+  from available
+  pay trapped   to account trap    = if(asset.plant.status == "trapped", remaining, 0.0)
+  pay residual  to party.sponsor   = remaining
+}
+
+// The release: once the covenant is cured, the accumulated trap balance is
+// handed back. A second waterfall drawing FROM the account, because the trap
+// is a location cash sits in, not a step in the distribution.
+waterfall release on entity asset.plant {
+  schedule every month from 2026-01 to 2027-06
+  from trap
+  pay released to party.sponsor = if(asset.plant.status == "compliant", remaining, 0.0)
+}
+```
+
 ## dscr_smoke
 
 ```cfdl
@@ -1793,6 +1911,35 @@ stream credit.amortization on entity asset.pool outflow currency USD {
 }
 ```
 
+## event_refires_on_each_occurrence
+
+```cfdl
+version 0.1
+model "event-refires-on-each-occurrence"
+time calendar monthly from 2026-01 for 10
+
+// AN EVENT IS SOMETHING THAT HAPPENS, and a unit that defaults, cures and
+// defaults again has had three events. Under the latch this fired once and
+// the second breach was invisible; it now fires on each rising edge, and the
+// journal carries one row per occurrence.
+//
+// `breached` is a marker the event writes, not a state: what makes the
+// condition RE-RISE is `paying` falling, recovering and falling again.
+entity asset suite {
+  paying init 1.0 next if(time.t == 3 or time.t == 7, 0.0, 1.0)
+  breach_count init 0.0 next prev
+}
+
+event breach when asset.suite.paying < 0.5 {
+  set entity asset.suite.breach_count = prev.asset.suite.breach_count + 1.0
+}
+
+stream core.rent on entity asset.suite inflow currency USD {
+  schedule every month from 2026-01 to 2026-10
+  amount = 100 * asset.suite.paying
+}
+```
+
 ## event_reseeds_recurrence
 
 ```cfdl
@@ -1828,6 +1975,33 @@ event partial_liquidation when time.t == 2.0 {
 stream loan.balance_report on entity asset.loan inflow currency USD {
   schedule every year from 2026-01 to 2031-01
   amount = asset.loan.balance
+}
+```
+
+## event_scheduled_occurrences
+
+```cfdl
+version 0.1
+model "event-scheduled-occurrences"
+time calendar monthly from 2026-01 for 12
+
+// A schedule SUPPLIES the occurrences and `when` FILTERS them: a quarterly
+// covenant test is four tests a year, and four consecutive failures are four
+// breach events, because the model declared quarterly testing. The schedule
+// is the same sub-language a stream's is, so `every quarter` tests at the
+// quarter's close.
+entity asset plant {
+  covered init 1.0 next if(time.t >= 4, 0.0, 1.0)
+  tests_failed init 0.0 next prev
+}
+
+event covenant_test schedule every quarter from 2026-01 to 2026-12 when asset.plant.covered < 0.5 {
+  set entity asset.plant.tests_failed = prev.asset.plant.tests_failed + 1.0
+}
+
+stream core.revenue on entity asset.plant inflow currency USD {
+  schedule every month from 2026-01 to 2026-12
+  amount = 100
 }
 ```
 
@@ -2313,7 +2487,7 @@ stream cre.rent on entity asset.suite inflow currency USD {
 }
 
 event delinquent when series_sum("cre.rent", time.t - 1, time.t - 1) < 50 {
-  set entity asset.suite.status = "downtime"
+  set entity asset.suite.status = "vacant"
 }
 ```
 
@@ -3919,6 +4093,61 @@ stream rent.total on entity asset.property inflow currency USD {
 }
 ```
 
+## reserve_interest_on_balance
+
+```cfdl
+version 0.1
+model "interest-on-a-reserve-balance"
+time calendar monthly from 2026-01 for 12
+
+entity asset project {
+  name = "Project"
+  // A FIELD's rule may read an account strictly backward; a stream's amount
+  // may not. The field carries the balance forward, the stream spends it.
+  reserve_interest init 0.0 next prev.dsra * 0.005
+}
+entity party sponsor { name = "Sponsor" }
+
+// INTEREST EARNED ON A FUNDED RESERVE (`docs/13` §7.76, part three). The
+// CREST reconciliation line this closes: `crest_solar_cost_based/NOTES.md`
+// records that the reference EBITDA "includes interest earned on funded
+// reserve accounts (~$4,606 in year one), which CFDL does not model."
+//
+// THE SPELLING MATTERS. A stream's amount may NOT read `prev.<account>` —
+// that is `E1123_PREV_OUTSIDE_NEXT`, because `prev` outside a `next` means
+// nothing. `docs/03` is precise about where an account balance is readable:
+// rules, guards and step expressions. A field's `next` IS a rule, so the
+// field carries the balance forward and the stream reads the field.
+//
+// The pin: the reserve funds toward 3,000 out of 1,000/month of revenue, and
+// interest accrues on the PRIOR balance at 0.5% — 0 while the balance is 0,
+// 5.00 on the first 1,000, 10.03 on 2,005, then 15.00 a month once the
+// target is held. Reading the balance strictly backward is what keeps the
+// reserve and the interest it earns from being mutually circular.
+
+// A debt service reserve funded to target out of operating cash.
+account dsra { }
+
+stream ops.revenue on entity asset.project inflow currency USD {
+  schedule every month from 2026-01 to 2026-12
+  amount = 1000
+}
+
+// Interest EARNED on the reserve balance. Reads the account strictly
+// backward, which is what makes it legal and cycle-free.
+stream ops.reserve_interest on entity asset.project inflow currency USD {
+  schedule every month from 2026-01 to 2026-12
+  amount = asset.project.reserve_interest
+}
+
+waterfall funding on entity asset.project {
+  schedule every month from 2026-01 to 2026-12
+  from available
+  pay top_up   to account dsra   = max(0.0, 3000.0 - prev.dsra)
+  pay residual to party.sponsor  = remaining
+}
+```
+
 ## rule_reads_literal_field
 
 ```cfdl
@@ -4482,7 +4711,7 @@ time calendar annual from 2026-01 for 5
 // `status` did not exist until an event wrote one.
 entity asset tower : CRE.Asset.RealProperty {
   asset_class = "office"
-  state operating
+  state stabilized
 }
 
 event start_repositioning when time.t >= 2 {
@@ -4575,7 +4804,7 @@ entity asset legacy : CRE.Asset.RealProperty
 entity asset tower : CRE.Asset.RealProperty {
   asset_class = "office"
   rentable_area = 30000
-  state operating
+  state stabilized
 }
 
 // Optional hierarchy: a unit inside the building. Never required.

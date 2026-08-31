@@ -1,6 +1,6 @@
 ---
 title: "Events and options"
-description: "Discrete change and contingent claims: latch semantics, lifecycle fields, rule-based exercise, and why the model's turning points deserve their own construct."
+description: "Discrete change and contingent claims: when an event occurs, lifecycle fields, rule-based exercise, and why the model's turning points deserve their own construct."
 part: 2
 order: 10
 track: core
@@ -44,7 +44,27 @@ event refi.trigger when time.t >= 12 {
 
 An event has a **condition** and a block of **actions**. The condition is an ordinary boolean expression. Here it is a date test, but it can read anything expressions read. "When cumulative revenue passes the threshold" and "when the balance falls below target" are conditions of the same shape.
 
-The semantics to internalize is the **latch**: an event fires *once*, at the first period its condition holds, and never again. It is a turning point, not a recurring rule — the deal refinances one time, even though `time.t >= 12` stays true forever after. If you find yourself wanting an event to fire repeatedly, what you want is either a stream with a guard (a recurring *amount*) or a **lifecycle edge** (a regime that returns): a declared machine's edges are checked each period the entity is in the edge's from-state, so a covenant that breaches and cures is the machine's topology walked twice, with no latch involved — edge availability is the memory.
+The semantics to internalize is the **occurrence**: an event fires each time its conditions become true having been false, and re-arms when they fall. An event is something that *happens*, and nothing restricts it to happening once — a unit that defaults, cures and defaults again has had three events, and a model that could record only the first would be wrong.
+
+So how does the refinance above fire only once? Not because the construct stops it. It fires once because **the world it describes happens once**: after the refinance the loan *is* refinanced, and `current -> refinanced` has no edge back. Once-ness is something a model declares, in one of two ways:
+
+- a **schedule whose occurrence is singular** — `schedule on 2027-03` fires once because the date occurs once;
+- a **topology with no way back** — the refinance above, where nothing returns the loan to `current`.
+
+If you declare a return edge, you have declared that re-firing is possible. The memory lives in the schedule or the machine — both of which a reader can see — rather than in a "has fired" flag inside the engine.
+
+An event may also say *when it is tested* rather than leaving that to its condition:
+
+```cfdl
+event covenant_test
+  schedule every quarter from 2026-01 to 2030-12
+  when domain.energy.dscr < 1.20
+{
+  set entity asset.plant.status = "trapped"
+}
+```
+
+The schedule **supplies** the occasions and `when` **filters** them. Four consecutive failing quarterly tests are four breach events, because the model declared quarterly testing — that is a different statement from "the DSCR was under trigger for a year", and the language lets you say which one you mean.
 
 The actions are a fixed vocabulary: `set` writes an entity field (chapter 8's third way a field changes), `activate` / `deactivate` switch a stream on or off, and `exercise` fires an option (below). Note the pattern the example uses, because it is the idiomatic one. The event writes a **lifecycle field** (`status`), and streams key their `active when` guards to it. `entity.status` is how a stream reads a field of the entity it is attached to. The event owns *when the regime changes*; each stream owns *which regime it belongs to*. When the refinance date moves, one condition changes and both loans follow — and the reviewer reads the deal's turning points as a short list of events rather than reverse-engineering them from flag arithmetic.
 
@@ -85,4 +105,4 @@ What this means in practice: you state the exercise policy, and policy alternati
 Then, on your own:
 
 1. Move the refinance trigger from a date test to an economic one: fire when cumulative NOI passes 250,000 (`series_sum("ops.noi", 0, time.t)`). Predict the firing month by hand first — you know the NOI per month.
-2. Add a second event that *reverses* nothing, by trying to write a "de-refinance." The latch means a free-standing event refuses to express regime flapping. Write down, in one sentence, why that refusal is a feature in a reviewed model — and then name the construct that DOES express a regime that returns (a lifecycle with a cure edge), and why declared edges make the flapping reviewable where a re-firing event would not.
+2. Try to express a regime that *flaps* — refinanced, then not, then refinanced again — using free-standing events alone. You will find you can write the events, but not the constraint: nothing stops the pair from firing in the same period, or in an order the deal could not take. Write down in one sentence what a **lifecycle** adds that two events cannot, and name the specific thing that makes the flapping reviewable (hint: an edge that does not exist cannot be taken, and every one that is taken is journalled).

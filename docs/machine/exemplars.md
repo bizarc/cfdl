@@ -3724,7 +3724,7 @@ time calendar annual from 2026-01 for 26
 entity asset project : Energy.Asset.GenerationFacility {
   technology         = "solar_pv"
   nameplate_capacity = 100000.0
-  state operating
+  state in_service
 
   // What the plant throws off after operating costs and debt service. A fact
   // about the project, so it belongs to the project.

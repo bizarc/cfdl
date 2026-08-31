@@ -228,8 +228,9 @@ Three helpers resolve in SCHEDULE position (see §11):
 They are not expression functions. An expression reads the phase it is in as
 `time.phase`, the name of the phase covering the current period, so a guard
 gates on a phase with `active when time.phase == "operations"` and an event
-fires on entering one with `when time.phase == "operations"` — once, because an
-event latches (§13.1).
+fires on entering one with `when time.phase == "operations"` — once per entry,
+on the rising edge (§13.1). A phase entered once yields one occurrence because
+the phase occurs once, not because the event is latched.
 
 ---
 
@@ -251,7 +252,7 @@ Rules:
 ```cfdl
 entity asset tower : CRE.Asset.RealProperty {
   asset_class = "office"
-  state operating
+  state stabilized
 }
 
 entity asset suite_a : CRE.Asset.Unit {
@@ -359,6 +360,112 @@ Rules:
 - **Every transition is journaled** with the edge taken and the values its
   guard read, and published in `deterministic.transitions` as
   `lifecycle:<id>`.
+
+#### 7.3.1 Arrival actions
+
+A transition may carry behavior. Arriving somewhere is an occurrence, and
+per-arrival bookkeeping — reset a counter, record a shortfall, strike the
+prevailing rent — belongs on the arrival rather than in a separate event
+that has to restate the condition.
+
+```cfdl
+lifecycle unit {
+  initial vacant
+  state vacant, leased, downtime
+
+  on enter leased {
+    set months_in_state = 0
+  }
+
+  vacant   -> leased    when time.t >= 1
+  holdover -> leased    when inputs.renews {
+    set in_place_rent = prev.in_place_rent * (1 + inputs.bump)
+  }
+  downtime -> leased    when months_in_state >= inputs.downtime_months {
+    set in_place_rent = curve_value("cre.market_rent", time.date)
+  }
+}
+```
+
+There are two grains because both are real:
+
+- **Entry actions** (`on enter <state> { … }`) carry what is true of the
+  STATE, however it was reached. Resetting `months_in_state` on entering
+  `leased` holds for every edge that arrives there, including one added
+  later. This is the primary spelling, and a pack's `types.toml` machine
+  declares it once for every model using the type.
+- **Edge actions** (a block after the edge) carry what is true of the PATH
+  taken. A renewal and a re-let both land in `leased`, but the rent is
+  struck differently because of how you arrived. An entry action cannot
+  express that: it does not know which edge fired.
+
+Rules:
+- **Field names are entity-relative.** `set months_in_state`, not
+  `set asset.unit_a.months_in_state` — one lifecycle is bound by many
+  entities, and the behavior belongs to the entity that transitioned. The
+  field MUST be declared on that entity; an unknown name is a compile
+  error.
+- **`set` writes FIELDS only, never `status`.** An action writing status
+  would fire a second transition inside the same period, breaking
+  one-transition-per-entity-per-period and inviting same-period cascades. A
+  transition that should cause another transition is topology: an edge out
+  of the target state, taken next period. Status writes remain the named
+  event's privilege (§13.1), validated against the declared edge relation.
+- **`set` is the whole vocabulary.** Stream gating is already declarative
+  (`active in state`, §9.3) and schedule anchoring already follows entry
+  (`state_enter`, §11.7); an imperative `activate`/`deactivate` on an edge
+  would duplicate a declared pattern. `exercise option` stays with named
+  events.
+- **Actions run on every traversal, whatever took the edge** — its own
+  guard, or a named event's `status` write moving the entity across a
+  permission edge. A status write that moves an entity runs the target
+  state's entry actions exactly as the machine's own path would.
+- **Order on arrival is entry actions, then the taken edge's actions**, each
+  block in declaration order — the specific refines the general. A
+  same-field write journals the earlier value `overridden`.
+- **Actions evaluate in the guard's environment**: state as the period
+  opened, series strictly backward, `inputs`, curves, `time.*`. This is the
+  environment the walk already proves acyclic, so actions add no cycle risk.
+  A write settles the field for the period; the recurrence resumes from it
+  next period, and streams later in the same period read the settled value.
+
+#### 7.3.2 Augmenting a pack's machine
+
+A model MAY attach entry and edge actions to a machine its pack declared,
+**additively only**. It names the machine by its qualified name — a
+`lifecycle` block naming a machine that already exists augments it rather
+than redeclaring it:
+
+```cfdl
+use pack "opco"
+
+lifecycle opco.enterprise {
+  on enter acquired {
+    set months_held = inputs.prior_hold_months
+  }
+}
+```
+
+A block naming a machine that does not exist declares a new one, and is then
+required to carry `initial` and `state` as usual.
+
+An augmenting block cannot add or remove states or edges, alter the topology,
+or remove the pack's actions; the pack's machine stays the checkable
+contract. The model's actions run after the pack's for the same arrival, so a
+same-field conflict resolves the model's way and journals the pack's value
+`overridden`.
+
+Every action records **who wrote it**, and the journal names that author. A
+secondary buyout that carries the sponsor's prior holding period, against a
+pack whose machine resets the clock on `acquired`, reads as two journal rows
+against the same field — one `overridden`, one `applied` — each naming its
+author. Attribution is not optional metadata: an action that cannot say who
+wrote it is refused, because an unattributable `overridden` line is the one
+thing the record exists to prevent.
+
+This is what makes arrival actions an extensibility surface rather than a
+pack-author convenience: the common position is modeling ON a pack whose
+machine is right but whose actions stop short.
 
 ---
 
@@ -972,18 +1079,56 @@ event refi_if_rates_drop when curve_value("sofr", time.date) < 0.045 {
 }
 ```
 
+An event may also state WHEN it occurs in the schedule language, with or
+without a `when` condition:
+
+```cfdl
+event covenant_test schedule every quarter when domain.energy.dscr < 1.20 {
+  set entity project.plant.status = "trapped"
+}
+```
+
 Rules:
-- Events are evaluated **discretely** at each time step of the master timeline.
+- **An event is something that happens**, and nothing restricts it to
+  happening once. A unit that defaults, cures and defaults again has had
+  three events, and a model that can only record the first is wrong.
+- **An event fires on each occurrence — rising edge.** It fires each time
+  its conditions become true having been false, and re-arms when they fall.
+  A DSCR below trigger for twelve months is ONE breach event and twelve
+  breach-months; "the conditions hold" is a state, and `active in state`
+  (§9.3) and edge guards (§7.3) already express states.
+- **A schedule supplies the occurrences; `when` filters them.** An event may
+  carry a schedule clause, a `when` clause, or both. With both present it
+  fires at each scheduled occurrence where the condition holds — `schedule
+  every quarter when dscr < 1.20` is a quarterly covenant test, and four
+  consecutive failing tests are four breach events, because the model
+  declared quarterly testing. Rising-edge applies only where no schedule is
+  present, occurrences then coming from the condition's own dynamics. A
+  model wanting "only on entry into breach" has the honest spelling already:
+  an edge on a machine, which is what states are for.
+- **Time conditions belong in the schedule language.** The schedule
+  sub-language is already the language of when things occur — dates,
+  intervals, anchors including `state_enter`, roll conventions, calendars.
+  Write `schedule on 2027-03`, not `when time.t == 15`.
+- **There is no `once` keyword, and nothing latches.** Once-ness is a
+  property of the world the model declared, and it has two spellings: a
+  schedule whose occurrence is singular (`schedule on 2027-03` fires once
+  because the date occurs once), or a topology with no way back (a refinance
+  fires once not because the event is latched but because afterwards the
+  loan IS refinanced — `current -> refinanced` with no returning edge). If a
+  model declares a return edge, it has declared that re-firing is possible.
+- **Named and anonymous events work identically.** To describe an event
+  informally, use guard conditions on the machine (§7.3); to canonize one,
+  use `event`. Same firing semantics, same evaluation environment, same
+  journaling. The anonymous form suits entity-local conditions; the named
+  form suits occurrences worth canonizing — referenced from elsewhere, or
+  spanning entities.
 - `when` MUST be a boolean expression.
-- **Events LATCH.** An event fires at most once per run, at the first period its
-  condition holds. It does not re-fire if the condition becomes true again, and
-  there is no repeating or level-triggered form. ("Evaluated discretely at each
-  time step" describes when the condition is TESTED, not how often the event may
-  fire — a distinction this spec previously left to be discovered.)
-- **The machine does not latch — and needs no policy saying so.** A
-  condition that holds and clears and holds again is a lifecycle edge
-  (§7.3), where edge availability is the memory. The free-standing event
-  keeps its latched meaning; a regime that returns is the machine's job.
+- **Conditions are evaluated once per period**, in declaration order, in the
+  walk's state stage. An event fires at most once per period, and at most
+  one transition per entity per period is taken. Rising-edge detection
+  compares this period's evaluation against the last; nothing re-evaluates
+  within a period.
 - **A status write is validated against the machine.** `set … status` on an
   entity whose lifecycle declares edges is refused — with the edge named —
   where no declared edge permits the move; the refusal is journaled as
@@ -1025,8 +1170,11 @@ neither is `E1302`.
 
 ### 13.3 Event timing and the grid (normative)
 
-An event fires in the **first period whose condition holds**, evaluated once per
-period against the state as that period opened. It cannot fire between periods.
+An event fires at **each occurrence**, evaluated once per period against the
+state as that period opened. Where the event carries a schedule, the
+occurrences are the scheduled ones the `when` clause admits; where it does not,
+an occurrence is the period its condition becomes true having been false. It
+cannot fire between periods.
 
 The model calendar therefore bounds how precisely a condition can be met: a
 condition that becomes true partway through a period takes effect at that
@@ -1610,12 +1758,39 @@ waterfall_block = "{" schedule_stmt "from" expr { waterfall_step } "}" ;
    but the machine never fires it on its own. A guarded edge is evaluated
    each period the entity is in its from-state; there is no latch, because
    edge availability is the memory. *)
-lifecycle_stmt  = "lifecycle" IDENT "{" { lifecycle_item } "}" ;
+(* The name is a qname so a model can address a machine its PACK declared
+   (`opco.enterprise`) and not only one of its own (`unit`). A block naming a
+   machine that already exists AUGMENTS it, additively (docs/34 D2a): it may
+   contribute entry and edge actions to states and edges the pack declared,
+   and may NOT add or remove states or edges, alter the topology, or remove
+   the pack's actions. The pack's actions run first; the model's refine them.
+   A block naming no existing machine declares a new one, which is then
+   required to carry `initial` and `state`. *)
+lifecycle_stmt  = "lifecycle" qname "{" { lifecycle_item } "}" ;
 lifecycle_item  = "initial" IDENT
                 | "state" IDENT { "," IDENT }
+                | entry_actions
                 | lifecycle_edge
                 ;
-lifecycle_edge  = IDENT "->" IDENT [ "when" expr ] ;
+
+(* Arrival actions (docs/01 §7.3.1, docs/34 D2/D3). Entry actions carry what
+   is true of the STATE however it was reached; edge actions carry what is
+   true of the PATH taken. On arrival the entry block runs first, then the
+   taken edge's block — the specific refines the general — each in
+   declaration order, a same-field write journaling the earlier value
+   `overridden`. Actions run on every traversal, including one a named
+   event's status write causes. `on` and `enter` are contextual identifiers,
+   not reserved words. *)
+entry_actions   = "on" "enter" IDENT action_block ;
+lifecycle_edge  = IDENT "->" IDENT [ "when" expr ] [ action_block ] ;
+
+(* The action vocabulary on an arrival is `set` ONLY, and the field name is
+   ENTITY-RELATIVE — one lifecycle is bound by many entities and the
+   behavior belongs to the entity that transitioned. It may NOT write
+   `status`: that would fire a second transition inside the same period. A
+   transition that should cause another transition is topology. *)
+action_block    = "{" { state_action_stmt } "}" ;
+state_action_stmt = "set" IDENT "=" expr ;
 
 account_stmt    = "account" IDENT account_block ;
 
@@ -1685,7 +1860,15 @@ convention      = "none" | "following" | "modified_following" | "preceding" | "m
 list_date       = "[" date_lit { "," date_lit } "]" ;
 
 (* --- events --- *)
-event_stmt      = "event" qname "when" expr event_block ;
+(* An event is something that happens, and nothing restricts it to happening
+   once (docs/01 §13.1, docs/34 D1). It fires on each occurrence: a schedule
+   clause SUPPLIES the occurrences and `when` FILTERS them; with no schedule,
+   an occurrence is the rising edge of the condition — true having been
+   false. At least one of the two clauses MUST be present. There is no `once`
+   keyword and nothing latches: once-ness is declared, as a schedule whose
+   occurrence is singular or a topology with no way back. *)
+event_stmt      = "event" qname [ "schedule" schedule_expr ] [ "when" expr ]
+                  event_block ;
 event_block     = "{" { action_stmt } "}" ;
 
 action_stmt     = set_entity_stmt
@@ -3229,7 +3412,6 @@ against it by `make ir-schema`.
       "required": [
         "id",
         "name",
-        "when",
         "actions",
         "provenance"
       ],
@@ -3240,8 +3422,13 @@ against it by `make ir-schema`.
         "name": {
           "$ref": "#/$defs/Id"
         },
+        "schedule": {
+          "$ref": "#/$defs/Schedule",
+          "description": "The occurrences this event is tested at. Absent means the condition's own dynamics supply them (rising edge). Present with `when`, the event fires at each scheduled occurrence the condition admits — a quarterly covenant test that fails four times running is four breach events, because the model declared quarterly testing."
+        },
         "when": {
-          "$ref": "#/$defs/Expr"
+          "$ref": "#/$defs/Expr",
+          "description": "Absent means every scheduled occurrence fires. Present with no schedule, occurrences are this expression's rising edges."
         },
         "actions": {
           "type": "array",
@@ -3252,7 +3439,20 @@ against it by `make ir-schema`.
         "provenance": {
           "$ref": "#/$defs/NodeProvenance"
         }
-      }
+      },
+      "description": "An event is something that happens, and nothing restricts it to happening once. It fires on EACH occurrence: `schedule` supplies the occurrences and `when` filters them; with no schedule, an occurrence is the rising edge of the condition — true having been false, re-arming when it falls. At least one of `schedule` and `when` is present. There is no latch and no `once` flag: once-ness is declared, as a schedule whose occurrence is singular or a topology with no way back. A consumer MUST NOT infer fired-once semantics from the absence of a schedule.",
+      "anyOf": [
+        {
+          "required": [
+            "schedule"
+          ]
+        },
+        {
+          "required": [
+            "when"
+          ]
+        }
+      ]
     },
     "Action": {
       "type": "object",
@@ -3804,6 +4004,13 @@ against it by `make ir-schema`.
             "$ref": "#/$defs/LifecycleEdge"
           },
           "description": "Empty or absent means the machine is unconstrained — permits()'s empty-means-open rule."
+        },
+        "entry_actions": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/StateEntry"
+          },
+          "description": "What is true of a STATE however it was reached, and the primary domain spelling: an entry action holds for every edge that arrives, including one added later. A pack's types.toml machine declares it once and every model using the type inherits it. Runs BEFORE the taken edge's actions."
         }
       }
     },
@@ -3825,6 +4032,67 @@ against it by `make ir-schema`.
         "guard": {
           "$ref": "#/$defs/Expr",
           "description": "Evaluated each period the entity is in `from`, reading state as the period opened and series strictly backward (docs/28 §4). There is no latch: edge availability is the memory."
+        },
+        "actions": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/StateAction"
+          },
+          "description": "What is true of the PATH taken, run on every traversal — whatever took the edge, including a named event's status write. Runs AFTER the target state's entry actions: the specific refines the general."
+        }
+      }
+    },
+    "StateAction": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "author",
+        "field",
+        "value"
+      ],
+      "description": "One arrival action. The vocabulary is `set` only and the target is a FIELD on the entity that transitioned — never `status`, which would fire a second transition inside the same period. The field name is entity-relative because one lifecycle is bound by many entities. Evaluated in the guard's environment (state as the period opened, series strictly backward), so arrival actions add no cycle risk; the write settles the field for the period and the recurrence resumes from it next period. `author` is REQUIRED rather than inferred from the presence of provenance: a pack action whose stamp was forgotten would otherwise journal as the model's, and an unattributable `overridden` line is the one thing this record exists to prevent.",
+      "properties": {
+        "kind": {
+          "type": "string",
+          "enum": [
+            "SetField"
+          ]
+        },
+        "author": {
+          "type": "string",
+          "enum": [
+            "pack",
+            "model"
+          ],
+          "description": "Who wrote this action. Within one state's or edge's list every `pack` action precedes every `model` action — the pack's machine is the general case and the model's augmentation refines it — and the journal names this as the actor, so a same-field conflict records which author's value was `overridden`."
+        },
+        "field": {
+          "$ref": "#/$defs/Id",
+          "description": "Entity-relative field name, resolved against the entity bound to this machine."
+        },
+        "value": {
+          "$ref": "#/$defs/Expr"
+        }
+      }
+    },
+    "StateEntry": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "state",
+        "actions"
+      ],
+      "description": "The arrival actions for one state. At most one entry per state per author; a model augmenting a pack-declared machine contributes a SEPARATE list that runs after the pack's, additively — the model may not add or remove states or edges, alter the topology, or remove the pack's actions.",
+      "properties": {
+        "state": {
+          "type": "string"
+        },
+        "actions": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/StateAction"
+          }
         }
       }
     }
@@ -3870,8 +4138,8 @@ against it by `make results-schema`.
   "properties": {
     "results_version": {
       "type": "string",
-      "const": "0.5",
-      "description": "Schema version of this document. 0.5 added the machine's `transition` journal action. 0.4 added the account journal actions `inflow`, `allocate_in` and `allocate_out`. 0.3 added `ledger_hash` and the optional `inputs` section, and `category` on IR streams upstream of it."
+      "const": "0.6",
+      "description": "Schema version of this document. 0.6 nests an act's own acts under it as `children`, which is what a transition and its arrival actions are. 0.5 added the machine's `transition` journal action. 0.4 added the account journal actions `inflow`, `allocate_in` and `allocate_out`. 0.3 added `ledger_hash` and the optional `inputs` section, and `category` on IR streams upstream of it."
     },
     "model_hash": {
       "type": "string",
@@ -4129,83 +4397,9 @@ against it by `make results-schema`.
         },
         "journal": {
           "type": "array",
-          "description": "Every causal act the run performed, with what became of it, in the order the engine performed them. `transitions` records field CHANGES; the journal answers the question a reviewer asks — what did the model DO, and did each thing it was asked to do happen. An action that was declined, ignored or overridden changes nothing and so appears nowhere else: an `activate stream` that lost to the stream's own `active when` used to leave no trace at all. Flat on purpose — one row per act — so a golden asserts on lines, a reviewer greps for a stream name, and this schema checks one row type. Omitted when a model has no events, options or waterfalls, so such a model publishes exactly what it published before.",
+          "description": "Every causal act the run performed, with what became of it, in the order the engine performed them. `transitions` records field CHANGES; the journal answers the question a reviewer asks — what did the model DO, and did each thing it was asked to do happen. An action that was declined, ignored or overridden changes nothing and so appears nowhere else: an `activate stream` that lost to the stream's own `active when` used to leave no trace at all. One row per act, and one row TYPE — an act whose effects are its own acts nests them as `children` rather than flattening them beside itself, which is what a transition and its arrival actions are (0.6). Omitted when a model has no events, options or waterfalls, so such a model publishes exactly what it published before.",
           "items": {
-            "type": "object",
-            "additionalProperties": false,
-            "required": [
-              "period",
-              "date",
-              "actor",
-              "action",
-              "target",
-              "outcome"
-            ],
-            "properties": {
-              "period": {
-                "type": "integer",
-                "minimum": 0
-              },
-              "date": {
-                "type": "string"
-              },
-              "actor": {
-                "type": "string",
-                "description": "Who acted, qualified by kind: `event:<name>`, `waterfall:<name>`, `option:<name>`, `stream:<name>`. Qualified because a waterfall and an event may share a name and the log must not conflate them."
-              },
-              "action": {
-                "type": "string",
-                "enum": [
-                  "set",
-                  "activate_stream",
-                  "deactivate_stream",
-                  "activate_contract",
-                  "deactivate_contract",
-                  "exercise_option",
-                  "pay",
-                  "inflow",
-                  "allocate_in",
-                  "allocate_out",
-                  "transition"
-                ]
-              },
-              "target": {
-                "type": "string",
-                "description": "What was acted on — a field path, a stream name, or a step and its payee."
-              },
-              "outcome": {
-                "type": "string",
-                "enum": [
-                  "applied",
-                  "declined",
-                  "overridden",
-                  "ignored",
-                  "failed"
-                ],
-                "description": "`applied` is the only one that changed anything. `declined` was refused for a stated reason. `overridden` was done and then lost to a stronger declaration — a stream activation against a false `active when`, or a waterfall step against a short pot. `ignored` is an action the engine does not execute yet. `failed` means the action's own expression did not evaluate."
-              },
-              "from": {
-                "type": "string"
-              },
-              "to": {
-                "type": "string"
-              },
-              "amount": {
-                "type": "number",
-                "description": "What the step allocated. Allocated, not transferred: a waterfall is an ordered allocation over a pot, deciding what each step is entitled to out of what remains. Whether that cash physically settles is a question the language does not model."
-              },
-              "pot_before": {
-                "type": "number",
-                "description": "The pot before the step drew on it, so a short pot is visible as the reason a step was allocated less than it was owed."
-              },
-              "pot_after": {
-                "type": "number"
-              },
-              "note": {
-                "type": "string",
-                "description": "Why, when the outcome is not `applied`."
-              }
-            }
+            "$ref": "#/$defs/JournalEntry"
           }
         }
       }
@@ -4829,6 +5023,91 @@ against it by `make results-schema`.
           "description": "What the call resolves to, rounded to the engine's published-number policy so it agrees exactly with the ledger figure it explains. ABSENT when an argument is not a literal — the call is still listed, because a silently omitted call site would read as a model that never made one."
         }
       }
+    },
+    "JournalEntry": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "period",
+        "date",
+        "actor",
+        "action",
+        "target",
+        "outcome"
+      ],
+      "properties": {
+        "period": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "date": {
+          "type": "string"
+        },
+        "actor": {
+          "type": "string",
+          "description": "Who acted, qualified by kind: `event:<name>`, `waterfall:<name>`, `option:<name>`, `stream:<name>`. Qualified because a waterfall and an event may share a name and the log must not conflate them."
+        },
+        "action": {
+          "type": "string",
+          "enum": [
+            "set",
+            "activate_stream",
+            "deactivate_stream",
+            "activate_contract",
+            "deactivate_contract",
+            "exercise_option",
+            "pay",
+            "inflow",
+            "allocate_in",
+            "allocate_out",
+            "transition"
+          ]
+        },
+        "target": {
+          "type": "string",
+          "description": "What was acted on — a field path, a stream name, or a step and its payee."
+        },
+        "outcome": {
+          "type": "string",
+          "enum": [
+            "applied",
+            "declined",
+            "overridden",
+            "ignored",
+            "failed"
+          ],
+          "description": "`applied` is the only one that changed anything. `declined` was refused for a stated reason. `overridden` was done and then lost to a stronger declaration — a stream activation against a false `active when`, or a waterfall step against a short pot. `ignored` is an action the engine does not execute yet. `failed` means the action's own expression did not evaluate."
+        },
+        "from": {
+          "type": "string"
+        },
+        "to": {
+          "type": "string"
+        },
+        "amount": {
+          "type": "number",
+          "description": "What the step allocated. Allocated, not transferred: a waterfall is an ordered allocation over a pot, deciding what each step is entitled to out of what remains. Whether that cash physically settles is a question the language does not model."
+        },
+        "pot_before": {
+          "type": "number",
+          "description": "The pot before the step drew on it, so a short pot is visible as the reason a step was allocated less than it was owed."
+        },
+        "pot_after": {
+          "type": "number"
+        },
+        "note": {
+          "type": "string",
+          "description": "Why, when the outcome is not `applied`."
+        },
+        "children": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/JournalEntry"
+          },
+          "description": "What this occurrence DID, when the occurrence and its effects are two different things. A transition's arrival actions are its children rather than its siblings because the tie between them is real: sharing a period and an entity only implies it, and a reader reconstructing which `set` belonged to which arrival would be guessing where several entities move in one period. Absent where an act has no composite effects, which is most of them."
+        }
+      },
+      "description": "One act, and what became of it. An act that DID something composite carries what it did as `children` — a transition is the occurrence, its arrival actions are its effects."
     }
   }
 }
@@ -5121,6 +5400,49 @@ guard = 'series_sum("cre.rent", time.t - 1, time.t - 1) < 50'
 - A lifecycle that declares no transitions at all is unconstrained.
 - An entity whose type declares a lifecycle MUST NOT also bind a
   model-declared one (`E1350`): one machine per entity.
+
+**Arrival actions.** A machine MAY carry what happens on arrival — the same
+two grains a model declares (`docs/34` D2, D3):
+
+```toml
+[[lifecycles.entry_actions]]
+state = "leased"
+description = "True of the STATE however it was reached."
+actions = [{ set = "months_in_state", value = "0" }]
+
+[[lifecycles.transitions]]
+from = "holdover"
+to = "leased"
+actions = [{ set = "in_place_rent", value = "prev.in_place_rent * (1 + inputs.bump)" }]
+```
+
+- **Entry actions** carry what is true of the STATE however it was reached,
+  and are the primary domain spelling: a pack declares them once and every
+  entity of the type inherits them, including for an edge added later.
+- **Transition actions** carry what is true of the PATH taken. A renewal and
+  a re-let both land in `leased` and strike rent differently; an entry action
+  cannot say that, because it does not know which edge fired.
+- Both run on EVERY traversal, including one a model's event causes by
+  writing `status` across a permission edge. Entry actions run first, then
+  the taken edge's — the specific refines the general — and a same-field
+  write journals the earlier value `overridden`, naming its author.
+- `set` writes a FIELD and never `status`, refused at pack load: a status
+  write would fire a second transition inside the same period. A transition
+  that should cause another transition is an edge out of the target state,
+  taken next period.
+- The field name is **entity-relative**, refused at pack load if qualified:
+  one lifecycle is bound by many entities, and the behavior belongs to
+  whichever one transitioned.
+- **The field itself comes from the pack's lowering rules**, like every other
+  pack-populated field (`field_name` / `field_init` / `field_next` in
+  §7). Those run per contract instance, so whether a given entity has the
+  field is a fact about the model, not about the pack — an action naming a
+  field the entity does not have is skipped with a warning at run.
+- A model MAY add its own actions to a pack's machine, additively
+  (`docs/34` D2a): a `lifecycle <pack machine>` block contributes actions and
+  may not state `initial`, `state` or an edge (`E1357`). The model's actions
+  run after the pack's, so the model wins a same-field conflict and the
+  pack's value is what journals `overridden`.
 
 ### 6.2 Alias registry
 Aliases map domain-friendly names to canonical TypeIds or contract templates.
@@ -6215,6 +6537,9 @@ Fields that move:
   read could only ever aggregate to zero. Model the quantity the step pays as a
   stream or a field if a stream must read it.
 - `E1302_UNRESOLVED_STREAM_REF` — an event activates or deactivates a stream the model does not run. Event action targets were never resolved, so a misspelling matched nothing and the action was silently inert: the stream it was meant to stop kept paying, with no diagnostic and no warning. Checked after lowering rather than in the resolver, so a name a CONTRACT produced resolves as readily as one the model declared — the symbol table is built before the pack is chosen, and a check running there reported an unlowered name and a typo alike. The hint lists every stream in the model, both kinds.
+- `E1357_LIFECYCLE_AUGMENT_TOPOLOGY` — a `lifecycle` block names a machine the PACK declared and also states `initial`, `state`, or an edge. A model may add arrival actions to a pack's machine and nothing else (`docs/34` D2a): the pack's machine is the checkable contract, and a model needing different topology declares a separate machine under its own name. The states and edges are refused rather than ignored — silently dropping them would leave the model saying one thing and the machine doing another.
+- `E1358_ARRIVAL_ACTION_SETS_STATUS` — an `on enter` or edge action writes `status`. An arrival action sets FIELDS on the entity that transitioned; a status write would fire a second transition inside the same period, breaking one-transition-per-entity-per-period. A transition that should cause another transition is topology — an edge out of the target state, taken next period — and status writes remain the named event's privilege (`docs/34` D4).
+- `E1359_ARRIVAL_ACTION_UNKNOWN_FIELD` — an `on enter` or edge action sets a field the entity bound to that machine does not have. The name is entity-relative, so it resolves against every entity bound to the machine and all of them need the field; the set is the union of what the model's entity block declares and what its ontology type contributes. Refused because a misspelled field is a write that lands nowhere — the silent-substitution shape `docs/13` §7.38 records for a misspelled series.
 - `E1304_UNRESOLVED_OPTION_REF` — an event exercises an option that is not declared. Checked in the compiler rather than the resolver, because options are not in the symbol tables.
 - `E1310_ENTITY_BLOCK_WITHOUT_TYPE` — an entity uses a block but declares no type, so there is nothing to check the block against.
 - `E1311_UNKNOWN_ENTITY_TYPE` — an entity declares a type the active ontology does not define. The known types are listed.
@@ -6999,7 +7324,7 @@ A thing the model is about. An asset produces or consumes cash; a party contract
 
 **event**
 
-A construct that fires on a condition and changes model state.
+Something that happens. An event fires on each occurrence, and nothing restricts it to happening once.
 
 **fact field**
 
@@ -7455,8 +7780,9 @@ occurrences = 160          # as above
 [[technical_name]]
 term = "event"
 category = "language"
-definition = "A construct that fires on a condition and changes model state."
+definition = "Something that happens. An event fires on each occurrence, and nothing restricts it to happening once."
 occurrences = 76
+note = "docs/34 D1, D6. A schedule supplies the occurrences and `when` filters them; with no schedule an occurrence is the condition's rising edge. Once-ness is declared \u2014 a singular schedule, or a topology with no way back \u2014 never a latch. The named `event` and a machine's guarded edge are two spellings of one semantics."
 
 [[technical_name]]
 term = "option"
@@ -7490,7 +7816,7 @@ term = "lifecycle"
 category = "language"
 definition = "A declared finite state machine: enumerated states, an initial one, and guarded edges declared only as used. A core-language construct that packs tailor to domains."
 occurrences = 0
-note = "docs/28 §6.1. There is no latch: edge availability is the memory, and a re-entered state re-arms its edges."
+note = "docs/28 §6.1, docs/34. Edge availability is the memory, and a re-entered state re-arms its edges. A state may carry arrival actions: `on enter <state>` for what is true of the state however reached, and actions on an edge for what is true of the path taken."
 
 [[technical_name]]
 term = "priced amount"
@@ -7977,7 +8303,7 @@ Templates (starting points; the `skeleton` MCP tool assembles them into a compil
 
 CFDL 0.7.0. Every model below compiles, and its IR and
 results are byte-asserted against goldens in CI (`fixtures/valid/`,
-124 models.
+129 models.
 
 `gold/ir/`, `gold/results/`). Each is single-purpose: the directory name
 says what it exercises. This is what right looks like — positive few-shot
@@ -8148,7 +8474,7 @@ entity asset suite : CRE.Asset.Unit {
 }
 
 event expiry when time.t >= 2 {
-  set entity asset.suite.status = "downtime"
+  set entity asset.suite.status = "vacant"
 }
 
 event reletting when time.t >= 4 {
@@ -8186,6 +8512,44 @@ stream bonus.fee on entity asset.co inflow currency USD {
   schedule every year from 2026-01 to 2028-01
   active when series_sum("base.revenue", 0, time.t) > 150
   amount = 25
+}
+```
+
+## arrival_actions_entry_and_edge
+
+```cfdl
+version 0.1
+model "arrival-actions-entry-and-edge"
+time calendar monthly from 2026-01 for 8
+
+// Both grains, and the conflict between them. `on enter` carries what is true
+// of the STATE however reached; the edge carries what is true of the PATH.
+// Entry runs first and the edge refines it, so the entry's value is
+// journalled `overridden` and the edge's stands.
+//
+// The write settles the field store, so the stream reads 1200 in the SAME
+// period the transition fires, and the recurrence resumes from it after.
+lifecycle unit {
+  initial vacant
+  state vacant, leased
+
+  on enter leased {
+    set in_place_rent = 1000.0
+  }
+
+  vacant -> leased when time.t >= 2 {
+    set in_place_rent = 1200.0
+  }
+}
+
+entity asset suite {
+  lifecycle unit
+  in_place_rent init 900.0 next prev
+}
+
+stream core.rent on entity asset.suite inflow currency USD {
+  schedule every month from 2026-01 to 2026-08
+  amount = asset.suite.in_place_rent
 }
 ```
 
@@ -9300,6 +9664,86 @@ metric total_cost    = series_sum("ops.cost", 0, 4)
 metric margin        = metric.gross_revenue + metric.total_cost
 ```
 
+## dscr_cash_trap_cure_period
+
+```cfdl
+version 0.1
+model "dscr-cash-trap-with-cure-period"
+time calendar monthly from 2026-01 for 18
+
+// A PROJECT FINANCE CASH TRAP, WITH THE CURE PERIOD A CREDIT AGREEMENT
+// ACTUALLY WRITES (`docs/13` §7.77). Below the trigger, distributions stop
+// and cash accumulates in the trap; the trap releases only after the ratio
+// has held AT OR ABOVE the trigger for the stated cure period. ONE GOOD
+// MONTH IS NOT A CURE, and that is the part `trapped_cash_cure` could not
+// say: it cures on the next good period, because a duration measured from
+// the last breach had no spelling until arrival actions (§7.79).
+//
+// `on enter trapped { set good_periods = 0 }` is what makes the cure period
+// expressible. A plain recurrence counts consecutive good periods, but it
+// has no way to start over at each new breach; the arrival does that.
+//
+// The pin: NOI drops to 12,000 against 15,000 of debt service at t=4..6, so
+// DSCR is 0.80 against a 1.20 trigger. The machine reads SETTLED cash
+// strictly backward, so it traps at t=5. Cash accumulates once NOI recovers
+// (5,000 at t=7, 10,000 at t=8) because the trapped months have nothing to
+// distribute. Two consecutive good periods land at t=9 and the trap
+// releases 10,000 in full.
+entity asset plant {
+  lifecycle covenant
+  // Consecutive periods at or above the trigger, on SETTLED cash. Reset to
+  // zero on every entry into `trapped`, so each breach starts its own clock.
+  good_periods init 0.0 next if(
+    series_sum("ops.noi", time.t - 1, time.t - 1) >= 1.20 * (0.0 - series_sum("debt.service", time.t - 1, time.t - 1)),
+    prev + 1.0,
+    0.0
+  )
+}
+
+entity party sponsor { name = "Sponsor" }
+
+account trap { }
+
+lifecycle covenant {
+  initial compliant
+  state compliant, trapped
+
+  on enter trapped { set good_periods = 0 }
+
+  compliant -> trapped when
+    series_sum("ops.noi", time.t - 1, time.t - 1) < 1.20 * (0.0 - series_sum("debt.service", time.t - 1, time.t - 1))
+
+  // The cure is the ratio held for two consecutive periods, not one.
+  trapped -> compliant when asset.plant.good_periods >= 2
+}
+
+stream ops.noi on entity asset.plant inflow currency USD {
+  schedule every month from 2026-01 to 2027-06
+  amount = if(time.t >= 4 and time.t <= 6, 12000, 20000)
+}
+
+stream debt.service on entity asset.plant outflow currency USD {
+  schedule every month from 2026-01 to 2027-06
+  amount = 15000
+}
+
+waterfall distribution on entity asset.plant {
+  schedule every month from 2026-01 to 2027-06
+  from available
+  pay trapped   to account trap    = if(asset.plant.status == "trapped", remaining, 0.0)
+  pay residual  to party.sponsor   = remaining
+}
+
+// The release: once the covenant is cured, the accumulated trap balance is
+// handed back. A second waterfall drawing FROM the account, because the trap
+// is a location cash sits in, not a step in the distribution.
+waterfall release on entity asset.plant {
+  schedule every month from 2026-01 to 2027-06
+  from trap
+  pay released to party.sponsor = if(asset.plant.status == "compliant", remaining, 0.0)
+}
+```
+
 ## dscr_smoke
 
 ```cfdl
@@ -9766,6 +10210,35 @@ stream credit.amortization on entity asset.pool outflow currency USD {
 }
 ```
 
+## event_refires_on_each_occurrence
+
+```cfdl
+version 0.1
+model "event-refires-on-each-occurrence"
+time calendar monthly from 2026-01 for 10
+
+// AN EVENT IS SOMETHING THAT HAPPENS, and a unit that defaults, cures and
+// defaults again has had three events. Under the latch this fired once and
+// the second breach was invisible; it now fires on each rising edge, and the
+// journal carries one row per occurrence.
+//
+// `breached` is a marker the event writes, not a state: what makes the
+// condition RE-RISE is `paying` falling, recovering and falling again.
+entity asset suite {
+  paying init 1.0 next if(time.t == 3 or time.t == 7, 0.0, 1.0)
+  breach_count init 0.0 next prev
+}
+
+event breach when asset.suite.paying < 0.5 {
+  set entity asset.suite.breach_count = prev.asset.suite.breach_count + 1.0
+}
+
+stream core.rent on entity asset.suite inflow currency USD {
+  schedule every month from 2026-01 to 2026-10
+  amount = 100 * asset.suite.paying
+}
+```
+
 ## event_reseeds_recurrence
 
 ```cfdl
@@ -9801,6 +10274,33 @@ event partial_liquidation when time.t == 2.0 {
 stream loan.balance_report on entity asset.loan inflow currency USD {
   schedule every year from 2026-01 to 2031-01
   amount = asset.loan.balance
+}
+```
+
+## event_scheduled_occurrences
+
+```cfdl
+version 0.1
+model "event-scheduled-occurrences"
+time calendar monthly from 2026-01 for 12
+
+// A schedule SUPPLIES the occurrences and `when` FILTERS them: a quarterly
+// covenant test is four tests a year, and four consecutive failures are four
+// breach events, because the model declared quarterly testing. The schedule
+// is the same sub-language a stream's is, so `every quarter` tests at the
+// quarter's close.
+entity asset plant {
+  covered init 1.0 next if(time.t >= 4, 0.0, 1.0)
+  tests_failed init 0.0 next prev
+}
+
+event covenant_test schedule every quarter from 2026-01 to 2026-12 when asset.plant.covered < 0.5 {
+  set entity asset.plant.tests_failed = prev.asset.plant.tests_failed + 1.0
+}
+
+stream core.revenue on entity asset.plant inflow currency USD {
+  schedule every month from 2026-01 to 2026-12
+  amount = 100
 }
 ```
 
@@ -10285,7 +10785,7 @@ stream cre.rent on entity asset.suite inflow currency USD {
 }
 
 event delinquent when series_sum("cre.rent", time.t - 1, time.t - 1) < 50 {
-  set entity asset.suite.status = "downtime"
+  set entity asset.suite.status = "vacant"
 }
 ```
 
@@ -11891,6 +12391,61 @@ stream rent.total on entity asset.property inflow currency USD {
 }
 ```
 
+## reserve_interest_on_balance
+
+```cfdl
+version 0.1
+model "interest-on-a-reserve-balance"
+time calendar monthly from 2026-01 for 12
+
+entity asset project {
+  name = "Project"
+  // A FIELD's rule may read an account strictly backward; a stream's amount
+  // may not. The field carries the balance forward, the stream spends it.
+  reserve_interest init 0.0 next prev.dsra * 0.005
+}
+entity party sponsor { name = "Sponsor" }
+
+// INTEREST EARNED ON A FUNDED RESERVE (`docs/13` §7.76, part three). The
+// CREST reconciliation line this closes: `crest_solar_cost_based/NOTES.md`
+// records that the reference EBITDA "includes interest earned on funded
+// reserve accounts (~$4,606 in year one), which CFDL does not model."
+//
+// THE SPELLING MATTERS. A stream's amount may NOT read `prev.<account>` —
+// that is `E1123_PREV_OUTSIDE_NEXT`, because `prev` outside a `next` means
+// nothing. `docs/03` is precise about where an account balance is readable:
+// rules, guards and step expressions. A field's `next` IS a rule, so the
+// field carries the balance forward and the stream reads the field.
+//
+// The pin: the reserve funds toward 3,000 out of 1,000/month of revenue, and
+// interest accrues on the PRIOR balance at 0.5% — 0 while the balance is 0,
+// 5.00 on the first 1,000, 10.03 on 2,005, then 15.00 a month once the
+// target is held. Reading the balance strictly backward is what keeps the
+// reserve and the interest it earns from being mutually circular.
+
+// A debt service reserve funded to target out of operating cash.
+account dsra { }
+
+stream ops.revenue on entity asset.project inflow currency USD {
+  schedule every month from 2026-01 to 2026-12
+  amount = 1000
+}
+
+// Interest EARNED on the reserve balance. Reads the account strictly
+// backward, which is what makes it legal and cycle-free.
+stream ops.reserve_interest on entity asset.project inflow currency USD {
+  schedule every month from 2026-01 to 2026-12
+  amount = asset.project.reserve_interest
+}
+
+waterfall funding on entity asset.project {
+  schedule every month from 2026-01 to 2026-12
+  from available
+  pay top_up   to account dsra   = max(0.0, 3000.0 - prev.dsra)
+  pay residual to party.sponsor  = remaining
+}
+```
+
 ## rule_reads_literal_field
 
 ```cfdl
@@ -12454,7 +13009,7 @@ time calendar annual from 2026-01 for 5
 // `status` did not exist until an event wrote one.
 entity asset tower : CRE.Asset.RealProperty {
   asset_class = "office"
-  state operating
+  state stabilized
 }
 
 event start_repositioning when time.t >= 2 {
@@ -12547,7 +13102,7 @@ entity asset legacy : CRE.Asset.RealProperty
 entity asset tower : CRE.Asset.RealProperty {
   asset_class = "office"
   rentable_area = 30000
-  state operating
+  state stabilized
 }
 
 // Optional hierarchy: a unit inside the building. Never required.
@@ -17196,7 +17751,7 @@ time calendar annual from 2026-01 for 26
 entity asset project : Energy.Asset.GenerationFacility {
   technology         = "solar_pv"
   nameplate_capacity = 100000.0
-  state operating
+  state in_service
 
   // What the plant throws off after operating costs and debt service. A fact
   // about the project, so it belongs to the project.
@@ -18974,7 +19529,7 @@ Then, on your own:
 1. Convert the guarded model's percentage rent from a guard to an `if(…, …, 0)` amount, confirm identical totals, then convert it back. Write one sentence on which version you would want to review at 6 p.m. on a closing day, and why.
 2. Slip the composed example's operations phase by one quarter (edit only the phase line) and predict which streams move before running. The ones that *should* have moved and did not are date logic you failed to centralize — the exercise most worth repeating on your own models.
 ## Events and options
-_Discrete change and contingent claims: latch semantics, lifecycle fields, rule-based exercise, and why the model's turning points deserve their own construct._
+_Discrete change and contingent claims: when an event occurs, lifecycle fields, rule-based exercise, and why the model's turning points deserve their own construct._
 Everything so far varies *continuously* along the grid — amounts grow, ramps climb, balances amortize. But deals also turn: a loan refinances, a covenant trips, a tenant exercises a renewal, an asset sells. These are discrete, once-only changes of regime, and modeling them with arithmetic — flags multiplied into amounts, `if` pyramids keyed to hard-coded dates — is how spreadsheets bury their most consequential logic. The language gives turning points their own constructs: **events** for "when this happens, change these things," and **options** for "someone holds the right to make this happen."
 
 ## Events: when, then
@@ -19013,7 +19568,27 @@ event refi.trigger when time.t >= 12 {
 
 An event has a **condition** and a block of **actions**. The condition is an ordinary boolean expression. Here it is a date test, but it can read anything expressions read. "When cumulative revenue passes the threshold" and "when the balance falls below target" are conditions of the same shape.
 
-The semantics to internalize is the **latch**: an event fires *once*, at the first period its condition holds, and never again. It is a turning point, not a recurring rule — the deal refinances one time, even though `time.t >= 12` stays true forever after. If you find yourself wanting an event to fire repeatedly, what you want is either a stream with a guard (a recurring *amount*) or a **lifecycle edge** (a regime that returns): a declared machine's edges are checked each period the entity is in the edge's from-state, so a covenant that breaches and cures is the machine's topology walked twice, with no latch involved — edge availability is the memory.
+The semantics to internalize is the **occurrence**: an event fires each time its conditions become true having been false, and re-arms when they fall. An event is something that *happens*, and nothing restricts it to happening once — a unit that defaults, cures and defaults again has had three events, and a model that could record only the first would be wrong.
+
+So how does the refinance above fire only once? Not because the construct stops it. It fires once because **the world it describes happens once**: after the refinance the loan *is* refinanced, and `current -> refinanced` has no edge back. Once-ness is something a model declares, in one of two ways:
+
+- a **schedule whose occurrence is singular** — `schedule on 2027-03` fires once because the date occurs once;
+- a **topology with no way back** — the refinance above, where nothing returns the loan to `current`.
+
+If you declare a return edge, you have declared that re-firing is possible. The memory lives in the schedule or the machine — both of which a reader can see — rather than in a "has fired" flag inside the engine.
+
+An event may also say *when it is tested* rather than leaving that to its condition:
+
+```cfdl
+event covenant_test
+  schedule every quarter from 2026-01 to 2030-12
+  when domain.energy.dscr < 1.20
+{
+  set entity asset.plant.status = "trapped"
+}
+```
+
+The schedule **supplies** the occasions and `when` **filters** them. Four consecutive failing quarterly tests are four breach events, because the model declared quarterly testing — that is a different statement from "the DSCR was under trigger for a year", and the language lets you say which one you mean.
 
 The actions are a fixed vocabulary: `set` writes an entity field (chapter 8's third way a field changes), `activate` / `deactivate` switch a stream on or off, and `exercise` fires an option (below). Note the pattern the example uses, because it is the idiomatic one. The event writes a **lifecycle field** (`status`), and streams key their `active when` guards to it. `entity.status` is how a stream reads a field of the entity it is attached to. The event owns *when the regime changes*; each stream owns *which regime it belongs to*. When the refinance date moves, one condition changes and both loans follow — and the reviewer reads the deal's turning points as a short list of events rather than reverse-engineering them from flag arithmetic.
 
@@ -19054,7 +19629,7 @@ What this means in practice: you state the exercise policy, and policy alternati
 Then, on your own:
 
 1. Move the refinance trigger from a date test to an economic one: fire when cumulative NOI passes 250,000 (`series_sum("ops.noi", 0, time.t)`). Predict the firing month by hand first — you know the NOI per month.
-2. Add a second event that *reverses* nothing, by trying to write a "de-refinance." The latch means a free-standing event refuses to express regime flapping. Write down, in one sentence, why that refusal is a feature in a reviewed model — and then name the construct that DOES express a regime that returns (a lifecycle with a cure edge), and why declared edges make the flapping reviewable where a re-firing event would not.
+2. Try to express a regime that *flaps* — refinanced, then not, then refinanced again — using free-standing events alone. You will find you can write the events, but not the constraint: nothing stops the pair from firing in the same period, or in an order the deal could not take. Write down in one sentence what a **lifecycle** adds that two events cannot, and name the specific thing that makes the flapping reviewable (hint: an edge that does not exist cannot be taken, and every one that is taken is journalled).
 ## Waterfalls
 _Priority of payments as a first-class construct: pots, steps, owed and paid, the non-negative pot guarantee, and distribution structures written the way the documents state them._
 Every structured deal ends in the same question: *who gets paid, in what order, out of what?* A securitization's priority of payments, a fund's distribution clause, and a JV's promote are all the same shape: a pot of cash, and a sequence of claims, each taking what it is owed until the pot runs out. Spreadsheets model this shape with their most fragile machinery — chains of `MIN(MAX(...))` cells where one wrong reference pays a junior claim ahead of a senior one. The language makes the shape a construct: the **waterfall**.
@@ -19585,8 +20160,8 @@ Ask what the sentence you would say aloud *is about*, and the construct follows:
 - *"Cash moves on this pattern."* → a **stream**. The atom; when nothing below applies, this is the answer.
 - *"This quantity persists and evolves."* → a **field** — a fact or rule on the entity that owns it. Not cash: memory.
 - *"Cash accumulates here until the rules move it."* → an **account**. Not a quantity *about* the deal but a location *in* it; a field remembers, an account holds.
-- *"At some point, the regime changes — once."* → an **event**. A turning point, latched.
-- *"The regime changes and can change back."* → a **lifecycle**. Declared states, guarded edges, no latch — the breach that cures is topology, not a re-firing trigger.
+- *"At some point, the regime changes — once."* → an **event**. A turning point, and it happens once because the world happens once: a singular schedule, or a topology with no way back.
+- *"The regime changes and can change back."* → a **lifecycle**. Declared states and guarded edges — the breach that cures is topology walked twice, and edge availability is the memory.
 - *"Someone holds a right they may use."* → an **option**. The right's terms, apart from the prediction of its use.
 - *"A pot is divided by priority."* → a **waterfall**. Contested cash, document order.
 - *"This is a standard deal in a domain."* → a **contract** (next chapter): a pack's named economics, stated by its terms.
@@ -19621,7 +20196,7 @@ For review checklists — yours and your team's:
 4. **A field with a bailiff.** Balance field + paydown stream + implicit ordering against other claims: a waterfall built by hand.
 5. **Mirror streams.** Two streams that must always negate each other — one transfer written as two claims; usually one stream (or one waterfall step) attached to the right entities.
 6. **A cumulative window doing an account's job.** `series_sum("x.*", 0, time.t)` as a waterfall's pot, or a field accumulating cash a step then "pays down" — the accumulated-cash claim has its own construct, with a journaled balance the hand-rolled sum never gets.
-7. **A pair of events fighting over one field.** A set-and-unset pair, or a condition and its negation on the same status — a regime that returns, wearing two latches; it is one lifecycle with two edges.
+7. **A pair of events fighting over one field.** A set-and-unset pair, or a condition and its negation on the same status — that is a regime that returns, written without the construct that constrains it. It is one lifecycle with two edges, where the edges that do not exist are the deal terms you are relying on.
 8. **An expression that stops reading aloud.** The chapter-5 limit, which is really this chapter's question arriving early: three claims in a trench coat want three constructs.
 
 None of these is a compile error, and that is the point of Part III: the compiler guarantees the model computes what it says; only judgment guarantees it *says what the deal means*.
@@ -20272,7 +20847,7 @@ lifecycle <name> {                               -- a finite state machine
   initial <state>
   state <a>, <b>, <c>
   <from> -> <to> [when <boolean expr>]           -- guard: checked each period
-}                                                --   in <from>; no latch
+}                                                --   in <from>; re-entry re-arms
 account <name> {                                 -- cash that accumulates
   [owner <family>.<name>]                        -- a party owns at most one
   [from <expr>]                                  -- per-period inflow; no floor
@@ -20484,7 +21059,7 @@ A thirteen-week shape fits the material. Give one session each to chapters 1–3
 
 Per-chapter objectives compress well here; the prompts are where sessions live.
 
-**Streams and schedules** — timing is money. *Prompt:* "Find the working-capital hole" in the net-45 model; ask who has lived it. **Expressions** — expressions you can read aloud. *Prompt:* the `pmt` exercise's −1,356: two right answers, one convention gap. **Assumptions and inputs** — the assumption page as governance. *Prompt:* "Which numbers in your firm's template would fail the four tests?" **Curves** — interpolation as claim. *Prompt:* step versus linear on a policy rate, priced. **Fields and recurrence** — cycles unwritable; match the method. *Prompt:* the dollar of drift in the rounded-escalation exercise: when does a dollar matter? **Growth, ramps, guards** — the idiom kit composes. *Variant:* idiom golf — express a claim in the fewest legible clauses; penalize illegibility. **Events and options** — the latch; policy as scenario. *Prompt:* "Why does the model refuse to predict exercise?" — the best philosophy-of-modeling discussion in the course. **Waterfalls** — transcription is review. *Variant:* hand out a real (redacted) priority-of-payments clause; transcribe in document order. **Uncertainty** — forks versus wobbles. *Prompt:* the blended 81,700 that no future pays; ask for examples from the room's own underwriting. **Multi-file and style** — the checklist as review standard. *Variant:* swap models between teams for a checklist review; grade the *review*, not the model.
+**Streams and schedules** — timing is money. *Prompt:* "Find the working-capital hole" in the net-45 model; ask who has lived it. **Expressions** — expressions you can read aloud. *Prompt:* the `pmt` exercise's −1,356: two right answers, one convention gap. **Assumptions and inputs** — the assumption page as governance. *Prompt:* "Which numbers in your firm's template would fail the four tests?" **Curves** — interpolation as claim. *Prompt:* step versus linear on a policy rate, priced. **Fields and recurrence** — cycles unwritable; match the method. *Prompt:* the dollar of drift in the rounded-escalation exercise: when does a dollar matter? **Growth, ramps, guards** — the idiom kit composes. *Variant:* idiom golf — express a claim in the fewest legible clauses; penalize illegibility. **Events and options** — the occurrence and once-ness; policy as scenario. *Prompt:* "Why does the model refuse to predict exercise?" — the best philosophy-of-modeling discussion in the course. **Waterfalls** — transcription is review. *Variant:* hand out a real (redacted) priority-of-payments clause; transcribe in document order. **Uncertainty** — forks versus wobbles. *Prompt:* the blended 81,700 that no future pays; ask for examples from the room's own underwriting. **Multi-file and style** — the checklist as review standard. *Variant:* swap models between teams for a checklist review; grade the *review*, not the model.
 
 The two deep dives read well as homework before the judgment part; assign exercise 1 from each (the IR read, the diagnostics collection) and discuss findings for ten minutes.
 
@@ -20515,7 +21090,7 @@ The engine settles each period in a fixed order: state first, then the period's 
 
 ```cfdl
 event delinquency.flag when series_sum("ops.rent", time.t - 1, time.t - 1) < 50 {
-  set entity asset.suite.status = "downtime"
+  set entity asset.suite.status = "vacant"
 }
 ```
 
@@ -20523,9 +21098,9 @@ The window ends at `time.t - 1`, and the bound is a rule, not a habit. Logic rea
 
 The one-period lag matches the world the model describes. A real delinquency flag also trails the missed payment: the servicer reports it after month-end. The model's lag and the world's lag agree.
 
-## The machine: edges instead of latches
+## The machine: topology instead of flags
 
-Chapter 10 said a regime that returns is not a re-firing event. This section shows what it is instead:
+Chapter 10 said an event happens as often as it happens, and that once-ness comes from the world rather than the construct. This section shows the other half: a regime that *returns*, and the construct that constrains it.
 
 ```cfdl
 version 0.1
@@ -20560,7 +21135,7 @@ Run the model and read the transitions in the results:
 - Rent resumes. Month 5 cures the breach.
 - Month 8 breaches again. Month 10 cures again.
 
-The topology was walked twice, and no latch was involved. An edge's condition is evaluated each period the entity is in the edge's *from* state, and only then. Taking the edge moves the machine, which disarms the edge. Re-entering the state re-arms it. Edge availability is the memory, which is what a finite state machine has always meant.
+The topology was walked twice. An edge's condition is evaluated each period the entity is in the edge's *from* state, and only then. Taking the edge moves the machine, which disarms the edge. Re-entering the state re-arms it. Edge availability is the memory, which is what a finite state machine has always meant.
 
 Four rules make the machine reviewable:
 
@@ -20570,6 +21145,95 @@ Four rules make the machine reviewable:
 - **Every transition is journaled**, with the edge taken and the values its condition read. A regime is never again a bare field whose changes the record cannot see.
 
 `active in state` closes the loop back to cash. A stream declared `active in state leased` turns off during delinquency and turns back on after the cure, with no further mechanism. State gates cash; cash moves state; both directions are declared.
+
+## Arrival actions: what happens when you get there
+
+A state can carry behavior. Arriving somewhere is an occurrence, and the
+bookkeeping that belongs to it — reset a counter, record a shortfall, strike a
+new rate — belongs on the arrival rather than in a separate event that has to
+restate the condition.
+
+Here is a loan that misses payments, defaults, resumes paying, and is restored
+to performing only after a **probation period**. That last requirement is why
+the counter has to exist: "three consecutive good months" is not a condition
+you can read off the calendar, and a plain recurrence counts up forever
+without ever going back to zero.
+
+```cfdl
+version 0.1
+model "a-loan-that-defaults-and-cures"
+time calendar monthly from 2026-01 for 14
+
+entity asset loan {
+  lifecycle servicing
+  paying init 1.0 next if(time.t >= 3 and time.t <= 6, 0.0, 1.0)
+  months_in_state init 0.0 next prev + 1.0
+}
+
+lifecycle servicing {
+  initial current
+  state current, delinquent, defaulted
+
+  // Every arrival restarts the clock. This is what makes "three months in
+  // this condition" sayable at all.
+  on enter current    { set months_in_state = 0 }
+  on enter delinquent { set months_in_state = 0 }
+  on enter defaulted  { set months_in_state = 0 }
+
+  current    -> delinquent when asset.loan.paying < 0.5
+  delinquent -> defaulted  when asset.loan.paying < 0.5 and asset.loan.months_in_state >= 2
+  delinquent -> current    when asset.loan.paying >= 0.5
+
+  // The cure is not a payment. It is a payment PLUS a probation period.
+  defaulted  -> current    when asset.loan.paying >= 0.5 and asset.loan.months_in_state >= 3
+}
+
+stream credit.payment on entity asset.loan inflow currency USD {
+  schedule every month from 2026-01 to 2027-02
+  amount = 1000 * asset.loan.paying
+}
+```
+
+Run it and read the transitions:
+
+```
+t=3   current    -> delinquent
+t=5   delinquent -> defaulted
+t=8   defaulted  -> current
+```
+
+Payments stop at month 3 and the loan goes delinquent immediately. Two months
+later it defaults. Payments resume at month 7 — and the loan is *still* in
+default, because paying once is not curing. The cure lands at month 8, three
+months after entering `defaulted`, which is exactly what the probation says.
+
+That gap between "started paying again" and "is performing again" is the whole
+point, and it is why supervisors write probation periods into the definition of
+default in the first place. Without arrival actions you cannot express it: the
+counter would still be climbing from whenever the model started.
+
+Two grains, and both are real:
+
+- **`on enter <state>`** carries what is true of the STATE however it was
+  reached. Resetting the clock holds for every edge that arrives, including one
+  you add later.
+- **an action on an edge** carries what is true of the PATH taken. A renewal
+  and a re-let both land in `leased`, but the rent is struck differently
+  because of how you arrived — and an entry action cannot say that, since it
+  does not know which edge fired.
+
+Entry actions run first, then the taken edge's: the state's own setup, then the
+path's refinement. If both write the same field the later one stands and the
+earlier is journalled `overridden`, naming who wrote it — so a pack's default
+and your override are distinguishable in the record rather than silently
+merged.
+
+Two rules worth knowing before you reach for them. An action writes **fields,
+never `status`**: a status write would fire a second transition inside the same
+period, and a transition that should cause another transition is an edge out of
+the target state, taken next period. And an action reads the same world its
+guard does — state as the period opened, settled cash strictly backward — so it
+cannot see this period's cash, which is what keeps the whole thing acyclic.
 
 ## The account: cash that waits
 

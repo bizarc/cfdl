@@ -49,7 +49,7 @@
         "vacant",
         "leased",
         "holdover",
-        "downtime"
+        "month_to_month"
       ],
       "edges": [
         {
@@ -62,15 +62,27 @@
         },
         {
           "from": "leased",
-          "to": "downtime"
+          "to": "month_to_month"
+        },
+        {
+          "from": "leased",
+          "to": "vacant"
         },
         {
           "from": "holdover",
           "to": "leased"
         },
         {
-          "from": "downtime",
+          "from": "holdover",
+          "to": "vacant"
+        },
+        {
+          "from": "month_to_month",
           "to": "leased"
+        },
+        {
+          "from": "month_to_month",
+          "to": "vacant"
         }
       ]
     }

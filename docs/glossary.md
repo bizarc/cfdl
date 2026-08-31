@@ -39,7 +39,7 @@ A thing the model is about. An asset produces or consumes cash; a party contract
 
 **event**
 
-A construct that fires on a condition and changes model state.
+Something that happens. An event fires on each occurrence, and nothing restricts it to happening once.
 
 **fact field**
 

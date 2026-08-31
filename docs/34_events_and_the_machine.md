@@ -158,6 +158,32 @@ same-field conflicts journaling `overridden` per D5). This is what makes
 per-edge actions an extensibility surface rather than a pack-author
 convenience.
 
+**Storage, settled in phase 1.** The pack's and the model's actions share ONE
+list per state and per edge, ordered pack-first, and every action carries a
+REQUIRED `author` of `pack` or `model`. Three shapes were compared: author
+inferred from the presence of `generated_by`; this one; and a separate
+top-level `lifecycle_augmentations` node keyed by `lifecycle_id`.
+
+The inferred form was rejected on the §7.38 argument — a lowering path that
+forgot the stamp would journal a pack action as the model's, silently, and an
+`overridden` line that cannot name the author is the one thing the record
+exists to prevent. The separate node keeps the pack's `Lifecycle` node
+byte-identical to what the pack declared, which is the stronger guarantee,
+and it was rejected only on weight: the IR already flattens pack machines
+into `lifecycles` wholesale, so the seam it protects was already gone, and it
+costs a top-level concept plus a join in the engine's arrival path.
+
+A required discriminator buys what that seam was for — attribution that
+cannot be forgotten — at no structural cost. The additive rule stays
+enforceable: validation asserts every `pack` action precedes every `model`
+action in each list.
+
+**A model addresses a pack machine by qualified name.** `lifecycle
+opco.enterprise { … }` augments; a block naming no existing machine declares
+one. The grammar's `lifecycle_stmt` therefore takes a `qname`, not an
+`IDENT` — a gap found in phase 1, since a dotted pack machine could not be
+named at all.
+
 ### D3 — entry actions are first-class, and the primary domain spelling
 
 Both grains exist because both are real, and `cre.unit` shows the split.
@@ -251,9 +277,15 @@ Glossary and `docs/22`: **an event is something that happens; the journal
 is the event log; edges, event declarations and schedules are event
 sources; an anonymous event is described by the entity it impacts and the
 conditions that must be true.** `docs/01` §13's latch paragraphs are
-rewritten to rising-edge plus `once`; the "machine does not latch" doctrine
-survives with its conclusion stated plainly: nothing latches unless it says
-`once`.
+rewritten to rising-edge (D1). The "machine does not latch" doctrine
+survives with its conclusion stated plainly and generally: **nothing
+latches.** Once-ness is declared, never engine policy — a singular
+schedule or a topology with no way back, per D1.
+
+*Corrected during phase 1:* this decision previously read "rising-edge plus
+`once`" and "nothing latches unless it says `once`", written before D1
+settled. D1 rejects a `once` keyword explicitly and D6 agrees; the phrase
+was stale and is removed rather than reconciled.
 
 ---
 
@@ -284,11 +316,26 @@ broken — but it is measured, not assumed:
 | 2 | Parser + IR + validation: entry-action and edge-action blocks, the event schedule clause (D1a), entity-relative field resolution, model-side augmentation of pack machines (D2a); diagnostics — unknown field on the bound entity (named set), action expression reading same-period series refused (E1134's argument, one construct over) | per-code validate tests from invalid fixtures |
 | 3 | Engine: rising-edge firing once per period, scheduled occurrences (D1a), entry-then-edge action execution in the walk, journal children, `results_version` 0.6 | fixtures: re-fire on cure/re-default; action write visible to a same-period stream; declaration-order writes; one-shot via no-return topology |
 | 4 | Corpus audit + golden re-bless per Migration | collapse property holds across the blessed corpus |
-| 5 | Pack surface: `types.toml` machines carry `on enter` blocks (and per-transition actions); `cre.unit` gains re-let entry actions (re-strike, counter reset); pack validations for action fields | doc-examples gate; pack READMEs |
+| 5 | Pack surface: `types.toml` machines carry `entry_actions` blocks and per-transition actions; pack-load validation for them; `docs/07` documents the surface. **The shipped packs declare actions as cases need them, not up front** — see the note below | pack load tests; `docs/07` |
 | 6 | Vocabulary sweep: glossary, `docs/22`, `docs/10` rows, `docs/33` Item 1 marked closed by this plan; learn-site chapters flagged for the next curriculum pass | glossary-check; site gates when published |
 
 Phases 1–4 are one arc (the semantics are not shippable half-changed); 5–6
-follow independently. The showcase fixtures are the chained-rollover
+follow independently.
+
+**Phase 5 landed as mechanism, not content.** The plan named `cre.unit`'s
+re-let actions as its deliverable, on the assumption that declaring them was
+the same act as building the surface. It is not. A pack's fields are populated
+by its LOWERING RULES, which run per contract instance — so an action can only
+rely on a field where the contract that lowers it is present. None of the eight
+models binding `CRE.Asset.Unit` carries a `cre.lease_unit` contract; they type
+an entity as a unit while exercising accounts, hierarchy and typed entities.
+Declaring the re-let actions now would warn on all eight and write nothing.
+
+So the packs ship the capability and declare actions when a case needs them,
+which is the same discipline the rest of this repository follows: worth a case
+before it is worth a construct. `docs/33` Item 1's chained-rollover case is the
+one that will force `cre.unit`'s, and it will carry a lease contract, so the
+field will lower with it. The showcase fixtures are the chained-rollover
 re-strike from `docs/33` — the probe that found the gap becomes the fixture
 that closes it — and a §7.77 cure-counter.
 

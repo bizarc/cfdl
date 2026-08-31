@@ -9,7 +9,7 @@ entity asset suite : CRE.Asset.Unit {
 }
 
 event expiry when time.t >= 2 {
-  set entity asset.suite.status = "downtime"
+  set entity asset.suite.status = "vacant"
 }
 
 event reletting when time.t >= 4 {

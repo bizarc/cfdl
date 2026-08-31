@@ -155,9 +155,17 @@ required = false
 
 [[lifecycles]]
 lifecycle_id = "cre.property"
-initial = "operating"
-states = ["predevelopment", "construction", "lease_up", "operating", "repositioning", "disposed"]
-description = "Initial state is `operating` because most models start with a stabilized asset; a development model declares `predevelopment` explicitly."
+initial = "stabilized"
+states = ["predevelopment", "construction", "lease_up", "stabilized", "repositioning", "disposed"]
+description = """A property's condition over a hold (`docs/36` §4.2). MARKET \
+CONVENTION, not a standard — no body defines a property lifecycle, and this \
+follows institutional investment practice. `stabilized` rather than `operating` \
+because a property in lease-up is also operating; stabilisation is what \
+distinguishes them. The RETURNING CYCLE is what earns this a machine rather \
+than phases: stabilized -> repositioning -> lease_up -> stabilized, walked as \
+many times as the hold walks it. `initial` is the common case, an already-\
+running asset; a development declares `initial_state predevelopment` on the \
+entity."""
 
 [[lifecycles.transitions]]
 from = "predevelopment"
@@ -166,56 +174,79 @@ to = "construction"
 [[lifecycles.transitions]]
 from = "construction"
 to = "lease_up"
-description = "Certificate of occupancy."
 
 [[lifecycles.transitions]]
 from = "lease_up"
-to = "operating"
-description = "Stabilization — commonly an occupancy threshold."
+to = "stabilized"
 
 [[lifecycles.transitions]]
-from = "operating"
+from = "stabilized"
 to = "repositioning"
 
 [[lifecycles.transitions]]
 from = "repositioning"
 to = "lease_up"
+description = "The cycle closes: re-tenanting after a reposition is a lease-up."
 
 [[lifecycles.transitions]]
-from = "operating"
+from = "stabilized"
 to = "disposed"
 
-# The unit lifecycle is what rollover modeling is really about: a suite is
-# occupied, then it rolls, then it is either renewed or re-let after downtime.
+[[lifecycles.transitions]]
+from = "repositioning"
+to = "disposed"
+description = "Selling out of a reposition is ordinary."
+
+[[lifecycles.transitions]]
+from = "lease_up"
+to = "disposed"
+
 [[lifecycles]]
 lifecycle_id = "cre.unit"
 initial = "vacant"
-states = ["vacant", "leased", "holdover", "downtime"]
+states = ["vacant", "leased", "holdover", "month_to_month"]
+description = """A unit's leasing condition (`docs/36` §4.1). MARKET CONVENTION, \
+following the vocabulary practitioners already use, filtered to conditions — \
+the expiration HANDLING choices (market, reabsorb, renew, vacate, option) \
+select a transition rather than name a state. `month_to_month` is a \
+contractual continuation at agreed terms; `holdover` is occupancy WITHOUT a \
+contract, usually at a penalty rent, and they pay differently. There is no \
+separate `downtime`: it was the same condition as `vacant` — no tenant, no \
+rent — differing only in the PATH taken to reach it, and an edge's actions now \
+carry that."""
 
 [[lifecycles.transitions]]
 from = "vacant"
 to = "leased"
-description = "Lease commencement."
 
 [[lifecycles.transitions]]
 from = "leased"
 to = "holdover"
-description = "Term expired, tenant in place, terms not yet reset."
 
 [[lifecycles.transitions]]
 from = "leased"
-to = "downtime"
-description = "Expiry without renewal."
+to = "month_to_month"
+
+[[lifecycles.transitions]]
+from = "leased"
+to = "vacant"
+description = "Expiry with no renewal: the re-let window opens here."
 
 [[lifecycles.transitions]]
 from = "holdover"
 to = "leased"
-description = "Renewal."
 
 [[lifecycles.transitions]]
-from = "downtime"
+from = "holdover"
+to = "vacant"
+
+[[lifecycles.transitions]]
+from = "month_to_month"
 to = "leased"
-description = "Re-let to a new tenant."
+
+[[lifecycles.transitions]]
+from = "month_to_month"
+to = "vacant"
 
 # ---------------------------------------------------------------------------
 # Contracts
