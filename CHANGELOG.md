@@ -8,6 +8,35 @@ This project follows Semantic Versioning: https://semver.org/
 
 ## [Unreleased]
 
+### Added: master types, containers, and the relation vocabulary (§7.88, §7.89, §7.92)
+
+The ontology promised refinement and did not record it: "a pack may refine
+`Asset.Real` into `CRE.Asset.RealProperty`" was a naming convention the system
+could not read, so no metric or validation could say "all debt" — each named
+concrete pack types and broke when a pack added one.
+
+Three changes, one type system. A pack type states what it specializes
+(`refines`), checked at load — exists in pack or language base, same family,
+same class, acyclic — and `is_a` walks the recorded chain. The language base
+ships eleven abstract contract masters (`Contract.Debt`, `Contract.Lease`,
+`Contract.Purchase`, `Contract.Sale`, `Contract.Offtake`, `Contract.Service`,
+`Contract.Tax`, `Contract.Option`, `Contract.Construction`,
+`Contract.Derivative`, `Contract.Insurance`); a master binds no lowering rule
+and cannot be instantiated. And the family roster is restored to its own
+comment plus one: `entity` declares `asset`, `party` or `container` (a fund, a
+portfolio, an SPV, a transaction — groupings that scope cash without producing
+it), while relations range over the five node families — the two above plus
+`contract` and `reference` — which is what lets `secured_by`,
+`guarantees` and `is_counterparty_to` join the base vocabulary beside the
+widened `part_of` and `owns`.
+
+All four packs declare their refinements (33 entity, 33 contract). Fixture
+`valid/container_entity` pins the container rollup;
+`invalid/entity_unknown_type`'s gold moves because E1311's known-types hint
+now lists the Container base types. Specs: `docs/01` §7,
+`docs/07_pack_interface.md` §6.1, `docs/13` §7.88/§7.89/§7.92.
+
+
 ### Added: a participant's realized return (§7.72)
 
 The model computed `model.irr` on the deal's net cash, and a waterfall

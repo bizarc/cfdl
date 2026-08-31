@@ -33,6 +33,7 @@ version = "0.1.0"
 type_id = "Energy.Asset.GenerationFacility"
 family = "asset"
 class = "real"
+refines = "Asset.Real"
 lifecycle = "energy.facility"
 description = "A plant that converts a resource into electricity or heat."
 
@@ -63,6 +64,9 @@ required = false
 type_id = "Energy.Asset.Portfolio"
 family = "asset"
 class = "real"
+# A portfolio is a grouping that scopes cash, not a thing that produces it —
+# migrates to the `container` family when docs/13 §7.88 lands.
+refines = "Asset.Real"
 description = "A grouping of facilities modeled as one. Use only when the grain is the portfolio; a facility needs no parent to exist."
 
 # A tax-equity or sponsor interest is a claim on the project, not the plant
@@ -71,6 +75,7 @@ description = "A grouping of facilities modeled as one. Use only when the grain 
 type_id = "Energy.Asset.ProjectInterest"
 family = "asset"
 class = "financial"
+refines = "Asset.Financial"
 lifecycle = "energy.flip_structure"
 description = "An equity interest in a project's cash and tax attributes."
 
@@ -87,6 +92,7 @@ description = "sponsor | tax_equity | preferred"
 [[entities]]
 type_id = "Energy.Party.Sponsor"
 family = "party"
+refines = "Party"
 description = "Develops and owns the project."
 
 [[entities.fields]]
@@ -97,6 +103,7 @@ required = false
 [[entities]]
 type_id = "Energy.Party.Offtaker"
 family = "party"
+refines = "Party"
 description = "Buys the output — a utility, a corporate buyer, or the market."
 
 [[entities.fields]]
@@ -112,6 +119,7 @@ required = false
 [[entities]]
 type_id = "Energy.Party.Lender"
 family = "party"
+refines = "Party"
 description = "Provides project debt."
 
 [[entities.fields]]
@@ -122,6 +130,7 @@ required = false
 [[entities]]
 type_id = "Energy.Party.TaxEquityInvestor"
 family = "party"
+refines = "Party"
 description = "Invests for the tax attributes — credits and depreciation."
 
 [[entities.fields]]
@@ -132,6 +141,7 @@ required = false
 [[entities]]
 type_id = "Energy.Party.ServiceProvider"
 family = "party"
+refines = "Party"
 description = "Operations and maintenance counterparty, or a landowner under a site lease."
 
 [[entities.fields]]
@@ -206,6 +216,7 @@ description = "The tax investor's after-tax internal rate of return reaches its 
 
 [[contracts]]
 type_id = "Energy.Contract.PPA"
+refines = "Contract.Offtake"
 contract_name = "energy.ppa"
 subject_family = "asset"
 parties = ["seller", "offtaker"]
@@ -213,6 +224,7 @@ description = "Power purchase agreement: contracted price for delivered energy."
 
 [[contracts]]
 type_id = "Energy.Contract.MerchantSale"
+refines = "Contract.Offtake"
 contract_name = "energy.merchant"
 subject_family = "asset"
 parties = ["seller"]
@@ -226,18 +238,21 @@ parties = ["seller"]
 
 [[contracts]]
 type_id = "Energy.Contract.CapacityPayment"
+refines = "Contract.Offtake"
 contract_name = "energy.capacity"
 subject_family = "asset"
 parties = ["seller", "offtaker"]
 
 [[contracts]]
 type_id = "Energy.Contract.OperationsAndMaintenance"
+refines = "Contract.Service"
 contract_name = "energy.om"
 subject_family = "asset"
 parties = ["owner", "service_provider"]
 
 [[contracts]]
 type_id = "Energy.Contract.ProjectDebt"
+refines = "Contract.Debt"
 contract_name = "energy.debt_service"
 subject_family = "asset"
 parties = ["borrower", "lender"]
@@ -252,18 +267,21 @@ parties = ["owner"]
 # commercial counterparty, so they name only the claimant.
 [[contracts]]
 type_id = "Energy.Contract.InvestmentTaxCredit"
+refines = "Contract.Tax"
 contract_name = "energy.itc"
 subject_family = "asset"
 parties = ["claimant"]
 
 [[contracts]]
 type_id = "Energy.Contract.ProductionTaxCredit"
+refines = "Contract.Tax"
 contract_name = "energy.ptc"
 subject_family = "asset"
 parties = ["claimant"]
 
 [[contracts]]
 type_id = "Energy.Contract.DepreciationShield"
+refines = "Contract.Tax"
 contract_name = "energy.macrs_shield"
 subject_family = "asset"
 parties = ["claimant"]
@@ -272,6 +290,7 @@ parties = ["claimant"]
 
 [[contracts]]
 type_id = "Energy.Contract.OfftakeExtension"
+refines = "Contract.Option"
 subject_family = "asset"
 parties = ["seller", "offtaker"]
 description = "An offtaker's right to extend the contracted term."

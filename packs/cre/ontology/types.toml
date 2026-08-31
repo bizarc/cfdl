@@ -23,6 +23,7 @@ version = "0.1.0"
 type_id = "CRE.Asset.RealProperty"
 family = "asset"
 class = "real"
+refines = "Asset.Real"
 lifecycle = "cre.property"
 description = "An income-producing property."
 
@@ -49,6 +50,7 @@ required = false
 type_id = "CRE.Asset.Unit"
 family = "asset"
 class = "real"
+refines = "CRE.Asset.RealProperty"
 lifecycle = "cre.unit"
 description = "A leasable unit or suite. Use when the model needs lease-by-lease detail; a property modeled at the building level needs none."
 
@@ -67,12 +69,16 @@ required = false
 type_id = "CRE.Asset.Portfolio"
 family = "asset"
 class = "real"
+# A portfolio is a grouping that scopes cash, not a thing that produces it —
+# migrates to the `container` family when docs/13 §7.88 lands.
+refines = "Asset.Real"
 description = "A grouping of properties modeled as one."
 
 [[entities]]
 type_id = "CRE.Asset.EquityInterest"
 family = "asset"
 class = "financial"
+refines = "Asset.Financial"
 description = "A partnership or joint-venture interest in a property's cash."
 
 [[entities.fields]]
@@ -88,6 +94,7 @@ description = "sponsor | limited_partner | preferred"
 [[entities]]
 type_id = "CRE.Party.Sponsor"
 family = "party"
+refines = "Party"
 description = "Acquires, develops and operates the property."
 
 [[entities.fields]]
@@ -98,6 +105,7 @@ required = false
 [[entities]]
 type_id = "CRE.Party.Investor"
 family = "party"
+refines = "Party"
 description = "Provides equity without operating the asset."
 
 [[entities.fields]]
@@ -108,6 +116,7 @@ required = false
 [[entities]]
 type_id = "CRE.Party.Lender"
 family = "party"
+refines = "Party"
 
 [[entities.fields]]
 name = "name"
@@ -117,6 +126,7 @@ required = false
 [[entities]]
 type_id = "CRE.Party.Tenant"
 family = "party"
+refines = "Party"
 description = "Occupies space under a lease."
 
 [[entities.fields]]
@@ -132,6 +142,7 @@ required = false
 [[entities]]
 type_id = "CRE.Party.PropertyManager"
 family = "party"
+refines = "Party"
 
 [[entities.fields]]
 name = "name"
@@ -212,12 +223,14 @@ description = "Re-let to a new tenant."
 
 [[contracts]]
 type_id = "CRE.Contract.Lease"
+refines = "Contract.Lease"
 contract_name = "cre.lease"
 subject_family = "asset"
 parties = ["landlord", "tenant"]
 
 [[contracts]]
 type_id = "CRE.Contract.UnitLease"
+refines = "CRE.Contract.Lease"
 contract_name = "cre.lease_unit"
 subject_family = "asset"
 parties = ["landlord", "tenant"]
@@ -225,6 +238,7 @@ description = "A lease modeled at unit grain, with recoveries and expense stops.
 
 [[contracts]]
 type_id = "CRE.Contract.Rollover"
+refines = "CRE.Contract.Lease"
 contract_name = "cre.rollover"
 subject_family = "asset"
 parties = ["landlord"]
@@ -232,12 +246,14 @@ description = "The probability-weighted outcome at expiry. Names only the landlo
 
 [[contracts]]
 type_id = "CRE.Contract.PercentageRent"
+refines = "CRE.Contract.Lease"
 contract_name = "cre.percentage_rent"
 subject_family = "asset"
 parties = ["landlord", "tenant"]
 
 [[contracts]]
 type_id = "CRE.Contract.PercentageRentExpected"
+refines = "CRE.Contract.Lease"
 contract_name = "cre.percentage_rent_expected"
 subject_family = "asset"
 parties = ["landlord", "tenant"]
@@ -263,6 +279,7 @@ parties = ["owner"]
 
 [[contracts]]
 type_id = "CRE.Contract.PermanentDebt"
+refines = "Contract.Debt"
 contract_name = "cre.permanent_debt"
 subject_family = "asset"
 parties = ["borrower", "lender"]
@@ -275,6 +292,7 @@ parties = ["owner", "lender"]
 
 [[contracts]]
 type_id = "CRE.Contract.ConstructionLoan"
+refines = "Contract.Debt"
 contract_name = "cre.construction_loan"
 subject_family = "asset"
 parties = ["owner", "lender"]
@@ -282,18 +300,21 @@ description = "A construction facility funded behind an equity commitment: equit
 
 [[contracts]]
 type_id = "CRE.Contract.Disposition"
+refines = "Contract.Sale"
 contract_name = "cre.exit"
 subject_family = "asset"
 parties = ["seller"]
 
 [[contracts]]
 type_id = "CRE.Contract.DispositionAtCap"
+refines = "Contract.Sale"
 contract_name = "cre.exit_cap"
 subject_family = "asset"
 parties = ["seller"]
 
 [[contracts]]
 type_id = "CRE.Contract.DispositionAtForwardCap"
+refines = "Contract.Sale"
 contract_name = "cre.exit_forward"
 subject_family = "asset"
 parties = ["seller"]
@@ -302,12 +323,14 @@ parties = ["seller"]
 
 [[contracts]]
 type_id = "CRE.Contract.RenewalOption"
+refines = "Contract.Option"
 subject_family = "asset"
 parties = ["landlord", "tenant"]
 description = "A tenant's right to extend at stated terms."
 
 [[contracts]]
 type_id = "CRE.Contract.PurchaseOption"
+refines = "Contract.Option"
 subject_family = "asset"
 parties = ["grantor", "holder"]
 description = "A right to buy the asset at a stated price."

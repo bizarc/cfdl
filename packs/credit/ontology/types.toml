@@ -23,6 +23,7 @@ version = "0.1.0"
 type_id = "Credit.Asset.LoanPool"
 family = "asset"
 class = "financial"
+refines = "Asset.Financial"
 lifecycle = "credit.pool"
 description = "A pool of loans modeled by its collective behavior. Needs no children: the pool IS the grain."
 
@@ -54,6 +55,7 @@ unit = "months"
 type_id = "Credit.Asset.Loan"
 family = "asset"
 class = "financial"
+refines = "Asset.Financial"
 lifecycle = "credit.loan"
 description = "A single loan. Use when the model needs loan-level behavior — individual default paths, borrower-level scenarios — otherwise model the pool."
 
@@ -79,6 +81,7 @@ unit = "months"
 type_id = "Credit.Asset.Tranche"
 family = "asset"
 class = "financial"
+refines = "Asset.Financial"
 description = "A claim of stated seniority on a pool's cash."
 
 [[entities.fields]]
@@ -100,6 +103,7 @@ unit = "USD"
 [[entities]]
 type_id = "Credit.Party.Issuer"
 family = "party"
+refines = "Party"
 
 [[entities.fields]]
 name = "name"
@@ -109,6 +113,7 @@ required = false
 [[entities]]
 type_id = "Credit.Party.Servicer"
 family = "party"
+refines = "Party"
 description = "Collects, advances and works out the collateral."
 
 [[entities.fields]]
@@ -119,6 +124,7 @@ required = false
 [[entities]]
 type_id = "Credit.Party.Investor"
 family = "party"
+refines = "Party"
 
 [[entities.fields]]
 name = "name"
@@ -128,6 +134,7 @@ required = false
 [[entities]]
 type_id = "Credit.Party.Borrower"
 family = "party"
+refines = "Party"
 description = "Owes under a loan. Named when the model is at loan grain; a pool model has no single borrower."
 
 [[entities.fields]]
@@ -208,6 +215,7 @@ to = "matured"
 
 [[contracts]]
 type_id = "Credit.Contract.LevelPayPool"
+refines = "Contract.Debt"
 contract_name = "credit.pool_level_pay"
 subject_family = "asset"
 parties = ["holder"]
@@ -215,12 +223,14 @@ description = "Amortizing pool with prepayment, default, severity and recovery l
 
 [[contracts]]
 type_id = "Credit.Contract.InterestOnlyPool"
+refines = "Contract.Debt"
 contract_name = "credit.pool_io_bullet"
 subject_family = "asset"
 parties = ["holder"]
 
 [[contracts]]
 type_id = "Credit.Contract.FloatingInterestOnlyPool"
+refines = "Contract.Debt"
 contract_name = "credit.pool_float_io_bullet"
 subject_family = "asset"
 parties = ["holder"]
@@ -228,6 +238,7 @@ description = "Coupon resets off a declared reference rather than being fixed at
 
 [[contracts]]
 type_id = "Credit.Contract.Purchase"
+refines = "Contract.Purchase"
 contract_name = "credit.purchase"
 subject_family = "asset"
 parties = ["buyer", "seller"]
@@ -236,6 +247,7 @@ parties = ["buyer", "seller"]
 
 [[contracts]]
 type_id = "Credit.Contract.CleanUpCall"
+refines = "Contract.Option"
 subject_family = "asset"
 parties = ["issuer", "holder"]
 description = "The issuer's right to retire the pool once it falls below a stated size."

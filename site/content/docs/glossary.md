@@ -28,6 +28,10 @@ A declared input to the model, constant or stochastic. Declared with `assume`.
 
 The `cfg.<path>` expression binding, which reads scenario knobs from the run configuration. Distinct from the run configuration itself.
 
+**container**
+
+An entity family for a grouping that scopes cash without producing it — a fund, a portfolio, an SPV, a transaction.
+
 **contract**
 
 A first-class agreement carrying terms and effects.
@@ -56,6 +60,10 @@ How finely the model slices time and things. Timeline grain and entity grain are
 
 A declared finite state machine: enumerated states, an initial one, and guarded edges declared only as used. A core-language construct that packs tailor to domains.
 
+**master type**
+
+A base type in the language's ontology that pack types refine — what a thing is, before a domain specializes it.
+
 **metric**
 
 A derived summary figure over the model's cash flows.
@@ -75,6 +83,10 @@ A stream amount whose series window reaches forward: a valuation setting a causa
 **quantile**
 
 A named series of values indexed by cumulative share.
+
+**refinement**
+
+The recorded is-a edge from a pack type to the type it specializes, declared with refines.
 
 **rule field**
 

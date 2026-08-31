@@ -253,12 +253,19 @@ entity party acme : CRE.Party.Tenant { name = "Acme Corp" }
 ```
 
 - The **family** is the first identifier: `asset` for something that produces or
-  consumes cash, `party` for someone who contracts, owns, lends or invests.
+  consumes cash, `party` for someone who contracts, owns, lends or invests,
+  `container` for a grouping that scopes cash without producing it — a fund, a
+  portfolio, an SPV, a transaction. Containment reuses `part of`: a container
+  parent's cash is aggregated from its members by the relation, exactly as an
+  asset parent's is, and counts as cash nowhere.
 - The **type** is checked against the active ontology. With no pack active a
   model still has the language's own vocabulary — `Asset.Real`,
-  `Asset.Financial`, `Asset.Intangible`, `Party` — because an ontology is a
-  language capability that packs supply defaults for, not one they own. A pack's
-  types are added to those and cannot remove them.
+  `Asset.Financial`, `Asset.Intangible`, `Party`, `Container.Fund`,
+  `Container.Portfolio`, `Container.SPV`, `Container.Transaction` — because an
+  ontology is a language capability that packs supply defaults for, not one
+  they own. A pack's types are added to those and cannot remove them. A pack
+  type states the master it specializes (`refines`, Pack Interface §6.1), so
+  "is a" is a recorded fact rather than a naming convention.
 - Attribute values are **literals**, checked against the type's declared fields.
 - `part of` declares hierarchy and is **always optional, at every grain**. A
   pool models collective behavior perfectly well with no loans under it; a
