@@ -1,0 +1,20 @@
+version 0.1
+model "inherited-field-near-miss"
+use pack "cre" version "0.1.0"
+time calendar annual from 2026-01 for 2
+
+// `yearbuilt` is a near miss of `year_built` — a field the Unit type does
+// not declare itself but INHERITS from CRE.Asset.RealProperty. Before
+// inheritance the typo sailed through as "the modeller's own field"; a
+// value nobody reads is the quiet kind of wrong this project keeps closing.
+
+entity asset suite : CRE.Asset.Unit {
+  rentable_area = 1200.0
+  yearbuilt = 1987.0
+}
+
+stream unit.rent on entity asset.suite inflow currency USD {
+  schedule every year from 2026-01 to 2027-01
+  category operating.revenue.other
+  amount = 100
+}

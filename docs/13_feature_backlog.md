@@ -2361,5 +2361,13 @@ refinement, and absence from an alpha pack vetoes nothing; and the "line"
 contract types (opex/revenue/capex/working-capital lines) refine nothing
 yet — they are statement-line generators rather than counterparty
 agreements, and whether they get a master of their own is an open question,
-not an oversight. Field inheritance (piece 3) remains: `OntologyContract`
-carries no field schema today, so it starts with entities.
+not an oversight. Piece 3 shipped for
+entities, 31 August 2026: `effective_fields` walks the chain root-down (the
+leaf's declaration of a name wins), the compiler validates models against
+the effective roster (E1312 required, E1313 near-miss and its declared-list
+hint), and redeclaration is strengthen-only — a rule the shipped packs
+dictated, since `CRE.Asset.Unit` already strengthens `rentable_area` from
+optional to required. The CONTRACT side still waits on a prior question:
+`OntologyContract` carries no field schema at all — terms are validated
+through templates and lowering rules — so contract-field inheritance first
+needs a decision on where a contract's term schema lives.

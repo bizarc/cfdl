@@ -1,0 +1,17 @@
+[
+  {
+    "code": "E1313_UNKNOWN_ENTITY_FIELD",
+    "severity": "error",
+    "message": "Entity 'asset.suite' of type 'CRE.Asset.Unit' sets 'yearbuilt', which the type does not declare.",
+    "file": "model.cfdl",
+    "span": {
+      "start_line": 13,
+      "start_col": 3,
+      "end_line": 13,
+      "end_col": 20
+    },
+    "path": null,
+    "hint": "Declared fields: asset_class, rentable_area, use, year_built.",
+    "notes": []
+  }
+]
