@@ -40,8 +40,8 @@ against it by `make results-schema`.
   "properties": {
     "results_version": {
       "type": "string",
-      "const": "0.7",
-      "description": "Schema version of this document. 0.7 publishes the model's entity graph (`graph`) and attributes each stream series to its owning entity and category — what lets a consumer holding results alone say whose cash and what kind. 0.6 nests an act's own acts under it as `children`, which is what a transition and its arrival actions are. 0.5 added the machine's `transition` journal action. 0.4 added the account journal actions `inflow`, `allocate_in` and `allocate_out`. 0.3 added `ledger_hash` and the optional `inputs` section, and `category` on IR streams upstream of it."
+      "const": "0.8",
+      "description": "Schema version of this document. 0.8 adds `slices` — declared partial selections with their matched streams, net series and figures, and no reconciliation block by design. 0.7 publishes the model's entity graph (`graph`) and attributes each stream series to its owning entity and category. 0.6 nests an act's own acts under it as `children`. 0.5 added the machine's `transition` journal action. 0.4 added the account journal actions. 0.3 added `ledger_hash`, the optional `inputs` section, and `category` on IR streams."
     },
     "model_hash": {
       "type": "string",
@@ -99,6 +99,12 @@ against it by `make results-schema`.
     },
     "graph": {
       "$ref": "#/$defs/ResultsGraph"
+    },
+    "slices": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/SliceResult"
+      }
     }
   },
   "$defs": {
@@ -1064,6 +1070,89 @@ against it by `make results-schema`.
           "type": "array",
           "items": {
             "$ref": "#/$defs/GraphEntity"
+          }
+        }
+      }
+    },
+    "SliceSelection": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "entities": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "types": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "categories": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "streams": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "except_streams": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "except_categories": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "except_entities": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "SliceResult": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "selection",
+        "streams",
+        "net",
+        "metrics"
+      ],
+      "description": "A declared slice and what it came to (docs/01 §15.4): the selection as lineage, every stream it matched (empty is published, not omitted), the net per-period series, and total/npv/irr over the matched streams on the model's own axis. NO reconciliation block, by design — a slice is partial, and must be seen to be.",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "selection": {
+          "$ref": "#/$defs/SliceSelection"
+        },
+        "streams": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "net": {
+          "$ref": "#/$defs/Series"
+        },
+        "metrics": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/$defs/Scalar"
           }
         }
       }

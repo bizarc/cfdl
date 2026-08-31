@@ -385,6 +385,8 @@ struct Ir {
     /// Omitted when a model declares none, so existing IR is byte-identical.
     #[serde(skip_serializing_if = "Vec::is_empty")]
     metrics: Vec<IrMetric>,
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    slices: Vec<IrSlice>,
     contracts: Vec<IrContract>,
     streams: Vec<IrStream>,
     /// What each pack-lowered stream consumed, keyed by stream name. Omitted
@@ -532,6 +534,32 @@ struct IrNodeProvenance {
     source_span: Span,
     #[serde(skip_serializing_if = "Option::is_none")]
     generated_by: Option<IrGeneratedBy>,
+}
+
+#[derive(Debug, Serialize)]
+struct IrSlice {
+    name: String,
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    entities: Vec<String>,
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    types: Vec<String>,
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    categories: Vec<String>,
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    streams: Vec<String>,
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    except_streams: Vec<String>,
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    except_categories: Vec<String>,
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    except_entities: Vec<String>,
+    /// The stream names the `type` clauses matched, resolved HERE because
+    /// only the compiler holds the ontology: a stream is selected when the
+    /// contract type its lowering rule binds to is_a a named type. The
+    /// clause stays in `types` as lineage; the engine reads this expansion.
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    type_streams: Vec<String>,
+    provenance: IrNodeProvenance,
 }
 
 #[derive(Debug, Serialize)]
@@ -4038,6 +4066,153 @@ fn build_ir(
         })
         .collect();
 
+    // SLICES (docs/13 §7.90): a named, deliberately partial selection.
+    // Clause kinds intersect, values within a kind union, `except` subtracts.
+    // Validated here — a reference is what the compiler can resolve — and the
+    // `type` clauses are EXPANDED here, because only the compiler holds the
+    // ontology the transitive match walks.
+    let ir_slices: Vec<IrSlice> = {
+        let declared_entities: BTreeSet<String> = resolve_output
+            .source_statements
+            .iter()
+            .filter_map(|s| match &s.statement {
+                Stmt::Entity(e) => Some(e.symbol()),
+                _ => None,
+            })
+            .collect();
+        let onto = active_pack
+            .map(|p| p.ontology.clone())
+            .unwrap_or_else(cfdl_pack::PackOntology::language_base);
+        // rule_id -> the contract type its rule family binds to.
+        let rule_type: BTreeMap<&str, &str> = active_pack
+            .map(|p| {
+                p.lowering_rules
+                    .iter()
+                    .filter_map(|r| {
+                        onto.contract_for_rule(&r.contract_name)
+                            .map(|c| (r.id.as_str(), c.type_id.as_str()))
+                    })
+                    .collect()
+            })
+            .unwrap_or_default();
+        let mut slice_diagnostics: Vec<Diagnostic> = Vec::new();
+        let mut out: Vec<IrSlice> = Vec::new();
+        for source_stmt in &resolve_output.source_statements {
+            let Stmt::Slice(slice_stmt) = &source_stmt.statement else {
+                continue;
+            };
+            for entity_ref in slice_stmt
+                .entities
+                .iter()
+                .chain(slice_stmt.except_entities.iter())
+            {
+                if !declared_entities.contains(entity_ref) {
+                    slice_diagnostics.push(Diagnostic {
+                        code: "E1362_SLICE_UNKNOWN_ENTITY".to_string(),
+                        severity: "error".to_string(),
+                        message: format!(
+                            "Slice '{}' selects entity '{entity_ref}', which is not declared.",
+                            slice_stmt.name
+                        ),
+                        file: Some(source_stmt.file.clone()),
+                        span: Some(map_span(slice_stmt.span)),
+                        path: None,
+                        hint: Some("A slice selects by reference, and a reference is what the compiler can check — correct the name or declare the entity.".to_string()),
+                        notes: vec![],
+                    });
+                }
+            }
+            for category in slice_stmt
+                .categories
+                .iter()
+                .chain(slice_stmt.except_categories.iter())
+            {
+                let root = category.split('.').next().unwrap_or("");
+                if !cfdl_pack::CATEGORY_ROOTS.contains(&root) {
+                    slice_diagnostics.push(Diagnostic {
+                        code: "E1364_SLICE_CATEGORY_ROOT".to_string(),
+                        severity: "error".to_string(),
+                        message: format!(
+                            "Slice '{}' selects category '{category}', whose root '{root}' is not one of {}.",
+                            slice_stmt.name,
+                            cfdl_pack::CATEGORY_ROOTS.join(", ")
+                        ),
+                        file: Some(source_stmt.file.clone()),
+                        span: Some(map_span(slice_stmt.span)),
+                        path: None,
+                        hint: Some("A category is a path into the cash flow statement; a selector that could never match anything is a typo, not a choice.".to_string()),
+                        notes: vec![],
+                    });
+                }
+            }
+            let mut type_streams: BTreeSet<String> = BTreeSet::new();
+            for wanted in &slice_stmt.types {
+                let known = onto.entities.iter().any(|e| e.type_id == *wanted)
+                    || onto.contracts.iter().any(|c| c.type_id == *wanted);
+                if !known {
+                    let mut names: Vec<&str> =
+                        onto.contracts.iter().map(|c| c.type_id.as_str()).collect();
+                    names.sort_unstable();
+                    slice_diagnostics.push(Diagnostic {
+                        code: "E1363_SLICE_UNKNOWN_TYPE".to_string(),
+                        severity: "error".to_string(),
+                        message: format!(
+                            "Slice '{}' selects type '{wanted}', which the active ontology does not define.",
+                            slice_stmt.name
+                        ),
+                        file: Some(source_stmt.file.clone()),
+                        span: Some(map_span(slice_stmt.span)),
+                        path: None,
+                        hint: Some(format!("Known contract types: {}.", names.join(", "))),
+                        notes: vec![],
+                    });
+                    continue;
+                }
+                // A stream is matched when the contract type its lowering
+                // rule binds to is_a the wanted type — the transitive walk
+                // the recorded refinement makes answerable. Entity types
+                // match through the stream's owner.
+                for (_, stream) in &streams {
+                    let by_contract = stream
+                        .provenance
+                        .generated_by
+                        .as_ref()
+                        .and_then(|g| rule_type.get(g.rule_id.as_str()))
+                        .is_some_and(|t| onto.is_a(t, wanted));
+                    let by_owner = entities
+                        .iter()
+                        .find(|(_, e)| e.symbol == stream.owner.symbol)
+                        .map(|(_, e)| e.r#type.as_str())
+                        .is_some_and(|t| !t.is_empty() && onto.is_a(t, wanted));
+                    if by_contract || by_owner {
+                        type_streams.insert(stream.name.clone());
+                    }
+                }
+            }
+            out.push(IrSlice {
+                name: slice_stmt.name.clone(),
+                entities: slice_stmt.entities.clone(),
+                types: slice_stmt.types.clone(),
+                categories: slice_stmt.categories.clone(),
+                streams: slice_stmt.streams.clone(),
+                except_streams: slice_stmt.except_streams.clone(),
+                except_categories: slice_stmt.except_categories.clone(),
+                except_entities: slice_stmt.except_entities.clone(),
+                type_streams: type_streams.into_iter().collect(),
+                provenance: IrNodeProvenance {
+                    source_file: source_stmt.file.clone(),
+                    source_span: map_span(slice_stmt.span),
+                    generated_by: None,
+                },
+            });
+        }
+        if !slice_diagnostics.is_empty() {
+            sort_compile_diagnostics(&mut slice_diagnostics);
+            return Err(slice_diagnostics);
+        }
+        out
+    };
+
     let mut ir = Ir {
         ir_version: "0.1".to_string(),
         model: IrModel {
@@ -4064,6 +4239,7 @@ fn build_ir(
         lifecycles: ir_lifecycles,
         waterfalls: ir_waterfalls,
         metrics: ir_metrics,
+        slices: ir_slices,
         contracts: contracts
             .into_iter()
             .map(|(_, contract)| contract)

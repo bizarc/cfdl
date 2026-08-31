@@ -1,0 +1,17 @@
+[
+  {
+    "code": "E1361_DUPLICATE_SLICE",
+    "severity": "error",
+    "message": "Duplicate slice 's'.",
+    "file": "model.cfdl",
+    "span": {
+      "start_line": 13,
+      "start_col": 1,
+      "end_line": 13,
+      "end_col": 24
+    },
+    "path": null,
+    "hint": null,
+    "notes": []
+  }
+]

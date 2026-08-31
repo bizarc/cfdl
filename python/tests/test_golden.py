@@ -28,6 +28,6 @@ def test_matches_gold(fixture_dir):
     assert gold_path.is_file(), f"missing gold for {fixture_dir.name}"
     gold = json.loads(gold_path.read_text(encoding="utf-8"))
 
-    assert results.raw["results_version"] == "0.7"
+    assert results.raw["results_version"] == "0.8"
     assert results.model_hash == gold["model_hash"]
     assert canon(results.raw) == canon(gold)

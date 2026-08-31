@@ -1,0 +1,17 @@
+[
+  {
+    "code": "E1364_SLICE_CATEGORY_ROOT",
+    "severity": "error",
+    "message": "Slice 's' selects category 'revenue.royalty', whose root 'revenue' is not one of operating, investing, financing.",
+    "file": "model.cfdl",
+    "span": {
+      "start_line": 13,
+      "start_col": 1,
+      "end_line": 13,
+      "end_col": 38
+    },
+    "path": null,
+    "hint": "A category is a path into the cash flow statement; a selector that could never match anything is a typo, not a choice.",
+    "notes": []
+  }
+]

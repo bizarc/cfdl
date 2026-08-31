@@ -1,0 +1,376 @@
+{
+  "results_version": "0.8",
+  "model_hash": "fc7de3540925ebc15b456b89df897c5aee2004d072f3192e68a73df381715692",
+  "ledger_hash": "0a98c05a2d82c8c08de123889027418a573b32ecacbb73c28961c01e07657251",
+  "engine": {
+    "name": "cfdl-engine",
+    "version": "0.7.0"
+  },
+  "warnings": [],
+  "deterministic": {
+    "status": "ok",
+    "metrics": {
+      "entity.asset.artist_a.total": {
+        "amount": 420.0,
+        "currency": "USD"
+      },
+      "entity.asset.artist_b.total": {
+        "amount": 210.0,
+        "currency": "USD"
+      },
+      "entity.container.label.total": {
+        "amount": 630.0,
+        "currency": "USD"
+      },
+      "model.npv": {
+        "amount": 630.0,
+        "currency": "USD"
+      },
+      "model.total": {
+        "amount": 630.0,
+        "currency": "USD"
+      },
+      "model.wal_years": 2.0,
+      "run.annual_discount_rate": 0.0,
+      "run.periods_per_year": 1.0,
+      "stream.a.merch.total": {
+        "amount": 120.0,
+        "currency": "USD"
+      },
+      "stream.a.royalties.total": {
+        "amount": 300.0,
+        "currency": "USD"
+      },
+      "stream.b.royalties.total": {
+        "amount": 210.0,
+        "currency": "USD"
+      }
+    },
+    "series": {
+      "entity.asset.artist_a.net_cash_flow": {
+        "index": {
+          "calendar": "annual",
+          "start": "2026-01-01",
+          "periods": 3
+        },
+        "values": [
+          {
+            "amount": 140.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 140.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 140.0,
+            "currency": "USD"
+          }
+        ]
+      },
+      "entity.asset.artist_b.net_cash_flow": {
+        "index": {
+          "calendar": "annual",
+          "start": "2026-01-01",
+          "periods": 3
+        },
+        "values": [
+          {
+            "amount": 70.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 70.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 70.0,
+            "currency": "USD"
+          }
+        ]
+      },
+      "entity.container.label.net_cash_flow": {
+        "index": {
+          "calendar": "annual",
+          "start": "2026-01-01",
+          "periods": 3
+        },
+        "values": [
+          {
+            "amount": 210.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 210.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 210.0,
+            "currency": "USD"
+          }
+        ]
+      },
+      "model.net_cash_flow": {
+        "index": {
+          "calendar": "annual",
+          "start": "2026-01-01",
+          "periods": 3
+        },
+        "values": [
+          {
+            "amount": 210.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 210.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 210.0,
+            "currency": "USD"
+          }
+        ]
+      },
+      "stream.a.merch": {
+        "index": {
+          "calendar": "annual",
+          "start": "2026-01-01",
+          "periods": 3
+        },
+        "offset": 1.0,
+        "entity": "asset.artist_a",
+        "category": "operating.revenue.merchandise",
+        "values": [
+          {
+            "amount": 40.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 40.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 40.0,
+            "currency": "USD"
+          }
+        ]
+      },
+      "stream.a.royalties": {
+        "index": {
+          "calendar": "annual",
+          "start": "2026-01-01",
+          "periods": 3
+        },
+        "offset": 1.0,
+        "entity": "asset.artist_a",
+        "category": "operating.revenue.royalty",
+        "values": [
+          {
+            "amount": 100.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 100.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 100.0,
+            "currency": "USD"
+          }
+        ]
+      },
+      "stream.b.royalties": {
+        "index": {
+          "calendar": "annual",
+          "start": "2026-01-01",
+          "periods": 3
+        },
+        "offset": 1.0,
+        "entity": "asset.artist_b",
+        "category": "operating.revenue.royalty",
+        "values": [
+          {
+            "amount": 70.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 70.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 70.0,
+            "currency": "USD"
+          }
+        ]
+      }
+    }
+  },
+  "scenarios": {
+    "status": "not_run",
+    "summaries": []
+  },
+  "monte_carlo": {
+    "status": "not_run",
+    "trials": 1,
+    "seed": 0,
+    "metrics": {},
+    "trial_summaries": []
+  },
+  "graph": {
+    "entities": [
+      {
+        "symbol": "asset.artist_a",
+        "family": "asset",
+        "type": "Asset.Intangible",
+        "parent": "container.label"
+      },
+      {
+        "symbol": "asset.artist_b",
+        "family": "asset",
+        "type": "Asset.Intangible",
+        "parent": "container.label"
+      },
+      {
+        "symbol": "container.label",
+        "family": "container",
+        "type": "Container.Portfolio"
+      }
+    ]
+  },
+  "slices": [
+    {
+      "id": "artist_a",
+      "selection": {
+        "entities": [
+          "asset.artist_a"
+        ]
+      },
+      "streams": [
+        "a.merch",
+        "a.royalties"
+      ],
+      "net": {
+        "index": {
+          "calendar": "annual",
+          "start": "2026-01-01",
+          "periods": 3
+        },
+        "values": [
+          {
+            "amount": 140.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 140.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 140.0,
+            "currency": "USD"
+          }
+        ]
+      },
+      "metrics": {
+        "npv": {
+          "amount": 420.0,
+          "currency": "USD"
+        },
+        "total": {
+          "amount": 420.0,
+          "currency": "USD"
+        }
+      }
+    },
+    {
+      "id": "artist_a_royalties",
+      "selection": {
+        "entities": [
+          "asset.artist_a"
+        ],
+        "categories": [
+          "operating.revenue.royalty"
+        ]
+      },
+      "streams": [
+        "a.royalties"
+      ],
+      "net": {
+        "index": {
+          "calendar": "annual",
+          "start": "2026-01-01",
+          "periods": 3
+        },
+        "values": [
+          {
+            "amount": 100.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 100.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 100.0,
+            "currency": "USD"
+          }
+        ]
+      },
+      "metrics": {
+        "npv": {
+          "amount": 300.0,
+          "currency": "USD"
+        },
+        "total": {
+          "amount": 300.0,
+          "currency": "USD"
+        }
+      }
+    },
+    {
+      "id": "label_ex_merch",
+      "selection": {
+        "entities": [
+          "container.label"
+        ],
+        "except_categories": [
+          "operating.revenue.merchandise"
+        ]
+      },
+      "streams": [
+        "a.royalties",
+        "b.royalties"
+      ],
+      "net": {
+        "index": {
+          "calendar": "annual",
+          "start": "2026-01-01",
+          "periods": 3
+        },
+        "values": [
+          {
+            "amount": 170.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 170.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 170.0,
+            "currency": "USD"
+          }
+        ]
+      },
+      "metrics": {
+        "npv": {
+          "amount": 510.0,
+          "currency": "USD"
+        },
+        "total": {
+          "amount": 510.0,
+          "currency": "USD"
+        }
+      }
+    }
+  ]
+}

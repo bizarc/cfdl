@@ -107,6 +107,10 @@ register, so it cannot fall behind the language.
 | `E1358_ARRIVAL_ACTION_SETS_STATUS` | Symbols and references | an `on enter` or edge action writes `status`. An arrival action sets FIELDS on the entity that transitioned; a status write would fire a second transition inside the same period, breaking one-transition-per-entity-per-period. A transition that should cause another transition is topology — an edge out of the target state, taken next period — and status writes remain the named event's privilege (`docs/34` D4). |
 | `E1359_ARRIVAL_ACTION_UNKNOWN_FIELD` | Symbols and references | an `on enter` or edge action sets a field the entity bound to that machine does not have. The name is entity-relative, so it resolves against every entity bound to the machine and all of them need the field; the set is the union of what the model's entity block declares and what its ontology type contributes. Refused because a misspelled field is a write that lands nowhere — the silent-substitution shape `docs/13` §7.38 records for a misspelled series. |
 | `E1360_DUPLICATE_ENTITY_ID` | Symbols and references | two entities declare the same literal field `id`. The id is a stable identity for the layer above the model — engine-opaque, published in the results graph (`docs/06`) — and a consumer joining on it would merge two things into one. Uniqueness within the model is the one thing the language can check about a value it must not interpret (`docs/13` §7.91). |
+| `E1361_DUPLICATE_SLICE` | Symbols and references | two slices share a name. Same rule as a metric: one name, one selection. |
+| `E1362_SLICE_UNKNOWN_ENTITY` | Symbols and references | a slice's `entity` (or `except entity`) names an entity the model does not declare. A slice selects by reference, and a reference is what the compiler can check — refused rather than silently matching nothing. |
+| `E1363_SLICE_UNKNOWN_TYPE` | Symbols and references | a slice's `type` names an ontology type the active ontology does not define. The hint lists the known contract types; a master type (`Contract.Debt`) matches transitively through `refines`. |
+| `E1364_SLICE_CATEGORY_ROOT` | Symbols and references | a slice's category selector is not rooted in operating, investing or financing. A selector that could never match anything is a typo, not a choice. |
 | `E1304_UNRESOLVED_OPTION_REF` | Symbols and references | an event exercises an option that is not declared. Checked in the compiler rather than the resolver, because options are not in the symbol tables. |
 | `E1310_ENTITY_BLOCK_WITHOUT_TYPE` | Symbols and references | an entity uses a block but declares no type, so there is nothing to check the block against. |
 | `E1311_UNKNOWN_ENTITY_TYPE` | Symbols and references | an entity declares a type the active ontology does not define. The known types are listed. |
@@ -254,7 +258,7 @@ register, so it cannot fall behind the language.
 | `E9019_CREDIT_INVALID_AGE_MONTHS` | Pack domain validations | `age_months` is the pool's weighted average age at closing. PSA, SDA and the ABS model are all indexed from ORIGINATION, so a seasoned pool starts part-way up the ramp; leaving it at the default 0 on a seasoned pool understates prepayment. Non-negative integer. |
 | `E9020_CREDIT_RATE_FLOOR_ABOVE_CAP` | Pack domain validations |  |
 
-*202 codes.*
+*206 codes.*
 <!-- /cfdl:generated diagnostics-catalog -->
 
 ## Related

@@ -327,6 +327,12 @@ definition = "A derived summary figure over the model's cash flows."
 occurrences = 98
 
 [[technical_name]]
+term = "slice"
+category = "language"
+definition = "A named, deliberately partial selection of a model's streams, with figures computed over the selection."
+note = "A slice carries no reconciliation block: partial by design, and seen to be. Contrast statement, whose defining property is completeness."
+
+[[technical_name]]
 term = "container"
 category = "language"
 definition = "An entity family for a grouping that scopes cash without producing it — a fund, a portfolio, an SPV, a transaction."

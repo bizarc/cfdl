@@ -2243,6 +2243,20 @@ Provenance: raised working out why "remove certain products and recompute" has
 no home in the language, 30 August 2026. The naming (`slice`, not `view`) was
 settled against the platform vocabulary the same day.
 
+**Status, 31 August 2026 — shipped** (docs/01 §15.4, normative). `slice` is
+the 87th reserved word; clause kinds intersect, values within a kind union,
+excepts subtract; entities are references selecting their `part of`
+descendants (a container's slice is its members'); `type` matches
+transitively through the recorded refinement, expanded at compile because
+the engine is pack-free; category and stream selectors are quoted — one
+dialect. Results publish selection lineage, matched streams (empty
+published, not omitted), net series, and total/npv/irr — and no
+reconciliation block, exactly as this entry demanded. Fixtures:
+`valid/slices` (intersection, container scope, except — 420/300/510 pinned),
+`valid/slice_by_type` (`Contract.Debt` expanding through
+CRE.Contract.PermanentDebt to the three lowered debt streams), four invalid
+fixtures for E1361–E1364. results_version 0.8.
+
 ---
 
 ### 7.91 An entity may carry a stable identity, and results repeat it
