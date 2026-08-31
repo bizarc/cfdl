@@ -26,7 +26,7 @@ One time grid per model; header statements live in the root file only. Everythin
 
 ```text
 entity <family> <name> : <Type>                  -- family: asset | party |
-entity <family> <name> : <Type> {                --         contract | reference
+entity <family> <name> : <Type> {                --         container
   <field> = <literal>                            -- a fact: literal only
   <field> init <expr>                            -- a rule: the recurrence
           next <expr>                            --   `prev` = own prior value
@@ -129,6 +129,14 @@ waterfall <a>.<b> on entity <ref> {
   schedule <as streams>
   from <expr>                                -- the pot; fields and series work
   pay <step> to <family>.<name> = <expr>     -- receives min(max(0,owed),remaining)
+}
+
+slice <name> {                               -- a named partial selection
+  entity <family>.<name>                     -- plus its part-of descendants
+  type <TypeId>                              -- matches through refines
+  category "<path or path.*>"                -- quoted; series_sum's dialect
+  stream "<selector>"
+  except stream "<selector>"                 -- kinds intersect; excepts subtract
 }
 ```
 

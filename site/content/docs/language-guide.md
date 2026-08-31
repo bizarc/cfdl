@@ -72,10 +72,12 @@ entity party acme  : CRE.Party.Tenant
 ```
 
 The first word is the entity's **family** — `asset` for something that produces
-or consumes cash, `party` for someone who contracts, owns or lends. The second
-is its name, and what follows the colon is its **type**, checked against the
-active pack's vocabulary. A model with no pack still has the base types:
-`Asset.Real`, `Asset.Financial`, `Asset.Intangible` and `Party`.
+or consumes cash, `party` for someone who contracts, owns or lends,
+`container` for a grouping that scopes cash: a fund, a portfolio, an SPV, a
+transaction. The second is its name, and what follows the colon is its
+**type**, checked against the active pack's vocabulary. A model with no pack
+still has the base types: `Asset.Real`, `Asset.Financial`,
+`Asset.Intangible`, `Party`, and the four `Container.*` types.
 
 Every stream belongs to an entity, so cash totals per entity as well as per
 model. Where a model declares hierarchy with `part of`, a parent's total

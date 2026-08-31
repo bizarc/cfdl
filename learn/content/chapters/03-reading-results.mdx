@@ -58,6 +58,10 @@ A run produces one document with a consistent anatomy, whether the model is this
 
 **Metrics.** NPV, IRR, and — once packs are involved — domain metrics like coverage ratios. Each metric carries its inputs in the output (the discount rate used, the as-of date), so a metric is never a bare number you have to reconstruct context for.
 
+**The graph, and who owns what.** A top-level `graph` lists every entity — its symbol, family, type, `part of` parent, and (when the model carries one) its stable `id`. Each stream series states its owning `entity` and its `category` beside the values. Together these mean the document stands alone: you can attribute any stream's cash to the thing that owns it without the model open in another window.
+
+**Slices.** A model that declares slices publishes each one: the selection it stated, the streams it matched, a net series, and total/NPV/IRR over the match. A slice never carries a reconciliation block — it is partial by design, and the document shows it as partial.
+
 ## Discounting: the two knobs that change everything
 
 NPV in this output is not "the" NPV of the model; it is the NPV *at the run's discount rate, from the run's as-of date*. Both live in the run configuration, not the model — the same file priced at 8% and at 12% is the same set of claims under two costs of capital.

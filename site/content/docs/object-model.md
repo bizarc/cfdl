@@ -16,6 +16,7 @@ of them.
 |---|---|
 | **Asset** | Something that produces or consumes cash — a building, a plant, a loan pool, a going concern. |
 | **Party** | Someone who contracts, owns, lends or occupies. |
+| **Container** | A grouping that scopes cash — a fund, a portfolio, an SPV, a transaction. It holds cash-producers; cash attached directly to it is deal-level cash. |
 | **Contract** | An agreement, written on an asset, between parties. It emits cash flows. |
 | **Reference** | Something observed rather than owned — a rate curve, an index, a price path. |
 
@@ -48,10 +49,22 @@ choose from. The language itself defines:
 - `Asset.Intangible` — a right without physical form: a royalty, a license, a
   patent.
 - `Party` — anyone a contract is with.
+- `Container.Fund`, `Container.Portfolio`, `Container.SPV`,
+  `Container.Transaction` — groupings that scope cash without producing it.
+- Abstract contract masters — `Contract.Debt`, `Contract.Lease`,
+  `Contract.Purchase`, `Contract.Sale`, `Contract.Offtake`,
+  `Contract.Service`, `Contract.Tax`, `Contract.Option`,
+  `Contract.Construction`, `Contract.Derivative`, `Contract.Insurance`. A
+  master states what a kind of agreement is. It binds no lowering rule and
+  cannot be instantiated; a pack's concrete contract types refine it.
 
-A pack adds its own types on top and cannot remove these. Contract types are
-the exception: they exist only in packs, because a contract type is bound to a
-lowering rule and lowering rules are what a pack is.
+A pack adds its own types on top and cannot remove these — and a pack type
+states what it specializes: `refines = "Asset.Real"` on
+`CRE.Asset.RealProperty`, `refines = "Contract.Debt"` on
+`CRE.Contract.PermanentDebt`. The refinement is recorded, so "is a" is a
+fact the tooling can read. A slice written as `type Contract.Debt` selects
+every stream a debt contract lowers, in any pack, including packs that do
+not exist yet.
 
 ## Assets can nest, and never have to
 

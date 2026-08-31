@@ -10,7 +10,7 @@ Everything in this course so far has been **packless**: models built from the co
 
 ## What a pack is
 
-A pack is a domain's modeling knowledge, versioned and declared in one line:
+A pack is a domain's modeling knowledge, versioned and declared in one line — and its types are refinements of the language's own masters: `CRE.Contract.PermanentDebt` states `refines = "Contract.Debt"`, so anything written against the master (a slice, a validation) reaches the pack's types without naming them. Declared in one line:
 
 ```cfdl
 use pack "cre" version "0.1.0"
