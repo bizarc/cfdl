@@ -1574,7 +1574,8 @@ reserves among what the reference zeroed out to be comparable. §7.5 carries
 is one accumulating FF&E reserve. Servicer advancing (§7.74) is a
 recoverable-advances balance.
 
-**The ask, in three parts.** First, the migrations the shipped fleet already
+**The ask, in three parts** — the third is done, the first is half done, and
+the second is open. First, the migrations the shipped fleet already
 owes: the flip case's hand-carried pot (`docs/25` — the one case where
 revenue is computed a second time inside the distribution) and Highlands'
 cumulative window, both named gate shapes in `docs/29` phase 4. **Highlands is
@@ -1590,33 +1591,80 @@ no split at all. The flip case is the remaining migration. Second, a
 reserve contract shape per pack where a document demands one — the DSRA
 funded to target with `dscr_periodic` gating the release, the replacement
 reserve of §7.5, the FF&E reserve — each as the `pay <step> to account`
-pattern rather than a bespoke contract. Third, interest ON a reserve balance:
-a stream whose amount reads `prev.<account>`, legal under §4's backward rule,
-and the first case that models it closes the CREST reconciliation line.
+pattern rather than a bespoke contract. Third, interest ON a reserve balance — **done 2026-08-30**,
+`fixtures/valid/reserve_interest_on_balance`. The entry was wrong about the
+spelling, and the first attempt was withdrawn for a reason that turned out to
+be wrong too; both are recorded because the second one is the interesting one.
+
+**The spelling.** The entry called this "a stream whose amount reads
+`prev.<account>`, legal under §4's backward rule". That is refused —
+`E1123_PREV_OUTSIDE_NEXT`, because `prev` outside a `next` means nothing — and
+`docs/03` is precise that a balance is readable in rules, guards and step
+expressions. A field's `next` is a rule, so the field carries the balance
+forward and the stream reads the field.
+
+**The withdrawal, and what it actually found.** The fixture failed
+`walk_matches_the_column_order`: column 0 against walk 5. That reads as the
+mechanism being unsound, and it is not. The test already excludes models whose
+logic reads settled cash, on the stated ground that "the column order settles
+all state before any stream has a value, so the read binds nothing there and
+the model means something different — which is exactly the expressiveness the
+walk adds". An account balance is that same category, and §5.1 above says so in
+terms: `prev.<account>` is settled state read "the same way a delinquency edge
+tests realised rent".
+
+The predicate simply did not know about accounts. It detects `series_` and
+predates `docs/28` §5.1, and no blessed model read a balance in logic until
+this one, so the gap had never been exposed. Extending it to account reads is
+completing an existing principle, not waiving a failure — and the property
+still holds where it applies: 124 models compare with walk == column, four are
+walk-only.
+
+**The pin:** a reserve funds toward 3,000 out of 1,000/month, and interest
+accrues at 0.5% on the PRIOR balance — 5.00 on the first 1,000, 10.03 on 2,005,
+then 15.00 a month once the target holds. Reading strictly backward is what
+keeps the reserve and the interest it earns from being mutually circular. The
+CREST reconciliation line is closed as a mechanism; the case that reconciles
+against CREST's own ~$4,606 still wants the reference.
 
 Related: §7.5, §7.41, §7.72 (shipped), §7.74, `docs/25`, `docs/28` §5.1, `docs/30` §1.
 
 ### 7.77 A covenant that is published but powerless: the DSCR cash trap
 
-*Roadmap: M2 (§7.78).*
+*Roadmap: M2 (§7.78). **The mechanism shipped 2026-08-30**; what remains is
+the benchmark against an external reference, which is `docs/20` §5.1's ask.*
 
 **What could not be expressed:** consequences. The energy pack publishes
 `dscr_periodic` per period (`packs/energy/statements.toml`, with its own
 argument that "a project finance covenant is tested EVERY PERIOD"), and
-`ppiaf_toll_highway` sizes a subsidy to hold 1.30x — but no model can say
+`ppiaf_toll_highway` sizes a subsidy to hold 1.30x — but no model could say
 what a real credit agreement says: below the trigger, distributions stop and
-cash traps in an account; at or above it for the cure period, the trap
-releases. The breach must be able to happen, and to end.
+cash traps in an account; at or above it **for the cure period**, the trap
+releases.
 
-**Why it waits on phase 5:** the trap is the repeatable machine (§7.36,
-`docs/28` §6) reading a settled ratio strictly backward, plus an account to
-hold what is trapped — the same pin as the credit trigger fixture in `docs/29`
-phase 5 ("trapped cash accumulating across a failed trigger and releasing on
-cure"), wearing project finance's vocabulary. When phase 5 lands, this is
-the energy/infrastructure case that proves it, and the benchmark ask is
-recorded in `docs/20` §5.
+**What shipped.** `fixtures/valid/dscr_cash_trap_cure_period` runs the whole
+covenant: NOI of 12,000 against 15,000 of debt service puts DSCR at 0.80
+against a 1.20 trigger, the machine reads settled cash strictly backward and
+traps at t=5, cash accumulates once NOI recovers (5,000 at t=7, 10,000 at
+t=8), and two consecutive good periods at t=9 release the trap in full.
 
-Related: §7.36, §7.74, `docs/28` §5.1 and §6, `docs/30` §2.
+**The cure period was the part that waited on §7.79**, and it is worth being
+precise about why. `trapped_cash_cure` has existed since the walk, and it
+cures on the *next* good period — which no credit agreement says. A cure
+period is a duration measured from the last breach, and a field recurrence
+counts consecutive good periods without any way to start over at each new
+one. `on enter trapped { set good_periods = 0 }` is the whole difference,
+and it is the same shape as the EBA probation the credit pack's machine
+carries (`docs/36` §2.1).
+
+**What remains: the external reference.** A fixture asserted against its own
+engine is the suite marking its own homework (`docs/20` §5.1). The mechanism
+is pinned; the covenant case wants a published credit agreement with a
+cash-trap schedule and figures to reconcile against, and none is vendored.
+That is a case-authoring ask with a sourcing problem, not a language gap.
+
+Related: §7.36, §7.74, §7.79, `docs/28` §5.1 and §6, `docs/30` §2,
+`docs/20` §5.1.
 
 ### 7.78 M2: what the walk unlocked, and what it retired
 

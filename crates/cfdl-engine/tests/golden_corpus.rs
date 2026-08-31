@@ -331,13 +331,35 @@ fn walk_matches_the_column_order() {
         // Comparing the two would assert that a new capability changes nothing,
         // which is the opposite of what it is for.
         let ir_value: serde_json::Value = serde_json::from_str(&raw).expect("blessed IR parses");
+        // An ACCOUNT BALANCE is the same category as a series read, and
+        // `docs/28` §5.1 says so: "`prev.<account>` is settled state, strictly
+        // backward under §4 — an OC/IC-style trigger tests a reserve balance
+        // the same way a delinquency edge tests realised rent." The column
+        // order settles all state before any waterfall has moved cash, so the
+        // balance reads zero there and the model means something different,
+        // exactly as it does for a series read.
+        //
+        // This clause was missing rather than decided against: the predicate
+        // predates accounts (`docs/28` §5.1, results_version 0.4), and no
+        // blessed model read a balance in logic until one did.
+        let accounts: Vec<String> = ir_value["accounts"]
+            .as_array()
+            .map(|xs| {
+                xs.iter()
+                    .filter_map(|a| a["name"].as_str().map(|n| format!("prev.{n}")))
+                    .collect()
+            })
+            .unwrap_or_default();
+        let reads_settled_state = |text: String| {
+            text.contains("series_") || accounts.iter().any(|a| text.contains(a.as_str()))
+        };
         let logic_reads_cash = ["events", "options"].iter().any(|key| {
             ir_value[key]
                 .as_array()
-                .is_some_and(|xs| xs.iter().any(|x| x.to_string().contains("series_")))
+                .is_some_and(|xs| xs.iter().any(|x| reads_settled_state(x.to_string())))
         }) || ir_value["entities"].as_array().is_some_and(|xs| {
             xs.iter()
-                .any(|e| e["rules"].to_string().contains("series_"))
+                .any(|e| reads_settled_state(e["rules"].to_string()))
         });
         if logic_reads_cash {
             walk_only += 1;

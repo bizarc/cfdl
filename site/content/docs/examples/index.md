@@ -41,6 +41,7 @@ Complete models for every pack, each checked period by period against an indepen
 - [Energy: merchant generator with capacity revenue](/docs/examples/energy-merchant-capacity) — A merchant generator earning both energy and capacity revenue, exposed to price rather than to a contracted offtake.
 - [Energy: solar PPA microgrid](/docs/examples/energy-solar-ppa-microgrid) — A solar microgrid selling under a long-term power purchase agreement, with production degradation and a fixed escalator on the contracted price.
 - [Energy: a tax-equity flip, with the date derived](/docs/examples/energy-tax-equity-flip) — A tax-equity partnership whose flip date is derived from the investor's return rather than stated, reconciled against an external model.
+- [Energy: a tax-equity flip, distributing from an account](/docs/examples/energy-tax-equity-flip-account) — The twin of tax_equity_flip, with the project's cash as streams settling into an account rather than a hand-carried field.
 - [Energy: utility-scale PV, single owner](/docs/examples/energy-utility-pv-singleowner) — A utility-scale photovoltaic project in a single-owner structure, carrying its own tax position rather than allocating to an investor.
 - [Energy: wind with PTC and MACRS](/docs/examples/energy-wind-ptc-macrs) — A wind project claiming the production tax credit over ten years and depreciating on the MACRS five-year schedule.
 

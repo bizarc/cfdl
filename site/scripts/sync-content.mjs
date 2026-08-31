@@ -648,6 +648,8 @@ const benchmarkTitles = {
   "energy/solar_ppa_microgrid": "Energy: solar PPA microgrid",
   "energy/utility_pv_singleowner": "Energy: utility-scale PV, single owner",
   "energy/tax_equity_flip": "Energy: a tax-equity flip, with the date derived",
+  "energy/tax_equity_flip_account":
+    "Energy: a tax-equity flip, distributing from an account",
   "energy/wind_ptc_macrs": "Energy: wind with PTC and MACRS",
   "opco/banker_dcf_conventions": "OpCo: banker DCF conventions",
   "opco/damodaran_fcff": "OpCo: free cash flow to firm",
