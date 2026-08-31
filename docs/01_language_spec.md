@@ -1229,6 +1229,20 @@ run monte_carlo trials 20000 seed 42
 Rules:
 - `monte_carlo` MUST provide `trials` and `seed`.
 
+A trial IS a complete deterministic run, and every metric it computed is
+published: each trial summary carries the same metric map the deterministic
+block carries — `model.*`, `domain.*` and `metric.*` alike — and
+`monte_carlo.metrics` summarises each name across the trials with a mean, a
+standard deviation, a minimum, a maximum and the full set of percentiles. A
+summary also states `trials`, the number that published that name, because not
+every trial publishes every one: `model.irr` exists only where the flows solve
+for a rate. A name a distribution cannot be taken over — a metric published as
+a string, or one whose kind changed between trials — is carried per trial and
+left out of the summary.
+
+Per-trial SERIES are not retained: a stochastic run's output is bounded by the
+model's metric names and its trial count, not by its horizon as well.
+
 ### 15.2 Engine-computed outputs
 Output metrics (NPV, IRR, DSCR, NOI, etc.) are computed by the engine based on the domain pack's output specification.
 
@@ -1255,9 +1269,10 @@ Rules:
 - Metrics compose in declaration order — the same rule waterfalls follow
   (§10.5) — so the dependency is an order rather than a graph. A forward or
   circular reference is refused (`E1354`).
-- Every metric is published as `metric.<name>` in `deterministic.metrics` and
-  in every scenario summary, so a scenario grid can assert a derived figure
-  per column and not only the engine's built-ins.
+- Every metric is published as `metric.<name>` in `deterministic.metrics`, in
+  every scenario summary, and in every Monte Carlo trial summary, so a
+  scenario grid can assert a derived figure per column and a stochastic run
+  gives that figure a distribution — not only the engine's built-ins.
 
 **A participant's realized return.** Two folds are available in a metric and
 nowhere else:

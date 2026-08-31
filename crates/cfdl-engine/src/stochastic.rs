@@ -140,6 +140,41 @@ pub(crate) fn stats_median(values: &[f64]) -> f64 {
     }
 }
 
+/// A quantile of a CONTINUOUS sample, by linear interpolation between the two
+/// order statistics that bracket it — the definition R calls type 7 and the
+/// one Excel's PERCENTILE uses, so a published p95 agrees with the figure an
+/// analyst reaches for it by hand.
+///
+/// Interpolating is right here and wrong for `period_distribution` above, and
+/// the difference is the quantity, not the code: a period is an observation
+/// that exists or does not, so month 9.5 is not an answer; an NPV is a
+/// continuous amount, and the sample is a draw from a distribution rather than
+/// the population itself.
+///
+/// At q = 0.5 this reduces exactly to `stats_median` — the midpoint of the two
+/// central values for an even sample, the central value for an odd one — which
+/// is what keeps every p50 already published identical to what it was.
+pub(crate) fn stats_quantile(sorted: &[f64], q: f64) -> f64 {
+    debug_assert!(
+        sorted.windows(2).all(|w| w[0] <= w[1] || w[0].is_nan()),
+        "must be sorted"
+    );
+    if sorted.is_empty() {
+        return 0.0;
+    }
+    if sorted.len() == 1 {
+        return sorted[0];
+    }
+    let position = q.clamp(0.0, 1.0) * (sorted.len() - 1) as f64;
+    let lower = position.floor() as usize;
+    let upper = position.ceil() as usize;
+    if lower == upper {
+        return sorted[lower];
+    }
+    let weight = position - lower as f64;
+    sorted[lower] + (sorted[upper] - sorted[lower]) * weight
+}
+
 pub(crate) fn stats_stddev_population(values: &[f64]) -> f64 {
     if values.is_empty() {
         return 0.0;
@@ -198,4 +233,110 @@ pub(crate) fn period_distribution(sorted: &[usize]) -> PeriodDistribution {
 /// platforms, which a bare f64 division is not guaranteed to be in its tail.
 pub(crate) fn round_share(value: f64) -> f64 {
     (value * 1_000_000.0).round() / 1_000_000.0
+}
+
+/// What one metric NAME drew across the trials of a Monte Carlo run.
+///
+/// A trial is a complete deterministic run, so every name the base run
+/// publishes — `model.irr` and `model.moic`, each `stream.*.total` and
+/// `entity.*.total`, every `domain.*` KPI and every metric the model declared
+/// — is computed in each trial and can carry a distribution. `docs/13` §7.87
+/// records what happened before: the loop built a fresh one-entry map holding
+/// `model.npv` and dropped the rest, and since per-trial SERIES are
+/// (reasonably) not retained, whatever the loop did not carry out was
+/// unrecoverable after it.
+///
+/// Two things a sample can be that a distribution cannot be taken over, and
+/// both are recorded rather than guessed at: a metric published as a STRING,
+/// and a metric whose kind CHANGED between trials. Either makes the name
+/// unsummarisable, and the per-trial values still publish — the trial rows are
+/// the record, this is only the summary over them.
+#[derive(Default)]
+pub(crate) struct MetricSamples {
+    values: Vec<f64>,
+    /// Set from the first Money sample and required to match after it. `None`
+    /// means every sample so far was a bare number.
+    currency: Option<String>,
+    unsummarisable: bool,
+}
+
+impl MetricSamples {
+    pub(crate) fn observe(&mut self, value: &Scalar) {
+        match value {
+            Scalar::Number(number) => {
+                if self.currency.is_some() {
+                    self.unsummarisable = true;
+                    return;
+                }
+                self.values.push(*number);
+            }
+            Scalar::Money(money) => {
+                match &self.currency {
+                    Some(currency) if *currency != money.currency => {
+                        self.unsummarisable = true;
+                        return;
+                    }
+                    Some(_) => {}
+                    None => {
+                        // A number seen first, then money: the same mixed-kind
+                        // objection, from the other side.
+                        if !self.values.is_empty() {
+                            self.unsummarisable = true;
+                            return;
+                        }
+                        self.currency = Some(money.currency.clone());
+                    }
+                }
+                self.values.push(money.amount);
+            }
+            // A metric that is a string has no mean and no p95. It is not an
+            // error — it still reaches every trial row.
+            Scalar::String(_) => self.unsummarisable = true,
+        }
+    }
+
+    /// The distribution over the trials that published this name, or `None`
+    /// where a distribution is not a thing this metric has.
+    ///
+    /// Every percentile the schema defines is filled. The engine used to
+    /// publish mean, stdev, min, max and p50 and hard-code p01 through p99
+    /// `None` — a section whose whole subject is dispersion, declining to
+    /// state its tails.
+    pub(crate) fn summarise(&self) -> Option<MetricSummary> {
+        if self.unsummarisable || self.values.is_empty() {
+            return None;
+        }
+        let mut sorted = self.values.clone();
+        sorted.sort_by(|a, b| a.total_cmp(b));
+        let scalar = |amount: f64| match &self.currency {
+            Some(currency) => Scalar::Money(Money {
+                amount: round_amount(amount),
+                currency: currency.clone(),
+            }),
+            None => Scalar::Number(round_amount(amount)),
+        };
+        let at = |q: f64| Some(scalar(stats_quantile(&sorted, q)));
+        Some(MetricSummary {
+            r#type: match self.currency {
+                Some(_) => "money".to_string(),
+                None => "number".to_string(),
+            },
+            trials: Some(self.values.len() as u32),
+            mean: scalar(stats_mean(&self.values)),
+            stdev: Some(scalar(stats_stddev_population(&self.values))),
+            min: Some(scalar(sorted[0])),
+            max: Some(scalar(sorted[sorted.len() - 1])),
+            p01: at(0.01),
+            p05: at(0.05),
+            p10: at(0.10),
+            p25: at(0.25),
+            // Interpolated at q = 0.5, which is `stats_median` exactly — the
+            // NPV p50 every blessed golden already carries does not move.
+            p50: scalar(stats_quantile(&sorted, 0.50)),
+            p75: at(0.75),
+            p90: at(0.90),
+            p95: at(0.95),
+            p99: at(0.99),
+        })
+    }
 }

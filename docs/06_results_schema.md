@@ -30,8 +30,8 @@ against it by `make results-schema`.
   "properties": {
     "results_version": {
       "type": "string",
-      "const": "0.8",
-      "description": "Schema version of this document. 0.8 adds `slices` — declared partial selections with their matched streams, net series and figures, and no reconciliation block by design. 0.7 publishes the model's entity graph (`graph`) and attributes each stream series to its owning entity and category. 0.6 nests an act's own acts under it as `children`. 0.5 added the machine's `transition` journal action. 0.4 added the account journal actions. 0.3 added `ledger_hash`, the optional `inputs` section, and `category` on IR streams."
+      "const": "0.9",
+      "description": "Schema version of this document. 0.9 carries every metric a Monte Carlo trial computed into its trial summary, summarises each of them across the trials with the full set of percentiles, and adds `trials` to a metric summary — the count of trials that published that name. 0.8 adds `slices` — declared partial selections with their matched streams, net series and figures, and no reconciliation block by design. 0.7 publishes the model's entity graph (`graph`) and attributes each stream series to its owning entity and category. 0.6 nests an act's own acts under it as `children`. 0.5 added the machine's `transition` journal action. 0.4 added the account journal actions. 0.3 added `ledger_hash`, the optional `inputs` section, and `category` on IR streams."
     },
     "model_hash": {
       "type": "string",
@@ -560,6 +560,11 @@ against it by `make results-schema`.
             "number",
             "money"
           ]
+        },
+        "trials": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "How many trials published this metric. Not every trial publishes every name — `model.irr` exists only where the flows solve for a rate — so without this a mean over three trials and a mean over five hundred read identically."
         },
         "mean": {
           "$ref": "#/$defs/Scalar"

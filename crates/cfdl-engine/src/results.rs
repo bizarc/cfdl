@@ -1125,6 +1125,12 @@ pub struct RuntimeError {
 #[derive(Debug, Clone, Serialize)]
 pub struct MetricSummary {
     pub r#type: String,
+    /// How many trials published this metric. Not every trial publishes every
+    /// name: `model.irr` exists only where the flows solve for a rate, so a
+    /// mean over three trials and a mean over five hundred would otherwise
+    /// read identically. `docs/13` §7.87.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub trials: Option<u32>,
     pub mean: Scalar,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub stdev: Option<Scalar>,

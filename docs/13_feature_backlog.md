@@ -2032,7 +2032,7 @@ language could not express the multiple. It can, and does.
 
 ---
 
-### 7.85 The valuation plane cannot read what the results plane publishes
+### 7.85 The valuation plane cannot read what it itself publishes
 
 *Belongs with the language and engine (section 5). Found with §7.86 and §7.87
 in one investigation; the three are separable and this is the widest.*
@@ -2062,13 +2062,22 @@ engine's own stance is that a metric that fails to evaluate is fatal, because
 "a missing key reads as 'not run' rather than 'not defined'"; a metric reading
 a name nothing binds deserves the same severity, and today gets none.
 
+**This is not a plane boundary, which the entry's first title implied by
+calling the published document a "results plane".** `docs/28` §2 names two
+planes and only two: the causal plane, and the VALUATION plane — the results
+stage, netting, rollups, discounting, metrics and statements alike. Every
+name listed above is computed in the valuation plane, published by the
+valuation plane, and unreachable from a metric evaluated in that same plane.
+A missing binding inside one plane is a worse finding than a boundary
+between two, because no rule was being upheld.
+
 **The fix must not recreate the August 2026 naming ambiguity.** Expression
-names and results names are different dialects (`ops.rev` vs
+names and published results keys are different dialects (`ops.rev` vs
 `stream.ops.rev`), and `docs/03` records what happened when documentation
 conflated them: "a model that followed it got an empty pot rather than a
 diagnostic." Merging results keys into `env.series` reopens that. A distinct
-results-plane accessor keeps the plane explicit at the call site and leaves
-every existing metric meaning what it meant.
+accessor for the published keys keeps the dialect explicit at the call site
+and leaves every existing metric meaning what it meant.
 
 Related: §7.43 (ownership is the other half of reaching results from an
 expression), §7.55 (the declaration surface these reads would serve), §7.84
@@ -2146,6 +2155,38 @@ per-period series), and a decision about stochastic exports should cover both.
 Provenance: found checking the claim "the deterministic results are exported
 for each MC trial" against the trial loop, 30 August 2026. The claim is
 false today and one line from true.
+
+**Status, 31 August 2026 — shipped, `results_version` 0.9.** The trial loop
+carries `trial_run.metrics` into the trial summary, so a trial's record is now
+the same metric map the deterministic block publishes: `model.irr`,
+`model.moic`, every `stream.*.total` and `entity.*.total`, each `domain.*` KPI
+and every metric the model declared. `monte_carlo.metrics` summarises each name
+present rather than the one that was hard-coded, and fills p01 through p99 —
+the section whose whole subject is dispersion had been declining to state its
+tails. Percentiles interpolate linearly between order statistics (R type 7,
+Excel's `PERCENTILE`), which at q = 0.5 is exactly the median already
+published: every blessed NPV figure is unchanged, and the goldens show the
+change as purely additive. `period_distribution` keeps nearest-rank, because a
+period is an observation rather than a continuous amount.
+
+Two things the entry did not anticipate, both found by building it. Not every
+trial publishes every name — `model.irr` exists only where the flows solve for
+a rate — so a summary states `trials`, the count it was taken over, or a mean
+over three trials and a mean over five hundred would read identically. And a
+name a distribution cannot be taken over (a string, or a kind that changed
+between trials) is carried per trial and omitted from the summary rather than
+guessed at.
+
+The reach is wider than metrics, because of what shipped beside it: a trial row
+keys `entity.<symbol>.total`, and the published entity graph (§7.43, §7.91,
+`results_version` 0.7) keys `graph.entities[].symbol` — so a per-entity
+distribution is now readable from results alone, on the ownership axis rather
+than by inspecting names. Fixtures: `valid/monte_carlo_metric_distribution`
+(the declared metric, the IRR, the MoIC and the rolled-up container total, all
+distributed) and `valid/monte_carlo_partial_metric` (`model.irr` in 20 trials
+of 24, which is what `trials` exists to say). §7.23's mirror-image gap — the
+scenario plane publishes metrics but no per-period series — is untouched and
+still open.
 
 ---
 
@@ -2303,7 +2344,7 @@ carries the selection in its lineage the way a metric carries its formula.
 The precedent is Palantir's object set — a saved, composable, named selection
 that functions and views consume — which is the concept the platform layer's
 "ontology slice" already borrows for packages; this brings the same idea to
-the results plane. The EVS spelling ("slice: a subset of the graph relevant
+what the valuation plane publishes. The EVS spelling ("slice: a subset of the graph relevant
 to a specific valuation... portable and self-contained") is the right one and
 the word should be registered in `docs/terminology.toml` beside `statement`
 and `metric` when this lands — noting that `subtotal` and `category`, both

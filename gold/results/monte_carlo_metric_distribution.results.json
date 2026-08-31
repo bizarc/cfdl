@@ -1,0 +1,2217 @@
+{
+  "results_version": "0.9",
+  "model_hash": "d7b7a700ded4a4cade8b160ab9e15afac4761e4a01aeb6bdca87ac4cda5ff6ed",
+  "ledger_hash": "1b764ff626d0c0a528ba1e4e66b903b196468e8d2717097465d1223b3863c86c",
+  "engine": {
+    "name": "cfdl-engine",
+    "version": "0.7.0"
+  },
+  "warnings": [],
+  "inputs": {
+    "resolved": {
+      "exit_price": 1200.0
+    }
+  },
+  "deterministic": {
+    "status": "ok",
+    "metrics": {
+      "entity.asset.holding.total": {
+        "amount": 520.0,
+        "currency": "USD"
+      },
+      "entity.container.fund.total": {
+        "amount": 520.0,
+        "currency": "USD"
+      },
+      "metric.exit_multiple": 1.52,
+      "metric.invested": 1000.0,
+      "metric.proceeds": 1520.0,
+      "model.irr": 0.12174,
+      "model.moic": 1.52,
+      "model.npv": {
+        "amount": 136.116639,
+        "currency": "USD"
+      },
+      "model.payback_periods": 4.0,
+      "model.payback_years": 5.0,
+      "model.total": {
+        "amount": 520.0,
+        "currency": "USD"
+      },
+      "model.wal_years": 4.684211,
+      "run.annual_discount_rate": 0.08,
+      "run.periods_per_year": 1.0,
+      "stream.deal.acquisition.total": {
+        "amount": -1000.0,
+        "currency": "USD"
+      },
+      "stream.deal.exit.total": {
+        "amount": 1200.0,
+        "currency": "USD"
+      },
+      "stream.deal.rent.total": {
+        "amount": 320.0,
+        "currency": "USD"
+      }
+    },
+    "series": {
+      "entity.asset.holding.net_cash_flow": {
+        "index": {
+          "calendar": "annual",
+          "start": "2026-01-01",
+          "periods": 5
+        },
+        "values": [
+          {
+            "amount": -1000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 80.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 80.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 80.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 1280.0,
+            "currency": "USD"
+          }
+        ]
+      },
+      "entity.container.fund.net_cash_flow": {
+        "index": {
+          "calendar": "annual",
+          "start": "2026-01-01",
+          "periods": 5
+        },
+        "values": [
+          {
+            "amount": -1000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 80.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 80.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 80.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 1280.0,
+            "currency": "USD"
+          }
+        ]
+      },
+      "model.net_cash_flow": {
+        "index": {
+          "calendar": "annual",
+          "start": "2026-01-01",
+          "periods": 5
+        },
+        "values": [
+          {
+            "amount": -1000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 80.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 80.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 80.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 1280.0,
+            "currency": "USD"
+          }
+        ]
+      },
+      "stream.deal.acquisition": {
+        "index": {
+          "calendar": "annual",
+          "start": "2026-01-01",
+          "periods": 5
+        },
+        "offset": 1.0,
+        "entity": "asset.holding",
+        "category": "investing.acquisition.purchase",
+        "values": [
+          {
+            "amount": -1000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          }
+        ]
+      },
+      "stream.deal.exit": {
+        "index": {
+          "calendar": "annual",
+          "start": "2026-01-01",
+          "periods": 5
+        },
+        "offset": 1.0,
+        "entity": "asset.holding",
+        "category": "investing.disposition.sale",
+        "values": [
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 1200.0,
+            "currency": "USD"
+          }
+        ]
+      },
+      "stream.deal.rent": {
+        "index": {
+          "calendar": "annual",
+          "start": "2026-01-01",
+          "periods": 5
+        },
+        "offset": 1.0,
+        "entity": "asset.holding",
+        "category": "operating.revenue.other",
+        "values": [
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 80.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 80.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 80.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 80.0,
+            "currency": "USD"
+          }
+        ]
+      }
+    }
+  },
+  "scenarios": {
+    "status": "not_run",
+    "summaries": []
+  },
+  "monte_carlo": {
+    "status": "ok",
+    "trials": 32,
+    "seed": 20260831,
+    "metrics": {
+      "entity.asset.holding.total": {
+        "type": "money",
+        "trials": 32,
+        "mean": {
+          "amount": 534.065709,
+          "currency": "USD"
+        },
+        "stdev": {
+          "amount": 175.442939,
+          "currency": "USD"
+        },
+        "min": {
+          "amount": 267.009745,
+          "currency": "USD"
+        },
+        "max": {
+          "amount": 814.090378,
+          "currency": "USD"
+        },
+        "p01": {
+          "amount": 270.069461,
+          "currency": "USD"
+        },
+        "p05": {
+          "amount": 284.447497,
+          "currency": "USD"
+        },
+        "p10": {
+          "amount": 293.017445,
+          "currency": "USD"
+        },
+        "p25": {
+          "amount": 373.462135,
+          "currency": "USD"
+        },
+        "p50": {
+          "amount": 553.046921,
+          "currency": "USD"
+        },
+        "p75": {
+          "amount": 688.731205,
+          "currency": "USD"
+        },
+        "p90": {
+          "amount": 768.289523,
+          "currency": "USD"
+        },
+        "p95": {
+          "amount": 779.996762,
+          "currency": "USD"
+        },
+        "p99": {
+          "amount": 805.082591,
+          "currency": "USD"
+        }
+      },
+      "entity.container.fund.total": {
+        "type": "money",
+        "trials": 32,
+        "mean": {
+          "amount": 534.065709,
+          "currency": "USD"
+        },
+        "stdev": {
+          "amount": 175.442939,
+          "currency": "USD"
+        },
+        "min": {
+          "amount": 267.009745,
+          "currency": "USD"
+        },
+        "max": {
+          "amount": 814.090378,
+          "currency": "USD"
+        },
+        "p01": {
+          "amount": 270.069461,
+          "currency": "USD"
+        },
+        "p05": {
+          "amount": 284.447497,
+          "currency": "USD"
+        },
+        "p10": {
+          "amount": 293.017445,
+          "currency": "USD"
+        },
+        "p25": {
+          "amount": 373.462135,
+          "currency": "USD"
+        },
+        "p50": {
+          "amount": 553.046921,
+          "currency": "USD"
+        },
+        "p75": {
+          "amount": 688.731205,
+          "currency": "USD"
+        },
+        "p90": {
+          "amount": 768.289523,
+          "currency": "USD"
+        },
+        "p95": {
+          "amount": 779.996762,
+          "currency": "USD"
+        },
+        "p99": {
+          "amount": 805.082591,
+          "currency": "USD"
+        }
+      },
+      "metric.exit_multiple": {
+        "type": "number",
+        "trials": 32,
+        "mean": 1.534066,
+        "stdev": 0.175443,
+        "min": 1.26701,
+        "max": 1.81409,
+        "p01": 1.27007,
+        "p05": 1.284447,
+        "p10": 1.293017,
+        "p25": 1.373462,
+        "p50": 1.553047,
+        "p75": 1.688731,
+        "p90": 1.768289,
+        "p95": 1.779997,
+        "p99": 1.805082
+      },
+      "metric.invested": {
+        "type": "number",
+        "trials": 32,
+        "mean": 1000.0,
+        "stdev": 0.0,
+        "min": 1000.0,
+        "max": 1000.0,
+        "p01": 1000.0,
+        "p05": 1000.0,
+        "p10": 1000.0,
+        "p25": 1000.0,
+        "p50": 1000.0,
+        "p75": 1000.0,
+        "p90": 1000.0,
+        "p95": 1000.0,
+        "p99": 1000.0
+      },
+      "metric.proceeds": {
+        "type": "number",
+        "trials": 32,
+        "mean": 1534.065709,
+        "stdev": 175.442939,
+        "min": 1267.009745,
+        "max": 1814.090378,
+        "p01": 1270.069461,
+        "p05": 1284.447497,
+        "p10": 1293.017445,
+        "p25": 1373.462135,
+        "p50": 1553.046921,
+        "p75": 1688.731205,
+        "p90": 1768.289523,
+        "p95": 1779.996762,
+        "p99": 1805.082591
+      },
+      "model.irr": {
+        "type": "number",
+        "trials": 32,
+        "mean": 0.122814,
+        "stdev": 0.03457,
+        "min": 0.06803,
+        "max": 0.175372,
+        "p01": 0.068731,
+        "p05": 0.072013,
+        "p10": 0.073958,
+        "p25": 0.091649,
+        "p50": 0.128104,
+        "p75": 0.15347,
+        "p90": 0.167518,
+        "p95": 0.169543,
+        "p99": 0.173834
+      },
+      "model.moic": {
+        "type": "number",
+        "trials": 32,
+        "mean": 1.534066,
+        "stdev": 0.175443,
+        "min": 1.26701,
+        "max": 1.81409,
+        "p01": 1.27007,
+        "p05": 1.284447,
+        "p10": 1.293017,
+        "p25": 1.373462,
+        "p50": 1.553047,
+        "p75": 1.688731,
+        "p90": 1.768289,
+        "p95": 1.779997,
+        "p99": 1.805082
+      },
+      "model.npv": {
+        "type": "money",
+        "trials": 32,
+        "mean": {
+          "amount": 145.689524,
+          "currency": "USD"
+        },
+        "stdev": {
+          "amount": 119.403516,
+          "currency": "USD"
+        },
+        "min": {
+          "amount": -36.064277,
+          "currency": "USD"
+        },
+        "max": {
+          "amount": 336.269609,
+          "currency": "USD"
+        },
+        "p01": {
+          "amount": -33.981886,
+          "currency": "USD"
+        },
+        "p05": {
+          "amount": -24.196436,
+          "currency": "USD"
+        },
+        "p10": {
+          "amount": -18.363873,
+          "currency": "USD"
+        },
+        "p25": {
+          "amount": 36.385431,
+          "currency": "USD"
+        },
+        "p50": {
+          "amount": 158.607819,
+          "currency": "USD"
+        },
+        "p75": {
+          "amount": 250.952262,
+          "currency": "USD"
+        },
+        "p90": {
+          "amount": 305.098316,
+          "currency": "USD"
+        },
+        "p95": {
+          "amount": 313.066067,
+          "currency": "USD"
+        },
+        "p99": {
+          "amount": 330.13906,
+          "currency": "USD"
+        }
+      },
+      "model.payback_periods": {
+        "type": "number",
+        "trials": 32,
+        "mean": 4.0,
+        "stdev": 0.0,
+        "min": 4.0,
+        "max": 4.0,
+        "p01": 4.0,
+        "p05": 4.0,
+        "p10": 4.0,
+        "p25": 4.0,
+        "p50": 4.0,
+        "p75": 4.0,
+        "p90": 4.0,
+        "p95": 4.0,
+        "p99": 4.0
+      },
+      "model.payback_years": {
+        "type": "number",
+        "trials": 32,
+        "mean": 5.0,
+        "stdev": 0.0,
+        "min": 5.0,
+        "max": 5.0,
+        "p01": 5.0,
+        "p05": 5.0,
+        "p10": 5.0,
+        "p25": 5.0,
+        "p50": 5.0,
+        "p75": 5.0,
+        "p90": 5.0,
+        "p95": 5.0,
+        "p99": 5.0
+      },
+      "model.total": {
+        "type": "money",
+        "trials": 32,
+        "mean": {
+          "amount": 534.065709,
+          "currency": "USD"
+        },
+        "stdev": {
+          "amount": 175.442939,
+          "currency": "USD"
+        },
+        "min": {
+          "amount": 267.009745,
+          "currency": "USD"
+        },
+        "max": {
+          "amount": 814.090378,
+          "currency": "USD"
+        },
+        "p01": {
+          "amount": 270.069461,
+          "currency": "USD"
+        },
+        "p05": {
+          "amount": 284.447497,
+          "currency": "USD"
+        },
+        "p10": {
+          "amount": 293.017445,
+          "currency": "USD"
+        },
+        "p25": {
+          "amount": 373.462135,
+          "currency": "USD"
+        },
+        "p50": {
+          "amount": 553.046921,
+          "currency": "USD"
+        },
+        "p75": {
+          "amount": 688.731205,
+          "currency": "USD"
+        },
+        "p90": {
+          "amount": 768.289523,
+          "currency": "USD"
+        },
+        "p95": {
+          "amount": 779.996762,
+          "currency": "USD"
+        },
+        "p99": {
+          "amount": 805.082591,
+          "currency": "USD"
+        }
+      },
+      "model.wal_years": {
+        "type": "number",
+        "trials": 32,
+        "mean": 4.682896,
+        "stdev": 0.03696,
+        "min": 4.621155,
+        "max": 4.735405,
+        "p01": 4.622063,
+        "p05": 4.626288,
+        "p10": 4.628773,
+        "p25": 4.650483,
+        "p50": 4.690741,
+        "p75": 4.715758,
+        "p90": 4.728544,
+        "p95": 4.730335,
+        "p99": 4.73407
+      },
+      "run.annual_discount_rate": {
+        "type": "number",
+        "trials": 32,
+        "mean": 0.08,
+        "stdev": 0.0,
+        "min": 0.08,
+        "max": 0.08,
+        "p01": 0.08,
+        "p05": 0.08,
+        "p10": 0.08,
+        "p25": 0.08,
+        "p50": 0.08,
+        "p75": 0.08,
+        "p90": 0.08,
+        "p95": 0.08,
+        "p99": 0.08
+      },
+      "run.periods_per_year": {
+        "type": "number",
+        "trials": 32,
+        "mean": 1.0,
+        "stdev": 0.0,
+        "min": 1.0,
+        "max": 1.0,
+        "p01": 1.0,
+        "p05": 1.0,
+        "p10": 1.0,
+        "p25": 1.0,
+        "p50": 1.0,
+        "p75": 1.0,
+        "p90": 1.0,
+        "p95": 1.0,
+        "p99": 1.0
+      },
+      "stream.deal.acquisition.total": {
+        "type": "money",
+        "trials": 32,
+        "mean": {
+          "amount": -1000.0,
+          "currency": "USD"
+        },
+        "stdev": {
+          "amount": 0.0,
+          "currency": "USD"
+        },
+        "min": {
+          "amount": -1000.0,
+          "currency": "USD"
+        },
+        "max": {
+          "amount": -1000.0,
+          "currency": "USD"
+        },
+        "p01": {
+          "amount": -1000.0,
+          "currency": "USD"
+        },
+        "p05": {
+          "amount": -1000.0,
+          "currency": "USD"
+        },
+        "p10": {
+          "amount": -1000.0,
+          "currency": "USD"
+        },
+        "p25": {
+          "amount": -1000.0,
+          "currency": "USD"
+        },
+        "p50": {
+          "amount": -1000.0,
+          "currency": "USD"
+        },
+        "p75": {
+          "amount": -1000.0,
+          "currency": "USD"
+        },
+        "p90": {
+          "amount": -1000.0,
+          "currency": "USD"
+        },
+        "p95": {
+          "amount": -1000.0,
+          "currency": "USD"
+        },
+        "p99": {
+          "amount": -1000.0,
+          "currency": "USD"
+        }
+      },
+      "stream.deal.exit.total": {
+        "type": "money",
+        "trials": 32,
+        "mean": {
+          "amount": 1214.065709,
+          "currency": "USD"
+        },
+        "stdev": {
+          "amount": 175.442939,
+          "currency": "USD"
+        },
+        "min": {
+          "amount": 947.009745,
+          "currency": "USD"
+        },
+        "max": {
+          "amount": 1494.090378,
+          "currency": "USD"
+        },
+        "p01": {
+          "amount": 950.069461,
+          "currency": "USD"
+        },
+        "p05": {
+          "amount": 964.447497,
+          "currency": "USD"
+        },
+        "p10": {
+          "amount": 973.017445,
+          "currency": "USD"
+        },
+        "p25": {
+          "amount": 1053.462135,
+          "currency": "USD"
+        },
+        "p50": {
+          "amount": 1233.046921,
+          "currency": "USD"
+        },
+        "p75": {
+          "amount": 1368.731205,
+          "currency": "USD"
+        },
+        "p90": {
+          "amount": 1448.289523,
+          "currency": "USD"
+        },
+        "p95": {
+          "amount": 1459.996762,
+          "currency": "USD"
+        },
+        "p99": {
+          "amount": 1485.082591,
+          "currency": "USD"
+        }
+      },
+      "stream.deal.rent.total": {
+        "type": "money",
+        "trials": 32,
+        "mean": {
+          "amount": 320.0,
+          "currency": "USD"
+        },
+        "stdev": {
+          "amount": 0.0,
+          "currency": "USD"
+        },
+        "min": {
+          "amount": 320.0,
+          "currency": "USD"
+        },
+        "max": {
+          "amount": 320.0,
+          "currency": "USD"
+        },
+        "p01": {
+          "amount": 320.0,
+          "currency": "USD"
+        },
+        "p05": {
+          "amount": 320.0,
+          "currency": "USD"
+        },
+        "p10": {
+          "amount": 320.0,
+          "currency": "USD"
+        },
+        "p25": {
+          "amount": 320.0,
+          "currency": "USD"
+        },
+        "p50": {
+          "amount": 320.0,
+          "currency": "USD"
+        },
+        "p75": {
+          "amount": 320.0,
+          "currency": "USD"
+        },
+        "p90": {
+          "amount": 320.0,
+          "currency": "USD"
+        },
+        "p95": {
+          "amount": 320.0,
+          "currency": "USD"
+        },
+        "p99": {
+          "amount": 320.0,
+          "currency": "USD"
+        }
+      }
+    },
+    "trial_summaries": [
+      {
+        "trial": 0,
+        "metrics": {
+          "entity.asset.holding.total": {
+            "amount": 349.558037,
+            "currency": "USD"
+          },
+          "entity.container.fund.total": {
+            "amount": 349.558037,
+            "currency": "USD"
+          },
+          "metric.exit_multiple": 1.349558,
+          "metric.invested": 1000.0,
+          "metric.proceeds": 1349.558037,
+          "model.irr": 0.086497,
+          "model.moic": 1.349558,
+          "model.npv": {
+            "amount": 20.116703,
+            "currency": "USD"
+          },
+          "model.payback_periods": 4.0,
+          "model.payback_years": 5.0,
+          "model.total": {
+            "amount": 349.558037,
+            "currency": "USD"
+          },
+          "model.wal_years": 4.644328,
+          "run.annual_discount_rate": 0.08,
+          "run.periods_per_year": 1.0,
+          "stream.deal.acquisition.total": {
+            "amount": -1000.0,
+            "currency": "USD"
+          },
+          "stream.deal.exit.total": {
+            "amount": 1029.558037,
+            "currency": "USD"
+          },
+          "stream.deal.rent.total": {
+            "amount": 320.0,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 1,
+        "metrics": {
+          "entity.asset.holding.total": {
+            "amount": 775.876203,
+            "currency": "USD"
+          },
+          "entity.container.fund.total": {
+            "amount": 775.876203,
+            "currency": "USD"
+          },
+          "metric.exit_multiple": 1.775876,
+          "metric.invested": 1000.0,
+          "metric.proceeds": 1775.876203,
+          "model.irr": 0.168833,
+          "model.moic": 1.775876,
+          "model.npv": {
+            "amount": 310.261684,
+            "currency": "USD"
+          },
+          "model.payback_periods": 4.0,
+          "model.payback_years": 5.0,
+          "model.total": {
+            "amount": 775.876203,
+            "currency": "USD"
+          },
+          "model.wal_years": 4.729711,
+          "run.annual_discount_rate": 0.08,
+          "run.periods_per_year": 1.0,
+          "stream.deal.acquisition.total": {
+            "amount": -1000.0,
+            "currency": "USD"
+          },
+          "stream.deal.exit.total": {
+            "amount": 1455.876203,
+            "currency": "USD"
+          },
+          "stream.deal.rent.total": {
+            "amount": 320.0,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 2,
+        "metrics": {
+          "entity.asset.holding.total": {
+            "amount": 492.560318,
+            "currency": "USD"
+          },
+          "entity.container.fund.total": {
+            "amount": 492.560318,
+            "currency": "USD"
+          },
+          "metric.exit_multiple": 1.49256,
+          "metric.invested": 1000.0,
+          "metric.proceeds": 1492.560318,
+          "model.irr": 0.116302,
+          "model.moic": 1.49256,
+          "model.npv": {
+            "amount": 117.441653,
+            "currency": "USD"
+          },
+          "model.payback_periods": 4.0,
+          "model.payback_years": 5.0,
+          "model.total": {
+            "amount": 492.560318,
+            "currency": "USD"
+          },
+          "model.wal_years": 4.678405,
+          "run.annual_discount_rate": 0.08,
+          "run.periods_per_year": 1.0,
+          "stream.deal.acquisition.total": {
+            "amount": -1000.0,
+            "currency": "USD"
+          },
+          "stream.deal.exit.total": {
+            "amount": 1172.560318,
+            "currency": "USD"
+          },
+          "stream.deal.rent.total": {
+            "amount": 320.0,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 3,
+        "metrics": {
+          "entity.asset.holding.total": {
+            "amount": 701.620337,
+            "currency": "USD"
+          },
+          "entity.container.fund.total": {
+            "amount": 701.620337,
+            "currency": "USD"
+          },
+          "metric.exit_multiple": 1.70162,
+          "metric.invested": 1000.0,
+          "metric.proceeds": 1701.620337,
+          "model.irr": 0.155785,
+          "model.moic": 1.70162,
+          "model.npv": {
+            "amount": 259.724389,
+            "currency": "USD"
+          },
+          "model.payback_periods": 4.0,
+          "model.payback_years": 5.0,
+          "model.total": {
+            "amount": 701.620337,
+            "currency": "USD"
+          },
+          "model.wal_years": 4.717916,
+          "run.annual_discount_rate": 0.08,
+          "run.periods_per_year": 1.0,
+          "stream.deal.acquisition.total": {
+            "amount": -1000.0,
+            "currency": "USD"
+          },
+          "stream.deal.exit.total": {
+            "amount": 1381.620337,
+            "currency": "USD"
+          },
+          "stream.deal.rent.total": {
+            "amount": 320.0,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 4,
+        "metrics": {
+          "entity.asset.holding.total": {
+            "amount": 591.437351,
+            "currency": "USD"
+          },
+          "entity.container.fund.total": {
+            "amount": 591.437351,
+            "currency": "USD"
+          },
+          "metric.exit_multiple": 1.591437,
+          "metric.invested": 1000.0,
+          "metric.proceeds": 1591.437351,
+          "model.irr": 0.135519,
+          "model.moic": 1.591437,
+          "model.npv": {
+            "amount": 184.7357,
+            "currency": "USD"
+          },
+          "model.payback_periods": 4.0,
+          "model.payback_years": 5.0,
+          "model.total": {
+            "amount": 591.437351,
+            "currency": "USD"
+          },
+          "model.wal_years": 4.698386,
+          "run.annual_discount_rate": 0.08,
+          "run.periods_per_year": 1.0,
+          "stream.deal.acquisition.total": {
+            "amount": -1000.0,
+            "currency": "USD"
+          },
+          "stream.deal.exit.total": {
+            "amount": 1271.437351,
+            "currency": "USD"
+          },
+          "stream.deal.rent.total": {
+            "amount": 320.0,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 5,
+        "metrics": {
+          "entity.asset.holding.total": {
+            "amount": 381.430168,
+            "currency": "USD"
+          },
+          "entity.container.fund.total": {
+            "amount": 381.430168,
+            "currency": "USD"
+          },
+          "metric.exit_multiple": 1.38143,
+          "metric.invested": 1000.0,
+          "metric.proceeds": 1381.430168,
+          "model.irr": 0.093366,
+          "model.moic": 1.38143,
+          "model.npv": {
+            "amount": 41.80834,
+            "currency": "USD"
+          },
+          "model.payback_periods": 4.0,
+          "model.payback_years": 5.0,
+          "model.total": {
+            "amount": 381.430168,
+            "currency": "USD"
+          },
+          "model.wal_years": 4.652534,
+          "run.annual_discount_rate": 0.08,
+          "run.periods_per_year": 1.0,
+          "stream.deal.acquisition.total": {
+            "amount": -1000.0,
+            "currency": "USD"
+          },
+          "stream.deal.exit.total": {
+            "amount": 1061.430168,
+            "currency": "USD"
+          },
+          "stream.deal.rent.total": {
+            "amount": 320.0,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 6,
+        "metrics": {
+          "entity.asset.holding.total": {
+            "amount": 785.033,
+            "currency": "USD"
+          },
+          "entity.container.fund.total": {
+            "amount": 785.033,
+            "currency": "USD"
+          },
+          "metric.exit_multiple": 1.785033,
+          "metric.invested": 1000.0,
+          "metric.proceeds": 1785.033,
+          "model.irr": 0.170411,
+          "model.moic": 1.785033,
+          "model.npv": {
+            "amount": 316.493646,
+            "currency": "USD"
+          },
+          "model.payback_periods": 4.0,
+          "model.payback_years": 5.0,
+          "model.total": {
+            "amount": 785.033,
+            "currency": "USD"
+          },
+          "model.wal_years": 4.731097,
+          "run.annual_discount_rate": 0.08,
+          "run.periods_per_year": 1.0,
+          "stream.deal.acquisition.total": {
+            "amount": -1000.0,
+            "currency": "USD"
+          },
+          "stream.deal.exit.total": {
+            "amount": 1465.033,
+            "currency": "USD"
+          },
+          "stream.deal.rent.total": {
+            "amount": 320.0,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 7,
+        "metrics": {
+          "entity.asset.holding.total": {
+            "amount": 677.584806,
+            "currency": "USD"
+          },
+          "entity.container.fund.total": {
+            "amount": 677.584806,
+            "currency": "USD"
+          },
+          "metric.exit_multiple": 1.677585,
+          "metric.invested": 1000.0,
+          "metric.proceeds": 1677.584806,
+          "model.irr": 0.15146,
+          "model.moic": 1.677585,
+          "model.npv": {
+            "amount": 243.366211,
+            "currency": "USD"
+          },
+          "model.payback_periods": 4.0,
+          "model.payback_years": 5.0,
+          "model.total": {
+            "amount": 677.584806,
+            "currency": "USD"
+          },
+          "model.wal_years": 4.713874,
+          "run.annual_discount_rate": 0.08,
+          "run.periods_per_year": 1.0,
+          "stream.deal.acquisition.total": {
+            "amount": -1000.0,
+            "currency": "USD"
+          },
+          "stream.deal.exit.total": {
+            "amount": 1357.584806,
+            "currency": "USD"
+          },
+          "stream.deal.rent.total": {
+            "amount": 320.0,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 8,
+        "metrics": {
+          "entity.asset.holding.total": {
+            "amount": 486.476594,
+            "currency": "USD"
+          },
+          "entity.container.fund.total": {
+            "amount": 486.476594,
+            "currency": "USD"
+          },
+          "metric.exit_multiple": 1.486477,
+          "metric.invested": 1000.0,
+          "metric.proceeds": 1486.476594,
+          "model.irr": 0.115085,
+          "model.moic": 1.486477,
+          "model.npv": {
+            "amount": 113.301173,
+            "currency": "USD"
+          },
+          "model.payback_periods": 4.0,
+          "model.payback_years": 5.0,
+          "model.total": {
+            "amount": 486.476594,
+            "currency": "USD"
+          },
+          "model.wal_years": 4.677089,
+          "run.annual_discount_rate": 0.08,
+          "run.periods_per_year": 1.0,
+          "stream.deal.acquisition.total": {
+            "amount": -1000.0,
+            "currency": "USD"
+          },
+          "stream.deal.exit.total": {
+            "amount": 1166.476594,
+            "currency": "USD"
+          },
+          "stream.deal.rent.total": {
+            "amount": 320.0,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 9,
+        "metrics": {
+          "entity.asset.holding.total": {
+            "amount": 382.879426,
+            "currency": "USD"
+          },
+          "entity.container.fund.total": {
+            "amount": 382.879426,
+            "currency": "USD"
+          },
+          "metric.exit_multiple": 1.382879,
+          "metric.invested": 1000.0,
+          "metric.proceeds": 1382.879426,
+          "model.irr": 0.093675,
+          "model.moic": 1.382879,
+          "model.npv": {
+            "amount": 42.794681,
+            "currency": "USD"
+          },
+          "model.payback_periods": 4.0,
+          "model.payback_years": 5.0,
+          "model.total": {
+            "amount": 382.879426,
+            "currency": "USD"
+          },
+          "model.wal_years": 4.652898,
+          "run.annual_discount_rate": 0.08,
+          "run.periods_per_year": 1.0,
+          "stream.deal.acquisition.total": {
+            "amount": -1000.0,
+            "currency": "USD"
+          },
+          "stream.deal.exit.total": {
+            "amount": 1062.879426,
+            "currency": "USD"
+          },
+          "stream.deal.rent.total": {
+            "amount": 320.0,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 10,
+        "metrics": {
+          "entity.asset.holding.total": {
+            "amount": 302.947028,
+            "currency": "USD"
+          },
+          "entity.container.fund.total": {
+            "amount": 302.947028,
+            "currency": "USD"
+          },
+          "metric.exit_multiple": 1.302947,
+          "metric.invested": 1000.0,
+          "metric.proceeds": 1302.947028,
+          "model.irr": 0.076194,
+          "model.moic": 1.302947,
+          "model.npv": {
+            "amount": -11.605966,
+            "currency": "USD"
+          },
+          "model.payback_periods": 4.0,
+          "model.payback_years": 5.0,
+          "model.total": {
+            "amount": 302.947028,
+            "currency": "USD"
+          },
+          "model.wal_years": 4.631604,
+          "run.annual_discount_rate": 0.08,
+          "run.periods_per_year": 1.0,
+          "stream.deal.acquisition.total": {
+            "amount": -1000.0,
+            "currency": "USD"
+          },
+          "stream.deal.exit.total": {
+            "amount": 982.947028,
+            "currency": "USD"
+          },
+          "stream.deal.rent.total": {
+            "amount": 320.0,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 11,
+        "metrics": {
+          "entity.asset.holding.total": {
+            "amount": 458.452387,
+            "currency": "USD"
+          },
+          "entity.container.fund.total": {
+            "amount": 458.452387,
+            "currency": "USD"
+          },
+          "metric.exit_multiple": 1.458452,
+          "metric.invested": 1000.0,
+          "metric.proceeds": 1458.452387,
+          "model.irr": 0.109422,
+          "model.moic": 1.458452,
+          "model.npv": {
+            "amount": 94.228368,
+            "currency": "USD"
+          },
+          "model.payback_periods": 4.0,
+          "model.payback_years": 5.0,
+          "model.total": {
+            "amount": 458.452387,
+            "currency": "USD"
+          },
+          "model.wal_years": 4.670884,
+          "run.annual_discount_rate": 0.08,
+          "run.periods_per_year": 1.0,
+          "stream.deal.acquisition.total": {
+            "amount": -1000.0,
+            "currency": "USD"
+          },
+          "stream.deal.exit.total": {
+            "amount": 1138.452387,
+            "currency": "USD"
+          },
+          "stream.deal.rent.total": {
+            "amount": 320.0,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 12,
+        "metrics": {
+          "entity.asset.holding.total": {
+            "amount": 456.308668,
+            "currency": "USD"
+          },
+          "entity.container.fund.total": {
+            "amount": 456.308668,
+            "currency": "USD"
+          },
+          "metric.exit_multiple": 1.456309,
+          "metric.invested": 1000.0,
+          "metric.proceeds": 1456.308668,
+          "model.irr": 0.108985,
+          "model.moic": 1.456309,
+          "model.npv": {
+            "amount": 92.769389,
+            "currency": "USD"
+          },
+          "model.payback_periods": 4.0,
+          "model.payback_years": 5.0,
+          "model.total": {
+            "amount": 456.308668,
+            "currency": "USD"
+          },
+          "model.wal_years": 4.6704,
+          "run.annual_discount_rate": 0.08,
+          "run.periods_per_year": 1.0,
+          "stream.deal.acquisition.total": {
+            "amount": -1000.0,
+            "currency": "USD"
+          },
+          "stream.deal.exit.total": {
+            "amount": 1136.308668,
+            "currency": "USD"
+          },
+          "stream.deal.rent.total": {
+            "amount": 320.0,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 13,
+        "metrics": {
+          "entity.asset.holding.total": {
+            "amount": 607.230933,
+            "currency": "USD"
+          },
+          "entity.container.fund.total": {
+            "amount": 607.230933,
+            "currency": "USD"
+          },
+          "metric.exit_multiple": 1.607231,
+          "metric.invested": 1000.0,
+          "metric.proceeds": 1607.230933,
+          "model.irr": 0.138495,
+          "model.moic": 1.607231,
+          "model.npv": {
+            "amount": 195.484547,
+            "currency": "USD"
+          },
+          "model.payback_periods": 4.0,
+          "model.payback_years": 5.0,
+          "model.total": {
+            "amount": 607.230933,
+            "currency": "USD"
+          },
+          "model.wal_years": 4.70135,
+          "run.annual_discount_rate": 0.08,
+          "run.periods_per_year": 1.0,
+          "stream.deal.acquisition.total": {
+            "amount": -1000.0,
+            "currency": "USD"
+          },
+          "stream.deal.exit.total": {
+            "amount": 1287.230933,
+            "currency": "USD"
+          },
+          "stream.deal.rent.total": {
+            "amount": 320.0,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 14,
+        "metrics": {
+          "entity.asset.holding.total": {
+            "amount": 684.434827,
+            "currency": "USD"
+          },
+          "entity.container.fund.total": {
+            "amount": 684.434827,
+            "currency": "USD"
+          },
+          "metric.exit_multiple": 1.684435,
+          "metric.invested": 1000.0,
+          "metric.proceeds": 1684.434827,
+          "model.irr": 0.152698,
+          "model.moic": 1.684435,
+          "model.npv": {
+            "amount": 248.02822,
+            "currency": "USD"
+          },
+          "model.payback_periods": 4.0,
+          "model.payback_years": 5.0,
+          "model.total": {
+            "amount": 684.434827,
+            "currency": "USD"
+          },
+          "model.wal_years": 4.715038,
+          "run.annual_discount_rate": 0.08,
+          "run.periods_per_year": 1.0,
+          "stream.deal.acquisition.total": {
+            "amount": -1000.0,
+            "currency": "USD"
+          },
+          "stream.deal.exit.total": {
+            "amount": 1364.434827,
+            "currency": "USD"
+          },
+          "stream.deal.rent.total": {
+            "amount": 320.0,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 15,
+        "metrics": {
+          "entity.asset.holding.total": {
+            "amount": 771.270381,
+            "currency": "USD"
+          },
+          "entity.container.fund.total": {
+            "amount": 771.270381,
+            "currency": "USD"
+          },
+          "metric.exit_multiple": 1.77127,
+          "metric.invested": 1000.0,
+          "metric.proceeds": 1771.270381,
+          "model.irr": 0.168037,
+          "model.moic": 1.77127,
+          "model.npv": {
+            "amount": 307.127038,
+            "currency": "USD"
+          },
+          "model.payback_periods": 4.0,
+          "model.payback_years": 5.0,
+          "model.total": {
+            "amount": 771.270381,
+            "currency": "USD"
+          },
+          "model.wal_years": 4.729008,
+          "run.annual_discount_rate": 0.08,
+          "run.periods_per_year": 1.0,
+          "stream.deal.acquisition.total": {
+            "amount": -1000.0,
+            "currency": "USD"
+          },
+          "stream.deal.exit.total": {
+            "amount": 1451.270381,
+            "currency": "USD"
+          },
+          "stream.deal.rent.total": {
+            "amount": 320.0,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 16,
+        "metrics": {
+          "entity.asset.holding.total": {
+            "amount": 710.341575,
+            "currency": "USD"
+          },
+          "entity.container.fund.total": {
+            "amount": 710.341575,
+            "currency": "USD"
+          },
+          "metric.exit_multiple": 1.710342,
+          "metric.invested": 1000.0,
+          "metric.proceeds": 1710.341575,
+          "model.irr": 0.157342,
+          "model.moic": 1.710342,
+          "model.npv": {
+            "amount": 265.659917,
+            "currency": "USD"
+          },
+          "model.payback_periods": 4.0,
+          "model.payback_years": 5.0,
+          "model.total": {
+            "amount": 710.341575,
+            "currency": "USD"
+          },
+          "model.wal_years": 4.719354,
+          "run.annual_discount_rate": 0.08,
+          "run.periods_per_year": 1.0,
+          "stream.deal.acquisition.total": {
+            "amount": -1000.0,
+            "currency": "USD"
+          },
+          "stream.deal.exit.total": {
+            "amount": 1390.341575,
+            "currency": "USD"
+          },
+          "stream.deal.rent.total": {
+            "amount": 320.0,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 17,
+        "metrics": {
+          "entity.asset.holding.total": {
+            "amount": 597.182419,
+            "currency": "USD"
+          },
+          "entity.container.fund.total": {
+            "amount": 597.182419,
+            "currency": "USD"
+          },
+          "metric.exit_multiple": 1.597182,
+          "metric.invested": 1000.0,
+          "metric.proceeds": 1597.182419,
+          "model.irr": 0.136605,
+          "model.moic": 1.597182,
+          "model.npv": {
+            "amount": 188.645697,
+            "currency": "USD"
+          },
+          "model.payback_periods": 4.0,
+          "model.payback_years": 5.0,
+          "model.total": {
+            "amount": 597.182419,
+            "currency": "USD"
+          },
+          "model.wal_years": 4.699471,
+          "run.annual_discount_rate": 0.08,
+          "run.periods_per_year": 1.0,
+          "stream.deal.acquisition.total": {
+            "amount": -1000.0,
+            "currency": "USD"
+          },
+          "stream.deal.exit.total": {
+            "amount": 1277.182419,
+            "currency": "USD"
+          },
+          "stream.deal.rent.total": {
+            "amount": 320.0,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 18,
+        "metrics": {
+          "entity.asset.holding.total": {
+            "amount": 442.969974,
+            "currency": "USD"
+          },
+          "entity.container.fund.total": {
+            "amount": 442.969974,
+            "currency": "USD"
+          },
+          "metric.exit_multiple": 1.44297,
+          "metric.invested": 1000.0,
+          "metric.proceeds": 1442.969974,
+          "model.irr": 0.106254,
+          "model.moic": 1.44297,
+          "model.npv": {
+            "amount": 83.691298,
+            "currency": "USD"
+          },
+          "model.payback_periods": 4.0,
+          "model.payback_years": 5.0,
+          "model.total": {
+            "amount": 442.969974,
+            "currency": "USD"
+          },
+          "model.wal_years": 4.667353,
+          "run.annual_discount_rate": 0.08,
+          "run.periods_per_year": 1.0,
+          "stream.deal.acquisition.total": {
+            "amount": -1000.0,
+            "currency": "USD"
+          },
+          "stream.deal.exit.total": {
+            "amount": 1122.969974,
+            "currency": "USD"
+          },
+          "stream.deal.rent.total": {
+            "amount": 320.0,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 19,
+        "metrics": {
+          "entity.asset.holding.total": {
+            "amount": 514.656491,
+            "currency": "USD"
+          },
+          "entity.container.fund.total": {
+            "amount": 514.656491,
+            "currency": "USD"
+          },
+          "metric.exit_multiple": 1.514656,
+          "metric.invested": 1000.0,
+          "metric.proceeds": 1514.656491,
+          "model.irr": 0.120688,
+          "model.moic": 1.514656,
+          "model.npv": {
+            "amount": 132.479937,
+            "currency": "USD"
+          },
+          "model.payback_periods": 4.0,
+          "model.payback_years": 5.0,
+          "model.total": {
+            "amount": 514.656491,
+            "currency": "USD"
+          },
+          "model.wal_years": 4.683096,
+          "run.annual_discount_rate": 0.08,
+          "run.periods_per_year": 1.0,
+          "stream.deal.acquisition.total": {
+            "amount": -1000.0,
+            "currency": "USD"
+          },
+          "stream.deal.exit.total": {
+            "amount": 1194.656491,
+            "currency": "USD"
+          },
+          "stream.deal.rent.total": {
+            "amount": 320.0,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 20,
+        "metrics": {
+          "entity.asset.holding.total": {
+            "amount": 290.639253,
+            "currency": "USD"
+          },
+          "entity.container.fund.total": {
+            "amount": 290.639253,
+            "currency": "USD"
+          },
+          "metric.exit_multiple": 1.290639,
+          "metric.invested": 1000.0,
+          "metric.proceeds": 1290.639253,
+          "model.irr": 0.073421,
+          "model.moic": 1.290639,
+          "model.npv": {
+            "amount": -19.982431,
+            "currency": "USD"
+          },
+          "model.payback_periods": 4.0,
+          "model.payback_years": 5.0,
+          "model.total": {
+            "amount": 290.639253,
+            "currency": "USD"
+          },
+          "model.wal_years": 4.628091,
+          "run.annual_discount_rate": 0.08,
+          "run.periods_per_year": 1.0,
+          "stream.deal.acquisition.total": {
+            "amount": -1000.0,
+            "currency": "USD"
+          },
+          "stream.deal.exit.total": {
+            "amount": 970.639253,
+            "currency": "USD"
+          },
+          "stream.deal.rent.total": {
+            "amount": 320.0,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 21,
+        "metrics": {
+          "entity.asset.holding.total": {
+            "amount": 592.134077,
+            "currency": "USD"
+          },
+          "entity.container.fund.total": {
+            "amount": 592.134077,
+            "currency": "USD"
+          },
+          "metric.exit_multiple": 1.592134,
+          "metric.invested": 1000.0,
+          "metric.proceeds": 1592.134077,
+          "model.irr": 0.135651,
+          "model.moic": 1.592134,
+          "model.npv": {
+            "amount": 185.20988,
+            "currency": "USD"
+          },
+          "model.payback_periods": 4.0,
+          "model.payback_years": 5.0,
+          "model.total": {
+            "amount": 592.134077,
+            "currency": "USD"
+          },
+          "model.wal_years": 4.698518,
+          "run.annual_discount_rate": 0.08,
+          "run.periods_per_year": 1.0,
+          "stream.deal.acquisition.total": {
+            "amount": -1000.0,
+            "currency": "USD"
+          },
+          "stream.deal.exit.total": {
+            "amount": 1272.134077,
+            "currency": "USD"
+          },
+          "stream.deal.rent.total": {
+            "amount": 320.0,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 22,
+        "metrics": {
+          "entity.asset.holding.total": {
+            "amount": 326.043615,
+            "currency": "USD"
+          },
+          "entity.container.fund.total": {
+            "amount": 326.043615,
+            "currency": "USD"
+          },
+          "metric.exit_multiple": 1.326044,
+          "metric.invested": 1000.0,
+          "metric.proceeds": 1326.043615,
+          "model.irr": 0.081339,
+          "model.moic": 1.326044,
+          "model.npv": {
+            "amount": 4.113183,
+            "currency": "USD"
+          },
+          "model.payback_periods": 4.0,
+          "model.payback_years": 5.0,
+          "model.total": {
+            "amount": 326.043615,
+            "currency": "USD"
+          },
+          "model.wal_years": 4.638021,
+          "run.annual_discount_rate": 0.08,
+          "run.periods_per_year": 1.0,
+          "stream.deal.acquisition.total": {
+            "amount": -1000.0,
+            "currency": "USD"
+          },
+          "stream.deal.exit.total": {
+            "amount": 1006.043615,
+            "currency": "USD"
+          },
+          "stream.deal.rent.total": {
+            "amount": 320.0,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 23,
+        "metrics": {
+          "entity.asset.holding.total": {
+            "amount": 652.061112,
+            "currency": "USD"
+          },
+          "entity.container.fund.total": {
+            "amount": 652.061112,
+            "currency": "USD"
+          },
+          "metric.exit_multiple": 1.652061,
+          "metric.invested": 1000.0,
+          "metric.proceeds": 1652.061112,
+          "model.irr": 0.14681,
+          "model.moic": 1.652061,
+          "model.npv": {
+            "amount": 225.995213,
+            "currency": "USD"
+          },
+          "model.payback_periods": 4.0,
+          "model.payback_years": 5.0,
+          "model.total": {
+            "amount": 652.061112,
+            "currency": "USD"
+          },
+          "model.wal_years": 4.709454,
+          "run.annual_discount_rate": 0.08,
+          "run.periods_per_year": 1.0,
+          "stream.deal.acquisition.total": {
+            "amount": -1000.0,
+            "currency": "USD"
+          },
+          "stream.deal.exit.total": {
+            "amount": 1332.061112,
+            "currency": "USD"
+          },
+          "stream.deal.rent.total": {
+            "amount": 320.0,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 24,
+        "metrics": {
+          "entity.asset.holding.total": {
+            "amount": 741.461798,
+            "currency": "USD"
+          },
+          "entity.container.fund.total": {
+            "amount": 741.461798,
+            "currency": "USD"
+          },
+          "metric.exit_multiple": 1.741462,
+          "metric.invested": 1000.0,
+          "metric.proceeds": 1741.461798,
+          "model.irr": 0.162843,
+          "model.moic": 1.741462,
+          "model.npv": {
+            "amount": 286.839818,
+            "currency": "USD"
+          },
+          "model.payback_periods": 4.0,
+          "model.payback_years": 5.0,
+          "model.total": {
+            "amount": 741.461798,
+            "currency": "USD"
+          },
+          "model.wal_years": 4.724369,
+          "run.annual_discount_rate": 0.08,
+          "run.periods_per_year": 1.0,
+          "stream.deal.acquisition.total": {
+            "amount": -1000.0,
+            "currency": "USD"
+          },
+          "stream.deal.exit.total": {
+            "amount": 1421.461798,
+            "currency": "USD"
+          },
+          "stream.deal.rent.total": {
+            "amount": 320.0,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 25,
+        "metrics": {
+          "entity.asset.holding.total": {
+            "amount": 731.988432,
+            "currency": "USD"
+          },
+          "entity.container.fund.total": {
+            "amount": 731.988432,
+            "currency": "USD"
+          },
+          "metric.exit_multiple": 1.731988,
+          "metric.invested": 1000.0,
+          "metric.proceeds": 1731.988432,
+          "model.irr": 0.161177,
+          "model.moic": 1.731988,
+          "model.npv": {
+            "amount": 280.392404,
+            "currency": "USD"
+          },
+          "model.payback_periods": 4.0,
+          "model.payback_years": 5.0,
+          "model.total": {
+            "amount": 731.988432,
+            "currency": "USD"
+          },
+          "model.wal_years": 4.722862,
+          "run.annual_discount_rate": 0.08,
+          "run.periods_per_year": 1.0,
+          "stream.deal.acquisition.total": {
+            "amount": -1000.0,
+            "currency": "USD"
+          },
+          "stream.deal.exit.total": {
+            "amount": 1411.988432,
+            "currency": "USD"
+          },
+          "stream.deal.rent.total": {
+            "amount": 320.0,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 26,
+        "metrics": {
+          "entity.asset.holding.total": {
+            "amount": 291.914158,
+            "currency": "USD"
+          },
+          "entity.container.fund.total": {
+            "amount": 291.914158,
+            "currency": "USD"
+          },
+          "metric.exit_multiple": 1.291914,
+          "metric.invested": 1000.0,
+          "metric.proceeds": 1291.914158,
+          "model.irr": 0.073709,
+          "model.moic": 1.291914,
+          "model.npv": {
+            "amount": -19.114752,
+            "currency": "USD"
+          },
+          "model.payback_periods": 4.0,
+          "model.payback_years": 5.0,
+          "model.total": {
+            "amount": 291.914158,
+            "currency": "USD"
+          },
+          "model.wal_years": 4.628458,
+          "run.annual_discount_rate": 0.08,
+          "run.periods_per_year": 1.0,
+          "stream.deal.acquisition.total": {
+            "amount": -1000.0,
+            "currency": "USD"
+          },
+          "stream.deal.exit.total": {
+            "amount": 971.914158,
+            "currency": "USD"
+          },
+          "stream.deal.rent.total": {
+            "amount": 320.0,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 27,
+        "metrics": {
+          "entity.asset.holding.total": {
+            "amount": 624.204455,
+            "currency": "USD"
+          },
+          "entity.container.fund.total": {
+            "amount": 624.204455,
+            "currency": "USD"
+          },
+          "metric.exit_multiple": 1.624204,
+          "metric.invested": 1000.0,
+          "metric.proceeds": 1624.204455,
+          "model.irr": 0.141666,
+          "model.moic": 1.624204,
+          "model.npv": {
+            "amount": 207.03644,
+            "currency": "USD"
+          },
+          "model.payback_periods": 4.0,
+          "model.payback_years": 5.0,
+          "model.total": {
+            "amount": 624.204455,
+            "currency": "USD"
+          },
+          "model.wal_years": 4.704471,
+          "run.annual_discount_rate": 0.08,
+          "run.periods_per_year": 1.0,
+          "stream.deal.acquisition.total": {
+            "amount": -1000.0,
+            "currency": "USD"
+          },
+          "stream.deal.exit.total": {
+            "amount": 1304.204455,
+            "currency": "USD"
+          },
+          "stream.deal.rent.total": {
+            "amount": 320.0,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 28,
+        "metrics": {
+          "entity.asset.holding.total": {
+            "amount": 814.090378,
+            "currency": "USD"
+          },
+          "entity.container.fund.total": {
+            "amount": 814.090378,
+            "currency": "USD"
+          },
+          "metric.exit_multiple": 1.81409,
+          "metric.invested": 1000.0,
+          "metric.proceeds": 1814.090378,
+          "model.irr": 0.175372,
+          "model.moic": 1.81409,
+          "model.npv": {
+            "amount": 336.269609,
+            "currency": "USD"
+          },
+          "model.payback_periods": 4.0,
+          "model.payback_years": 5.0,
+          "model.total": {
+            "amount": 814.090378,
+            "currency": "USD"
+          },
+          "model.wal_years": 4.735405,
+          "run.annual_discount_rate": 0.08,
+          "run.periods_per_year": 1.0,
+          "stream.deal.acquisition.total": {
+            "amount": -1000.0,
+            "currency": "USD"
+          },
+          "stream.deal.exit.total": {
+            "amount": 1494.090378,
+            "currency": "USD"
+          },
+          "stream.deal.rent.total": {
+            "amount": 320.0,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 29,
+        "metrics": {
+          "entity.asset.holding.total": {
+            "amount": 267.009745,
+            "currency": "USD"
+          },
+          "entity.container.fund.total": {
+            "amount": 267.009745,
+            "currency": "USD"
+          },
+          "metric.exit_multiple": 1.26701,
+          "metric.invested": 1000.0,
+          "metric.proceeds": 1267.009745,
+          "model.irr": 0.06803,
+          "model.moic": 1.26701,
+          "model.npv": {
+            "amount": -36.064277,
+            "currency": "USD"
+          },
+          "model.payback_periods": 4.0,
+          "model.payback_years": 5.0,
+          "model.total": {
+            "amount": 267.009745,
+            "currency": "USD"
+          },
+          "model.wal_years": 4.621155,
+          "run.annual_discount_rate": 0.08,
+          "run.periods_per_year": 1.0,
+          "stream.deal.acquisition.total": {
+            "amount": -1000.0,
+            "currency": "USD"
+          },
+          "stream.deal.exit.total": {
+            "amount": 947.009745,
+            "currency": "USD"
+          },
+          "stream.deal.rent.total": {
+            "amount": 320.0,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 30,
+        "metrics": {
+          "entity.asset.holding.total": {
+            "amount": 311.424936,
+            "currency": "USD"
+          },
+          "entity.container.fund.total": {
+            "amount": 311.424936,
+            "currency": "USD"
+          },
+          "metric.exit_multiple": 1.311425,
+          "metric.invested": 1000.0,
+          "metric.proceeds": 1311.424936,
+          "model.irr": 0.078092,
+          "model.moic": 1.311425,
+          "model.npv": {
+            "amount": -5.836045,
+            "currency": "USD"
+          },
+          "model.payback_periods": 4.0,
+          "model.payback_years": 5.0,
+          "model.total": {
+            "amount": 311.424936,
+            "currency": "USD"
+          },
+          "model.wal_years": 4.633986,
+          "run.annual_discount_rate": 0.08,
+          "run.periods_per_year": 1.0,
+          "stream.deal.acquisition.total": {
+            "amount": -1000.0,
+            "currency": "USD"
+          },
+          "stream.deal.exit.total": {
+            "amount": 991.424936,
+            "currency": "USD"
+          },
+          "stream.deal.rent.total": {
+            "amount": 320.0,
+            "currency": "USD"
+          }
+        }
+      },
+      {
+        "trial": 31,
+        "metrics": {
+          "entity.asset.holding.total": {
+            "amount": 276.879795,
+            "currency": "USD"
+          },
+          "entity.container.fund.total": {
+            "amount": 276.879795,
+            "currency": "USD"
+          },
+          "metric.exit_multiple": 1.27688,
+          "metric.invested": 1000.0,
+          "metric.proceeds": 1276.879795,
+          "model.irr": 0.070292,
+          "model.moic": 1.27688,
+          "model.npv": {
+            "amount": -29.346887,
+            "currency": "USD"
+          },
+          "model.payback_periods": 4.0,
+          "model.payback_years": 5.0,
+          "model.total": {
+            "amount": 276.879795,
+            "currency": "USD"
+          },
+          "model.wal_years": 4.624084,
+          "run.annual_discount_rate": 0.08,
+          "run.periods_per_year": 1.0,
+          "stream.deal.acquisition.total": {
+            "amount": -1000.0,
+            "currency": "USD"
+          },
+          "stream.deal.exit.total": {
+            "amount": 956.879795,
+            "currency": "USD"
+          },
+          "stream.deal.rent.total": {
+            "amount": 320.0,
+            "currency": "USD"
+          }
+        }
+      }
+    ],
+    "aggregates": {
+      "npv": {
+        "mean": 145.689524,
+        "median": 158.607819,
+        "stddev": 119.403516,
+        "p_negative": 0.1875
+      }
+    }
+  },
+  "graph": {
+    "entities": [
+      {
+        "symbol": "asset.holding",
+        "family": "asset",
+        "type": "Asset.Financial",
+        "parent": "container.fund"
+      },
+      {
+        "symbol": "container.fund",
+        "family": "container",
+        "type": "Container.Fund"
+      }
+    ]
+  }
+}

@@ -61,7 +61,7 @@ Declared metrics (§7.25) and participant-level returns (§7.72) shipped —
 pulled forward by `docs/31` W4, whose phases 1–2 *were* this milestone's
 work. `excel_compat` arithmetic and act/act (ISDA) shipped earlier despite
 being listed deferred. Stream ownership in results (§7.43) shipped as the
-graph on the results plane (`results_version` 0.7, #242); what survives of
+graph the valuation plane publishes (`results_version` 0.7, #242); what survives of
 that entry is a default-presentation request, which is a statement's job
 (§7.55) and not a gate on release.
 

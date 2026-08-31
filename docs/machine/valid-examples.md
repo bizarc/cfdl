@@ -4,7 +4,7 @@
 
 CFDL 0.7.0. Every model below compiles, and its IR and
 results are byte-asserted against goldens in CI (`fixtures/valid/`,
-137 models.
+139 models.
 
 `gold/ir/`, `gold/results/`). Each is single-purpose: the directory name
 says what it exercises. This is what right looks like — positive few-shot
@@ -2749,6 +2749,110 @@ stream credit.fee on entity asset.pool inflow currency USD {
 }
 
 run monte_carlo trials 40 seed 20260827
+```
+
+## monte_carlo_metric_distribution
+
+```cfdl
+version 0.1
+model "monte-carlo-metric-distribution"
+time calendar annual from 2026-01 for 5
+
+// A TRIAL IS A COMPLETE RUN, AND EVERY FIGURE IT COMPUTED SURVIVES IT.
+//
+// `docs/13` §7.87: the trial loop used to build a fresh one-entry map holding
+// `model.npv` and publish that as the trial's whole record. Every other figure
+// — the IRR, the MoIC, each entity's total, each stream's total, and every
+// metric the model declared — was computed inside the trial and dropped on the
+// way out. Since per-trial SERIES are (reasonably) not retained, the metric
+// map is the only window into a trial: what the loop did not carry was
+// unrecoverable after it, and the figure a stochastic case exists to assert
+// existed in no trial.
+//
+// This model is that claim, in one page. The exit price is drawn, so every
+// figure below MOVES with the draw and a distribution over it means something:
+//
+//   - `metric.exit_multiple` — a declared metric, the thing §7.25 built and
+//     the thing §7.87 was throwing away;
+//   - `model.irr` and `model.moic` — the acquisition in 2026 is the sign
+//     change an IRR needs;
+//   - `entity.container.fund.total` — the ROLLED-UP total, which is the join
+//     to the results-plane graph: `graph.entities[].symbol` is
+//     `container.fund`, so a consumer holding results alone can read a
+//     per-entity distribution rather than inferring ownership from names
+//     (§7.43, §7.91).
+//
+// The seed is stated, so every published percentile is reproducible: a Monte
+// Carlo run IS a golden when its seed is.
+
+entity container fund : Container.Fund
+
+entity asset holding : Asset.Financial { part of container.fund }
+
+assume exit_price ~ Uniform(min=900, max=1500)
+
+stream deal.acquisition on entity asset.holding outflow currency USD {
+  schedule every year from 2026-01 to 2026-01
+  category investing.acquisition.purchase
+  amount = 1000
+}
+
+stream deal.rent on entity asset.holding inflow currency USD {
+  schedule every year from 2027-01 to 2030-01
+  category operating.revenue.other
+  amount = 80
+}
+
+stream deal.exit on entity asset.holding inflow currency USD {
+  schedule every year from 2030-01 to 2030-01
+  category investing.disposition.sale
+  amount = inputs.exit_price
+}
+
+// An outflow's total is NEGATIVE — it is cash leaving — so the capital
+// invested is its negation, and `exit_multiple` then reproduces `model.moic`
+// in the language. Two computations of the same figure by different routes,
+// one the engine's and one the model's, and the trial rows now carry both.
+metric invested      = 0 - series_sum("deal.acquisition", 0, 4)
+metric proceeds      = series_sum("deal.rent", 0, 4) + series_sum("deal.exit", 0, 4)
+metric exit_multiple = metric.proceeds / metric.invested
+
+run monte_carlo trials 32 seed 20260831
+```
+
+## monte_carlo_partial_metric
+
+```cfdl
+version 0.1
+model "monte-carlo-partial-metric"
+time calendar annual from 2026-01 for 3
+
+// NOT EVERY TRIAL PUBLISHES EVERY METRIC, WHICH IS WHY A SUMMARY COUNTS.
+//
+// `model.irr` exists only where the flows solve for a rate. The swing below is
+// drawn across zero, so in the trials that draw it negative there is no sign
+// change and no IRR — and a mean over the trials that DID solve would read
+// exactly like a mean over all of them, if the summary did not say how many it
+// was taken over. `trials` on a metric summary is that count (`docs/13` §7.87).
+//
+// `model.npv` is published by every trial and `model.irr` by some, so this one
+// model shows both cases in one results document.
+
+entity asset co : Asset.Financial
+
+assume swing ~ Uniform(min=-60, max=140)
+
+stream ops.outlay on entity asset.co outflow currency USD {
+  schedule every year from 2026-01 to 2026-01
+  amount = 100
+}
+
+stream ops.swing on entity asset.co inflow currency USD {
+  schedule every year from 2027-01 to 2028-01
+  amount = inputs.swing
+}
+
+run monte_carlo trials 24 seed 20260831
 ```
 
 ## monte_carlo_smoke

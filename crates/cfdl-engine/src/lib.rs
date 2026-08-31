@@ -316,6 +316,11 @@ fn compute_results(ir: &Ir, model_hash: String, config: RunConfig) -> Result<Res
         let mut journal_firsts: BTreeMap<(String, String, String, String), Vec<usize>> =
             BTreeMap::new();
         let mut npv_values = Vec::with_capacity(monte_carlo_config.trial_count as usize);
+        // METRIC NAME -> its samples across the trials. Bounded by the model's
+        // metric names rather than by the trial count, which is the same size
+        // argument §7.18 made about the journal — and the reason a scalar map
+        // is carried per trial where a series map is not.
+        let mut metric_samples: BTreeMap<String, MetricSamples> = BTreeMap::new();
         for trial in 0..monte_carlo_config.trial_count {
             let mut trial_overrides = config.parameter_overrides.clone();
             let mut rng_state = splitmix64(
@@ -384,14 +389,28 @@ fn compute_results(ir: &Ir, model_hash: String, config: RunConfig) -> Result<Res
                 journal_firsts.entry(key).or_default().push(period);
             }
 
-            let mut trial_metrics = BTreeMap::new();
-            trial_metrics.insert(
-                "model.npv".to_string(),
-                Scalar::Money(Money {
-                    amount: round_amount(trial_run.npv),
-                    currency: ir.model.currency.clone(),
-                }),
-            );
+            // EVERY metric the trial computed, not NPV alone (`docs/13`
+            // §7.87). A trial IS a complete deterministic run, so this map
+            // already holds `model.npv` beside `model.irr`, `model.moic`,
+            // every `stream.*.total` and `entity.*.total`, each `domain.*` KPI
+            // and every metric the model declared. The scenario path one
+            // function up has carried the whole map since it was written; the
+            // trial loop had `trial_run.metrics` in scope and built a fresh
+            // one-entry map instead, so the figure a stochastic case exists to
+            // assert existed in no trial.
+            //
+            // `entity.*.total` is the join the published entity graph was
+            // built for: a trial row keys `entity.asset.tower.total`, and
+            // `graph.entities[].symbol` is `asset.tower`, so a per-entity
+            // distribution is now readable from results alone — the ownership
+            // axis of §7.43, worn stochastically.
+            let trial_metrics = trial_run.metrics;
+            for (name, value) in &trial_metrics {
+                metric_samples
+                    .entry(name.clone())
+                    .or_default()
+                    .observe(value);
+            }
             trial_summaries.push(MonteCarloTrialSummary {
                 trial,
                 metrics: trial_metrics,
@@ -410,47 +429,23 @@ fn compute_results(ir: &Ir, model_hash: String, config: RunConfig) -> Result<Res
                 },
             })
         };
-        let mut metrics = BTreeMap::new();
-        if let Some(aggregates_ref) = &aggregates {
-            metrics.insert(
-                "model.npv".to_string(),
-                MetricSummary {
-                    r#type: "money".to_string(),
-                    mean: Scalar::Money(Money {
-                        amount: aggregates_ref.npv.mean,
-                        currency: ir.model.currency.clone(),
-                    }),
-                    stdev: Some(Scalar::Money(Money {
-                        amount: aggregates_ref.npv.stddev,
-                        currency: ir.model.currency.clone(),
-                    })),
-                    min: Some(Scalar::Money(Money {
-                        amount: round_amount(
-                            npv_values.iter().copied().fold(f64::INFINITY, f64::min),
-                        ),
-                        currency: ir.model.currency.clone(),
-                    })),
-                    max: Some(Scalar::Money(Money {
-                        amount: round_amount(
-                            npv_values.iter().copied().fold(f64::NEG_INFINITY, f64::max),
-                        ),
-                        currency: ir.model.currency.clone(),
-                    })),
-                    p01: None,
-                    p05: None,
-                    p10: None,
-                    p25: None,
-                    p50: Scalar::Money(Money {
-                        amount: aggregates_ref.npv.median,
-                        currency: ir.model.currency.clone(),
-                    }),
-                    p75: None,
-                    p90: None,
-                    p95: None,
-                    p99: None,
-                },
-            );
-        }
+        // ONE SUMMARY PER METRIC THE TRIALS PUBLISHED (`docs/13` §7.87).
+        //
+        // This used to be a single hand-built entry for `model.npv`, which is
+        // why a declared metric, a MoIC, an IRR or any `domain.*` KPI had no
+        // distribution at all. `model.npv` is not special-cased any more — it
+        // arrives through the same accumulator as every other name, and comes
+        // out with the mean, stdev, min, max and p50 it always had, now with
+        // the tails beside them.
+        //
+        // `MonteCarloAggregates` below still carries the NPV's own four
+        // figures, `p_negative` among them: that is the loss probability, a
+        // question about a threshold rather than a quantile, and it stays
+        // where consumers already read it.
+        let metrics: BTreeMap<String, MetricSummary> = metric_samples
+            .iter()
+            .filter_map(|(name, samples)| Some((name.clone(), samples.summarise()?)))
+            .collect();
 
         let trials_run = monte_carlo_config.trial_count.max(1) as f64;
         let journal_summary: Vec<JournalTrialSummary> = journal_firsts
@@ -552,7 +547,7 @@ fn compute_results(ir: &Ir, model_hash: String, config: RunConfig) -> Result<Res
     });
 
     Ok(Results {
-        results_version: "0.8".to_string(),
+        results_version: "0.9".to_string(),
         model_hash,
         ledger_hash,
         engine: EngineInfo {
