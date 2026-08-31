@@ -259,6 +259,7 @@ pub fn resolve_imports_with(
 pub fn resolve_symbols(output: &ResolveOutput) -> Result<SymbolTables, Vec<ResolveDiagnostic>> {
     let mut tables = SymbolTables::default();
     let mut diagnostics = Vec::new();
+    let mut seen_slices: std::collections::BTreeSet<String> = std::collections::BTreeSet::new();
     let mut stream_decls = Vec::new();
     let mut contract_decls = Vec::new();
 
@@ -369,6 +370,19 @@ pub fn resolve_symbols(output: &ResolveOutput) -> Result<SymbolTables, Vec<Resol
                         },
                     );
                     tables.metric_order.push(metric.name.clone());
+                }
+            }
+            Stmt::Slice(slice_stmt) => {
+                // Same rule as a metric: one name, one selection. E1361 is
+                // the slice's own code because the two namespaces are
+                // different rosters with different consumers.
+                if !seen_slices.insert(slice_stmt.name.clone()) {
+                    diagnostics.push(ResolveDiagnostic {
+                        code: "E1361_DUPLICATE_SLICE".to_string(),
+                        message: format!("Duplicate slice '{}'.", slice_stmt.name),
+                        file: source_stmt.file.clone(),
+                        span: slice_stmt.span,
+                    });
                 }
             }
             Stmt::Phase(phase) => {
@@ -803,6 +817,7 @@ fn statement_span(stmt: &Stmt) -> Span {
         Stmt::Entity(s) => s.span,
         Stmt::Assume(s) => s.span,
         Stmt::Metric(s) => s.span,
+        Stmt::Slice(s) => s.span,
         Stmt::Curve(s) => s.span,
         Stmt::Quantile(s) => s.span,
         Stmt::Contract(s) => s.span,

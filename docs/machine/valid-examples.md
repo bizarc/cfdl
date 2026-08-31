@@ -4,7 +4,7 @@
 
 CFDL 0.7.0. Every model below compiles, and its IR and
 results are byte-asserted against goldens in CI (`fixtures/valid/`,
-131 models.
+133 models.
 
 `gold/ir/`, `gold/results/`). Each is single-purpose: the directory name
 says what it exercises. This is what right looks like — positive few-shot
@@ -4534,6 +4534,99 @@ stream mid.cumulative on entity asset.co inflow currency USD {
 stream top.cumulative on entity asset.co inflow currency USD {
   schedule every year from 2026-01 to 2028-01
   amount = series_sum("mid.cumulative", 0, time.t)
+}
+```
+
+## slice_by_type
+
+```cfdl
+version 0.1
+model "slice-by-type"
+use pack "cre" version "0.1.0"
+time calendar monthly from 2026-01 for 60
+
+// BASE-TYPE SELECTION, THE REFINEMENT'S PAYOFF (docs/13 §7.92, §7.90).
+// `type Contract.Debt` names a MASTER; the compiler expands it through the
+// recorded refinement — CRE.Contract.PermanentDebt is_a Contract.Debt — to
+// every stream that contract lowers. The slice survives a new pack
+// unchanged, because it names what the thing IS, not how a pack spells it.
+
+entity asset tower : CRE.Asset.RealProperty
+
+contract cre.permanent_debt on entity asset.tower {
+  term 2026-01..2030-12
+  terms {
+    principal = 6000000
+    rate = 0.055
+    amort_months = 300
+    io_months = 24
+    balloon_at_maturity = 1
+  }
+}
+
+stream ops.noi on entity asset.tower inflow currency USD {
+  schedule every month from 2026-01 to 2030-12
+  category operating.revenue.other
+  amount = 55000
+}
+
+slice debt {
+  type Contract.Debt
+}
+```
+
+## slices
+
+```cfdl
+version 0.1
+model "slices"
+time calendar annual from 2026-01 for 3
+
+// A SLICE IS A NAMED, DELIBERATELY PARTIAL SELECTION (docs/13 §7.90).
+// Clause kinds intersect, values within a kind union, `except` subtracts —
+// and a slice carries NO reconciliation block, because the absence is what
+// the declaration means: a partial number must not dress as a complete one.
+//
+// Two artists under one label. Slicing is the question the results plane
+// could not answer before the graph: one artist's cash, one artist's
+// royalties only, and the label minus a discontinued line.
+
+entity container label : Container.Portfolio
+entity asset artist_a : Asset.Intangible { part of container.label }
+entity asset artist_b : Asset.Intangible { part of container.label }
+
+stream a.royalties on entity asset.artist_a inflow currency USD {
+  schedule every year from 2026-01 to 2028-01
+  category operating.revenue.royalty
+  amount = 100
+}
+stream a.merch on entity asset.artist_a inflow currency USD {
+  schedule every year from 2026-01 to 2028-01
+  category operating.revenue.merchandise
+  amount = 40
+}
+stream b.royalties on entity asset.artist_b inflow currency USD {
+  schedule every year from 2026-01 to 2028-01
+  category operating.revenue.royalty
+  amount = 70
+}
+
+// All of artist A: entity clause selects the entity and its descendants.
+slice artist_a {
+  entity asset.artist_a
+}
+
+// Artist A's royalties only: kinds intersect.
+slice artist_a_royalties {
+  entity asset.artist_a
+  category "operating.revenue.royalty"
+}
+
+// The whole label, minus merchandise: include by entity, subtract by
+// category. The label is a container; its scope arrives through part_of.
+slice label_ex_merch {
+  entity container.label
+  except category "operating.revenue.merchandise"
 }
 ```
 

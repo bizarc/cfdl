@@ -1,0 +1,17 @@
+[
+  {
+    "code": "E1362_SLICE_UNKNOWN_ENTITY",
+    "severity": "error",
+    "message": "Slice 's' selects entity 'asset.nonesuch', which is not declared.",
+    "file": "model.cfdl",
+    "span": {
+      "start_line": 14,
+      "start_col": 1,
+      "end_line": 14,
+      "end_col": 33
+    },
+    "path": null,
+    "hint": "A slice selects by reference, and a reference is what the compiler can check — correct the name or declare the entity.",
+    "notes": []
+  }
+]

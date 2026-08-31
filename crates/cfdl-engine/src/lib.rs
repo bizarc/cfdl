@@ -552,7 +552,7 @@ fn compute_results(ir: &Ir, model_hash: String, config: RunConfig) -> Result<Res
     });
 
     Ok(Results {
-        results_version: "0.7".to_string(),
+        results_version: "0.8".to_string(),
         model_hash,
         ledger_hash,
         engine: EngineInfo {
@@ -568,11 +568,13 @@ fn compute_results(ir: &Ir, model_hash: String, config: RunConfig) -> Result<Res
         domain_metrics: None,
         statements: None,
         graph,
+        slices: (!base_run.slices.is_empty()).then(|| base_run.slices.clone()),
     })
 }
 
 #[derive(Debug, Clone)]
 struct DeterministicRunOutput {
+    slices: Vec<SliceResult>,
     warnings: Vec<String>,
     /// Evaluated `assume` values, carried out so `compute_results` can publish
     /// them without re-evaluating (which would duplicate every warning).
@@ -2495,6 +2497,134 @@ fn run_deterministic(
         }
     }
 
+    // SLICES (docs/13 §7.90): each declared selection, resolved against the
+    // settled ledger. Kinds intersect, values within a kind union, excepts
+    // subtract; an empty include-kind does not constrain, so a slice of
+    // nothing but excepts reads "everything minus these". Matching delegates
+    // to `cfdl_expr::selector_matches` — one dialect. A slice never carries
+    // a reconciliation block: partial by design, and seen to be partial.
+    let slice_results: Vec<SliceResult> = if ir.slices.is_empty() {
+        Vec::new()
+    } else {
+        // parent chains, for entity clauses selecting descendants.
+        let parent_of: BTreeMap<&str, &str> = ir
+            .entities
+            .iter()
+            .filter_map(|e| e.parent.as_deref().map(|p| (e.symbol.as_str(), p)))
+            .collect();
+        let in_scope = |owner: &str, roots: &[String]| -> bool {
+            let mut current = owner;
+            for _ in 0..=parent_of.len() {
+                if roots.iter().any(|r| r == current) {
+                    return true;
+                }
+                match parent_of.get(current) {
+                    Some(next) => current = next,
+                    None => return false,
+                }
+            }
+            false
+        };
+        let stream_meta: BTreeMap<&str, (&str, Option<&str>)> = ir
+            .streams
+            .iter()
+            .map(|st| {
+                (
+                    st.name.as_str(),
+                    (st.owner.symbol.as_str(), st.category.as_deref()),
+                )
+            })
+            .collect();
+        ir.slices
+            .iter()
+            .map(|slice| {
+                let mut matched: Vec<&str> = Vec::new();
+                for (name, (owner, category)) in &stream_meta {
+                    let entity_ok = slice.entities.is_empty() || in_scope(owner, &slice.entities);
+                    let type_ok =
+                        slice.types.is_empty() || slice.type_streams.iter().any(|t| t == name);
+                    let cat_ok = slice.categories.is_empty()
+                        || category
+                            .is_some_and(|c| cfdl_expr::selector_matches_any(&slice.categories, c));
+                    let name_ok = slice.streams.is_empty()
+                        || cfdl_expr::selector_matches_any(&slice.streams, name);
+                    if !(entity_ok && type_ok && cat_ok && name_ok) {
+                        continue;
+                    }
+                    let dropped = cfdl_expr::selector_matches_any(&slice.except_streams, name)
+                        || category.is_some_and(|c| {
+                            cfdl_expr::selector_matches_any(&slice.except_categories, c)
+                        })
+                        || (!slice.except_entities.is_empty()
+                            && in_scope(owner, &slice.except_entities));
+                    if !dropped {
+                        matched.push(name);
+                    }
+                }
+                matched.sort_unstable();
+                let mut net = vec![0.0_f64; cash_periods];
+                let mut valued: Vec<(Vec<f64>, f64)> = Vec::new();
+                for name in &matched {
+                    if let Some(values) = stream_series.get(*name) {
+                        let cash = &values[..cash_periods.min(values.len())];
+                        for (t, v) in cash.iter().enumerate() {
+                            net[t] += *v;
+                        }
+                        valued.push((
+                            cash.to_vec(),
+                            stream_offsets.get(*name).copied().unwrap_or(1.0),
+                        ));
+                    }
+                }
+                let mut slice_metrics: BTreeMap<String, Scalar> = BTreeMap::new();
+                slice_metrics.insert(
+                    "total".to_string(),
+                    Scalar::Money(Money {
+                        amount: round_amount(net.iter().sum()),
+                        currency: ir.model.currency.clone(),
+                    }),
+                );
+                slice_metrics.insert(
+                    "npv".to_string(),
+                    Scalar::Money(Money {
+                        amount: round_amount(npv_with_offsets(&valued, per_period_rate)),
+                        currency: ir.model.currency.clone(),
+                    }),
+                );
+                if let Some(pp_irr) = irr_with_offsets(&valued) {
+                    slice_metrics.insert(
+                        "irr".to_string(),
+                        Scalar::Number(round_amount((1.0 + pp_irr).powf(ppy) - 1.0)),
+                    );
+                }
+                let mut net_series = Series::from_values(
+                    &ir.time.calendar,
+                    &ir.time.start,
+                    cash_periods as u32,
+                    &ir.model.currency,
+                    None,
+                    &net,
+                );
+                net_series.entity = None;
+                SliceResult {
+                    id: slice.name.clone(),
+                    selection: SliceSelection {
+                        entities: slice.entities.clone(),
+                        types: slice.types.clone(),
+                        categories: slice.categories.clone(),
+                        streams: slice.streams.clone(),
+                        except_streams: slice.except_streams.clone(),
+                        except_categories: slice.except_categories.clone(),
+                        except_entities: slice.except_entities.clone(),
+                    },
+                    streams: matched.iter().map(|n| n.to_string()).collect(),
+                    net: net_series,
+                    metrics: slice_metrics,
+                }
+            })
+            .collect()
+    };
+
     let unresolved = unresolved_names(&warnings, &declared);
     if !unresolved.is_empty() {
         return Err(EngineError::UnknownName(format!(
@@ -2504,6 +2634,7 @@ fn run_deterministic(
     }
 
     Ok(DeterministicRunOutput {
+        slices: slice_results,
         journal,
         warnings,
         resolved_inputs: base_inputs,

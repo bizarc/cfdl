@@ -47,6 +47,8 @@ pub(crate) struct Ir {
     /// plane, after every series they can read has settled.
     #[serde(default)]
     pub(crate) metrics: Vec<IrMetric>,
+    #[serde(default)]
+    pub(crate) slices: Vec<IrSlice>,
     /// Declared entities. Read so an entity's lifecycle STARTS where the model
     /// says rather than at null — the totality the ontology exists to give.
     #[serde(default)]
@@ -223,6 +225,29 @@ pub(crate) struct IrStateAction {
 pub(crate) struct IrMetric {
     pub(crate) name: String,
     pub(crate) expr: IrExpr,
+}
+
+#[derive(Debug, Deserialize)]
+pub(crate) struct IrSlice {
+    pub(crate) name: String,
+    #[serde(default)]
+    pub(crate) entities: Vec<String>,
+    #[serde(default)]
+    pub(crate) types: Vec<String>,
+    #[serde(default)]
+    pub(crate) categories: Vec<String>,
+    #[serde(default)]
+    pub(crate) streams: Vec<String>,
+    #[serde(default)]
+    pub(crate) except_streams: Vec<String>,
+    #[serde(default)]
+    pub(crate) except_categories: Vec<String>,
+    #[serde(default)]
+    pub(crate) except_entities: Vec<String>,
+    /// The `type` clauses' expansion, resolved by the compiler — the engine
+    /// is pack-free and cannot walk the ontology itself.
+    #[serde(default)]
+    pub(crate) type_streams: Vec<String>,
 }
 
 #[derive(Debug, Deserialize)]

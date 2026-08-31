@@ -1,0 +1,50 @@
+version 0.1
+model "slices"
+time calendar annual from 2026-01 for 3
+
+// A SLICE IS A NAMED, DELIBERATELY PARTIAL SELECTION (docs/13 §7.90).
+// Clause kinds intersect, values within a kind union, `except` subtracts —
+// and a slice carries NO reconciliation block, because the absence is what
+// the declaration means: a partial number must not dress as a complete one.
+//
+// Two artists under one label. Slicing is the question the results plane
+// could not answer before the graph: one artist's cash, one artist's
+// royalties only, and the label minus a discontinued line.
+
+entity container label : Container.Portfolio
+entity asset artist_a : Asset.Intangible { part of container.label }
+entity asset artist_b : Asset.Intangible { part of container.label }
+
+stream a.royalties on entity asset.artist_a inflow currency USD {
+  schedule every year from 2026-01 to 2028-01
+  category operating.revenue.royalty
+  amount = 100
+}
+stream a.merch on entity asset.artist_a inflow currency USD {
+  schedule every year from 2026-01 to 2028-01
+  category operating.revenue.merchandise
+  amount = 40
+}
+stream b.royalties on entity asset.artist_b inflow currency USD {
+  schedule every year from 2026-01 to 2028-01
+  category operating.revenue.royalty
+  amount = 70
+}
+
+// All of artist A: entity clause selects the entity and its descendants.
+slice artist_a {
+  entity asset.artist_a
+}
+
+// Artist A's royalties only: kinds intersect.
+slice artist_a_royalties {
+  entity asset.artist_a
+  category "operating.revenue.royalty"
+}
+
+// The whole label, minus merchandise: include by entity, subtract by
+// category. The label is a container; its scope arrives through part_of.
+slice label_ex_merch {
+  entity container.label
+  except category "operating.revenue.merchandise"
+}

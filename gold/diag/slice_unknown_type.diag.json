@@ -1,0 +1,17 @@
+[
+  {
+    "code": "E1363_SLICE_UNKNOWN_TYPE",
+    "severity": "error",
+    "message": "Slice 's' selects type 'Contract.Imaginary', which the active ontology does not define.",
+    "file": "model.cfdl",
+    "span": {
+      "start_line": 12,
+      "start_col": 1,
+      "end_line": 12,
+      "end_col": 35
+    },
+    "path": null,
+    "hint": "Known contract types: Contract.Construction, Contract.Debt, Contract.Derivative, Contract.Insurance, Contract.Lease, Contract.Offtake, Contract.Option, Contract.Purchase, Contract.Sale, Contract.Service, Contract.Tax.",
+    "notes": []
+  }
+]

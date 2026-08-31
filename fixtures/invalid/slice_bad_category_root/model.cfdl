@@ -1,0 +1,13 @@
+version 0.1
+model "slice-bad-category-root"
+time calendar annual from 2026-01 for 2
+
+entity asset a : Asset.Financial
+
+stream a.x on entity asset.a inflow currency USD {
+  schedule every year from 2026-01 to 2027-01
+  amount = 1
+}
+
+// A selector that could never match anything is a typo, not a choice.
+slice s { category "revenue.royalty" }

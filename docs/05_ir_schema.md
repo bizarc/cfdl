@@ -141,6 +141,14 @@ against it by `make ir-schema`.
       },
       "description": "Reserved. Metrics are computed at run time by the engine and by the active pack, so a compile output does not carry them; no compiler emits this field."
     },
+    "slices": {
+      "type": "array",
+      "minItems": 0,
+      "items": {
+        "$ref": "#/$defs/Slice"
+      },
+      "description": "Declared slices — named, deliberately partial selections (docs/01 §15.4). Clause kinds intersect, values within a kind union, excepts subtract. `type_streams` is the compiler's expansion of the `type` clauses, resolved at compile because only the compiler holds the ontology the transitive match walks. Omitted when a model declares none."
+    },
     "waterfalls": {
       "type": "array",
       "minItems": 0,
@@ -1736,6 +1744,75 @@ against it by `make ir-schema`.
           "items": {
             "$ref": "#/$defs/StateAction"
           }
+        }
+      }
+    },
+    "Slice": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "provenance"
+      ],
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "entities": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Entity references; each selects the entity and its part_of descendants."
+        },
+        "types": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Ontology types, matched transitively through refines."
+        },
+        "categories": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Category selectors — series_sum's dialect."
+        },
+        "streams": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Stream-name selectors — same dialect."
+        },
+        "except_streams": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "except_categories": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "except_entities": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "type_streams": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "The streams the type clauses matched — the compiler's expansion, read by the engine."
+        },
+        "provenance": {
+          "$ref": "#/$defs/NodeProvenance"
         }
       }
     }

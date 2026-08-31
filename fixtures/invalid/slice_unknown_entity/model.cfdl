@@ -1,0 +1,14 @@
+version 0.1
+model "slice-unknown-entity"
+time calendar annual from 2026-01 for 2
+
+entity asset a : Asset.Financial
+
+stream a.x on entity asset.a inflow currency USD {
+  schedule every year from 2026-01 to 2027-01
+  amount = 1
+}
+
+// A slice selects by REFERENCE, and a reference is what the compiler can
+// check — a misspelled entity is refused, not silently matched to nothing.
+slice s { entity asset.nonesuch }
