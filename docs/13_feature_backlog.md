@@ -2123,10 +2123,15 @@ accept one family or a list; every pre-widening pack file still parses). The
 engine needed nothing: `entity container fund` already compiled — the model
 namespace was never family-gated — and the rollup already follows `parent`
 regardless of family, verified with a probe whose container aggregated its
-child's cash. What remains: migrating `CRE.Asset.Portfolio` and
-`Energy.Asset.Portfolio` to the container family (touches two published
-penzance benchmarks, so it goes with a golden re-run, not a vocabulary
-change); and deciding whether a model-level `entity` namespace should be
+child's cash. The Portfolio migration landed
+31 August 2026: `CRE.Container.Portfolio` and `Energy.Container.Portfolio`
+(renamed — "Asset" in a container's type_id would be incoherent), both
+penzance models re-declared (`entity container project`, every
+`asset.project` reference moved with it), economics identical — 45/45
+benchmarks. The migration settled a design point the models forced: a
+container MAY carry directly-attached cash (penzance hangs land and
+development costs on the project), so "does not produce" softened to
+"deal-level cash is real cash" in docs/01 and docs/07. What remains: deciding whether a model-level `entity` namespace should be
 validated against `ENTITY_FAMILIES` at all — today `entity carpark x` is
 legal and silently untyped, which is a finding of this work, not a change
 it made.

@@ -70,12 +70,9 @@ a magnitude — so this is a field rather than a state (`docs/36` §3.1). 1.0 is
 fully available."""
 
 [[entities]]
-type_id = "Energy.Asset.Portfolio"
-family = "asset"
-class = "real"
-# A portfolio is a grouping that scopes cash, not a thing that produces it —
-# migrates to the `container` family when docs/13 §7.88 lands.
-refines = "Asset.Real"
+type_id = "Energy.Container.Portfolio"
+family = "container"
+refines = "Container.Portfolio"
 description = "A grouping of facilities modeled as one. Use only when the grain is the portfolio; a facility needs no parent to exist."
 
 # A tax-equity or sponsor interest is a claim on the project, not the plant

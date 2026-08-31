@@ -408,59 +408,59 @@ curve pierce_sellout {
 
 
 // ---------------------------------------------------------------- structure
-entity asset project : CRE.Asset.Portfolio
-entity asset east : CRE.Asset.RealProperty { asset_class = "mixed_use"  part of asset.project }
-entity asset west : CRE.Asset.RealProperty { asset_class = "multifamily"  part of asset.project }
+entity container project : CRE.Container.Portfolio
+entity asset east : CRE.Asset.RealProperty { asset_class = "mixed_use"  part of container.project }
+entity asset west : CRE.Asset.RealProperty { asset_class = "multifamily"  part of container.project }
 
 entity party penzance : CRE.Party.Sponsor  { name = "Penzance" }
 entity party baupost  : CRE.Party.Investor { name = "The Baupost Group" }
 entity party mack     : CRE.Party.Lender   { name = "Mack Real Estate Credit Strategies" }
 
 // ------------------------------------------------------------------ capital
-stream cre.land on entity asset.project outflow currency USD {
+stream cre.land on entity container.project outflow currency USD {
   schedule on 2011-09
   category investing.capital.capex
   amount = 67000000.00
 }
 
 
-stream cre.hard_buildings on entity asset.project outflow currency USD {
+stream cre.hard_buildings on entity container.project outflow currency USD {
   schedule every month start from 2018-04 to 2021-06
   category investing.capital.construction
   amount = 301693050.00 * (time.t - 78.0) * (118.0 - time.t) / 10660.0
 }
 
-stream cre.hard_garage on entity asset.project outflow currency USD {
+stream cre.hard_garage on entity container.project outflow currency USD {
   schedule every month start from 2018-04 to 2021-06
   category investing.capital.construction
   amount = 33184000.00 * (time.t - 78.0) * (118.0 - time.t) / 10660.0
 }
 
-stream cre.fire_station on entity asset.project outflow currency USD {
+stream cre.fire_station on entity container.project outflow currency USD {
   schedule every month start from 2018-04 to 2021-06
   category investing.capital.construction
   amount = 7454800.00 * (time.t - 78.0) * (118.0 - time.t) / 10660.0
 }
 
-stream cre.park_and_street on entity asset.project outflow currency USD {
+stream cre.park_and_street on entity container.project outflow currency USD {
   schedule every month start from 2018-04 to 2021-06
   category investing.capital.construction
   amount = 14000000.00 * (time.t - 78.0) * (118.0 - time.t) / 10660.0
 }
 
-stream cre.soft_costs on entity asset.project outflow currency USD {
+stream cre.soft_costs on entity container.project outflow currency USD {
   schedule every month start from 2018-04 to 2021-06
   category investing.capital.construction
   amount = 60576414.50 * (time.t - 78.0) * (118.0 - time.t) / 10660.0
 }
 
-stream cre.contingency on entity asset.project outflow currency USD {
+stream cre.contingency on entity container.project outflow currency USD {
   schedule every month start from 2018-04 to 2021-06
   category investing.capital.construction
   amount = 17816592.50 * (time.t - 78.0) * (118.0 - time.t) / 10660.0
 }
 
-stream cre.developer_fee on entity asset.project outflow currency USD {
+stream cre.developer_fee on entity container.project outflow currency USD {
   schedule every month start from 2018-04 to 2021-06
   category investing.capital.construction
   amount = 17994713.10 * (time.t - 78.0) * (118.0 - time.t) / 10660.0
@@ -469,13 +469,13 @@ stream cre.developer_fee on entity asset.project outflow currency USD {
 
 // SP #445 conditions: utility undergrounding and TDM at permit; public art,
 // green building and affordable housing at certificate of occupancy.
-stream cre.obligations_permit on entity asset.project outflow currency USD {
+stream cre.obligations_permit on entity container.project outflow currency USD {
   schedule on 2018-04
   category investing.capital.construction
   amount = 157303.00
 }
 
-stream cre.obligations_co on entity asset.project outflow currency USD {
+stream cre.obligations_co on entity container.project outflow currency USD {
   schedule on 2021-09
   category investing.capital.construction
   amount = 12252500.00
@@ -560,7 +560,7 @@ stream cre.evo_sale on entity asset.east inflow currency USD {
   amount = 334642240.00
 }
 
-stream cre.sale_costs on entity asset.project outflow currency USD {
+stream cre.sale_costs on entity container.project outflow currency USD {
   schedule on 2022-05
   category investing.disposal.selling_costs
   amount = 601097240.00 * inputs.cost_of_sale
@@ -765,7 +765,7 @@ entity asset facility : Asset.Financial {
 }
 
 // Interest is capitalized: it is repaid inside the principal repayment. That is the convention the reference workbook uses.
-stream cre.loan_draw on entity asset.project inflow currency USD {
+stream cre.loan_draw on entity container.project inflow currency USD {
   schedule every month start from 2011-09 to 2024-12
   category financing.debt.proceeds
   amount = asset.facility.draw
@@ -775,13 +775,13 @@ stream cre.loan_draw on entity asset.project inflow currency USD {
 // net to zero in cash while the balance grows. Stated GROSS rather than folded
 // into the balance silently, so `domain.cre.debt_service` sees real interest
 // and coverage during the build is measurable instead of absent.
-stream cre.loan_interest on entity asset.project outflow currency USD {
+stream cre.loan_interest on entity container.project outflow currency USD {
   schedule every month start from 2011-09 to 2024-12
   category financing.debt.interest_paid
   amount = asset.facility.interest
 }
 
-stream cre.loan_interest_funding on entity asset.project inflow currency USD {
+stream cre.loan_interest_funding on entity container.project inflow currency USD {
   schedule every month start from 2011-09 to 2024-12
   category financing.debt.proceeds
   amount = asset.facility.interest
@@ -791,7 +791,7 @@ stream cre.loan_interest_funding on entity asset.project inflow currency USD {
 // `domain.cre.debt_service`, and a balance retired out of sale proceeds is not
 // debt service — it would make every coverage ratio in the disposal period
 // meaningless. The cre pack says the same of a permanent loan's balloon.
-stream cre.loan_repayment on entity asset.project outflow currency USD {
+stream cre.loan_repayment on entity container.project outflow currency USD {
   schedule every month start from 2011-09 to 2024-12
   category investing.disposal.reversion
   amount = asset.facility.repay
@@ -865,7 +865,7 @@ account penzance_capital {
 
 // -------------------------------------------------------------- the JV split
 // Penzance / Baupost terms are not public; these tiers are stated assumptions.
-waterfall jv.distribution on entity asset.project {
+waterfall jv.distribution on entity container.project {
   schedule on 2024-06 end
   from deal_cash
 

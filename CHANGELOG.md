@@ -8,6 +8,26 @@ This project follows Semantic Versioning: https://semver.org/
 
 ## [Unreleased]
 
+### Changed (breaking): the Portfolio types are containers (§7.88)
+
+`CRE.Asset.Portfolio` and `Energy.Asset.Portfolio` were typed falsely —
+`family = asset, class = real` claims a physical thing that produces cash,
+and a portfolio is a grouping. Both move to the `container` family as
+`CRE.Container.Portfolio` and `Energy.Container.Portfolio` (a container's
+type_id cannot honestly say "Asset"), refining `Container.Portfolio`.
+
+A model using one re-declares: `entity container project :
+CRE.Container.Portfolio`, and every `asset.<symbol>` reference — `part of`,
+`on entity`, waterfall attachments, results keys — moves to
+`container.<symbol>` with it. Both penzance benchmarks made the move;
+their economics are identical (45/45).
+
+The migration settled a design point: a container MAY carry
+directly-attached cash. Penzance hangs land and development costs on the
+project itself, and that is deal-level cash — real, and aggregated with the
+members' by the relation. `docs/01` §7 and the Pack Interface say so now.
+
+
 ### Added: master types, containers, and the relation vocabulary (§7.88, §7.89, §7.92)
 
 The ontology promised refinement and did not record it: "a pack may refine
