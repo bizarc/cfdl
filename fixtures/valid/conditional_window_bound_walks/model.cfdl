@@ -1,0 +1,48 @@
+version 0.1
+model "conditional-window-bound-walks"
+time calendar monthly from 2026-01 for 4
+
+// A CONDITIONAL WINDOW BOUND IS BACKWARD WHEN BOTH BRANCHES ARE.
+//
+// `walk_ineligible_reason` asks whether a series window can reach past the
+// current period; if it can, the model keeps the column order, and the column
+// order has no periods to carry an account balance through. The check reads
+// the bound's SOURCE TEXT and recognised numeric literals, `time.t` plus a
+// chain of signed literals, and `max`/`min` of those. It did not recognise
+// `if`, so a bound that is backward down both branches was reported forward.
+//
+// The cost was not theoretical. `benchmarks/credit/americredit_2017_1` draws
+// its pot with the lower bound `if(time.t == 1.0, 0.0, time.t)` — the first
+// distribution collects two periods, because six of the twelve assumed pools
+// have a January cutoff and six a February one. That one conditional held the
+// corpus's most intricate waterfall on the column order, so the reserve
+// account it needed could be declared and could never carry a balance. The
+// engine said so rather than publishing zeros, which is how it was found.
+//
+// The condition is NOT examined and does not need to be: whichever branch it
+// selects, the bound is one of the two, so both being backward settles it. A
+// forward branch makes the whole bound forward — `window_bound_is_backward`'s
+// own unit tests pin that direction.
+//
+// The pin here is the CONSEQUENCE, not the predicate: this model both draws
+// from an if-bounded window and declares an account, so if the bound were
+// read as forward the run would warn and `account.reserve` would be absent.
+
+entity asset co { name = "Co" }
+entity party sponsor { name = "Sponsor" }
+
+account reserve { }
+
+stream ops.revenue on entity asset.co inflow currency USD {
+  schedule every month from 2026-01 to 2026-04
+  amount = 100
+}
+
+// The first distribution draws two periods of revenue and every later one
+// draws its own — the AmeriCredit pot's shape, at four periods.
+waterfall funding on entity asset.co {
+  schedule every month from 2026-02 to 2026-04
+  from series_sum("ops.revenue", if(time.t == 1.0, 0.0, time.t), time.t)
+  pay to_reserve to account reserve = 30.0
+  pay residual   to party.sponsor   = remaining
+}

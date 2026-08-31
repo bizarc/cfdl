@@ -69,6 +69,16 @@ then `min(total, principal)` and clause 20 is `max(total - principal, 0)`, which
 is what those clauses mean. The two formulations agree to $0.0000 at all four
 speeds.
 
+The **reserve account** is the other thing the target depends on. Clause 19
+funds it at closing to 2.0% of the initial pool, and the Required Pro Forma Note
+Balance is 14.75% of the pool *less the amount on deposit in it* — so the
+reserve sets how far the turbo runs, and through that every class's retirement
+date. It is a declared account here, funded by its own inflow at closing rather
+than out of the waterfall, which allocates collections and never touched it.
+Clause 19 is then the top-up it is: whatever the balance is short of the
+required amount. On this deal, with no losses assumed, that is zero at every
+period — because the balance is at target, which is what the clause says.
+
 All twenty-two clauses are written out. Ten of them — the parity steps and the
 final-maturity steps — pay nothing at every period and every speed, because the
 pool always covers the notes and every class retires years early. They are there
@@ -277,7 +287,7 @@ entity asset trust : Credit.Asset.LoanPool {
        next if(time.t <= 1.0, prev,
                 max(prev - (min(max((if((prev.asset.trust.pool_bal) <= 101196992.93, (prev.asset.trust.bal_a1 + prev.asset.trust.bal_a2 + prev.asset.trust.bal_a3 + prev.asset.trust.bal_b + prev.asset.trust.bal_c + prev.asset.trust.bal_d + prev.asset.trust.bal_e),
          max((prev.asset.trust.bal_a1 + prev.asset.trust.bal_a2 + prev.asset.trust.bal_a3 + prev.asset.trust.bal_b + prev.asset.trust.bal_c + prev.asset.trust.bal_d + prev.asset.trust.bal_e) - (min((prev.asset.trust.pool_bal) - 5059849.65,
-          max(((prev.asset.trust.pool_bal) - max(0.1475 * (prev.asset.trust.pool_bal) - 20239398.59, 0.0)),
+          max(((prev.asset.trust.pool_bal) - max(0.1475 * (prev.asset.trust.pool_bal) - prev.reserve, 0.0)),
               (prev.asset.trust.bal_a1 + prev.asset.trust.bal_a2 + prev.asset.trust.bal_a3 + prev.asset.trust.bal_b + prev.asset.trust.bal_c + prev.asset.trust.bal_d + prev.asset.trust.bal_e) - ((prev.asset.trust.pool_prior) - (prev.asset.trust.pool_bal)) - max(((prev.asset.trust.pool_int)
            - (prev.asset.trust.pool_fee) * 0.0018750000
            - 625.0
@@ -298,7 +308,7 @@ entity asset trust : Credit.Asset.LoanPool {
        next if(time.t <= 1.0, prev,
                 max(prev - (min(max((if((prev.asset.trust.pool_bal) <= 101196992.93, (prev.asset.trust.bal_a1 + prev.asset.trust.bal_a2 + prev.asset.trust.bal_a3 + prev.asset.trust.bal_b + prev.asset.trust.bal_c + prev.asset.trust.bal_d + prev.asset.trust.bal_e),
          max((prev.asset.trust.bal_a1 + prev.asset.trust.bal_a2 + prev.asset.trust.bal_a3 + prev.asset.trust.bal_b + prev.asset.trust.bal_c + prev.asset.trust.bal_d + prev.asset.trust.bal_e) - (min((prev.asset.trust.pool_bal) - 5059849.65,
-          max(((prev.asset.trust.pool_bal) - max(0.1475 * (prev.asset.trust.pool_bal) - 20239398.59, 0.0)),
+          max(((prev.asset.trust.pool_bal) - max(0.1475 * (prev.asset.trust.pool_bal) - prev.reserve, 0.0)),
               (prev.asset.trust.bal_a1 + prev.asset.trust.bal_a2 + prev.asset.trust.bal_a3 + prev.asset.trust.bal_b + prev.asset.trust.bal_c + prev.asset.trust.bal_d + prev.asset.trust.bal_e) - ((prev.asset.trust.pool_prior) - (prev.asset.trust.pool_bal)) - max(((prev.asset.trust.pool_int)
            - (prev.asset.trust.pool_fee) * 0.0018750000
            - 625.0
@@ -319,7 +329,7 @@ entity asset trust : Credit.Asset.LoanPool {
        next if(time.t <= 1.0, prev,
                 max(prev - (min(max((if((prev.asset.trust.pool_bal) <= 101196992.93, (prev.asset.trust.bal_a1 + prev.asset.trust.bal_a2 + prev.asset.trust.bal_a3 + prev.asset.trust.bal_b + prev.asset.trust.bal_c + prev.asset.trust.bal_d + prev.asset.trust.bal_e),
          max((prev.asset.trust.bal_a1 + prev.asset.trust.bal_a2 + prev.asset.trust.bal_a3 + prev.asset.trust.bal_b + prev.asset.trust.bal_c + prev.asset.trust.bal_d + prev.asset.trust.bal_e) - (min((prev.asset.trust.pool_bal) - 5059849.65,
-          max(((prev.asset.trust.pool_bal) - max(0.1475 * (prev.asset.trust.pool_bal) - 20239398.59, 0.0)),
+          max(((prev.asset.trust.pool_bal) - max(0.1475 * (prev.asset.trust.pool_bal) - prev.reserve, 0.0)),
               (prev.asset.trust.bal_a1 + prev.asset.trust.bal_a2 + prev.asset.trust.bal_a3 + prev.asset.trust.bal_b + prev.asset.trust.bal_c + prev.asset.trust.bal_d + prev.asset.trust.bal_e) - ((prev.asset.trust.pool_prior) - (prev.asset.trust.pool_bal)) - max(((prev.asset.trust.pool_int)
            - (prev.asset.trust.pool_fee) * 0.0018750000
            - 625.0
@@ -340,7 +350,7 @@ entity asset trust : Credit.Asset.LoanPool {
        next if(time.t <= 1.0, prev,
                 max(prev - (min(max((if((prev.asset.trust.pool_bal) <= 101196992.93, (prev.asset.trust.bal_a1 + prev.asset.trust.bal_a2 + prev.asset.trust.bal_a3 + prev.asset.trust.bal_b + prev.asset.trust.bal_c + prev.asset.trust.bal_d + prev.asset.trust.bal_e),
          max((prev.asset.trust.bal_a1 + prev.asset.trust.bal_a2 + prev.asset.trust.bal_a3 + prev.asset.trust.bal_b + prev.asset.trust.bal_c + prev.asset.trust.bal_d + prev.asset.trust.bal_e) - (min((prev.asset.trust.pool_bal) - 5059849.65,
-          max(((prev.asset.trust.pool_bal) - max(0.1475 * (prev.asset.trust.pool_bal) - 20239398.59, 0.0)),
+          max(((prev.asset.trust.pool_bal) - max(0.1475 * (prev.asset.trust.pool_bal) - prev.reserve, 0.0)),
               (prev.asset.trust.bal_a1 + prev.asset.trust.bal_a2 + prev.asset.trust.bal_a3 + prev.asset.trust.bal_b + prev.asset.trust.bal_c + prev.asset.trust.bal_d + prev.asset.trust.bal_e) - ((prev.asset.trust.pool_prior) - (prev.asset.trust.pool_bal)) - max(((prev.asset.trust.pool_int)
            - (prev.asset.trust.pool_fee) * 0.0018750000
            - 625.0
@@ -361,7 +371,7 @@ entity asset trust : Credit.Asset.LoanPool {
        next if(time.t <= 1.0, prev,
                 max(prev - (min(max((if((prev.asset.trust.pool_bal) <= 101196992.93, (prev.asset.trust.bal_a1 + prev.asset.trust.bal_a2 + prev.asset.trust.bal_a3 + prev.asset.trust.bal_b + prev.asset.trust.bal_c + prev.asset.trust.bal_d + prev.asset.trust.bal_e),
          max((prev.asset.trust.bal_a1 + prev.asset.trust.bal_a2 + prev.asset.trust.bal_a3 + prev.asset.trust.bal_b + prev.asset.trust.bal_c + prev.asset.trust.bal_d + prev.asset.trust.bal_e) - (min((prev.asset.trust.pool_bal) - 5059849.65,
-          max(((prev.asset.trust.pool_bal) - max(0.1475 * (prev.asset.trust.pool_bal) - 20239398.59, 0.0)),
+          max(((prev.asset.trust.pool_bal) - max(0.1475 * (prev.asset.trust.pool_bal) - prev.reserve, 0.0)),
               (prev.asset.trust.bal_a1 + prev.asset.trust.bal_a2 + prev.asset.trust.bal_a3 + prev.asset.trust.bal_b + prev.asset.trust.bal_c + prev.asset.trust.bal_d + prev.asset.trust.bal_e) - ((prev.asset.trust.pool_prior) - (prev.asset.trust.pool_bal)) - max(((prev.asset.trust.pool_int)
            - (prev.asset.trust.pool_fee) * 0.0018750000
            - 625.0
@@ -382,7 +392,7 @@ entity asset trust : Credit.Asset.LoanPool {
        next if(time.t <= 1.0, prev,
                 max(prev - (min(max((if((prev.asset.trust.pool_bal) <= 101196992.93, (prev.asset.trust.bal_a1 + prev.asset.trust.bal_a2 + prev.asset.trust.bal_a3 + prev.asset.trust.bal_b + prev.asset.trust.bal_c + prev.asset.trust.bal_d + prev.asset.trust.bal_e),
          max((prev.asset.trust.bal_a1 + prev.asset.trust.bal_a2 + prev.asset.trust.bal_a3 + prev.asset.trust.bal_b + prev.asset.trust.bal_c + prev.asset.trust.bal_d + prev.asset.trust.bal_e) - (min((prev.asset.trust.pool_bal) - 5059849.65,
-          max(((prev.asset.trust.pool_bal) - max(0.1475 * (prev.asset.trust.pool_bal) - 20239398.59, 0.0)),
+          max(((prev.asset.trust.pool_bal) - max(0.1475 * (prev.asset.trust.pool_bal) - prev.reserve, 0.0)),
               (prev.asset.trust.bal_a1 + prev.asset.trust.bal_a2 + prev.asset.trust.bal_a3 + prev.asset.trust.bal_b + prev.asset.trust.bal_c + prev.asset.trust.bal_d + prev.asset.trust.bal_e) - ((prev.asset.trust.pool_prior) - (prev.asset.trust.pool_bal)) - max(((prev.asset.trust.pool_int)
            - (prev.asset.trust.pool_fee) * 0.0018750000
            - 625.0
@@ -403,7 +413,7 @@ entity asset trust : Credit.Asset.LoanPool {
        next if(time.t <= 1.0, prev,
                 max(prev - (min(max((if((prev.asset.trust.pool_bal) <= 101196992.93, (prev.asset.trust.bal_a1 + prev.asset.trust.bal_a2 + prev.asset.trust.bal_a3 + prev.asset.trust.bal_b + prev.asset.trust.bal_c + prev.asset.trust.bal_d + prev.asset.trust.bal_e),
          max((prev.asset.trust.bal_a1 + prev.asset.trust.bal_a2 + prev.asset.trust.bal_a3 + prev.asset.trust.bal_b + prev.asset.trust.bal_c + prev.asset.trust.bal_d + prev.asset.trust.bal_e) - (min((prev.asset.trust.pool_bal) - 5059849.65,
-          max(((prev.asset.trust.pool_bal) - max(0.1475 * (prev.asset.trust.pool_bal) - 20239398.59, 0.0)),
+          max(((prev.asset.trust.pool_bal) - max(0.1475 * (prev.asset.trust.pool_bal) - prev.reserve, 0.0)),
               (prev.asset.trust.bal_a1 + prev.asset.trust.bal_a2 + prev.asset.trust.bal_a3 + prev.asset.trust.bal_b + prev.asset.trust.bal_c + prev.asset.trust.bal_d + prev.asset.trust.bal_e) - ((prev.asset.trust.pool_prior) - (prev.asset.trust.pool_bal)) - max(((prev.asset.trust.pool_int)
            - (prev.asset.trust.pool_fee) * 0.0018750000
            - 625.0
@@ -636,6 +646,35 @@ entity party d_holders : Credit.Party.Investor { name = "Class D noteholders" }
 entity party e_holders : Credit.Party.Investor { name = "Class E noteholders" }
 
 // ---------------------------------------------------------------------------
+// The initial pool balance at the cutoff date, and the reserve required
+// against it. The prospectus states the reserve as a RULE — 2.0% of the
+// initial pool — so the model states it as one: 20,239,398.5856, the product
+// rather than a rounded dollar amount.
+assume initial_pool     = 1011969929.28
+assume reserve_required = 0.02 * inputs.initial_pool
+
+// ---------------------------------------------------------------------------
+// THE RESERVE ACCOUNT (clause 19), funded at closing.
+//
+// The reserve is not inert here even though it is never drawn. The Required
+// Pro Forma Note Balance — the target the turbo runs toward — is 14.75% of the
+// pool "less the amount required on deposit in the reserve account"
+// (glossary), so the reserve is what the target is stated against, and every
+// class's retirement date depends on it. That is why it is an account whose
+// balance the target reads, rather than a number repeated wherever the target
+// appears.
+//
+// FUNDED AT CLOSING, WHICH IS NOT A DISTRIBUTION. The reserve comes out of
+// note proceeds before the first collection period, so it cannot be funded
+// from the waterfall: the waterfall allocates collections, and taking the
+// reserve out of them would spend cash the deal never spent. `from` is the
+// account's own inflow — the one that is not an allocation — and it fires
+// once, at period 0. Clause 19 below is then the top-up it is.
+account reserve {
+  from if(time.t == 0.0, inputs.reserve_required, 0.0)
+}
+
+// ---------------------------------------------------------------------------
 // The priority of payments — all twenty-two clauses, in the prospectus's order
 // (pp. 77-78). Clauses 4, 5, 7, 8, 10, 11, 13, 14, 16 and 17 are the parity
 // and final-maturity steps: with no defaults, losses or repurchases assumed,
@@ -776,7 +815,7 @@ waterfall notes.distribution on entity asset.trust {
   pay a1_principal to party.a1_holders =
         min(max((min((if((asset.trust.pool_bal) <= 101196992.93, (asset.trust.bal_a1 + asset.trust.bal_a2 + asset.trust.bal_a3 + asset.trust.bal_b + asset.trust.bal_c + asset.trust.bal_d + asset.trust.bal_e),
          max((asset.trust.bal_a1 + asset.trust.bal_a2 + asset.trust.bal_a3 + asset.trust.bal_b + asset.trust.bal_c + asset.trust.bal_d + asset.trust.bal_e) - (min((asset.trust.pool_bal) - 5059849.65,
-          max(((asset.trust.pool_bal) - max(0.1475 * (asset.trust.pool_bal) - 20239398.59, 0.0)),
+          max(((asset.trust.pool_bal) - max(0.1475 * (asset.trust.pool_bal) - prev.reserve, 0.0)),
               (asset.trust.bal_a1 + asset.trust.bal_a2 + asset.trust.bal_a3 + asset.trust.bal_b + asset.trust.bal_c + asset.trust.bal_d + asset.trust.bal_e) - ((asset.trust.pool_prior) - (asset.trust.pool_bal)) - max(((asset.trust.pool_int)
            - (asset.trust.pool_fee) * 0.0018750000
            - 625.0
@@ -792,7 +831,7 @@ waterfall notes.distribution on entity asset.trust {
   pay a2_principal to party.a2_holders =
         min(max((min((if((asset.trust.pool_bal) <= 101196992.93, (asset.trust.bal_a1 + asset.trust.bal_a2 + asset.trust.bal_a3 + asset.trust.bal_b + asset.trust.bal_c + asset.trust.bal_d + asset.trust.bal_e),
          max((asset.trust.bal_a1 + asset.trust.bal_a2 + asset.trust.bal_a3 + asset.trust.bal_b + asset.trust.bal_c + asset.trust.bal_d + asset.trust.bal_e) - (min((asset.trust.pool_bal) - 5059849.65,
-          max(((asset.trust.pool_bal) - max(0.1475 * (asset.trust.pool_bal) - 20239398.59, 0.0)),
+          max(((asset.trust.pool_bal) - max(0.1475 * (asset.trust.pool_bal) - prev.reserve, 0.0)),
               (asset.trust.bal_a1 + asset.trust.bal_a2 + asset.trust.bal_a3 + asset.trust.bal_b + asset.trust.bal_c + asset.trust.bal_d + asset.trust.bal_e) - ((asset.trust.pool_prior) - (asset.trust.pool_bal)) - max(((asset.trust.pool_int)
            - (asset.trust.pool_fee) * 0.0018750000
            - 625.0
@@ -808,7 +847,7 @@ waterfall notes.distribution on entity asset.trust {
   pay a3_principal to party.a3_holders =
         min(max((min((if((asset.trust.pool_bal) <= 101196992.93, (asset.trust.bal_a1 + asset.trust.bal_a2 + asset.trust.bal_a3 + asset.trust.bal_b + asset.trust.bal_c + asset.trust.bal_d + asset.trust.bal_e),
          max((asset.trust.bal_a1 + asset.trust.bal_a2 + asset.trust.bal_a3 + asset.trust.bal_b + asset.trust.bal_c + asset.trust.bal_d + asset.trust.bal_e) - (min((asset.trust.pool_bal) - 5059849.65,
-          max(((asset.trust.pool_bal) - max(0.1475 * (asset.trust.pool_bal) - 20239398.59, 0.0)),
+          max(((asset.trust.pool_bal) - max(0.1475 * (asset.trust.pool_bal) - prev.reserve, 0.0)),
               (asset.trust.bal_a1 + asset.trust.bal_a2 + asset.trust.bal_a3 + asset.trust.bal_b + asset.trust.bal_c + asset.trust.bal_d + asset.trust.bal_e) - ((asset.trust.pool_prior) - (asset.trust.pool_bal)) - max(((asset.trust.pool_int)
            - (asset.trust.pool_fee) * 0.0018750000
            - 625.0
@@ -824,7 +863,7 @@ waterfall notes.distribution on entity asset.trust {
   pay b_principal to party.b_holders =
         min(max((min((if((asset.trust.pool_bal) <= 101196992.93, (asset.trust.bal_a1 + asset.trust.bal_a2 + asset.trust.bal_a3 + asset.trust.bal_b + asset.trust.bal_c + asset.trust.bal_d + asset.trust.bal_e),
          max((asset.trust.bal_a1 + asset.trust.bal_a2 + asset.trust.bal_a3 + asset.trust.bal_b + asset.trust.bal_c + asset.trust.bal_d + asset.trust.bal_e) - (min((asset.trust.pool_bal) - 5059849.65,
-          max(((asset.trust.pool_bal) - max(0.1475 * (asset.trust.pool_bal) - 20239398.59, 0.0)),
+          max(((asset.trust.pool_bal) - max(0.1475 * (asset.trust.pool_bal) - prev.reserve, 0.0)),
               (asset.trust.bal_a1 + asset.trust.bal_a2 + asset.trust.bal_a3 + asset.trust.bal_b + asset.trust.bal_c + asset.trust.bal_d + asset.trust.bal_e) - ((asset.trust.pool_prior) - (asset.trust.pool_bal)) - max(((asset.trust.pool_int)
            - (asset.trust.pool_fee) * 0.0018750000
            - 625.0
@@ -840,7 +879,7 @@ waterfall notes.distribution on entity asset.trust {
   pay c_principal to party.c_holders =
         min(max((min((if((asset.trust.pool_bal) <= 101196992.93, (asset.trust.bal_a1 + asset.trust.bal_a2 + asset.trust.bal_a3 + asset.trust.bal_b + asset.trust.bal_c + asset.trust.bal_d + asset.trust.bal_e),
          max((asset.trust.bal_a1 + asset.trust.bal_a2 + asset.trust.bal_a3 + asset.trust.bal_b + asset.trust.bal_c + asset.trust.bal_d + asset.trust.bal_e) - (min((asset.trust.pool_bal) - 5059849.65,
-          max(((asset.trust.pool_bal) - max(0.1475 * (asset.trust.pool_bal) - 20239398.59, 0.0)),
+          max(((asset.trust.pool_bal) - max(0.1475 * (asset.trust.pool_bal) - prev.reserve, 0.0)),
               (asset.trust.bal_a1 + asset.trust.bal_a2 + asset.trust.bal_a3 + asset.trust.bal_b + asset.trust.bal_c + asset.trust.bal_d + asset.trust.bal_e) - ((asset.trust.pool_prior) - (asset.trust.pool_bal)) - max(((asset.trust.pool_int)
            - (asset.trust.pool_fee) * 0.0018750000
            - 625.0
@@ -856,7 +895,7 @@ waterfall notes.distribution on entity asset.trust {
   pay d_principal to party.d_holders =
         min(max((min((if((asset.trust.pool_bal) <= 101196992.93, (asset.trust.bal_a1 + asset.trust.bal_a2 + asset.trust.bal_a3 + asset.trust.bal_b + asset.trust.bal_c + asset.trust.bal_d + asset.trust.bal_e),
          max((asset.trust.bal_a1 + asset.trust.bal_a2 + asset.trust.bal_a3 + asset.trust.bal_b + asset.trust.bal_c + asset.trust.bal_d + asset.trust.bal_e) - (min((asset.trust.pool_bal) - 5059849.65,
-          max(((asset.trust.pool_bal) - max(0.1475 * (asset.trust.pool_bal) - 20239398.59, 0.0)),
+          max(((asset.trust.pool_bal) - max(0.1475 * (asset.trust.pool_bal) - prev.reserve, 0.0)),
               (asset.trust.bal_a1 + asset.trust.bal_a2 + asset.trust.bal_a3 + asset.trust.bal_b + asset.trust.bal_c + asset.trust.bal_d + asset.trust.bal_e) - ((asset.trust.pool_prior) - (asset.trust.pool_bal)) - max(((asset.trust.pool_int)
            - (asset.trust.pool_fee) * 0.0018750000
            - 625.0
@@ -872,7 +911,7 @@ waterfall notes.distribution on entity asset.trust {
   pay e_principal to party.e_holders =
         min(max((min((if((asset.trust.pool_bal) <= 101196992.93, (asset.trust.bal_a1 + asset.trust.bal_a2 + asset.trust.bal_a3 + asset.trust.bal_b + asset.trust.bal_c + asset.trust.bal_d + asset.trust.bal_e),
          max((asset.trust.bal_a1 + asset.trust.bal_a2 + asset.trust.bal_a3 + asset.trust.bal_b + asset.trust.bal_c + asset.trust.bal_d + asset.trust.bal_e) - (min((asset.trust.pool_bal) - 5059849.65,
-          max(((asset.trust.pool_bal) - max(0.1475 * (asset.trust.pool_bal) - 20239398.59, 0.0)),
+          max(((asset.trust.pool_bal) - max(0.1475 * (asset.trust.pool_bal) - prev.reserve, 0.0)),
               (asset.trust.bal_a1 + asset.trust.bal_a2 + asset.trust.bal_a3 + asset.trust.bal_b + asset.trust.bal_c + asset.trust.bal_d + asset.trust.bal_e) - ((asset.trust.pool_prior) - (asset.trust.pool_bal)) - max(((asset.trust.pool_int)
            - (asset.trust.pool_fee) * 0.0018750000
            - 625.0
@@ -885,9 +924,15 @@ waterfall notes.distribution on entity asset.trust {
            + asset.trust.bal_e * 0.0000000000)), 0.0)))), 0.0))), ((asset.trust.pool_prior) - (asset.trust.pool_bal))))
            - (asset.trust.bal_a1 + asset.trust.bal_a2 + asset.trust.bal_a3 + asset.trust.bal_b + asset.trust.bal_c + asset.trust.bal_d), 0.0), asset.trust.bal_e)
 
-  // 19. the reserve account, funded at closing to 2.0% of the initial
-  //     pool and never drawn, since nothing is assumed to default.
-  pay reserve_topup to party.certificate = 0.0
+  // 19. the reserve account. This step is the TOP-UP: whatever the
+  //     account is short of its required amount, restored out of
+  //     collections ahead of principal. It pays nothing at any period on
+  //     this deal — no losses are assumed, so the reserve is never drawn
+  //     and the shortfall is always zero — and it pays nothing BECAUSE
+  //     the balance is at target, which is what the clause says. Were the
+  //     reserve ever drawn, this step would restore it.
+  pay reserve_topup to account reserve =
+        max(0.0, inputs.reserve_required - prev.reserve)
 
   // 20. the Accelerated Principal Amount: excess cash turboing the
   //     notes toward the target, and at the clean-up call the whole
@@ -896,7 +941,7 @@ waterfall notes.distribution on entity asset.trust {
   pay a1_accelerated to party.a1_holders =
         max(min(max((if((asset.trust.pool_bal) <= 101196992.93, (asset.trust.bal_a1 + asset.trust.bal_a2 + asset.trust.bal_a3 + asset.trust.bal_b + asset.trust.bal_c + asset.trust.bal_d + asset.trust.bal_e),
          max((asset.trust.bal_a1 + asset.trust.bal_a2 + asset.trust.bal_a3 + asset.trust.bal_b + asset.trust.bal_c + asset.trust.bal_d + asset.trust.bal_e) - (min((asset.trust.pool_bal) - 5059849.65,
-          max(((asset.trust.pool_bal) - max(0.1475 * (asset.trust.pool_bal) - 20239398.59, 0.0)),
+          max(((asset.trust.pool_bal) - max(0.1475 * (asset.trust.pool_bal) - prev.reserve, 0.0)),
               (asset.trust.bal_a1 + asset.trust.bal_a2 + asset.trust.bal_a3 + asset.trust.bal_b + asset.trust.bal_c + asset.trust.bal_d + asset.trust.bal_e) - ((asset.trust.pool_prior) - (asset.trust.pool_bal)) - max(((asset.trust.pool_int)
            - (asset.trust.pool_fee) * 0.0018750000
            - 625.0
@@ -910,7 +955,7 @@ waterfall notes.distribution on entity asset.trust {
            - (0.0), 0.0), asset.trust.bal_a1)
             - (min(max((min((if((asset.trust.pool_bal) <= 101196992.93, (asset.trust.bal_a1 + asset.trust.bal_a2 + asset.trust.bal_a3 + asset.trust.bal_b + asset.trust.bal_c + asset.trust.bal_d + asset.trust.bal_e),
          max((asset.trust.bal_a1 + asset.trust.bal_a2 + asset.trust.bal_a3 + asset.trust.bal_b + asset.trust.bal_c + asset.trust.bal_d + asset.trust.bal_e) - (min((asset.trust.pool_bal) - 5059849.65,
-          max(((asset.trust.pool_bal) - max(0.1475 * (asset.trust.pool_bal) - 20239398.59, 0.0)),
+          max(((asset.trust.pool_bal) - max(0.1475 * (asset.trust.pool_bal) - prev.reserve, 0.0)),
               (asset.trust.bal_a1 + asset.trust.bal_a2 + asset.trust.bal_a3 + asset.trust.bal_b + asset.trust.bal_c + asset.trust.bal_d + asset.trust.bal_e) - ((asset.trust.pool_prior) - (asset.trust.pool_bal)) - max(((asset.trust.pool_int)
            - (asset.trust.pool_fee) * 0.0018750000
            - 625.0
@@ -926,7 +971,7 @@ waterfall notes.distribution on entity asset.trust {
   pay a2_accelerated to party.a2_holders =
         max(min(max((if((asset.trust.pool_bal) <= 101196992.93, (asset.trust.bal_a1 + asset.trust.bal_a2 + asset.trust.bal_a3 + asset.trust.bal_b + asset.trust.bal_c + asset.trust.bal_d + asset.trust.bal_e),
          max((asset.trust.bal_a1 + asset.trust.bal_a2 + asset.trust.bal_a3 + asset.trust.bal_b + asset.trust.bal_c + asset.trust.bal_d + asset.trust.bal_e) - (min((asset.trust.pool_bal) - 5059849.65,
-          max(((asset.trust.pool_bal) - max(0.1475 * (asset.trust.pool_bal) - 20239398.59, 0.0)),
+          max(((asset.trust.pool_bal) - max(0.1475 * (asset.trust.pool_bal) - prev.reserve, 0.0)),
               (asset.trust.bal_a1 + asset.trust.bal_a2 + asset.trust.bal_a3 + asset.trust.bal_b + asset.trust.bal_c + asset.trust.bal_d + asset.trust.bal_e) - ((asset.trust.pool_prior) - (asset.trust.pool_bal)) - max(((asset.trust.pool_int)
            - (asset.trust.pool_fee) * 0.0018750000
            - 625.0
@@ -940,7 +985,7 @@ waterfall notes.distribution on entity asset.trust {
            - (asset.trust.bal_a1), 0.0), asset.trust.bal_a2)
             - (min(max((min((if((asset.trust.pool_bal) <= 101196992.93, (asset.trust.bal_a1 + asset.trust.bal_a2 + asset.trust.bal_a3 + asset.trust.bal_b + asset.trust.bal_c + asset.trust.bal_d + asset.trust.bal_e),
          max((asset.trust.bal_a1 + asset.trust.bal_a2 + asset.trust.bal_a3 + asset.trust.bal_b + asset.trust.bal_c + asset.trust.bal_d + asset.trust.bal_e) - (min((asset.trust.pool_bal) - 5059849.65,
-          max(((asset.trust.pool_bal) - max(0.1475 * (asset.trust.pool_bal) - 20239398.59, 0.0)),
+          max(((asset.trust.pool_bal) - max(0.1475 * (asset.trust.pool_bal) - prev.reserve, 0.0)),
               (asset.trust.bal_a1 + asset.trust.bal_a2 + asset.trust.bal_a3 + asset.trust.bal_b + asset.trust.bal_c + asset.trust.bal_d + asset.trust.bal_e) - ((asset.trust.pool_prior) - (asset.trust.pool_bal)) - max(((asset.trust.pool_int)
            - (asset.trust.pool_fee) * 0.0018750000
            - 625.0
@@ -956,7 +1001,7 @@ waterfall notes.distribution on entity asset.trust {
   pay a3_accelerated to party.a3_holders =
         max(min(max((if((asset.trust.pool_bal) <= 101196992.93, (asset.trust.bal_a1 + asset.trust.bal_a2 + asset.trust.bal_a3 + asset.trust.bal_b + asset.trust.bal_c + asset.trust.bal_d + asset.trust.bal_e),
          max((asset.trust.bal_a1 + asset.trust.bal_a2 + asset.trust.bal_a3 + asset.trust.bal_b + asset.trust.bal_c + asset.trust.bal_d + asset.trust.bal_e) - (min((asset.trust.pool_bal) - 5059849.65,
-          max(((asset.trust.pool_bal) - max(0.1475 * (asset.trust.pool_bal) - 20239398.59, 0.0)),
+          max(((asset.trust.pool_bal) - max(0.1475 * (asset.trust.pool_bal) - prev.reserve, 0.0)),
               (asset.trust.bal_a1 + asset.trust.bal_a2 + asset.trust.bal_a3 + asset.trust.bal_b + asset.trust.bal_c + asset.trust.bal_d + asset.trust.bal_e) - ((asset.trust.pool_prior) - (asset.trust.pool_bal)) - max(((asset.trust.pool_int)
            - (asset.trust.pool_fee) * 0.0018750000
            - 625.0
@@ -970,7 +1015,7 @@ waterfall notes.distribution on entity asset.trust {
            - (asset.trust.bal_a1 + asset.trust.bal_a2), 0.0), asset.trust.bal_a3)
             - (min(max((min((if((asset.trust.pool_bal) <= 101196992.93, (asset.trust.bal_a1 + asset.trust.bal_a2 + asset.trust.bal_a3 + asset.trust.bal_b + asset.trust.bal_c + asset.trust.bal_d + asset.trust.bal_e),
          max((asset.trust.bal_a1 + asset.trust.bal_a2 + asset.trust.bal_a3 + asset.trust.bal_b + asset.trust.bal_c + asset.trust.bal_d + asset.trust.bal_e) - (min((asset.trust.pool_bal) - 5059849.65,
-          max(((asset.trust.pool_bal) - max(0.1475 * (asset.trust.pool_bal) - 20239398.59, 0.0)),
+          max(((asset.trust.pool_bal) - max(0.1475 * (asset.trust.pool_bal) - prev.reserve, 0.0)),
               (asset.trust.bal_a1 + asset.trust.bal_a2 + asset.trust.bal_a3 + asset.trust.bal_b + asset.trust.bal_c + asset.trust.bal_d + asset.trust.bal_e) - ((asset.trust.pool_prior) - (asset.trust.pool_bal)) - max(((asset.trust.pool_int)
            - (asset.trust.pool_fee) * 0.0018750000
            - 625.0
@@ -986,7 +1031,7 @@ waterfall notes.distribution on entity asset.trust {
   pay b_accelerated to party.b_holders =
         max(min(max((if((asset.trust.pool_bal) <= 101196992.93, (asset.trust.bal_a1 + asset.trust.bal_a2 + asset.trust.bal_a3 + asset.trust.bal_b + asset.trust.bal_c + asset.trust.bal_d + asset.trust.bal_e),
          max((asset.trust.bal_a1 + asset.trust.bal_a2 + asset.trust.bal_a3 + asset.trust.bal_b + asset.trust.bal_c + asset.trust.bal_d + asset.trust.bal_e) - (min((asset.trust.pool_bal) - 5059849.65,
-          max(((asset.trust.pool_bal) - max(0.1475 * (asset.trust.pool_bal) - 20239398.59, 0.0)),
+          max(((asset.trust.pool_bal) - max(0.1475 * (asset.trust.pool_bal) - prev.reserve, 0.0)),
               (asset.trust.bal_a1 + asset.trust.bal_a2 + asset.trust.bal_a3 + asset.trust.bal_b + asset.trust.bal_c + asset.trust.bal_d + asset.trust.bal_e) - ((asset.trust.pool_prior) - (asset.trust.pool_bal)) - max(((asset.trust.pool_int)
            - (asset.trust.pool_fee) * 0.0018750000
            - 625.0
@@ -1000,7 +1045,7 @@ waterfall notes.distribution on entity asset.trust {
            - (asset.trust.bal_a1 + asset.trust.bal_a2 + asset.trust.bal_a3), 0.0), asset.trust.bal_b)
             - (min(max((min((if((asset.trust.pool_bal) <= 101196992.93, (asset.trust.bal_a1 + asset.trust.bal_a2 + asset.trust.bal_a3 + asset.trust.bal_b + asset.trust.bal_c + asset.trust.bal_d + asset.trust.bal_e),
          max((asset.trust.bal_a1 + asset.trust.bal_a2 + asset.trust.bal_a3 + asset.trust.bal_b + asset.trust.bal_c + asset.trust.bal_d + asset.trust.bal_e) - (min((asset.trust.pool_bal) - 5059849.65,
-          max(((asset.trust.pool_bal) - max(0.1475 * (asset.trust.pool_bal) - 20239398.59, 0.0)),
+          max(((asset.trust.pool_bal) - max(0.1475 * (asset.trust.pool_bal) - prev.reserve, 0.0)),
               (asset.trust.bal_a1 + asset.trust.bal_a2 + asset.trust.bal_a3 + asset.trust.bal_b + asset.trust.bal_c + asset.trust.bal_d + asset.trust.bal_e) - ((asset.trust.pool_prior) - (asset.trust.pool_bal)) - max(((asset.trust.pool_int)
            - (asset.trust.pool_fee) * 0.0018750000
            - 625.0
@@ -1016,7 +1061,7 @@ waterfall notes.distribution on entity asset.trust {
   pay c_accelerated to party.c_holders =
         max(min(max((if((asset.trust.pool_bal) <= 101196992.93, (asset.trust.bal_a1 + asset.trust.bal_a2 + asset.trust.bal_a3 + asset.trust.bal_b + asset.trust.bal_c + asset.trust.bal_d + asset.trust.bal_e),
          max((asset.trust.bal_a1 + asset.trust.bal_a2 + asset.trust.bal_a3 + asset.trust.bal_b + asset.trust.bal_c + asset.trust.bal_d + asset.trust.bal_e) - (min((asset.trust.pool_bal) - 5059849.65,
-          max(((asset.trust.pool_bal) - max(0.1475 * (asset.trust.pool_bal) - 20239398.59, 0.0)),
+          max(((asset.trust.pool_bal) - max(0.1475 * (asset.trust.pool_bal) - prev.reserve, 0.0)),
               (asset.trust.bal_a1 + asset.trust.bal_a2 + asset.trust.bal_a3 + asset.trust.bal_b + asset.trust.bal_c + asset.trust.bal_d + asset.trust.bal_e) - ((asset.trust.pool_prior) - (asset.trust.pool_bal)) - max(((asset.trust.pool_int)
            - (asset.trust.pool_fee) * 0.0018750000
            - 625.0
@@ -1030,7 +1075,7 @@ waterfall notes.distribution on entity asset.trust {
            - (asset.trust.bal_a1 + asset.trust.bal_a2 + asset.trust.bal_a3 + asset.trust.bal_b), 0.0), asset.trust.bal_c)
             - (min(max((min((if((asset.trust.pool_bal) <= 101196992.93, (asset.trust.bal_a1 + asset.trust.bal_a2 + asset.trust.bal_a3 + asset.trust.bal_b + asset.trust.bal_c + asset.trust.bal_d + asset.trust.bal_e),
          max((asset.trust.bal_a1 + asset.trust.bal_a2 + asset.trust.bal_a3 + asset.trust.bal_b + asset.trust.bal_c + asset.trust.bal_d + asset.trust.bal_e) - (min((asset.trust.pool_bal) - 5059849.65,
-          max(((asset.trust.pool_bal) - max(0.1475 * (asset.trust.pool_bal) - 20239398.59, 0.0)),
+          max(((asset.trust.pool_bal) - max(0.1475 * (asset.trust.pool_bal) - prev.reserve, 0.0)),
               (asset.trust.bal_a1 + asset.trust.bal_a2 + asset.trust.bal_a3 + asset.trust.bal_b + asset.trust.bal_c + asset.trust.bal_d + asset.trust.bal_e) - ((asset.trust.pool_prior) - (asset.trust.pool_bal)) - max(((asset.trust.pool_int)
            - (asset.trust.pool_fee) * 0.0018750000
            - 625.0
@@ -1046,7 +1091,7 @@ waterfall notes.distribution on entity asset.trust {
   pay d_accelerated to party.d_holders =
         max(min(max((if((asset.trust.pool_bal) <= 101196992.93, (asset.trust.bal_a1 + asset.trust.bal_a2 + asset.trust.bal_a3 + asset.trust.bal_b + asset.trust.bal_c + asset.trust.bal_d + asset.trust.bal_e),
          max((asset.trust.bal_a1 + asset.trust.bal_a2 + asset.trust.bal_a3 + asset.trust.bal_b + asset.trust.bal_c + asset.trust.bal_d + asset.trust.bal_e) - (min((asset.trust.pool_bal) - 5059849.65,
-          max(((asset.trust.pool_bal) - max(0.1475 * (asset.trust.pool_bal) - 20239398.59, 0.0)),
+          max(((asset.trust.pool_bal) - max(0.1475 * (asset.trust.pool_bal) - prev.reserve, 0.0)),
               (asset.trust.bal_a1 + asset.trust.bal_a2 + asset.trust.bal_a3 + asset.trust.bal_b + asset.trust.bal_c + asset.trust.bal_d + asset.trust.bal_e) - ((asset.trust.pool_prior) - (asset.trust.pool_bal)) - max(((asset.trust.pool_int)
            - (asset.trust.pool_fee) * 0.0018750000
            - 625.0
@@ -1060,7 +1105,7 @@ waterfall notes.distribution on entity asset.trust {
            - (asset.trust.bal_a1 + asset.trust.bal_a2 + asset.trust.bal_a3 + asset.trust.bal_b + asset.trust.bal_c), 0.0), asset.trust.bal_d)
             - (min(max((min((if((asset.trust.pool_bal) <= 101196992.93, (asset.trust.bal_a1 + asset.trust.bal_a2 + asset.trust.bal_a3 + asset.trust.bal_b + asset.trust.bal_c + asset.trust.bal_d + asset.trust.bal_e),
          max((asset.trust.bal_a1 + asset.trust.bal_a2 + asset.trust.bal_a3 + asset.trust.bal_b + asset.trust.bal_c + asset.trust.bal_d + asset.trust.bal_e) - (min((asset.trust.pool_bal) - 5059849.65,
-          max(((asset.trust.pool_bal) - max(0.1475 * (asset.trust.pool_bal) - 20239398.59, 0.0)),
+          max(((asset.trust.pool_bal) - max(0.1475 * (asset.trust.pool_bal) - prev.reserve, 0.0)),
               (asset.trust.bal_a1 + asset.trust.bal_a2 + asset.trust.bal_a3 + asset.trust.bal_b + asset.trust.bal_c + asset.trust.bal_d + asset.trust.bal_e) - ((asset.trust.pool_prior) - (asset.trust.pool_bal)) - max(((asset.trust.pool_int)
            - (asset.trust.pool_fee) * 0.0018750000
            - 625.0
@@ -1076,7 +1121,7 @@ waterfall notes.distribution on entity asset.trust {
   pay e_accelerated to party.e_holders =
         max(min(max((if((asset.trust.pool_bal) <= 101196992.93, (asset.trust.bal_a1 + asset.trust.bal_a2 + asset.trust.bal_a3 + asset.trust.bal_b + asset.trust.bal_c + asset.trust.bal_d + asset.trust.bal_e),
          max((asset.trust.bal_a1 + asset.trust.bal_a2 + asset.trust.bal_a3 + asset.trust.bal_b + asset.trust.bal_c + asset.trust.bal_d + asset.trust.bal_e) - (min((asset.trust.pool_bal) - 5059849.65,
-          max(((asset.trust.pool_bal) - max(0.1475 * (asset.trust.pool_bal) - 20239398.59, 0.0)),
+          max(((asset.trust.pool_bal) - max(0.1475 * (asset.trust.pool_bal) - prev.reserve, 0.0)),
               (asset.trust.bal_a1 + asset.trust.bal_a2 + asset.trust.bal_a3 + asset.trust.bal_b + asset.trust.bal_c + asset.trust.bal_d + asset.trust.bal_e) - ((asset.trust.pool_prior) - (asset.trust.pool_bal)) - max(((asset.trust.pool_int)
            - (asset.trust.pool_fee) * 0.0018750000
            - 625.0
@@ -1090,7 +1135,7 @@ waterfall notes.distribution on entity asset.trust {
            - (asset.trust.bal_a1 + asset.trust.bal_a2 + asset.trust.bal_a3 + asset.trust.bal_b + asset.trust.bal_c + asset.trust.bal_d), 0.0), asset.trust.bal_e)
             - (min(max((min((if((asset.trust.pool_bal) <= 101196992.93, (asset.trust.bal_a1 + asset.trust.bal_a2 + asset.trust.bal_a3 + asset.trust.bal_b + asset.trust.bal_c + asset.trust.bal_d + asset.trust.bal_e),
          max((asset.trust.bal_a1 + asset.trust.bal_a2 + asset.trust.bal_a3 + asset.trust.bal_b + asset.trust.bal_c + asset.trust.bal_d + asset.trust.bal_e) - (min((asset.trust.pool_bal) - 5059849.65,
-          max(((asset.trust.pool_bal) - max(0.1475 * (asset.trust.pool_bal) - 20239398.59, 0.0)),
+          max(((asset.trust.pool_bal) - max(0.1475 * (asset.trust.pool_bal) - prev.reserve, 0.0)),
               (asset.trust.bal_a1 + asset.trust.bal_a2 + asset.trust.bal_a3 + asset.trust.bal_b + asset.trust.bal_c + asset.trust.bal_d + asset.trust.bal_e) - ((asset.trust.pool_prior) - (asset.trust.pool_bal)) - max(((asset.trust.pool_int)
            - (asset.trust.pool_fee) * 0.0018750000
            - 625.0

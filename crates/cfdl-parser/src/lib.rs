@@ -4656,6 +4656,20 @@ fn keyword_text(keyword: Keyword) -> &'static str {
 /// deliberately: it opens no declaration, and the parser rejects it with a
 /// message pointing at entity fields.
 fn is_statement_start(token: &Token) -> bool {
+    // `lifecycle` is CONTEXTUAL — an ordinary identifier that starts a
+    // top-level statement (`docs/13` §7.19, no new reserved word). It is
+    // matched here for the same reason every keyword below is: this function
+    // is what tells a scanning parser where the previous statement ended, and
+    // a top-level statement absent from this list gets swallowed by the one
+    // before it. `account` was absent from exactly here, and an `account`
+    // declared after an `assume` disappeared with no diagnostic at all — the
+    // `metric`-after-`contract` failure the caller at
+    // `scan_to_next_top_level_statement` describes, repeated.
+    //
+    // THE INVARIANT: every arm of `parse_statement`'s dispatch appears here.
+    if matches!(token.kind, TokenKind::Ident(ref i) if i == "lifecycle") {
+        return true;
+    }
     matches!(
         token.kind,
         TokenKind::Keyword(Keyword::Version)
@@ -4675,6 +4689,7 @@ fn is_statement_start(token: &Token) -> bool {
             | TokenKind::Keyword(Keyword::Event)
             | TokenKind::Keyword(Keyword::Option)
             | TokenKind::Keyword(Keyword::Waterfall)
+            | TokenKind::Keyword(Keyword::Account)
             | TokenKind::Keyword(Keyword::Run)
     )
 }

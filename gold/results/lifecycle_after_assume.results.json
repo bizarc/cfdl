@@ -1,0 +1,190 @@
+{
+  "results_version": "0.8",
+  "model_hash": "5060fa1ef5b0900a347406e765900f8a511a2fd1a4c48b066242e6ba24b9dc7e",
+  "ledger_hash": "792f7e533b565c0e0857752fb78709a7d7fa8163ddfc3937d0fdb8d3dd9adac7",
+  "engine": {
+    "name": "cfdl-engine",
+    "version": "0.7.0"
+  },
+  "warnings": [],
+  "inputs": {
+    "resolved": {
+      "threshold": 2.0
+    }
+  },
+  "deterministic": {
+    "status": "ok",
+    "metrics": {
+      "entity.asset.suite.total": {
+        "amount": 400.0,
+        "currency": "USD"
+      },
+      "model.npv": {
+        "amount": 392.151281,
+        "currency": "USD"
+      },
+      "model.total": {
+        "amount": 400.0,
+        "currency": "USD"
+      },
+      "model.wal_years": 0.208333,
+      "run.annual_discount_rate": 0.1,
+      "run.periods_per_year": 12.0,
+      "stream.core.rent.total": {
+        "amount": 400.0,
+        "currency": "USD"
+      }
+    },
+    "series": {
+      "entity.asset.suite.net_cash_flow": {
+        "index": {
+          "calendar": "monthly",
+          "start": "2026-01-01",
+          "periods": 4
+        },
+        "values": [
+          {
+            "amount": 100.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 100.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 100.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 100.0,
+            "currency": "USD"
+          }
+        ]
+      },
+      "model.net_cash_flow": {
+        "index": {
+          "calendar": "monthly",
+          "start": "2026-01-01",
+          "periods": 4
+        },
+        "values": [
+          {
+            "amount": 100.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 100.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 100.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 100.0,
+            "currency": "USD"
+          }
+        ]
+      },
+      "stream.core.rent": {
+        "index": {
+          "calendar": "monthly",
+          "start": "2026-01-01",
+          "periods": 4
+        },
+        "offset": 1.0,
+        "entity": "asset.suite",
+        "values": [
+          {
+            "amount": 100.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 100.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 100.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 100.0,
+            "currency": "USD"
+          }
+        ]
+      }
+    },
+    "transitions": [
+      {
+        "period": 2,
+        "date": "2026-03-01",
+        "entity": "asset.suite",
+        "field": "status",
+        "from": "vacant",
+        "to": "leased",
+        "event": "lifecycle:unit"
+      }
+    ],
+    "journal": [
+      {
+        "period": 2,
+        "date": "2026-03-01",
+        "actor": "lifecycle:unit",
+        "action": "transition",
+        "target": "asset.suite: vacant -> leased",
+        "outcome": "applied",
+        "note": "when time.t >= inputs.threshold — read time.t=2"
+      }
+    ],
+    "annual_rollup": {
+      "series": {
+        "model.net_cash_flow": {
+          "index": {
+            "calendar": "annual",
+            "start": "2026-01-01",
+            "periods": 1
+          },
+          "values": [
+            {
+              "amount": 400.0,
+              "currency": "USD"
+            }
+          ]
+        },
+        "stream.core.rent": {
+          "index": {
+            "calendar": "annual",
+            "start": "2026-01-01",
+            "periods": 1
+          },
+          "values": [
+            {
+              "amount": 400.0,
+              "currency": "USD"
+            }
+          ]
+        }
+      }
+    }
+  },
+  "scenarios": {
+    "status": "not_run",
+    "summaries": []
+  },
+  "monte_carlo": {
+    "status": "not_run",
+    "trials": 1,
+    "seed": 0,
+    "metrics": {},
+    "trial_summaries": []
+  },
+  "graph": {
+    "entities": [
+      {
+        "symbol": "asset.suite",
+        "family": "asset",
+        "type": "core.Entity"
+      }
+    ]
+  }
+}

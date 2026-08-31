@@ -53,6 +53,16 @@ then `min(total, principal)` and clause 20 is `max(total - principal, 0)`, which
 is what those clauses mean. The two formulations agree to $0.0000 at all four
 speeds.
 
+The **reserve account** is the other thing the target depends on. Clause 19
+funds it at closing to 2.0% of the initial pool, and the Required Pro Forma Note
+Balance is 14.75% of the pool *less the amount on deposit in it* — so the
+reserve sets how far the turbo runs, and through that every class's retirement
+date. It is a declared account here, funded by its own inflow at closing rather
+than out of the waterfall, which allocates collections and never touched it.
+Clause 19 is then the top-up it is: whatever the balance is short of the
+required amount. On this deal, with no losses assumed, that is zero at every
+period — because the balance is at target, which is what the clause says.
+
 All twenty-two clauses are written out. Ten of them — the parity steps and the
 final-maturity steps — pay nothing at every period and every speed, because the
 pool always covers the notes and every class retires years early. They are there

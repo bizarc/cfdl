@@ -1,0 +1,392 @@
+{
+  "results_version": "0.8",
+  "model_hash": "cdfc32fa10da4166496dbb454f1bdbd70bb44630bb68ba6a44b26842a65180ec",
+  "ledger_hash": "5193f98dd5bc3b3c193dee3486c7eaf3ae3c93235c9de3128a1a76214374b4eb",
+  "engine": {
+    "name": "cfdl-engine",
+    "version": "0.7.0"
+  },
+  "warnings": [],
+  "deterministic": {
+    "status": "ok",
+    "metrics": {
+      "entity.asset.co.total": {
+        "amount": 400.0,
+        "currency": "USD"
+      },
+      "entity.party.sponsor.total": {
+        "amount": 310.0,
+        "currency": "USD"
+      },
+      "entity.reserve.total": {
+        "amount": 90.0,
+        "currency": "USD"
+      },
+      "model.npv": {
+        "amount": 392.151281,
+        "currency": "USD"
+      },
+      "model.total": {
+        "amount": 400.0,
+        "currency": "USD"
+      },
+      "model.wal_years": 0.208333,
+      "run.annual_discount_rate": 0.1,
+      "run.periods_per_year": 12.0,
+      "stream.ops.revenue.total": {
+        "amount": 400.0,
+        "currency": "USD"
+      }
+    },
+    "series": {
+      "account.reserve": {
+        "index": {
+          "calendar": "monthly",
+          "start": "2026-01-01",
+          "periods": 4
+        },
+        "values": [
+          0.0,
+          30.0,
+          60.0,
+          90.0
+        ]
+      },
+      "entity.asset.co.net_cash_flow": {
+        "index": {
+          "calendar": "monthly",
+          "start": "2026-01-01",
+          "periods": 4
+        },
+        "values": [
+          {
+            "amount": 100.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 100.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 100.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 100.0,
+            "currency": "USD"
+          }
+        ]
+      },
+      "entity.party.sponsor.net_cash_flow": {
+        "index": {
+          "calendar": "monthly",
+          "start": "2026-01-01",
+          "periods": 4
+        },
+        "values": [
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 170.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 70.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 70.0,
+            "currency": "USD"
+          }
+        ]
+      },
+      "entity.reserve.net_cash_flow": {
+        "index": {
+          "calendar": "monthly",
+          "start": "2026-01-01",
+          "periods": 4
+        },
+        "values": [
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 30.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 30.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 30.0,
+            "currency": "USD"
+          }
+        ]
+      },
+      "model.net_cash_flow": {
+        "index": {
+          "calendar": "monthly",
+          "start": "2026-01-01",
+          "periods": 4
+        },
+        "values": [
+          {
+            "amount": 100.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 100.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 100.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 100.0,
+            "currency": "USD"
+          }
+        ]
+      },
+      "stream.funding.residual": {
+        "index": {
+          "calendar": "monthly",
+          "start": "2026-01-01",
+          "periods": 4
+        },
+        "entity": "asset.co",
+        "values": [
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 170.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 70.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 70.0,
+            "currency": "USD"
+          }
+        ]
+      },
+      "stream.funding.to_reserve": {
+        "index": {
+          "calendar": "monthly",
+          "start": "2026-01-01",
+          "periods": 4
+        },
+        "entity": "asset.co",
+        "values": [
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 30.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 30.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 30.0,
+            "currency": "USD"
+          }
+        ]
+      },
+      "stream.ops.revenue": {
+        "index": {
+          "calendar": "monthly",
+          "start": "2026-01-01",
+          "periods": 4
+        },
+        "offset": 1.0,
+        "entity": "asset.co",
+        "values": [
+          {
+            "amount": 100.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 100.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 100.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 100.0,
+            "currency": "USD"
+          }
+        ]
+      }
+    },
+    "journal": [
+      {
+        "period": 1,
+        "date": "2026-02-01",
+        "actor": "waterfall:funding",
+        "action": "pay",
+        "target": "to_reserve -> reserve",
+        "outcome": "applied",
+        "amount": 30.0,
+        "pot_before": 200.0,
+        "pot_after": 170.0
+      },
+      {
+        "period": 1,
+        "date": "2026-02-01",
+        "actor": "waterfall:funding",
+        "action": "pay",
+        "target": "residual -> party.sponsor",
+        "outcome": "applied",
+        "amount": 170.0,
+        "pot_before": 170.0,
+        "pot_after": 0.0
+      },
+      {
+        "period": 1,
+        "date": "2026-02-01",
+        "actor": "waterfall:funding",
+        "action": "allocate_in",
+        "target": "to_reserve -> account:reserve",
+        "outcome": "applied",
+        "amount": 30.0,
+        "pot_before": 0.0,
+        "pot_after": 30.0
+      },
+      {
+        "period": 2,
+        "date": "2026-03-01",
+        "actor": "waterfall:funding",
+        "action": "pay",
+        "target": "to_reserve -> reserve",
+        "outcome": "applied",
+        "amount": 30.0,
+        "pot_before": 100.0,
+        "pot_after": 70.0
+      },
+      {
+        "period": 2,
+        "date": "2026-03-01",
+        "actor": "waterfall:funding",
+        "action": "pay",
+        "target": "residual -> party.sponsor",
+        "outcome": "applied",
+        "amount": 70.0,
+        "pot_before": 70.0,
+        "pot_after": 0.0
+      },
+      {
+        "period": 2,
+        "date": "2026-03-01",
+        "actor": "waterfall:funding",
+        "action": "allocate_in",
+        "target": "to_reserve -> account:reserve",
+        "outcome": "applied",
+        "amount": 30.0,
+        "pot_before": 30.0,
+        "pot_after": 60.0
+      },
+      {
+        "period": 3,
+        "date": "2026-04-01",
+        "actor": "waterfall:funding",
+        "action": "pay",
+        "target": "to_reserve -> reserve",
+        "outcome": "applied",
+        "amount": 30.0,
+        "pot_before": 100.0,
+        "pot_after": 70.0
+      },
+      {
+        "period": 3,
+        "date": "2026-04-01",
+        "actor": "waterfall:funding",
+        "action": "pay",
+        "target": "residual -> party.sponsor",
+        "outcome": "applied",
+        "amount": 70.0,
+        "pot_before": 70.0,
+        "pot_after": 0.0
+      },
+      {
+        "period": 3,
+        "date": "2026-04-01",
+        "actor": "waterfall:funding",
+        "action": "allocate_in",
+        "target": "to_reserve -> account:reserve",
+        "outcome": "applied",
+        "amount": 30.0,
+        "pot_before": 60.0,
+        "pot_after": 90.0
+      }
+    ],
+    "annual_rollup": {
+      "series": {
+        "model.net_cash_flow": {
+          "index": {
+            "calendar": "annual",
+            "start": "2026-01-01",
+            "periods": 1
+          },
+          "values": [
+            {
+              "amount": 400.0,
+              "currency": "USD"
+            }
+          ]
+        },
+        "stream.ops.revenue": {
+          "index": {
+            "calendar": "annual",
+            "start": "2026-01-01",
+            "periods": 1
+          },
+          "values": [
+            {
+              "amount": 400.0,
+              "currency": "USD"
+            }
+          ]
+        }
+      }
+    }
+  },
+  "scenarios": {
+    "status": "not_run",
+    "summaries": []
+  },
+  "monte_carlo": {
+    "status": "not_run",
+    "trials": 1,
+    "seed": 0,
+    "metrics": {},
+    "trial_summaries": []
+  },
+  "graph": {
+    "entities": [
+      {
+        "symbol": "asset.co",
+        "family": "asset",
+        "type": "core.Entity"
+      },
+      {
+        "symbol": "party.sponsor",
+        "family": "party",
+        "type": "core.Entity"
+      }
+    ]
+  }
+}

@@ -1,0 +1,35 @@
+version 0.1
+model "lifecycle-after-assume"
+time calendar monthly from 2026-01 for 4
+
+// A LIFECYCLE DECLARED AFTER AN ASSUMPTION — the second half of the swallow
+// `account_after_assume` records.
+//
+// `lifecycle` is CONTEXTUAL: an ordinary identifier that starts a top-level
+// statement, deliberately, so that declaring one costs no new reserved word
+// (`docs/13` §7.19). `is_statement_start` matched on keywords only, so it
+// could not see this one either, and an assumption's expression scan ran
+// through the declaration below.
+//
+// This half was never silent — the scan stopped at the `{` and the next
+// parse reported `E3001_EXPR_PARSE_ERROR: unexpected character '{'`, which
+// names a brace three lines away from the assumption that actually swallowed
+// the statement. Loud and misdirecting rather than silent and absent; the
+// same bug, and the same fix.
+
+assume threshold = 2.0
+
+lifecycle unit {
+  initial vacant
+  state vacant, leased
+  vacant -> leased when time.t >= inputs.threshold
+}
+
+entity asset suite {
+  lifecycle unit
+}
+
+stream core.rent on entity asset.suite inflow currency USD {
+  schedule every month from 2026-01 to 2026-04
+  amount = 100
+}

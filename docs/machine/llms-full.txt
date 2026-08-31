@@ -8599,11 +8599,63 @@ Templates (starting points; the `skeleton` MCP tool assembles them into a compil
 
 CFDL 0.7.0. Every model below compiles, and its IR and
 results are byte-asserted against goldens in CI (`fixtures/valid/`,
-133 models.
+136 models.
 
 `gold/ir/`, `gold/results/`). Each is single-purpose: the directory name
 says what it exercises. This is what right looks like — positive few-shot
 material to pair with the diagnostics repair catalog.
+
+## account_after_assume
+
+```cfdl
+version 0.1
+model "account-after-assume"
+time calendar monthly from 2026-01 for 4
+
+// AN ACCOUNT DECLARED AFTER AN ASSUMPTION.
+//
+// `assume <name> = <expr>` has no terminator of its own, so the parser scans
+// to the next top-level statement — and `is_statement_start` is the list that
+// says where that is. `account` was missing from it, so the scan ran straight
+// through this declaration and swallowed it: no diagnostic at the swallow
+// site, and the account simply did not exist. The only symptom was
+// `E1347_UNRESOLVED_ACCOUNT_REF` at whatever referred to it later, pointing at
+// the reference rather than at the cause — and a model that referred to the
+// account nowhere lost it in total silence.
+//
+// The same list already carries the same scar: the comment at
+// `scan_to_next_top_level_statement` records a `metric` declared after a
+// contract vanishing the same way. Found by `docs/13` §7.76 —
+// `benchmarks/credit/americredit_2017_1` states its reserve as an assumption
+// and declares the account against it, which is this exact order.
+//
+// The pin is that the account carries its balance. `lifecycle` is the other
+// statement the list was missing; it is an ordinary identifier rather than a
+// keyword, and `lifecycle_after_assume` pins it separately.
+
+entity asset co { name = "Co" }
+entity party sponsor { name = "Sponsor" }
+
+assume required = 100.0
+
+account reserve {
+  from if(time.t == 0.0, inputs.required, 0.0)
+}
+
+stream ops.revenue on entity asset.co inflow currency USD {
+  schedule every month from 2026-01 to 2026-04
+  amount = 50
+}
+
+// Funded at inception by the account's own inflow, so the top-up finds the
+// balance already at target and pays nothing — every period, on purpose.
+waterfall funding on entity asset.co {
+  schedule every month from 2026-02 to 2026-04
+  from available
+  pay topup    to account reserve = max(0.0, inputs.required - prev.reserve)
+  pay residual to party.sponsor   = remaining
+}
+```
 
 ## account_cumulative_identity
 
@@ -9021,6 +9073,59 @@ stream saas.infra_cost on entity asset.product outflow currency USD {
   schedule every month from 2026-01 to 2028-12
   amount = 2000 + time.t * 50
   active when time.t >= 6
+}
+```
+
+## conditional_window_bound_walks
+
+```cfdl
+version 0.1
+model "conditional-window-bound-walks"
+time calendar monthly from 2026-01 for 4
+
+// A CONDITIONAL WINDOW BOUND IS BACKWARD WHEN BOTH BRANCHES ARE.
+//
+// `walk_ineligible_reason` asks whether a series window can reach past the
+// current period; if it can, the model keeps the column order, and the column
+// order has no periods to carry an account balance through. The check reads
+// the bound's SOURCE TEXT and recognised numeric literals, `time.t` plus a
+// chain of signed literals, and `max`/`min` of those. It did not recognise
+// `if`, so a bound that is backward down both branches was reported forward.
+//
+// The cost was not theoretical. `benchmarks/credit/americredit_2017_1` draws
+// its pot with the lower bound `if(time.t == 1.0, 0.0, time.t)` — the first
+// distribution collects two periods, because six of the twelve assumed pools
+// have a January cutoff and six a February one. That one conditional held the
+// corpus's most intricate waterfall on the column order, so the reserve
+// account it needed could be declared and could never carry a balance. The
+// engine said so rather than publishing zeros, which is how it was found.
+//
+// The condition is NOT examined and does not need to be: whichever branch it
+// selects, the bound is one of the two, so both being backward settles it. A
+// forward branch makes the whole bound forward — `window_bound_is_backward`'s
+// own unit tests pin that direction.
+//
+// The pin here is the CONSEQUENCE, not the predicate: this model both draws
+// from an if-bounded window and declares an account, so if the bound were
+// read as forward the run would warn and `account.reserve` would be absent.
+
+entity asset co { name = "Co" }
+entity party sponsor { name = "Sponsor" }
+
+account reserve { }
+
+stream ops.revenue on entity asset.co inflow currency USD {
+  schedule every month from 2026-01 to 2026-04
+  amount = 100
+}
+
+// The first distribution draws two periods of revenue and every later one
+// draws its own — the AmeriCredit pot's shape, at four periods.
+waterfall funding on entity asset.co {
+  schedule every month from 2026-02 to 2026-04
+  from series_sum("ops.revenue", if(time.t == 1.0, 0.0, time.t), time.t)
+  pay to_reserve to account reserve = 30.0
+  pay residual   to party.sponsor   = remaining
 }
 ```
 
@@ -11038,6 +11143,46 @@ stream ops.baseline on entity asset.bldg inflow currency USD {
 option renewal on entity asset.bldg type Option.Renewal exercisable in early {
   exercise when 0 > 1
   payoff 250
+}
+```
+
+## lifecycle_after_assume
+
+```cfdl
+version 0.1
+model "lifecycle-after-assume"
+time calendar monthly from 2026-01 for 4
+
+// A LIFECYCLE DECLARED AFTER AN ASSUMPTION — the second half of the swallow
+// `account_after_assume` records.
+//
+// `lifecycle` is CONTEXTUAL: an ordinary identifier that starts a top-level
+// statement, deliberately, so that declaring one costs no new reserved word
+// (`docs/13` §7.19). `is_statement_start` matched on keywords only, so it
+// could not see this one either, and an assumption's expression scan ran
+// through the declaration below.
+//
+// This half was never silent — the scan stopped at the `{` and the next
+// parse reported `E3001_EXPR_PARSE_ERROR: unexpected character '{'`, which
+// names a brace three lines away from the assumption that actually swallowed
+// the statement. Loud and misdirecting rather than silent and absent; the
+// same bug, and the same fix.
+
+assume threshold = 2.0
+
+lifecycle unit {
+  initial vacant
+  state vacant, leased
+  vacant -> leased when time.t >= inputs.threshold
+}
+
+entity asset suite {
+  lifecycle unit
+}
+
+stream core.rent on entity asset.suite inflow currency USD {
+  schedule every month from 2026-01 to 2026-04
+  amount = 100
 }
 ```
 

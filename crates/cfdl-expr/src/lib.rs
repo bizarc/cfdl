@@ -1549,7 +1549,16 @@ pub fn window_bound_is_backward(src: &str) -> bool {
         }
         return net <= 0.0;
     }
-    for f in ["max", "min"] {
+    // `max`, `min` and `if` are all "the value is one of these operands", so
+    // each is backward exactly when every operand it could return is. `if` is
+    // here because the AmeriCredit waterfall's pot is bounded by
+    // `if(time.t == 1.0, 0.0, time.t)` — the first distribution draws two
+    // collection periods — and both branches are plainly at or behind the
+    // current period. Without this the check called that window forward, the
+    // model kept the column order, and an account declared on it carried no
+    // balance at all (`docs/13` §7.76). The CONDITION is not examined and
+    // does not need to be: whichever branch it selects, the bound is backward.
+    for f in ["max", "min", "if"] {
         if let Some(rest) = s.strip_prefix(f) {
             let rest = rest.trim();
             if let Some(inner) = rest.strip_prefix('(').and_then(|r| r.strip_suffix(')')) {
@@ -1570,8 +1579,15 @@ pub fn window_bound_is_backward(src: &str) -> bool {
                     }
                 }
                 parts.push(&inner[start..]);
-                if parts.len() == 2 {
-                    return parts.iter().all(|p| window_bound_is_backward(p));
+                // `max`/`min` return one of two operands; `if` returns one of
+                // its two BRANCHES, so the condition at parts[0] is skipped.
+                let operands: &[&str] = match (f, parts.len()) {
+                    ("if", 3) => &parts[1..],
+                    ("max" | "min", 2) => &parts[..],
+                    _ => &[],
+                };
+                if !operands.is_empty() {
+                    return operands.iter().all(|p| window_bound_is_backward(p));
                 }
             }
         }
@@ -1599,6 +1615,28 @@ mod window_tests {
             r#"series_sum("credit.pool.prepay.*", 0, time.t - 1)"#
         ));
         assert!(backward(r#"series_sum("cre.rent", time.t, time.t)"#));
+    }
+
+    #[test]
+    fn a_conditional_bound_is_backward_when_both_branches_are() {
+        // The AmeriCredit pot: the first distribution draws TWO collection
+        // periods, so the window's lower bound is `0` at t == 1 and `time.t`
+        // otherwise. Both branches are backward, so the window is — and the
+        // model walks, which is what lets it carry a reserve account at all.
+        assert!(backward(
+            r#"series_sum("credit.pool.interest.*", if(time.t == 1.0, 0.0, time.t), time.t)"#
+        ));
+        // Nested, and mixed with the clamped shape above.
+        assert!(backward(
+            r#"series_sum("cre.rent", if(time.t == 0.0, 0.0, max(time.t - 1, 0)), time.t)"#
+        ));
+        // A branch that reaches forward makes the whole bound forward: the
+        // condition is not examined, so EITHER branch is reachable.
+        assert!(!backward(
+            r#"series_sum("cre.rent", 0, if(time.t == 1.0, time.t + 1, time.t))"#
+        ));
+        // An identifier that merely starts with `if` is not a conditional.
+        assert!(!backward(r#"series_sum("cre.rent", 0, iffy)"#));
     }
 
     #[test]
