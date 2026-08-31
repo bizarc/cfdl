@@ -55,6 +55,13 @@ narrow, not broad.
 
 ## Item 1 — lifecycle entry actions
 
+*Closed at the construct level 2026-08-30 by `docs/34` (backlog §7.79,
+#235–#236): events fire on each rising edge, states carry `on enter` action
+blocks, and edges carry path-specific ones. What remains of this item is the
+case, not the construct — the chained-rollover re-strike benchmark below,
+which is also what will force `cre.unit`'s declared actions (`docs/34`
+phase 5 note). The text that follows records the gap as found.*
+
 **The one construct-level gap this comparison found.**
 
 **What could not be expressed:** an action performed on the Nth entry into a

@@ -1,7 +1,13 @@
 # Events and the machine — scope
 
-Status: **decisions settled** — reviewed and answered 2026-08-28; D1–D8
-resolved, D2a added in review. Not published; repository-only.
+Status: **shipped** — decisions reviewed and answered 2026-08-28 (D1–D8
+resolved, D2a added in review); phases 1–4 landed 2026-08-30 as #235
+(`results_version` 0.6, the collapse property holding across all 123
+pre-existing results goldens) and phase 5 as #236, with phase 6's surfaces
+(`docs/10`, `terminology.toml`) following. Of the two showcase fixtures the
+phase 5 note names, the §7.77 cure-counter shipped (#238,
+`fixtures/valid/dscr_cash_trap_cure_period`); the chained-rollover re-strike
+waits on `docs/33` Item 1's case. Not published; repository-only.
 
 ## The principle
 
