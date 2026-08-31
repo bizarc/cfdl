@@ -1,0 +1,219 @@
+{
+  "ir_version": "0.1",
+  "model": {
+    "name": "monte-carlo-metric-distribution",
+    "currency": "USD"
+  },
+  "time": {
+    "calendar": "annual",
+    "start": "2026-01-01",
+    "periods": 5
+  },
+  "phases": [],
+  "entities": [
+    {
+      "id": "30d6b49011942242f81b74aeabac22be",
+      "symbol": "asset.holding",
+      "type": "Asset.Financial",
+      "fields": {},
+      "state": {},
+      "parent": "container.fund"
+    },
+    {
+      "id": "fac8939144583da91b3c41819b3e919a",
+      "symbol": "container.fund",
+      "type": "Container.Fund",
+      "fields": {},
+      "state": {}
+    }
+  ],
+  "assumptions": {
+    "constants": {},
+    "random": {
+      "exit_price": {
+        "dist": {
+          "kind": "Uniform",
+          "params": {
+            "max": 1500.0,
+            "min": 900.0
+          }
+        },
+        "name": "exit_price",
+        "type": "Decimal"
+      }
+    }
+  },
+  "metrics": [
+    {
+      "name": "invested",
+      "expr": {
+        "lang": "cfdl",
+        "src": "0.0 - series_sum(\"deal.acquisition\", 0.0, 4.0)"
+      },
+      "provenance": {
+        "source_file": "model.cfdl",
+        "source_span": {
+          "start_line": 60,
+          "start_col": 1,
+          "end_line": 60,
+          "end_col": 63
+        }
+      }
+    },
+    {
+      "name": "proceeds",
+      "expr": {
+        "lang": "cfdl",
+        "src": "series_sum(\"deal.rent\", 0.0, 4.0) + series_sum(\"deal.exit\", 0.0, 4.0)"
+      },
+      "provenance": {
+        "source_file": "model.cfdl",
+        "source_span": {
+          "start_line": 61,
+          "start_col": 1,
+          "end_line": 61,
+          "end_col": 84
+        }
+      }
+    },
+    {
+      "name": "exit_multiple",
+      "expr": {
+        "lang": "cfdl",
+        "src": "metric.proceeds / metric.invested"
+      },
+      "provenance": {
+        "source_file": "model.cfdl",
+        "source_span": {
+          "start_line": 62,
+          "start_col": 1,
+          "end_line": 62,
+          "end_col": 56
+        }
+      }
+    }
+  ],
+  "contracts": [],
+  "streams": [
+    {
+      "id": "12bc42eefd081c0127f608fb4474ddc4",
+      "name": "deal.acquisition",
+      "owner": {
+        "symbol": "asset.holding"
+      },
+      "direction": "outflow",
+      "currency": "USD",
+      "category": "investing.acquisition.purchase",
+      "schedule": {
+        "kind": "Every",
+        "every": "annual",
+        "from": "2026-01-01",
+        "to": "2026-01-01"
+      },
+      "amount": {
+        "lang": "cfdl",
+        "src": "1000.0"
+      },
+      "active_when": {
+        "lang": "cfdl",
+        "src": "true"
+      },
+      "provenance": {
+        "source_file": "model.cfdl",
+        "source_span": {
+          "start_line": 38,
+          "start_col": 1,
+          "end_line": 42,
+          "end_col": 1
+        }
+      }
+    },
+    {
+      "id": "65ec25e66fdd908f7a8e534c33180f9f",
+      "name": "deal.exit",
+      "owner": {
+        "symbol": "asset.holding"
+      },
+      "direction": "inflow",
+      "currency": "USD",
+      "category": "investing.disposition.sale",
+      "schedule": {
+        "kind": "Every",
+        "every": "annual",
+        "from": "2030-01-01",
+        "to": "2030-01-01"
+      },
+      "amount": {
+        "lang": "cfdl",
+        "src": "inputs.exit_price"
+      },
+      "active_when": {
+        "lang": "cfdl",
+        "src": "true"
+      },
+      "provenance": {
+        "source_file": "model.cfdl",
+        "source_span": {
+          "start_line": 50,
+          "start_col": 1,
+          "end_line": 54,
+          "end_col": 1
+        }
+      }
+    },
+    {
+      "id": "03e34243ae6aa40ff72a0d7032739c79",
+      "name": "deal.rent",
+      "owner": {
+        "symbol": "asset.holding"
+      },
+      "direction": "inflow",
+      "currency": "USD",
+      "category": "operating.revenue.other",
+      "schedule": {
+        "kind": "Every",
+        "every": "annual",
+        "from": "2027-01-01",
+        "to": "2030-01-01"
+      },
+      "amount": {
+        "lang": "cfdl",
+        "src": "80.0"
+      },
+      "active_when": {
+        "lang": "cfdl",
+        "src": "true"
+      },
+      "provenance": {
+        "source_file": "model.cfdl",
+        "source_span": {
+          "start_line": 44,
+          "start_col": 1,
+          "end_line": 48,
+          "end_col": 1
+        }
+      }
+    }
+  ],
+  "events": [],
+  "options": [],
+  "runs": [
+    {
+      "kind": "monte_carlo",
+      "trials": 32,
+      "seed": 20260831
+    }
+  ],
+  "required_observables": [],
+  "required_refs": [],
+  "provenance": {
+    "sources": [
+      "model.cfdl"
+    ],
+    "compiler": {
+      "name": "cfdl",
+      "version": "0.7.0",
+      "hash": "d80f4c40398fe75b55a6788a2be14aac"
+    }
+  }
+}

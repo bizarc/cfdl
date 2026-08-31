@@ -2147,6 +2147,38 @@ Provenance: found checking the claim "the deterministic results are exported
 for each MC trial" against the trial loop, 30 August 2026. The claim is
 false today and one line from true.
 
+**Status, 31 August 2026 — shipped, `results_version` 0.9.** The trial loop
+carries `trial_run.metrics` into the trial summary, so a trial's record is now
+the same metric map the deterministic block publishes: `model.irr`,
+`model.moic`, every `stream.*.total` and `entity.*.total`, each `domain.*` KPI
+and every metric the model declared. `monte_carlo.metrics` summarises each name
+present rather than the one that was hard-coded, and fills p01 through p99 —
+the section whose whole subject is dispersion had been declining to state its
+tails. Percentiles interpolate linearly between order statistics (R type 7,
+Excel's `PERCENTILE`), which at q = 0.5 is exactly the median already
+published: every blessed NPV figure is unchanged, and the goldens show the
+change as purely additive. `period_distribution` keeps nearest-rank, because a
+period is an observation rather than a continuous amount.
+
+Two things the entry did not anticipate, both found by building it. Not every
+trial publishes every name — `model.irr` exists only where the flows solve for
+a rate — so a summary states `trials`, the count it was taken over, or a mean
+over three trials and a mean over five hundred would read identically. And a
+name a distribution cannot be taken over (a string, or a kind that changed
+between trials) is carried per trial and omitted from the summary rather than
+guessed at.
+
+The reach is wider than metrics, because of what shipped beside it: a trial row
+keys `entity.<symbol>.total`, and the results-plane graph (§7.43, §7.91,
+`results_version` 0.7) keys `graph.entities[].symbol` — so a per-entity
+distribution is now readable from results alone, on the ownership axis rather
+than by inspecting names. Fixtures: `valid/monte_carlo_metric_distribution`
+(the declared metric, the IRR, the MoIC and the rolled-up container total, all
+distributed) and `valid/monte_carlo_partial_metric` (`model.irr` in 20 trials
+of 24, which is what `trials` exists to say). §7.23's mirror-image gap — the
+scenario plane publishes metrics but no per-period series — is untouched and
+still open.
+
 ---
 
 ### 7.88 A container is not a kind of asset

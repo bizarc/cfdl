@@ -8,6 +8,40 @@ This project follows Semantic Versioning: https://semver.org/
 
 ## [Unreleased]
 
+### Added: every Monte Carlo metric gets a distribution — `results_version` 0.9
+
+A trial is a complete deterministic run — journal, streams, every declared
+and pack metric — and the trial loop was building a fresh one-entry map
+holding `model.npv` and dropping the rest. Because per-trial SERIES are
+(reasonably) not retained, the metric map is the only window into a trial:
+whatever the loop did not carry out was unrecoverable after it, so the figure
+a stochastic case exists to assert existed in no trial (backlog §7.87).
+
+- **A trial summary carries the whole metric map** the deterministic block
+  carries: `model.irr`, `model.moic`, every `stream.*.total` and
+  `entity.*.total`, each `domain.*` KPI and every `metric.<name>` the model
+  declared. The scenario path has done this since it was written.
+- **`monte_carlo.metrics` summarises every name present**, with p01 through
+  p99 filled — the section defines those percentiles and had been
+  hard-coding them `None`. Percentiles interpolate linearly between order
+  statistics (R type 7, Excel's `PERCENTILE`), which at q = 0.5 is exactly
+  the median already published: every blessed NPV figure is unchanged and the
+  goldens show the change as purely additive.
+- **A summary states `trials`**, the count that published that name. Not
+  every trial publishes every metric — `model.irr` exists only where the
+  flows solve for a rate — and without the count, a mean over three trials
+  and a mean over five hundred read identically. A name a distribution cannot
+  be taken over (a string, or a kind that changed between trials) is carried
+  per trial and left out of the summary.
+
+A trial row keys `entity.<symbol>.total` and the results-plane graph
+(`results_version` 0.7) keys `graph.entities[].symbol`, so a per-entity
+distribution is now readable from results alone.
+
+Fixtures: `valid/monte_carlo_metric_distribution`,
+`valid/monte_carlo_partial_metric`. Every results golden re-blessed for the
+version bump; docs/01 §15.1 and §15.3, docs/06 regenerated from the schema.
+
 ### Fixed: `container` reaches the expression environment (spec audit)
 
 The family was first-class everywhere except the expression layer: FOUR

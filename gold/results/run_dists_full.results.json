@@ -1,5 +1,5 @@
 {
-  "results_version": "0.8",
+  "results_version": "0.9",
   "model_hash": "a7881699b7cb1327e29253d54a25dbb1478c2ff2a9c47e725e5e2b9dfa4ddae7",
   "ledger_hash": "e47c92795c40d321f6285af62ec5fd5bbb5ab5c2b437d6b08efb1e9880153e45",
   "engine": {
@@ -257,8 +257,65 @@
     "trials": 8,
     "seed": 20260728,
     "metrics": {
+      "entity.asset.plant.total": {
+        "type": "money",
+        "trials": 8,
+        "mean": {
+          "amount": 6060.317913,
+          "currency": "USD"
+        },
+        "stdev": {
+          "amount": 273.591418,
+          "currency": "USD"
+        },
+        "min": {
+          "amount": 5667.018509,
+          "currency": "USD"
+        },
+        "max": {
+          "amount": 6453.938013,
+          "currency": "USD"
+        },
+        "p01": {
+          "amount": 5668.175062,
+          "currency": "USD"
+        },
+        "p05": {
+          "amount": 5672.801272,
+          "currency": "USD"
+        },
+        "p10": {
+          "amount": 5678.584036,
+          "currency": "USD"
+        },
+        "p25": {
+          "amount": 5862.935042,
+          "currency": "USD"
+        },
+        "p50": {
+          "amount": 6095.631188,
+          "currency": "USD"
+        },
+        "p75": {
+          "amount": 6240.124742,
+          "currency": "USD"
+        },
+        "p90": {
+          "amount": 6392.259848,
+          "currency": "USD"
+        },
+        "p95": {
+          "amount": 6423.09893,
+          "currency": "USD"
+        },
+        "p99": {
+          "amount": 6447.770196,
+          "currency": "USD"
+        }
+      },
       "model.npv": {
         "type": "money",
+        "trials": 8,
         "mean": {
           "amount": 5757.548384,
           "currency": "USD"
@@ -275,8 +332,203 @@
           "amount": 6131.50348,
           "currency": "USD"
         },
+        "p01": {
+          "amount": 5384.996734,
+          "currency": "USD"
+        },
+        "p05": {
+          "amount": 5389.391822,
+          "currency": "USD"
+        },
+        "p10": {
+          "amount": 5394.885682,
+          "currency": "USD"
+        },
+        "p25": {
+          "amount": 5570.026633,
+          "currency": "USD"
+        },
         "p50": {
           "amount": 5791.097431,
+          "currency": "USD"
+        },
+        "p75": {
+          "amount": 5928.372181,
+          "currency": "USD"
+        },
+        "p90": {
+          "amount": 6072.906716,
+          "currency": "USD"
+        },
+        "p95": {
+          "amount": 6102.205098,
+          "currency": "USD"
+        },
+        "p99": {
+          "amount": 6125.643804,
+          "currency": "USD"
+        }
+      },
+      "model.total": {
+        "type": "money",
+        "trials": 8,
+        "mean": {
+          "amount": 6060.317913,
+          "currency": "USD"
+        },
+        "stdev": {
+          "amount": 273.591418,
+          "currency": "USD"
+        },
+        "min": {
+          "amount": 5667.018509,
+          "currency": "USD"
+        },
+        "max": {
+          "amount": 6453.938013,
+          "currency": "USD"
+        },
+        "p01": {
+          "amount": 5668.175062,
+          "currency": "USD"
+        },
+        "p05": {
+          "amount": 5672.801272,
+          "currency": "USD"
+        },
+        "p10": {
+          "amount": 5678.584036,
+          "currency": "USD"
+        },
+        "p25": {
+          "amount": 5862.935042,
+          "currency": "USD"
+        },
+        "p50": {
+          "amount": 6095.631188,
+          "currency": "USD"
+        },
+        "p75": {
+          "amount": 6240.124742,
+          "currency": "USD"
+        },
+        "p90": {
+          "amount": 6392.259848,
+          "currency": "USD"
+        },
+        "p95": {
+          "amount": 6423.09893,
+          "currency": "USD"
+        },
+        "p99": {
+          "amount": 6447.770196,
+          "currency": "USD"
+        }
+      },
+      "model.wal_years": {
+        "type": "number",
+        "trials": 8,
+        "mean": 0.541667,
+        "stdev": 0.0,
+        "min": 0.541667,
+        "max": 0.541667,
+        "p01": 0.541667,
+        "p05": 0.541667,
+        "p10": 0.541667,
+        "p25": 0.541667,
+        "p50": 0.541667,
+        "p75": 0.541667,
+        "p90": 0.541667,
+        "p95": 0.541667,
+        "p99": 0.541667
+      },
+      "run.annual_discount_rate": {
+        "type": "number",
+        "trials": 8,
+        "mean": 0.1,
+        "stdev": 0.0,
+        "min": 0.1,
+        "max": 0.1,
+        "p01": 0.1,
+        "p05": 0.1,
+        "p10": 0.1,
+        "p25": 0.1,
+        "p50": 0.1,
+        "p75": 0.1,
+        "p90": 0.1,
+        "p95": 0.1,
+        "p99": 0.1
+      },
+      "run.periods_per_year": {
+        "type": "number",
+        "trials": 8,
+        "mean": 12.0,
+        "stdev": 0.0,
+        "min": 12.0,
+        "max": 12.0,
+        "p01": 12.0,
+        "p05": 12.0,
+        "p10": 12.0,
+        "p25": 12.0,
+        "p50": 12.0,
+        "p75": 12.0,
+        "p90": 12.0,
+        "p95": 12.0,
+        "p99": 12.0
+      },
+      "stream.plant.revenue.total": {
+        "type": "money",
+        "trials": 8,
+        "mean": {
+          "amount": 6060.317913,
+          "currency": "USD"
+        },
+        "stdev": {
+          "amount": 273.591418,
+          "currency": "USD"
+        },
+        "min": {
+          "amount": 5667.018509,
+          "currency": "USD"
+        },
+        "max": {
+          "amount": 6453.938013,
+          "currency": "USD"
+        },
+        "p01": {
+          "amount": 5668.175062,
+          "currency": "USD"
+        },
+        "p05": {
+          "amount": 5672.801272,
+          "currency": "USD"
+        },
+        "p10": {
+          "amount": 5678.584036,
+          "currency": "USD"
+        },
+        "p25": {
+          "amount": 5862.935042,
+          "currency": "USD"
+        },
+        "p50": {
+          "amount": 6095.631188,
+          "currency": "USD"
+        },
+        "p75": {
+          "amount": 6240.124742,
+          "currency": "USD"
+        },
+        "p90": {
+          "amount": 6392.259848,
+          "currency": "USD"
+        },
+        "p95": {
+          "amount": 6423.09893,
+          "currency": "USD"
+        },
+        "p99": {
+          "amount": 6447.770196,
           "currency": "USD"
         }
       }
@@ -285,8 +537,23 @@
       {
         "trial": 0,
         "metrics": {
+          "entity.asset.plant.total": {
+            "amount": 6453.938013,
+            "currency": "USD"
+          },
           "model.npv": {
             "amount": 6131.50348,
+            "currency": "USD"
+          },
+          "model.total": {
+            "amount": 6453.938013,
+            "currency": "USD"
+          },
+          "model.wal_years": 0.541667,
+          "run.annual_discount_rate": 0.1,
+          "run.periods_per_year": 12.0,
+          "stream.plant.revenue.total": {
+            "amount": 6453.938013,
             "currency": "USD"
           }
         }
@@ -294,8 +561,23 @@
       {
         "trial": 1,
         "metrics": {
+          "entity.asset.plant.total": {
+            "amount": 5922.73316,
+            "currency": "USD"
+          },
           "model.npv": {
             "amount": 5626.837275,
+            "currency": "USD"
+          },
+          "model.total": {
+            "amount": 5922.73316,
+            "currency": "USD"
+          },
+          "model.wal_years": 0.541667,
+          "run.annual_discount_rate": 0.1,
+          "run.periods_per_year": 12.0,
+          "stream.plant.revenue.total": {
+            "amount": 5922.73316,
             "currency": "USD"
           }
         }
@@ -303,8 +585,23 @@
       {
         "trial": 2,
         "metrics": {
+          "entity.asset.plant.total": {
+            "amount": 5667.018509,
+            "currency": "USD"
+          },
           "model.npv": {
             "amount": 5383.897962,
+            "currency": "USD"
+          },
+          "model.total": {
+            "amount": 5667.018509,
+            "currency": "USD"
+          },
+          "model.wal_years": 0.541667,
+          "run.annual_discount_rate": 0.1,
+          "run.periods_per_year": 12.0,
+          "stream.plant.revenue.total": {
+            "amount": 5667.018509,
             "currency": "USD"
           }
         }
@@ -312,8 +609,23 @@
       {
         "trial": 3,
         "metrics": {
+          "entity.asset.plant.total": {
+            "amount": 6177.663686,
+            "currency": "USD"
+          },
           "model.npv": {
             "amount": 5869.031639,
+            "currency": "USD"
+          },
+          "model.total": {
+            "amount": 6177.663686,
+            "currency": "USD"
+          },
+          "model.wal_years": 0.541667,
+          "run.annual_discount_rate": 0.1,
+          "run.periods_per_year": 12.0,
+          "stream.plant.revenue.total": {
+            "amount": 6177.663686,
             "currency": "USD"
           }
         }
@@ -321,8 +633,23 @@
       {
         "trial": 4,
         "metrics": {
+          "entity.asset.plant.total": {
+            "amount": 6198.224206,
+            "currency": "USD"
+          },
           "model.npv": {
             "amount": 5888.564969,
+            "currency": "USD"
+          },
+          "model.total": {
+            "amount": 6198.224206,
+            "currency": "USD"
+          },
+          "model.wal_years": 0.541667,
+          "run.annual_discount_rate": 0.1,
+          "run.periods_per_year": 12.0,
+          "stream.plant.revenue.total": {
+            "amount": 6198.224206,
             "currency": "USD"
           }
         }
@@ -330,8 +657,23 @@
       {
         "trial": 5,
         "metrics": {
+          "entity.asset.plant.total": {
+            "amount": 6013.59869,
+            "currency": "USD"
+          },
           "model.npv": {
             "amount": 5713.163223,
+            "currency": "USD"
+          },
+          "model.total": {
+            "amount": 6013.59869,
+            "currency": "USD"
+          },
+          "model.wal_years": 0.541667,
+          "run.annual_discount_rate": 0.1,
+          "run.periods_per_year": 12.0,
+          "stream.plant.revenue.total": {
+            "amount": 6013.59869,
             "currency": "USD"
           }
         }
@@ -339,8 +681,23 @@
       {
         "trial": 6,
         "metrics": {
+          "entity.asset.plant.total": {
+            "amount": 6365.826348,
+            "currency": "USD"
+          },
           "model.npv": {
             "amount": 6047.793817,
+            "currency": "USD"
+          },
+          "model.total": {
+            "amount": 6365.826348,
+            "currency": "USD"
+          },
+          "model.wal_years": 0.541667,
+          "run.annual_discount_rate": 0.1,
+          "run.periods_per_year": 12.0,
+          "stream.plant.revenue.total": {
+            "amount": 6365.826348,
             "currency": "USD"
           }
         }
@@ -348,8 +705,23 @@
       {
         "trial": 7,
         "metrics": {
+          "entity.asset.plant.total": {
+            "amount": 5683.54069,
+            "currency": "USD"
+          },
           "model.npv": {
             "amount": 5399.594705,
+            "currency": "USD"
+          },
+          "model.total": {
+            "amount": 5683.54069,
+            "currency": "USD"
+          },
+          "model.wal_years": 0.541667,
+          "run.annual_discount_rate": 0.1,
+          "run.periods_per_year": 12.0,
+          "stream.plant.revenue.total": {
+            "amount": 5683.54069,
             "currency": "USD"
           }
         }

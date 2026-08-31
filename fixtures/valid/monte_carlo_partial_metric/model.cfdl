@@ -1,0 +1,30 @@
+version 0.1
+model "monte-carlo-partial-metric"
+time calendar annual from 2026-01 for 3
+
+// NOT EVERY TRIAL PUBLISHES EVERY METRIC, WHICH IS WHY A SUMMARY COUNTS.
+//
+// `model.irr` exists only where the flows solve for a rate. The swing below is
+// drawn across zero, so in the trials that draw it negative there is no sign
+// change and no IRR — and a mean over the trials that DID solve would read
+// exactly like a mean over all of them, if the summary did not say how many it
+// was taken over. `trials` on a metric summary is that count (`docs/13` §7.87).
+//
+// `model.npv` is published by every trial and `model.irr` by some, so this one
+// model shows both cases in one results document.
+
+entity asset co : Asset.Financial
+
+assume swing ~ Uniform(min=-60, max=140)
+
+stream ops.outlay on entity asset.co outflow currency USD {
+  schedule every year from 2026-01 to 2026-01
+  amount = 100
+}
+
+stream ops.swing on entity asset.co inflow currency USD {
+  schedule every year from 2027-01 to 2028-01
+  amount = inputs.swing
+}
+
+run monte_carlo trials 24 seed 20260831

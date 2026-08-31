@@ -1,5 +1,5 @@
 {
-  "results_version": "0.8",
+  "results_version": "0.9",
   "model_hash": "0f98fb4afee2d40cec00028812d657ba5d324fca483cfaac32751a8a7fc3e27d",
   "ledger_hash": "25b07fac945f5d952f2fbb02f8928af85c7516ae7cf007c10e2ba4b3124c4014",
   "engine": {
@@ -179,8 +179,65 @@
     "trials": 8,
     "seed": 20260721,
     "metrics": {
+      "entity.asset.borrower.total": {
+        "type": "money",
+        "trials": 8,
+        "mean": {
+          "amount": 5616.562786,
+          "currency": "USD"
+        },
+        "stdev": {
+          "amount": 403.492651,
+          "currency": "USD"
+        },
+        "min": {
+          "amount": 5133.343079,
+          "currency": "USD"
+        },
+        "max": {
+          "amount": 6257.785021,
+          "currency": "USD"
+        },
+        "p01": {
+          "amount": 5140.816851,
+          "currency": "USD"
+        },
+        "p05": {
+          "amount": 5170.711937,
+          "currency": "USD"
+        },
+        "p10": {
+          "amount": 5208.080796,
+          "currency": "USD"
+        },
+        "p25": {
+          "amount": 5327.060098,
+          "currency": "USD"
+        },
+        "p50": {
+          "amount": 5467.746746,
+          "currency": "USD"
+        },
+        "p75": {
+          "amount": 5891.813365,
+          "currency": "USD"
+        },
+        "p90": {
+          "amount": 6239.00952,
+          "currency": "USD"
+        },
+        "p95": {
+          "amount": 6248.397271,
+          "currency": "USD"
+        },
+        "p99": {
+          "amount": 6255.907471,
+          "currency": "USD"
+        }
+      },
       "model.npv": {
         "type": "money",
+        "trials": 8,
         "mean": {
           "amount": 5522.105173,
           "currency": "USD"
@@ -197,8 +254,203 @@
           "amount": 6152.54353,
           "currency": "USD"
         },
+        "p01": {
+          "amount": 5054.360185,
+          "currency": "USD"
+        },
+        "p05": {
+          "amount": 5083.752505,
+          "currency": "USD"
+        },
+        "p10": {
+          "amount": 5120.492905,
+          "currency": "USD"
+        },
+        "p25": {
+          "amount": 5237.471251,
+          "currency": "USD"
+        },
         "p50": {
           "amount": 5375.791875,
+          "currency": "USD"
+        },
+        "p75": {
+          "amount": 5792.726673,
+          "currency": "USD"
+        },
+        "p90": {
+          "amount": 6134.083789,
+          "currency": "USD"
+        },
+        "p95": {
+          "amount": 6143.31366,
+          "currency": "USD"
+        },
+        "p99": {
+          "amount": 6150.697556,
+          "currency": "USD"
+        }
+      },
+      "model.total": {
+        "type": "money",
+        "trials": 8,
+        "mean": {
+          "amount": 5616.562786,
+          "currency": "USD"
+        },
+        "stdev": {
+          "amount": 403.492651,
+          "currency": "USD"
+        },
+        "min": {
+          "amount": 5133.343079,
+          "currency": "USD"
+        },
+        "max": {
+          "amount": 6257.785021,
+          "currency": "USD"
+        },
+        "p01": {
+          "amount": 5140.816851,
+          "currency": "USD"
+        },
+        "p05": {
+          "amount": 5170.711937,
+          "currency": "USD"
+        },
+        "p10": {
+          "amount": 5208.080796,
+          "currency": "USD"
+        },
+        "p25": {
+          "amount": 5327.060098,
+          "currency": "USD"
+        },
+        "p50": {
+          "amount": 5467.746746,
+          "currency": "USD"
+        },
+        "p75": {
+          "amount": 5891.813365,
+          "currency": "USD"
+        },
+        "p90": {
+          "amount": 6239.00952,
+          "currency": "USD"
+        },
+        "p95": {
+          "amount": 6248.397271,
+          "currency": "USD"
+        },
+        "p99": {
+          "amount": 6255.907471,
+          "currency": "USD"
+        }
+      },
+      "model.wal_years": {
+        "type": "number",
+        "trials": 8,
+        "mean": 0.291667,
+        "stdev": 0.0,
+        "min": 0.291667,
+        "max": 0.291667,
+        "p01": 0.291667,
+        "p05": 0.291667,
+        "p10": 0.291667,
+        "p25": 0.291667,
+        "p50": 0.291667,
+        "p75": 0.291667,
+        "p90": 0.291667,
+        "p95": 0.291667,
+        "p99": 0.291667
+      },
+      "run.annual_discount_rate": {
+        "type": "number",
+        "trials": 8,
+        "mean": 0.06,
+        "stdev": 0.0,
+        "min": 0.06,
+        "max": 0.06,
+        "p01": 0.06,
+        "p05": 0.06,
+        "p10": 0.06,
+        "p25": 0.06,
+        "p50": 0.06,
+        "p75": 0.06,
+        "p90": 0.06,
+        "p95": 0.06,
+        "p99": 0.06
+      },
+      "run.periods_per_year": {
+        "type": "number",
+        "trials": 8,
+        "mean": 12.0,
+        "stdev": 0.0,
+        "min": 12.0,
+        "max": 12.0,
+        "p01": 12.0,
+        "p05": 12.0,
+        "p10": 12.0,
+        "p25": 12.0,
+        "p50": 12.0,
+        "p75": 12.0,
+        "p90": 12.0,
+        "p95": 12.0,
+        "p99": 12.0
+      },
+      "stream.lease.rent.total": {
+        "type": "money",
+        "trials": 8,
+        "mean": {
+          "amount": 5616.562786,
+          "currency": "USD"
+        },
+        "stdev": {
+          "amount": 403.492651,
+          "currency": "USD"
+        },
+        "min": {
+          "amount": 5133.343079,
+          "currency": "USD"
+        },
+        "max": {
+          "amount": 6257.785021,
+          "currency": "USD"
+        },
+        "p01": {
+          "amount": 5140.816851,
+          "currency": "USD"
+        },
+        "p05": {
+          "amount": 5170.711937,
+          "currency": "USD"
+        },
+        "p10": {
+          "amount": 5208.080796,
+          "currency": "USD"
+        },
+        "p25": {
+          "amount": 5327.060098,
+          "currency": "USD"
+        },
+        "p50": {
+          "amount": 5467.746746,
+          "currency": "USD"
+        },
+        "p75": {
+          "amount": 5891.813365,
+          "currency": "USD"
+        },
+        "p90": {
+          "amount": 6239.00952,
+          "currency": "USD"
+        },
+        "p95": {
+          "amount": 6248.397271,
+          "currency": "USD"
+        },
+        "p99": {
+          "amount": 6255.907471,
           "currency": "USD"
         }
       }
@@ -207,8 +459,23 @@
       {
         "trial": 0,
         "metrics": {
+          "entity.asset.borrower.total": {
+            "amount": 5778.763528,
+            "currency": "USD"
+          },
           "model.npv": {
             "amount": 5681.578073,
+            "currency": "USD"
+          },
+          "model.total": {
+            "amount": 5778.763528,
+            "currency": "USD"
+          },
+          "model.wal_years": 0.291667,
+          "run.annual_discount_rate": 0.06,
+          "run.periods_per_year": 12.0,
+          "stream.lease.rent.total": {
+            "amount": 5778.763528,
             "currency": "USD"
           }
         }
@@ -216,8 +483,23 @@
       {
         "trial": 1,
         "metrics": {
+          "entity.asset.borrower.total": {
+            "amount": 6257.785021,
+            "currency": "USD"
+          },
           "model.npv": {
             "amount": 6152.54353,
+            "currency": "USD"
+          },
+          "model.total": {
+            "amount": 6257.785021,
+            "currency": "USD"
+          },
+          "model.wal_years": 0.291667,
+          "run.annual_discount_rate": 0.06,
+          "run.periods_per_year": 12.0,
+          "stream.lease.rent.total": {
+            "amount": 6257.785021,
             "currency": "USD"
           }
         }
@@ -225,8 +507,23 @@
       {
         "trial": 2,
         "metrics": {
+          "entity.asset.borrower.total": {
+            "amount": 5133.343079,
+            "currency": "USD"
+          },
           "model.npv": {
             "amount": 5047.012105,
+            "currency": "USD"
+          },
+          "model.total": {
+            "amount": 5133.343079,
+            "currency": "USD"
+          },
+          "model.wal_years": 0.291667,
+          "run.annual_discount_rate": 0.06,
+          "run.periods_per_year": 12.0,
+          "stream.lease.rent.total": {
+            "amount": 5133.343079,
             "currency": "USD"
           }
         }
@@ -234,8 +531,23 @@
       {
         "trial": 3,
         "metrics": {
+          "entity.asset.borrower.total": {
+            "amount": 5475.096524,
+            "currency": "USD"
+          },
           "model.npv": {
             "amount": 5383.018046,
+            "currency": "USD"
+          },
+          "model.total": {
+            "amount": 5475.096524,
+            "currency": "USD"
+          },
+          "model.wal_years": 0.291667,
+          "run.annual_discount_rate": 0.06,
+          "run.periods_per_year": 12.0,
+          "stream.lease.rent.total": {
+            "amount": 5475.096524,
             "currency": "USD"
           }
         }
@@ -243,8 +555,23 @@
       {
         "trial": 4,
         "metrics": {
+          "entity.asset.borrower.total": {
+            "amount": 5356.043048,
+            "currency": "USD"
+          },
           "model.npv": {
             "amount": 5265.966775,
+            "currency": "USD"
+          },
+          "model.total": {
+            "amount": 5356.043048,
+            "currency": "USD"
+          },
+          "model.wal_years": 0.291667,
+          "run.annual_discount_rate": 0.06,
+          "run.periods_per_year": 12.0,
+          "stream.lease.rent.total": {
+            "amount": 5356.043048,
             "currency": "USD"
           }
         }
@@ -252,8 +579,23 @@
       {
         "trial": 5,
         "metrics": {
+          "entity.asset.borrower.total": {
+            "amount": 5460.396968,
+            "currency": "USD"
+          },
           "model.npv": {
             "amount": 5368.565703,
+            "currency": "USD"
+          },
+          "model.total": {
+            "amount": 5460.396968,
+            "currency": "USD"
+          },
+          "model.wal_years": 0.291667,
+          "run.annual_discount_rate": 0.06,
+          "run.periods_per_year": 12.0,
+          "stream.lease.rent.total": {
+            "amount": 5460.396968,
             "currency": "USD"
           }
         }
@@ -261,8 +603,23 @@
       {
         "trial": 6,
         "metrics": {
+          "entity.asset.borrower.total": {
+            "amount": 5240.111246,
+            "currency": "USD"
+          },
           "model.npv": {
             "amount": 5151.984677,
+            "currency": "USD"
+          },
+          "model.total": {
+            "amount": 5240.111246,
+            "currency": "USD"
+          },
+          "model.wal_years": 0.291667,
+          "run.annual_discount_rate": 0.06,
+          "run.periods_per_year": 12.0,
+          "stream.lease.rent.total": {
+            "amount": 5240.111246,
             "currency": "USD"
           }
         }
@@ -270,8 +627,23 @@
       {
         "trial": 7,
         "metrics": {
+          "entity.asset.borrower.total": {
+            "amount": 6230.962877,
+            "currency": "USD"
+          },
           "model.npv": {
             "amount": 6126.172472,
+            "currency": "USD"
+          },
+          "model.total": {
+            "amount": 6230.962877,
+            "currency": "USD"
+          },
+          "model.wal_years": 0.291667,
+          "run.annual_discount_rate": 0.06,
+          "run.periods_per_year": 12.0,
+          "stream.lease.rent.total": {
+            "amount": 6230.962877,
             "currency": "USD"
           }
         }
