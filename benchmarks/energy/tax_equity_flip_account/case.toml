@@ -1,0 +1,21 @@
+# Benchmark case: a tax-equity partnership flip, with the flip date derived.
+#
+# Reconciled against the national laboratory's open-source project-finance
+# model in its leveraged-partnership-flip configuration (BSD-3, run once
+# outside this repo — see NOTES.md for the version, the inputs and the
+# command). Nothing about that tool persists here: no vendored package, no CI
+# dependency, no reference_gen.py. The figures below are its outputs, carried
+# as anchor values.
+#
+# Anchors are every operating period on both partners' columns. Period 0 is
+# excluded: the reference books a sponsor development fee at close that this
+# case does not model, and the flip has nothing to do with it.
+#
+# period_tolerance = 0.01 — a cent, the same as the original. This case is
+# looser against the anchors than its twin: worst disagreement 4.7e-3 dollars
+# against the original's 1.0e-6. That is reassociation, not modelling — the
+# same quantities summed in a different order, through the ledger rather than
+# inside a field.
+summary = "The twin of tax_equity_flip, with the project's cash as streams settling into an account rather than a hand-carried field."
+pack = "energy"
+period_tolerance = 0.01
