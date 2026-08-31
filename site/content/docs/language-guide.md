@@ -86,7 +86,7 @@ includes its children.
 An asset may carry a **lifecycle** — a declared finite state machine, with
 guarded edges that move it and contracts and streams that switch on where it
 is. A model declares the machine itself, or the type brings one from its
-pack. See below, and [the object model](/docs/object-model).
+pack. See below, and [lifecycles and state](/docs/lifecycles).
 
 ## Streams
 
@@ -246,7 +246,7 @@ memory — and it reads settled series strictly backward,
 so realized cash drives state. `active in state leased` on a stream closes
 the loop back to cash. A schedule can hang a window off an entry:
 `from state_enter(asset.site, building) for 18 periods`. See
-[the object model](/docs/object-model).
+[lifecycles and state](/docs/lifecycles).
 
 ## The account
 

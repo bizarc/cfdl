@@ -31,7 +31,7 @@ phase lease_up from 2026-01 to 2027-06
 
 ### The calendar is an assumption when events are involved
 
-An [event](/docs/object-model) fires in the first period where its condition
+An [event](/docs/lifecycles) fires in the first period where its condition
 holds, and never between periods. So the calendar sets how precisely a
 condition can be met — which matters as soon as an event decides who gets paid.
 
@@ -78,7 +78,7 @@ Each entry of the entity into the state opens its own window of n grid
 periods; a re-entered state re-anchors with a fresh window. This is what
 "eighteen months of construction from whenever construction starts" needs —
 the machine enters the state whenever its edge fires, and the schedule hangs
-off the entry. See [the object model](/docs/object-model).
+off the entry. See [lifecycles and state](/docs/lifecycles).
 
 ## Day counts
 

@@ -60,6 +60,7 @@ export const NAV: NavSection[] = [
       { title: "Curves", slug: "/docs/examples/curves" },
       { title: "Uncertainty and Monte Carlo", slug: "/docs/examples/uncertainty" },
       { title: "Events and options", slug: "/docs/examples/options_events" },
+      { title: "Lifecycles and state", slug: "/docs/lifecycles" },
     ],
   },
   {
