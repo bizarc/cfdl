@@ -110,7 +110,7 @@ Two facts about it:
 
 1. **It is never bound into a waterfall's environment.** `docs/03` §3 lists the
    namespaces a waterfall step can read: `model`, `entity` (fields only),
-   `asset`/`party`/`contract`/`reference` (the same fields, spelled bare),
+   `asset`/`party`/`container`/`contract`/`reference` (the same fields, spelled bare),
    `time`, `inputs`, `cfg`, `obs`, curves, and `series_sum`. There is no entry
    for an entity's cash. `asset.x.net_cash_flow` is `E1131_UNKNOWN_FIELD_READ`;
    `entity.asset.x.net_cash_flow` resolves to `Optional(None)` and the pot

@@ -293,7 +293,7 @@ entity party acme : CRE.Party.Tenant { name = "Acme Corp" }
 
 ```cfdl
 event refinance when time.t >= 12 {
-  set entity loan.senior.status = "refinanced"
+  set entity asset.senior.status = "refinanced"
 }
 ```
 
@@ -541,7 +541,7 @@ stressed — is still named as an input rather than computed inline:
 ```cfdl
 assume annual_yield ~ Normal(mean=5000, stdev=350, clip=[4000, 6000])
 
-contract energy.ppa.plant_a on entity project.plant {
+contract energy.ppa.plant_a on entity asset.plant {
   term 2026-01..2050-12
   terms {
     ppa_price = 3000              // contractual fact
@@ -1070,7 +1070,7 @@ Syntax:
 
 ```cfdl
 event refi_if_rates_drop when curve_value("sofr", time.date) < 0.045 {
-  set entity loan.senior.status = "refinanced"
+  set entity asset.senior.status = "refinanced"
   deactivate stream loan.debt_service
 }
 ```
@@ -1079,9 +1079,19 @@ An event may also state WHEN it occurs in the schedule language, with or
 without a `when` condition:
 
 ```cfdl
-event covenant_test schedule every quarter when domain.energy.dscr < 1.20 {
-  set entity project.plant.status = "trapped"
+event covenant_test schedule every quarter
+  when series_sum("plant.noi", time.t - 4, time.t - 1)
+     < 1.20 * series_sum("plant.debt_service", time.t - 4, time.t - 1) {
+  set entity asset.plant.status = "trapped"
 }
+```
+
+A guard reads the walk's own past — series strictly backward, fields,
+curves. It cannot read `domain.*`: a subtotal is a fold over the settled
+ledger, and inside the walk the ledger has not settled. State the covenant
+on the flows themselves, as above.
+
+```cfdl
 ```
 
 Rules:
@@ -1488,7 +1498,7 @@ phase operations from 2027-01 to 2031-12
 **structure.cfdl**
 ```cfdl
 entity asset sunset
-entity loan senior
+entity asset senior : Asset.Financial
 ```
 
 **assumptions.cfdl**
@@ -1511,14 +1521,14 @@ contract cre.lease on entity asset.sunset {
   }
 }
 
-stream loan.debt_service on entity loan.senior outflow currency USD {
+stream loan.debt_service on entity asset.senior outflow currency USD {
   active when entity.status != "refinanced"
   schedule every month from 2026-01 to 2031-12
   amount = -pmt(0.06 / 12, 72, 8500000)
 }
 
 event refi_if_rates_drop when curve_value("sofr", time.date) < 0.045 {
-  set entity loan.senior.status = "refinanced"
+  set entity asset.senior.status = "refinanced"
   deactivate stream loan.debt_service
 }
 ```

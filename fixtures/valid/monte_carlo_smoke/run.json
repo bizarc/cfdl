@@ -12,7 +12,7 @@
       "stream.legal.rent:amount": {
         "kind": "normal",
         "mean": 1000,
-        "stddev": 75
+        "stdev": 75
       },
       "stream.legal.fee:amount": {
         "kind": "fixed",

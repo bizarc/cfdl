@@ -112,9 +112,11 @@ packs/
     templates.toml
     lowering/
       rules.toml
+    metrics.toml
+    statements.toml
     validations.toml
-    defaults.toml
-    outputs.toml
+    ontology/
+      types.toml
     README.md
   opco/
     pack.toml
@@ -133,9 +135,12 @@ cadences = ["monthly"]   # optional; empty or absent means every calendar
 
 [entrypoints]
 aliases = "aliases.toml"
+templates = "templates.toml"
 lowering = "lowering/rules.toml"
 metrics = "metrics.toml"
+statements = "statements.toml"
 validations = "validations.toml"
+ontology = "ontology/types.toml"
 ```
 
 Rules:
@@ -151,8 +156,9 @@ Rules:
   (`E5014_RULE_CADENCE_UNSUPPORTED`), which is what lets a pack carry neutral
   and month-locked rules side by side mid-migration.
 - Every entrypoint is optional; a pack supplies only what it defines. The
-  recognized keys are `aliases`, `templates`, `lowering`, `metrics` and
-  `validations`, each a path relative to the pack directory. An unrecognized
+  recognized keys are `aliases`, `templates`, `lowering`, `metrics`,
+  `statements`, `validations` and `ontology`, each a path relative to the
+  pack directory. An unrecognized
   key is accepted and ignored, so check spelling: `packs/cre/pack.toml` once
   declared `defaults = "defaults.toml"`, which the loader has no field for, and
   the file sat unread.
@@ -183,20 +189,32 @@ A pack MAY define types used by:
 **Required:**
 - A pack MUST provide a type registry file for at least the types it claims.
 
-Minimum shape:
-```json
-{
-  "types": [
-    {
-      "type_id": "CRE.Asset",
-      "kind": "entity",
-      "fields": {
-        "city": {"type": "String", "required": false},
-        "units": {"type": "Int", "required": false}
-      }
-    }
-  ]
-}
+Minimum shape — `ontology/types.toml`, the file the loader reads (an
+earlier revision showed a JSON registry no loader ever parsed):
+
+```toml
+[pack]
+ontology_id = "cre"
+version = "0.1.0"
+
+[[entities]]
+type_id = "CRE.Asset.RealProperty"
+family = "asset"
+class = "real"
+refines = "Asset.Real"
+
+[[entities.fields]]
+name = "rentable_area"
+field_type = "decimal"
+required = false
+unit = "sf"
+
+[[relations]]
+relation_id = "occupies"
+from_family = "party"
+to_family = "asset"
+cardinality = "many_to_many"
+inverse = "occupied_by"
 ```
 
 Type registry semantics:
@@ -547,18 +565,18 @@ Current contract for packs:
 - Packs should not rely on implicit casts; invalid values must emit diagnostics.
 - If term-level spans are unavailable for a rule, use contract span consistently.
 
-### 6.6 Ontology observable and reference IDs
-Packs define canonical IDs for:
-- `obs.rate(<name>)`, `obs.index(<name>)`, `obs.fx(<from>, <to>)`
-- `ref.<name>`
+### 6.6 References (market observables)
+A pack's ontology declares its references in `types.toml` —
+`[[references]]` entries with a `reference_id`, a `kind` (`rate_curve`,
+`index`), an optional `unit` and a description. They are vocabulary: what a
+model using the pack may observe, resolved at run time from the model's own
+`curve`/`quantile` declarations and the run configuration.
 
-Packs MAY provide registries:
-- `observables.json`
-- `refs.json`
-
-Compiler behavior:
-- If pack provides registries, the compiler MAY validate that referenced IDs exist.
-- Missing observable IDs SHOULD be warnings in v0.1 (allow offline modeling).
+Earlier revisions of this section described `observables.json` and
+`refs.json` registries and an `obs.rate(...)` accessor family. No loader
+has ever read such files and no such accessors exist; the expression
+environment's observable surface is `cfg.*`/`obs.*` bindings and
+`curve_value` (see the Expression Environment).
 
 ### 6.7 Expression functions
 
@@ -581,8 +599,12 @@ Validation must:
 
 Validations are declared as data in `packs/<pack>/validations.toml` and
 evaluated by the compiler; they are not implemented in the engine. Each rule
-names the contract it applies to, the check, a stable diagnostic code, and a
-message. Available checks: `term_present`, `any_term_present`, `terms_mutually_exclusive`, `term_number`
+names the contract it applies to — `contract` for one, `contracts` for a
+list, exactly one of the two — the check, a stable diagnostic code, a
+message, and an optional `severity` (`error` by default). `term` names the
+term under test; `terms` lists them for `any_term_present`; `values` lists
+what `term_enum` accepts; `left`/`op`/`right` are `term_compare`'s
+operands. Available checks: `term_present`, `any_term_present`, `terms_mutually_exclusive`, `term_number`
 (integer or decimal, with `min`/`max`/`exclusive_min`/`exclusive_max`, and
 `when`/`on_invalid` to control absent and unparseable values),
 `term_range_within_timeline`, `term_enum`, and `term_compare`. The set is

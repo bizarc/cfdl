@@ -984,12 +984,14 @@ fn references_prev_other_than_field(src: &str) -> bool {
         // rule as a current-period read rather than teaching a difference. It
         // is also the spelling a pack lowering rule produces, since
         // `field.<name>` is rewritten through the entity root — the bare
-        // family alias covers the four declared families only, and a rule may
+        // family alias covers the declared node families only (`cfdl_expr::FIELD_FAMILIES`), and a rule may
         // sit on any entity.
         if boundary_ok
-            && !["asset.", "party.", "contract.", "reference.", "entity."]
+            && !cfdl_expr::FIELD_FAMILIES
                 .iter()
-                .any(|family| tail[1..].starts_with(family))
+                .map(|f| format!("{f}."))
+                .chain(std::iter::once("entity.".to_string()))
+                .any(|family| tail[1..].starts_with(&family))
         {
             return true;
         }
@@ -1035,7 +1037,7 @@ fn series_read_message(window: &cfdl_expr::SeriesWindow, site: &str) -> String {
 /// rule-bearing field has a period-close value that does not exist yet inside
 /// another rule, which is what §4a of docs/18 settled.
 fn reads_moving_field(src: &str, rule_fields: &BTreeSet<String>) -> bool {
-    for family in ["asset", "party", "contract", "reference"] {
+    for family in cfdl_expr::FIELD_FAMILIES {
         let needle = format!("{family}.");
         let mut base = 0usize;
         while let Some(idx) = src[base..].find(&needle) {

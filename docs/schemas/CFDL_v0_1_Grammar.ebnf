@@ -10,6 +10,7 @@ statement       = version_stmt
                 | time_stmt
                 | phase_stmt
                 | metric_stmt
+                | slice_stmt
                 | entity_stmt
                 | assume_stmt
                 | curve_stmt
@@ -46,6 +47,19 @@ phase_stmt      = "phase" IDENT "from" date_lit "to" date_lit ;
 (* A figure the model solved for. Evaluated once at the horizon, over the
    finished projection; published as `metric.<name>`. *)
 metric_stmt     = "metric" IDENT "=" expr ;
+
+(* A named, deliberately partial selection (docs/01 §15.4). Clause kinds
+   intersect, values within a kind union, `except` subtracts. Entity and
+   type operands are references; category and stream selectors are quoted,
+   in the dialect `series_sum` reads. *)
+slice_stmt      = "slice" IDENT "{" slice_clause* "}" ;
+slice_clause    = "entity" QNAME
+                | "type" ( QNAME | IDENT )
+                | "category" STRING
+                | "stream" STRING
+                | "except" ( "stream" STRING
+                           | "category" STRING
+                           | "entity" QNAME ) ;
 
 (* --- entities --- *)
 (* Both the type annotation and the block are optional. `entity asset sunset`

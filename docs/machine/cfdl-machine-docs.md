@@ -305,7 +305,7 @@ entity party acme : CRE.Party.Tenant { name = "Acme Corp" }
 
 ```cfdl
 event refinance when time.t >= 12 {
-  set entity loan.senior.status = "refinanced"
+  set entity asset.senior.status = "refinanced"
 }
 ```
 
@@ -553,7 +553,7 @@ stressed — is still named as an input rather than computed inline:
 ```cfdl
 assume annual_yield ~ Normal(mean=5000, stdev=350, clip=[4000, 6000])
 
-contract energy.ppa.plant_a on entity project.plant {
+contract energy.ppa.plant_a on entity asset.plant {
   term 2026-01..2050-12
   terms {
     ppa_price = 3000              // contractual fact
@@ -1082,7 +1082,7 @@ Syntax:
 
 ```cfdl
 event refi_if_rates_drop when curve_value("sofr", time.date) < 0.045 {
-  set entity loan.senior.status = "refinanced"
+  set entity asset.senior.status = "refinanced"
   deactivate stream loan.debt_service
 }
 ```
@@ -1091,9 +1091,19 @@ An event may also state WHEN it occurs in the schedule language, with or
 without a `when` condition:
 
 ```cfdl
-event covenant_test schedule every quarter when domain.energy.dscr < 1.20 {
-  set entity project.plant.status = "trapped"
+event covenant_test schedule every quarter
+  when series_sum("plant.noi", time.t - 4, time.t - 1)
+     < 1.20 * series_sum("plant.debt_service", time.t - 4, time.t - 1) {
+  set entity asset.plant.status = "trapped"
 }
+```
+
+A guard reads the walk's own past — series strictly backward, fields,
+curves. It cannot read `domain.*`: a subtotal is a fold over the settled
+ledger, and inside the walk the ledger has not settled. State the covenant
+on the flows themselves, as above.
+
+```cfdl
 ```
 
 Rules:
@@ -1500,7 +1510,7 @@ phase operations from 2027-01 to 2031-12
 **structure.cfdl**
 ```cfdl
 entity asset sunset
-entity loan senior
+entity asset senior : Asset.Financial
 ```
 
 **assumptions.cfdl**
@@ -1523,14 +1533,14 @@ contract cre.lease on entity asset.sunset {
   }
 }
 
-stream loan.debt_service on entity loan.senior outflow currency USD {
+stream loan.debt_service on entity asset.senior outflow currency USD {
   active when entity.status != "refinanced"
   schedule every month from 2026-01 to 2031-12
   amount = -pmt(0.06 / 12, 72, 8500000)
 }
 
 event refi_if_rates_drop when curve_value("sofr", time.date) < 0.045 {
-  set entity loan.senior.status = "refinanced"
+  set entity asset.senior.status = "refinanced"
   deactivate stream loan.debt_service
 }
 ```
@@ -1572,6 +1582,7 @@ statement       = version_stmt
                 | time_stmt
                 | phase_stmt
                 | metric_stmt
+                | slice_stmt
                 | entity_stmt
                 | assume_stmt
                 | curve_stmt
@@ -1608,6 +1619,19 @@ phase_stmt      = "phase" IDENT "from" date_lit "to" date_lit ;
 (* A figure the model solved for. Evaluated once at the horizon, over the
    finished projection; published as `metric.<name>`. *)
 metric_stmt     = "metric" IDENT "=" expr ;
+
+(* A named, deliberately partial selection (docs/01 §15.4). Clause kinds
+   intersect, values within a kind union, `except` subtracts. Entity and
+   type operands are references; category and stream selectors are quoted,
+   in the dialect `series_sum` reads. *)
+slice_stmt      = "slice" IDENT "{" slice_clause* "}" ;
+slice_clause    = "entity" QNAME
+                | "type" ( QNAME | IDENT )
+                | "category" STRING
+                | "stream" STRING
+                | "except" ( "stream" STRING
+                           | "category" STRING
+                           | "entity" QNAME ) ;
 
 (* --- entities --- *)
 (* Both the type annotation and the block are optional. `entity asset sunset`
@@ -2070,7 +2094,7 @@ The host (compiler or engine) provides values under these roots:
 | `model` | `model.id`, `model.base_currency` |
 | `time` | `time.t` (0-based period index), `time.date`, `time.phase`, `time.ppy` (periods per year for the model's calendar), `time.days_in_period` |
 | `entity` | fields of the stream's owning entity, and every entity's fields under its family — `entity.asset.tlb.balance` |
-| `asset`, `party`, `contract`, `reference` | an entity's fields, spelled bare: `asset.tlb.balance` is the same read as `entity.asset.tlb.balance` |
+| `asset`, `party`, `container`, `contract`, `reference` | an entity's fields, spelled bare: `asset.tlb.balance` is the same read as `entity.asset.tlb.balance` |
 | `cfg` | run-config values (scenario knobs) |
 | `obs` | observations (rates, curves) supplied at run time |
 | `inputs` | assumption values (`assume` statements), including ones derived from other assumptions (§2.1) |
@@ -5502,9 +5526,11 @@ packs/
     templates.toml
     lowering/
       rules.toml
+    metrics.toml
+    statements.toml
     validations.toml
-    defaults.toml
-    outputs.toml
+    ontology/
+      types.toml
     README.md
   opco/
     pack.toml
@@ -5523,9 +5549,12 @@ cadences = ["monthly"]   # optional; empty or absent means every calendar
 
 [entrypoints]
 aliases = "aliases.toml"
+templates = "templates.toml"
 lowering = "lowering/rules.toml"
 metrics = "metrics.toml"
+statements = "statements.toml"
 validations = "validations.toml"
+ontology = "ontology/types.toml"
 ```
 
 Rules:
@@ -5541,8 +5570,9 @@ Rules:
   (`E5014_RULE_CADENCE_UNSUPPORTED`), which is what lets a pack carry neutral
   and month-locked rules side by side mid-migration.
 - Every entrypoint is optional; a pack supplies only what it defines. The
-  recognized keys are `aliases`, `templates`, `lowering`, `metrics` and
-  `validations`, each a path relative to the pack directory. An unrecognized
+  recognized keys are `aliases`, `templates`, `lowering`, `metrics`,
+  `statements`, `validations` and `ontology`, each a path relative to the
+  pack directory. An unrecognized
   key is accepted and ignored, so check spelling: `packs/cre/pack.toml` once
   declared `defaults = "defaults.toml"`, which the loader has no field for, and
   the file sat unread.
@@ -5573,20 +5603,32 @@ A pack MAY define types used by:
 **Required:**
 - A pack MUST provide a type registry file for at least the types it claims.
 
-Minimum shape:
-```json
-{
-  "types": [
-    {
-      "type_id": "CRE.Asset",
-      "kind": "entity",
-      "fields": {
-        "city": {"type": "String", "required": false},
-        "units": {"type": "Int", "required": false}
-      }
-    }
-  ]
-}
+Minimum shape — `ontology/types.toml`, the file the loader reads (an
+earlier revision showed a JSON registry no loader ever parsed):
+
+```toml
+[pack]
+ontology_id = "cre"
+version = "0.1.0"
+
+[[entities]]
+type_id = "CRE.Asset.RealProperty"
+family = "asset"
+class = "real"
+refines = "Asset.Real"
+
+[[entities.fields]]
+name = "rentable_area"
+field_type = "decimal"
+required = false
+unit = "sf"
+
+[[relations]]
+relation_id = "occupies"
+from_family = "party"
+to_family = "asset"
+cardinality = "many_to_many"
+inverse = "occupied_by"
 ```
 
 Type registry semantics:
@@ -5937,18 +5979,18 @@ Current contract for packs:
 - Packs should not rely on implicit casts; invalid values must emit diagnostics.
 - If term-level spans are unavailable for a rule, use contract span consistently.
 
-### 6.6 Ontology observable and reference IDs
-Packs define canonical IDs for:
-- `obs.rate(<name>)`, `obs.index(<name>)`, `obs.fx(<from>, <to>)`
-- `ref.<name>`
+### 6.6 References (market observables)
+A pack's ontology declares its references in `types.toml` —
+`[[references]]` entries with a `reference_id`, a `kind` (`rate_curve`,
+`index`), an optional `unit` and a description. They are vocabulary: what a
+model using the pack may observe, resolved at run time from the model's own
+`curve`/`quantile` declarations and the run configuration.
 
-Packs MAY provide registries:
-- `observables.json`
-- `refs.json`
-
-Compiler behavior:
-- If pack provides registries, the compiler MAY validate that referenced IDs exist.
-- Missing observable IDs SHOULD be warnings in v0.1 (allow offline modeling).
+Earlier revisions of this section described `observables.json` and
+`refs.json` registries and an `obs.rate(...)` accessor family. No loader
+has ever read such files and no such accessors exist; the expression
+environment's observable surface is `cfg.*`/`obs.*` bindings and
+`curve_value` (see the Expression Environment).
 
 ### 6.7 Expression functions
 
@@ -5971,8 +6013,12 @@ Validation must:
 
 Validations are declared as data in `packs/<pack>/validations.toml` and
 evaluated by the compiler; they are not implemented in the engine. Each rule
-names the contract it applies to, the check, a stable diagnostic code, and a
-message. Available checks: `term_present`, `any_term_present`, `terms_mutually_exclusive`, `term_number`
+names the contract it applies to — `contract` for one, `contracts` for a
+list, exactly one of the two — the check, a stable diagnostic code, a
+message, and an optional `severity` (`error` by default). `term` names the
+term under test; `terms` lists them for `any_term_present`; `values` lists
+what `term_enum` accepts; `left`/`op`/`right` are `term_compare`'s
+operands. Available checks: `term_present`, `any_term_present`, `terms_mutually_exclusive`, `term_number`
 (integer or decimal, with `min`/`max`/`exclusive_min`/`exclusive_max`, and
 `when`/`on_invalid` to control absent and unparseable values),
 `term_range_within_timeline`, `term_enum`, and `term_compare`. The set is

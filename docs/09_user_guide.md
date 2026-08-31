@@ -294,7 +294,7 @@ cargo build -p cfdl-cli
     "trial_count": 1000,
     "seed": 12345,
     "distributions": {
-      "cfg.exit_multiple": { "kind": "normal", "mean": 8.0, "stddev": 1.0 },
+      "cfg.exit_multiple": { "kind": "normal", "mean": 8.0, "stdev": 1.0 },
       "cfg.growth": { "kind": "uniform", "min": 0.01, "max": 0.05 }
     }
   }
