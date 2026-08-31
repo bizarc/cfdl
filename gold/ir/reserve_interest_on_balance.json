@@ -1,0 +1,175 @@
+{
+  "ir_version": "0.1",
+  "model": {
+    "name": "interest-on-a-reserve-balance",
+    "currency": "USD"
+  },
+  "time": {
+    "calendar": "monthly",
+    "start": "2026-01-01",
+    "periods": 12
+  },
+  "phases": [],
+  "entities": [
+    {
+      "id": "0d71074b71a6612a126be3dc11b69ecc",
+      "symbol": "asset.project",
+      "type": "core.Entity",
+      "fields": {
+        "name": "Project"
+      },
+      "rules": {
+        "reserve_interest": {
+          "init": {
+            "lang": "cfdl",
+            "src": "0.0"
+          },
+          "next": {
+            "lang": "cfdl",
+            "src": "prev.dsra * 0.005"
+          }
+        }
+      },
+      "state": {}
+    },
+    {
+      "id": "24a62c472a43f2095bc8f47536162f83",
+      "symbol": "party.sponsor",
+      "type": "core.Entity",
+      "fields": {
+        "name": "Sponsor"
+      },
+      "state": {}
+    }
+  ],
+  "assumptions": {
+    "constants": {},
+    "random": {}
+  },
+  "accounts": [
+    {
+      "name": "dsra"
+    }
+  ],
+  "waterfalls": [
+    {
+      "name": "funding",
+      "entity": "asset.project",
+      "schedule": {
+        "kind": "Every",
+        "every": "monthly",
+        "from": "2026-01-01",
+        "to": "2026-12-01"
+      },
+      "source": {
+        "lang": "cfdl",
+        "src": "available"
+      },
+      "steps": [
+        {
+          "name": "top_up",
+          "payee": "dsra",
+          "payee_is_account": true,
+          "amount": {
+            "lang": "cfdl",
+            "src": "max(0.0, 3000.0 - prev.dsra)"
+          }
+        },
+        {
+          "name": "residual",
+          "payee": "party.sponsor",
+          "amount": {
+            "lang": "cfdl",
+            "src": "remaining"
+          }
+        }
+      ]
+    }
+  ],
+  "contracts": [],
+  "streams": [
+    {
+      "id": "7699e095a79e547b56f9c4cad1ca76b7",
+      "name": "ops.reserve_interest",
+      "owner": {
+        "symbol": "asset.project"
+      },
+      "direction": "inflow",
+      "currency": "USD",
+      "schedule": {
+        "kind": "Every",
+        "every": "monthly",
+        "from": "2026-01-01",
+        "to": "2026-12-01"
+      },
+      "amount": {
+        "lang": "cfdl",
+        "src": "asset.project.reserve_interest"
+      },
+      "active_when": {
+        "lang": "cfdl",
+        "src": "true"
+      },
+      "provenance": {
+        "source_file": "model.cfdl",
+        "source_span": {
+          "start_line": 40,
+          "start_col": 1,
+          "end_line": 43,
+          "end_col": 1
+        }
+      }
+    },
+    {
+      "id": "408b04922f58ab8d69f8cf26aa1d08a0",
+      "name": "ops.revenue",
+      "owner": {
+        "symbol": "asset.project"
+      },
+      "direction": "inflow",
+      "currency": "USD",
+      "schedule": {
+        "kind": "Every",
+        "every": "monthly",
+        "from": "2026-01-01",
+        "to": "2026-12-01"
+      },
+      "amount": {
+        "lang": "cfdl",
+        "src": "1000.0"
+      },
+      "active_when": {
+        "lang": "cfdl",
+        "src": "true"
+      },
+      "provenance": {
+        "source_file": "model.cfdl",
+        "source_span": {
+          "start_line": 33,
+          "start_col": 1,
+          "end_line": 36,
+          "end_col": 1
+        }
+      }
+    }
+  ],
+  "events": [],
+  "options": [],
+  "runs": [
+    {
+      "kind": "deterministic"
+    }
+  ],
+  "required_observables": [],
+  "required_refs": [],
+  "provenance": {
+    "sources": [
+      "model.cfdl"
+    ],
+    "compiler": {
+      "name": "cfdl",
+      "version": "0.7.0",
+      "hash": "d80f4c40398fe75b55a6788a2be14aac"
+    }
+  }
+}

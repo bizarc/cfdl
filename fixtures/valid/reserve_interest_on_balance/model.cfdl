@@ -1,0 +1,50 @@
+version 0.1
+model "interest-on-a-reserve-balance"
+time calendar monthly from 2026-01 for 12
+
+entity asset project {
+  name = "Project"
+  // A FIELD's rule may read an account strictly backward; a stream's amount
+  // may not. The field carries the balance forward, the stream spends it.
+  reserve_interest init 0.0 next prev.dsra * 0.005
+}
+entity party sponsor { name = "Sponsor" }
+
+// INTEREST EARNED ON A FUNDED RESERVE (`docs/13` §7.76, part three). The
+// CREST reconciliation line this closes: `crest_solar_cost_based/NOTES.md`
+// records that the reference EBITDA "includes interest earned on funded
+// reserve accounts (~$4,606 in year one), which CFDL does not model."
+//
+// THE SPELLING MATTERS. A stream's amount may NOT read `prev.<account>` —
+// that is `E1123_PREV_OUTSIDE_NEXT`, because `prev` outside a `next` means
+// nothing. `docs/03` is precise about where an account balance is readable:
+// rules, guards and step expressions. A field's `next` IS a rule, so the
+// field carries the balance forward and the stream reads the field.
+//
+// The pin: the reserve funds toward 3,000 out of 1,000/month of revenue, and
+// interest accrues on the PRIOR balance at 0.5% — 0 while the balance is 0,
+// 5.00 on the first 1,000, 10.03 on 2,005, then 15.00 a month once the
+// target is held. Reading the balance strictly backward is what keeps the
+// reserve and the interest it earns from being mutually circular.
+
+// A debt service reserve funded to target out of operating cash.
+account dsra { }
+
+stream ops.revenue on entity asset.project inflow currency USD {
+  schedule every month from 2026-01 to 2026-12
+  amount = 1000
+}
+
+// Interest EARNED on the reserve balance. Reads the account strictly
+// backward, which is what makes it legal and cycle-free.
+stream ops.reserve_interest on entity asset.project inflow currency USD {
+  schedule every month from 2026-01 to 2026-12
+  amount = asset.project.reserve_interest
+}
+
+waterfall funding on entity asset.project {
+  schedule every month from 2026-01 to 2026-12
+  from available
+  pay top_up   to account dsra   = max(0.0, 3000.0 - prev.dsra)
+  pay residual to party.sponsor  = remaining
+}
