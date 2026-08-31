@@ -30,8 +30,8 @@ loops, so the same inputs always produce the same number.
 | `entity.*` | fields of the entity the stream belongs to |
 | `cfg.*` | run configuration, such as the discount rate |
 | `obs.*` | observed series a curve provides |
-| `state.*` | declared states, at the current period |
-| `prev` | this state's previous value — inside a state's `next` only |
+| `<family>.<entity>.<field>` | an entity's field — a value that moves is declared `init … next …` on the entity and read here. There is no `state.*` namespace (`E1125`) |
+| `prev` | this field's previous value — inside a field's `next` only |
 
 Three more are bound inside a [waterfall](/docs/guides/waterfalls) step:
 

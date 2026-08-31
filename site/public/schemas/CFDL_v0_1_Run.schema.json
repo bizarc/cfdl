@@ -1,0 +1,148 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://cfdl.dev/schemas/CFDL_v0_1_Run.schema.json",
+  "title": "CFDL Run Configuration",
+  "description": "Configuration for a CFDL engine run: the deterministic case, optional named scenarios, and an optional Monte Carlo block. Every override writes to the same channel the model reads, so one driver declaration serves all three modes. Unknown properties are rejected — a misspelled key would otherwise produce a clean run with wrong numbers.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "deterministic": { "$ref": "#/$defs/DeterministicCase" },
+    "scenarios": {
+      "description": "Named variants of the deterministic case. Each is a full re-run; scenario overrides win over the deterministic ones. Scenarios and Monte Carlo do not cross — a scenario never runs trials.",
+      "type": "object",
+      "additionalProperties": { "$ref": "#/$defs/Scenario" }
+    },
+    "monte_carlo": { "$ref": "#/$defs/MonteCarlo" }
+  },
+  "$defs": {
+    "DeterministicCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "annual_discount_rate": {
+          "description": "Annual rate, converted to the model's period frequency.",
+          "type": "number"
+        },
+        "valuation_grain": {
+          "description": "The grain to value at. Omitted, each flow discounts at its own fractional year on the model grid; \"annual\" sums cash into calendar years and discounts each once, the convention published sources use.",
+          "enum": ["annual", "period"]
+        },
+        "arithmetic": {
+          "description": "Which arithmetic expressions evaluate under. Omitted, decimal — what every published number uses. \"excel_compat\" reproduces a spreadsheet's float64 artifacts, for reconciling against a workbook rather than for producing an answer; it describes the comparison being made, not the deal.",
+          "enum": ["decimal", "excel_compat"]
+        },
+        "as_of": { "$ref": "#/$defs/Date" },
+        "parameters": { "$ref": "#/$defs/Parameters" }
+      }
+    },
+    "Scenario": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "annual_discount_rate": { "type": "number" },
+        "as_of": { "$ref": "#/$defs/Date" },
+        "parameters": { "$ref": "#/$defs/Parameters" }
+      }
+    },
+    "Parameters": {
+      "description": "Value overrides, keyed by target. Four key shapes are recognized and anything else is ignored:\n  inputs.<name>          — an assumption, also the channel Monte Carlo samples into\n  stream.<name>:amount   — replaces a stream's amount for every period, bypassing its expression\n  cfg.<path>             — a config value read as cfg.<path> in expressions\n  obs.<path>             — an observable read as obs.<path> in expressions\nPrefer inputs.<name>: a contract term declared as `inputs.<name>` is then drivable by both scenarios and Monte Carlo without touching the model.",
+      "type": "object",
+      "additionalProperties": { "type": "number" }
+    },
+    "MonteCarlo": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["trial_count", "seed"],
+      "properties": {
+        "trial_count": {
+          "description": "Number of trials. Results report mean, stdev, min, max and p50 per metric.",
+          "type": "integer",
+          "minimum": 1
+        },
+        "seed": {
+          "description": "Base seed. Each assumption draws from its own derived stream, so adding one assumption never reshuffles another's draws.",
+          "type": "integer",
+          "minimum": 0
+        },
+        "distributions": {
+          "description": "Distributions keyed by target, using the same key shapes as `parameters`. These override an in-language `assume x ~ Dist(...)` of the same name.",
+          "type": "object",
+          "additionalProperties": { "$ref": "#/$defs/Distribution" }
+        }
+      }
+    },
+    "Distribution": {
+      "description": "Matches the distributions available to `assume x ~ Dist(...)` in the language, including clip.",
+      "type": "object",
+      "required": ["kind"],
+      "oneOf": [
+        {
+          "additionalProperties": false,
+          "properties": {
+            "kind": { "const": "fixed" },
+            "value": { "type": "number" },
+            "clip": { "$ref": "#/$defs/Clip" }
+          },
+          "required": ["kind", "value"]
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "kind": { "const": "normal" },
+            "mean": { "type": "number" },
+            "stdev": { "type": "number", "minimum": 0 },
+            "stddev": {
+              "description": "Deprecated spelling; `stdev` matches the language.",
+              "type": "number",
+              "minimum": 0
+            },
+            "clip": { "$ref": "#/$defs/Clip" }
+          },
+          "required": ["kind", "mean"]
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "kind": { "const": "uniform" },
+            "min": { "type": "number" },
+            "max": { "type": "number" },
+            "clip": { "$ref": "#/$defs/Clip" }
+          },
+          "required": ["kind", "min", "max"]
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "kind": { "const": "log_normal" },
+            "mu": { "type": "number" },
+            "sigma": { "type": "number", "minimum": 0 },
+            "clip": { "$ref": "#/$defs/Clip" }
+          },
+          "required": ["kind", "mu", "sigma"]
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "kind": { "const": "triangular" },
+            "min": { "type": "number" },
+            "mode": { "type": "number" },
+            "max": { "type": "number" },
+            "clip": { "$ref": "#/$defs/Clip" }
+          },
+          "required": ["kind", "min", "mode", "max"]
+        }
+      ]
+    },
+    "Clip": {
+      "description": "Inclusive [lower, upper] bounds applied after sampling.",
+      "type": "array",
+      "items": { "type": "number" },
+      "minItems": 2,
+      "maxItems": 2
+    },
+    "Date": {
+      "type": "string",
+      "pattern": "^\\d{4}-\\d{2}(-\\d{2})?$"
+    }
+  }
+}

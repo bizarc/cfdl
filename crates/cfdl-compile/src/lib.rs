@@ -1499,7 +1499,7 @@ fn root_paths(src: &str, root: &str) -> Vec<String> {
 
 fn field_paths(src: &str) -> Vec<(String, String)> {
     let mut found = Vec::new();
-    for family in ["asset", "party", "contract", "reference"] {
+    for family in cfdl_expr::FIELD_FAMILIES {
         let needle = format!("{family}.");
         // `base` walks forward; the scan is always over `src` itself.
         let mut base = 0usize;

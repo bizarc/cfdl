@@ -8,6 +8,31 @@ This project follows Semantic Versioning: https://semver.org/
 
 ## [Unreleased]
 
+### Fixed: `container` reaches the expression environment (spec audit)
+
+The family was first-class everywhere except the expression layer: FOUR
+separate enumerations — the evaluator's bare-family alias, the compiler's
+and validator's field-path scans, and the validator's prev-read check —
+still listed `asset|party|contract|reference`, so `container.fund.x`
+failed a run while `entity container fund` compiled. The audit found three
+of the lists; the remediation sweep found the fourth. All four now consume
+one definition, `cfdl_expr::FIELD_FAMILIES` — the fourth-list defect #222
+named, closed the way #222 closed it. Fixture
+`valid/container_field_read` pins the read that failed.
+
+Documentation remediated in the same pass: docs/07's type-registry example
+now shows the TOML the loader reads and §6.6 no longer describes registries
+that never existed; docs/04's `Stmt` list matches the parser's twenty
+variants; the EBNF gains `slice_stmt`; three spec examples that used
+nonexistent families or read `domain.*` in a guard are corrected (a guard
+reads the walk's own past — a subtotal is a fold over the settled ledger);
+the run-config reference is rewritten against `run.schema.json`, which is
+now staged to the site and byte-checked by its gate; the expressions
+reference no longer teaches a `state.*` namespace E1125 refuses; and the
+deprecated `stddev` spelling is gone from the fixture and guide that
+taught it.
+
+
 ### Fixed: an account declared after an assumption, and a conditional window bound (§7.76 part 2)
 
 Two parser/engine bugs, both found by giving `americredit_2017_1` the reserve

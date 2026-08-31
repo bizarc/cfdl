@@ -120,22 +120,27 @@ Every AST node MUST carry a `Span`:
 - `Module { statements: Vec<Stmt>, span: Span }`
 
 #### 3.2.2 Statements (`Stmt` enum)
-- `Version { value: String }`
-- `Model { name: String, currency: Option<Currency> }`
-- `UsePack { name: String, version: String }`
-- `Import { path: String, alias: Option<String> }`
-- `Time { calendar: Frequency, start: DateLit, periods: u32 }`
-- `Phase { name: Ident, start: DateLit, end: DateLit }`
-- `Entity { ns: Ident, name: Ident, type_id: Qname, attrs: Vec<Kv> }`
-- `AssumeConst { name: Ident, expr: Expr }`
-- `AssumeDist { name: Ident, dist: DistExpr }`
-- `Contract { type_id: Qname, name: Ident, subject: EntityRef, term: DateRangeLit, body: ContractBody }`
-- `StreamStandalone { name: Ident, owner: EntityRef, direction: Direction, currency: Currency, body: StreamBody }`
-- `Event { name: Ident, when: Expr, actions: Vec<Action> }`
-- `Option { name: Ident, type_id: Qname, exercisable_in_phase: Option<Ident>, body: OptionBody }`
-- `RunDeterministic`
-- `RunMonteCarlo { trials: u32, seed: u64 }`
-- `Metric { name: Ident, expr: Expr }`
+
+Twenty variants, one per statement kind, each wrapping its own struct
+(`crates/cfdl-parser/src/lib.rs`):
+
+- `Version`, `Model`, `UsePack`, `Import` — the preamble.
+- `Time`, `Phase` — the timeline and its named spans.
+- `Entity` — family, name, optional type, literal fields and rule fields,
+  optional `part of`, optional lifecycle binding.
+- `Assume` — one variant for both a constant and a distribution; the value
+  distinguishes them. (An earlier revision listed `AssumeConst` and
+  `AssumeDist`; the parser has one.)
+- `Metric` — a named horizon fold (docs/01 §15.3).
+- `Slice` — a named partial selection (docs/01 §15.4).
+- `Curve`, `Quantile` — declared lookups on their two axes.
+- `Contract` — a pack contract instance: type, subject, term range, terms.
+- `Stream` — owner, direction, currency, schedule, amount, guards.
+- `Event`, `Option` — occurrences and elections.
+- `Account`, `Lifecycle`, `Waterfall` — cash locations, state machines,
+  ordered allocation.
+- `Run` — one variant; deterministic and monte_carlo are its modes. (An
+  earlier revision listed `RunDeterministic`/`RunMonteCarlo`.)
 
 #### 3.2.3 Common value nodes
 - `Ident(String)`

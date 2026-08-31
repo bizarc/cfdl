@@ -4,7 +4,7 @@
 
 CFDL 0.7.0. Every model below compiles, and its IR and
 results are byte-asserted against goldens in CI (`fixtures/valid/`,
-136 models.
+137 models.
 
 `gold/ir/`, `gold/results/`). Each is single-purpose: the directory name
 says what it exercises. This is what right looks like — positive few-shot
@@ -570,6 +570,35 @@ stream beta.income on entity asset.beta inflow currency USD {
   schedule every year from 2026-01 to 2028-01
   category operating.revenue.other
   amount = 40
+}
+```
+
+## container_field_read
+
+```cfdl
+version 0.1
+model "container-field-read"
+time calendar annual from 2026-01 for 3
+
+// A CONTAINER'S FIELD READS LIKE ANY OTHER ENTITY'S. `container.fund.fee_rate`
+// is the same spelling an asset's field answers to — the family joined the
+// declaration surface in one release and the expression environment lagged a
+// list (the fourth-list defect #222 named; spec audit, 31 August 2026). This
+// fixture is the read that failed.
+
+entity container fund : Container.Fund { fee_rate = 0.02 }
+entity asset alpha : Asset.Financial { part of container.fund }
+
+stream alpha.income on entity asset.alpha inflow currency USD {
+  schedule every year from 2026-01 to 2028-01
+  category operating.revenue.other
+  amount = 100
+}
+
+stream fund.fee on entity container.fund outflow currency USD {
+  schedule every year from 2026-01 to 2028-01
+  category operating.expense.management_fee
+  amount = 100 * container.fund.fee_rate
 }
 ```
 
