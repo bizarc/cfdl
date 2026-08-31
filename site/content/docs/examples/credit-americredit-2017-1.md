@@ -69,6 +69,16 @@ then `min(total, principal)` and clause 20 is `max(total - principal, 0)`, which
 is what those clauses mean. The two formulations agree to $0.0000 at all four
 speeds.
 
+The **reserve account** is the other thing the target depends on. Clause 19
+funds it at closing to 2.0% of the initial pool, and the Required Pro Forma Note
+Balance is 14.75% of the pool *less the amount on deposit in it* — so the
+reserve sets how far the turbo runs, and through that every class's retirement
+date. It is a declared account here, funded by its own inflow at closing rather
+than out of the waterfall, which allocates collections and never touched it.
+Clause 19 is then the top-up it is: whatever the balance is short of the
+required amount. On this deal, with no losses assumed, that is zero at every
+period — because the balance is at target, which is what the clause says.
+
 All twenty-two clauses are written out. Ten of them — the parity steps and the
 final-maturity steps — pay nothing at every period and every speed, because the
 pool always covers the notes and every class retires years early. They are there
@@ -636,34 +646,30 @@ entity party d_holders : Credit.Party.Investor { name = "Class D noteholders" }
 entity party e_holders : Credit.Party.Investor { name = "Class E noteholders" }
 
 // ---------------------------------------------------------------------------
-// The initial pool balance at the cutoff date, and the reserve stated against
-// it. Two other structural amounts are the same shape and still literals —
-// 5,059,849.65 is the 0.50% overcollateralization floor and 101,196,992.93 is
-// the 10% clean-up call threshold, each written out twenty-eight times. They
-// are left alone here: this change is the reserve.
+// The initial pool balance at the cutoff date, and the reserve required
+// against it. The prospectus states the reserve as a RULE — 2.0% of the
+// initial pool — so the model states it as one: 20,239,398.5856, the product
+// rather than a rounded dollar amount.
 assume initial_pool     = 1011969929.28
 assume reserve_required = 0.02 * inputs.initial_pool
 
 // ---------------------------------------------------------------------------
-// THE RESERVE ACCOUNT (clause 19). 2.0% of the initial pool, funded at
-// closing. It was a literal — 20,239,398.59, written out twenty-eight times,
-// once in each balance field's recurrence and once in each waterfall step
-// that reads the overcollateralization target. The document does not state a
-// number; it states a RULE, and the target is stated against the account
-// rather than against a dollar amount: the Required Pro Forma Note Balance is
-// 14.75% of the pool "less the amount required on deposit in the reserve
-// account" (glossary). So the balance is what the target should read.
+// THE RESERVE ACCOUNT (clause 19), funded at closing.
 //
-// FUNDED AT CLOSING, WHICH IS NOT A DISTRIBUTION. The reserve is funded out
-// of note proceeds before the first collection period, so it cannot come from
-// the waterfall — the waterfall allocates collections, and taking the reserve
-// out of them would spend cash the deal never spent. `from` is the account's
-// own inflow, and it fires once at period 0.
+// The reserve is not inert here even though it is never drawn. The Required
+// Pro Forma Note Balance — the target the turbo runs toward — is 14.75% of the
+// pool "less the amount required on deposit in the reserve account"
+// (glossary), so the reserve is what the target is stated against, and every
+// class's retirement date depends on it. That is why it is an account whose
+// balance the target reads, rather than a number repeated wherever the target
+// appears.
 //
-// NOT ROUNDED. The literal was 20,239,398.59; the deal is 2.0% of
-// 1,011,969,929.28, which is 20,239,398.5856. The reference computes the
-// product (`reference_gen.py`, `RESERVE = 0.02 * POOL0`) and so does this
-// now. See NOTES.md for what the 0.0044 moved.
+// FUNDED AT CLOSING, WHICH IS NOT A DISTRIBUTION. The reserve comes out of
+// note proceeds before the first collection period, so it cannot be funded
+// from the waterfall: the waterfall allocates collections, and taking the
+// reserve out of them would spend cash the deal never spent. `from` is the
+// account's own inflow — the one that is not an allocation — and it fires
+// once, at period 0. Clause 19 below is then the top-up it is.
 account reserve {
   from if(time.t == 0.0, inputs.reserve_required, 0.0)
 }
@@ -918,16 +924,13 @@ waterfall notes.distribution on entity asset.trust {
            + asset.trust.bal_e * 0.0000000000)), 0.0)))), 0.0))), ((asset.trust.pool_prior) - (asset.trust.pool_bal))))
            - (asset.trust.bal_a1 + asset.trust.bal_a2 + asset.trust.bal_a3 + asset.trust.bal_b + asset.trust.bal_c + asset.trust.bal_d), 0.0), asset.trust.bal_e)
 
-  // 19. the reserve account, funded at closing to 2.0% of the initial
-  //     pool. This step is the TOP-UP: whatever the account is short of
-  //     its required amount, restored out of collections ahead of
-  //     principal. It pays nothing on this deal — no losses are assumed,
-  //     so the reserve is never drawn and the shortfall is always zero —
-  //     but it pays nothing BECAUSE the balance is at target, which is
-  //     what the clause says, rather than because the step is written as
-  //     a constant. Previously `pay reserve_topup to party.certificate =
-  //     0.0`, which paid the right amount to the wrong payee for no
-  //     stated reason.
+  // 19. the reserve account. This step is the TOP-UP: whatever the
+  //     account is short of its required amount, restored out of
+  //     collections ahead of principal. It pays nothing at any period on
+  //     this deal — no losses are assumed, so the reserve is never drawn
+  //     and the shortfall is always zero — and it pays nothing BECAUSE
+  //     the balance is at target, which is what the clause says. Were the
+  //     reserve ever drawn, this step would restore it.
   pay reserve_topup to account reserve =
         max(0.0, inputs.reserve_required - prev.reserve)
 
