@@ -1426,6 +1426,40 @@ Rules:
   one number at the horizon and every row is a series, so the figures sit in
   their own map rather than as a row kind. An undeclared slice or metric is
   refused (`E1368`).
+**A statement may state its own rows instead.** A generated statement is right
+when the tree IS the presentation; a pro forma is not that, because its rows
+carry curated labels, its expenses are shown positive under "Less:", and it
+ends in a coverage ratio that is a node of no hierarchy.
+
+```cfdl
+statement operating {
+  label    "Operating statement"
+  line     "Base rental revenue"   { category "operating.revenue.base_rent" }
+  line     "Less: operating costs" { category "operating.expense.*" display positive }
+  subtotal "Net operating income"  { category "operating.*" }
+  spacer
+  ratio    "DSCR"                  { of noi to debt_service display positive }
+}
+```
+
+- A statement is AUTHORED OR GENERATED, never both, and never neither
+  (`E1369`). A generated statement partitions the cash by construction; an
+  authored one partitions it by the author's care. Mixed, neither holds.
+- A row draws from `category`, `stream`, `slice` or `entity`. A `subtotal` row
+  folds rows stated elsewhere and CLAIMS nothing, so it never doubles the
+  bottom line.
+- A `ratio` divides two declared SLICES — a slice is already a named selection
+  with a per-period net, so a ratio needs no row identifiers. A zero
+  denominator publishes `null`, not zero. A ratio carries no total, because
+  summing one means nothing.
+- `display` says how to RENDER the sign and never what is summed: `values`
+  carries the signed amount, so a consumer that ignores it still adds up
+  correctly. An outflow is negative cash, so a coverage ratio is arithmetically
+  negative and `display positive` is how it is shown.
+- A row's `depth` is an indent. The STATEMENT's `depth` is a level of
+  aggregation — an authored row states where it sits, a generated one is told
+  by the tree.
+
 - Every clause word is CONTEXTUAL; only `statement` is reserved.
 - **A statement is a VIEW.** It changes no value and no identity: the compiler
   files it under the document's `views`, which `model_hash` is taken over

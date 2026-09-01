@@ -1831,10 +1831,9 @@ against it by `make ir-schema`.
       "additionalProperties": false,
       "required": [
         "name",
-        "structure",
         "provenance"
       ],
-      "description": "A declared presentation: which hierarchy to show, and to what level. It carries no rows — the rows are generated from the structure after the run, and depth decides which are shown, so an interior node is a subtotal by virtue of where it sits.",
+      "description": "A declared presentation: which hierarchy to show, and to what level. It carries no rows — the rows are generated from the structure after the run, and depth decides which are shown, so an interior node is a subtotal by virtue of where it sits. A statement is authored or generated, never both and never neither (E1369): a generated statement partitions the cash by construction, an authored one by the author's care, and mixed neither guarantee holds.",
       "properties": {
         "name": {
           "type": "string"
@@ -1871,8 +1870,29 @@ against it by `make ir-schema`.
         },
         "provenance": {
           "$ref": "#/$defs/NodeProvenance"
+        },
+        "rows": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/StatementRow"
+          },
+          "description": "Authored rows, for a statement that enumerates rather than generates. A statement does one or the other, never both (E1369): a generated statement partitions the cash by construction, an authored one by the author's care."
         }
-      }
+      },
+      "oneOf": [
+        {
+          "required": [
+            "structure"
+          ],
+          "description": "A GENERATED statement: the rows follow from the named hierarchy, down to `depth`."
+        },
+        {
+          "required": [
+            "rows"
+          ],
+          "description": "An AUTHORED statement: the rows are stated, with their own labels and display signs."
+        }
+      ]
     },
     "Views": {
       "type": "object",
@@ -1890,6 +1910,63 @@ against it by `make ir-schema`.
           "items": {
             "$ref": "#/$defs/Statement"
           }
+        }
+      }
+    },
+    "StatementRow": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind"
+      ],
+      "properties": {
+        "kind": {
+          "type": "string",
+          "enum": [
+            "line",
+            "subtotal",
+            "ratio",
+            "spacer"
+          ]
+        },
+        "label": {
+          "type": "string"
+        },
+        "depth": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Indent, for presentation. Distinct from the statement's own depth, which is a level of aggregation."
+        },
+        "categories": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "streams": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "slice": {
+          "type": "string",
+          "description": "A declared slice whose streams the row draws."
+        },
+        "entity": {
+          "type": "string"
+        },
+        "numerator": {
+          "type": "string",
+          "description": "ratio rows: the declared slice on top."
+        },
+        "denominator": {
+          "type": "string",
+          "description": "ratio rows: the declared slice underneath. A zero denominator publishes null, not zero."
+        },
+        "display": {
+          "type": "string",
+          "description": "How to RENDER the sign. Never changes what is summed: values carries the signed amount, so a consumer ignoring this still adds up."
         }
       }
     }

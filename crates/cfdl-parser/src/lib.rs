@@ -374,7 +374,35 @@ pub struct StatementStmt {
     pub slice: Option<String>,
     /// Declared metrics to publish beside the statement.
     pub metrics: Vec<String>,
+    /// AUTHORED rows, for a statement that enumerates rather than generates.
+    /// A statement is one or the other: a generated statement partitions the
+    /// cash by construction, an authored one partitions it by the author's
+    /// care, and mixing them means neither guarantee holds.
+    pub rows: Vec<StatementRowStmt>,
     pub span: Span,
+}
+
+/// One authored row of a statement.
+#[derive(Debug, Clone, PartialEq, Eq, serde::Serialize)]
+pub struct StatementRowStmt {
+    /// `line`, `subtotal`, `ratio` or `spacer`.
+    pub kind: String,
+    pub label: String,
+    /// Indent, for presentation. Distinct from the STATEMENT's `depth`, which
+    /// is a level of aggregation: an authored row states where it sits, a
+    /// generated one is told by the tree.
+    pub depth: u32,
+    pub categories: Vec<String>,
+    pub streams: Vec<String>,
+    /// A declared slice, whose net series the row draws.
+    pub slice: Option<String>,
+    /// An entity reference; the row draws that entity and its descendants.
+    pub entity: Option<String>,
+    /// `ratio` rows: two declared slices, numerator then denominator.
+    pub ratio_of: Option<(String, String)>,
+    /// `natural` (default), `positive` or `negative` — how to RENDER the sign,
+    /// never what is summed.
+    pub display: Option<String>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, serde::Serialize)]
@@ -3688,6 +3716,141 @@ impl<'a> Parser<'a> {
     /// `except` subtracts last. A slice carries no reconciliation: the
     /// absence is what the declaration means — a partial number must not
     /// dress as a complete one.
+    /// One authored row: `line "Label" { category "..." display positive }`.
+    fn parse_statement_row(&mut self, kind: &str) -> Option<StatementRowStmt> {
+        let label_tok = self.bump();
+        let label = match label_tok.kind {
+            TokenKind::String(ref v) => v.clone(),
+            _ => {
+                self.push_expected(
+                    label_tok.span,
+                    format!("Expected a quoted label after '{kind}'."),
+                );
+                return None;
+            }
+        };
+        let mut row = StatementRowStmt {
+            kind: kind.to_string(),
+            label,
+            depth: 0,
+            categories: Vec::new(),
+            streams: Vec::new(),
+            slice: None,
+            entity: None,
+            ratio_of: None,
+            display: None,
+        };
+        let _ = self.expect_punct(Punct::LBrace, "'{'")?;
+        loop {
+            let tok = self.bump();
+            match tok.kind {
+                TokenKind::Punct(Punct::RBrace) => break,
+                TokenKind::Eof => {
+                    self.push_expected(
+                        tok.span,
+                        "Expected '}' to close the statement row.".to_string(),
+                    );
+                    return None;
+                }
+                TokenKind::Ident(ref ident) if ident == "category" => {
+                    let value = self.parse_slice_selector("category")?;
+                    row.categories.push(value);
+                }
+                TokenKind::Keyword(Keyword::Stream) => {
+                    let value = self.parse_slice_selector("stream")?;
+                    row.streams.push(value);
+                }
+                TokenKind::Keyword(Keyword::Slice) => {
+                    let value_tok = self.bump();
+                    match value_tok.kind {
+                        TokenKind::Ident(ref v) => row.slice = Some(v.clone()),
+                        _ => {
+                            self.push_expected(
+                                value_tok.span,
+                                "Expected a declared slice name after 'slice'.".to_string(),
+                            );
+                            return None;
+                        }
+                    }
+                }
+                TokenKind::Keyword(Keyword::Entity) => {
+                    let value = self.parse_slice_entity_ref()?;
+                    row.entity = Some(value);
+                }
+                // `of <slice> to <slice>` — a ratio divides two declared
+                // selections. Slices are the operands because a slice is
+                // already a named selection with a per-period series; naming
+                // rows instead would mean inventing row identifiers.
+                TokenKind::Ident(ref ident) if ident == "of" => {
+                    let num_tok = self.bump();
+                    let numerator = match num_tok.kind {
+                        TokenKind::Ident(ref v) => v.clone(),
+                        _ => {
+                            self.push_expected(
+                                num_tok.span,
+                                "Expected a declared slice name after 'of'.".to_string(),
+                            );
+                            return None;
+                        }
+                    };
+                    let _ = self.expect_keyword(Keyword::To, "'to'")?;
+                    let den_tok = self.bump();
+                    let denominator = match den_tok.kind {
+                        TokenKind::Ident(ref v) => v.clone(),
+                        _ => {
+                            self.push_expected(
+                                den_tok.span,
+                                "Expected a declared slice name after 'to'.".to_string(),
+                            );
+                            return None;
+                        }
+                    };
+                    row.ratio_of = Some((numerator, denominator));
+                }
+                TokenKind::Ident(ref ident) if ident == "display" => {
+                    let value_tok = self.bump();
+                    match value_tok.kind {
+                        TokenKind::Ident(ref v) => row.display = Some(v.clone()),
+                        _ => {
+                            self.push_expected(
+                                value_tok.span,
+                                "Expected 'natural', 'positive' or 'negative' after 'display'."
+                                    .to_string(),
+                            );
+                            return None;
+                        }
+                    }
+                }
+                TokenKind::Ident(ref ident) if ident == "depth" => {
+                    let value_tok = self.bump();
+                    match value_tok.kind {
+                        TokenKind::Number(ref n) => {
+                            row.depth = n.parse::<f64>().ok().map(|v| v as u32).unwrap_or(0);
+                        }
+                        _ => {
+                            self.push_expected(
+                                value_tok.span,
+                                "Expected a whole number after 'depth'.".to_string(),
+                            );
+                            return None;
+                        }
+                    }
+                }
+                _ => {
+                    let word = self.slice_source(tok.span);
+                    self.push_expected(
+                        tok.span,
+                        format!(
+                            "Unexpected '{word}' in a statement row. A row draws from 'category', 'stream', 'slice' or 'entity', a ratio states 'of <slice> to <slice>', and 'display' and 'depth' set presentation."
+                        ),
+                    );
+                    return None;
+                }
+            }
+        }
+        Some(row)
+    }
+
     /// `statement <name> { ... }` — a declared presentation (`docs/13` §7.55).
     ///
     /// Every clause word inside the block is CONTEXTUAL, as `category` and
@@ -3725,6 +3888,7 @@ impl<'a> Parser<'a> {
             grain: None,
             slice: None,
             metrics: Vec::new(),
+            rows: Vec::new(),
             span: start.span,
         };
         loop {
@@ -3811,6 +3975,29 @@ impl<'a> Parser<'a> {
                             return None;
                         }
                     }
+                }
+                // AUTHORED ROWS. `spacer` takes nothing; the rest take a
+                // label and a braced body. Braces are what make `slice` mean
+                // the row's SOURCE here and the statement's FILTER outside.
+                TokenKind::Ident(ref ident)
+                    if ident == "line" || ident == "subtotal" || ident == "ratio" =>
+                {
+                    let kind = ident.clone();
+                    let row = self.parse_statement_row(&kind)?;
+                    stmt.rows.push(row);
+                }
+                TokenKind::Ident(ref ident) if ident == "spacer" => {
+                    stmt.rows.push(StatementRowStmt {
+                        kind: "spacer".to_string(),
+                        label: String::new(),
+                        depth: 0,
+                        categories: Vec::new(),
+                        streams: Vec::new(),
+                        slice: None,
+                        entity: None,
+                        ratio_of: None,
+                        display: None,
+                    });
                 }
                 TokenKind::Ident(ref ident) if ident == "metrics" => {
                     // A comma-separated list of declared metric names.

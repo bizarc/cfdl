@@ -1013,10 +1013,53 @@ block) and `invalid/statement_unknown_structure` (`E1367`). New codes: `E1366`
 (duplicate), `E1367` (unknown structure, or a category structure over
 uncategorized streams), `E1368` (unknown slice or metric).
 
-**What remains.** A per-period ratio (`dscr = noi / debt_service`) falls out of
-no hierarchy, so packs still express it as a subtotal and a model still cannot.
-Its own entry. And a pack's statements are still declared in TOML rather than
-in the language — the evaluator converged, the surface has not.
+**Shipped 2026-09-01, part three: authored rows.** A statement may state its
+own rows instead of generating them. A generated statement is right when the
+tree IS the presentation; a pro forma is not that, because its rows carry
+curated labels, its expenses show positive under "Less:", and it ends in a
+coverage ratio that is a node of no hierarchy.
+
+```cfdl
+line     "Less: operating costs" { category "operating.expense.*" display positive }
+subtotal "Net operating income"  { category "operating.*" }
+ratio    "DSCR"                  { of noi to debt_service display positive }
+```
+
+This closes three gaps at once, which is why it was the first thing to build:
+labels, the display sign, and the per-period ratio — which needed no entry of
+its own after all, because `ratio` is a row kind the packs already use.
+
+**A ratio divides two declared SLICES.** A slice is already a named selection
+with a per-period net, so a ratio needs no row identifiers. A zero denominator
+publishes `null` rather than zero, the rule a pack ratio already follows.
+
+**Authored or generated, never both, and never neither** (`E1369`). A generated
+statement partitions the cash by construction, because a hierarchy covers its
+own tree; an authored one partitions it by the author's care. Mixed, neither
+holds — an authored row claims streams the generated rows already claimed, and
+the bottom line double-counts. The published IR schema states the rule as a
+`oneOf` rather than leaving it to the compiler alone.
+
+**The display sign never changes what is summed.** Debt service is stored
+negative because an outflow is negative cash, so NOI over it is arithmetically
+-1.75; `display positive` renders the conventional 1.75 and leaves `values`
+signed, so a consumer that ignores the sign still adds up.
+
+Found by the gate rather than by review: an authored statement first emitted
+`structure: ""`, an empty string meaning "no value", which `check-ir-schema`
+refused. It is omitted now.
+
+Fixtures: `valid/statement_authored_rows` (curated labels, a flipped expense, a
+claiming-nothing subtotal, a spacer, and the ratio) and
+`invalid/statement_authored_and_generated` (`E1369`). No existing golden moved.
+
+**What remains.** Generated-row ordering — generation iterates a `BTreeSet`, so
+category rows sort `financing`, `investing`, `operating`, while
+`cfdl_pack::CATEGORY_ROOTS` defines the canonical order and is unused. Derived
+labels for generated rows. A default entity-tree statement when a model
+declares none, which closes §7.43's residue. And a pack's statements are still
+declared in TOML rather than in the language — the evaluator converged, the
+surface has not.
 
 ---
 

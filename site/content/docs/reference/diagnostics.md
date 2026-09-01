@@ -113,6 +113,7 @@ register, so it cannot fall behind the language.
 | `E1364_SLICE_CATEGORY_ROOT` | Symbols and references | a slice's category selector is not rooted in operating, investing or financing. A selector that could never match anything is a typo, not a choice. |
 | `E1366_DUPLICATE_STATEMENT` | Symbols and references | two statements share a name. Same rule as a metric and a slice: one name, one presentation. |
 | `E1367_STATEMENT_UNKNOWN_STRUCTURE` | Symbols and references | a statement presents a hierarchy the engine does not build, or asks for a category hierarchy in a model whose streams declare no category. Either would render as one residual row and nothing else — technically complete and useless — so it is refused rather than shipped empty. Known structures: `entity` (the `part of` tree the results graph publishes) and `category` (the dotted path). `docs/13` §7.55. |
+| `E1369_STATEMENT_AUTHORED_AND_GENERATED` | Symbols and references | a statement states both a `structure` and its own rows, or neither. A generated statement partitions the cash by construction, because a hierarchy covers its own tree; an authored one partitions it by the author's care. Mixed, neither guarantee holds — an authored row claims streams the generated rows already claimed, so the bottom line double-counts and the reconciliation that makes a statement trustworthy becomes noise. A statement stating neither would render nothing. `docs/13` §7.55. |
 | `E1368_STATEMENT_UNKNOWN_REFERENCE` | Symbols and references | a statement filters by a slice, or shows a metric, that the model does not declare. A presentation that silently shows nothing is the failure §7.55 exists to end. |
 | `E1365_METRIC_UNKNOWN_SERIES` | Symbols and references | a metric folds a series name this model does not publish. `series_sum`/`series_avg` return 0.0 for a selector that matches nothing, which is right for a `.*` selector and wrong for a name spelled out in full; in a metric it is worse than wrong, because a fold publishes ONE number under a name the author chose, with no series beside it to show the zero (`docs/13` §7.85). A metric may fold any series the valuation plane publishes: a stream by its own name or as `stream.<name>`, a waterfall step, `entity.<symbol>.net_cash_flow`, `account.<name>`, an entity field, a money subtotal, or `model.net_cash_flow`. A RATIO subtotal is refused with its own hint — its undefined periods publish as null rather than zero, and what a fold should do with null has not been decided. |
 | `E1304_UNRESOLVED_OPTION_REF` | Symbols and references | an event exercises an option that is not declared. Checked in the compiler rather than the resolver, because options are not in the symbol tables. |
@@ -263,7 +264,7 @@ register, so it cannot fall behind the language.
 | `E9019_CREDIT_INVALID_AGE_MONTHS` | Pack domain validations | `age_months` is the pool's weighted average age at closing. PSA, SDA and the ABS model are all indexed from ORIGINATION, so a seasoned pool starts part-way up the ramp; leaving it at the default 0 on a seasoned pool understates prepayment. Non-negative integer. |
 | `E9020_CREDIT_RATE_FLOOR_ABOVE_CAP` | Pack domain validations |  |
 
-*211 codes.*
+*212 codes.*
 <!-- /cfdl:generated diagnostics-catalog -->
 
 ## Related

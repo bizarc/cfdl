@@ -70,7 +70,24 @@ statement_clause = "label" STRING
                  | "depth" NUMBER
                  | "grain" ( "annual" | IDENT )
                  | "slice" IDENT
-                 | "metrics" IDENT { "," IDENT } ;
+                 | "metrics" IDENT { "," IDENT }
+                 | statement_row ;
+
+(* An AUTHORED row, for a statement that enumerates rather than generates.
+   A statement does one or the other, never both (E1369). Braces are what
+   make `slice` the row's SOURCE here and the statement's FILTER outside. A
+   ratio divides two declared slices, because a slice is already a named
+   selection with a per-period net. *)
+statement_row   = ( "line" | "subtotal" | "ratio" ) STRING
+                    "{" row_clause* "}"
+                | "spacer" ;
+row_clause      = "category" STRING
+                | "stream" STRING
+                | "slice" IDENT
+                | "entity" QNAME
+                | "of" IDENT "to" IDENT
+                | "display" IDENT
+                | "depth" NUMBER ;
 slice_clause    = "entity" QNAME
                 | "type" ( QNAME | IDENT )
                 | "category" STRING

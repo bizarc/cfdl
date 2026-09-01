@@ -8,6 +8,45 @@ This project follows Semantic Versioning: https://semver.org/
 
 ## [Unreleased]
 
+### Added: a statement may state its own rows (§7.55 part three)
+
+A generated statement is right when the tree IS the presentation. A pro forma
+is not that: its rows carry curated labels, its expenses show positive under
+"Less:", and it ends in a coverage ratio that is a node of no hierarchy.
+
+```cfdl
+statement operating {
+  label    "Operating statement"
+  line     "Base rental revenue"   { category "operating.revenue.base_rent" }
+  line     "Less: operating costs" { category "operating.expense.*" display positive }
+  subtotal "Net operating income"  { category "operating.*" }
+  spacer
+  ratio    "DSCR"                  { of noi to debt_service display positive }
+}
+```
+
+This closes three gaps at once: row labels, the display sign, and the
+per-period ratio — which needed no entry of its own after all, because `ratio`
+is a row kind the packs already use.
+
+- **A ratio divides two declared slices.** A slice is already a named selection
+  with a per-period net, so a ratio needs no row identifiers. A zero
+  denominator publishes `null`, not zero.
+- **Authored or generated, never both, and never neither** (`E1369`). A
+  generated statement partitions the cash by construction; an authored one by
+  the author's care. Mixed, neither holds. The IR schema states the rule as a
+  `oneOf`.
+- **The display sign never changes what is summed.** An outflow is negative
+  cash, so a coverage ratio is arithmetically negative; `display positive`
+  renders the conventional figure and leaves `values` signed.
+
+A row draws from `category`, `stream`, `slice` or `entity`; a `subtotal` row
+claims nothing, so it never doubles the bottom line. Every clause word is
+contextual — the reserved-word list is unchanged at 101.
+
+Fixtures: `valid/statement_authored_rows`,
+`invalid/statement_authored_and_generated`. No existing golden moved.
+
 ### Changed: the model, the ledger, and the views — `results_version` 0.12
 
 Adding four statements to a model changed its `model_hash`. Presentation had
