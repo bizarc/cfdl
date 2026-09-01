@@ -3,7 +3,7 @@
 
 SHELL := /bin/bash
 
-.PHONY: pack-series pack-templates keyword-register diagnostic-parity ci-gates invariants glossary glossary-check machine-docs machine-docs-check agent-eval-selftest agent-eval-replay shipped-examples benchmark-cases help fmt fmt-check lint test build clean gold gold-update ci verify site-voice verify-python verify-site verify-site-nofresh verify-site-fresh verify-learn-nofresh doc-examples training-examples py-develop py-test py-wheel notebooks-render notebooks-check wasm cadence-parity ir-schema results-schema run-schema pack-validations rule-fragments py-stamp py-check
+.PHONY: notebook-ids pack-series pack-templates keyword-register diagnostic-parity ci-gates invariants glossary glossary-check machine-docs machine-docs-check agent-eval-selftest agent-eval-replay shipped-examples benchmark-cases help fmt fmt-check lint test build clean gold gold-update ci verify site-voice verify-python verify-site verify-site-nofresh verify-site-fresh verify-learn-nofresh doc-examples training-examples py-develop py-test py-wheel notebooks-render notebooks-check wasm cadence-parity ir-schema results-schema run-schema pack-validations rule-fragments py-stamp py-check
 
 help:
 	@echo "Targets:"
@@ -95,6 +95,7 @@ bench:
 # how a 23% weighted-average-life error once survived because `analytic-checks`
 # was in this file and not in the workflow.
 ci-gates: analytic invariants cadence-parity ir-schema results-schema run-schema \
+          notebook-ids \
           pack-validations pack-series pack-templates keyword-register site-voice \
           diagnostic-parity \
           glossary-check machine-docs-check agent-eval-selftest \
@@ -225,6 +226,13 @@ results-schema:
 
 run-schema:
 	$(PYGATE) tools/check-run-schema.py
+
+# A cell id is required from nbformat 4.5, and all four notebooks declared 4.5
+# without one. nbformat repairs that in memory today and warns that it will
+# stop, which is a build failure scheduled for a dependency upgrade rather than
+# a commit. Cheap to hold, so it is held here.
+notebook-ids:
+	$(PYGATE) tools/check-notebook-ids.py
 
 # A diagnostic code is an identifier. Three codes each named two different
 # checks before this gate existed, and a fourth collision was created while
