@@ -1,6 +1,6 @@
 {
   "results_version": "0.9",
-  "model_hash": "91ed4b6f4fd4b90afa88fb4159625ce9ab61eb1960585dda7122b4350b4ec9ac",
+  "model_hash": "196af45846ab98a36e0b2f1c79d54a0757a0e513e1589a10c282d82d79611b25",
   "ledger_hash": "009661d806938611b6f7131956cdd5b5fd8ba0a29b09b5ae95c7edf0b451a98f",
   "engine": {
     "name": "cfdl-engine",
@@ -17,6 +17,10 @@
       "metric.busy_periods": 4.0,
       "metric.compounded": 1.147363,
       "metric.draw_periods": 2.0,
+      "metric.empty_count": 0.0,
+      "metric.empty_max": null,
+      "metric.empty_sum": 0.0,
+      "metric.guarded": 0.0,
       "metric.largest_flow": 6000.0,
       "metric.lifetime": 3000.0,
       "metric.peak_debt": 10000.0,

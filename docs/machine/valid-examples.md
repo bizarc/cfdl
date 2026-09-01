@@ -4940,6 +4940,24 @@ metric compounded = series_prod("asset.tlb.growth", 0, 3)
 // of the four; the two debt streams together leave no period at zero.
 metric draw_periods = series_count("dbt.draw", 0, 3)
 metric busy_periods = series_count("dbt.*", 0, 3)
+
+// A SELECTION THAT MATCHES NOTHING HAS NO MAXIMUM — and that is not an error.
+//
+// Each fold has its own honest answer for an empty selection: nothing sums to
+// 0, multiplies to 1, and no period carries a non-zero aggregate. A maximum
+// has none, so it publishes NULL, which is the language's existing word for
+// absent (an entity state no event has set is one; a ratio's undefined period
+// publishes as one) and carries exactly the right guard rails — ordering and
+// arithmetic on a null are errors, so the absence can never quietly become a
+// number.
+//
+// Null rather than a hard error, because an error leaves the model no way to
+// SAY that a selector may legitimately be empty. `guarded` below is that
+// sentence, and it is why this is a value and not a refusal.
+metric empty_max   = series_max("nothing.*", 0, 3)
+metric empty_sum   = series_sum("nothing.*", 0, 3)
+metric empty_count = series_count("nothing.*", 0, 3)
+metric guarded     = if(series_count("nothing.*", 0, 3) == 0, 0, series_max("nothing.*", 0, 3))
 ```
 
 ## slice_by_type

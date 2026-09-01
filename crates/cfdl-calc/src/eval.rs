@@ -66,6 +66,15 @@ impl SeriesReduction {
     /// carries a non-zero aggregate. A maximum is different — nothing has no
     /// maximum, and returning 0 would state a value where there is none, which
     /// is the exact failure §7.86 exists to end.
+    ///
+    /// `None` here means NO ANSWER, and the caller turns it into `Value::Null`
+    /// rather than an error. Null is the language's existing word for absent —
+    /// an entity state no event has set is one, and a ratio's undefined period
+    /// publishes as one — and it carries exactly the guard rails this needs:
+    /// `null == null` compares, while ordering and arithmetic on it are errors.
+    /// So a null can never quietly become a number, and unlike an error it
+    /// leaves the model able to SAY a selector may be empty:
+    /// `if(series_count("x.*", 0, t) == 0, 0, series_max("x.*", 0, t))`.
     pub fn empty_selection(self) -> Option<f64> {
         match self {
             Self::Sum | Self::Mean | Self::CountNonZero => Some(0.0),
@@ -73,6 +82,33 @@ impl SeriesReduction {
             Self::Max | Self::Min => None,
         }
     }
+
+    /// Does an empty selection have an answer for this fold?
+    pub fn defined_on_empty(self) -> bool {
+        self.empty_selection().is_some()
+    }
+}
+
+/// What a host could make of a series reduction.
+///
+/// THREE OUTCOMES, NOT TWO, and collapsing the last two is a measured mistake.
+/// A selection that matched nothing and a window the walk has not reached both
+/// used to arrive as `None`, so making an empty selection publish null turned
+/// every refused read into a null as well — and a cash-trap guard that had said
+/// "series `ops.noi` is not available in this context" started saying "cannot
+/// apply Sub to number and null" instead. Four goldens caught it.
+///
+/// `NoAnswer` is a fact about the DATA: nothing matched, and this fold has no
+/// identity for that (only `Max` and `Min` are in that position). `Unavailable`
+/// is a fact about the CONTEXT: there are no series here at all, or the window
+/// reaches past what the walk has settled — which `docs/28` §4 refuses rather
+/// than clamps, because clamping makes a forward read look like a small number
+/// instead of a mistake.
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub enum SeriesFold {
+    Value(Decimal),
+    NoAnswer,
+    Unavailable,
 }
 
 /// Variable resolution: dotted paths like `time.t` or `contract.term_months`.
@@ -91,8 +127,8 @@ pub trait Env {
         _from: i64,
         _to: i64,
         _reduce: SeriesReduction,
-    ) -> Option<Decimal> {
-        None
+    ) -> SeriesFold {
+        SeriesFold::Unavailable
     }
 
     /// Host hook for named curve lookup (`curve_value`). Returns the curve's

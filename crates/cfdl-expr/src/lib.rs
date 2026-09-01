@@ -14,7 +14,7 @@
 //!   plumbed for the benchmark harness via `eval_with_mode`.
 
 pub use cfdl_calc::Mode;
-use cfdl_calc::SeriesReduction;
+use cfdl_calc::{SeriesFold, SeriesReduction};
 use rust_decimal::prelude::{FromPrimitive, ToPrimitive};
 use rust_decimal::Decimal;
 use std::collections::BTreeMap;
@@ -787,17 +787,17 @@ impl cfdl_calc::Env for EnvAdapter<'_> {
         from: i64,
         to: i64,
         reduce: SeriesReduction,
-    ) -> Option<Decimal> {
+    ) -> SeriesFold {
         if self.env.series.is_empty() {
-            return None;
+            return SeriesFold::Unavailable;
         }
         let matched = self.matching_series(name);
         if matched.is_empty() {
             // A selection that matched nothing: streams that never lowered
             // contribute nothing. Each fold has its own honest answer and
-            // `Max`/`Min` have none, which is why this asks rather than
-            // returning zero for everything.
-            return reduce.empty_selection().and_then(Decimal::from_f64);
+            // `Max`/`Min` have none — which is `NoAnswer`, a fact about the
+            // data, never `Unavailable`, which is a fact about the context.
+            return fold_or_no_answer(reduce.empty_selection());
         }
         // Inclusive window, clamped to available periods (projection tail
         // included). The divisor for series_avg is the REQUESTED window
@@ -810,7 +810,7 @@ impl cfdl_calc::Env for EnvAdapter<'_> {
         // a small number instead of a mistake.
         if let Some(available_to) = self.env.series_available_to {
             if to > available_to as i64 {
-                return None;
+                return SeriesFold::Unavailable;
             }
             // BEFORE THE MODEL BEGAN IS NOT ZERO EITHER. A strictly backward
             // window at the first period lies entirely before the grid, and
@@ -820,7 +820,7 @@ impl cfdl_calc::Env for EnvAdapter<'_> {
             // a read of the period before the first one rather than calling it
             // zero.
             if to < 0 {
-                return None;
+                return SeriesFold::Unavailable;
             }
         }
         // THE PER-PERIOD AGGREGATE FIRST, then the fold over it (`docs/13`
@@ -850,7 +850,7 @@ impl cfdl_calc::Env for EnvAdapter<'_> {
         }
         // Every matched series ended before the window: nothing was reduced.
         if per_period.is_empty() {
-            return reduce.empty_selection().and_then(Decimal::from_f64);
+            return fold_or_no_answer(reduce.empty_selection());
         }
         let folded = match reduce {
             SeriesReduction::Sum => per_period.iter().sum::<f64>(),
@@ -867,7 +867,7 @@ impl cfdl_calc::Env for EnvAdapter<'_> {
                 per_period.iter().filter(|v| **v != 0.0).count() as f64
             }
         };
-        Decimal::from_f64(folded)
+        fold_or_no_answer(Some(folded))
     }
 
     fn curve_value(&self, name: &str, date: cfdl_calc::CalcDate) -> Option<Decimal> {
@@ -887,6 +887,15 @@ impl cfdl_calc::Env for EnvAdapter<'_> {
     fn quantile_of(&self, name: &str, value: Decimal) -> Option<Decimal> {
         let q = self.env.quantiles.get(name)?;
         quantile_invert(q, to_f64(value)?).and_then(Decimal::from_f64)
+    }
+}
+
+/// A fold's f64 answer as a `SeriesFold`, with `None` meaning the fold has no
+/// answer for what it was given rather than that the host could not be asked.
+fn fold_or_no_answer(value: Option<f64>) -> SeriesFold {
+    match value.and_then(Decimal::from_f64) {
+        Some(d) => SeriesFold::Value(d),
+        None => SeriesFold::NoAnswer,
     }
 }
 
@@ -1120,7 +1129,10 @@ mod tests {
             ..ExprEnv::empty()
         };
         let adapter = EnvAdapter { env: &env };
-        let fold = |r| adapter.series_aggregate("dbt.*", 0, 3, r).and_then(to_f64);
+        let fold = |r| match adapter.series_aggregate("dbt.*", 0, 3, r) {
+            SeriesFold::Value(v) => to_f64(v),
+            _ => None,
+        };
 
         assert_eq!(fold(R::Sum), Some(4.0));
         assert_eq!(
@@ -1135,11 +1147,29 @@ mod tests {
         // a product has one, and a maximum does not — returning 0 there would
         // state a peak no period reached, which is the failure §7.86 ends.
         let empty = |r| adapter.series_aggregate("nothing.*", 0, 3, r);
-        assert_eq!(empty(R::Sum).and_then(to_f64), Some(0.0));
-        assert_eq!(empty(R::CountNonZero).and_then(to_f64), Some(0.0));
-        assert_eq!(empty(R::Product).and_then(to_f64), Some(1.0));
-        assert!(empty(R::Max).is_none());
-        assert!(empty(R::Min).is_none());
+        assert_eq!(empty(R::Sum), SeriesFold::Value(Decimal::from(0)));
+        assert_eq!(empty(R::CountNonZero), SeriesFold::Value(Decimal::from(0)));
+        assert_eq!(empty(R::Product), SeriesFold::Value(Decimal::from(1)));
+        // NO ANSWER, not UNAVAILABLE. The distinction is the whole point: an
+        // empty selection publishes null, while a context with no series — or
+        // a window past what the walk has settled — is still refused.
+        assert_eq!(empty(R::Max), SeriesFold::NoAnswer);
+        assert_eq!(empty(R::Min), SeriesFold::NoAnswer);
+
+        // A WINDOW THE WALK HAS NOT REACHED stays Unavailable. Collapsing this
+        // into null was measured, not theorised: it turned a cash-trap guard's
+        // "series is not available in this context" into "cannot apply Sub to
+        // number and null", and four goldens caught it.
+        let walking = ExprEnv {
+            series: Arc::clone(&env.series),
+            series_available_to: Some(1),
+            ..ExprEnv::empty()
+        };
+        let walking = EnvAdapter { env: &walking };
+        assert_eq!(
+            walking.series_aggregate("dbt.*", 0, 3, R::Sum),
+            SeriesFold::Unavailable
+        );
     }
 
     /// A varying growth path is a product, and `pow` is not it.
@@ -1153,7 +1183,10 @@ mod tests {
             ..ExprEnv::empty()
         };
         let adapter = EnvAdapter { env: &env };
-        let product = to_f64(adapter.series_aggregate("g", 0, 3, R::Product).unwrap()).unwrap();
+        let product = match adapter.series_aggregate("g", 0, 3, R::Product) {
+            SeriesFold::Value(v) => to_f64(v).unwrap(),
+            other => panic!("expected a value, got {other:?}"),
+        };
         assert!((product - 1.05 * 1.03 * 1.03 * 1.03).abs() < 1e-9);
         // pow(1.03, 4) applies one period's rate as though it had held
         // throughout, which is the mistake this exists to avoid.

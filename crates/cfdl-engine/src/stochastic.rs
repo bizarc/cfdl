@@ -289,9 +289,12 @@ impl MetricSamples {
                 }
                 self.values.push(money.amount);
             }
-            // A metric that is a string has no mean and no p95. It is not an
-            // error — it still reaches every trial row.
-            Scalar::String(_) => self.unsummarisable = true,
+            // A metric that is a string has no mean and no p95, and neither
+            // does one that is null — a trial where a selection matched
+            // nothing has no observation to contribute, and averaging it in as
+            // zero would be the same mistake `series_max` refuses to make. It
+            // is not an error: the metric still reaches every trial row.
+            Scalar::String(_) | Scalar::Null => self.unsummarisable = true,
         }
     }
 

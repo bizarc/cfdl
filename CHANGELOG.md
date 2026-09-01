@@ -25,8 +25,15 @@ same signature, same selector dialect, same window semantics, same contexts.
   "peak outstanding" means. No golden moved, which is the evidence that
   `series_sum` and `series_avg` still compute what they computed.
 - **A selection matching nothing** sums to 0, multiplies to 1 and counts 0;
-  `series_max`/`series_min` refuse it, because nothing has no maximum and a
-  zero there would state a peak no period reached.
+  `series_max`/`series_min` publish **null**, because nothing has no maximum
+  and a zero there would state a peak no period reached. Null is the
+  language's existing word for absent and carries the guard rails — it
+  compares but does not order or add — so the absence cannot quietly become a
+  number, and a model can still say a selector may legitimately be empty:
+  `if(series_count("x.*", 0, t) == 0, 0, series_max("x.*", 0, t))`. A
+  `Scalar::Null` publishes it as JSON null, which the results schema already
+  permitted. A window the walk has NOT reached stays an error, which is a
+  different fact and stayed different.
 - **`series_prod` retires a workaround.** `exp(series_sum(helper, 0, t))`
   needs a helper stream carrying `ln(1 + r_t)`, and a stream must be `inflow`
   or `outflow` — so the helper IS cash — while `ln`/`exp` escape to f64.

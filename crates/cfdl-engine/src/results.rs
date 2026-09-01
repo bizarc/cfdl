@@ -880,6 +880,12 @@ pub enum Scalar {
     Number(f64),
     Money(Money),
     String(String),
+    /// NO ANSWER, published as JSON `null` — which the results schema has
+    /// always permitted for a scalar. A metric that folded a selection with
+    /// nothing in it has no maximum, and stringifying that as `"null"` (which
+    /// is what the catch-all arm used to do) makes an absence look like a
+    /// value of type text. `docs/13` §7.86.
+    Null,
 }
 
 /// One period's value on a published series.
