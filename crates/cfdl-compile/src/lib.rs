@@ -559,6 +559,10 @@ struct IrSlice {
     /// clause stays in `types` as lineage; the engine reads this expansion.
     #[serde(skip_serializing_if = "Vec::is_empty")]
     type_streams: Vec<String>,
+    /// A reporting window, inclusive, as declared. Omitted when the slice
+    /// spans the whole horizon, so existing IR stays byte-identical.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    window: Option<IrDateRange>,
     provenance: IrNodeProvenance,
 }
 
@@ -4203,6 +4207,13 @@ fn build_ir(
                 except_categories: slice_stmt.except_categories.clone(),
                 except_entities: slice_stmt.except_entities.clone(),
                 type_streams: type_streams.into_iter().collect(),
+                // Normalised the way a phase's range is, so a month-only
+                // bound means the first of that month and the engine's
+                // `Date::parse` — which takes YYYY-MM-DD only — reads it.
+                window: slice_stmt.window.as_ref().map(|(from, to)| IrDateRange {
+                    start: normalize_date(from),
+                    end: normalize_date(to),
+                }),
                 provenance: IrNodeProvenance {
                     source_file: source_stmt.file.clone(),
                     source_span: map_span(slice_stmt.span),

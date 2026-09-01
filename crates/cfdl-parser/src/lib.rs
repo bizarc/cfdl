@@ -343,6 +343,11 @@ pub struct SliceStmt {
     pub except_streams: Vec<String>,
     pub except_categories: Vec<String>,
     pub except_entities: Vec<String>,
+    /// A reporting window: only periods inside it are selected. `None` is the
+    /// whole horizon. NOT a phase — a phase is a lifecycle anchor that drives
+    /// schedules, and a window is a reporting bound; one construct doing both
+    /// jobs would mean neither could change without the other.
+    pub window: Option<(String, String)>,
     pub span: Span,
 }
 
@@ -3654,6 +3659,39 @@ impl<'a> Parser<'a> {
     /// `except` subtracts last. A slice carries no reconciliation: the
     /// absence is what the declaration means — a partial number must not
     /// dress as a complete one.
+    /// `window from <date> to <date>` — a slice's reporting bound.
+    ///
+    /// Dates rather than period indices, as every other range in the language
+    /// is: an index is a fact about one grid, and a window that survives a
+    /// change of calendar has to be stated in dates.
+    fn parse_slice_window(&mut self) -> Option<(String, String)> {
+        let _from_kw = self.expect_keyword(Keyword::From, "'from'")?;
+        let from_tok = self.bump();
+        let from = match from_tok.kind {
+            TokenKind::Date(ref d) => d.clone(),
+            _ => {
+                self.push_expected(
+                    from_tok.span,
+                    "Expected token <date> after 'window from'.".to_string(),
+                );
+                return None;
+            }
+        };
+        let _to_kw = self.expect_keyword(Keyword::To, "'to'")?;
+        let to_tok = self.bump();
+        let to = match to_tok.kind {
+            TokenKind::Date(ref d) => d.clone(),
+            _ => {
+                self.push_expected(
+                    to_tok.span,
+                    "Expected token <date> after 'window from <date> to'.".to_string(),
+                );
+                return None;
+            }
+        };
+        Some((from, to))
+    }
+
     fn parse_slice_stmt(&mut self) -> Option<SliceStmt> {
         let start = self.expect_keyword(Keyword::Slice, "'slice'")?;
         let name_tok = self.bump();
@@ -3687,6 +3725,7 @@ impl<'a> Parser<'a> {
             except_streams: Vec::new(),
             except_categories: Vec::new(),
             except_entities: Vec::new(),
+            window: None,
             span: start.span,
         };
         loop {
@@ -3718,6 +3757,20 @@ impl<'a> Parser<'a> {
                 TokenKind::Ident(ref ident) if ident == "category" => {
                     let value = self.parse_slice_selector("category")?;
                     stmt.categories.push(value);
+                }
+                // A CONTEXTUAL WORD, like `category` beside it, rather than a
+                // reserved one. Reserving `window` would break any model using
+                // it as an identifier and buys nothing: the token can only
+                // appear here.
+                TokenKind::Ident(ref ident) if ident == "window" => {
+                    if stmt.window.is_some() {
+                        self.push_expected(
+                            tok.span,
+                            "A slice states at most one 'window'.".to_string(),
+                        );
+                        return None;
+                    }
+                    stmt.window = Some(self.parse_slice_window()?);
                 }
                 TokenKind::Keyword(Keyword::Except) => {
                     let kind_tok = self.bump();

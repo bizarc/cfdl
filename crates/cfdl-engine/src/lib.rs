@@ -547,7 +547,7 @@ fn compute_results(ir: &Ir, model_hash: String, config: RunConfig) -> Result<Res
     });
 
     Ok(Results {
-        results_version: "0.9".to_string(),
+        results_version: "0.10".to_string(),
         model_hash,
         ledger_hash,
         engine: EngineInfo {
@@ -2655,18 +2655,40 @@ fn run_deterministic(
                     }
                 }
                 matched.sort_unstable();
+                // THE WINDOW SELECTS PERIODS, the clauses above select streams.
+                // A period outside it contributes nothing — to the net series,
+                // and so to `total`, `npv` and `irr`, which are folds of it.
+                // Dates rather than indices, compared the way `phase_at` does,
+                // so a window means the same thing on any calendar.
+                let in_window: Vec<bool> = match &slice.window {
+                    None => vec![true; cash_periods],
+                    Some(range) => {
+                        let start = Date::parse(&range.start);
+                        let end = Date::parse(&range.end);
+                        (0..cash_periods)
+                            .map(|t| match timeline.get(t) {
+                                None => false,
+                                Some(date) => {
+                                    start.as_ref().is_ok_and(|s| date >= s)
+                                        && end.as_ref().is_ok_and(|e| date <= e)
+                                }
+                            })
+                            .collect()
+                    }
+                };
                 let mut net = vec![0.0_f64; cash_periods];
                 let mut valued: Vec<(Vec<f64>, f64)> = Vec::new();
                 for name in &matched {
                     if let Some(values) = stream_series.get(*name) {
-                        let cash = &values[..cash_periods.min(values.len())];
+                        let cash: Vec<f64> = values[..cash_periods.min(values.len())]
+                            .iter()
+                            .enumerate()
+                            .map(|(t, v)| if in_window[t] { *v } else { 0.0 })
+                            .collect();
                         for (t, v) in cash.iter().enumerate() {
                             net[t] += *v;
                         }
-                        valued.push((
-                            cash.to_vec(),
-                            stream_offsets.get(*name).copied().unwrap_or(1.0),
-                        ));
+                        valued.push((cash, stream_offsets.get(*name).copied().unwrap_or(1.0)));
                     }
                 }
                 let mut slice_metrics: BTreeMap<String, Scalar> = BTreeMap::new();
@@ -2709,6 +2731,10 @@ fn run_deterministic(
                         except_streams: slice.except_streams.clone(),
                         except_categories: slice.except_categories.clone(),
                         except_entities: slice.except_entities.clone(),
+                        window: slice.window.as_ref().map(|r| SliceWindow {
+                            from: r.start.clone(),
+                            to: r.end.clone(),
+                        }),
                     },
                     streams: matched.iter().map(|n| n.to_string()).collect(),
                     net: net_series,

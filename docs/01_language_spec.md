@@ -1333,6 +1333,11 @@ slice label_ex_merch {
 slice debt {
   type Contract.Debt
 }
+
+slice west_2027 {
+  entity asset.west_tower
+  window from 2027-01 to 2028-12
+}
 ```
 
 Rules:
@@ -1350,6 +1355,18 @@ Rules:
 - `category` and `stream` take QUOTED selectors — the dialect `series_sum`
   reads, exact or one trailing `.*` — and a category selector must be rooted
   in a statement section (`E1364`).
+- `window` bounds the PERIODS, where every other clause bounds the streams. A
+  period outside it contributes nothing, so `total`, `npv` and `irr` are folds
+  over the window. At most one window per slice.
+
+  **A window is not a phase.** A phase is a lifecycle anchor — `phase_start()`
+  and `phase_end()` drive schedules, and a period is named by the phase it sits
+  in. A window is a reporting bound applied to a finished projection. Giving one
+  construct both jobs would mean neither could change without the other.
+
+  Dates, not period indices: an index is a fact about one grid, and a window
+  that survives a change of calendar has to be stated in dates. A month-only
+  bound means the first of that month, as a phase's does.
 - Results publish each slice's selection (the lineage), the streams it
   matched, its net per-period series, and `total`/`npv`/`irr` over the
   matched streams on the model's own axis. A slice carries **no

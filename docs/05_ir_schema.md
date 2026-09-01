@@ -1813,6 +1813,10 @@ against it by `make ir-schema`.
         },
         "provenance": {
           "$ref": "#/$defs/NodeProvenance"
+        },
+        "window": {
+          "$ref": "#/$defs/DateRange",
+          "description": "A reporting window, inclusive. Only periods inside it are selected, so total, npv and irr are folds over it. Absent when the slice spans the whole horizon. Not a phase: a phase is a lifecycle anchor that drives schedules, and a window is a reporting bound."
         }
       }
     }

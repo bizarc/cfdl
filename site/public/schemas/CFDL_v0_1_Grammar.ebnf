@@ -51,12 +51,16 @@ metric_stmt     = "metric" IDENT "=" expr ;
 (* A named, deliberately partial selection (docs/01 §15.4). Clause kinds
    intersect, values within a kind union, `except` subtracts. Entity and
    type operands are references; category and stream selectors are quoted,
-   in the dialect `series_sum` reads. *)
+   in the dialect `series_sum` reads. `window` bounds the PERIODS rather
+   than the streams, and is not a phase: a phase anchors schedules, a
+   window bounds a report. `category` and `window` are contextual words,
+   not reserved ones. *)
 slice_stmt      = "slice" IDENT "{" slice_clause* "}" ;
 slice_clause    = "entity" QNAME
                 | "type" ( QNAME | IDENT )
                 | "category" STRING
                 | "stream" STRING
+                | "window" "from" date_lit "to" date_lit
                 | "except" ( "stream" STRING
                            | "category" STRING
                            | "entity" QNAME ) ;
