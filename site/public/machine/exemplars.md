@@ -2,7 +2,7 @@
 
 # CFDL benchmark exemplars
 
-CFDL 0.7.0. 18 of the registered benchmark
+CFDL 0.8.0. 18 of the registered benchmark
 cases, curated so every core-language mechanism and every
 meaningfully-composed pack pattern appears at least once. Each model
 compiles, runs, and matches an external reference within stated tolerances
