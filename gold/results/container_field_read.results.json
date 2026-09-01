@@ -163,6 +163,100 @@
     "metrics": {},
     "trial_summaries": []
   },
+  "statements": {
+    "statements": [
+      {
+        "id": "by_entity",
+        "label": "Cash by entity",
+        "default": true,
+        "grain": {
+          "calendar": "annual",
+          "start": "2026-01-01",
+          "labels": [
+            "2026",
+            "2027",
+            "2028"
+          ]
+        },
+        "rows": [
+          {
+            "kind": "subtotal",
+            "label": "Fund",
+            "depth": 0,
+            "display_sign": 1.0,
+            "values": [
+              {
+                "amount": 98.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 98.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 98.0,
+                "currency": "USD"
+              }
+            ],
+            "total": 294.0
+          },
+          {
+            "kind": "line",
+            "label": "Alpha",
+            "depth": 1,
+            "display_sign": 1.0,
+            "values": [
+              {
+                "amount": 100.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 100.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 100.0,
+                "currency": "USD"
+              }
+            ],
+            "total": 300.0,
+            "streams": [
+              "stream.alpha.income"
+            ]
+          },
+          {
+            "kind": "residual",
+            "label": "Not shown by this structure",
+            "depth": 0,
+            "display_sign": 1.0,
+            "values": [
+              {
+                "amount": -2.0,
+                "currency": "USD"
+              },
+              {
+                "amount": -2.0,
+                "currency": "USD"
+              },
+              {
+                "amount": -2.0,
+                "currency": "USD"
+              }
+            ],
+            "total": -6.0,
+            "streams": [
+              "stream.fund.fee"
+            ]
+          }
+        ],
+        "reconciliation": {
+          "bottom_line": 294.0,
+          "model_total": 294.0,
+          "residual": 0.0
+        }
+      }
+    ]
+  },
   "graph": {
     "entities": [
       {

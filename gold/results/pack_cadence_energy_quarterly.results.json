@@ -890,6 +890,102 @@
     "metrics": {},
     "trial_summaries": []
   },
+  "statements": {
+    "statements": [
+      {
+        "id": "by_entity",
+        "label": "Cash by entity",
+        "default": true,
+        "grain": {
+          "calendar": "quarterly",
+          "start": "2025-01-01",
+          "labels": [
+            "2025-Q1",
+            "2025-Q2",
+            "2025-Q3",
+            "2025-Q4",
+            "2026-Q1",
+            "2026-Q2",
+            "2026-Q3",
+            "2026-Q4",
+            "2027-Q1",
+            "2027-Q2",
+            "2027-Q3",
+            "2027-Q4"
+          ]
+        },
+        "rows": [
+          {
+            "kind": "line",
+            "label": "Microgrid",
+            "depth": 0,
+            "display_sign": 1.0,
+            "values": [
+              {
+                "amount": 92250.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 92250.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 92250.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 92250.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 93279.825,
+                "currency": "USD"
+              },
+              {
+                "amount": 93279.825,
+                "currency": "USD"
+              },
+              {
+                "amount": 93279.825,
+                "currency": "USD"
+              },
+              {
+                "amount": 93279.825,
+                "currency": "USD"
+              },
+              {
+                "amount": 94321.964393,
+                "currency": "USD"
+              },
+              {
+                "amount": 94321.964393,
+                "currency": "USD"
+              },
+              {
+                "amount": 94321.964393,
+                "currency": "USD"
+              },
+              {
+                "amount": 94321.964393,
+                "currency": "USD"
+              }
+            ],
+            "total": 1119407.157572,
+            "streams": [
+              "stream.energy.capacity.revenue",
+              "stream.energy.om.expense",
+              "stream.energy.ppa.revenue"
+            ]
+          }
+        ],
+        "reconciliation": {
+          "bottom_line": 1119407.157572,
+          "model_total": 1119407.15757,
+          "residual": 2e-6
+        }
+      }
+    ]
+  },
   "graph": {
     "entities": [
       {

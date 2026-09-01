@@ -268,6 +268,100 @@
     "metrics": {},
     "trial_summaries": []
   },
+  "statements": {
+    "statements": [
+      {
+        "id": "by_entity",
+        "label": "Cash by entity",
+        "default": true,
+        "grain": {
+          "calendar": "monthly",
+          "start": "2026-01-01",
+          "labels": [
+            "2026-01",
+            "2026-02",
+            "2026-03",
+            "2026-04",
+            "2026-05",
+            "2026-06",
+            "2026-07",
+            "2026-08",
+            "2026-09",
+            "2026-10",
+            "2026-11",
+            "2026-12"
+          ]
+        },
+        "rows": [
+          {
+            "kind": "line",
+            "label": "Property",
+            "depth": 0,
+            "display_sign": 1.0,
+            "values": [
+              {
+                "amount": 80000.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 80800.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 81608.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 82424.08,
+                "currency": "USD"
+              },
+              {
+                "amount": 83248.3208,
+                "currency": "USD"
+              },
+              {
+                "amount": 84080.804008,
+                "currency": "USD"
+              },
+              {
+                "amount": 84921.612048,
+                "currency": "USD"
+              },
+              {
+                "amount": 85770.828169,
+                "currency": "USD"
+              },
+              {
+                "amount": 86628.53645,
+                "currency": "USD"
+              },
+              {
+                "amount": 87494.821815,
+                "currency": "USD"
+              },
+              {
+                "amount": 88369.770033,
+                "currency": "USD"
+              },
+              {
+                "amount": 89253.467733,
+                "currency": "USD"
+              }
+            ],
+            "total": 1014600.241056,
+            "streams": [
+              "stream.rent.total"
+            ]
+          }
+        ],
+        "reconciliation": {
+          "bottom_line": 1014600.241056,
+          "model_total": 1014600.241056,
+          "residual": 0.0
+        }
+      }
+    ]
+  },
   "graph": {
     "entities": [
       {

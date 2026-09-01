@@ -136,6 +136,56 @@
     "metrics": {},
     "trial_summaries": []
   },
+  "statements": {
+    "statements": [
+      {
+        "id": "by_entity",
+        "label": "Cash by entity",
+        "default": true,
+        "grain": {
+          "calendar": "annual",
+          "start": "2026-01-01",
+          "labels": [
+            "2026",
+            "2027",
+            "2028"
+          ]
+        },
+        "rows": [
+          {
+            "kind": "line",
+            "label": "Co",
+            "depth": 0,
+            "display_sign": 1.0,
+            "values": [
+              {
+                "amount": 100.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 125.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 125.0,
+                "currency": "USD"
+              }
+            ],
+            "total": 350.0,
+            "streams": [
+              "stream.base.revenue",
+              "stream.bonus.fee"
+            ]
+          }
+        ],
+        "reconciliation": {
+          "bottom_line": 350.0,
+          "model_total": 350.0,
+          "residual": 0.0
+        }
+      }
+    ]
+  },
   "graph": {
     "entities": [
       {

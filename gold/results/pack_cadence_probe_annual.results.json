@@ -147,6 +147,76 @@
     "metrics": {},
     "trial_summaries": []
   },
+  "statements": {
+    "statements": [
+      {
+        "id": "by_entity",
+        "label": "Cash by entity",
+        "default": true,
+        "grain": {
+          "calendar": "annual",
+          "start": "2026-01-01",
+          "labels": [
+            "2026",
+            "2027",
+            "2028"
+          ]
+        },
+        "rows": [
+          {
+            "kind": "line",
+            "label": "Borrower",
+            "depth": 0,
+            "display_sign": 1.0,
+            "values": [
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              }
+            ],
+            "total": 0.0
+          },
+          {
+            "kind": "residual",
+            "label": "Not shown by this structure",
+            "depth": 0,
+            "display_sign": 1.0,
+            "values": [
+              {
+                "amount": 69999.999996,
+                "currency": "USD"
+              },
+              {
+                "amount": 132000.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 145200.0,
+                "currency": "USD"
+              }
+            ],
+            "total": 347199.999996,
+            "streams": [
+              "stream.testpack.cadence_probe"
+            ]
+          }
+        ],
+        "reconciliation": {
+          "bottom_line": 347199.999996,
+          "model_total": 347199.999996,
+          "residual": 0.0
+        }
+      }
+    ]
+  },
   "graph": {
     "entities": [
       {

@@ -337,6 +337,157 @@
     "metrics": {},
     "trial_summaries": []
   },
+  "statements": {
+    "statements": [
+      {
+        "id": "by_entity",
+        "label": "Cash by entity",
+        "default": true,
+        "grain": {
+          "calendar": "quarterly",
+          "start": "2026-01-01",
+          "labels": [
+            "2026-Q1",
+            "2026-Q2",
+            "2026-Q3",
+            "2026-Q4",
+            "2027-Q1",
+            "2027-Q2",
+            "2027-Q3",
+            "2027-Q4",
+            "2028-Q1",
+            "2028-Q2",
+            "2028-Q3",
+            "2028-Q4"
+          ]
+        },
+        "rows": [
+          {
+            "kind": "line",
+            "label": "Borrower",
+            "depth": 0,
+            "display_sign": 1.0,
+            "values": [
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              }
+            ],
+            "total": 0.0
+          },
+          {
+            "kind": "residual",
+            "label": "Not shown by this structure",
+            "depth": 0,
+            "display_sign": 1.0,
+            "values": [
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 9999.999999,
+                "currency": "USD"
+              },
+              {
+                "amount": 30000.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 30000.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 33000.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 33000.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 33000.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 33000.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 36300.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 36300.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 36300.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 36300.0,
+                "currency": "USD"
+              }
+            ],
+            "total": 347199.999999,
+            "streams": [
+              "stream.testpack.cadence_probe"
+            ]
+          }
+        ],
+        "reconciliation": {
+          "bottom_line": 347199.999999,
+          "model_total": 347199.999999,
+          "residual": 0.0
+        }
+      }
+    ]
+  },
   "graph": {
     "entities": [
       {

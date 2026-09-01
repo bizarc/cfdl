@@ -329,6 +329,101 @@
     "metrics": {},
     "trial_summaries": []
   },
+  "statements": {
+    "statements": [
+      {
+        "id": "by_entity",
+        "label": "Cash by entity",
+        "default": true,
+        "grain": {
+          "calendar": "annual",
+          "start": "2026-01-01",
+          "labels": [
+            "2026",
+            "2027",
+            "2028"
+          ]
+        },
+        "rows": [
+          {
+            "kind": "subtotal",
+            "label": "Tower",
+            "depth": 0,
+            "display_sign": 1.0,
+            "values": [
+              {
+                "amount": 110000.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 110000.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 110000.0,
+                "currency": "USD"
+              }
+            ],
+            "total": 330000.0
+          },
+          {
+            "kind": "line",
+            "label": "Suite",
+            "depth": 1,
+            "display_sign": 1.0,
+            "values": [
+              {
+                "amount": 36000.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 36000.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 36000.0,
+                "currency": "USD"
+              }
+            ],
+            "total": 108000.0,
+            "streams": [
+              "stream.cre.rent.suite"
+            ]
+          },
+          {
+            "kind": "residual",
+            "label": "Not shown by this structure",
+            "depth": 0,
+            "display_sign": 1.0,
+            "values": [
+              {
+                "amount": 74000.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 74000.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 74000.0,
+                "currency": "USD"
+              }
+            ],
+            "total": 222000.0,
+            "streams": [
+              "stream.cre.opex",
+              "stream.cre.rent.tower"
+            ]
+          }
+        ],
+        "reconciliation": {
+          "bottom_line": 330000.0,
+          "model_total": 330000.0,
+          "residual": 0.0
+        }
+      }
+    ]
+  },
   "graph": {
     "entities": [
       {

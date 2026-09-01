@@ -323,6 +323,139 @@
     "metrics": {},
     "trial_summaries": []
   },
+  "statements": {
+    "statements": [
+      {
+        "id": "by_entity",
+        "label": "Cash by entity",
+        "default": true,
+        "grain": {
+          "calendar": "annual",
+          "start": "2026-01-01",
+          "labels": [
+            "2026",
+            "2027",
+            "2028"
+          ]
+        },
+        "rows": [
+          {
+            "kind": "line",
+            "label": "Legacy",
+            "depth": 0,
+            "display_sign": 1.0,
+            "values": [
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              }
+            ],
+            "total": 0.0
+          },
+          {
+            "kind": "subtotal",
+            "label": "Tower",
+            "depth": 0,
+            "display_sign": 1.0,
+            "values": [
+              {
+                "amount": 100000.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 100000.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 100000.0,
+                "currency": "USD"
+              }
+            ],
+            "total": 300000.0
+          },
+          {
+            "kind": "line",
+            "label": "Suite a",
+            "depth": 1,
+            "display_sign": 1.0,
+            "values": [
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              }
+            ],
+            "total": 0.0
+          },
+          {
+            "kind": "line",
+            "label": "Acme",
+            "depth": 0,
+            "display_sign": 1.0,
+            "values": [
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              }
+            ],
+            "total": 0.0
+          },
+          {
+            "kind": "residual",
+            "label": "Not shown by this structure",
+            "depth": 0,
+            "display_sign": 1.0,
+            "values": [
+              {
+                "amount": 100000.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 100000.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 100000.0,
+                "currency": "USD"
+              }
+            ],
+            "total": 300000.0,
+            "streams": [
+              "stream.cre.rent"
+            ]
+          }
+        ],
+        "reconciliation": {
+          "bottom_line": 300000.0,
+          "model_total": 300000.0,
+          "residual": 0.0
+        }
+      }
+    ]
+  },
   "graph": {
     "entities": [
       {

@@ -955,9 +955,41 @@ pub fn attach_model_statements(
     waterfall_series: &BTreeSet<String>,
     results: &mut Results,
 ) {
-    if specs.is_empty() {
-        return;
-    }
+    // A DEFAULT PRESENTATION, when nothing else provides one (`docs/13` §7.43).
+    //
+    // Without it a reader holding results sees a flat list of series keyed by
+    // symbol, and has to rebuild the hierarchy the graph already publishes.
+    // Every model has a shape; showing it costs a median of twelve values.
+    //
+    // A FALLBACK, NOT A DECLARATION. It is assembled here, at render time, and
+    // never enters the IR — so it moves neither `model_hash` nor
+    // `ledger_hash`, which is what lets it appear without changing what any
+    // model IS. And it yields to anything declared: a pack's statements or the
+    // model's own mean the presentation question is already answered.
+    let owned;
+    let mut is_fallback = false;
+    let specs: &[ModelStatement] = if specs.is_empty() {
+        if results.statements.is_some() || results.graph.is_none() {
+            return;
+        }
+        owned = vec![ModelStatement {
+            name: "by_entity".to_string(),
+            label: Some("Cash by entity".to_string()),
+            structure: "entity".to_string(),
+            // The whole tree. A default cannot know which level a reader
+            // wants, and showing every node with its children beneath it is
+            // what §7.43 asked for.
+            depth: None,
+            grain: None,
+            slice: None,
+            metrics: Vec::new(),
+            rows: Vec::new(),
+        }];
+        is_fallback = true;
+        &owned
+    } else {
+        specs
+    };
     let periods = results
         .deterministic
         .series
@@ -980,7 +1012,7 @@ pub fn attach_model_statements(
         .values()
         .next()
         .map(|s| s.index.clone());
-    let rendered: Vec<Statement> = specs
+    let mut rendered: Vec<Statement> = specs
         .iter()
         .map(|spec| {
             let grain = index
@@ -995,6 +1027,14 @@ pub fn attach_model_statements(
             generate(spec, &grain, &borrowed, stream_categories, results, periods)
         })
         .collect();
+    // The fallback IS the statement a consumer means by "the" statement, so it
+    // says so. A declared statement does not: which of several is default is
+    // the author's call, and nothing here can guess it.
+    if is_fallback {
+        for statement in &mut rendered {
+            statement.default = true;
+        }
+    }
     match &mut results.statements {
         Some(section) => section.statements.extend(rendered),
         None => {

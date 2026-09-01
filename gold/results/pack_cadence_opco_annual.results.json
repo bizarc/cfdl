@@ -508,6 +508,58 @@
     "metrics": {},
     "trial_summaries": []
   },
+  "statements": {
+    "statements": [
+      {
+        "id": "by_entity",
+        "label": "Cash by entity",
+        "default": true,
+        "grain": {
+          "calendar": "annual",
+          "start": "2025-01-01",
+          "labels": [
+            "2025",
+            "2026",
+            "2027"
+          ]
+        },
+        "rows": [
+          {
+            "kind": "line",
+            "label": "Business",
+            "depth": 0,
+            "display_sign": 1.0,
+            "values": [
+              {
+                "amount": 391200.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 391200.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 391200.0,
+                "currency": "USD"
+              }
+            ],
+            "total": 1173600.0,
+            "streams": [
+              "stream.opco.capex.line",
+              "stream.opco.opex.recurring",
+              "stream.opco.revenue.recurring",
+              "stream.opco.taxes.cash"
+            ]
+          }
+        ],
+        "reconciliation": {
+          "bottom_line": 1173600.0,
+          "model_total": 1173600.0,
+          "residual": 0.0
+        }
+      }
+    ]
+  },
   "graph": {
     "entities": [
       {

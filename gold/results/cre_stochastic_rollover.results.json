@@ -3433,6 +3433,162 @@
       }
     }
   },
+  "statements": {
+    "statements": [
+      {
+        "id": "by_entity",
+        "label": "Cash by entity",
+        "default": true,
+        "grain": {
+          "calendar": "monthly",
+          "start": "2031-01-01",
+          "labels": [
+            "2031-01",
+            "2031-02",
+            "2031-03",
+            "2031-04",
+            "2031-05",
+            "2031-06",
+            "2031-07",
+            "2031-08",
+            "2031-09",
+            "2031-10",
+            "2031-11",
+            "2031-12",
+            "2032-01",
+            "2032-02",
+            "2032-03",
+            "2032-04",
+            "2032-05",
+            "2032-06",
+            "2032-07",
+            "2032-08",
+            "2032-09",
+            "2032-10",
+            "2032-11",
+            "2032-12"
+          ]
+        },
+        "rows": [
+          {
+            "kind": "line",
+            "label": "Tower",
+            "depth": 0,
+            "display_sign": 1.0,
+            "values": [
+              {
+                "amount": -56666.666667,
+                "currency": "USD"
+              },
+              {
+                "amount": 43333.333333,
+                "currency": "USD"
+              },
+              {
+                "amount": 43333.333333,
+                "currency": "USD"
+              },
+              {
+                "amount": 43333.333333,
+                "currency": "USD"
+              },
+              {
+                "amount": 43333.333333,
+                "currency": "USD"
+              },
+              {
+                "amount": 43333.333333,
+                "currency": "USD"
+              },
+              {
+                "amount": 43333.333333,
+                "currency": "USD"
+              },
+              {
+                "amount": 43333.333333,
+                "currency": "USD"
+              },
+              {
+                "amount": 43333.333333,
+                "currency": "USD"
+              },
+              {
+                "amount": 43333.333333,
+                "currency": "USD"
+              },
+              {
+                "amount": 43333.333333,
+                "currency": "USD"
+              },
+              {
+                "amount": 43333.333333,
+                "currency": "USD"
+              },
+              {
+                "amount": 43333.333333,
+                "currency": "USD"
+              },
+              {
+                "amount": 43333.333333,
+                "currency": "USD"
+              },
+              {
+                "amount": 43333.333333,
+                "currency": "USD"
+              },
+              {
+                "amount": 43333.333333,
+                "currency": "USD"
+              },
+              {
+                "amount": 43333.333333,
+                "currency": "USD"
+              },
+              {
+                "amount": 43333.333333,
+                "currency": "USD"
+              },
+              {
+                "amount": 43333.333333,
+                "currency": "USD"
+              },
+              {
+                "amount": 43333.333333,
+                "currency": "USD"
+              },
+              {
+                "amount": 43333.333333,
+                "currency": "USD"
+              },
+              {
+                "amount": 43333.333333,
+                "currency": "USD"
+              },
+              {
+                "amount": 43333.333333,
+                "currency": "USD"
+              },
+              {
+                "amount": 43333.333333,
+                "currency": "USD"
+              }
+            ],
+            "total": 939999.999992,
+            "streams": [
+              "stream.asset.downtime_loss",
+              "stream.asset.rollover_rent",
+              "stream.asset.turnover_costs"
+            ]
+          }
+        ],
+        "reconciliation": {
+          "bottom_line": 939999.999992,
+          "model_total": 940000.0,
+          "residual": -8e-6
+        }
+      }
+    ]
+  },
   "graph": {
     "entities": [
       {

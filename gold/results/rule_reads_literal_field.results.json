@@ -162,6 +162,85 @@
     "metrics": {},
     "trial_summaries": []
   },
+  "statements": {
+    "statements": [
+      {
+        "id": "by_entity",
+        "label": "Cash by entity",
+        "default": true,
+        "grain": {
+          "calendar": "annual",
+          "start": "2026-01-01",
+          "labels": [
+            "2026",
+            "2027",
+            "2028",
+            "2029"
+          ]
+        },
+        "rows": [
+          {
+            "kind": "line",
+            "label": "Pool",
+            "depth": 0,
+            "display_sign": 1.0,
+            "values": [
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": -10.0,
+                "currency": "USD"
+              },
+              {
+                "amount": -10.0,
+                "currency": "USD"
+              },
+              {
+                "amount": -10.0,
+                "currency": "USD"
+              }
+            ],
+            "total": -30.0,
+            "streams": [
+              "stream.credit.principal"
+            ]
+          },
+          {
+            "kind": "line",
+            "label": "Lender",
+            "depth": 0,
+            "display_sign": 1.0,
+            "values": [
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              }
+            ],
+            "total": 0.0
+          }
+        ],
+        "reconciliation": {
+          "bottom_line": -30.0,
+          "model_total": -30.0,
+          "residual": 0.0
+        }
+      }
+    ]
+  },
   "graph": {
     "entities": [
       {

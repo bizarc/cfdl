@@ -496,6 +496,61 @@
     "metrics": {},
     "trial_summaries": []
   },
+  "statements": {
+    "statements": [
+      {
+        "id": "by_entity",
+        "label": "Cash by entity",
+        "default": true,
+        "grain": {
+          "calendar": "annual",
+          "start": "2025-01-01",
+          "labels": [
+            "2025",
+            "2026",
+            "2027"
+          ]
+        },
+        "rows": [
+          {
+            "kind": "line",
+            "label": "Tower",
+            "depth": 0,
+            "display_sign": 1.0,
+            "values": [
+              {
+                "amount": -20000.000016,
+                "currency": "USD"
+              },
+              {
+                "amount": 189900.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 3376354.493077,
+                "currency": "USD"
+              }
+            ],
+            "total": 3546254.493061,
+            "streams": [
+              "stream.cre.exit.proceeds",
+              "stream.cre.exit.selling_costs",
+              "stream.cre.opex.line",
+              "stream.cre.unit.abatement.tenant_a",
+              "stream.cre.unit.base_rent.tenant_a",
+              "stream.cre.unit.recoveries.tenant_a",
+              "stream.cre.unit.ti_lc.tenant_a"
+            ]
+          }
+        ],
+        "reconciliation": {
+          "bottom_line": 3546254.493061,
+          "model_total": 3546254.493061,
+          "residual": 0.0
+        }
+      }
+    ]
+  },
   "graph": {
     "entities": [
       {

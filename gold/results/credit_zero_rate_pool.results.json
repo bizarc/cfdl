@@ -1478,6 +1478,105 @@
     "metrics": {},
     "trial_summaries": []
   },
+  "statements": {
+    "statements": [
+      {
+        "id": "by_entity",
+        "label": "Cash by entity",
+        "default": true,
+        "grain": {
+          "calendar": "monthly",
+          "start": "2026-01-01",
+          "labels": [
+            "2026-01",
+            "2026-02",
+            "2026-03",
+            "2026-04",
+            "2026-05",
+            "2026-06",
+            "2026-07",
+            "2026-08",
+            "2026-09",
+            "2026-10",
+            "2026-11",
+            "2026-12"
+          ]
+        },
+        "rows": [
+          {
+            "kind": "line",
+            "label": "Lender",
+            "depth": 0,
+            "display_sign": 1.0,
+            "values": [
+              {
+                "amount": 100000.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 100000.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 100000.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 100000.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 100000.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 100000.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 100000.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 100000.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 100000.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 100000.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 100000.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 100000.0,
+                "currency": "USD"
+              }
+            ],
+            "total": 1200000.0,
+            "streams": [
+              "stream.credit.pool.interest",
+              "stream.credit.pool.penalty",
+              "stream.credit.pool.prepay",
+              "stream.credit.pool.recoveries",
+              "stream.credit.pool.sched_principal",
+              "stream.credit.pool.servicing"
+            ]
+          }
+        ],
+        "reconciliation": {
+          "bottom_line": 1200000.0,
+          "model_total": 1200000.0,
+          "residual": 0.0
+        }
+      }
+    ]
+  },
   "graph": {
     "entities": [
       {
