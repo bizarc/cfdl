@@ -38,6 +38,13 @@ The word after `entity` is the family. The name follows. What comes after the
 colon is the type, which is checked against the active pack's vocabulary — a
 misspelled type is a compile error, not a silently different model.
 
+Fields inherit down the type chain. A type that `refines` another carries
+every master field without restating it, and a model is checked against the
+effective roster — required fields and near-miss detection include the
+masters'. A refinement may strengthen a field (an optional master field
+becomes required) but never retype, re-unit, or weaken it: a reader who
+learned a field from the master is not lied to by the refinement.
+
 ## Every model has a vocabulary
 
 The type after the colon is optional, and a model with no pack still has one to

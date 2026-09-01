@@ -26,10 +26,15 @@ derives the schedule, the metrics, and the uncertainty.
   references; lifecycles, events and options.
 - [Language guide](/docs/language-guide) — the complete tour: time,
   entities, streams, contracts, expressions, assumptions, curves.
+- [Lifecycles and state](/docs/lifecycles) — the declared state machine:
+  states, guarded edges, and cash that switches on where an entity is.
 - [Examples](/docs/examples) — eight lessons in order, then worked domain
   models and the benchmark set.
 - [How-to guides](/docs/guides/schedules-and-calendars) — one question each:
   schedules, packs, multi-file models, scenarios, curves, and metrics.
+- Reporting — [statements](/docs/reference/statements),
+  [slices](/docs/reference/slices) and [metrics](/docs/reference/metrics):
+  how a run's results are organized, filtered, and summarized.
 
 ## Model your domain
 

@@ -8,9 +8,13 @@ generated: regions
 
 # Metrics
 
-A run reports a set of scalars beside its cash flows. Model metrics are
-computed for every model; domain metrics come from the active pack and are
-absent without one.
+A run reports a set of scalars beside its cash flows, and the prefix says who
+minted each: `model.*` metrics are computed by the engine for every model;
+`domain.*` metrics come from the active pack and are absent without one; and
+`metric.*` names a figure the model declared itself — `metric <name> =
+<expr>`, evaluated once at the horizon over the finished projection (the
+valuation plane), folding any series the model publishes. See the
+[metrics guide](/docs/guides/metrics) for the declared form's rules.
 
 ## Model metrics
 
