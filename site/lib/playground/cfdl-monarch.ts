@@ -20,7 +20,8 @@ const KEYWORDS = [
   "phase_end", "day", "eom", "convention", "stub", "except", "also", "event",
   "when", "set", "activate", "deactivate", "exercise", "option", "type",
   "exercisable", "in", "payoff", "run", "metric", "active", "and", "or",
-  "not", "currency", "curve",
+  "not", "currency", "curve", "slice", "statement", "waterfall", "account",
+  "quantile", "state",
 ];
 
 const FREQUENCIES = ["daily", "monthly", "quarterly", "annual"];
