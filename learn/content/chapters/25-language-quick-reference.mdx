@@ -20,7 +20,7 @@ time calendar <daily|monthly|quarterly|annual> from <date> for <N>
 phase <name> from <date> to <date>
 ```
 
-One time grid per model; header statements live in the root file only. Everything else — entities, assumptions, curves, streams, contracts, events, options, waterfalls — may live in any file, in any order. Order never carries meaning.
+One time grid per model; header statements live in the root file only. Everything else — entities, assumptions, curves, streams, contracts, events, options, waterfalls, metrics, slices, statements — may live in any file, in any order. Order never carries meaning (metrics excepted: they compose in declaration order).
 
 ## Entities and fields
 
@@ -36,17 +36,21 @@ entity <family> <name> : <Type> {                --         container
 
 Reads, from any expression: `asset.x.field` (this period, at close), `prev.asset.x.field` (prior close), `entity.field` (the attached entity's own field). Rules see only the completed prior column — same-period cycles are unwritable.
 
+Types form a `refines` chain ending at a master. The language base ships abstract contract masters (`Contract.Debt`, `Contract.Lease`, `Contract.Option`, …) that bind no lowering and cannot be instantiated — they exist so a slice's `type Contract.Debt` reaches every pack's debt transitively, and fields inherit down the chain.
+
 ## Streams
 
 ```text
 stream <a>.<b>[.<c>] on entity <family>.<name> <inflow|outflow> currency <CCY> {
-  schedule <see below>
-  [active when <boolean expr>]
+  [category <dotted.path>]                       -- bare, like `currency USD`;
+  schedule <see below>                           --   rooted operating |
+  [active when <boolean expr>                    --   investing | financing
+   | active in state <name>]
   amount = <expr>
 }
 ```
 
-Names are dotted, at least two segments, unique. Direction is declared; amounts are written positive.
+Names are dotted, at least two segments, unique. Direction is declared; amounts are written positive. `category` says what the cash *is* — a dotted path into the cash flow statement, first segment `operating`, `investing`, or `financing`. `active in state` gates on the owner's lifecycle, checked against the declared machine — where a string comparison against `entity.status` could be misspelled and false forever.
 
 ## Schedules
 
@@ -70,9 +74,12 @@ assume <name> ~ Normal(mean=, stdev=, clip=[lo, hi])
              ~ LogNormal(mu=, sigma=)     ~ Uniform(min=, max=)
              ~ Triangular(min=, mode=, max=)
 curve <name> <step|linear> { <date>: <value>  ... }
+quantile <name> <step|linear> [by exceedance] [ref <id>] { <share>: <value>  ... }
 ```
 
 Read as `inputs.<name>` and `curve_value("<name>", <date>)`. Deterministic runs use central values: Normal → mean, LogNormal → exp(mu + sigma²/2), Uniform → midpoint, Triangular → (min + mode + max) / 3 — *not* the mode. Curves clamp outside their stated range.
+
+A `quantile` is a curve turned sideways: indexed by cumulative share rather than by date, for a quantity whose *dispersion* drives the answer. Shares in 0..1, values non-decreasing; `by exceedance` writes the points worst-first, the way a duration curve reads, and is authoring surface only. Read with `quantile_at`, `quantile_mean`, `quantile_of` (expression table below). Never sampled: it is declared data.
 
 ## Lifecycles and accounts
 
@@ -130,17 +137,48 @@ waterfall <a>.<b> on entity <ref> {
   from <expr>                                -- the pot; fields and series work
   pay <step> to <family>.<name> = <expr>     -- receives min(max(0,owed),remaining)
 }
+```
 
+Waterfall step expressions may read `remaining`, `owed.<step>`, `paid.<step>` (earlier steps only). The five step shapes: stated amount, capped (`min`), pay-to-target (balance − target), shortfall (`owed.x − paid.x`), sweep (`remaining`).
+
+## Metrics, slices, statements
+
+The figures-and-views tier: constructs that read a finished projection and produce no cash.
+
+```text
+metric <name> = <expr>                       -- one number at the horizon; folds
+                                             --   published series; composes in
+                                             --   declaration order
 slice <name> {                               -- a named partial selection
   entity <family>.<name>                     -- plus its part-of descendants
   type <TypeId>                              -- matches through refines
   category "<path or path.*>"                -- quoted; series_sum's dialect
   stream "<selector>"
   except stream "<selector>"                 -- kinds intersect; excepts subtract
+  window from <date> to <date>               -- bounds the PERIODS, not the
+}                                            --   streams; at most one
+
+statement <name> {                           -- generated: the tree renders
+  label     "<title>"
+  structure <entity|category>
+  depth     <N>                              -- level of aggregation
+  [grain <calendar>]                         -- re-buckets values; total stays
+  [slice <name>]                             --   lifetime; ratios recompute
+  [metrics  <a>, <b>]                        -- declared metrics, beside the rows
+}
+statement <name> {                           -- authored: the rows are stated
+  label    "<title>"
+  line     "<label>"  { category "<sel>" | stream "<sel>" | slice <name>
+                        | entity <family>.<name> [display positive] [depth <N>] }
+  subtotal "<label>"  { category "<sel>" }   -- folds rows stated elsewhere
+  spacer
+  ratio    "<label>"  { of <slice> to <slice> display positive }
 }
 ```
 
-Waterfall step expressions may read `remaining`, `owed.<step>`, `paid.<step>` (earlier steps only). The five step shapes: stated amount, capped (`min`), pay-to-target (balance − target), shortfall (`owed.x − paid.x`), sweep (`remaining`).
+A `metric` is evaluated once, at the horizon, over the finished projection. It may fold any series the model *publishes* — a stream by either spelling (`ops.rev` or `stream.ops.rev`), a waterfall step, `entity.<sym>.net_cash_flow`, `account.<name>`, an entity field, a money subtotal, `model.net_cash_flow` — and folding an unpublished name is refused at compile (E1365), not read as zero. `irr(party.x)` and `moic(party.x)` are legal *only* in a metric: folds over the party's own account, refused elsewhere (E1355).
+
+A statement is authored or generated, never both, and never neither. `slice` filters orthogonally to the structure, and a sliced statement reconciles against the *slice's* total. A slice and a statement are **views** — they change no value and move neither hash; a metric is a figure the model claims, and does move the model hash. A model that declares no statement gets a default one: the entity hierarchy, marked `default` in results.
 
 ## Expressions
 
@@ -154,8 +192,11 @@ Scopes: `time.t` (period index from 0), `time.date`, `time.phase` · `inputs.*` 
 | Conditional | `if(cond, then, else)` |
 | Dates | `date` `edate` `eomonth` `days_between` `months_between` `year_frac` `is_business_day` `add_business_days` `roll` |
 | TVM | `pv` `fv` `pmt(rate, nper, pv)` `ipmt` `ppmt` `nper` `rate` |
-| Series | `series_sum("name", from_t, to_t)` `series_avg` — dependency-ordered; chains to any depth, cycles refused |
+| Series | `series_sum` `series_avg` `series_min` `series_max` `series_prod` `series_count`, each `("name", from_t, to_t)` — dependency-ordered; chains to any depth, cycles refused |
+| Quantiles | `quantile_at("name", share)` `quantile_mean("name", from, to)` — exact partial expectation · `quantile_of("name", value)` — the inverse: threshold → share |
 | Domain | `cpr_to_smm` `macrs_rate(year, life)` `curve_value` |
+
+Every series reduction folds the **per-period aggregate**: streams a selector matches are added within each period first, then the fold runs over that one series. An empty selection returns each fold's identity — sum 0, product 1, count 0 — and `series_max`/`series_min`, which have none, return null. `series_avg` divides by the *requested* window length; `series_count` counts the periods whose aggregate is non-zero, and `if(series_count("x.*", 0, t) == 0, 0, series_max("x.*", 0, t))` is how a legitimately-empty selector says so.
 
 Full signatures: the expressions reference at [cfdl.dev](https://cfdl.dev/docs/reference/expressions).
 
