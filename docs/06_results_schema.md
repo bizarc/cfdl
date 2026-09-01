@@ -30,17 +30,17 @@ against it by `make results-schema`.
   "properties": {
     "results_version": {
       "type": "string",
-      "const": "0.11",
-      "description": "Schema version of this document. 0.11 adds model-declared statements: `pack` on the statements section is optional, and a statement may carry `metrics`. 0.10 adds `window` to a slice's selection — a reporting bound whose periods are the only ones the slice folds. 0.9 carries every metric a Monte Carlo trial computed into its trial summary, summarises each of them across the trials with the full set of percentiles, and adds `trials` to a metric summary — the count of trials that published that name. 0.8 adds `slices` — declared partial selections with their matched streams, net series and figures, and no reconciliation block by design. 0.7 publishes the model's entity graph (`graph`) and attributes each stream series to its owning entity and category. 0.6 nests an act's own acts under it as `children`. 0.5 added the machine's `transition` journal action. 0.4 added the account journal actions. 0.3 added `ledger_hash`, the optional `inputs` section, and `category` on IR streams."
+      "const": "0.12",
+      "description": "Schema version of this document. 0.12 separates the model from its views: `model_hash` covers the IR without `views` (slices and statements), and `ledger_hash` now covers the journal and transitions beside the series. 0.11 adds model-declared statements: `pack` on the statements section is optional, and a statement may carry `metrics`. 0.10 adds `window` to a slice's selection — a reporting bound whose periods are the only ones the slice folds. 0.9 carries every metric a Monte Carlo trial computed into its trial summary, summarises each of them across the trials with the full set of percentiles, and adds `trials` to a metric summary — the count of trials that published that name. 0.8 adds `slices` — declared partial selections with their matched streams, net series and figures, and no reconciliation block by design. 0.7 publishes the model's entity graph (`graph`) and attributes each stream series to its owning entity and category. 0.6 nests an act's own acts under it as `children`. 0.5 added the machine's `transition` journal action. 0.4 added the account journal actions. 0.3 added `ledger_hash`, the optional `inputs` section, and `category` on IR streams."
     },
     "model_hash": {
       "type": "string",
-      "description": "Hash of canonical IR for traceability",
+      "description": "Identifies the MODEL: a hash of the compiled IR without its `views`. A slice filters and a statement organizes, and neither produces cash, so two users who look at identical results differently are running the same model and share this hash. A declared metric is NOT excluded — it is a figure the model claims.",
       "minLength": 8
     },
     "ledger_hash": {
       "type": "string",
-      "description": "SHA-256 over the canonical form of the deterministic ledger — `deterministic.series` and `deterministic.annual_rollup`. Together with `model_hash` and `engine` this closes the chain: identical inputs on an identical engine must reproduce an identical ledger_hash. It covers the LEDGER, not the metrics: NPV and IRR are derived FROM the ledger, so including them would make the hash move for a reason the ledger did not. It is therefore invariant to the discount rate, which is correct — the ledger is cash before discounting."
+      "description": "Identifies the RESULT: SHA-256 over the canonical form of the ledger — `deterministic.series` and `annual_rollup`, plus the journal and the transitions, because a ledger has journal entries in it and the trace of what the model did belongs to what came out. It covers the LEDGER, not the metrics: NPV and IRR are derived FROM the ledger, so including them would make the hash move for a reason the ledger did not, and `domain.*` folds are excluded on the same argument. It is invariant to the discount rate, which is correct — the ledger is cash before discounting. The RUN CONFIGURATION is deliberately not hashed here: folding it in would give three prepayment speeds over one model three different hashes, with no way to tell whether the cash moved or only a setting, and comparing results across runs is the point."
     },
     "engine": {
       "type": "object",

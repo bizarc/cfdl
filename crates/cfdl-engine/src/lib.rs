@@ -125,9 +125,29 @@ pub fn run_from_file(ir_path: &Path, config: RunConfig) -> Result<Results, Engin
 
 pub fn run_from_json_str(raw_ir: &str, config: RunConfig) -> Result<Results, EngineError> {
     let ir_value: Value = serde_json::from_str(raw_ir)?;
-    let model_hash = canonical_hash(&ir_value);
+    let model_hash = canonical_hash(&model_only(&ir_value));
     let ir: Ir = serde_json::from_value(ir_value)?;
     compute_results(&ir, model_hash, config)
+}
+
+/// The document without its VIEWS — what `model_hash` identifies.
+///
+/// A slice filters and a statement organizes. Neither produces cash, so two
+/// users who look at identical results differently are running the same model,
+/// and the hash has to say so. A metric is NOT dropped: it is a figure the
+/// model claims, asserted by every benchmark's `expected_metrics.json`.
+///
+/// One key, dropped at the ONE site that hashes. `is_ledger` below is the
+/// cautionary case — that rule was written onto one field, missed a second,
+/// and moved `ledger_hash` on fifteen goldens whose cash was bit-identical.
+/// A single site cannot repeat that, and anything added under `views` is
+/// outside the model's identity without this function changing.
+fn model_only(document: &Value) -> Value {
+    let mut model = document.clone();
+    if let Some(object) = model.as_object_mut() {
+        object.remove("views");
+    }
+    model
 }
 
 /// A series read where no stream value exists — the engine's backstop for the
@@ -511,9 +531,22 @@ fn compute_results(ir: &Ir, model_hash: String, config: RunConfig) -> Result<Res
         .annual_rollup
         .as_ref()
         .map(|r| r.series.iter().filter(|(key, _)| is_ledger(key)).collect());
+    // A LEDGER HAS JOURNAL ENTRIES IN IT. That is what a ledger is, and the
+    // trace was in neither hash: two runs with identical series and different
+    // journals hashed identically, so the record of what the model DID — the
+    // thing `explain` walks — was outside the guarantee. `transitions` joins
+    // it on the same argument: which fields changed, and when.
+    //
+    // THE RUN CONFIGURATION IS DELIBERATELY NOT HERE. Folding it in would give
+    // three prepayment speeds over one model three different hashes, and no
+    // way to tell whether the cash moved or only a setting. Comparing results
+    // across runs is the point; the configuration is an input, and this is the
+    // output hash.
     let ledger_hash = canonical_hash(&serde_json::json!({
         "series": ledger_only,
         "annual_rollup": rollup_only.map(|series| serde_json::json!({ "series": series })),
+        "journal": deterministic.journal,
+        "transitions": deterministic.transitions,
     }));
 
     let inputs = {
@@ -547,7 +580,7 @@ fn compute_results(ir: &Ir, model_hash: String, config: RunConfig) -> Result<Res
     });
 
     Ok(Results {
-        results_version: "0.11".to_string(),
+        results_version: "0.12".to_string(),
         model_hash,
         ledger_hash,
         engine: EngineInfo {
@@ -2596,7 +2629,7 @@ fn run_deterministic(
     // nothing but excepts reads "everything minus these". Matching delegates
     // to `cfdl_expr::selector_matches` — one dialect. A slice never carries
     // a reconciliation block: partial by design, and seen to be partial.
-    let slice_results: Vec<SliceResult> = if ir.slices.is_empty() {
+    let slice_results: Vec<SliceResult> = if ir.views.slices.is_empty() {
         Vec::new()
     } else {
         // parent chains, for entity clauses selecting descendants.
@@ -2628,7 +2661,8 @@ fn run_deterministic(
                 )
             })
             .collect();
-        ir.slices
+        ir.views
+            .slices
             .iter()
             .map(|slice| {
                 let mut matched: Vec<&str> = Vec::new();
@@ -3002,6 +3036,79 @@ mod tests {
         let (m_amt, l_amt, _) = run(&probe_ir("101"), 0.10);
         assert_ne!(m1, m_amt);
         assert_ne!(l1, l_amt, "a different ledger must hash differently");
+    }
+
+    /// A VIEW IS NOT THE MODEL, AND NOT THE RESULT.
+    ///
+    /// `docs/13` §7.55. Two users who look at identical results differently
+    /// are running the same model: adding a slice or a statement must move
+    /// neither hash. A metric is the other side of the same rule — it is a
+    /// figure the model CLAIMS, asserted by every benchmark's
+    /// `expected_metrics.json`, so it belongs to the model's identity and not
+    /// to the ledger's.
+    #[test]
+    fn a_view_changes_neither_identity_but_a_metric_changes_the_model() {
+        use super::*;
+        let ir = |extra: &str, views: &str| {
+            format!(
+                r#"{{
+                  "model": {{"name": "view-probe", "currency": "USD"}},
+                  "time": {{"calendar": "annual", "start": "2026-01-01", "periods": 3}},
+                  "entities": [{{"id": "e1", "symbol": "asset.co", "type": "Asset.Financial",
+                                "fields": {{}}, "state": {{}}}}],
+                  {extra}
+                  {views}
+                  "streams": [
+                    {{"id": "s1", "name": "probe.rent",
+                      "owner": {{"symbol": "asset.co"}},
+                      "direction": "inflow", "currency": "USD",
+                      "category": "operating.revenue.base_rent",
+                      "schedule": {{"kind": "Every", "every": "annual",
+                                   "from": "2026-01-01", "to": "2028-01-01"}},
+                      "amount": {{"lang": "cfdl", "src": "100"}},
+                      "active_when": {{"lang": "cfdl", "src": "true"}}}}
+                  ]
+                }}"#
+            )
+        };
+        let run = |src: String| run_from_json_str(&src, RunConfig::default()).expect("run");
+
+        let bare = run(ir("", ""));
+        let viewed = run(ir(
+            "",
+            r#""views": {"slices": [{"name": "only_co", "entities": ["asset.co"],
+                                    "provenance": {"source_file": "m.cfdl"}}]},"#,
+        ));
+        let measured = run(ir(
+            r#""metrics": [{"name": "rent", "expr": {"lang": "cfdl",
+                            "src": "series_sum(\"probe.rent\", 0, 2)"}}],"#,
+            "",
+        ));
+
+        // The view really was evaluated, so a passing assertion below means
+        // the exclusion worked rather than that nothing was there to exclude.
+        assert!(
+            viewed.slices.as_ref().is_some_and(|s| !s.is_empty()),
+            "the slice must actually have been computed"
+        );
+        assert!(measured.deterministic.metrics.contains_key("metric.rent"));
+
+        assert_eq!(
+            bare.model_hash, viewed.model_hash,
+            "a slice is a lens on the result, not part of the model"
+        );
+        assert_eq!(
+            bare.ledger_hash, viewed.ledger_hash,
+            "a slice changes no cash"
+        );
+        assert_ne!(
+            bare.model_hash, measured.model_hash,
+            "a declared metric is a figure the model claims"
+        );
+        assert_eq!(
+            bare.ledger_hash, measured.ledger_hash,
+            "a metric is a fold OF the ledger, so it does not change it"
+        );
     }
 
     /// A SUBTOTAL is a fold OF the ledger, so declaring one must not make the

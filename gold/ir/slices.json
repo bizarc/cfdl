@@ -39,59 +39,61 @@
     "constants": {},
     "random": {}
   },
-  "slices": [
-    {
-      "name": "artist_a",
-      "entities": [
-        "asset.artist_a"
-      ],
-      "provenance": {
-        "source_file": "model.cfdl",
-        "source_span": {
-          "start_line": 35,
-          "start_col": 1,
-          "end_line": 37,
-          "end_col": 1
+  "views": {
+    "slices": [
+      {
+        "name": "artist_a",
+        "entities": [
+          "asset.artist_a"
+        ],
+        "provenance": {
+          "source_file": "model.cfdl",
+          "source_span": {
+            "start_line": 35,
+            "start_col": 1,
+            "end_line": 37,
+            "end_col": 1
+          }
+        }
+      },
+      {
+        "name": "artist_a_royalties",
+        "entities": [
+          "asset.artist_a"
+        ],
+        "categories": [
+          "operating.revenue.royalty"
+        ],
+        "provenance": {
+          "source_file": "model.cfdl",
+          "source_span": {
+            "start_line": 40,
+            "start_col": 1,
+            "end_line": 43,
+            "end_col": 1
+          }
+        }
+      },
+      {
+        "name": "label_ex_merch",
+        "entities": [
+          "container.label"
+        ],
+        "except_categories": [
+          "operating.revenue.merchandise"
+        ],
+        "provenance": {
+          "source_file": "model.cfdl",
+          "source_span": {
+            "start_line": 47,
+            "start_col": 1,
+            "end_line": 50,
+            "end_col": 1
+          }
         }
       }
-    },
-    {
-      "name": "artist_a_royalties",
-      "entities": [
-        "asset.artist_a"
-      ],
-      "categories": [
-        "operating.revenue.royalty"
-      ],
-      "provenance": {
-        "source_file": "model.cfdl",
-        "source_span": {
-          "start_line": 40,
-          "start_col": 1,
-          "end_line": 43,
-          "end_col": 1
-        }
-      }
-    },
-    {
-      "name": "label_ex_merch",
-      "entities": [
-        "container.label"
-      ],
-      "except_categories": [
-        "operating.revenue.merchandise"
-      ],
-      "provenance": {
-        "source_file": "model.cfdl",
-        "source_span": {
-          "start_line": 47,
-          "start_col": 1,
-          "end_line": 50,
-          "end_col": 1
-        }
-      }
-    }
-  ],
+    ]
+  },
   "contracts": [],
   "streams": [
     {

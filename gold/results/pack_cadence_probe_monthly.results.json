@@ -1,7 +1,7 @@
 {
-  "results_version": "0.11",
+  "results_version": "0.12",
   "model_hash": "499f1172051dfbb793f944aef2f1e14610f590f822f99e43515f8ec6da0a8a8a",
-  "ledger_hash": "e0b21bdb827418460297d0a95a011165ee1e29d6e9996acc2a22b45832444594",
+  "ledger_hash": "086ffc820ccb36aaec74e56a9ec27146fcc022d16f1fcf4b7b8260320c421b7e",
   "engine": {
     "name": "cfdl-engine",
     "version": "0.8.0"

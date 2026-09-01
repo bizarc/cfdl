@@ -57,93 +57,95 @@
       }
     }
   ],
-  "slices": [
-    {
-      "name": "north_early",
-      "entities": [
-        "asset.north"
-      ],
-      "window": {
-        "start": "2026-01-01",
-        "end": "2027-01-01"
+  "views": {
+    "slices": [
+      {
+        "name": "north_early",
+        "entities": [
+          "asset.north"
+        ],
+        "window": {
+          "start": "2026-01-01",
+          "end": "2027-01-01"
+        },
+        "provenance": {
+          "source_file": "model.cfdl",
+          "source_span": {
+            "start_line": 70,
+            "start_col": 1,
+            "end_line": 73,
+            "end_col": 1
+          }
+        }
+      }
+    ],
+    "statements": [
+      {
+        "name": "portfolio",
+        "label": "Portfolio by property",
+        "structure": "entity",
+        "depth": 2,
+        "provenance": {
+          "source_file": "model.cfdl",
+          "source_span": {
+            "start_line": 36,
+            "start_col": 1,
+            "end_line": 40,
+            "end_col": 1
+          }
+        }
       },
-      "provenance": {
-        "source_file": "model.cfdl",
-        "source_span": {
-          "start_line": 70,
-          "start_col": 1,
-          "end_line": 73,
-          "end_col": 1
+      {
+        "name": "portfolio_summary",
+        "label": "Portfolio, one line",
+        "structure": "entity",
+        "depth": 1,
+        "provenance": {
+          "source_file": "model.cfdl",
+          "source_span": {
+            "start_line": 48,
+            "start_col": 1,
+            "end_line": 52,
+            "end_col": 1
+          }
+        }
+      },
+      {
+        "name": "by_category",
+        "label": "By category",
+        "structure": "category",
+        "depth": 3,
+        "provenance": {
+          "source_file": "model.cfdl",
+          "source_span": {
+            "start_line": 56,
+            "start_col": 1,
+            "end_line": 60,
+            "end_col": 1
+          }
+        }
+      },
+      {
+        "name": "north_only",
+        "label": "North, first two years",
+        "structure": "entity",
+        "depth": 2,
+        "slice": "north_early",
+        "metrics": [
+          "total_rent"
+        ],
+        "provenance": {
+          "source_file": "model.cfdl",
+          "source_span": {
+            "start_line": 75,
+            "start_col": 1,
+            "end_line": 81,
+            "end_col": 1
+          }
         }
       }
-    }
-  ],
-  "statements": [
-    {
-      "name": "portfolio",
-      "label": "Portfolio by property",
-      "structure": "entity",
-      "depth": 2,
-      "provenance": {
-        "source_file": "model.cfdl",
-        "source_span": {
-          "start_line": 36,
-          "start_col": 1,
-          "end_line": 40,
-          "end_col": 1
-        }
-      }
-    },
-    {
-      "name": "portfolio_summary",
-      "label": "Portfolio, one line",
-      "structure": "entity",
-      "depth": 1,
-      "provenance": {
-        "source_file": "model.cfdl",
-        "source_span": {
-          "start_line": 48,
-          "start_col": 1,
-          "end_line": 52,
-          "end_col": 1
-        }
-      }
-    },
-    {
-      "name": "by_category",
-      "label": "By category",
-      "structure": "category",
-      "depth": 3,
-      "provenance": {
-        "source_file": "model.cfdl",
-        "source_span": {
-          "start_line": 56,
-          "start_col": 1,
-          "end_line": 60,
-          "end_col": 1
-        }
-      }
-    },
-    {
-      "name": "north_only",
-      "label": "North, first two years",
-      "structure": "entity",
-      "depth": 2,
-      "slice": "north_early",
-      "metrics": [
-        "total_rent"
-      ],
-      "provenance": {
-        "source_file": "model.cfdl",
-        "source_span": {
-          "start_line": 75,
-          "start_col": 1,
-          "end_line": 81,
-          "end_col": 1
-        }
-      }
-    }
-  ],
+    ]
+  },
   "contracts": [],
   "streams": [
     {

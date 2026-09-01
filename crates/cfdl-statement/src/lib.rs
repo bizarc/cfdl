@@ -871,7 +871,8 @@ pub struct ModelStatement {
 
 /// The model statements an IR carries, if any.
 pub fn model_statements(ir: &serde_json::Value) -> Vec<ModelStatement> {
-    ir.get("statements")
+    ir.get("views")
+        .and_then(|v| v.get("statements"))
         .and_then(|v| serde_json::from_value::<Vec<ModelStatement>>(v.clone()).ok())
         .unwrap_or_default()
 }

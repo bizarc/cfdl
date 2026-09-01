@@ -8,6 +8,44 @@ This project follows Semantic Versioning: https://semver.org/
 
 ## [Unreleased]
 
+### Changed: the model, the ledger, and the views — `results_version` 0.12
+
+Adding four statements to a model changed its `model_hash`. Presentation had
+become part of the model's identity, which is wrong: two users who slice or
+organize identical results differently are running the same model, and the
+hashes must say so.
+
+The document now carries a **`views`** part — slices and statements — and each
+hash answers one question:
+
+- **`model_hash`** identifies the MODEL: the compiled IR WITHOUT its views. A
+  slice filters and a statement organizes; neither produces cash. A declared
+  METRIC is deliberately not a view — it is a figure the model claims, asserted
+  by every benchmark's `expected_metrics.json` — so it stays in the model and
+  still moves this hash.
+- **`ledger_hash`** identifies the RESULT, and now covers the **journal and
+  transitions** beside the series. A ledger has journal entries in it, and the
+  trace was previously in neither hash: two runs with identical series and
+  different journals hashed identically.
+
+**The run configuration is deliberately hashed by neither.** Folding it into
+the ledger would give three prepayment speeds over one model three different
+hashes, with no way to tell whether the cash moved or only a setting —
+comparing results across runs is the point.
+
+A `views` key rather than a filter rule: anything added there is outside the
+model's identity by construction. `is_ledger` is the cautionary case — written
+onto one field, missed a second, and moved `ledger_hash` on fifteen goldens
+whose cash was bit-identical.
+
+The language is unchanged. `metric`, `slice` and `statement` keep their syntax,
+resolution and diagnostics; views may sit beside the streams they present or in
+their own file, since `import` already carries them.
+
+Goldens: `model_hash` moved on the 4 that declare views and no others;
+`ledger_hash` moved on all 143 for the journal's inclusion, with no cash value,
+series entry, metric or journal line changing.
+
 ### Added: a model declares how its results are organized (§7.55 part two)
 
 `statement <name> { structure entity | category, depth N, grain, slice,

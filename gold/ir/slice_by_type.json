@@ -140,28 +140,30 @@
       "formula": "-sum(investing.capital.leasing)"
     }
   ],
-  "slices": [
-    {
-      "name": "debt",
-      "types": [
-        "Contract.Debt"
-      ],
-      "type_streams": [
-        "cre.debt.interest",
-        "cre.debt.principal",
-        "cre.debt.proceeds"
-      ],
-      "provenance": {
-        "source_file": "model.cfdl",
-        "source_span": {
-          "start_line": 31,
-          "start_col": 1,
-          "end_line": 33,
-          "end_col": 1
+  "views": {
+    "slices": [
+      {
+        "name": "debt",
+        "types": [
+          "Contract.Debt"
+        ],
+        "type_streams": [
+          "cre.debt.interest",
+          "cre.debt.principal",
+          "cre.debt.proceeds"
+        ],
+        "provenance": {
+          "source_file": "model.cfdl",
+          "source_span": {
+            "start_line": 31,
+            "start_col": 1,
+            "end_line": 33,
+            "end_col": 1
+          }
         }
       }
-    }
-  ],
+    ]
+  },
   "contracts": [
     {
       "id": "c74b8c336ed5c49a3b9530a89460cd43",

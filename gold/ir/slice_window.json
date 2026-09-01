@@ -23,42 +23,44 @@
     "constants": {},
     "random": {}
   },
-  "slices": [
-    {
-      "name": "all_years",
-      "entities": [
-        "asset.co"
-      ],
-      "provenance": {
-        "source_file": "model.cfdl",
-        "source_span": {
-          "start_line": 34,
-          "start_col": 1,
-          "end_line": 36,
-          "end_col": 1
+  "views": {
+    "slices": [
+      {
+        "name": "all_years",
+        "entities": [
+          "asset.co"
+        ],
+        "provenance": {
+          "source_file": "model.cfdl",
+          "source_span": {
+            "start_line": 34,
+            "start_col": 1,
+            "end_line": 36,
+            "end_col": 1
+          }
         }
-      }
-    },
-    {
-      "name": "middle",
-      "entities": [
-        "asset.co"
-      ],
-      "window": {
-        "start": "2027-01-01",
-        "end": "2028-01-01"
       },
-      "provenance": {
-        "source_file": "model.cfdl",
-        "source_span": {
-          "start_line": 38,
-          "start_col": 1,
-          "end_line": 41,
-          "end_col": 1
+      {
+        "name": "middle",
+        "entities": [
+          "asset.co"
+        ],
+        "window": {
+          "start": "2027-01-01",
+          "end": "2028-01-01"
+        },
+        "provenance": {
+          "source_file": "model.cfdl",
+          "source_span": {
+            "start_line": 38,
+            "start_col": 1,
+            "end_line": 41,
+            "end_col": 1
+          }
         }
       }
-    }
-  ],
+    ]
+  },
   "contracts": [],
   "streams": [
     {

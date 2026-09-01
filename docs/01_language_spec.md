@@ -1377,6 +1377,13 @@ See the Pack Interface specification for details on how packs define output cate
 
 ---
 
+- **A slice is a VIEW, and changes no identity.** It filters a completed
+  result; it produces no cash. The compiler files it under the document's
+  `views`, which `model_hash` is taken over WITHOUT — so two users who look at
+  identical results differently share a model hash, and a slice moves neither
+  hash. A declared METRIC is not a view: it is a figure the model claims, so it
+  belongs to the model and does move `model_hash`.
+
 ### 15.5 Statements (normative)
 
 A model MAY declare a statement — how its results are organized. A statement
@@ -1420,7 +1427,10 @@ Rules:
   their own map rather than as a row kind. An undeclared slice or metric is
   refused (`E1368`).
 - Every clause word is CONTEXTUAL; only `statement` is reserved.
-- A statement changes no value, so it does not move `ledger_hash`.
+- **A statement is a VIEW.** It changes no value and no identity: the compiler
+  files it under the document's `views`, which `model_hash` is taken over
+  without, so adding a statement moves neither hash. Views may be declared
+  beside the streams they present, or kept in their own file and `import`ed.
 
 A pack declares its own statements the same way, and both render through one
 evaluator.

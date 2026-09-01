@@ -47,8 +47,12 @@ pub(crate) struct Ir {
     /// plane, after every series they can read has settled.
     #[serde(default)]
     pub(crate) metrics: Vec<IrMetric>,
+    /// Views — lenses on a completed result, outside the model's identity.
+    /// The engine still EVALUATES a slice, because the valuation plane is its
+    /// stage (`docs/28` §2); what changed is which part of the document the
+    /// declaration is read from.
     #[serde(default)]
-    pub(crate) slices: Vec<IrSlice>,
+    pub(crate) views: IrViews,
     /// Declared entities. Read so an entity's lifecycle STARTS where the model
     /// says rather than at null — the totality the ontology exists to give.
     #[serde(default)]
@@ -225,6 +229,12 @@ pub(crate) struct IrStateAction {
 pub(crate) struct IrMetric {
     pub(crate) name: String,
     pub(crate) expr: IrExpr,
+}
+
+#[derive(Debug, Deserialize, Default)]
+pub(crate) struct IrViews {
+    #[serde(default)]
+    pub(crate) slices: Vec<IrSlice>,
 }
 
 #[derive(Debug, Deserialize)]

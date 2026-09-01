@@ -141,14 +141,6 @@ against it by `make ir-schema`.
       },
       "description": "Reserved. Metrics are computed at run time by the engine and by the active pack, so a compile output does not carry them; no compiler emits this field."
     },
-    "slices": {
-      "type": "array",
-      "minItems": 0,
-      "items": {
-        "$ref": "#/$defs/Slice"
-      },
-      "description": "Declared slices — named, deliberately partial selections (docs/01 §15.4). Clause kinds intersect, values within a kind union, excepts subtract. `type_streams` is the compiler's expansion of the `type` clauses, resolved at compile because only the compiler holds the ontology the transitive match walks. Omitted when a model declares none."
-    },
     "waterfalls": {
       "type": "array",
       "minItems": 0,
@@ -227,12 +219,9 @@ against it by `make ir-schema`.
     "provenance": {
       "$ref": "#/$defs/Provenance"
     },
-    "statements": {
-      "type": "array",
-      "items": {
-        "$ref": "#/$defs/Statement"
-      },
-      "description": "Declared presentations (docs/13 §7.55)."
+    "views": {
+      "$ref": "#/$defs/Views",
+      "description": "Lenses on a completed result — never part of the model. `model_hash` is taken over this document WITHOUT `views`, so adding a slice or a statement changes no identity: two users who look at identical results differently are running the same model. A declared metric is not here; it is a figure the model claims."
     }
   },
   "$defs": {
@@ -1872,6 +1861,25 @@ against it by `make ir-schema`.
         },
         "provenance": {
           "$ref": "#/$defs/NodeProvenance"
+        }
+      }
+    },
+    "Views": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "Slices filter and statements organize. Anything added here is outside the model's identity by construction.",
+      "properties": {
+        "slices": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Slice"
+          }
+        },
+        "statements": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Statement"
+          }
         }
       }
     }
