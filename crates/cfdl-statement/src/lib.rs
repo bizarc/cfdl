@@ -53,6 +53,11 @@ pub fn generate(
     // direction that looks plausible. `W3501` needs the count to say so, and
     // converging the renderers onto a set lost it.
     let mut claimed: BTreeMap<String, usize> = BTreeMap::new();
+    // ROWS THAT DREW A PUBLISHED SERIES, by index. A series row is
+    // presentation of an existing fold, so its total stays out of the bottom
+    // line whatever kind the author gave it — the promise its doc comment
+    // makes, enforced where the bottom line is summed.
+    let mut series_rows: BTreeSet<usize> = BTreeSet::new();
     let depth_limit = spec.depth.unwrap_or(u32::MAX);
 
     // THE FILTER, resolved once. A statement scoped to a slice shows the same
@@ -226,6 +231,7 @@ pub fn generate(
                     }
                     None => (vec![], None),
                 };
+                series_rows.insert(rows.len());
                 rows.push(StatementRow {
                     kind: row.kind.clone(),
                     label: row.label.clone(),
@@ -575,8 +581,9 @@ pub fn generate(
 
     let bottom_line: f64 = rows
         .iter()
-        .filter(|r| r.kind == "line" || r.kind == "residual")
-        .filter_map(|r| r.total)
+        .enumerate()
+        .filter(|(i, r)| !series_rows.contains(i) && (r.kind == "line" || r.kind == "residual"))
+        .filter_map(|(_, r)| r.total)
         .sum();
     // WHAT THE STATEMENT IS ACCOUNTABLE FOR. An unfiltered statement must
     // account for the model's cash. A FILTERED one must account for the
@@ -764,7 +771,10 @@ pub fn attach_model_statements(
         })
         .collect();
     match &mut results.statements {
-        Some(section) => section.statements.extend(rendered),
+        // REPLACE, never extend. One enrichment renders every statement in one
+        // call, so an existing section means a REPEATED enrichment — and
+        // extending would show every statement twice. `enrich_results` is pub.
+        Some(section) => section.statements = rendered,
         None => {
             results.statements = Some(StatementsSection {
                 // A model statement has no pack. The field stays for the

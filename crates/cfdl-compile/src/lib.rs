@@ -4594,6 +4594,31 @@ fn check_statements(
         if !statement.rows.is_empty() {
             // An authored row draws from a declared slice; a ratio divides two.
             for row in &statement.rows {
+                // A `series` ROW DRAWS A FOLD, NOT CASH. Its figure is
+                // presentation of something already computed, so it claims no
+                // streams and stays out of the bottom line — which makes any
+                // claim clause beside it a contradiction: the row cannot both
+                // present a fold and claim cash. Refused rather than resolved
+                // by precedence, because a precedence a reader cannot see is a
+                // silently ignored clause (`docs/13` §7.55).
+                if row.series.is_some()
+                    && (!row.categories.is_empty()
+                        || !row.streams.is_empty()
+                        || row.slice.is_some()
+                        || row.entity.is_some()
+                        || row.numerator.is_some()
+                        || row.denominator.is_some())
+                {
+                    push(
+                        "E1370_STATEMENT_SERIES_ROW_CLAIMS",
+                        format!(
+                            "Statement '{}' has a row drawing series '{}' beside a claim clause.",
+                            statement.name,
+                            row.series.as_deref().unwrap_or_default()
+                        ),
+                        "A row draws a published series or claims cash, never both. Remove the `series`, or the other draw clauses.".to_string(),
+                    );
+                }
                 for referenced in [&row.slice, &row.numerator, &row.denominator]
                     .into_iter()
                     .flatten()

@@ -30,6 +30,15 @@ streams instead of a silent residual.
 
 `W3501_STATEMENT_STREAM_DOUBLE_COUNTED` was lost in the deletion and restored.
 
+Review remediation, same change: a `series` row's figure now stays out of the
+bottom line whatever kind the author gives it — the promise its doc comment
+made, enforced where the bottom line is summed (`statement_series_row` pins
+it). A claim clause beside a `series` is refused at compile time with the new
+`E1370_STATEMENT_SERIES_ROW_CLAIMS` rather than resolved by a precedence the
+reader cannot see. `series` joins the row-clause grammar (EBNF, `docs/01`
+§15.5, the IR schema) and the parser's row hint. Repeated enrichment of one
+results document replaces its statements instead of appending them.
+
 All 45 benchmark cases and every pack golden render byte-identically. No cash
 value moved.
 

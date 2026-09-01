@@ -1458,6 +1458,11 @@ statement operating {
 - A row draws from `category`, `stream`, `slice` or `entity`. A `subtotal` row
   folds rows stated elsewhere and CLAIMS nothing, so it never doubles the
   bottom line.
+- A row may instead draw a published `series` (`series "domain.cre.noi"`) — a
+  fold OF the ledger rather than cash in it, so the row claims no streams and
+  its figure stays out of the bottom line. A claim clause beside a `series` is
+  refused (`E1370`), and a key this run does not publish renders no values and
+  no total rather than a column of fabricated zeros.
 - A `ratio` divides two declared SLICES — a slice is already a named selection
   with a per-period net, so a ratio needs no row identifiers. A zero
   denominator publishes `null`, not zero. A ratio carries no total, because

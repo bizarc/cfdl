@@ -1,0 +1,23 @@
+version 0.1
+model "statement-series-row-claims"
+time calendar annual from 2026-01 for 3
+
+// A ROW DRAWS A PUBLISHED SERIES OR CLAIMS CASH, NEVER BOTH (`E1370`).
+//
+// A series row presents a fold and claims nothing; a category claims streams
+// into the bottom line. Both on one row could only be resolved by a precedence
+// the reader cannot see, which is a silently ignored clause — the failure
+// §7.55 exists to end. Refused instead.
+
+entity asset property : Asset.Financial
+
+stream ops.rent on entity asset.property inflow currency USD {
+  schedule every year from 2026-01 to 2028-01
+  category operating.revenue.base_rent
+  amount = 1000
+}
+
+statement memo {
+  label "Operating memo"
+  line "Net (memo)" { series "model.net_cash_flow" category "operating.*" }
+}

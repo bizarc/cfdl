@@ -60,9 +60,9 @@ pub fn enrich_results(
         .map(|spec| cfdl_statement::lower_pack_statement(spec, &subtotal_specs))
         .collect();
     // A MODEL'S OWN STATEMENTS, beside the pack's (`docs/13` §7.55). One
-    // evaluator, two producers: a pack enumerates its rows, a model names a
-    // structure and a depth and the rows follow from the tree. The pack path
-    // above is untouched, so a packed model renders exactly what it rendered.
+    // evaluator, two producers: a pack's TOML statements LOWER above into the
+    // model-statement shape, a model declares its own, and both render through
+    // the same `generate`.
     let model_statements = ir_value
         .as_ref()
         .map(cfdl_statement::model_statements)

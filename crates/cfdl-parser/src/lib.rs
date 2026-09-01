@@ -3860,7 +3860,7 @@ impl<'a> Parser<'a> {
                     self.push_expected(
                         tok.span,
                         format!(
-                            "Unexpected '{word}' in a statement row. A row draws from 'category', 'stream', 'slice' or 'entity', a ratio states 'of <slice> to <slice>', and 'display' and 'depth' set presentation."
+                            "Unexpected '{word}' in a statement row. A row draws from 'category', 'stream', 'slice', 'entity' or a published 'series', a ratio states 'of <slice> to <slice>', and 'display' and 'depth' set presentation."
                         ),
                     );
                     return None;

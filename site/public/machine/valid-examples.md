@@ -4,7 +4,7 @@
 
 CFDL 0.8.0. Every model below compiles, and its IR and
 results are byte-asserted against goldens in CI (`fixtures/valid/`,
-146 models.
+147 models.
 
 `gold/ir/`, `gold/results/`). Each is single-purpose: the directory name
 says what it exercises. This is what right looks like — positive few-shot
@@ -5482,6 +5482,60 @@ stream misc.windfall on entity asset.tower inflow currency USD {
   schedule every year from 2026-01 to 2028-01
   category operating.revenue.windfall
   amount = 250
+}
+```
+
+## statement_series_row
+
+```cfdl
+version 0.1
+model "statement-series-row"
+time calendar annual from 2026-01 for 3
+
+// A ROW MAY DRAW A PUBLISHED SERIES (`docs/13` §7.55).
+//
+// A series row presents a fold OF the ledger — `model.net_cash_flow` here —
+// rather than cash in it, so it claims no streams and its figure stays out of
+// the bottom line whatever kind the author gives it. The reconciliation below
+// proves it: the claimed rows alone account for the model's cash, the memo
+// line repeats the model's own net beside them, and no W3502 fires.
+//
+// AN UNCLAIMED STREAM NAMED BY NOTHING falls to the residual. `misc.sundry`
+// carries no category and no row claims it, so it lands in the residual row
+// under W3500 — a named stream is drawn only through a claim clause, never
+// implied.
+
+entity asset property : Asset.Financial
+
+stream ops.rent on entity asset.property inflow currency USD {
+  schedule every year from 2026-01 to 2028-01
+  category operating.revenue.base_rent
+  amount = 1000
+}
+
+stream ops.opex on entity asset.property outflow currency USD {
+  schedule every year from 2026-01 to 2028-01
+  category operating.expense.other
+  amount = 300
+}
+
+stream misc.sundry on entity asset.property inflow currency USD {
+  schedule every year from 2026-01 to 2028-01
+  amount = 50
+}
+
+statement memo {
+  label "Operating memo"
+
+  line     "Rental revenue"       { category "operating.revenue.*" }
+  line     "Less: operating costs" { category "operating.expense.*" display positive }
+  spacer
+  // A MEMO OF THE MODEL'S OWN NET. Drawn as a series, so it reaches no
+  // bottom line and doubles nothing.
+  subtotal "Net cash flow (memo)" { series "model.net_cash_flow" }
+  // A key this run does not publish renders no values and no total — never
+  // a column of fabricated zeros.
+  subtotal "NOI (pack memo)"      { series "domain.cre.noi" }
 }
 ```
 
