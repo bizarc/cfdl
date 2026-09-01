@@ -318,12 +318,12 @@
             ],
             "total": 1200.0,
             "streams": [
-              "stream.one.end",
-              "stream.one.mid",
-              "stream.one.start",
-              "stream.rec.end",
-              "stream.rec.mid",
-              "stream.rec.start"
+              "one.end",
+              "one.mid",
+              "one.start",
+              "rec.end",
+              "rec.mid",
+              "rec.start"
             ]
           }
         ],

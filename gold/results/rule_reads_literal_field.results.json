@@ -204,7 +204,7 @@
             ],
             "total": -30.0,
             "streams": [
-              "stream.credit.principal"
+              "credit.principal"
             ]
           },
           {

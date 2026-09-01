@@ -716,7 +716,7 @@
       "required": [
         "statements"
       ],
-      "description": "Statements the active pack declares, rendered against this run. Rows carry order, labels, depth and a display sign; they compute nothing the engine has not already aggregated. Absent when the pack declares no statement.",
+      "description": "Statements rendered against this run: the model's own declarations, the active pack's, or — when neither declares one — a default entity-hierarchy statement marked `default`. Rows carry order, labels, depth and a display sign; they compute nothing the engine has not already aggregated. Always present.",
       "properties": {
         "pack": {
           "type": "string",

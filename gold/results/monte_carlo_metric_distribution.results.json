@@ -2275,9 +2275,9 @@
             ],
             "total": 520.0,
             "streams": [
-              "stream.deal.acquisition",
-              "stream.deal.exit",
-              "stream.deal.rent"
+              "deal.acquisition",
+              "deal.exit",
+              "deal.rent"
             ]
           }
         ],

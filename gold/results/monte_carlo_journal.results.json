@@ -1639,7 +1639,7 @@
             ],
             "total": 187.2,
             "streams": [
-              "stream.credit.fee"
+              "credit.fee"
             ]
           }
         ],

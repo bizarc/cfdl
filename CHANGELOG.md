@@ -8,6 +8,31 @@ This project follows Semantic Versioning: https://semver.org/
 
 ## [Unreleased]
 
+### Changed: one statement evaluator, two producers (§7.55 part six — closed)
+
+A pack's `statements.toml` now lowers into the same shape a model's statements
+use, and the second renderer — 407 lines — is deleted.
+
+While there were two renderers they drifted, and the model path was the one
+that had drifted: it never bucketed rows to the statement's grain, would have
+averaged a ratio instead of recomputing it, and emitted a silent residual row
+where a pack statement named the streams.
+
+A row gains a `series "<key>"` source — a published series such as
+`domain.cre.noi`, which is what a pack's subtotal row draws — and a ratio's
+operands resolve to either a declared slice or a published series, so one
+resolver serves both producers.
+
+Model statements change in three ways to match what a pack and a slice already
+published: the bare stream name rather than the prefixed results key, the
+residual row labelled "Unclassified" at depth 1, and `W3500` naming unclaimed
+streams instead of a silent residual.
+
+`W3501_STATEMENT_STREAM_DOUBLE_COUNTED` was lost in the deletion and restored.
+
+All 45 benchmark cases and every pack golden render byte-identically. No cash
+value moved.
+
 ### Fixed: a model statement reports at its own grain, and its ratio is recomputed at it
 
 Two defects in the statement construct, both latent — no fixture used `grain`

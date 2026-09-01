@@ -218,8 +218,8 @@
             ],
             "total": 3000.0,
             "streams": [
-              "stream.ops.cost",
-              "stream.ops.revenue"
+              "ops.cost",
+              "ops.revenue"
             ]
           }
         ],

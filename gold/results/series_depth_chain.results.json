@@ -200,9 +200,9 @@
             ],
             "total": 1900.0,
             "streams": [
-              "stream.base.revenue",
-              "stream.mid.cumulative",
-              "stream.top.cumulative"
+              "base.revenue",
+              "mid.cumulative",
+              "top.cumulative"
             ]
           }
         ],

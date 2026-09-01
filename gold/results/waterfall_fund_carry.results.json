@@ -538,7 +538,7 @@
             ],
             "total": 30000000.0,
             "streams": [
-              "stream.fund.sale_proceeds"
+              "fund.sale_proceeds"
             ]
           },
           {

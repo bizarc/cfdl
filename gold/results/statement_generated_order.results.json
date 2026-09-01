@@ -303,7 +303,7 @@
             ],
             "total": 200.0,
             "streams": [
-              "stream.alpha.base_rent"
+              "alpha.base_rent"
             ]
           },
           {
@@ -323,7 +323,7 @@
             ],
             "total": 100.0,
             "streams": [
-              "stream.beta.base_rent"
+              "beta.base_rent"
             ]
           },
           {
@@ -360,8 +360,8 @@
             ],
             "total": 820.0,
             "streams": [
-              "stream.gamma.debt",
-              "stream.gamma.sale"
+              "gamma.debt",
+              "gamma.sale"
             ]
           }
         ],
@@ -418,8 +418,8 @@
             ],
             "total": 300.0,
             "streams": [
-              "stream.alpha.base_rent",
-              "stream.beta.base_rent"
+              "alpha.base_rent",
+              "beta.base_rent"
             ]
           },
           {
@@ -456,7 +456,7 @@
             ],
             "total": 900.0,
             "streams": [
-              "stream.gamma.sale"
+              "gamma.sale"
             ]
           },
           {
@@ -493,7 +493,7 @@
             ],
             "total": -80.0,
             "streams": [
-              "stream.gamma.debt"
+              "gamma.debt"
             ]
           }
         ],

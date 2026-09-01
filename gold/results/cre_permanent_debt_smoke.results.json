@@ -3541,9 +3541,9 @@
             ],
             "total": -1621559.308214,
             "streams": [
-              "stream.cre.debt.interest",
-              "stream.cre.debt.principal",
-              "stream.cre.debt.proceeds"
+              "cre.debt.interest",
+              "cre.debt.principal",
+              "cre.debt.proceeds"
             ]
           }
         ],

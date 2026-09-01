@@ -25721,7 +25721,7 @@
             ],
             "total": 202663472.480745,
             "streams": [
-              "stream.interest.operating_cash"
+              "interest.operating_cash"
             ]
           },
           {

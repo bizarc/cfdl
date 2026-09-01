@@ -6154,7 +6154,7 @@
             ],
             "total": -720000.0,
             "streams": [
-              "stream.loan.construction_interest"
+              "loan.construction_interest"
             ]
           },
           {
@@ -6454,7 +6454,7 @@
             ],
             "total": -2970000.0,
             "streams": [
-              "stream.loan.permanent_debt_service"
+              "loan.permanent_debt_service"
             ]
           },
           {
@@ -6754,11 +6754,11 @@
             ],
             "total": 5244000.0,
             "streams": [
-              "stream.cre.construction.draws",
-              "stream.cre.exit.sale",
-              "stream.cre.lease.base_rent",
-              "stream.cre.opex.line",
-              "stream.cre.revenue.line"
+              "cre.construction.draws",
+              "cre.exit.sale",
+              "cre.lease.base_rent",
+              "cre.opex.line",
+              "cre.revenue.line"
             ]
           }
         ],

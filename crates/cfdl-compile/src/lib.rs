@@ -637,6 +637,8 @@ struct IrStatementRow {
     #[serde(skip_serializing_if = "Option::is_none")]
     slice: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
+    series: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     entity: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     numerator: Option<String>,
@@ -4190,6 +4192,7 @@ fn build_ir(
                         categories: r.categories.clone(),
                         streams: r.streams.clone(),
                         slice: r.slice.clone(),
+                        series: r.series.clone(),
                         entity: r.entity.clone(),
                         numerator: r.ratio_of.as_ref().map(|(n, _)| n.clone()),
                         denominator: r.ratio_of.as_ref().map(|(_, d)| d.clone()),

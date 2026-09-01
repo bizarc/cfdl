@@ -3212,8 +3212,8 @@
             ],
             "total": 2312450.604355,
             "streams": [
-              "stream.rev.gross_production",
-              "stream.rev.royalty_burden"
+              "rev.gross_production",
+              "rev.royalty_burden"
             ]
           },
           {
@@ -3465,8 +3465,8 @@
             ],
             "total": -5000000.0,
             "streams": [
-              "stream.capital.drilling_costs",
-              "stream.capital.well_capex"
+              "capital.drilling_costs",
+              "capital.well_capex"
             ]
           },
           {
@@ -3718,8 +3718,8 @@
             ],
             "total": -2232000.0,
             "streams": [
-              "stream.opex.ga",
-              "stream.opex.loe"
+              "opex.ga",
+              "opex.loe"
             ]
           }
         ],

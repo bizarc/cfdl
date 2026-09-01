@@ -1444,7 +1444,7 @@
             ],
             "total": 720000.0,
             "streams": [
-              "stream.cre.revenue.line"
+              "cre.revenue.line"
             ]
           },
           {

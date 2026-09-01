@@ -4878,11 +4878,11 @@
             ],
             "total": 5844000.0,
             "streams": [
-              "stream.cre.construction.draws",
-              "stream.cre.exit.sale",
-              "stream.cre.lease.base_rent",
-              "stream.cre.opex.line",
-              "stream.cre.revenue.line"
+              "cre.construction.draws",
+              "cre.exit.sale",
+              "cre.lease.base_rent",
+              "cre.opex.line",
+              "cre.revenue.line"
             ]
           }
         ],

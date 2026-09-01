@@ -1454,8 +1454,8 @@
             ],
             "total": 1823452.523125,
             "streams": [
-              "stream.saas.infra_cost",
-              "stream.saas.mrr"
+              "saas.infra_cost",
+              "saas.mrr"
             ]
           },
           {
@@ -1611,8 +1611,8 @@
             ],
             "total": -1580000.0,
             "streams": [
-              "stream.ops.seed_investment",
-              "stream.ops.team_cost"
+              "ops.seed_investment",
+              "ops.team_cost"
             ]
           }
         ],

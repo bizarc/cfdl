@@ -6003,10 +6003,10 @@
             ],
             "total": 8584000.0,
             "streams": [
-              "stream.opco.exit.value",
-              "stream.opco.opex.recurring",
-              "stream.opco.revenue.recurring",
-              "stream.opco.working_capital.adjustment"
+              "opco.exit.value",
+              "opco.opex.recurring",
+              "opco.revenue.recurring",
+              "opco.working_capital.adjustment"
             ]
           }
         ],

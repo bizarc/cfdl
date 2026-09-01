@@ -407,7 +407,7 @@
             ],
             "total": 1440.0,
             "streams": [
-              "stream.ops.noi"
+              "ops.noi"
             ]
           },
           {
@@ -432,8 +432,8 @@
           },
           {
             "kind": "residual",
-            "label": "Not shown by this structure",
-            "depth": 0,
+            "label": "Unclassified",
+            "depth": 1,
             "display_sign": 1.0,
             "values": [
               {
@@ -487,7 +487,7 @@
             ],
             "total": -720.0,
             "streams": [
-              "stream.fin.ds"
+              "fin.ds"
             ]
           }
         ],
@@ -495,7 +495,13 @@
           "bottom_line": 720.0,
           "model_total": 720.0,
           "residual": 0.0
-        }
+        },
+        "diagnostics": [
+          {
+            "code": "W3500_STATEMENT_UNCLASSIFIED_STREAM",
+            "message": "1 stream(s) are in no row of statement 'by_month', so the bottom line is short by -720.00: fin.ds. Classify them, or give the statement a row that claims them."
+          }
+        ]
       },
       {
         "id": "by_year",
@@ -522,7 +528,7 @@
             ],
             "total": 1440.0,
             "streams": [
-              "stream.ops.noi"
+              "ops.noi"
             ]
           },
           {
@@ -536,8 +542,8 @@
           },
           {
             "kind": "residual",
-            "label": "Not shown by this structure",
-            "depth": 0,
+            "label": "Unclassified",
+            "depth": 1,
             "display_sign": 1.0,
             "values": [
               {
@@ -547,7 +553,7 @@
             ],
             "total": -720.0,
             "streams": [
-              "stream.fin.ds"
+              "fin.ds"
             ]
           }
         ],
@@ -555,7 +561,13 @@
           "bottom_line": 720.0,
           "model_total": 720.0,
           "residual": 0.0
-        }
+        },
+        "diagnostics": [
+          {
+            "code": "W3500_STATEMENT_UNCLASSIFIED_STREAM",
+            "message": "1 stream(s) are in no row of statement 'by_year', so the bottom line is short by -720.00: fin.ds. Classify them, or give the statement a row that claims them."
+          }
+        ]
       }
     ]
   },

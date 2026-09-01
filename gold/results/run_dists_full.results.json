@@ -818,7 +818,7 @@
             ],
             "total": 0.0,
             "streams": [
-              "stream.plant.revenue"
+              "plant.revenue"
             ]
           }
         ],

@@ -806,7 +806,7 @@
             ],
             "total": 600.0,
             "streams": [
-              "stream.cre.rent"
+              "cre.rent"
             ]
           }
         ],

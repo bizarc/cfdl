@@ -375,7 +375,7 @@
             ],
             "total": 800.0,
             "streams": [
-              "stream.core.rent"
+              "core.rent"
             ]
           }
         ],

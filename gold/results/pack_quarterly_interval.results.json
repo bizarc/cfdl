@@ -653,8 +653,8 @@
           },
           {
             "kind": "residual",
-            "label": "Not shown by this structure",
-            "depth": 0,
+            "label": "Unclassified",
+            "depth": 1,
             "display_sign": 1.0,
             "values": [
               {
@@ -756,7 +756,7 @@
             ],
             "total": 20000.0,
             "streams": [
-              "stream.testpack.coupon"
+              "testpack.coupon"
             ]
           }
         ],
@@ -764,7 +764,13 @@
           "bottom_line": 20000.0,
           "model_total": 20000.0,
           "residual": 0.0
-        }
+        },
+        "diagnostics": [
+          {
+            "code": "W3500_STATEMENT_UNCLASSIFIED_STREAM",
+            "message": "1 stream(s) are in no row of statement 'by_entity', so the bottom line is short by 20000.00: testpack.coupon. Classify them, or give the statement a row that claims them."
+          }
+        ]
       }
     ]
   },

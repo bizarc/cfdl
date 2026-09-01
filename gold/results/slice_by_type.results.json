@@ -3826,10 +3826,10 @@
             ],
             "total": 1678440.691786,
             "streams": [
-              "stream.cre.debt.interest",
-              "stream.cre.debt.principal",
-              "stream.cre.debt.proceeds",
-              "stream.ops.noi"
+              "cre.debt.interest",
+              "cre.debt.principal",
+              "cre.debt.proceeds",
+              "ops.noi"
             ]
           }
         ],

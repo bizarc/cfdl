@@ -2044,8 +2044,8 @@
             ],
             "total": 150.0,
             "streams": [
-              "stream.co.rent",
-              "stream.co.sweep"
+              "co.rent",
+              "co.sweep"
             ]
           }
         ],

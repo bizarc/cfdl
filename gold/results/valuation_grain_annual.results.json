@@ -669,8 +669,8 @@
             ],
             "total": 168000.0,
             "streams": [
-              "stream.ops.expense",
-              "stream.ops.rent"
+              "ops.expense",
+              "ops.rent"
             ]
           }
         ],

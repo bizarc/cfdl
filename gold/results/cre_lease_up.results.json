@@ -1333,7 +1333,7 @@
             ],
             "total": 237500.0,
             "streams": [
-              "stream.cre.lease.base_rent"
+              "cre.lease.base_rent"
             ]
           }
         ],

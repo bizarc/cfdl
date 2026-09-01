@@ -333,8 +333,8 @@
             ],
             "total": 230000.0,
             "streams": [
-              "stream.co.rent",
-              "stream.co.true_up"
+              "co.rent",
+              "co.true_up"
             ]
           }
         ],

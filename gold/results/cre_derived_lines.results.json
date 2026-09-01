@@ -7214,15 +7214,15 @@
             ],
             "total": 10335485.263191,
             "streams": [
-              "stream.cre.exit.proceeds",
-              "stream.cre.exit.selling_costs",
-              "stream.cre.opex.line",
-              "stream.cre.opex.line.management",
-              "stream.cre.unit.abatement.anchor",
-              "stream.cre.unit.base_rent.anchor",
-              "stream.cre.unit.recoveries.anchor",
-              "stream.cre.unit.ti_lc.anchor",
-              "stream.cre.vacancy.loss"
+              "cre.exit.proceeds",
+              "cre.exit.selling_costs",
+              "cre.opex.line",
+              "cre.opex.line.management",
+              "cre.unit.abatement.anchor",
+              "cre.unit.base_rent.anchor",
+              "cre.unit.recoveries.anchor",
+              "cre.unit.ti_lc.anchor",
+              "cre.vacancy.loss"
             ]
           }
         ],

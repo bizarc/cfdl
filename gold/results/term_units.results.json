@@ -286,7 +286,7 @@
             ],
             "total": 21000000.0,
             "streams": [
-              "stream.energy.ptc.credit"
+              "energy.ptc.credit"
             ]
           }
         ],

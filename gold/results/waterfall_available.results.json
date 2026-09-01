@@ -464,7 +464,7 @@
             ],
             "total": 900.0,
             "streams": [
-              "stream.a.collections"
+              "a.collections"
             ]
           },
           {
@@ -488,8 +488,8 @@
             ],
             "total": 300.0,
             "streams": [
-              "stream.b.collections",
-              "stream.b.fee"
+              "b.collections",
+              "b.fee"
             ]
           },
           {

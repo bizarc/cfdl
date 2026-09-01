@@ -1017,8 +1017,8 @@
             ],
             "total": 2100.0,
             "streams": [
-              "stream.cre.capex",
-              "stream.cre.rent"
+              "cre.capex",
+              "cre.rent"
             ]
           }
         ],

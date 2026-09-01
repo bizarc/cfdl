@@ -1380,12 +1380,12 @@
             ],
             "total": 1221087.280638,
             "streams": [
-              "stream.credit.pool.interest.pool",
-              "stream.credit.pool.penalty.pool",
-              "stream.credit.pool.prepay.pool",
-              "stream.credit.pool.recoveries.pool",
-              "stream.credit.pool.sched_principal.pool",
-              "stream.credit.pool.servicing.pool"
+              "credit.pool.interest.pool",
+              "credit.pool.penalty.pool",
+              "credit.pool.prepay.pool",
+              "credit.pool.recoveries.pool",
+              "credit.pool.sched_principal.pool",
+              "credit.pool.servicing.pool"
             ]
           },
           {

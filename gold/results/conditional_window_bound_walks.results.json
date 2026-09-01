@@ -417,7 +417,7 @@
             ],
             "total": 400.0,
             "streams": [
-              "stream.ops.revenue"
+              "ops.revenue"
             ]
           },
           {

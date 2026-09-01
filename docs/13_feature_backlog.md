@@ -1100,11 +1100,39 @@ added per document, and the largest addition is about 1,200 cells on a file
 already 1.7MB. 130 result goldens gained a section; 36,694 insertions and zero
 deletions, so nothing existing moved.
 
-**What remains: the pack surface.** A pack's statements are still declared in
-TOML rather than in the language. The evaluator converged in part two — model
-statements render beside a pack's through one path — but the two surfaces have
-not. That is the last item, and it is a lowering job rather than a language
-one: `statements.toml` becoming another producer of the same views shape.
+**Shipped 2026-09-01, part six: one evaluator. §7.55 is closed.** A pack's
+`statements.toml` lowers into the shape a model's statements use, and the
+second renderer — 407 lines — is deleted.
+
+The convergence paid for itself before it was finished. While there were two
+renderers they drifted, and the model path was the one that had drifted:
+reading them side by side found that rows were never bucketed to the
+statement's grain, that a ratio would have been re-bucketed rather than
+recomputed (-3.6 where the answer is -2.0), and that an authored statement
+omitting cash emitted a silent residual row where a pack statement named the
+streams. The first two shipped as `#264`.
+
+**What the byte-identical test found**, which a reading did not:
+
+- a pack row publishes the BARE stream name, as a slice does; the model path
+  published the prefixed results key. Three publishers, one spelling, and mine
+  was the newcomer.
+- an UNCLASSIFIED stream is never claimed by name, because a stream row refines
+  within a category. Dropping that condition put an "Operating expenses" line
+  of -240,000 above a net operating income that excluded it. `dscr_smoke` is
+  the model whose comment predicted exactly that.
+- a named series must be PRESENT, not merely declared: `Grain::sum` of an
+  absent series is one zero per bucket, so a row publishes no values rather
+  than a column of manufactured zeros.
+- a ratio whose inputs were never published still emits its row, falling back
+  to its own series; dropping it silently shortened a statement the pack
+  declared.
+
+`W3501_STATEMENT_STREAM_DOUBLE_COUNTED` was lost in the deletion and restored —
+the converged path tracked claims in a set rather than a count, so a stream
+claimed by two rows became invisible. Found by auditing the codes the deleted
+renderer emitted against the codes the new one does, which is the check worth
+running whenever four hundred lines go.
 
 ---
 

@@ -16,417 +16,10 @@ use cfdl_engine::{
     Grain, Money, Results, Scalar, SeriesValue, Statement, StatementDiagnostic, StatementGrain,
     StatementReconciliation, StatementRow, StatementsSection,
 };
-use cfdl_pack::{StatementSpec, SubtotalSpec};
+use cfdl_pack::SubtotalSpec;
 use std::collections::{BTreeMap, BTreeSet};
 
 /// Render every statement the pack declares. `None` when it declares none.
-pub fn compute(
-    pack: &str,
-    specs: &[StatementSpec],
-    subtotals: &[SubtotalSpec],
-    stream_categories: &BTreeMap<String, String>,
-    waterfall_series: &BTreeSet<String>,
-    // The pack's recommended category vocabulary, for `W5023`.
-    recommended_categories: &[String],
-    results: &Results,
-) -> Option<StatementsSection> {
-    if specs.is_empty() {
-        return None;
-    }
-    let series = &results.deterministic.series;
-    let periods = series
-        .values()
-        .next()
-        .map(|s| s.values.len())
-        .unwrap_or_default();
-
-    // The cash universe a statement must account for. `state.` and `domain.`
-    // are excluded by prefix rather than by rule: a state is not cash, and a
-    // subtotal is a fold OF the cash, so counting either would double what it
-    // touches.
-    //
-    // WATERFALL STEPS ARE EXCLUDED BY NAME, because a prefix cannot reach them:
-    // a step publishes as `stream.<waterfall>.<step>` and is indistinguishable
-    // from a stream by its key alone. A waterfall runs AFTER the cash it
-    // divides has been computed — it distributes free cash flow rather than
-    // producing any — which is why `model.total` already leaves the steps out.
-    // Counting them here made the statement disagree with the model by the
-    // whole distributed amount: 4,000 on waterfall_smoke, 202.7M on the
-    // monthly-grain flip, reported as W3502 beside the W3500 that named them.
-    let cash_keys: Vec<&String> = series
-        .keys()
-        .filter(|k| k.starts_with("stream.") || k.starts_with("option."))
-        .filter(|k| !waterfall_series.contains(k.as_str()))
-        .collect();
-
-    // The index every series shares, used to rebuild the timeline a coarser
-    // grain needs. A post-pass has no timeline of its own.
-    let index = series.values().next().map(|s| s.index.clone());
-
-    let mut statements: Vec<Statement> = specs
-        .iter()
-        .map(|spec| {
-            let grain = index
-                .as_ref()
-                .map(|ix| Grain::from_index(ix, spec.grain.as_deref()))
-                .unwrap_or_else(|| Grain {
-                    calendar: String::new(),
-                    start: String::new(),
-                    buckets: (0..periods).map(|i| vec![i]).collect(),
-                    // No index means no dates to label with; a bare ordinal is
-                    // honest about that rather than inventing a calendar.
-                    labels: (0..periods).map(|i| i.to_string()).collect(),
-                });
-            render(
-                spec,
-                subtotals,
-                &grain,
-                &cash_keys,
-                stream_categories,
-                results,
-                periods,
-            )
-        })
-        .collect();
-
-    // `W5023` is a fact about the MODEL's vocabulary, not about any one
-    // statement's rows, so it is computed once and carried on the default
-    // statement rather than repeated on every statement a pack declares.
-    let unrecommended = unrecommended_categories(stream_categories, recommended_categories);
-    if !unrecommended.is_empty() {
-        let index = statements
-            .iter()
-            .position(|st| st.default)
-            .unwrap_or_default();
-        if let Some(st) = statements.get_mut(index) {
-            let mut merged = unrecommended;
-            merged.append(&mut st.diagnostics);
-            st.diagnostics = merged;
-        }
-    }
-
-    Some(StatementsSection {
-        pack: Some(pack.to_string()),
-        statements,
-    })
-}
-
-fn render(
-    spec: &StatementSpec,
-    subtotals: &[SubtotalSpec],
-    grain: &Grain,
-    cash_keys: &[&String],
-    stream_categories: &BTreeMap<String, String>,
-    results: &Results,
-    periods: usize,
-) -> Statement {
-    let series = &results.deterministic.series;
-    let mut rows: Vec<StatementRow> = Vec::new();
-    let mut claimed: BTreeMap<&str, usize> = BTreeMap::new();
-
-    for row in &spec.rows {
-        let display_sign = match row.display.as_deref() {
-            Some("positive") | Some("negative") => -1.0,
-            _ => 1.0,
-        };
-        match row.kind.as_str() {
-            "spacer" => rows.push(StatementRow {
-                kind: "spacer".to_string(),
-                label: String::new(),
-                depth: row.depth,
-                display_sign: 1.0,
-                values: vec![],
-                total: None,
-                streams: vec![],
-            }),
-            "line" => {
-                let mut acc = vec![0.0_f64; periods];
-                let mut drawn: Vec<String> = Vec::new();
-                for key in cash_keys {
-                    let name = key
-                        .strip_prefix("stream.")
-                        .or_else(|| key.strip_prefix("option."))
-                        .unwrap_or(key);
-                    let by_category = stream_categories.get(name).is_some_and(|c| {
-                        row.categories
-                            .iter()
-                            .any(|sel| sel == c || matches_prefix(sel, c))
-                    });
-                    // A stream row refines WITHIN a category — it itemises a
-                    // family whose members all carry the same one, which is
-                    // why the pack loader can resolve the selector to that
-                    // category and count the row toward completeness.
-                    //
-                    // So an UNCLASSIFIED stream is never claimed by name. A
-                    // pack-less model whose stream happens to share a pack's
-                    // spelling would otherwise be drawn onto a labelled row
-                    // while every subtotal, which folds by category, ignored
-                    // it — an "Operating expenses" line above a Net operating
-                    // income that does not include it. `dscr_smoke` is exactly
-                    // that model. Cash with no category belongs in the
-                    // residual row, which is where it already went.
-                    let by_name = stream_categories.contains_key(name)
-                        && cfdl_expr::selector_matches_any(&row.streams, name);
-                    if !(by_category || by_name) {
-                        continue;
-                    }
-                    *claimed.entry(key.as_str()).or_insert(0) += 1;
-                    drawn.push(name.to_string());
-                    if let Some(s) = series.get(*key) {
-                        for (t, v) in s.values.iter().enumerate().take(periods) {
-                            if let SeriesValue::Money(m) = v {
-                                acc[t] += m.amount;
-                            }
-                        }
-                    }
-                }
-                let total = acc.iter().sum::<f64>();
-                let acc = grain.sum(&acc);
-                rows.push(StatementRow {
-                    kind: "line".to_string(),
-                    label: row.label.clone(),
-                    depth: row.depth,
-                    display_sign,
-                    values: money(&acc, results),
-                    total: Some(round6(total)),
-                    streams: drawn,
-                });
-            }
-            "subtotal" => {
-                let id = row.subtotal.clone().unwrap_or_default();
-                let (values, total) = match series.get(&id) {
-                    Some(s) => {
-                        let raw: Vec<f64> = s
-                            .values
-                            .iter()
-                            .map(|v| match v {
-                                SeriesValue::Money(m) => m.amount,
-                                SeriesValue::Number(n) => *n,
-                                SeriesValue::Null => 0.0,
-                            })
-                            .collect();
-                        let tot = round6(raw.iter().sum::<f64>());
-                        (money(&grain.sum(&raw), results), Some(tot))
-                    }
-                    None => (vec![], None),
-                };
-                let kind = "subtotal";
-                rows.push(StatementRow {
-                    kind: kind.to_string(),
-                    label: row.label.clone(),
-                    depth: row.depth,
-                    display_sign,
-                    values,
-                    total,
-                    streams: vec![],
-                });
-            }
-            "ratio" => {
-                // THE CORRECTNESS TRAP, and why this arm takes the SPECS rather
-                // than the published ratio series.
-                //
-                // An annual coverage ratio is annual NOI over annual debt
-                // service. It is NOT the mean of twelve monthly ratios, and it
-                // is not any other function of them — a column of ratios cannot
-                // be re-bucketed at all. So a coarse grain recomputes it from
-                // its inputs, which means knowing what its inputs ARE, which is
-                // in the subtotal declaration and not in the series.
-                //
-                // Handing this arm the ratio values and a grain would have made
-                // averaging them the obvious thing to write. Handing it the
-                // specs makes the wrong version unavailable.
-                let id = row.subtotal.clone().unwrap_or_default();
-                let spec = subtotals.iter().find(|s| s.id == id);
-                //
-                // The inputs must be PRESENT, not merely declared. A pack always
-                // declares the spec, but a model whose streams carry no category
-                // publishes no subtotal series at all — and `Grain::sum` of an
-                // absent series is not an empty vector, it is one zero per
-                // bucket. Recomputing from that gives a zero denominator in every
-                // period and a full column of nulls, which says "undefined here"
-                // about a ratio that was never computed. `dscr_smoke` is exactly
-                // that model, and it is how this was caught.
-                let fetch = |k: &str| -> Option<Vec<f64>> {
-                    series.get(k).map(|s| {
-                        s.values
-                            .iter()
-                            .map(|v| match v {
-                                SeriesValue::Money(m) => m.amount,
-                                SeriesValue::Number(n) => *n,
-                                SeriesValue::Null => 0.0,
-                            })
-                            .collect()
-                    })
-                };
-                let inputs =
-                    spec.and_then(|s| match (s.numerator.as_ref(), s.denominator.as_ref()) {
-                        (Some(n), Some(d)) => fetch(n).zip(fetch(d)),
-                        _ => None,
-                    });
-                let values = match inputs {
-                    Some((num_raw, den_raw)) => {
-                        let num = grain.sum(&num_raw);
-                        let den = grain.sum(&den_raw);
-                        num.iter()
-                            .zip(den.iter())
-                            .map(|(n, d)| {
-                                if d.abs() > f64::EPSILON {
-                                    SeriesValue::Number(round6(n / d))
-                                } else {
-                                    SeriesValue::Null
-                                }
-                            })
-                            .collect()
-                    }
-                    // Not a declared ratio, or its inputs were never published.
-                    // Falls back to the ratio series itself, which is absent in
-                    // the same cases — so the row carries no values rather than
-                    // a column of manufactured ones.
-                    None => series
-                        .get(&id)
-                        .map(|s| s.values.clone())
-                        .unwrap_or_default(),
-                };
-                rows.push(StatementRow {
-                    kind: "ratio".to_string(),
-                    label: row.label.clone(),
-                    depth: row.depth,
-                    display_sign,
-                    values,
-                    // No total: summing a column of coverage ratios answers no
-                    // question anyone asks.
-                    total: None,
-                    streams: vec![],
-                });
-            }
-            _ => {}
-        }
-    }
-
-    // --- completeness -------------------------------------------------------
-    let mut diagnostics: Vec<StatementDiagnostic> = Vec::new();
-
-    let unclaimed: Vec<&String> = cash_keys
-        .iter()
-        .filter(|k| !claimed.contains_key(k.as_str()))
-        .copied()
-        .collect();
-    if !unclaimed.is_empty() {
-        // Visible, not absorbed. A statement that silently omits cash is worse
-        // than one that shows an ugly row, because the ugly row is the only
-        // signal a reader gets that the bottom line is short.
-        let mut acc = vec![0.0_f64; periods];
-        let mut names: Vec<String> = Vec::new();
-        for key in &unclaimed {
-            names.push(
-                key.strip_prefix("stream.")
-                    .or_else(|| key.strip_prefix("option."))
-                    .unwrap_or(key)
-                    .to_string(),
-            );
-            if let Some(s) = series.get(*key) {
-                for (t, v) in s.values.iter().enumerate().take(periods) {
-                    if let SeriesValue::Money(m) = v {
-                        acc[t] += m.amount;
-                    }
-                }
-            }
-        }
-        let total = acc.iter().sum::<f64>();
-        let acc = grain.sum(&acc);
-        diagnostics.push(StatementDiagnostic {
-            code: "W3500_STATEMENT_UNCLASSIFIED_STREAM".to_string(),
-            message: format!(
-                "{} stream(s) are in no row of statement '{}', so the bottom line is short by \
-                 {:.2}: {}. Classify them, or give the statement a row that claims them.",
-                names.len(),
-                spec.id,
-                total,
-                names.join(", ")
-            ),
-        });
-        rows.push(StatementRow {
-            kind: "residual".to_string(),
-            label: "Unclassified".to_string(),
-            depth: 1,
-            display_sign: 1.0,
-            values: money(&acc, results),
-            total: Some(round6(total)),
-            streams: names,
-        });
-    }
-
-    let doubled: Vec<&str> = claimed
-        .iter()
-        .filter(|(_, n)| **n > 1)
-        .map(|(k, _)| *k)
-        .collect();
-    if !doubled.is_empty() {
-        // Worse than omission: the bottom line is wrong in a direction that
-        // looks plausible.
-        diagnostics.push(StatementDiagnostic {
-            code: "W3501_STATEMENT_STREAM_DOUBLE_COUNTED".to_string(),
-            message: format!(
-                "{} stream(s) appear in more than one row of statement '{}', so their cash is \
-                 counted twice: {}.",
-                doubled.len(),
-                spec.id,
-                doubled.join(", ")
-            ),
-        });
-    }
-
-    // --- reconciliation -----------------------------------------------------
-    // The bottom line is every LINE row plus any residual — not the subtotals,
-    // which are folds of those same lines and would double them.
-    let bottom_line: f64 = rows
-        .iter()
-        .filter(|r| r.kind == "line" || r.kind == "residual")
-        .filter_map(|r| r.total)
-        .sum();
-    let model_total = match results.deterministic.metrics.get("model.total") {
-        Some(Scalar::Money(m)) => m.amount,
-        _ => 0.0,
-    };
-    let residual = round6(bottom_line - model_total);
-    // Half a cent. Not 1e-6: every row total is rounded to six decimals before
-    // being summed, so a statement of N rows carries up to N * 5e-7 of pure
-    // presentation rounding — about 1e-5 here, which tripped the gate on a
-    // statement that reconciles exactly. The question this asks is "does the
-    // statement account for the model's cash", and money that agrees to within
-    // half a cent does.
-    const RECONCILES_WITHIN: f64 = 0.005;
-    if residual.abs() > RECONCILES_WITHIN {
-        diagnostics.push(StatementDiagnostic {
-            code: "W3502_STATEMENT_BOTTOM_LINE_RESIDUAL".to_string(),
-            message: format!(
-                "Statement '{}' totals {:.6} against model.total {:.6}, a residual of {:.6}.",
-                spec.id, bottom_line, model_total, residual
-            ),
-        });
-    }
-
-    Statement {
-        id: spec.id.clone(),
-        label: spec.label.clone(),
-        default: spec.default,
-        grain: StatementGrain {
-            calendar: grain.calendar.clone(),
-            start: grain.start.clone(),
-            labels: grain.labels.clone(),
-        },
-        rows,
-        reconciliation: StatementReconciliation {
-            bottom_line: round6(bottom_line),
-            model_total: round6(model_total),
-            residual,
-        },
-        diagnostics,
-        // A pack statement names no metrics; the clause is the model's.
-        metrics: BTreeMap::new(),
-    }
-}
-
 /// Rows generated from a hierarchy, rather than enumerated by an author.
 ///
 /// `docs/13` §7.55. A pack's statement lists every row it wants; a model's
@@ -455,7 +48,11 @@ pub fn generate(
     let series = &results.deterministic.series;
     let mut rows: Vec<StatementRow> = Vec::new();
     let mut diagnostics: Vec<StatementDiagnostic> = Vec::new();
-    let mut claimed: BTreeSet<String> = BTreeSet::new();
+    // A COUNT, not a set. A stream claimed by two rows is counted twice in the
+    // bottom line — worse than omission, because the figure is wrong in a
+    // direction that looks plausible. `W3501` needs the count to say so, and
+    // converging the renderers onto a set lost it.
+    let mut claimed: BTreeMap<String, usize> = BTreeMap::new();
     let depth_limit = spec.depth.unwrap_or(u32::MAX);
 
     // THE FILTER, resolved once. A statement scoped to a slice shows the same
@@ -546,24 +143,31 @@ pub fn generate(
                 // TWO DECLARED SLICES. A slice is already a named selection
                 // with a per-period net, so a ratio needs no row identifiers.
                 let net_of = |name: &Option<String>| -> Option<Vec<f64>> {
-                    let name = name.as_ref()?;
-                    let all = results.slices.as_ref()?;
-                    let found = all.iter().find(|s| &s.id == name)?;
-                    Some(
-                        found
-                            .net
-                            .values
-                            .iter()
-                            .map(|v| match v {
-                                SeriesValue::Money(m) => m.amount,
-                                SeriesValue::Number(n) => *n,
-                                _ => 0.0,
-                            })
-                            .collect(),
-                    )
+                    operand_series(name.as_ref()?, results)
                 };
-                let (Some(num), Some(den)) = (net_of(&row.numerator), net_of(&row.denominator))
-                else {
+                let inputs = net_of(&row.numerator).zip(net_of(&row.denominator));
+                let Some((num, den)) = inputs else {
+                    // NOT A DECLARED RATIO, or its inputs were never
+                    // published. Fall back to the ratio's own series, which is
+                    // absent in the same cases — so the row carries no values
+                    // rather than a column of manufactured ones, and it is
+                    // still EMITTED: dropping it would silently shorten the
+                    // statement a pack declared.
+                    let values = row
+                        .series
+                        .as_ref()
+                        .and_then(|key| results.deterministic.series.get(key))
+                        .map(|s| s.values.clone())
+                        .unwrap_or_default();
+                    rows.push(StatementRow {
+                        kind: "ratio".to_string(),
+                        label: row.label.clone(),
+                        depth: row.depth,
+                        display_sign,
+                        values,
+                        total: None,
+                        streams: vec![],
+                    });
                     continue;
                 };
                 // RECOMPUTED FROM RE-BUCKETED INPUTS, never re-bucketed
@@ -602,6 +206,37 @@ pub fn generate(
                 });
                 continue;
             }
+            // A ROW DRAWING A PUBLISHED SERIES claims nothing. `domain.cre.noi`
+            // is a fold OF the ledger, so counting its streams would double
+            // them in the bottom line — the same argument that keeps a
+            // `subtotal` row from claiming.
+            if let Some(key) = &row.series {
+                // THE SERIES MUST BE PRESENT, NOT MERELY NAMED. A pack always
+                // declares its subtotals, but a model whose streams carry no
+                // category publishes no `domain.*` series at all — and
+                // `Grain::sum` of an absent series is not an empty vector, it
+                // is one zero per bucket. Emitting those zeros states a figure
+                // that was never computed. An absent series publishes no
+                // values and no total, which is what a reader should see.
+                // `dscr_smoke` is exactly that model, and it caught this.
+                let (values, total) = match operand_series(key, results) {
+                    Some(raw) => {
+                        let tot = round6(raw.iter().sum::<f64>());
+                        (money(&grain.sum(&raw), results), Some(tot))
+                    }
+                    None => (vec![], None),
+                };
+                rows.push(StatementRow {
+                    kind: row.kind.clone(),
+                    label: row.label.clone(),
+                    depth: row.depth,
+                    display_sign,
+                    total,
+                    values,
+                    streams: vec![],
+                });
+                continue;
+            }
             let mut acc = vec![0.0_f64; periods];
             let mut drawn: Vec<String> = Vec::new();
             for key in cash_keys {
@@ -612,8 +247,21 @@ pub fn generate(
                 let by_category = stream_categories
                     .get(name)
                     .is_some_and(|c| row.categories.iter().any(|p| matches_prefix(p, c)));
-                let by_name =
-                    !row.streams.is_empty() && cfdl_expr::selector_matches_any(&row.streams, name);
+                // A STREAM ROW REFINES WITHIN A CATEGORY — it itemises a
+                // family whose members all carry the same one, which is why a
+                // row's selector can be resolved to that category and counted
+                // toward completeness.
+                //
+                // So an UNCLASSIFIED stream is never claimed by name. A model
+                // whose stream happens to share a pack's spelling would
+                // otherwise be drawn onto a labelled row while every subtotal,
+                // which folds by category, ignored it — an "Operating
+                // expenses" line above a Net operating income that does not
+                // include it. `dscr_smoke` is exactly that model, and dropping
+                // this condition while converging the renderers put that line
+                // back at -240,000 above an NOI that excluded it.
+                let by_name = stream_categories.contains_key(name)
+                    && cfdl_expr::selector_matches_any(&row.streams, name);
                 let by_slice = row.slice.as_ref().is_some_and(|slice_name| {
                     results.slices.as_ref().is_some_and(|all| {
                         all.iter()
@@ -633,8 +281,8 @@ pub fn generate(
                 // A SUBTOTAL CLAIMS NOTHING. It folds rows stated elsewhere,
                 // so counting its streams would double them in the bottom line.
                 if row.kind != "subtotal" {
-                    claimed.insert((*key).clone());
-                    drawn.push((*key).clone());
+                    *claimed.entry((*key).clone()).or_insert(0) += 1;
+                    drawn.push(bare_name(key));
                 }
                 if let Some(s) = series.get(*key) {
                     for (t, v) in s.values.iter().enumerate().take(periods) {
@@ -742,8 +390,8 @@ pub fn generate(
                         // A LINE claims its subtree's streams; a subtotal claims
                         // nothing, because the rows beneath it will.
                         if !is_subtotal {
-                            claimed.insert((*key).clone());
-                            drawn.push((*key).clone());
+                            *claimed.entry((*key).clone()).or_insert(0) += 1;
+                            drawn.push(bare_name(key));
                         }
                         if let Some(s) = series.get(*key) {
                             for (t, v) in s.values.iter().enumerate().take(periods) {
@@ -813,8 +461,8 @@ pub fn generate(
                             continue;
                         }
                         if !is_subtotal {
-                            claimed.insert((*key).clone());
-                            drawn.push((*key).clone());
+                            *claimed.entry((*key).clone()).or_insert(0) += 1;
+                            drawn.push(bare_name(key));
                         }
                         if let Some(s) = series.get(*key) {
                             for (t, v) in s.values.iter().enumerate().take(periods) {
@@ -858,10 +506,10 @@ pub fn generate(
     let mut residual_acc = vec![0.0_f64; periods];
     let mut residual_streams: Vec<String> = Vec::new();
     for key in cash_keys {
-        if claimed.contains(*key) {
+        if claimed.contains_key(*key) {
             continue;
         }
-        residual_streams.push((*key).clone());
+        residual_streams.push(bare_name(key));
         if let Some(s) = series.get(*key) {
             for (t, v) in s.values.iter().enumerate().take(periods) {
                 if in_window[t] {
@@ -874,14 +522,54 @@ pub fn generate(
     }
     if !residual_streams.is_empty() {
         residual_streams.sort();
+        // NAMED, NOT JUST TOTALLED. A residual row says how much is missing; a
+        // reader still has to find WHICH streams. The pack renderer has always
+        // named them and the model path did not, so an authored statement that
+        // omitted cash said nothing while a pack statement warned — the same
+        // divergence that let the grain defect live.
+        let short: f64 = round6(residual_acc.iter().sum());
+        diagnostics.push(StatementDiagnostic {
+            code: "W3500_STATEMENT_UNCLASSIFIED_STREAM".to_string(),
+            message: format!(
+                "{} stream(s) are in no row of statement '{}', so the bottom line is short by \
+                 {:.2}: {}. Classify them, or give the statement a row that claims them.",
+                residual_streams.len(),
+                spec.name,
+                short,
+                residual_streams.join(", ")
+            ),
+        });
         rows.push(StatementRow {
             kind: "residual".to_string(),
-            label: "Not shown by this structure".to_string(),
-            depth: 0,
+            // "Unclassified" at depth 1, the form a pack statement has always
+            // published. My own wording here was the newcomer, and one label
+            // for one concept beats two that mean the same thing.
+            label: "Unclassified".to_string(),
+            depth: 1,
             display_sign: 1.0,
             total: Some(round6(residual_acc.iter().sum())),
             values: money(&grain.sum(&residual_acc), results),
             streams: residual_streams,
+        });
+    }
+
+    let doubled: Vec<String> = claimed
+        .iter()
+        .filter(|(_, n)| **n > 1)
+        .map(|(k, _)| bare_name(k))
+        .collect();
+    if !doubled.is_empty() {
+        // Worse than omission: the bottom line is wrong in a direction that
+        // looks plausible.
+        diagnostics.push(StatementDiagnostic {
+            code: "W3501_STATEMENT_STREAM_DOUBLE_COUNTED".to_string(),
+            message: format!(
+                "{} stream(s) appear in more than one row of statement '{}', so their cash is \
+                 counted twice: {}.",
+                doubled.len(),
+                spec.name,
+                doubled.join(", ")
+            ),
         });
     }
 
@@ -938,7 +626,7 @@ pub fn generate(
     Statement {
         id: spec.name.clone(),
         label: spec.label.clone().unwrap_or_else(|| spec.name.clone()),
-        default: false,
+        default: spec.default,
         grain: StatementGrain {
             calendar: grain.calendar.clone(),
             start: grain.start.clone(),
@@ -961,6 +649,38 @@ pub fn generate(
 /// specs come from the registry and a model's from the IR — and the same
 /// output: `StatementsSection` holds both, in declaration order with the
 /// pack's first.
+/// `W5023` and the section's pack name, applied once the statements exist.
+///
+/// A fact about the MODEL's vocabulary rather than about any one statement's
+/// rows, so it is computed once and carried on the default statement.
+pub fn attach_vocabulary_diagnostics(
+    stream_categories: &BTreeMap<String, String>,
+    recommended_categories: &[String],
+    pack: &str,
+    results: &mut Results,
+) {
+    let Some(section) = results.statements.as_mut() else {
+        return;
+    };
+    if !pack.is_empty() {
+        section.pack = Some(pack.to_string());
+    }
+    let unrecommended = unrecommended_categories(stream_categories, recommended_categories);
+    if unrecommended.is_empty() {
+        return;
+    }
+    let index = section
+        .statements
+        .iter()
+        .position(|st| st.default)
+        .unwrap_or_default();
+    if let Some(st) = section.statements.get_mut(index) {
+        let mut merged = unrecommended;
+        merged.append(&mut st.diagnostics);
+        st.diagnostics = merged;
+    }
+}
+
 pub fn attach_model_statements(
     specs: &[ModelStatement],
     stream_categories: &BTreeMap<String, String>,
@@ -979,9 +699,13 @@ pub fn attach_model_statements(
     // model IS. And it yields to anything declared: a pack's statements or the
     // model's own mean the presentation question is already answered.
     let owned;
-    let mut is_fallback = false;
     let specs: &[ModelStatement] = if specs.is_empty() {
-        if results.statements.is_some() || results.graph.is_none() {
+        // ALWAYS, when nothing else declares one. Guarding on the graph made
+        // the guarantee conditional on something a reader cannot see from the
+        // contract; a stream requires `on entity`, so any model with cash has
+        // a hierarchy, and one without cash gets an honest empty statement
+        // rather than a missing section.
+        if results.statements.is_some() {
             return;
         }
         owned = vec![ModelStatement {
@@ -996,8 +720,8 @@ pub fn attach_model_statements(
             slice: None,
             metrics: Vec::new(),
             rows: Vec::new(),
+            default: true,
         }];
-        is_fallback = true;
         &owned
     } else {
         specs
@@ -1024,7 +748,7 @@ pub fn attach_model_statements(
         .values()
         .next()
         .map(|s| s.index.clone());
-    let mut rendered: Vec<Statement> = specs
+    let rendered: Vec<Statement> = specs
         .iter()
         .map(|spec| {
             let grain = index
@@ -1039,14 +763,6 @@ pub fn attach_model_statements(
             generate(spec, &grain, &borrowed, stream_categories, results, periods)
         })
         .collect();
-    // The fallback IS the statement a consumer means by "the" statement, so it
-    // says so. A declared statement does not: which of several is default is
-    // the author's call, and nothing here can guess it.
-    if is_fallback {
-        for statement in &mut rendered {
-            statement.default = true;
-        }
-    }
     match &mut results.statements {
         Some(section) => section.statements.extend(rendered),
         None => {
@@ -1059,6 +775,114 @@ pub fn attach_model_statements(
             })
         }
     }
+}
+
+/// A pack's statement, lowered into the shape a model's uses.
+///
+/// ONE EVALUATOR, TWO PRODUCERS. A pack enumerates its rows and a model may
+/// generate them, but a rendered row is a rendered row — and while there were
+/// two renderers they drifted: the pack's bucketed rows to the statement's
+/// grain and recomputed a ratio from its inputs, the model's did neither, and
+/// nothing said so until the two were read side by side.
+///
+/// A pack row's `subtotal` field names a PUBLISHED SERIES (`domain.cre.noi`),
+/// which is what the `series` source is; a ratio's operands come from the
+/// subtotal SPEC, because a ratio must be recomputed from its inputs at a
+/// coarse grain rather than re-bucketed.
+pub fn lower_pack_statement(
+    spec: &cfdl_pack::StatementSpec,
+    subtotals: &[SubtotalSpec],
+) -> ModelStatement {
+    ModelStatement {
+        name: spec.id.clone(),
+        label: Some(spec.label.clone()),
+        structure: String::new(),
+        depth: None,
+        grain: spec.grain.clone(),
+        slice: None,
+        metrics: Vec::new(),
+        default: spec.default,
+        rows: spec
+            .rows
+            .iter()
+            .map(|row| {
+                // A ratio names a subtotal whose spec holds the two series it
+                // divides; anything else drawing a subtotal draws that series.
+                let (numerator, denominator) = if row.kind == "ratio" {
+                    let id = row.subtotal.clone().unwrap_or_default();
+                    match subtotals.iter().find(|s| s.id == id) {
+                        Some(found) => (found.numerator.clone(), found.denominator.clone()),
+                        None => (None, None),
+                    }
+                } else {
+                    (None, None)
+                };
+                ModelStatementRow {
+                    kind: row.kind.clone(),
+                    label: row.label.clone(),
+                    depth: row.depth,
+                    categories: row.categories.clone(),
+                    streams: row.streams.clone(),
+                    slice: None,
+                    // For a ratio this is the FALLBACK: its own published
+                    // series, used when the inputs it should be recomputed
+                    // from were never published.
+                    series: row.subtotal.clone(),
+                    entity: None,
+                    numerator,
+                    denominator,
+                    display: row.display.clone(),
+                }
+            })
+            .collect(),
+    }
+}
+
+/// The per-period series a row operand names — a declared SLICE or a PUBLISHED
+/// series key.
+///
+/// One resolver, because a row and a ratio take the same kind of operand and a
+/// pack names its subtotals by published key while a model names its slices.
+/// Giving each its own lookup is how the two renderers drifted in the first
+/// place.
+fn operand_series(name: &str, results: &Results) -> Option<Vec<f64>> {
+    let from_slice = results.slices.as_ref().and_then(|all| {
+        all.iter()
+            .find(|s| s.id == name)
+            .map(|s| numbers(&s.net.values))
+    });
+    from_slice.or_else(|| {
+        results
+            .deterministic
+            .series
+            .get(name)
+            .map(|s| numbers(&s.values))
+    })
+}
+
+/// A published series key as the name a model wrote — `stream.a.b` -> `a.b`.
+///
+/// A slice publishes its matched streams this way and so does a pack's row, so
+/// a statement does too. Three publishers, one spelling.
+fn bare_name(key: &str) -> String {
+    key.strip_prefix("stream.")
+        .or_else(|| key.strip_prefix("option."))
+        .unwrap_or(key)
+        .to_string()
+}
+
+/// A series' values as plain numbers. `null` reads as zero HERE and only here:
+/// a fold of an undefined period contributes nothing, which is what the pack
+/// renderer has always done.
+fn numbers(values: &[SeriesValue]) -> Vec<f64> {
+    values
+        .iter()
+        .map(|v| match v {
+            SeriesValue::Money(m) => m.amount,
+            SeriesValue::Number(n) => *n,
+            SeriesValue::Null => 0.0,
+        })
+        .collect()
 }
 
 /// A readable label for a generated row, from the name it was generated from.
@@ -1097,6 +921,10 @@ pub struct ModelStatement {
     pub metrics: Vec<String>,
     #[serde(default)]
     pub rows: Vec<ModelStatementRow>,
+    /// Shown when a consumer asks for "the" statement. A pack states it; a
+    /// model's is set only on the fallback.
+    #[serde(default)]
+    pub default: bool,
 }
 
 /// One authored row, as the IR carries it.
@@ -1113,6 +941,10 @@ pub struct ModelStatementRow {
     pub streams: Vec<String>,
     #[serde(default)]
     pub slice: Option<String>,
+    /// A published series key. A fold OF the ledger rather than cash in it,
+    /// so a row drawing one claims nothing and never reaches the bottom line.
+    #[serde(default)]
+    pub series: Option<String>,
     #[serde(default)]
     pub entity: Option<String>,
     #[serde(default)]

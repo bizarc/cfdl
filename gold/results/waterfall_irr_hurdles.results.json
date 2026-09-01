@@ -464,7 +464,7 @@
             ],
             "total": 30000000.0,
             "streams": [
-              "stream.deal.sale_proceeds"
+              "deal.sale_proceeds"
             ]
           },
           {

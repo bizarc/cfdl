@@ -175,7 +175,7 @@
             ],
             "total": -3000.0,
             "streams": [
-              "stream.debt.rate_payment"
+              "debt.rate_payment"
             ]
           }
         ],

@@ -296,7 +296,7 @@
             ],
             "total": -6000.0,
             "streams": [
-              "stream.lease.rent"
+              "lease.rent"
             ]
           }
         ],

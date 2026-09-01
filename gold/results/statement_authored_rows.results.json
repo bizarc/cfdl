@@ -203,7 +203,7 @@
             ],
             "total": 3000.0,
             "streams": [
-              "stream.ops.rent"
+              "ops.rent"
             ]
           },
           {
@@ -227,7 +227,7 @@
             ],
             "total": -900.0,
             "streams": [
-              "stream.ops.opex"
+              "ops.opex"
             ]
           },
           {
@@ -277,7 +277,7 @@
             ],
             "total": -1200.0,
             "streams": [
-              "stream.fin.debt_service"
+              "fin.debt_service"
             ]
           },
           {

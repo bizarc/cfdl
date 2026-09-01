@@ -3285,10 +3285,10 @@
             ],
             "total": 1173600.0,
             "streams": [
-              "stream.opco.capex.line",
-              "stream.opco.opex.recurring",
-              "stream.opco.revenue.recurring",
-              "stream.opco.taxes.cash"
+              "opco.capex.line",
+              "opco.opex.recurring",
+              "opco.revenue.recurring",
+              "opco.taxes.cash"
             ]
           }
         ],

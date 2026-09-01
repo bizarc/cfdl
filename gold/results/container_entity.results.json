@@ -246,7 +246,7 @@
             ],
             "total": 300.0,
             "streams": [
-              "stream.alpha.income"
+              "alpha.income"
             ]
           },
           {
@@ -270,7 +270,7 @@
             ],
             "total": 120.0,
             "streams": [
-              "stream.beta.income"
+              "beta.income"
             ]
           }
         ],

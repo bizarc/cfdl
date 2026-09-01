@@ -1211,7 +1211,7 @@
             ],
             "total": 18000000.0,
             "streams": [
-              "stream.energy.ppa.revenue.plant_a"
+              "energy.ppa.revenue.plant_a"
             ]
           }
         ],

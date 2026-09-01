@@ -247,7 +247,7 @@
             ],
             "total": 300.0,
             "streams": [
-              "stream.north.rent"
+              "north.rent"
             ]
           },
           {
@@ -271,7 +271,7 @@
             ],
             "total": 180.0,
             "streams": [
-              "stream.south.rent"
+              "south.rent"
             ]
           }
         ],
@@ -316,8 +316,8 @@
             ],
             "total": 480.0,
             "streams": [
-              "stream.north.rent",
-              "stream.south.rent"
+              "north.rent",
+              "south.rent"
             ]
           }
         ],
@@ -404,8 +404,8 @@
             ],
             "total": 480.0,
             "streams": [
-              "stream.north.rent",
-              "stream.south.rent"
+              "north.rent",
+              "south.rent"
             ]
           }
         ],
@@ -471,7 +471,7 @@
             ],
             "total": 200.0,
             "streams": [
-              "stream.north.rent"
+              "north.rent"
             ]
           },
           {

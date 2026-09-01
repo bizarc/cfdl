@@ -671,8 +671,8 @@
             ],
             "total": -380000.0,
             "streams": [
-              "stream.development.construction_draw",
-              "stream.operations.revenue"
+              "development.construction_draw",
+              "operations.revenue"
             ]
           }
         ],
