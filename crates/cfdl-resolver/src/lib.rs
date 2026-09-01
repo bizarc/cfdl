@@ -260,6 +260,8 @@ pub fn resolve_symbols(output: &ResolveOutput) -> Result<SymbolTables, Vec<Resol
     let mut tables = SymbolTables::default();
     let mut diagnostics = Vec::new();
     let mut seen_slices: std::collections::BTreeSet<String> = std::collections::BTreeSet::new();
+    let mut seen_statements: std::collections::BTreeSet<String> =
+        std::collections::BTreeSet::new();
     let mut stream_decls = Vec::new();
     let mut contract_decls = Vec::new();
 
@@ -382,6 +384,19 @@ pub fn resolve_symbols(output: &ResolveOutput) -> Result<SymbolTables, Vec<Resol
                         message: format!("Duplicate slice '{}'.", slice_stmt.name),
                         file: source_stmt.file.clone(),
                         span: slice_stmt.span,
+                    });
+                }
+            }
+            Stmt::Statement(statement_stmt) => {
+                // One name, one presentation — the same rule a slice and a
+                // metric follow, and its own code because the three are
+                // different rosters with different consumers.
+                if !seen_statements.insert(statement_stmt.name.clone()) {
+                    diagnostics.push(ResolveDiagnostic {
+                        code: "E1366_DUPLICATE_STATEMENT".to_string(),
+                        message: format!("Duplicate statement '{}'.", statement_stmt.name),
+                        file: source_stmt.file.clone(),
+                        span: statement_stmt.span,
                     });
                 }
             }
@@ -818,6 +833,7 @@ fn statement_span(stmt: &Stmt) -> Span {
         Stmt::Assume(s) => s.span,
         Stmt::Metric(s) => s.span,
         Stmt::Slice(s) => s.span,
+        Stmt::Statement(s) => s.span,
         Stmt::Curve(s) => s.span,
         Stmt::Quantile(s) => s.span,
         Stmt::Contract(s) => s.span,

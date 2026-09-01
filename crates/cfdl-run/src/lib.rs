@@ -60,6 +60,22 @@ pub fn enrich_results(
         &recommended,
         results,
     );
+    // A MODEL'S OWN STATEMENTS, beside the pack's (`docs/13` §7.55). One
+    // evaluator, two producers: a pack enumerates its rows, a model names a
+    // structure and a depth and the rows follow from the tree. The pack path
+    // above is untouched, so a packed model renders exactly what it rendered.
+    let model_statements = ir_value
+        .as_ref()
+        .map(cfdl_statement::model_statements)
+        .unwrap_or_default();
+    if !model_statements.is_empty() {
+        cfdl_statement::attach_model_statements(
+            &model_statements,
+            &categories,
+            &waterfall_series,
+            results,
+        );
+    }
 }
 
 /// Run an in-memory IR and enrich the results when a pack is named.

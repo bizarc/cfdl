@@ -236,6 +236,13 @@ against it by `make ir-schema`.
     },
     "provenance": {
       "$ref": "#/$defs/Provenance"
+    },
+    "statements": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/Statement"
+      },
+      "description": "Declared presentations (docs/13 §7.55)."
     }
   },
   "$defs": {
@@ -1827,6 +1834,54 @@ against it by `make ir-schema`.
         "window": {
           "$ref": "#/$defs/DateRange",
           "description": "A reporting window, inclusive. Only periods inside it are selected, so total, npv and irr are folds over it. Absent when the slice spans the whole horizon. Not a phase: a phase is a lifecycle anchor that drives schedules, and a window is a reporting bound."
+        }
+      }
+    },
+    "Statement": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "structure",
+        "provenance"
+      ],
+      "description": "A declared presentation: which hierarchy to show, and to what level. It carries no rows — the rows are generated from the structure after the run, and depth decides which are shown, so an interior node is a subtotal by virtue of where it sits.",
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "label": {
+          "type": "string"
+        },
+        "structure": {
+          "type": "string",
+          "enum": [
+            "entity",
+            "category"
+          ],
+          "description": "Which existing hierarchy to present: the part_of tree, or the dotted category path."
+        },
+        "depth": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "The level of aggregation. Absent means the whole tree."
+        },
+        "grain": {
+          "type": "string"
+        },
+        "slice": {
+          "type": "string",
+          "description": "An optional filter, orthogonal to the structure."
+        },
+        "metrics": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Declared metrics published beside the statement."
+        },
+        "provenance": {
+          "$ref": "#/$defs/NodeProvenance"
         }
       }
     }

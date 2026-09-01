@@ -508,6 +508,7 @@ dependencies = [
  "cfdl-engine",
  "cfdl-expr",
  "cfdl-pack",
+ "serde",
  "serde_json",
 ]
 

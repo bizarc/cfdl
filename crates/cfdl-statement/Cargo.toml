@@ -12,4 +12,5 @@ publish = false
 cfdl-engine = { path = "../cfdl-engine" }
 cfdl-expr = { path = "../cfdl-expr" }
 cfdl-pack = { path = "../cfdl-pack" }
+serde = { workspace = true }
 serde_json = { workspace = true }

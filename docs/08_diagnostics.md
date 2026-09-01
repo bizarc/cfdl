@@ -264,6 +264,9 @@ Fields that move:
 - `E1362_SLICE_UNKNOWN_ENTITY` — a slice's `entity` (or `except entity`) names an entity the model does not declare. A slice selects by reference, and a reference is what the compiler can check — refused rather than silently matching nothing.
 - `E1363_SLICE_UNKNOWN_TYPE` — a slice's `type` names an ontology type the active ontology does not define. The hint lists the known contract types; a master type (`Contract.Debt`) matches transitively through `refines`.
 - `E1364_SLICE_CATEGORY_ROOT` — a slice's category selector is not rooted in operating, investing or financing. A selector that could never match anything is a typo, not a choice.
+- `E1366_DUPLICATE_STATEMENT` — two statements share a name. Same rule as a metric and a slice: one name, one presentation.
+- `E1367_STATEMENT_UNKNOWN_STRUCTURE` — a statement presents a hierarchy the engine does not build, or asks for a category hierarchy in a model whose streams declare no category. Either would render as one residual row and nothing else — technically complete and useless — so it is refused rather than shipped empty. Known structures: `entity` (the `part of` tree the results graph publishes) and `category` (the dotted path). `docs/13` §7.55.
+- `E1368_STATEMENT_UNKNOWN_REFERENCE` — a statement filters by a slice, or shows a metric, that the model does not declare. A presentation that silently shows nothing is the failure §7.55 exists to end.
 - `E1365_METRIC_UNKNOWN_SERIES` — a metric folds a series name this model does not publish. `series_sum`/`series_avg` return 0.0 for a selector that matches nothing, which is right for a `.*` selector and wrong for a name spelled out in full; in a metric it is worse than wrong, because a fold publishes ONE number under a name the author chose, with no series beside it to show the zero (`docs/13` §7.85). A metric may fold any series the valuation plane publishes: a stream by its own name or as `stream.<name>`, a waterfall step, `entity.<symbol>.net_cash_flow`, `account.<name>`, an entity field, a money subtotal, or `model.net_cash_flow`. A RATIO subtotal is refused with its own hint — its undefined periods publish as null rather than zero, and what a fold should do with null has not been decided.
 - `E1304_UNRESOLVED_OPTION_REF` — an event exercises an option that is not declared. Checked in the compiler rather than the resolver, because options are not in the symbol tables.
 - `E1310_ENTITY_BLOCK_WITHOUT_TYPE` — an entity uses a block but declares no type, so there is nothing to check the block against.
@@ -395,7 +398,17 @@ see what is wrong with it.
   row. Worse than an omission: the bottom line is then wrong in a direction
   that looks entirely plausible.
 - `W3502_STATEMENT_BOTTOM_LINE_RESIDUAL` — the statement's rows do not sum to
-  `model.total` within half a cent. Asserted, never corrected.
+  what the statement is accountable for, within half a cent. That is
+  `model.total` for an unfiltered statement and the SLICE's total for one
+  scoped to a slice: reconciling a filtered statement against the model would
+  report the filter as a shortfall, and a warning that fires on a correct model
+  is noise. Asserted, never corrected.
+
+- `W3503_STATEMENT_UNKNOWN_STRUCTURE` — a model-declared statement asks for a
+  hierarchy the evaluator does not build. A compiled model cannot reach this:
+  `E1367` refuses the same condition earlier, with a span. It survives for
+  hand-written IR, which the compiler never saw — the same reason the `ignored`
+  journal outcome survives.
 
 - `W5023_UNRECOGNISED_PACK_CATEGORY` — a stream's category is well-rooted and
   valid, and is not one the active pack recommends. The three roots are the only

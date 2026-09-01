@@ -4,7 +4,7 @@
 
 CFDL 0.8.0. Every model below compiles, and its IR and
 results are byte-asserted against goldens in CI (`fixtures/valid/`,
-142 models.
+143 models.
 
 `gold/ir/`, `gold/results/`). Each is single-purpose: the directory name
 says what it exercises. This is what right looks like — positive few-shot
@@ -5162,6 +5162,94 @@ stream capex.build on entity asset.site outflow currency USD {
   amount = 100
   active in state building
 }
+```
+
+## statement_by_entity
+
+```cfdl
+version 0.1
+model "statement-by-entity"
+time calendar annual from 2026-01 for 3
+
+// A MODEL DECLARES HOW ITS RESULTS ARE ORGANISED.
+//
+// `docs/13` §7.55. A statement is the ORGANISING STRUCTURE — whether the
+// presentation is an entity hierarchy, a category hierarchy, or something else.
+// It is NOT a list of rows: the rows come from the structure, and `depth` sets
+// the level of aggregation, so an interior node IS a subtotal by virtue of
+// where it sits. That is how a statement carries dozens of rows without dozens
+// of declarations, and it is why a model needs no subtotal construct.
+//
+// The hierarchy here is the one `graph` already publishes: `part of`. The fund
+// holds two properties, each with its own rent. At depth 1 the fund is one
+// line; at depth 2 the properties appear beneath it and the fund becomes their
+// subtotal — the same tree, two levels of aggregation.
+
+entity container fund : Container.Fund
+
+entity asset north : Asset.Financial { part of container.fund }
+entity asset south : Asset.Financial { part of container.fund }
+
+stream north.rent on entity asset.north inflow currency USD {
+  schedule every year from 2026-01 to 2028-01
+  category operating.revenue.base_rent
+  amount = 100
+}
+
+stream south.rent on entity asset.south inflow currency USD {
+  schedule every year from 2026-01 to 2028-01
+  category operating.revenue.base_rent
+  amount = 60
+}
+
+statement portfolio {
+  label     "Portfolio by property"
+  structure entity
+  depth     2
+}
+
+// THE SAME TREE, ONE LEVEL UP. The fund's children are now cut off by `depth`,
+// so the fund is a LINE carrying all of their cash rather than a subtotal over
+// rows beneath it. That rule — a node whose children are shown is a subtotal, a
+// node whose children are cut off is a line — is what keeps the bottom line
+// reconciling at EVERY depth: the lines always partition the cash, whichever
+// level you cut at.
+statement portfolio_summary {
+  label     "Portfolio, one line"
+  structure entity
+  depth     1
+}
+
+// THE OTHER HIERARCHY, over the same cash. A category is a dotted path, so its
+// levels are structural and need no declaring either.
+statement by_category {
+  label     "By category"
+  structure category
+  depth     3
+}
+
+// A FILTER, ORTHOGONAL TO THE STRUCTURE. A slice narrows WHICH cash; the
+// statement decides HOW it is organised. The same entity hierarchy over the
+// north property alone, bounded to the first two years — 100 a year, so 200
+// against the portfolio's 480.
+//
+// The bottom line reconciles against the MODEL, so a filtered statement shows
+// a residual: that is the completeness guarantee doing its job rather than
+// failing. A statement that hides cash should say how much.
+slice north_early {
+  entity asset.north
+  window from 2026-01 to 2027-01
+}
+
+statement north_only {
+  label     "North, first two years"
+  structure entity
+  depth     2
+  slice     north_early
+  metrics   total_rent
+}
+
+metric total_rent = series_sum("north.rent", 0, 2) + series_sum("south.rent", 0, 2)
 ```
 
 ## statement_residual

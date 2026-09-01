@@ -30,8 +30,8 @@ against it by `make results-schema`.
   "properties": {
     "results_version": {
       "type": "string",
-      "const": "0.10",
-      "description": "Schema version of this document. 0.10 adds `window` to a slice's selection — a reporting bound whose periods are the only ones the slice folds. 0.9 carries every metric a Monte Carlo trial computed into its trial summary, summarises each of them across the trials with the full set of percentiles, and adds `trials` to a metric summary — the count of trials that published that name. 0.8 adds `slices` — declared partial selections with their matched streams, net series and figures, and no reconciliation block by design. 0.7 publishes the model's entity graph (`graph`) and attributes each stream series to its owning entity and category. 0.6 nests an act's own acts under it as `children`. 0.5 added the machine's `transition` journal action. 0.4 added the account journal actions. 0.3 added `ledger_hash`, the optional `inputs` section, and `category` on IR streams."
+      "const": "0.11",
+      "description": "Schema version of this document. 0.11 adds model-declared statements: `pack` on the statements section is optional, and a statement may carry `metrics`. 0.10 adds `window` to a slice's selection — a reporting bound whose periods are the only ones the slice folds. 0.9 carries every metric a Monte Carlo trial computed into its trial summary, summarises each of them across the trials with the full set of percentiles, and adds `trials` to a metric summary — the count of trials that published that name. 0.8 adds `slices` — declared partial selections with their matched streams, net series and figures, and no reconciliation block by design. 0.7 publishes the model's entity graph (`graph`) and attributes each stream series to its owning entity and category. 0.6 nests an act's own acts under it as `children`. 0.5 added the machine's `transition` journal action. 0.4 added the account journal actions. 0.3 added `ledger_hash`, the optional `inputs` section, and `category` on IR streams."
     },
     "model_hash": {
       "type": "string",
@@ -727,13 +727,13 @@ against it by `make results-schema`.
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "pack",
         "statements"
       ],
       "description": "Statements the active pack declares, rendered against this run. Rows carry order, labels, depth and a display sign; they compute nothing the engine has not already aggregated. Absent when the pack declares no statement.",
       "properties": {
         "pack": {
-          "type": "string"
+          "type": "string",
+          "description": "The pack whose statements these are. Absent when a MODEL declared them: a model-declared statement has no pack, and a sentinel string would be a value a consumer has to know to disregard."
         },
         "statements": {
           "type": "array",
@@ -782,6 +782,13 @@ against it by `make results-schema`.
             "$ref": "#/$defs/StatementDiagnostic"
           },
           "description": "Completeness findings. Empty is the healthy case."
+        },
+        "metrics": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/$defs/Scalar"
+          },
+          "description": "Declared metrics published beside the statement (docs/13 §7.55). A metric is one number at the horizon and every row is a series, so the figures sit in their own map rather than as a row kind."
         }
       }
     },

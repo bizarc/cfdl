@@ -106,7 +106,7 @@ pub fn compute(
     }
 
     Some(StatementsSection {
-        pack: pack.to_string(),
+        pack: Some(pack.to_string()),
         statements,
     })
 }
@@ -422,7 +422,460 @@ fn render(
             residual,
         },
         diagnostics,
+        // A pack statement names no metrics; the clause is the model's.
+        metrics: BTreeMap::new(),
     }
+}
+
+/// Rows generated from a hierarchy, rather than enumerated by an author.
+///
+/// `docs/13` §7.55. A pack's statement lists every row it wants; a model's
+/// names a STRUCTURE and a DEPTH, and the rows follow from the tree. That is
+/// the difference between a presentation you can write in a page and one that
+/// needs a page per property.
+///
+/// **An interior node is a subtotal because of where it sits.** A node whose
+/// children are shown is a `subtotal`; a node whose children are cut off by
+/// `depth` is a `line`, carrying all of its descendants' cash. That single rule
+/// is what keeps the bottom line reconciling at EVERY depth: the lines always
+/// partition the cash, whichever level you cut at.
+///
+/// The two structures read what already exists rather than recomputing it. An
+/// entity row is the published `entity.<symbol>.net_cash_flow` rollup, and the
+/// tree is the one `graph` publishes (§7.43, §7.91). A category row folds the
+/// streams whose published `category` sits under its path.
+pub fn generate(
+    spec: &ModelStatement,
+    grain: &Grain,
+    cash_keys: &[&String],
+    stream_categories: &BTreeMap<String, String>,
+    results: &Results,
+    periods: usize,
+) -> Statement {
+    let series = &results.deterministic.series;
+    let mut rows: Vec<StatementRow> = Vec::new();
+    let mut diagnostics: Vec<StatementDiagnostic> = Vec::new();
+    let mut claimed: BTreeSet<String> = BTreeSet::new();
+    let depth_limit = spec.depth.unwrap_or(u32::MAX);
+
+    // THE FILTER, resolved once. A statement scoped to a slice shows the same
+    // structure over less cash: the slice's matched streams, within its window.
+    // Both halves have to be applied here — the slice's own `net` already has
+    // them, but a statement folds the streams, not the net.
+    let sliced = spec.slice.as_ref().and_then(|name| {
+        results
+            .slices
+            .as_ref()
+            .and_then(|all| all.iter().find(|s| &s.id == name))
+    });
+    let in_window: Vec<bool> = match sliced.and_then(|s| s.selection.window.as_ref()) {
+        None => vec![true; periods],
+        Some(window) => {
+            let index = results.deterministic.series.values().next().map(|s| &s.index);
+            let dates = index
+                .map(|ix| {
+                    cfdl_engine::timeline_dates(&ix.start, &ix.calendar, ix.periods as usize)
+                        .unwrap_or_default()
+                })
+                .unwrap_or_default();
+            (0..periods)
+                .map(|t| match dates.get(t) {
+                    // ISO dates compare lexically, and the compiler
+                    // normalises both bounds to YYYY-MM-DD.
+                    Some(d) => {
+                        let d = d.to_string();
+                        d >= window.from && d <= window.to
+                    }
+                    None => false,
+                })
+                .collect()
+        }
+    };
+    // A stream the slice did not match is not in this statement at all — not
+    // even as a residual, because the residual answers "what did this
+    // STRUCTURE miss", and a filter's exclusions are a different question that
+    // the slice's own lineage already answers.
+    let owned: Vec<&String>;
+    let cash_keys: &[&String] = match sliced {
+        None => cash_keys,
+        Some(slice) => {
+            owned = cash_keys
+                .iter()
+                .copied()
+                .filter(|k| {
+                    let name = k
+                        .strip_prefix("stream.")
+                        .or_else(|| k.strip_prefix("option."))
+                        .unwrap_or(k);
+                    slice.streams.iter().any(|s| s == name)
+                })
+                .collect();
+            &owned
+        }
+    };
+
+    match spec.structure.as_str() {
+        "entity" => {
+            // The tree `graph` publishes: symbol -> parent.
+            let entities: Vec<(&str, Option<&str>)> = results
+                .graph
+                .as_ref()
+                .map(|g| {
+                    g.entities
+                        .iter()
+                        .map(|e| (e.symbol.as_str(), e.parent.as_deref()))
+                        .collect()
+                })
+                .unwrap_or_default();
+            let depth_of = |symbol: &str| -> u32 {
+                let mut d = 0;
+                let mut cursor = symbol;
+                while let Some((_, Some(parent))) =
+                    entities.iter().find(|(s, _)| *s == cursor).copied()
+                {
+                    d += 1;
+                    cursor = parent;
+                    if d > 64 {
+                        break;
+                    }
+                }
+                d
+            };
+            let has_shown_child = |symbol: &str, d: u32| -> bool {
+                d + 1 < depth_limit && entities.iter().any(|(_, p)| *p == Some(symbol))
+            };
+            // Parents before children, and stable within a level.
+            let mut ordered: Vec<(&str, u32)> =
+                entities.iter().map(|(s, _)| (*s, depth_of(s))).collect();
+            ordered.sort_by(|a, b| a.1.cmp(&b.1).then(a.0.cmp(b.0)));
+            for (symbol, d) in ordered {
+                if d >= depth_limit {
+                    continue;
+                }
+                let is_subtotal = has_shown_child(symbol, d);
+                // FOLDS ITS SUBTREE rather than reading the published
+                // `entity.<symbol>.net_cash_flow` rollup. The rollup is the
+                // same number and would be cheaper, but it is computed over
+                // ALL of the entity's cash — so a statement scoped to a slice
+                // would silently ignore the filter. Folding the streams the
+                // row actually covers is the only version that stays correct
+                // when something narrows them.
+                let mut values = vec![0.0_f64; periods];
+                let mut drawn: Vec<String> = Vec::new();
+                for key in cash_keys {
+                    let Some(owner) = series.get(*key).and_then(|s| s.entity.as_deref()) else {
+                        continue;
+                    };
+                    let mut cursor = Some(owner);
+                    let mut under = false;
+                    while let Some(current) = cursor {
+                        if current == symbol {
+                            under = true;
+                            break;
+                        }
+                        cursor = entities
+                            .iter()
+                            .find(|(s, _)| *s == current)
+                            .and_then(|(_, p)| *p);
+                    }
+                    if !under {
+                        continue;
+                    }
+                    // A LINE claims its subtree's streams; a subtotal claims
+                    // nothing, because the rows beneath it will.
+                    if !is_subtotal {
+                        claimed.insert((*key).clone());
+                        drawn.push((*key).clone());
+                    }
+                    if let Some(s) = series.get(*key) {
+                        for (t, v) in s.values.iter().enumerate().take(periods) {
+                            if in_window[t] {
+                                if let SeriesValue::Money(m) = v {
+                                    values[t] += m.amount;
+                                }
+                            }
+                        }
+                    }
+                }
+                drawn.sort();
+                rows.push(StatementRow {
+                    kind: if is_subtotal { "subtotal" } else { "line" }.to_string(),
+                    label: symbol.to_string(),
+                    depth: d,
+                    display_sign: 1.0,
+                    total: Some(round6(values.iter().sum())),
+                    values: money(&values, results),
+                    streams: drawn,
+                });
+            }
+        }
+        "category" => {
+            // The category tree, from the paths the streams declare.
+            let mut nodes: BTreeSet<String> = BTreeSet::new();
+            for category in stream_categories.values() {
+                let parts: Vec<&str> = category.split('.').collect();
+                for take in 1..=parts.len() {
+                    if (take as u32) <= depth_limit {
+                        nodes.insert(parts[..take].join("."));
+                    }
+                }
+            }
+            let ordered: Vec<String> = nodes.iter().cloned().collect();
+            for node in &ordered {
+                let d = node.matches('.').count() as u32;
+                let is_subtotal = ordered
+                    .iter()
+                    .any(|other| other != node && other.starts_with(&format!("{node}.")));
+                let mut acc = vec![0.0_f64; periods];
+                let mut drawn: Vec<String> = Vec::new();
+                for key in cash_keys {
+                    let name = key
+                        .strip_prefix("stream.")
+                        .or_else(|| key.strip_prefix("option."))
+                        .unwrap_or(key);
+                    let under = stream_categories
+                        .get(name)
+                        .is_some_and(|c| c == node || c.starts_with(&format!("{node}.")));
+                    if !under {
+                        continue;
+                    }
+                    if !is_subtotal {
+                        claimed.insert((*key).clone());
+                        drawn.push((*key).clone());
+                    }
+                    if let Some(s) = series.get(*key) {
+                        for (t, v) in s.values.iter().enumerate().take(periods) {
+                            if in_window[t] {
+                                if let SeriesValue::Money(m) = v {
+                                    acc[t] += m.amount;
+                                }
+                            }
+                        }
+                    }
+                }
+                drawn.sort();
+                rows.push(StatementRow {
+                    kind: if is_subtotal { "subtotal" } else { "line" }.to_string(),
+                    label: node.clone(),
+                    depth: d,
+                    display_sign: 1.0,
+                    total: Some(round6(acc.iter().sum())),
+                    values: money(&acc, results),
+                    streams: drawn,
+                });
+            }
+        }
+        other => {
+            diagnostics.push(StatementDiagnostic {
+                code: "W3503_STATEMENT_UNKNOWN_STRUCTURE".to_string(),
+                message: format!(
+                    "Statement '{}' asks for structure '{other}', which this engine cannot \
+                     build. Known structures: entity, category.",
+                    spec.name
+                ),
+            });
+        }
+    }
+
+    // WHAT NO ROW CLAIMED. The same completeness guarantee a pack statement
+    // carries: a hierarchy covers its own tree, so a residual here means cash
+    // that sits outside the structure — an uncategorised stream, or one owned
+    // by no entity — and saying so is the point.
+    let mut residual_acc = vec![0.0_f64; periods];
+    let mut residual_streams: Vec<String> = Vec::new();
+    for key in cash_keys {
+        if claimed.contains(*key) {
+            continue;
+        }
+        residual_streams.push((*key).clone());
+        if let Some(s) = series.get(*key) {
+            for (t, v) in s.values.iter().enumerate().take(periods) {
+                if in_window[t] {
+                    if let SeriesValue::Money(m) = v {
+                        residual_acc[t] += m.amount;
+                    }
+                }
+            }
+        }
+    }
+    if !residual_streams.is_empty() {
+        residual_streams.sort();
+        rows.push(StatementRow {
+            kind: "residual".to_string(),
+            label: "Not shown by this structure".to_string(),
+            depth: 0,
+            display_sign: 1.0,
+            total: Some(round6(residual_acc.iter().sum())),
+            values: money(&residual_acc, results),
+            streams: residual_streams,
+        });
+    }
+
+    let bottom_line: f64 = rows
+        .iter()
+        .filter(|r| r.kind == "line" || r.kind == "residual")
+        .filter_map(|r| r.total)
+        .sum();
+    // WHAT THE STATEMENT IS ACCOUNTABLE FOR. An unfiltered statement must
+    // account for the model's cash. A FILTERED one must account for the
+    // SLICE's — reconciling it against the model would report the filter as a
+    // defect, and a warning that fires on a correct model is noise, which is
+    // the standard this codebase already holds ratios to.
+    let (universe, universe_label) = match sliced {
+        Some(slice) => match slice.metrics.get("total") {
+            Some(Scalar::Money(m)) => (m.amount, format!("slice '{}'", slice.id)),
+            _ => (0.0, format!("slice '{}'", slice.id)),
+        },
+        None => (
+            match results.deterministic.metrics.get("model.total") {
+                Some(Scalar::Money(m)) => m.amount,
+                _ => 0.0,
+            },
+            "model.total".to_string(),
+        ),
+    };
+    let residual = round6(bottom_line - universe);
+    const RECONCILES_WITHIN: f64 = 0.005;
+    if residual.abs() > RECONCILES_WITHIN {
+        diagnostics.push(StatementDiagnostic {
+            code: "W3502_STATEMENT_BOTTOM_LINE_RESIDUAL".to_string(),
+            message: format!(
+                "Statement '{}' totals {:.6} against {universe_label} {:.6}, a residual of {:.6}.",
+                spec.name, bottom_line, universe, residual
+            ),
+        });
+    }
+    let model_total = universe;
+
+    // THE FIGURES BESIDE THE STATEMENT. A metric is one number at the horizon
+    // and every row is a series, which is why they sit in their own map rather
+    // than as a row kind: a consumer that renders rows as columns of periods
+    // would have nowhere to put a scalar.
+    let mut metrics: BTreeMap<String, Scalar> = BTreeMap::new();
+    for name in &spec.metrics {
+        let key = format!("metric.{name}");
+        if let Some(value) = results.deterministic.metrics.get(&key) {
+            metrics.insert(name.clone(), value.clone());
+        } else if let Some(value) = results.deterministic.metrics.get(name) {
+            metrics.insert(name.clone(), value.clone());
+        }
+    }
+
+    Statement {
+        id: spec.name.clone(),
+        label: spec.label.clone().unwrap_or_else(|| spec.name.clone()),
+        default: false,
+        grain: StatementGrain {
+            calendar: grain.calendar.clone(),
+            start: grain.start.clone(),
+            labels: grain.labels.clone(),
+        },
+        rows,
+        reconciliation: StatementReconciliation {
+            bottom_line: round6(bottom_line),
+            model_total: round6(model_total),
+            residual,
+        },
+        diagnostics,
+        metrics,
+    }
+}
+
+/// Render a model's own statements and attach them to the results.
+///
+/// Separate from `compute` because the two have different inputs — a pack's
+/// specs come from the registry and a model's from the IR — and the same
+/// output: `StatementsSection` holds both, in declaration order with the
+/// pack's first.
+pub fn attach_model_statements(
+    specs: &[ModelStatement],
+    stream_categories: &BTreeMap<String, String>,
+    waterfall_series: &BTreeSet<String>,
+    results: &mut Results,
+) {
+    if specs.is_empty() {
+        return;
+    }
+    let periods = results
+        .deterministic
+        .series
+        .values()
+        .next()
+        .map(|s| s.values.len())
+        .unwrap_or_default();
+    let cash_keys: Vec<String> = results
+        .deterministic
+        .series
+        .keys()
+        .filter(|k| k.starts_with("stream.") || k.starts_with("option."))
+        .filter(|k| !waterfall_series.contains(k.as_str()))
+        .cloned()
+        .collect();
+    let borrowed: Vec<&String> = cash_keys.iter().collect();
+    let index = results
+        .deterministic
+        .series
+        .values()
+        .next()
+        .map(|s| s.index.clone());
+    let rendered: Vec<Statement> = specs
+        .iter()
+        .map(|spec| {
+            let grain = index
+                .as_ref()
+                .map(|ix| Grain::from_index(ix, spec.grain.as_deref()))
+                .unwrap_or_else(|| Grain {
+                    calendar: String::new(),
+                    start: String::new(),
+                    buckets: (0..periods).map(|i| vec![i]).collect(),
+                    labels: (0..periods).map(|i| i.to_string()).collect(),
+                });
+            generate(
+                spec,
+                &grain,
+                &borrowed,
+                stream_categories,
+                results,
+                periods,
+            )
+        })
+        .collect();
+    match &mut results.statements {
+        Some(section) => section.statements.extend(rendered),
+        None => {
+            results.statements = Some(StatementsSection {
+                // A model statement has no pack. The field stays for the
+                // pack's own statements, which is why it is optional rather
+                // than carrying a sentinel that a consumer would have to know.
+                pack: None,
+                statements: rendered,
+            })
+        }
+    }
+}
+
+/// A model-declared presentation, as the IR carries it.
+#[derive(Debug, Clone, serde::Deserialize)]
+pub struct ModelStatement {
+    pub name: String,
+    #[serde(default)]
+    pub label: Option<String>,
+    pub structure: String,
+    #[serde(default)]
+    pub depth: Option<u32>,
+    #[serde(default)]
+    pub grain: Option<String>,
+    #[serde(default)]
+    pub slice: Option<String>,
+    #[serde(default)]
+    pub metrics: Vec<String>,
+}
+
+/// The model statements an IR carries, if any.
+pub fn model_statements(ir: &serde_json::Value) -> Vec<ModelStatement> {
+    ir.get("statements")
+        .and_then(|v| serde_json::from_value::<Vec<ModelStatement>>(v.clone()).ok())
+        .unwrap_or_default()
 }
 
 /// `operating.*` reaches `operating.revenue.base_rent`. The same path-segment

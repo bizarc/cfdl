@@ -1,0 +1,579 @@
+{
+  "results_version": "0.11",
+  "model_hash": "3e6b45b7711fe4895d2f2b48a82926415ecb90434329f05782c9df610123568d",
+  "ledger_hash": "fa2d6ecfc9378db4d3f01dfdd046f001dd81703955c31bf5a1db663d3a3196e8",
+  "engine": {
+    "name": "cfdl-engine",
+    "version": "0.8.0"
+  },
+  "warnings": [],
+  "deterministic": {
+    "status": "ok",
+    "metrics": {
+      "entity.asset.north.total": {
+        "amount": 300.0,
+        "currency": "USD"
+      },
+      "entity.asset.south.total": {
+        "amount": 180.0,
+        "currency": "USD"
+      },
+      "entity.container.fund.total": {
+        "amount": 480.0,
+        "currency": "USD"
+      },
+      "metric.total_rent": 480.0,
+      "model.npv": {
+        "amount": 397.896319,
+        "currency": "USD"
+      },
+      "model.total": {
+        "amount": 480.0,
+        "currency": "USD"
+      },
+      "model.wal_years": 2.0,
+      "run.annual_discount_rate": 0.1,
+      "run.periods_per_year": 1.0,
+      "stream.north.rent.total": {
+        "amount": 300.0,
+        "currency": "USD"
+      },
+      "stream.south.rent.total": {
+        "amount": 180.0,
+        "currency": "USD"
+      }
+    },
+    "series": {
+      "entity.asset.north.net_cash_flow": {
+        "index": {
+          "calendar": "annual",
+          "start": "2026-01-01",
+          "periods": 3
+        },
+        "values": [
+          {
+            "amount": 100.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 100.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 100.0,
+            "currency": "USD"
+          }
+        ]
+      },
+      "entity.asset.south.net_cash_flow": {
+        "index": {
+          "calendar": "annual",
+          "start": "2026-01-01",
+          "periods": 3
+        },
+        "values": [
+          {
+            "amount": 60.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 60.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 60.0,
+            "currency": "USD"
+          }
+        ]
+      },
+      "entity.container.fund.net_cash_flow": {
+        "index": {
+          "calendar": "annual",
+          "start": "2026-01-01",
+          "periods": 3
+        },
+        "values": [
+          {
+            "amount": 160.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 160.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 160.0,
+            "currency": "USD"
+          }
+        ]
+      },
+      "model.net_cash_flow": {
+        "index": {
+          "calendar": "annual",
+          "start": "2026-01-01",
+          "periods": 3
+        },
+        "values": [
+          {
+            "amount": 160.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 160.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 160.0,
+            "currency": "USD"
+          }
+        ]
+      },
+      "stream.north.rent": {
+        "index": {
+          "calendar": "annual",
+          "start": "2026-01-01",
+          "periods": 3
+        },
+        "offset": 1.0,
+        "entity": "asset.north",
+        "category": "operating.revenue.base_rent",
+        "values": [
+          {
+            "amount": 100.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 100.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 100.0,
+            "currency": "USD"
+          }
+        ]
+      },
+      "stream.south.rent": {
+        "index": {
+          "calendar": "annual",
+          "start": "2026-01-01",
+          "periods": 3
+        },
+        "offset": 1.0,
+        "entity": "asset.south",
+        "category": "operating.revenue.base_rent",
+        "values": [
+          {
+            "amount": 60.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 60.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 60.0,
+            "currency": "USD"
+          }
+        ]
+      }
+    }
+  },
+  "scenarios": {
+    "status": "not_run",
+    "summaries": []
+  },
+  "monte_carlo": {
+    "status": "not_run",
+    "trials": 1,
+    "seed": 0,
+    "metrics": {},
+    "trial_summaries": []
+  },
+  "statements": {
+    "statements": [
+      {
+        "id": "portfolio",
+        "label": "Portfolio by property",
+        "default": false,
+        "grain": {
+          "calendar": "annual",
+          "start": "2026-01-01",
+          "labels": [
+            "2026",
+            "2027",
+            "2028"
+          ]
+        },
+        "rows": [
+          {
+            "kind": "subtotal",
+            "label": "container.fund",
+            "depth": 0,
+            "display_sign": 1.0,
+            "values": [
+              {
+                "amount": 160.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 160.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 160.0,
+                "currency": "USD"
+              }
+            ],
+            "total": 480.0
+          },
+          {
+            "kind": "line",
+            "label": "asset.north",
+            "depth": 1,
+            "display_sign": 1.0,
+            "values": [
+              {
+                "amount": 100.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 100.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 100.0,
+                "currency": "USD"
+              }
+            ],
+            "total": 300.0,
+            "streams": [
+              "stream.north.rent"
+            ]
+          },
+          {
+            "kind": "line",
+            "label": "asset.south",
+            "depth": 1,
+            "display_sign": 1.0,
+            "values": [
+              {
+                "amount": 60.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 60.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 60.0,
+                "currency": "USD"
+              }
+            ],
+            "total": 180.0,
+            "streams": [
+              "stream.south.rent"
+            ]
+          }
+        ],
+        "reconciliation": {
+          "bottom_line": 480.0,
+          "model_total": 480.0,
+          "residual": 0.0
+        }
+      },
+      {
+        "id": "portfolio_summary",
+        "label": "Portfolio, one line",
+        "default": false,
+        "grain": {
+          "calendar": "annual",
+          "start": "2026-01-01",
+          "labels": [
+            "2026",
+            "2027",
+            "2028"
+          ]
+        },
+        "rows": [
+          {
+            "kind": "line",
+            "label": "container.fund",
+            "depth": 0,
+            "display_sign": 1.0,
+            "values": [
+              {
+                "amount": 160.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 160.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 160.0,
+                "currency": "USD"
+              }
+            ],
+            "total": 480.0,
+            "streams": [
+              "stream.north.rent",
+              "stream.south.rent"
+            ]
+          }
+        ],
+        "reconciliation": {
+          "bottom_line": 480.0,
+          "model_total": 480.0,
+          "residual": 0.0
+        }
+      },
+      {
+        "id": "by_category",
+        "label": "By category",
+        "default": false,
+        "grain": {
+          "calendar": "annual",
+          "start": "2026-01-01",
+          "labels": [
+            "2026",
+            "2027",
+            "2028"
+          ]
+        },
+        "rows": [
+          {
+            "kind": "subtotal",
+            "label": "operating",
+            "depth": 0,
+            "display_sign": 1.0,
+            "values": [
+              {
+                "amount": 160.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 160.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 160.0,
+                "currency": "USD"
+              }
+            ],
+            "total": 480.0
+          },
+          {
+            "kind": "subtotal",
+            "label": "operating.revenue",
+            "depth": 1,
+            "display_sign": 1.0,
+            "values": [
+              {
+                "amount": 160.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 160.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 160.0,
+                "currency": "USD"
+              }
+            ],
+            "total": 480.0
+          },
+          {
+            "kind": "line",
+            "label": "operating.revenue.base_rent",
+            "depth": 2,
+            "display_sign": 1.0,
+            "values": [
+              {
+                "amount": 160.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 160.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 160.0,
+                "currency": "USD"
+              }
+            ],
+            "total": 480.0,
+            "streams": [
+              "stream.north.rent",
+              "stream.south.rent"
+            ]
+          }
+        ],
+        "reconciliation": {
+          "bottom_line": 480.0,
+          "model_total": 480.0,
+          "residual": 0.0
+        }
+      },
+      {
+        "id": "north_only",
+        "label": "North, first two years",
+        "default": false,
+        "grain": {
+          "calendar": "annual",
+          "start": "2026-01-01",
+          "labels": [
+            "2026",
+            "2027",
+            "2028"
+          ]
+        },
+        "rows": [
+          {
+            "kind": "subtotal",
+            "label": "container.fund",
+            "depth": 0,
+            "display_sign": 1.0,
+            "values": [
+              {
+                "amount": 100.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 100.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              }
+            ],
+            "total": 200.0
+          },
+          {
+            "kind": "line",
+            "label": "asset.north",
+            "depth": 1,
+            "display_sign": 1.0,
+            "values": [
+              {
+                "amount": 100.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 100.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              }
+            ],
+            "total": 200.0,
+            "streams": [
+              "stream.north.rent"
+            ]
+          },
+          {
+            "kind": "line",
+            "label": "asset.south",
+            "depth": 1,
+            "display_sign": 1.0,
+            "values": [
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              }
+            ],
+            "total": 0.0
+          }
+        ],
+        "reconciliation": {
+          "bottom_line": 200.0,
+          "model_total": 200.0,
+          "residual": 0.0
+        },
+        "metrics": {
+          "total_rent": 480.0
+        }
+      }
+    ]
+  },
+  "graph": {
+    "entities": [
+      {
+        "symbol": "asset.north",
+        "family": "asset",
+        "type": "Asset.Financial",
+        "parent": "container.fund"
+      },
+      {
+        "symbol": "asset.south",
+        "family": "asset",
+        "type": "Asset.Financial",
+        "parent": "container.fund"
+      },
+      {
+        "symbol": "container.fund",
+        "family": "container",
+        "type": "Container.Fund"
+      }
+    ]
+  },
+  "slices": [
+    {
+      "id": "north_early",
+      "selection": {
+        "entities": [
+          "asset.north"
+        ],
+        "window": {
+          "from": "2026-01-01",
+          "to": "2027-01-01"
+        }
+      },
+      "streams": [
+        "north.rent"
+      ],
+      "net": {
+        "index": {
+          "calendar": "annual",
+          "start": "2026-01-01",
+          "periods": 3
+        },
+        "values": [
+          {
+            "amount": 100.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 100.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          }
+        ]
+      },
+      "metrics": {
+        "npv": {
+          "amount": 173.553719,
+          "currency": "USD"
+        },
+        "total": {
+          "amount": 200.0,
+          "currency": "USD"
+        }
+      }
+    }
+  ]
+}

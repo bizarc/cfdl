@@ -1,0 +1,17 @@
+[
+  {
+    "code": "E1367_STATEMENT_UNKNOWN_STRUCTURE",
+    "severity": "error",
+    "message": "Statement 'wrong' presents structure 'region', which is not one this engine builds.",
+    "file": "model.cfdl",
+    "span": {
+      "start_line": 19,
+      "start_col": 1,
+      "end_line": 22,
+      "end_col": 1
+    },
+    "path": null,
+    "hint": "Known structures: entity, category.",
+    "notes": []
+  }
+]

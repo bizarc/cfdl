@@ -536,7 +536,11 @@ pub struct Results {
 
 #[derive(Debug, Clone, Serialize)]
 pub struct StatementsSection {
-    pub pack: String,
+    /// The pack whose statements these are. Absent when a MODEL declared them:
+    /// a model-declared statement has no pack, and a sentinel string would be
+    /// a value a consumer has to know to disregard (`docs/13` §7.55).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub pack: Option<String>,
     pub statements: Vec<Statement>,
 }
 
@@ -556,6 +560,12 @@ pub struct Statement {
     /// Completeness findings. Empty is the healthy case.
     #[serde(skip_serializing_if = "Vec::is_empty")]
     pub diagnostics: Vec<StatementDiagnostic>,
+    /// Declared metrics published beside the statement (`docs/13` §7.55). A
+    /// metric is one number at the horizon and every row is a series, so the
+    /// figures sit in their own map rather than as a row kind: a consumer
+    /// rendering rows as columns of periods has nowhere to put a scalar.
+    #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
+    pub metrics: BTreeMap<String, Scalar>,
 }
 
 /// How a statement's columns are bucketed, and what to call them.

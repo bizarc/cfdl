@@ -1385,6 +1385,55 @@ See the Pack Interface specification for details on how packs define output cate
 
 ---
 
+### 15.5 Statements (normative)
+
+A model MAY declare a statement — how its results are organized. A statement
+enumerates NO rows:
+
+```cfdl
+statement portfolio {
+  label     "Portfolio by property"
+  structure entity
+  depth     2
+}
+
+statement operating {
+  label     "Operating statement"
+  structure category
+  depth     3
+  slice     west_2027
+  metrics   noi_yield, lp_irr
+}
+```
+
+Rules:
+- A statement name MUST be unique within the model (`E1366`).
+- `structure` names an existing hierarchy: `entity`, the `part of` tree the
+  results graph publishes, or `category`, the dotted category path. A structure
+  the engine does not build is refused (`E1367`), as is a category statement in
+  a model whose streams declare no category — either would render one residual
+  row and nothing else.
+- `depth` sets the LEVEL OF AGGREGATION, and the rows follow from the tree.
+  **A subtotal is not declared.** A node whose children are shown is a
+  `subtotal`; a node whose children are cut off by `depth` is a `line`,
+  carrying all of its descendants' cash. That single rule is what keeps the
+  bottom line reconciling at every depth: the lines always partition the cash,
+  whichever level the tree is cut at.
+- `slice` filters, orthogonally to the structure — any structure may be shown
+  for any filter. A statement so filtered reconciles against the SLICE's total
+  rather than the model's, because reporting the filter as a shortfall would
+  make a warning fire on a correct model.
+- `metrics` names declared metrics to publish beside the statement. A metric is
+  one number at the horizon and every row is a series, so the figures sit in
+  their own map rather than as a row kind. An undeclared slice or metric is
+  refused (`E1368`).
+- Every clause word is CONTEXTUAL; only `statement` is reserved.
+- A statement changes no value, so it does not move `ledger_hash`.
+
+A pack declares its own statements the same way, and both render through one
+evaluator.
+
+
 ## 16. Expressions (CFDL expression language)
 
 ### 16.1 Expression syntax
@@ -1480,7 +1529,7 @@ These MUST compile to typed values in IR.
 A reserved word cannot be used as an identifier. The list is exhaustive and is
 checked against the lexer, so a word added to one appears in the other.
 
-### 18.1 In use (87)
+### 18.1 In use (88)
 
 Read by a production of the grammar:
 
@@ -1489,7 +1538,7 @@ Read by a production of the grammar:
 `every`, `except`, `exercisable`, `exercise`, `false`, `following`, `for`, `from`, `import`, `in`, `inflow`,
 `LogNormal`, `metric`, `mid`, `model`, `modified_following`, `modified_preceding`, `monte_carlo`, `month`, `monthly`, `months`, `net`, `none`,
 `Normal`, `on`, `option`, `owner`, `outflow`, `pack`, `parties`, `payment`, `payoff`, `phase`, `phase_end`, `phase_enter`,
-`phase_start`, `preceding`, `quantile`, `quarter`, `quarterly`, `run`, `schedule`, `seed`, `set`, `slice`, `state`, `start`, `stream`, `stub`,
+`phase_start`, `preceding`, `quantile`, `quarter`, `quarterly`, `run`, `schedule`, `seed`, `set`, `slice`, `state`, `start`, `statement`, `stream`, `stub`,
 `term`, `terms`, `time`, `to`, `trials`, `Triangular`, `true`, `type`, `Uniform`, `use`, `version`,
 `waterfall`, `week`, `when`, `year`.
 
