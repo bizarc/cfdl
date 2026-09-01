@@ -387,6 +387,10 @@ struct Ir {
     metrics: Vec<IrMetric>,
     #[serde(skip_serializing_if = "Vec::is_empty")]
     slices: Vec<IrSlice>,
+    /// Declared presentations (`docs/13` §7.55). Omitted when a model declares
+    /// none, so existing IR is byte-identical.
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    statements: Vec<IrStatement>,
     contracts: Vec<IrContract>,
     streams: Vec<IrStream>,
     /// What each pack-lowered stream consumed, keyed by stream name. Omitted
@@ -563,6 +567,29 @@ struct IrSlice {
     /// spans the whole horizon, so existing IR stays byte-identical.
     #[serde(skip_serializing_if = "Option::is_none")]
     window: Option<IrDateRange>,
+    provenance: IrNodeProvenance,
+}
+
+/// A declared presentation: which hierarchy, to what level, for what filter.
+///
+/// It carries no rows. The rows are generated from the structure at run time —
+/// an entity hierarchy from `part of`, a category hierarchy from the dotted
+/// path — and `depth` decides which of them are shown, so an interior node is
+/// a subtotal by virtue of where it sits rather than by declaration.
+#[derive(Debug, Serialize)]
+struct IrStatement {
+    name: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    label: Option<String>,
+    structure: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    depth: Option<u32>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    grain: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    slice: Option<String>,
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    metrics: Vec<String>,
     provenance: IrNodeProvenance,
 }
 
@@ -4079,6 +4106,37 @@ fn build_ir(
     // Validated here — a reference is what the compiler can resolve — and the
     // `type` clauses are EXPANDED here, because only the compiler holds the
     // ontology the transitive match walks.
+    // DECLARED PRESENTATIONS (`docs/13` §7.55). Carried to the IR as declared;
+    // the rows are generated after the run, because a hierarchy's shape is a
+    // fact about the results rather than about the source.
+    let mut statement_spans: BTreeMap<String, (String, cfdl_parser::Span)> = BTreeMap::new();
+    for source_stmt in &resolve_output.source_statements {
+        if let Stmt::Statement(st) = &source_stmt.statement {
+            statement_spans.insert(st.name.clone(), (source_stmt.file.clone(), st.span));
+        }
+    }
+    let ir_statements: Vec<IrStatement> = resolve_output
+        .source_statements
+        .iter()
+        .filter_map(|source_stmt| match &source_stmt.statement {
+            Stmt::Statement(statement_stmt) => Some(IrStatement {
+                name: statement_stmt.name.clone(),
+                label: statement_stmt.label.clone(),
+                structure: statement_stmt.structure.clone(),
+                depth: statement_stmt.depth,
+                grain: statement_stmt.grain.clone(),
+                slice: statement_stmt.slice.clone(),
+                metrics: statement_stmt.metrics.clone(),
+                provenance: IrNodeProvenance {
+                    source_file: source_stmt.file.clone(),
+                    source_span: map_span(statement_stmt.span),
+                    generated_by: None,
+                },
+            }),
+            _ => None,
+        })
+        .collect();
+
     let ir_slices: Vec<IrSlice> = {
         let declared_entities: BTreeSet<String> = resolve_output
             .source_statements
@@ -4255,6 +4313,7 @@ fn build_ir(
         waterfalls: ir_waterfalls,
         metrics: ir_metrics,
         slices: ir_slices,
+        statements: ir_statements,
         contracts: contracts
             .into_iter()
             .map(|(_, contract)| contract)
@@ -4322,6 +4381,17 @@ fn build_ir(
     // vocabulary is the WHOLE assembled document — lowered streams, waterfall
     // steps, entity rollups, accounts, fields, pack subtotals — and half of it
     // does not exist yet where metrics are read.
+    // A STATEMENT NAMING SOMETHING THAT IS NOT THERE (`docs/13` §7.55).
+    // Refused here rather than reported inside the rendered statement: a
+    // presentation that silently shows nothing is the failure mode the whole
+    // entry exists to end.
+    let statement_diagnostics = check_statements(&ir, &statement_spans);
+    if !statement_diagnostics.is_empty() {
+        let mut diagnostics = statement_diagnostics;
+        sort_compile_diagnostics(&mut diagnostics);
+        return Err(diagnostics);
+    }
+
     let metric_series_diagnostics = check_metric_series_names(&ir, &metric_spans);
     if !metric_series_diagnostics.is_empty() {
         let mut diagnostics = metric_series_diagnostics;
@@ -4395,6 +4465,92 @@ fn metric_series_vocabulary(ir: &Ir) -> BTreeSet<String> {
     }
     known.insert("model.net_cash_flow".to_string());
     known
+}
+
+/// Known structures a statement may present.
+///
+/// Both read a hierarchy the results already carry: `entity` walks the `part
+/// of` tree `graph` publishes, `category` walks the dotted category path. A
+/// third would be added here and in `cfdl-statement::generate` together.
+const STATEMENT_STRUCTURES: &[&str] = &["entity", "category"];
+
+fn check_statements(
+    ir: &Ir,
+    spans: &BTreeMap<String, (String, cfdl_parser::Span)>,
+) -> Vec<Diagnostic> {
+    let mut diagnostics = Vec::new();
+    let slice_names: BTreeSet<&str> = ir.slices.iter().map(|s| s.name.as_str()).collect();
+    let metric_names: BTreeSet<&str> = ir.metrics.iter().map(|m| m.name.as_str()).collect();
+    let categorised = ir.streams.iter().any(|s| s.category.is_some());
+    for statement in &ir.statements {
+        let (file, span) = spans
+            .get(&statement.name)
+            .map(|(f, s)| (Some(f.clone()), Some(map_span(*s))))
+            .unwrap_or((None, None));
+        let mut found: Vec<(String, String, String)> = Vec::new();
+        let mut push = |code: &str, message: String, hint: String| {
+            found.push((code.to_string(), message, hint));
+        };
+        if !STATEMENT_STRUCTURES.contains(&statement.structure.as_str()) {
+            push(
+                "E1367_STATEMENT_UNKNOWN_STRUCTURE",
+                format!(
+                    "Statement '{}' presents structure '{}', which is not one this engine builds.",
+                    statement.name, statement.structure
+                ),
+                format!("Known structures: {}.", STATEMENT_STRUCTURES.join(", ")),
+            );
+        } else if statement.structure == "category" && !categorised {
+            // A CATEGORY STATEMENT OVER UNCATEGORISED STREAMS would render as
+            // one residual row and nothing else — technically complete, and
+            // useless. Refused with the reason rather than shipped empty.
+            push(
+                "E1367_STATEMENT_UNKNOWN_STRUCTURE",
+                format!(
+                    "Statement '{}' presents a category hierarchy, and no stream in this model declares a category.",
+                    statement.name
+                ),
+                "Give the streams a `category`, or present `structure entity`.".to_string(),
+            );
+        }
+        if let Some(slice) = &statement.slice {
+            if !slice_names.contains(slice.as_str()) {
+                push(
+                    "E1368_STATEMENT_UNKNOWN_REFERENCE",
+                    format!(
+                        "Statement '{}' filters by slice '{slice}', which this model does not declare.",
+                        statement.name
+                    ),
+                    "A statement filters by a declared slice; check the spelling.".to_string(),
+                );
+            }
+        }
+        for metric in &statement.metrics {
+            if !metric_names.contains(metric.as_str()) {
+                push(
+                    "E1368_STATEMENT_UNKNOWN_REFERENCE",
+                    format!(
+                        "Statement '{}' shows metric '{metric}', which this model does not declare.",
+                        statement.name
+                    ),
+                    "A statement shows declared metrics; check the spelling.".to_string(),
+                );
+            }
+        }
+        for (code, message, hint) in found {
+            diagnostics.push(Diagnostic {
+                code,
+                severity: "error".to_string(),
+                message,
+                file: file.clone(),
+                span: span.clone(),
+                path: None,
+                hint: Some(hint),
+                notes: vec![],
+            });
+        }
+    }
+    diagnostics
 }
 
 fn check_metric_series_names(

@@ -1,0 +1,235 @@
+{
+  "ir_version": "0.1",
+  "model": {
+    "name": "statement-by-entity",
+    "currency": "USD"
+  },
+  "time": {
+    "calendar": "annual",
+    "start": "2026-01-01",
+    "periods": 3
+  },
+  "phases": [],
+  "entities": [
+    {
+      "id": "4c8e7d70014c0659303543644c4765ab",
+      "symbol": "asset.north",
+      "type": "Asset.Financial",
+      "fields": {},
+      "state": {},
+      "parent": "container.fund"
+    },
+    {
+      "id": "abef389b48d7e375ca5ce114bf71f755",
+      "symbol": "asset.south",
+      "type": "Asset.Financial",
+      "fields": {},
+      "state": {},
+      "parent": "container.fund"
+    },
+    {
+      "id": "fac8939144583da91b3c41819b3e919a",
+      "symbol": "container.fund",
+      "type": "Container.Fund",
+      "fields": {},
+      "state": {}
+    }
+  ],
+  "assumptions": {
+    "constants": {},
+    "random": {}
+  },
+  "metrics": [
+    {
+      "name": "total_rent",
+      "expr": {
+        "lang": "cfdl",
+        "src": "series_sum(\"north.rent\", 0.0, 2.0) + series_sum(\"south.rent\", 0.0, 2.0)"
+      },
+      "provenance": {
+        "source_file": "model.cfdl",
+        "source_span": {
+          "start_line": 83,
+          "start_col": 1,
+          "end_line": 83,
+          "end_col": 83
+        }
+      }
+    }
+  ],
+  "slices": [
+    {
+      "name": "north_early",
+      "entities": [
+        "asset.north"
+      ],
+      "window": {
+        "start": "2026-01-01",
+        "end": "2027-01-01"
+      },
+      "provenance": {
+        "source_file": "model.cfdl",
+        "source_span": {
+          "start_line": 70,
+          "start_col": 1,
+          "end_line": 73,
+          "end_col": 1
+        }
+      }
+    }
+  ],
+  "statements": [
+    {
+      "name": "portfolio",
+      "label": "Portfolio by property",
+      "structure": "entity",
+      "depth": 2,
+      "provenance": {
+        "source_file": "model.cfdl",
+        "source_span": {
+          "start_line": 36,
+          "start_col": 1,
+          "end_line": 40,
+          "end_col": 1
+        }
+      }
+    },
+    {
+      "name": "portfolio_summary",
+      "label": "Portfolio, one line",
+      "structure": "entity",
+      "depth": 1,
+      "provenance": {
+        "source_file": "model.cfdl",
+        "source_span": {
+          "start_line": 48,
+          "start_col": 1,
+          "end_line": 52,
+          "end_col": 1
+        }
+      }
+    },
+    {
+      "name": "by_category",
+      "label": "By category",
+      "structure": "category",
+      "depth": 3,
+      "provenance": {
+        "source_file": "model.cfdl",
+        "source_span": {
+          "start_line": 56,
+          "start_col": 1,
+          "end_line": 60,
+          "end_col": 1
+        }
+      }
+    },
+    {
+      "name": "north_only",
+      "label": "North, first two years",
+      "structure": "entity",
+      "depth": 2,
+      "slice": "north_early",
+      "metrics": [
+        "total_rent"
+      ],
+      "provenance": {
+        "source_file": "model.cfdl",
+        "source_span": {
+          "start_line": 75,
+          "start_col": 1,
+          "end_line": 81,
+          "end_col": 1
+        }
+      }
+    }
+  ],
+  "contracts": [],
+  "streams": [
+    {
+      "id": "624ca5909995cc857b71714e78215d45",
+      "name": "north.rent",
+      "owner": {
+        "symbol": "asset.north"
+      },
+      "direction": "inflow",
+      "currency": "USD",
+      "category": "operating.revenue.base_rent",
+      "schedule": {
+        "kind": "Every",
+        "every": "annual",
+        "from": "2026-01-01",
+        "to": "2028-01-01"
+      },
+      "amount": {
+        "lang": "cfdl",
+        "src": "100.0"
+      },
+      "active_when": {
+        "lang": "cfdl",
+        "src": "true"
+      },
+      "provenance": {
+        "source_file": "model.cfdl",
+        "source_span": {
+          "start_line": 24,
+          "start_col": 1,
+          "end_line": 28,
+          "end_col": 1
+        }
+      }
+    },
+    {
+      "id": "e8b4748d90b332e2e7153b3f1fac522f",
+      "name": "south.rent",
+      "owner": {
+        "symbol": "asset.south"
+      },
+      "direction": "inflow",
+      "currency": "USD",
+      "category": "operating.revenue.base_rent",
+      "schedule": {
+        "kind": "Every",
+        "every": "annual",
+        "from": "2026-01-01",
+        "to": "2028-01-01"
+      },
+      "amount": {
+        "lang": "cfdl",
+        "src": "60.0"
+      },
+      "active_when": {
+        "lang": "cfdl",
+        "src": "true"
+      },
+      "provenance": {
+        "source_file": "model.cfdl",
+        "source_span": {
+          "start_line": 30,
+          "start_col": 1,
+          "end_line": 34,
+          "end_col": 1
+        }
+      }
+    }
+  ],
+  "events": [],
+  "options": [],
+  "runs": [
+    {
+      "kind": "deterministic"
+    }
+  ],
+  "required_observables": [],
+  "required_refs": [],
+  "provenance": {
+    "sources": [
+      "model.cfdl"
+    ],
+    "compiler": {
+      "name": "cfdl",
+      "version": "0.8.0",
+      "hash": "5fdb54f1ea1d7d1e626a7dbad0b08339"
+    }
+  }
+}

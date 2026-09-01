@@ -1397,6 +1397,55 @@ See the Pack Interface specification for details on how packs define output cate
 
 ---
 
+### 15.5 Statements (normative)
+
+A model MAY declare a statement — how its results are organized. A statement
+enumerates NO rows:
+
+```cfdl
+statement portfolio {
+  label     "Portfolio by property"
+  structure entity
+  depth     2
+}
+
+statement operating {
+  label     "Operating statement"
+  structure category
+  depth     3
+  slice     west_2027
+  metrics   noi_yield, lp_irr
+}
+```
+
+Rules:
+- A statement name MUST be unique within the model (`E1366`).
+- `structure` names an existing hierarchy: `entity`, the `part of` tree the
+  results graph publishes, or `category`, the dotted category path. A structure
+  the engine does not build is refused (`E1367`), as is a category statement in
+  a model whose streams declare no category — either would render one residual
+  row and nothing else.
+- `depth` sets the LEVEL OF AGGREGATION, and the rows follow from the tree.
+  **A subtotal is not declared.** A node whose children are shown is a
+  `subtotal`; a node whose children are cut off by `depth` is a `line`,
+  carrying all of its descendants' cash. That single rule is what keeps the
+  bottom line reconciling at every depth: the lines always partition the cash,
+  whichever level the tree is cut at.
+- `slice` filters, orthogonally to the structure — any structure may be shown
+  for any filter. A statement so filtered reconciles against the SLICE's total
+  rather than the model's, because reporting the filter as a shortfall would
+  make a warning fire on a correct model.
+- `metrics` names declared metrics to publish beside the statement. A metric is
+  one number at the horizon and every row is a series, so the figures sit in
+  their own map rather than as a row kind. An undeclared slice or metric is
+  refused (`E1368`).
+- Every clause word is CONTEXTUAL; only `statement` is reserved.
+- A statement changes no value, so it does not move `ledger_hash`.
+
+A pack declares its own statements the same way, and both render through one
+evaluator.
+
+
 ## 16. Expressions (CFDL expression language)
 
 ### 16.1 Expression syntax
@@ -1492,7 +1541,7 @@ These MUST compile to typed values in IR.
 A reserved word cannot be used as an identifier. The list is exhaustive and is
 checked against the lexer, so a word added to one appears in the other.
 
-### 18.1 In use (87)
+### 18.1 In use (88)
 
 Read by a production of the grammar:
 
@@ -1501,7 +1550,7 @@ Read by a production of the grammar:
 `every`, `except`, `exercisable`, `exercise`, `false`, `following`, `for`, `from`, `import`, `in`, `inflow`,
 `LogNormal`, `metric`, `mid`, `model`, `modified_following`, `modified_preceding`, `monte_carlo`, `month`, `monthly`, `months`, `net`, `none`,
 `Normal`, `on`, `option`, `owner`, `outflow`, `pack`, `parties`, `payment`, `payoff`, `phase`, `phase_end`, `phase_enter`,
-`phase_start`, `preceding`, `quantile`, `quarter`, `quarterly`, `run`, `schedule`, `seed`, `set`, `slice`, `state`, `start`, `stream`, `stub`,
+`phase_start`, `preceding`, `quantile`, `quarter`, `quarterly`, `run`, `schedule`, `seed`, `set`, `slice`, `state`, `start`, `statement`, `stream`, `stub`,
 `term`, `terms`, `time`, `to`, `trials`, `Triangular`, `true`, `type`, `Uniform`, `use`, `version`,
 `waterfall`, `week`, `when`, `year`.
 
@@ -1630,6 +1679,7 @@ statement       = version_stmt
                 | phase_stmt
                 | metric_stmt
                 | slice_stmt
+                | statement_stmt
                 | entity_stmt
                 | assume_stmt
                 | curve_stmt
@@ -1675,6 +1725,20 @@ metric_stmt     = "metric" IDENT "=" expr ;
    window bounds a report. `category` and `window` are contextual words,
    not reserved ones. *)
 slice_stmt      = "slice" IDENT "{" slice_clause* "}" ;
+
+(* A declared presentation (docs/01 §15.5). It enumerates NO rows: the rows
+   come from the structure — an entity hierarchy from `part of`, a category
+   hierarchy from the dotted path — and `depth` sets the level of aggregation,
+   so an interior node is a subtotal by virtue of where it sits. `slice` is a
+   filter, orthogonal to the structure. Every clause word is contextual;
+   only `statement` itself is reserved. *)
+statement_stmt  = "statement" IDENT "{" statement_clause* "}" ;
+statement_clause = "label" STRING
+                 | "structure" ( "entity" | IDENT )
+                 | "depth" NUMBER
+                 | "grain" ( "annual" | IDENT )
+                 | "slice" IDENT
+                 | "metrics" IDENT { "," IDENT } ;
 slice_clause    = "entity" QNAME
                 | "type" ( QNAME | IDENT )
                 | "category" STRING
@@ -2760,6 +2824,13 @@ against it by `make ir-schema`.
     },
     "provenance": {
       "$ref": "#/$defs/Provenance"
+    },
+    "statements": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/Statement"
+      },
+      "description": "Declared presentations (docs/13 §7.55)."
     }
   },
   "$defs": {
@@ -4353,6 +4424,54 @@ against it by `make ir-schema`.
           "description": "A reporting window, inclusive. Only periods inside it are selected, so total, npv and irr are folds over it. Absent when the slice spans the whole horizon. Not a phase: a phase is a lifecycle anchor that drives schedules, and a window is a reporting bound."
         }
       }
+    },
+    "Statement": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "structure",
+        "provenance"
+      ],
+      "description": "A declared presentation: which hierarchy to show, and to what level. It carries no rows — the rows are generated from the structure after the run, and depth decides which are shown, so an interior node is a subtotal by virtue of where it sits.",
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "label": {
+          "type": "string"
+        },
+        "structure": {
+          "type": "string",
+          "enum": [
+            "entity",
+            "category"
+          ],
+          "description": "Which existing hierarchy to present: the part_of tree, or the dotted category path."
+        },
+        "depth": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "The level of aggregation. Absent means the whole tree."
+        },
+        "grain": {
+          "type": "string"
+        },
+        "slice": {
+          "type": "string",
+          "description": "An optional filter, orthogonal to the structure."
+        },
+        "metrics": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Declared metrics published beside the statement."
+        },
+        "provenance": {
+          "$ref": "#/$defs/NodeProvenance"
+        }
+      }
     }
   }
 }
@@ -4397,8 +4516,8 @@ against it by `make results-schema`.
   "properties": {
     "results_version": {
       "type": "string",
-      "const": "0.10",
-      "description": "Schema version of this document. 0.10 adds `window` to a slice's selection — a reporting bound whose periods are the only ones the slice folds. 0.9 carries every metric a Monte Carlo trial computed into its trial summary, summarises each of them across the trials with the full set of percentiles, and adds `trials` to a metric summary — the count of trials that published that name. 0.8 adds `slices` — declared partial selections with their matched streams, net series and figures, and no reconciliation block by design. 0.7 publishes the model's entity graph (`graph`) and attributes each stream series to its owning entity and category. 0.6 nests an act's own acts under it as `children`. 0.5 added the machine's `transition` journal action. 0.4 added the account journal actions. 0.3 added `ledger_hash`, the optional `inputs` section, and `category` on IR streams."
+      "const": "0.11",
+      "description": "Schema version of this document. 0.11 adds model-declared statements: `pack` on the statements section is optional, and a statement may carry `metrics`. 0.10 adds `window` to a slice's selection — a reporting bound whose periods are the only ones the slice folds. 0.9 carries every metric a Monte Carlo trial computed into its trial summary, summarises each of them across the trials with the full set of percentiles, and adds `trials` to a metric summary — the count of trials that published that name. 0.8 adds `slices` — declared partial selections with their matched streams, net series and figures, and no reconciliation block by design. 0.7 publishes the model's entity graph (`graph`) and attributes each stream series to its owning entity and category. 0.6 nests an act's own acts under it as `children`. 0.5 added the machine's `transition` journal action. 0.4 added the account journal actions. 0.3 added `ledger_hash`, the optional `inputs` section, and `category` on IR streams."
     },
     "model_hash": {
       "type": "string",
@@ -5094,13 +5213,13 @@ against it by `make results-schema`.
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "pack",
         "statements"
       ],
       "description": "Statements the active pack declares, rendered against this run. Rows carry order, labels, depth and a display sign; they compute nothing the engine has not already aggregated. Absent when the pack declares no statement.",
       "properties": {
         "pack": {
-          "type": "string"
+          "type": "string",
+          "description": "The pack whose statements these are. Absent when a MODEL declared them: a model-declared statement has no pack, and a sentinel string would be a value a consumer has to know to disregard."
         },
         "statements": {
           "type": "array",
@@ -5149,6 +5268,13 @@ against it by `make results-schema`.
             "$ref": "#/$defs/StatementDiagnostic"
           },
           "description": "Completeness findings. Empty is the healthy case."
+        },
+        "metrics": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/$defs/Scalar"
+          },
+          "description": "Declared metrics published beside the statement (docs/13 §7.55). A metric is one number at the horizon and every row is a series, so the figures sit in their own map rather than as a row kind."
         }
       }
     },
@@ -7009,6 +7135,9 @@ Fields that move:
 - `E1362_SLICE_UNKNOWN_ENTITY` — a slice's `entity` (or `except entity`) names an entity the model does not declare. A slice selects by reference, and a reference is what the compiler can check — refused rather than silently matching nothing.
 - `E1363_SLICE_UNKNOWN_TYPE` — a slice's `type` names an ontology type the active ontology does not define. The hint lists the known contract types; a master type (`Contract.Debt`) matches transitively through `refines`.
 - `E1364_SLICE_CATEGORY_ROOT` — a slice's category selector is not rooted in operating, investing or financing. A selector that could never match anything is a typo, not a choice.
+- `E1366_DUPLICATE_STATEMENT` — two statements share a name. Same rule as a metric and a slice: one name, one presentation.
+- `E1367_STATEMENT_UNKNOWN_STRUCTURE` — a statement presents a hierarchy the engine does not build, or asks for a category hierarchy in a model whose streams declare no category. Either would render as one residual row and nothing else — technically complete and useless — so it is refused rather than shipped empty. Known structures: `entity` (the `part of` tree the results graph publishes) and `category` (the dotted path). `docs/13` §7.55.
+- `E1368_STATEMENT_UNKNOWN_REFERENCE` — a statement filters by a slice, or shows a metric, that the model does not declare. A presentation that silently shows nothing is the failure §7.55 exists to end.
 - `E1365_METRIC_UNKNOWN_SERIES` — a metric folds a series name this model does not publish. `series_sum`/`series_avg` return 0.0 for a selector that matches nothing, which is right for a `.*` selector and wrong for a name spelled out in full; in a metric it is worse than wrong, because a fold publishes ONE number under a name the author chose, with no series beside it to show the zero (`docs/13` §7.85). A metric may fold any series the valuation plane publishes: a stream by its own name or as `stream.<name>`, a waterfall step, `entity.<symbol>.net_cash_flow`, `account.<name>`, an entity field, a money subtotal, or `model.net_cash_flow`. A RATIO subtotal is refused with its own hint — its undefined periods publish as null rather than zero, and what a fold should do with null has not been decided.
 - `E1304_UNRESOLVED_OPTION_REF` — an event exercises an option that is not declared. Checked in the compiler rather than the resolver, because options are not in the symbol tables.
 - `E1310_ENTITY_BLOCK_WITHOUT_TYPE` — an entity uses a block but declares no type, so there is nothing to check the block against.
@@ -7140,7 +7269,17 @@ see what is wrong with it.
   row. Worse than an omission: the bottom line is then wrong in a direction
   that looks entirely plausible.
 - `W3502_STATEMENT_BOTTOM_LINE_RESIDUAL` — the statement's rows do not sum to
-  `model.total` within half a cent. Asserted, never corrected.
+  what the statement is accountable for, within half a cent. That is
+  `model.total` for an unfiltered statement and the SLICE's total for one
+  scoped to a slice: reconciling a filtered statement against the model would
+  report the filter as a shortfall, and a warning that fires on a correct model
+  is noise. Asserted, never corrected.
+
+- `W3503_STATEMENT_UNKNOWN_STRUCTURE` — a model-declared statement asks for a
+  hierarchy the evaluator does not build. A compiled model cannot reach this:
+  `E1367` refuses the same condition earlier, with a span. It survives for
+  hand-written IR, which the compiler never saw — the same reason the `ignored`
+  journal outcome survives.
 
 - `W5023_UNRECOGNISED_PACK_CATEGORY` — a stream's category is well-rooted and
   valid, and is not one the active pack recommends. The three roots are the only

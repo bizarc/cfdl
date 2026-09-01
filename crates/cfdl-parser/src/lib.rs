@@ -31,6 +31,7 @@ pub enum Stmt {
     Assume(AssumeStmt),
     Metric(MetricStmt),
     Slice(SliceStmt),
+    Statement(StatementStmt),
     Curve(CurveStmt),
     Quantile(QuantileStmt),
     Contract(ContractStmt),
@@ -348,6 +349,31 @@ pub struct SliceStmt {
     /// schedules, and a window is a reporting bound; one construct doing both
     /// jobs would mean neither could change without the other.
     pub window: Option<(String, String)>,
+    pub span: Span,
+}
+
+/// A declared presentation: which hierarchy to show, and to what level.
+///
+/// It does NOT enumerate rows. The rows come from the structure — an entity
+/// hierarchy from `part of`, a category hierarchy from the dotted path — and
+/// `depth` sets the level of aggregation, so an interior node IS a subtotal by
+/// virtue of where it sits. That is why a statement can carry dozens of rows
+/// without dozens of declarations, and why a model needs no subtotal construct
+/// at all (`docs/13` §7.55).
+#[derive(Debug, Clone, PartialEq, Eq, serde::Serialize)]
+pub struct StatementStmt {
+    pub name: String,
+    pub label: Option<String>,
+    /// `entity` or `category` — which existing hierarchy to present.
+    pub structure: String,
+    /// The level of aggregation. `None` means the whole tree.
+    pub depth: Option<u32>,
+    /// The grain to report at; `None` is the model grid.
+    pub grain: Option<String>,
+    /// An optional filter, orthogonal to the structure.
+    pub slice: Option<String>,
+    /// Declared metrics to publish beside the statement.
+    pub metrics: Vec<String>,
     pub span: Span,
 }
 
@@ -877,6 +903,9 @@ impl<'a> Parser<'a> {
             TokenKind::Keyword(Keyword::Assume) => self.parse_assume_stmt().map(Stmt::Assume),
             TokenKind::Keyword(Keyword::Metric) => self.parse_metric_stmt().map(Stmt::Metric),
             TokenKind::Keyword(Keyword::Slice) => self.parse_slice_stmt().map(Stmt::Slice),
+            TokenKind::Keyword(Keyword::Statement) => {
+                self.parse_statement_stmt().map(Stmt::Statement)
+            }
             TokenKind::Keyword(Keyword::Curve) => self.parse_curve_stmt().map(Stmt::Curve),
             TokenKind::Keyword(Keyword::Quantile) => self.parse_quantile_stmt().map(Stmt::Quantile),
             // A value that changes over time belongs to the thing it
@@ -3659,6 +3688,166 @@ impl<'a> Parser<'a> {
     /// `except` subtracts last. A slice carries no reconciliation: the
     /// absence is what the declaration means — a partial number must not
     /// dress as a complete one.
+    /// `statement <name> { ... }` — a declared presentation (`docs/13` §7.55).
+    ///
+    /// Every clause word inside the block is CONTEXTUAL, as `category` and
+    /// `window` are in a slice: only `statement` itself is reserved, because
+    /// only it has to be recognised where a top-level statement may begin.
+    fn parse_statement_stmt(&mut self) -> Option<StatementStmt> {
+        let start = self.expect_keyword(Keyword::Statement, "'statement'")?;
+        let name_tok = self.bump();
+        let name = match name_tok.kind {
+            TokenKind::Ident(ref s) => s.clone(),
+            TokenKind::Keyword(_) => {
+                let word = self.slice_source(name_tok.span);
+                self.push_expected(
+                    name_tok.span,
+                    format!(
+                        "Expected identifier after 'statement', found the reserved word '{word}'. Reserved words are listed in section 18 of the language specification; choose another name."
+                    ),
+                );
+                return None;
+            }
+            _ => {
+                self.push_expected(
+                    name_tok.span,
+                    "Expected identifier after 'statement'.".to_string(),
+                );
+                return None;
+            }
+        };
+        let _ = self.expect_punct(Punct::LBrace, "'{'")?;
+        let mut stmt = StatementStmt {
+            name,
+            label: None,
+            structure: String::new(),
+            depth: None,
+            grain: None,
+            slice: None,
+            metrics: Vec::new(),
+            span: start.span,
+        };
+        loop {
+            let tok = self.bump();
+            match tok.kind {
+                TokenKind::Punct(Punct::RBrace) => {
+                    stmt.span = merge_spans(start.span, tok.span);
+                    break;
+                }
+                TokenKind::Eof => {
+                    self.push_expected(
+                        tok.span,
+                        "Expected '}' to close the statement block.".to_string(),
+                    );
+                    return None;
+                }
+                TokenKind::Ident(ref ident) if ident == "label" => {
+                    let value_tok = self.bump();
+                    match value_tok.kind {
+                        TokenKind::String(ref v) => stmt.label = Some(v.clone()),
+                        _ => {
+                            self.push_expected(
+                                value_tok.span,
+                                "Expected a quoted label after 'label'.".to_string(),
+                            );
+                            return None;
+                        }
+                    }
+                }
+                TokenKind::Ident(ref ident) if ident == "structure" => {
+                    let value_tok = self.bump();
+                    let value = match value_tok.kind {
+                        TokenKind::Keyword(Keyword::Entity) => "entity".to_string(),
+                        TokenKind::Ident(ref v) => v.clone(),
+                        _ => {
+                            self.push_expected(
+                                value_tok.span,
+                                "Expected 'entity' or 'category' after 'structure'.".to_string(),
+                            );
+                            return None;
+                        }
+                    };
+                    stmt.structure = value;
+                }
+                TokenKind::Ident(ref ident) if ident == "depth" => {
+                    let value_tok = self.bump();
+                    match value_tok.kind {
+                        TokenKind::Number(ref n) => {
+                            stmt.depth = n.parse::<f64>().ok().map(|v| v as u32);
+                        }
+                        _ => {
+                            self.push_expected(
+                                value_tok.span,
+                                "Expected a whole number after 'depth'.".to_string(),
+                            );
+                            return None;
+                        }
+                    }
+                }
+                TokenKind::Ident(ref ident) if ident == "grain" => {
+                    let value_tok = self.bump();
+                    let value = match value_tok.kind {
+                        TokenKind::Keyword(Keyword::Annual) => "annual".to_string(),
+                        TokenKind::Ident(ref v) => v.clone(),
+                        _ => {
+                            self.push_expected(
+                                value_tok.span,
+                                "Expected a grain after 'grain'.".to_string(),
+                            );
+                            return None;
+                        }
+                    };
+                    stmt.grain = Some(value);
+                }
+                TokenKind::Keyword(Keyword::Slice) => {
+                    let value_tok = self.bump();
+                    match value_tok.kind {
+                        TokenKind::Ident(ref v) => stmt.slice = Some(v.clone()),
+                        _ => {
+                            self.push_expected(
+                                value_tok.span,
+                                "Expected a declared slice name after 'slice'.".to_string(),
+                            );
+                            return None;
+                        }
+                    }
+                }
+                TokenKind::Ident(ref ident) if ident == "metrics" => {
+                    // A comma-separated list of declared metric names.
+                    loop {
+                        let name_tok = self.bump();
+                        match name_tok.kind {
+                            TokenKind::Ident(ref v) => stmt.metrics.push(v.clone()),
+                            _ => {
+                                self.push_expected(
+                                    name_tok.span,
+                                    "Expected a declared metric name in 'metrics'.".to_string(),
+                                );
+                                return None;
+                            }
+                        }
+                        if matches!(self.peek().kind, TokenKind::Punct(Punct::Comma)) {
+                            let _ = self.bump();
+                            continue;
+                        }
+                        break;
+                    }
+                }
+                _ => {
+                    let word = self.slice_source(tok.span);
+                    self.push_expected(
+                        tok.span,
+                        format!(
+                            "Unexpected '{word}' in a statement block. A statement states 'label', 'structure', 'depth', 'grain', 'slice' and 'metrics'."
+                        ),
+                    );
+                    return None;
+                }
+            }
+        }
+        Some(stmt)
+    }
+
     /// `window from <date> to <date>` — a slice's reporting bound.
     ///
     /// Dates rather than period indices, as every other range in the language
@@ -4346,6 +4535,7 @@ impl<'a> Parser<'a> {
                 | TokenKind::Keyword(Keyword::Assume)
                 | TokenKind::Keyword(Keyword::Metric)
                 | TokenKind::Keyword(Keyword::Slice)
+                | TokenKind::Keyword(Keyword::Statement)
                 | TokenKind::Keyword(Keyword::Curve)
                 | TokenKind::Keyword(Keyword::Quantile)
                 | TokenKind::Keyword(Keyword::State)
@@ -4557,6 +4747,7 @@ fn statement_span(stmt: &Stmt) -> Span {
         Stmt::Assume(s) => s.span,
         Stmt::Metric(s) => s.span,
         Stmt::Slice(s) => s.span,
+        Stmt::Statement(s) => s.span,
         Stmt::Curve(s) => s.span,
         Stmt::Quantile(s) => s.span,
         Stmt::Run(s) => s.span,
@@ -4625,6 +4816,7 @@ fn keyword_text(keyword: Keyword) -> &'static str {
         Keyword::Assume => "assume",
         Keyword::Metric => "metric",
         Keyword::Slice => "slice",
+        Keyword::Statement => "statement",
         Keyword::Contract => "contract",
         Keyword::On => "on",
         Keyword::Term => "term",
@@ -4735,6 +4927,7 @@ fn is_statement_start(token: &Token) -> bool {
             | TokenKind::Keyword(Keyword::Assume)
             | TokenKind::Keyword(Keyword::Metric)
             | TokenKind::Keyword(Keyword::Slice)
+            | TokenKind::Keyword(Keyword::Statement)
             | TokenKind::Keyword(Keyword::Curve)
             | TokenKind::Keyword(Keyword::Quantile)
             | TokenKind::Keyword(Keyword::Contract)

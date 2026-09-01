@@ -269,16 +269,21 @@ fn main() -> Result<()> {
                     std::process::exit(1);
                 }
             };
-            if let Some(pack_name) = &pack {
-                // Enrichment (domain metrics, statements) is the shared
-                // cfdl-run facade. Statements read the IR back because a
-                // stream's CATEGORY lives there, not in results; an unreadable
-                // IR skips statements and keeps metrics, as before.
+            // Enrichment (domain metrics, statements) is the shared cfdl-run
+            // facade. Statements read the IR back because a stream's CATEGORY
+            // lives there, not in results; an unreadable IR skips statements
+            // and keeps metrics, as before.
+            //
+            // RUN WITHOUT A PACK TOO, since `docs/13` §7.55: a model declares
+            // its own statements, and a pack-less model is the case the entry
+            // exists for. With no pack there are no pack specs, so the pack
+            // path inside does nothing and only the model's statements render.
+            {
                 let raw_ir = std::fs::read_to_string(&ir_json_path).ok();
                 cfdl_run::enrich_results(
                     &mut results,
                     raw_ir.as_deref(),
-                    pack_name,
+                    pack.as_deref().unwrap_or(""),
                     registry.as_ref(),
                 );
             }

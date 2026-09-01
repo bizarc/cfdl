@@ -435,7 +435,10 @@ pub(crate) fn roll_date(
     }
 }
 
-pub(crate) fn timeline_dates(
+/// Public so a post-engine pass can rebuild the same dates the run walked —
+/// `cfdl-statement` needs them to resolve a slice's window into periods, and a
+/// second implementation of the calendar would be a second thing to keep right.
+pub fn timeline_dates(
     start: &str,
     calendar: &str,
     periods: usize,

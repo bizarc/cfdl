@@ -1,0 +1,22 @@
+version 0.1
+model "statement-unknown-structure"
+time calendar annual from 2026-01 for 2
+
+// A STATEMENT PRESENTS A HIERARCHY THE ENGINE CAN BUILD, OR IT IS REFUSED.
+//
+// `docs/13` §7.55. Rendering a structure nobody implements would produce one
+// residual row and nothing else — technically complete, and useless. A
+// presentation that silently shows nothing is the failure this entry exists to
+// end, so it is a compile error rather than a note inside the output.
+
+entity asset co : Asset.Financial
+
+stream ops.rent on entity asset.co inflow currency USD {
+  schedule every year from 2026-01 to 2027-01
+  amount = 100
+}
+
+statement wrong {
+  structure region
+  depth     2
+}

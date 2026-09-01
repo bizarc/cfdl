@@ -8,6 +8,43 @@ This project follows Semantic Versioning: https://semver.org/
 
 ## [Unreleased]
 
+### Added: a model declares how its results are organized (§7.55 part two)
+
+`statement <name> { structure entity | category, depth N, grain, slice,
+metrics }`. It enumerates no rows.
+
+The rows come from the tree — `part of` for an entity structure, the dotted
+path for a category one — and `depth` decides which are shown. **A node whose
+children are shown is a subtotal; a node whose children are cut off is a line,
+carrying all of its descendants' cash.** That one rule keeps the bottom line
+reconciling at every depth, because the lines always partition the cash
+whichever level the tree is cut at. The same model reconciles at 480 as a
+two-level entity tree, a one-line summary, and a three-level category tree.
+
+A **subtotal is never declared**. It is what an interior node looks like at a
+chosen level of aggregation, which is how a statement carries dozens of rows
+without dozens of declarations.
+
+- **A `slice` filters, orthogonally to the structure** — any structure may be
+  shown for any filter. A filtered statement reconciles against the SLICE's
+  total, not the model's: reporting the filter as a shortfall would fire a
+  warning on a correct model.
+- **`metrics` publishes declared metrics beside the statement**, in their own
+  map rather than as a row kind, because a metric is one number at the horizon
+  and every row is a series.
+- **Refused at compile time**, not reported inside the output: an unknown
+  structure or a category structure over uncategorized streams (`E1367`), an
+  undeclared slice or metric (`E1368`), a duplicate name (`E1366`).
+
+Packs converge on the evaluator: model statements render beside a pack's,
+`StatementsSection.pack` is optional because a model-declared statement has no
+pack, and all 45 benchmark cases render byte-identically.
+
+`ledger_hash` is unmoved by adding statements — verified, not assumed.
+
+Fixtures: `valid/statement_by_entity`, `invalid/statement_unknown_structure`.
+`results_version` 0.11.
+
 ### Added: a slice may bound the periods it reports (§7.55 part one)
 
 A slice selected streams — by entity, type, category or name — and all of their

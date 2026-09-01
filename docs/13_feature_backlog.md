@@ -977,12 +977,46 @@ reserved-word list is unchanged at 100.
 `ledger_hash` is unmoved by adding slices, verified rather than assumed — a
 presentation is not a change to the underlying values.
 
-**What remains: the statement.** `structure entity | category`, a `depth` that
-sets the level of aggregation, an optional `slice` filter and a `metrics`
-clause, generated rows rather than enumerated ones, and packs configuring their
-own statements through the same construct. Plus one thing that falls out of no
-hierarchy and so needs its own entry: a per-period ratio (`dscr = noi /
-debt_service`), which packs express as a subtotal and a model still cannot.
+**Shipped 2026-09-01, part two: the statement.** `statement <name> { structure
+entity | category, depth N, grain, slice, metrics }`. It enumerates no rows.
+
+The rows come from the tree — `part of` for an entity structure, the dotted
+path for a category one — and `depth` decides which are shown. **A node whose
+children are shown is a `subtotal`; a node whose children are cut off is a
+`line`, carrying all of its descendants' cash.** That one rule is what keeps
+the bottom line reconciling at every depth, because the lines always partition
+the cash whichever level the tree is cut at. Measured on the fixture: the same
+model reconciles at 480 as a two-level entity tree, as a one-line summary, and
+as a three-level category tree.
+
+An entity row FOLDS ITS SUBTREE rather than reading the published
+`entity.<symbol>.net_cash_flow` rollup. The rollup is the same number and
+cheaper, and it is computed over all of the entity's cash — so a statement
+scoped to a slice would have silently ignored the filter.
+
+**A filtered statement reconciles against its SLICE**, not against the model.
+Reconciling it against the model reported the filter as a shortfall and raised
+`W3502` on a correct model, which is the noise standard this codebase already
+holds ratios to.
+
+`ledger_hash` is unmoved by adding statements, verified: the same model with
+none and with four hashes identically.
+
+Packs converge on the evaluator rather than the surface: `cfdl-run::enrich`
+renders model statements beside the pack's, `StatementsSection.pack` is now
+optional because a model-declared statement has no pack, and all 45 benchmark
+cases render byte-identically — including the HUD pack statement.
+
+Fixtures: `valid/statement_by_entity` (four statements over one model: two
+depths of the entity tree, the category tree, and a sliced one with a metrics
+block) and `invalid/statement_unknown_structure` (`E1367`). New codes: `E1366`
+(duplicate), `E1367` (unknown structure, or a category structure over
+uncategorized streams), `E1368` (unknown slice or metric).
+
+**What remains.** A per-period ratio (`dscr = noi / debt_service`) falls out of
+no hierarchy, so packs still express it as a subtotal and a model still cannot.
+Its own entry. And a pack's statements are still declared in TOML rather than
+in the language — the evaluator converged, the surface has not.
 
 ---
 

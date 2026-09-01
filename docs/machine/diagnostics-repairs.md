@@ -11,7 +11,7 @@ Diagnostics are the repair signal: read the `code`, `message`, `span`, and
 `hint`, change the model, recompile. The catalog is how an agent learns what
 each code looks like in the flesh before it meets one.
 
-**Coverage:** 207 codes in the docs/08 §7 register; 96 exemplified here; 70 of 101 examples carry a recorded fix.
+**Coverage:** 211 codes in the docs/08 §7 register; 97 exemplified here; 70 of 102 examples carry a recorded fix.
 
 ## active_in_unknown_state — E1332_UNKNOWN_ACTIVE_STATE
 
@@ -3396,6 +3396,40 @@ slice s { type Contract.Imaginary }
 
 Fix: not yet recorded.
 
+## statement_unknown_structure — E1367_STATEMENT_UNKNOWN_STRUCTURE
+
+Failing example:
+
+```cfdl
+version 0.1
+model "statement-unknown-structure"
+time calendar annual from 2026-01 for 2
+
+// A STATEMENT PRESENTS A HIERARCHY THE ENGINE CAN BUILD, OR IT IS REFUSED.
+//
+// `docs/13` §7.55. Rendering a structure nobody implements would produce one
+// residual row and nothing else — technically complete, and useless. A
+// presentation that silently shows nothing is the failure this entry exists to
+// end, so it is a compile error rather than a note inside the output.
+
+entity asset co : Asset.Financial
+
+stream ops.rent on entity asset.co inflow currency USD {
+  schedule every year from 2026-01 to 2027-01
+  amount = 100
+}
+
+statement wrong {
+  structure region
+  depth     2
+}
+```
+
+- `E1367_STATEMENT_UNKNOWN_STRUCTURE` (error): Statement 'wrong' presents structure 'region', which is not one this engine builds.
+  - hint: Known structures: entity, category.
+
+Fix: not yet recorded.
+
 ## stream_active_not_bool — E2202_STREAM_ACTIVE_NOT_BOOL
 
 Failing example:
@@ -4271,6 +4305,8 @@ Documented in docs/08 §7, awaiting a minimal failing fixture:
 - `E1344_WATERFALL_NO_REMAINDER` — a waterfall never says where the remainder
 - `E1345_WATERFALL_STEP_NO_AMOUNT` — a step says nothing about what it pays.
 - `E1347_UNRESOLVED_ACCOUNT_REF` — a step allocates `to account <name>` and no
+- `E1366_DUPLICATE_STATEMENT` — two statements share a name. Same rule as a metric and a slice: one name, one presentation.
+- `E1368_STATEMENT_UNKNOWN_REFERENCE` — a statement filters by a slice, or shows a metric, that the model does not declare. A presentation that silently shows nothing is the failure §7.55 exists to end.
 - `E2002_CONTRACT_MISSING_EFFECTS` — a contract produces no streams, so it has no effect on the model.
 - `E2101_STREAM_MISSING_SCHEDULE` — a stream has no `schedule`, so there is no period for its cash to land in.
 - `E2102_STREAM_MISSING_AMOUNT` — a stream has no `amount`.
@@ -4351,5 +4387,6 @@ Documented in docs/08 §7, awaiting a minimal failing fixture:
 - `W3500_STATEMENT_UNCLASSIFIED_STREAM` — cash that no row of the statement
 - `W3501_STATEMENT_STREAM_DOUBLE_COUNTED` — a stream claimed by more than one
 - `W3502_STATEMENT_BOTTOM_LINE_RESIDUAL` — the statement's rows do not sum to
+- `W3503_STATEMENT_UNKNOWN_STRUCTURE` — a model-declared statement asks for a
 - `W5022_UNKNOWN_SERIES_REFERENCE` — a `series_sum`/`series_avg` names a series
 - `W5023_UNRECOGNISED_PACK_CATEGORY` — a stream's category is well-rooted and
