@@ -1,7 +1,7 @@
 {
   "results_version": "0.10",
-  "model_hash": "bc78bd9f59e564c10095809de967c08f3208397ae8dc542ee0da56a2be4e29cf",
-  "ledger_hash": "b88883414927f217a995ac8531a1948b0e45cf6678fcd14e808d95ab878e0fb5",
+  "model_hash": "1e2ad96e9e0fab4c8780ef6b8b1788c4c253f75943c872ec0b2f174af3b8a91c",
+  "ledger_hash": "df5b15317d06d2e3debd67b3e2386e1e7753883d8a6a73c62c5da1a6e7e43a4f",
   "engine": {
     "name": "cfdl-engine",
     "version": "0.8.0"
@@ -11,34 +11,22 @@
     "status": "ok",
     "metrics": {
       "entity.asset.co.total": {
-        "amount": 2200.0,
+        "amount": 500.0,
         "currency": "USD"
       },
       "model.npv": {
-        "amount": 1786.115647,
+        "amount": 379.078677,
         "currency": "USD"
       },
       "model.total": {
-        "amount": 2200.0,
+        "amount": 500.0,
         "currency": "USD"
       },
-      "model.wal_years": 2.227273,
+      "model.wal_years": 3.0,
       "run.annual_discount_rate": 0.1,
       "run.periods_per_year": 1.0,
-      "stream.co.flow_due.total": {
-        "amount": 400.0,
-        "currency": "USD"
-      },
-      "stream.co.flow_end.total": {
-        "amount": 400.0,
-        "currency": "USD"
-      },
-      "stream.co.flow_mid.total": {
-        "amount": 400.0,
-        "currency": "USD"
-      },
-      "stream.co.oneshot_mid.total": {
-        "amount": 1000.0,
+      "stream.ops.rent.total": {
+        "amount": 500.0,
         "currency": "USD"
       }
     },
@@ -47,61 +35,13 @@
         "index": {
           "calendar": "annual",
           "start": "2026-01-01",
-          "periods": 4
+          "periods": 5
         },
         "values": [
           {
-            "amount": 300.0,
+            "amount": 100.0,
             "currency": "USD"
           },
-          {
-            "amount": 300.0,
-            "currency": "USD"
-          },
-          {
-            "amount": 1300.0,
-            "currency": "USD"
-          },
-          {
-            "amount": 300.0,
-            "currency": "USD"
-          }
-        ]
-      },
-      "model.net_cash_flow": {
-        "index": {
-          "calendar": "annual",
-          "start": "2026-01-01",
-          "periods": 4
-        },
-        "values": [
-          {
-            "amount": 300.0,
-            "currency": "USD"
-          },
-          {
-            "amount": 300.0,
-            "currency": "USD"
-          },
-          {
-            "amount": 1300.0,
-            "currency": "USD"
-          },
-          {
-            "amount": 300.0,
-            "currency": "USD"
-          }
-        ]
-      },
-      "stream.co.flow_due": {
-        "index": {
-          "calendar": "annual",
-          "start": "2026-01-01",
-          "periods": 4
-        },
-        "offset": 0.0,
-        "entity": "asset.co",
-        "values": [
           {
             "amount": 100.0,
             "currency": "USD"
@@ -120,14 +60,44 @@
           }
         ]
       },
-      "stream.co.flow_end": {
+      "model.net_cash_flow": {
         "index": {
           "calendar": "annual",
           "start": "2026-01-01",
-          "periods": 4
+          "periods": 5
+        },
+        "values": [
+          {
+            "amount": 100.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 100.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 100.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 100.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 100.0,
+            "currency": "USD"
+          }
+        ]
+      },
+      "stream.ops.rent": {
+        "index": {
+          "calendar": "annual",
+          "start": "2026-01-01",
+          "periods": 5
         },
         "offset": 1.0,
         "entity": "asset.co",
+        "category": "operating.revenue.base_rent",
         "values": [
           {
             "amount": 100.0,
@@ -144,59 +114,9 @@
           {
             "amount": 100.0,
             "currency": "USD"
-          }
-        ]
-      },
-      "stream.co.flow_mid": {
-        "index": {
-          "calendar": "annual",
-          "start": "2026-01-01",
-          "periods": 4
-        },
-        "offset": 0.5,
-        "entity": "asset.co",
-        "values": [
-          {
-            "amount": 100.0,
-            "currency": "USD"
           },
           {
             "amount": 100.0,
-            "currency": "USD"
-          },
-          {
-            "amount": 100.0,
-            "currency": "USD"
-          },
-          {
-            "amount": 100.0,
-            "currency": "USD"
-          }
-        ]
-      },
-      "stream.co.oneshot_mid": {
-        "index": {
-          "calendar": "annual",
-          "start": "2026-01-01",
-          "periods": 4
-        },
-        "offset": 0.5,
-        "entity": "asset.co",
-        "values": [
-          {
-            "amount": 0.0,
-            "currency": "USD"
-          },
-          {
-            "amount": 0.0,
-            "currency": "USD"
-          },
-          {
-            "amount": 1000.0,
-            "currency": "USD"
-          },
-          {
-            "amount": 0.0,
             "currency": "USD"
           }
         ]
@@ -222,5 +142,111 @@
         "type": "Asset.Financial"
       }
     ]
-  }
+  },
+  "slices": [
+    {
+      "id": "all_years",
+      "selection": {
+        "entities": [
+          "asset.co"
+        ]
+      },
+      "streams": [
+        "ops.rent"
+      ],
+      "net": {
+        "index": {
+          "calendar": "annual",
+          "start": "2026-01-01",
+          "periods": 5
+        },
+        "values": [
+          {
+            "amount": 100.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 100.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 100.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 100.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 100.0,
+            "currency": "USD"
+          }
+        ]
+      },
+      "metrics": {
+        "npv": {
+          "amount": 379.078677,
+          "currency": "USD"
+        },
+        "total": {
+          "amount": 500.0,
+          "currency": "USD"
+        }
+      }
+    },
+    {
+      "id": "middle",
+      "selection": {
+        "entities": [
+          "asset.co"
+        ],
+        "window": {
+          "from": "2027-01-01",
+          "to": "2028-01-01"
+        }
+      },
+      "streams": [
+        "ops.rent"
+      ],
+      "net": {
+        "index": {
+          "calendar": "annual",
+          "start": "2026-01-01",
+          "periods": 5
+        },
+        "values": [
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 100.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 100.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          }
+        ]
+      },
+      "metrics": {
+        "npv": {
+          "amount": 157.776108,
+          "currency": "USD"
+        },
+        "total": {
+          "amount": 200.0,
+          "currency": "USD"
+        }
+      }
+    }
+  ]
 }

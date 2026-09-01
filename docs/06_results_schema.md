@@ -30,8 +30,8 @@ against it by `make results-schema`.
   "properties": {
     "results_version": {
       "type": "string",
-      "const": "0.9",
-      "description": "Schema version of this document. 0.9 carries every metric a Monte Carlo trial computed into its trial summary, summarises each of them across the trials with the full set of percentiles, and adds `trials` to a metric summary — the count of trials that published that name. 0.8 adds `slices` — declared partial selections with their matched streams, net series and figures, and no reconciliation block by design. 0.7 publishes the model's entity graph (`graph`) and attributes each stream series to its owning entity and category. 0.6 nests an act's own acts under it as `children`. 0.5 added the machine's `transition` journal action. 0.4 added the account journal actions. 0.3 added `ledger_hash`, the optional `inputs` section, and `category` on IR streams."
+      "const": "0.10",
+      "description": "Schema version of this document. 0.10 adds `window` to a slice's selection — a reporting bound whose periods are the only ones the slice folds. 0.9 carries every metric a Monte Carlo trial computed into its trial summary, summarises each of them across the trials with the full set of percentiles, and adds `trials` to a metric summary — the count of trials that published that name. 0.8 adds `slices` — declared partial selections with their matched streams, net series and figures, and no reconciliation block by design. 0.7 publishes the model's entity graph (`graph`) and attributes each stream series to its owning entity and category. 0.6 nests an act's own acts under it as `children`. 0.5 added the machine's `transition` journal action. 0.4 added the account journal actions. 0.3 added `ledger_hash`, the optional `inputs` section, and `category` on IR streams."
     },
     "model_hash": {
       "type": "string",
@@ -1114,6 +1114,10 @@ against it by `make results-schema`.
           "items": {
             "type": "string"
           }
+        },
+        "window": {
+          "$ref": "#/$defs/SliceWindow",
+          "description": "The reporting window, as declared. Published because it is the one part of a selection that removes cash a reader can still see in the series beside it, so the lineage has to state it."
         }
       }
     },
@@ -1149,6 +1153,23 @@ against it by `make results-schema`.
           "additionalProperties": {
             "$ref": "#/$defs/Scalar"
           }
+        }
+      }
+    },
+    "SliceWindow": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "from",
+        "to"
+      ],
+      "description": "A slice's reporting bound, inclusive, normalised to YYYY-MM-DD.",
+      "properties": {
+        "from": {
+          "type": "string"
+        },
+        "to": {
+          "type": "string"
         }
       }
     }

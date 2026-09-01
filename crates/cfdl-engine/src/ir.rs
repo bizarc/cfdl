@@ -248,6 +248,10 @@ pub(crate) struct IrSlice {
     /// is pack-free and cannot walk the ontology itself.
     #[serde(default)]
     pub(crate) type_streams: Vec<String>,
+    /// A reporting window, inclusive. Absent when the slice spans the whole
+    /// horizon.
+    #[serde(default)]
+    pub(crate) window: Option<IrDateRange>,
 }
 
 #[derive(Debug, Deserialize)]

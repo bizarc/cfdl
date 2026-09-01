@@ -8,6 +8,34 @@ This project follows Semantic Versioning: https://semver.org/
 
 ## [Unreleased]
 
+### Added: a slice may bound the periods it reports (§7.55 part one)
+
+A slice selected streams — by entity, type, category or name — and all of their
+periods with them. "The 2027 to 2028 result for this asset" was not
+expressible, so a reader wanting it left the language.
+
+`window from <date> to <date>` bounds the periods. A period outside it
+contributes nothing, so `total`, `npv` and `irr` are folds over the window, and
+the window publishes in the slice's own selection — it is the one part of a
+selection that removes cash a reader can still see in the series beside it, so
+the lineage has to say so.
+
+**A window is not a phase.** A phase is a lifecycle anchor: `phase_start()` and
+`phase_end()` drive schedules, and a period is named by the phase it sits in. A
+window is a reporting bound on a finished projection. One construct with both
+jobs would mean neither could change without the other.
+
+Dates rather than period indices, because an index is a fact about one grid and
+a window should survive a change of calendar. A month-only bound means the
+first of that month, as a phase's does. `window` is a CONTEXTUAL word, like
+`category` beside it, so the reserved-word list is unchanged at 100 and no
+model using `window` as an identifier breaks.
+
+`ledger_hash` does not move when a slice is added — verified, not assumed. A
+presentation is not a change to the underlying values.
+
+Fixture: `valid/slice_window`. `results_version` 0.10.
+
 ### Added: four more reductions over a series (§7.86)
 
 `series_sum` and `series_avg` were the whole reduction vocabulary, and the

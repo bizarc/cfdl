@@ -4,7 +4,7 @@
 
 CFDL 0.8.0. Every model below compiles, and its IR and
 results are byte-asserted against goldens in CI (`fixtures/valid/`,
-141 models.
+142 models.
 
 `gold/ir/`, `gold/results/`). Each is single-purpose: the directory name
 says what it exercises. This is what right looks like — positive few-shot
@@ -4995,6 +4995,52 @@ stream ops.noi on entity asset.tower inflow currency USD {
 
 slice debt {
   type Contract.Debt
+}
+```
+
+## slice_window
+
+```cfdl
+version 0.1
+model "slice-window"
+time calendar annual from 2026-01 for 5
+
+// A SLICE MAY BOUND THE PERIODS IT REPORTS.
+//
+// `docs/13` §7.55. A slice selects streams — by entity, type, category or name
+// — and until now it selected all of their periods. "The 2027 to 2028 result
+// for this asset" was not expressible, so a reader wanting it left the language
+// and did the arithmetic somewhere else.
+//
+// A WINDOW IS NOT A PHASE. A phase is a lifecycle anchor: `phase_start()` and
+// `phase_end()` drive schedules, and the model's own periods are named by it.
+// A window is a reporting bound, applied after the walk has finished. One
+// construct doing both jobs would mean neither could move without the other.
+//
+// Dates, not period indices. An index is a fact about one grid; a window that
+// survives a change of calendar has to be stated in dates, which is how every
+// other range in the language is stated.
+//
+// The rent is 100 a year for five years. `all_years` totals 500; `middle`
+// bounds itself to 2027-2028 and totals 200. The window is published in the
+// slice's own selection, so a reader can see WHY the two differ rather than
+// having to infer it.
+
+entity asset co : Asset.Financial
+
+stream ops.rent on entity asset.co inflow currency USD {
+  schedule every year from 2026-01 to 2030-01
+  category operating.revenue.base_rent
+  amount = 100
+}
+
+slice all_years {
+  entity asset.co
+}
+
+slice middle {
+  entity asset.co
+  window from 2027-01 to 2028-01
 }
 ```
 

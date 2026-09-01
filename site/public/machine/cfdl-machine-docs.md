@@ -1353,6 +1353,11 @@ slice label_ex_merch {
 slice debt {
   type Contract.Debt
 }
+
+slice west_2027 {
+  entity asset.west_tower
+  window from 2027-01 to 2028-12
+}
 ```
 
 Rules:
@@ -1370,6 +1375,18 @@ Rules:
 - `category` and `stream` take QUOTED selectors — the dialect `series_sum`
   reads, exact or one trailing `.*` — and a category selector must be rooted
   in a statement section (`E1364`).
+- `window` bounds the PERIODS, where every other clause bounds the streams. A
+  period outside it contributes nothing, so `total`, `npv` and `irr` are folds
+  over the window. At most one window per slice.
+
+  **A window is not a phase.** A phase is a lifecycle anchor — `phase_start()`
+  and `phase_end()` drive schedules, and a period is named by the phase it sits
+  in. A window is a reporting bound applied to a finished projection. Giving one
+  construct both jobs would mean neither could change without the other.
+
+  Dates, not period indices: an index is a fact about one grid, and a window
+  that survives a change of calendar has to be stated in dates. A month-only
+  bound means the first of that month, as a phase's does.
 - Results publish each slice's selection (the lineage), the streams it
   matched, its net per-period series, and `total`/`npv`/`irr` over the
   matched streams on the model's own axis. A slice carries **no
@@ -1653,12 +1670,16 @@ metric_stmt     = "metric" IDENT "=" expr ;
 (* A named, deliberately partial selection (docs/01 §15.4). Clause kinds
    intersect, values within a kind union, `except` subtracts. Entity and
    type operands are references; category and stream selectors are quoted,
-   in the dialect `series_sum` reads. *)
+   in the dialect `series_sum` reads. `window` bounds the PERIODS rather
+   than the streams, and is not a phase: a phase anchors schedules, a
+   window bounds a report. `category` and `window` are contextual words,
+   not reserved ones. *)
 slice_stmt      = "slice" IDENT "{" slice_clause* "}" ;
 slice_clause    = "entity" QNAME
                 | "type" ( QNAME | IDENT )
                 | "category" STRING
                 | "stream" STRING
+                | "window" "from" date_lit "to" date_lit
                 | "except" ( "stream" STRING
                            | "category" STRING
                            | "entity" QNAME ) ;
@@ -4326,6 +4347,10 @@ against it by `make ir-schema`.
         },
         "provenance": {
           "$ref": "#/$defs/NodeProvenance"
+        },
+        "window": {
+          "$ref": "#/$defs/DateRange",
+          "description": "A reporting window, inclusive. Only periods inside it are selected, so total, npv and irr are folds over it. Absent when the slice spans the whole horizon. Not a phase: a phase is a lifecycle anchor that drives schedules, and a window is a reporting bound."
         }
       }
     }
@@ -4372,8 +4397,8 @@ against it by `make results-schema`.
   "properties": {
     "results_version": {
       "type": "string",
-      "const": "0.9",
-      "description": "Schema version of this document. 0.9 carries every metric a Monte Carlo trial computed into its trial summary, summarises each of them across the trials with the full set of percentiles, and adds `trials` to a metric summary — the count of trials that published that name. 0.8 adds `slices` — declared partial selections with their matched streams, net series and figures, and no reconciliation block by design. 0.7 publishes the model's entity graph (`graph`) and attributes each stream series to its owning entity and category. 0.6 nests an act's own acts under it as `children`. 0.5 added the machine's `transition` journal action. 0.4 added the account journal actions. 0.3 added `ledger_hash`, the optional `inputs` section, and `category` on IR streams."
+      "const": "0.10",
+      "description": "Schema version of this document. 0.10 adds `window` to a slice's selection — a reporting bound whose periods are the only ones the slice folds. 0.9 carries every metric a Monte Carlo trial computed into its trial summary, summarises each of them across the trials with the full set of percentiles, and adds `trials` to a metric summary — the count of trials that published that name. 0.8 adds `slices` — declared partial selections with their matched streams, net series and figures, and no reconciliation block by design. 0.7 publishes the model's entity graph (`graph`) and attributes each stream series to its owning entity and category. 0.6 nests an act's own acts under it as `children`. 0.5 added the machine's `transition` journal action. 0.4 added the account journal actions. 0.3 added `ledger_hash`, the optional `inputs` section, and `category` on IR streams."
     },
     "model_hash": {
       "type": "string",
@@ -5456,6 +5481,10 @@ against it by `make results-schema`.
           "items": {
             "type": "string"
           }
+        },
+        "window": {
+          "$ref": "#/$defs/SliceWindow",
+          "description": "The reporting window, as declared. Published because it is the one part of a selection that removes cash a reader can still see in the series beside it, so the lineage has to state it."
         }
       }
     },
@@ -5491,6 +5520,23 @@ against it by `make results-schema`.
           "additionalProperties": {
             "$ref": "#/$defs/Scalar"
           }
+        }
+      }
+    },
+    "SliceWindow": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "from",
+        "to"
+      ],
+      "description": "A slice's reporting bound, inclusive, normalised to YYYY-MM-DD.",
+      "properties": {
+        "from": {
+          "type": "string"
+        },
+        "to": {
+          "type": "string"
         }
       }
     }

@@ -960,6 +960,18 @@ pub struct SliceSelection {
     pub except_categories: Vec<String>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub except_entities: Vec<String>,
+    /// The reporting window, as declared. Published because it is the one
+    /// part of a selection that removes cash a reader can still see in the
+    /// series beside it — the lineage has to say so.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub window: Option<SliceWindow>,
+}
+
+/// A slice's reporting bound, inclusive.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct SliceWindow {
+    pub from: String,
+    pub to: String,
 }
 
 /// The model's entity graph, published so a consumer holding results alone

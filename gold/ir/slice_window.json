@@ -1,0 +1,117 @@
+{
+  "ir_version": "0.1",
+  "model": {
+    "name": "slice-window",
+    "currency": "USD"
+  },
+  "time": {
+    "calendar": "annual",
+    "start": "2026-01-01",
+    "periods": 5
+  },
+  "phases": [],
+  "entities": [
+    {
+      "id": "78addbcb4fef35f6390fdcd3b175e0e8",
+      "symbol": "asset.co",
+      "type": "Asset.Financial",
+      "fields": {},
+      "state": {}
+    }
+  ],
+  "assumptions": {
+    "constants": {},
+    "random": {}
+  },
+  "slices": [
+    {
+      "name": "all_years",
+      "entities": [
+        "asset.co"
+      ],
+      "provenance": {
+        "source_file": "model.cfdl",
+        "source_span": {
+          "start_line": 34,
+          "start_col": 1,
+          "end_line": 36,
+          "end_col": 1
+        }
+      }
+    },
+    {
+      "name": "middle",
+      "entities": [
+        "asset.co"
+      ],
+      "window": {
+        "start": "2027-01-01",
+        "end": "2028-01-01"
+      },
+      "provenance": {
+        "source_file": "model.cfdl",
+        "source_span": {
+          "start_line": 38,
+          "start_col": 1,
+          "end_line": 41,
+          "end_col": 1
+        }
+      }
+    }
+  ],
+  "contracts": [],
+  "streams": [
+    {
+      "id": "66609d28cefa7b01a7112672c7194068",
+      "name": "ops.rent",
+      "owner": {
+        "symbol": "asset.co"
+      },
+      "direction": "inflow",
+      "currency": "USD",
+      "category": "operating.revenue.base_rent",
+      "schedule": {
+        "kind": "Every",
+        "every": "annual",
+        "from": "2026-01-01",
+        "to": "2030-01-01"
+      },
+      "amount": {
+        "lang": "cfdl",
+        "src": "100.0"
+      },
+      "active_when": {
+        "lang": "cfdl",
+        "src": "true"
+      },
+      "provenance": {
+        "source_file": "model.cfdl",
+        "source_span": {
+          "start_line": 28,
+          "start_col": 1,
+          "end_line": 32,
+          "end_col": 1
+        }
+      }
+    }
+  ],
+  "events": [],
+  "options": [],
+  "runs": [
+    {
+      "kind": "deterministic"
+    }
+  ],
+  "required_observables": [],
+  "required_refs": [],
+  "provenance": {
+    "sources": [
+      "model.cfdl"
+    ],
+    "compiler": {
+      "name": "cfdl",
+      "version": "0.8.0",
+      "hash": "5fdb54f1ea1d7d1e626a7dbad0b08339"
+    }
+  }
+}

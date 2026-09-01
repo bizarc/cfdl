@@ -938,6 +938,52 @@ Related: §7.43, where the same absence shows up as results carrying no statemen
 for a pack-less model. §7.25, where a model could not declare a metric either, is closed.
 The three are one surface question asked from three directions.
 
+**Rewritten 2026-09-01, after the design discussion this entry was blocking.**
+Both of the original nouns are wrong, and the entry had been asking for the
+wrong construct.
+
+- A **slice** is a FILTER — focus on one product line, region or period. It
+  narrows what is included.
+- A **statement** is the ORGANISING STRUCTURE — whether a presentation is an
+  entity hierarchy, a category hierarchy, or something else. Independent of any
+  filter. This is the actual gap.
+- A **subtotal** is not a declaration at all. It is what an interior node of a
+  hierarchy looks like at a chosen level of aggregation: show an entity
+  hierarchy two levels deep and the interior nodes ARE the subtotals, and
+  aggregating coarser changes them. Nobody enumerates them, which is how a
+  statement carries dozens of rows without dozens of declarations. A model
+  needs no subtotal construct.
+
+What makes this buildable now is what shipped since: the entity hierarchy is
+published in `graph` (§7.43, §7.91) and rolled up as
+`entity.<symbol>.net_cash_flow`; a category is a dotted path, so its levels are
+structural; and a metric can be declared (§7.25) and now fold the published
+surface (§7.85, §7.86), so figures can sit beside a statement.
+
+**Shipped 2026-09-01, part one: the slice window.** A slice selected streams and
+all of their periods, so "the 2027 to 2028 result for this asset" was not
+expressible. `window from <date> to <date>` bounds the periods; a period outside
+it contributes nothing, so `total`, `npv` and `irr` are folds over the window,
+and the window publishes in the slice's own selection because it is the one part
+of a selection that removes cash a reader can still see in the series beside it.
+
+Not a phase, deliberately: a phase is a lifecycle anchor that drives schedules
+(`phase_start()`, `phase_end()`), a window is a reporting bound on a finished
+projection, and one construct with both jobs would mean neither could change
+without the other. Dates rather than period indices, because an index is a fact
+about one grid. `window` is a CONTEXTUAL word, like `category` beside it, so the
+reserved-word list is unchanged at 100.
+
+`ledger_hash` is unmoved by adding slices, verified rather than assumed — a
+presentation is not a change to the underlying values.
+
+**What remains: the statement.** `structure entity | category`, a `depth` that
+sets the level of aggregation, an optional `slice` filter and a `metrics`
+clause, generated rows rather than enumerated ones, and packs configuring their
+own statements through the same construct. Plus one thing that falls out of no
+hierarchy and so needs its own entry: a per-period ratio (`dscr = noi /
+debt_service`), which packs express as a subtotal and a model still cannot.
+
 ---
 
 ### 7.56 A term deferred to `inputs.` is never bounds-checked
