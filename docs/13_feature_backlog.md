@@ -1100,11 +1100,47 @@ added per document, and the largest addition is about 1,200 cells on a file
 already 1.7MB. 130 result goldens gained a section; 36,694 insertions and zero
 deletions, so nothing existing moved.
 
-**What remains: the pack surface.** A pack's statements are still declared in
-TOML rather than in the language. The evaluator converged in part two — model
-statements render beside a pack's through one path — but the two surfaces have
-not. That is the last item, and it is a lowering job rather than a language
-one: `statements.toml` becoming another producer of the same views shape.
+**Shipped 2026-09-01, part six: one evaluator. §7.55 is closed.** A pack's
+`statements.toml` lowers into the same shape a model's statements use, and the
+second renderer — 407 lines — is deleted. One evaluator, two producers.
+
+The convergence was worth doing because the divergence was already costing:
+while there were two renderers they drifted, and the model path was the one
+that had drifted. Reading them side by side found three defects in shipped
+code, none of which any golden caught:
+
+- rows were never bucketed to the statement's grain, so an annual statement
+  published two labels against twenty-four monthly values (fixed in part five's
+  follow-up, `#264`);
+- a ratio would have been re-bucketed rather than recomputed, giving -3.6 where
+  the answer is -2.0;
+- an authored statement that omitted cash emitted a silent residual row, where
+  a pack statement named the streams with `W3500`.
+
+**What the byte-identical test found.** The acceptance test — 45 benchmark
+cases and every pack golden rendering unchanged — caught four more differences
+that a reading would not have:
+
+- a pack row publishes the BARE stream name (`cre.unit.base_rent.anchor`), as a
+  slice does; the model path published the prefixed results key. Three
+  publishers, one spelling, and mine was the newcomer.
+- an UNCLASSIFIED stream is never claimed by name, because a stream row refines
+  within a category. Dropping that condition put an "Operating expenses" line
+  of -240,000 above a net operating income that excluded it. `dscr_smoke` is
+  the model whose comment predicted exactly this.
+- a named series must be PRESENT, not merely declared: `Grain::sum` of an
+  absent series is one zero per bucket, not an empty vector, so a row must
+  publish no values rather than a column of manufactured zeros.
+- a ratio whose inputs were never published still emits its row, falling back
+  to its own series. Dropping the row silently shortened a statement the pack
+  declared.
+
+`W3501_STATEMENT_STREAM_DOUBLE_COUNTED` was lost in the deletion and restored:
+the converged path tracked claims in a set rather than a count, so a stream
+claimed by two rows — "wrong in a direction that looks plausible" — became
+invisible. Found by auditing the codes the deleted renderer emitted against
+the codes the new one does, which is the check worth running whenever four
+hundred lines go.
 
 ---
 
@@ -1625,92 +1661,25 @@ structural rather than a known debt.
 ### 7.74 Structured-finance engine parity — the Intex scope
 
 *Roadmap: partly M2 (§7.78) — the deal mechanics; the analytics ride on
-declared metrics (§7.25, shipped).*
+declared metrics (§7.25, shipped). Promoted 2026-09-01 to
+`docs/38_intex_parity.md`, which carries the survey the way `docs/34`
+carries §7.79's design: the parity-or-ahead ledger, the itemized gaps, the
+non-items and the licensing position all live there, and this entry stays as
+the anchor other entries reference.*
 
 **What this item is.** An umbrella over the gaps that separate CFDL from the
 full scope of a structured-finance cash flow engine (the Intex/Trepp
 category: collateral pools feeding tranche waterfalls with triggers and
-reserve accounts, plus bond analytics over the result). It exists so the
-parity question has one place to stand; each constituent either references an
-existing item or is named here for the first time.
-
-**What is already covered, and is the larger half.** The collateral side runs
-to published-schedule parity (the credit pack; the FNMA REMIC family at six
-PSA speeds, the auto-ABS cases at speed variants). Sequential-pay tranching
-runs as an ordered waterfall (`benchmarks/credit/auto_abs_tranches`; the
-AmeriCredit 22-step priority compiles). The walk with accounts covers reserve
-mechanics — fund to target, top up, release, trapped cash across a failed
-test — and logic reads settled cash strictly backward (`docs/28` §4–§5,
-shipped). Deterministic scenario grids — the dominant workflow of the
-category — are scenarios plus curves plus options, today.
-
-**Deal mechanics still open:**
-
-- **Repeatable triggers as a checked construct.** An OC/IC test that fails
-  and cures is a bare field flipping both ways until the declared machine
-  ships — `docs/28` §6, docs/29 phase 5. Referenced, not duplicated.
-- **Coupled interest/principal waterfalls.** Interest diverted into principal
-  redemption on a trigger failure crosses two waterfalls; one pot does not
-  express it. `docs/17` §5 question 2, still unresolved — the account and the
-  walk are the machinery an answer would use, but the answer is not designed.
-- **A step's shortfall as a published series** (`docs/17` §5 question 3) and
-  **deferred/PIK interest on an unpaid step** (`docs/17` §5 question 1 —
-  "probably a second form, not a default"). Both are the write-up-from-the-
-  bottom mechanics CMBS and CLO documents assume.
-- **Servicer advances.** P&I advancing and stop-advance appear nowhere in the
-  docs. Under the machine they are a state (`advancing`, `stopped`) with
-  streams gated on it and a recoverable-advances account; the item is naming
-  that shape, not new machinery.
-- **The clean-up call.** Exists only as the `called` lifecycle state in the
-  credit pack's ontology; the election itself is an option whose guard reads
-  pool factor — expressible now, but no shipped case exercises it. A
-  benchmark deal with a call is the ask, not a construct.
-
-**Analytics still open:**
-
-- **Valuation-plane solvers: yield from price, price from yield, discount
-  margin.** `model.irr` is the shipped precedent — a bracketed bisection over
-  the completed projection, deterministic and replayable. These are the same
-  computation with a different objective, and they belong in the valuation
-  plane as declared metrics (§7.25, shipped — the construct they ride on), bracketed
-  bisection or Brent per `docs/17` §12 — never in the causal core, where a
-  solver would cost provenance and replay.
-- **The make-whole.** A causal cash amount whose size is a discounting
-  computation — the priced exception of `docs/28` §7 is the sanctioned
-  mechanism, as with the direct-cap reversion. Currently on the credit pack's
-  parity worklist as "needs an engine primitive"; the primitive is the priced
-  exception plus a PV expression, not a new solver.
-- **Per-period stochastic draws.** `assume ~ Dist` draws one scalar per
-  trial; a rate path is a field recurrence whose innovation must differ per
-  period. The extension is a per-period draw stream, seeded per
-  (assumption, period, trial) the way per-assumption streams are seeded
-  today — additive, journaled, replayable. Correlation stays excluded
-  (`docs/01` §1.1.10) until a document forces it; a rate-dependent CPR is a
-  recurrence reading the rate path, and needs no correlation construct.
-- **The output surface an analyst reads:** per-class WAL assertions (§7.22),
-  the published settlement axis (§7.26), participant-level return (§7.72, shipped),
-  model-declared metrics (§7.25, shipped) and statements (§7.55). Referenced, not
-  duplicated.
-
-**Infrastructure still open:**
-
-- **Multi-currency.** No mechanism has landed; the account was shaped so the
-  currency clause is additive (`docs/28` §5.1). Blocked on a document that
-  needs it, not on design room.
-- **Loan-level scale is undemonstrated, not disproven.** Four loans tie to
-  the single-pool model at 0.0 over 372 periods (§2.2); 43 sub-pool entities
-  run in the auto-ABS cases. Nothing has measured thousands of entities, and
-  the per-(stream, period) environment rebuild (`docs/29` §2.3) is the known
-  hot spot to profile first. The ask is a measurement, then the fix if the
-  measurement demands one.
-
-**What stays out, on purpose.** Same-period circular conventions (a fee on an
-ending balance that includes the fee) are spreadsheet artifacts, not
-indenture mechanics; priorities are ordered, and the causal plane's refusal
-to iterate is the product's guarantee, not its gap. A tool of this category
-built on CFDL is those guarantees applied to the one domain that most needs
-an auditable engine — the constituent items above are what remain between
-here and that claim.
+reserve accounts, plus bond analytics over the result). The collateral side
+and the reserve mechanics are the larger half and are done; what remains, per
+`docs/38`: the coupled-waterfall trio of `docs/17` §5 (cross-linked pots, the
+shortfall series, deferred/PIK), the externally-referenced trigger case
+(§7.77's remainder), servicer advances, a clean-up call case, valuation
+solvers and the make-whole, per-period stochastic draws, the analyst output
+surface (§7.22, §7.23, §7.26), the unexercised class types and structured
+collateral (`docs/20` §2), multi-currency, and a loan-level scale
+measurement. Same-period circular conventions stay out on purpose — the
+causal plane's refusal to iterate is the product's guarantee, not its gap.
 
 ### 7.75 Storage state of charge is now buildable, and it is what validates the last energy rule
 

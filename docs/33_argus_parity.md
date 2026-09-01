@@ -1,7 +1,9 @@
 # Argus parity — the real items
 
-Status: informative, 2026-08-28. Not published; repository-only, like the
-backlog.
+Status: informative, 2026-09-01. Not published; repository-only, like the
+backlog. First written 2026-08-28; refreshed after §7.55 (model-declared
+statements and slices), §7.85–§7.86 (the metric surface), and §7.87 (metric
+distributions) landed.
 
 Argus Enterprise is the reference application for institutional CRE cash flow
 projection. This document records what separates CFDL from it **at the level
@@ -9,7 +11,12 @@ of modeling mechanics** — the language and engine, not the application. The
 UI, the lease-abstraction workflow, importers and the report library are out
 of scope by decision: the agent substrate (`docs/32`) and surfaces built on
 the results contract are the answer to those, and they consume the language
-as it is.
+as it is. One caveat to that line since 2026-09-01: "report library" no
+longer means "reporting is someone else's problem." A model now declares its
+own statements in the language (`docs/13` §7.55 — generated hierarchies,
+authored rows, slices, a default statement), so the LAYOUTS a report library
+carries are out of scope while the statements themselves are in — see the
+ledger below.
 
 Every claim about CFDL below was verified by probing the current build
 pack-free, reading the pack sources, or citing a benchmark — not by reading
@@ -41,12 +48,29 @@ narrow, not broad.
   cumulative recovery cap (the probe's cap bound exactly at its limit, with
   a correct partial period); netting general vacancy against modeled
   downtime is arithmetic.
+- **Reporting is core language now, not only pack TOML** (added 2026-09-01;
+  the first writing of this document predates §7.55). A model declares a
+  `statement` — generated from the entity or category hierarchy at a chosen
+  depth, or authored row by row with curated labels, display signs and a
+  per-period ratio — and a `slice` with `window` bounds scopes it
+  (`docs/13` §7.55, parts one through five; fixtures
+  `valid/statement_by_entity`, `valid/statement_authored_rows`,
+  `valid/statement_generated_order`). A model with no statement at all still
+  renders as its entity hierarchy, marked `default`. This strengthens the
+  Argus-reports comparison materially: what Argus holds as a report library,
+  CFDL holds as declarations in the model source, versioned with the deal.
+  A model also declares its own metrics (`docs/13` §7.25, shipped), and a
+  metric reads everything the valuation plane publishes — entity rollups,
+  accounts, subtotals — through six series reductions
+  (`docs/13` §7.85, §7.86).
 - **Ahead of Argus:** percentage rent as an expectation over a sales
   distribution (`cre.percentage_rent_expected` — the point-estimate form
   pays 0.00 on any breakpoint above expected sales, however wide the
   distribution); grain/day-count/roll-convention/holiday-calendar time
   machinery; the journal as a causal audit trail; text source under version
-  control; byte-comparable runs; per-assumption Monte Carlo.
+  control; byte-comparable runs; per-assumption Monte Carlo — and, since
+  §7.87 shipped (`results_version` 0.9), a Monte Carlo distribution with
+  p01–p99 tails for EVERY metric, declared ones included, not only NPV.
 - **Debt sizing needs no solver.** Every sizing met so far is closed-form,
   sequential once the wiring is untangled, or affine — the pattern is
   recorded once in `docs/26` ("A sized loan does not need a solver").
@@ -130,6 +154,20 @@ state-reading recurrence compiles clean and dies at run.
 
 ## Item 2 — the discount curve reaches the valuation plane
 
+*Re-examined 2026-09-01 against §7.85, because "the valuation plane" changed
+underneath this item and it is worth being precise about what did and did not
+close. §7.85 changed what the plane READS: a metric now binds entity fields,
+accounts, and every series the plane publishes, and a name nothing publishes
+is refused (`E1365`) instead of folding as a silent zero. It did not change
+what the plane DISCOUNTS with: `RunConfig.discount_rate` is still a single
+`f64` (`crates/cfdl-engine/src/config.rs`), still turned into one
+`per_period_rate` and handed to the NPV fold
+(`crates/cfdl-engine/src/lib.rs`), and no discounted figure consults a curve.
+So this item stands exactly as written — the shape below is unchanged — and
+§7.85 is why building it got easier, not narrower: the reads and refusal
+machinery the curve-driven DF product would want in the metric environment
+now exist. The text that follows is the original.*
+
 **Backlog §7.4, made explicit.** The language side is done — `curve` already
 expresses a sparse rate schedule (step = flat-forward, linear =
 calendar-day interpolation). The gap is confined to the valuation plane:
@@ -173,6 +211,13 @@ instance. The ontology's field machinery already supports typed,
 multi-field declarations; this is a pack/ontology surface design, not a
 language construct. No backlog entry until a case forces the shape.
 
+*Note, 2026-09-01: §7.55's statements and slices are adjacent machinery, not
+a closure. A slice is a named SELECTION over a finished projection and a
+statement is a PRESENTATION of one; the market bundle is a named set of
+INPUT terms shared by many contracts. Same instinct — name a thing once,
+reference it many times — different plane. The item stands as a pack design
+question.*
+
 ---
 
 ## Non-items, recorded so they are not rediscovered
@@ -185,7 +230,7 @@ language construct. No backlog entry until a case forces the shape.
 | Repeating rollover cycle, re-anchored windows, per-cycle TI/LC | shipped core (M1 phase 5); probed |
 | Deterministic re-strike at market | step `curve` with knots at known cycle starts |
 | DSCR/LTV/sculpted debt sizing | no solver needed — `docs/26`, "A sized loan does not need a solver" |
-| UI, abstraction workflow, importers, report library | out of scope; `docs/32` |
+| UI, abstraction workflow, importers, report library | out of scope; `docs/32` — with the 2026-09-01 caveat from the scope paragraph: declared statements are in-language now (§7.55), so what stays out is the LIBRARY of layouts, not the ability to state one |
 
 ## The benchmark this document wants
 
