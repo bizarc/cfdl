@@ -43,11 +43,14 @@ statement portfolio {
 ```
 
 An **authored** statement states its own rows — `line`, `subtotal`, `ratio`,
-`spacer` — each drawing from a `category`, `stream`, `slice` or `entity`. A
-`subtotal` folds rows stated elsewhere and claims nothing; a `ratio` divides
-two declared slices and publishes `null` where the denominator is zero. This
-is the form for a pro forma: curated labels, expenses shown positive under
-"Less:", a coverage ratio that is a node of no hierarchy.
+`spacer` — each drawing from a `category`, `stream`, `slice` or `entity`, or
+presenting a published `series` (`series "domain.cre.noi"`). A
+`subtotal` folds rows stated elsewhere and claims nothing; a series row is a
+fold OF the ledger rather than cash in it, so it claims no streams, stays out
+of the bottom line, and refuses a claim clause beside it (`E1370`); a `ratio`
+divides two declared slices and publishes `null` where the denominator is
+zero. This is the form for a pro forma: curated labels, expenses shown
+positive under "Less:", a coverage ratio that is a node of no hierarchy.
 
 ## What makes a generated statement work
 
