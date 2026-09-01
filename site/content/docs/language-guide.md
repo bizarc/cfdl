@@ -351,14 +351,86 @@ deal/
 Declaration order does not matter. See
 [Multi-file models](/docs/guides/multi-file-models).
 
+## Metrics of your own
+
+The engine mints `model.*` metrics and a pack mints `domain.*` ones. A
+`metric` declaration mints the model's own — a figure evaluated once, at the
+horizon, over the finished projection:
+
+```cfdl
+metric gross_revenue = series_sum("ops.revenue", 0, 4)
+metric total_cost    = series_sum("ops.cost", 0, 4)
+metric margin        = metric.gross_revenue + metric.total_cost
+```
+
+A metric folds any series the model publishes, and metrics compose in
+declaration order — `margin` reads the two above it rather than repeating
+their expressions. `irr(party.lp)` and `moic(party.lp)` read a participant's
+realized return from their account, and exist in a metric and nowhere else.
+Every declared metric is published as `metric.<name>` beside the engine's,
+in every scenario and every Monte Carlo trial. See
+[Metrics](/docs/guides/metrics).
+
+## Slices
+
+A `slice` names a deliberately partial selection of the model's streams —
+one artist's royalties, a portfolio minus a discontinued line, one asset over
+two years:
+
+```cfdl
+slice artist_a_royalties {
+  entity asset.artist_a
+  category "operating.revenue.royalty"
+}
+
+slice middle_years {
+  entity asset.co
+  window from 2027-01 to 2028-01
+}
+```
+
+Clause kinds intersect, values within a kind union, `except` subtracts, and
+`window` bounds the periods. Results publish each slice's selection, matched
+streams, net series, and total/NPV/IRR — and no reconciliation, because a
+partial number must not dress as a complete one. See
+[Slices](/docs/reference/slices).
+
+## Statements
+
+A `statement` declares how results are organized. The generated form names a
+hierarchy the results already carry and a depth to cut it at:
+
+```cfdl
+statement portfolio {
+  label     "Portfolio by property"
+  structure entity
+  depth     2
+}
+```
+
+Or a statement states its own rows — `line`, `subtotal`, `ratio`, `spacer` —
+for the pro forma whose labels and ordering no tree supplies. One or the
+other, never both. A model that declares none gets its entity hierarchy as a
+default. See [Statements and reporting](/docs/guides/statements).
+
+Slices and statements are **views**: they move no cash and change no
+identity, so declaring one moves neither results hash. A declared metric is a
+figure the model claims, so it does.
+
 ## What you get back
 
 A run produces a results document containing:
 
-- **`deterministic.series`** — every stream per period, plus
-  `model.net_cash_flow` and each account's balance as `account.<name>`
-- **`deterministic.metrics`** — NPV, IRR, MOIC, payback, weighted average life
-- **`statements`** — the pro forma, when the pack declares one
+- **`deterministic.series`** — every stream per period, attributed to its
+  owning entity and category, plus `model.net_cash_flow` and each account's
+  balance as `account.<name>`
+- **`deterministic.metrics`** — NPV, IRR, MOIC, payback, weighted average
+  life, and every declared `metric.<name>`
+- **`statements`** — every declared or pack statement, or the default entity
+  hierarchy when nothing declares one
+- **`slices`** — each declared slice's selection, streams, net series and
+  figures
+- **`graph`** — the model's entity graph: symbols, families, types, `part of`
 - **`monte_carlo`** — percentiles and trial summaries, when trials were asked for
 
 Read it in the playground, through the [Python SDK](/docs/python-sdk), or as

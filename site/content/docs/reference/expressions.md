@@ -87,10 +87,33 @@ current build accepts.
 
 **Curves** — `curve_value`
 
+**Series folds** — `series_sum`, `series_avg`, `series_min`, `series_max`, `series_prod`, `series_count`
+
 **Other** — `irr`, `moic`, `quantile_at`, `quantile_mean`, `quantile_of`
 
-*40 functions.*
+*46 functions.*
 <!-- /cfdl:generated expression-builtins -->
+
+### Series folds and empty selections
+
+The six series folds — `series_sum`, `series_avg`, `series_min`, `series_max`,
+`series_prod`, `series_count` — take `(pattern, from_t, to_t)`: a stream
+pattern such as `"dbt.*"` and an inclusive period window. Each period's
+matched streams are aggregated first, and the fold runs over that per-period
+vector — so `series_max` finds the peak of the combined position, not the
+largest single cell. `series_count` counts the periods whose aggregate is
+non-zero.
+
+A pattern may legitimately match nothing, and each fold answers for itself: an
+empty selection sums to `0`, averages to `0`, multiplies to `1`, and counts `0`
+periods. A maximum or minimum of nothing has no answer, so `series_max` and
+`series_min` return `null` rather than `0`. A
+null compares (`null == null`) but refuses ordering and arithmetic, so it can
+be guarded but never quietly become a number:
+
+```
+if(series_count("x.*", 0, time.t) == 0, 0, series_max("x.*", 0, time.t))
+```
 
 ## Related
 

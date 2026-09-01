@@ -80,7 +80,11 @@ its level.
 
 ## What results carry
 
-Monte Carlo results summarize each metric with `mean`, `stdev`, `min`/`max`,
-and percentiles (`p01` through `p99`, including `p05`/`p25`/`p50`/`p75`/`p95`)
-— see the [Results schema](/docs/specification/results-schema). The
+Each trial's summary carries the full metric map — the engine's, the pack's,
+and the model's declared `metric.*` figures alike — so a declared metric gets
+a distribution, not only the built-ins. Monte Carlo results summarize each
+metric with `mean`, `stdev`, `min`/`max`, percentiles (`p01` through `p99`,
+including `p05`/`p25`/`p50`/`p75`/`p95`), and `trials` — the count of trials
+that published that name — see the
+[Results schema](/docs/specification/results-schema). The
 [Python SDK](/docs/python-sdk) exposes them via `results.monte_carlo()`.

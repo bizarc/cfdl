@@ -56,11 +56,15 @@ A run produces one document with a consistent anatomy, whether the model is this
 
 **Annual rollup.** The same cash regrouped by calendar year — the view a committee actually reads, and the bridge to how results are compared against a source document that reports annually.
 
-**Metrics.** NPV, IRR, and — once packs are involved — domain metrics like coverage ratios. Each metric carries its inputs in the output (the discount rate used, the as-of date), so a metric is never a bare number you have to reconstruct context for.
+**Metrics.** NPV, IRR, and — once packs are involved — domain metrics like coverage ratios. Each metric carries its inputs in the output (the discount rate used, the as-of date), so a metric is never a bare number you have to reconstruct context for. The prefix says who minted the number: `model.*` is the engine's, `domain.*` the active pack's, and `metric.<name>` one the *model* declared — a figure the deal solved for, evaluated once at the horizon over the finished projection (Part III introduces declaring them).
 
 **The graph, and who owns what.** A top-level `graph` lists every entity — its symbol, family, type, `part of` parent, and (when the model carries one) its stable `id`. Each stream series states its owning `entity` and its `category` beside the values. Together these mean the document stands alone: you can attribute any stream's cash to the thing that owns it without the model open in another window.
 
-**Slices.** A model that declares slices publishes each one: the selection it stated, the streams it matched, a net series, and total/NPV/IRR over the match. A slice never carries a reconciliation block — it is partial by design, and the document shows it as partial.
+**Slices.** A model that declares slices publishes each one: the selection it stated, the streams it matched, a net series, and total/NPV/IRR over the match. A slice may also state a `window` — a pair of dates bounding the *periods*, where every other clause bounds the streams — and the window is published as part of the lineage, because it is the one part of a selection that removes cash a reader can still see in the series beside it. A slice never carries a reconciliation block — it is partial by design, and the document shows it as partial.
+
+**Statements.** Every results document with an entity in it carries at least one statement — rows with labels, depths, and a display sign, ending in a bottom line that reconciles against the model's cash. Where they come from is a three-way precedence: the model's own declared statements when it has them, the active pack's otherwise, and — when neither declares one — a default rendering of the entity hierarchy, marked `default`, so a reader holding results sees the model's shape rather than a flat list of series. A statement filtered by a slice reconciles against the *slice's* total, not the model's.
+
+**Two hashes.** The document states a `model_hash` — identifying the compiled model, taken *without* its views (slices and statements organize; they produce no cash) — and a `ledger_hash` over what came out: the series, the journal, the transitions. The machinery chapter in Part II tells the full story; for now, know that "same model?" and "same result?" are separately answerable questions.
 
 ## Discounting: the two knobs that change everything
 

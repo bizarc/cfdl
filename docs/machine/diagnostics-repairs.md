@@ -4426,5 +4426,5 @@ Documented in docs/08 §7, awaiting a minimal failing fixture:
 - `W3501_STATEMENT_STREAM_DOUBLE_COUNTED` — a stream claimed by more than one
 - `W3502_STATEMENT_BOTTOM_LINE_RESIDUAL` — the statement's rows do not sum to
 - `W3503_STATEMENT_UNKNOWN_STRUCTURE` — a model-declared statement asks for a
-- `W5022_UNKNOWN_SERIES_REFERENCE` — a `series_sum`/`series_avg` names a series
+- `W5022_UNKNOWN_SERIES_REFERENCE` — a series reduction (`series_sum`,
 - `W5023_UNRECOGNISED_PACK_CATEGORY` — a stream's category is well-rooted and

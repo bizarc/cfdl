@@ -10,13 +10,46 @@ generated: regions
 
 A **statement** is the artifact a practitioner recognizes: an operating pro
 forma, a remittance report, a free cash flow build-up. CFDL produces one per
-period from the model you already wrote — you do not build it, and you do not
-maintain it alongside the model.
+period from the model you already wrote — you declare how it is organized, or
+take one from a pack or the default, and never maintain its numbers alongside
+the model.
 
-Run a model with a pack and the results carry a `statements` section. In the
-playground it is the **Statement** tab.
+Every run's results carry a `statements` section — in the playground it is
+the **Statement** tab. A statement comes from one of three places: the model
+declares one, the active pack ships one, or the engine renders the entity
+hierarchy as a default, marked `default`. The default is assembled when
+results are rendered, never enters the compiled document, and yields to any
+declared statement.
 
-## What makes it work
+## Declaring one
+
+A declared statement is **generated or authored, never both and never
+neither** (`E1369`).
+
+A **generated** statement names an existing hierarchy — `structure entity`
+(the `part of` tree) or `structure category` (the dotted path) — and cuts it
+at a `depth`. It enumerates no rows: a node whose children are shown is a
+subtotal, a node whose children are cut off is a line carrying all of its
+descendants' cash, so the lines partition the cash at every depth. It may
+carry a `label`, a `grain`, a `slice` filter (orthogonal to the structure),
+and `metrics` naming declared metrics to publish beside it.
+
+```cfdl
+statement portfolio {
+  label     "Portfolio by property"
+  structure entity
+  depth     2
+}
+```
+
+An **authored** statement states its own rows — `line`, `subtotal`, `ratio`,
+`spacer` — each drawing from a `category`, `stream`, `slice` or `entity`. A
+`subtotal` folds rows stated elsewhere and claims nothing; a `ratio` divides
+two declared slices and publishes `null` where the denominator is zero. This
+is the form for a pro forma: curated labels, expenses shown positive under
+"Less:", a coverage ratio that is a node of no hierarchy.
+
+## What makes a generated statement work
 
 Three things, and only the first is something you write.
 
@@ -54,10 +87,17 @@ the value is `null` rather than zero: a period with no debt service has no
 coverage ratio, and averaging a zero in would understate the deal.
 
 **The bottom line is checked, not assumed.** Every statement publishes a
-`reconciliation` — its own total, the model's total, and the residual between
-them. If a stream carries no category it appears in a visible *Unclassified*
-row rather than quietly vanishing, because a statement that is short by an
-unnoticed line looks entirely plausible.
+`reconciliation` — its own total, the total of the universe it reports, and
+the residual between them. That universe is the model, with one exception: a
+statement filtered by a `slice` reconciles against the slice's total, because
+reporting the filter itself as a shortfall would make a warning fire on a
+correct model. If a stream carries no category it appears in a visible
+*Unclassified* row rather than quietly vanishing, because a statement that is
+short by an unnoticed line looks entirely plausible.
+
+A [slice](/docs/reference/slices) itself publishes no reconciliation, by
+design: it is partial on purpose, and must be seen to be — a partial number
+never dresses as a complete one.
 
 ## Grain
 

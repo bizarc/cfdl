@@ -15,8 +15,13 @@ For what the pieces are, see [Statements](/docs/reference/statements).
 
 ## Get a statement
 
-Use a pack. A pack classifies the streams its contracts emit, and declares the
-statement they roll into. Nothing else is required.
+There are three ways to get one: declare a `statement` in the model, use a
+pack that ships one, or take the default — a model that declares none renders
+its entity hierarchy as a statement marked `default`, so results always read
+as the model's shape rather than a flat list of series.
+
+The quickest is a pack. A pack classifies the streams its contracts emit, and
+declares the statement they roll into. Nothing else is required.
 
 ```cfdl
 version 0.1
@@ -73,14 +78,66 @@ Use the categories the pack declares — see [pack contracts](/docs/reference/pa
 Without a pack, any path rooted in `operating`, `investing` or `financing` is
 valid.
 
+## Declare your own
+
+A model declares a statement the same way a pack does. The generated form
+names a hierarchy the results already carry — the `part of` tree or the
+dotted category path — and a depth to cut it at:
+
+```cfdl
+statement portfolio {
+  label     "Portfolio by property"
+  structure entity
+  depth     2
+}
+```
+
+The rows follow from the tree: a node whose children are shown is a subtotal,
+a node whose children are cut off by `depth` is a line carrying all of its
+descendants' cash. That single rule keeps the bottom line reconciling at
+every depth.
+
+Where the tree is not the presentation — curated labels, expenses shown
+positive under "Less:", a coverage ratio at the bottom — a statement states
+its own rows instead:
+
+```cfdl
+slice noi          { category "operating.*" }
+slice debt_service { category "financing.debt.service" }
+
+statement operating {
+  label "Operating statement"
+  line     "Base rental revenue"   { category "operating.revenue.base_rent" }
+  line     "Less: operating costs" { category "operating.expense.*" display positive }
+  subtotal "Net operating income"  { category "operating.*" }
+  spacer
+  ratio    "DSCR"                  { of noi to debt_service display positive }
+}
+```
+
+A statement is authored or generated, never both (`E1369`). A generated
+statement may also carry a `slice` — an orthogonal filter, so any structure
+can be shown for any selection — and `metrics`, naming declared metrics to
+publish beside it. See [Statements](/docs/reference/statements) for the
+rules.
+
 ## Read it annually
 
 The CRE pack publishes a monthly statement and an annual one from the same run.
 Nothing is re-modeled: the annual view regroups the same ledger, and its
 columns are years rather than months.
 
-Where you need a different grain than a pack offers, that is a pack change —
-a statement declares the grain it reports at.
+Where you need a different grain than a pack offers, declare it: a model
+statement carries a `grain` clause and reports at it. Values re-bucket into
+the coarser periods; the total stays the lifetime figure; a ratio is
+recomputed from the re-bucketed inputs.
+
+```cfdl
+statement portfolio {
+  structure entity
+  grain     annual
+}
+```
 
 **A coverage ratio is not averaged.** Annual DSCR is annual NOI over annual debt
 service, recomputed from the re-bucketed inputs. The mean of twelve monthly
@@ -89,14 +146,17 @@ badly different one.
 
 ## Check the bottom line
 
-Every statement publishes a reconciliation: its own total, the model's total,
-and the residual between them.
+Every statement publishes a reconciliation: its own total, the total of the
+universe it reports, and the residual between them. For most statements that
+universe is the model; a statement filtered by a `slice` reconciles against
+the slice's total instead, because reporting the filter itself as a shortfall
+would make a warning fire on a correct model.
 
 ```
 reconciliation.residual = 0.0
 ```
 
-A non-zero residual means the statement and the model disagree, and the usual
+A non-zero residual means the statement and its universe disagree, and the usual
 cause is a stream carrying no category — which is why the *Unclassified* row
 exists rather than the cash silently vanishing. A statement that is short by an
 unnoticed line looks entirely plausible, so this is published always, whether it

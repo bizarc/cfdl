@@ -729,7 +729,7 @@ against it by `make results-schema`.
       "required": [
         "statements"
       ],
-      "description": "Statements the active pack declares, rendered against this run. Rows carry order, labels, depth and a display sign; they compute nothing the engine has not already aggregated. Absent when the pack declares no statement.",
+      "description": "Statements rendered against this run: the model's own declarations, the active pack's, or — when neither declares one — a default entity-hierarchy statement marked `default`. Rows carry order, labels, depth and a display sign; they compute nothing the engine has not already aggregated. Always present.",
       "properties": {
         "pack": {
           "type": "string",
@@ -879,13 +879,14 @@ against it by `make results-schema`.
         "model_total",
         "residual"
       ],
-      "description": "Does the statement account for the model's cash? Published always and asserted rather than corrected: a bottom line that quietly differs from model.total is the failure this exists to make visible.",
+      "description": "Does the statement account for the cash it is accountable for? Published always and asserted rather than corrected: a bottom line that quietly differs from the statement's universe is the failure this exists to make visible.",
       "properties": {
         "bottom_line": {
           "type": "number"
         },
         "model_total": {
-          "type": "number"
+          "type": "number",
+          "description": "The total of the statement's universe: model.total for an unfiltered statement, the slice's total when the statement declares one."
         },
         "residual": {
           "type": "number"

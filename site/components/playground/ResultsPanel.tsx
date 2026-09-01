@@ -979,7 +979,15 @@ function JsonTab({
   const facts: [string, string | undefined][] = [
     ["Results schema", results.results_version],
     ["Engine", [results.engine?.name, results.engine?.version].filter(Boolean).join(" ") || undefined],
-    ["Pack", results.statements?.pack],
+    // A statements section without a `pack` is model-declared (or the default
+    // entity hierarchy) — the absence is meaningful, not missing data.
+    [
+      "Statements",
+      results.statements
+        ? (results.statements.pack ??
+          (results.statements.statements?.some((s) => !s.default) ? "model" : "default"))
+        : undefined,
+    ],
     ["Deterministic", results.deterministic?.status],
     ["Scenarios", results.scenarios?.summaries?.length?.toString()],
     [
@@ -1145,9 +1153,17 @@ function StatementTab({
   );
   const hidden = useMemo(() => hiddenRows(groups, view.collapsed), [groups, view.collapsed]);
 
+  // Statements always render now — the model's own, the pack's, or the default
+  // entity hierarchy — so "no statements" means no run yet, or a model with no
+  // entities to build the default from.
+  if (!results) {
+    return <PaddedEmpty>Run a model to see its statement.</PaddedEmpty>;
+  }
   if (!statements?.length) {
     return (
-      <PaddedEmpty>Run a model with a pack that declares statements to see a pro forma.</PaddedEmpty>
+      <PaddedEmpty>
+        No statement in these results — a model with no entities has no hierarchy to render.
+      </PaddedEmpty>
     );
   }
   if (!active) return <PaddedEmpty>No statement to show.</PaddedEmpty>;
