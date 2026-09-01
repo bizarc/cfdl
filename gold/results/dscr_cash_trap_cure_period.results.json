@@ -1,10 +1,10 @@
 {
   "results_version": "0.12",
-  "model_hash": "a7a919d38c06a79c31985d539c150eac0889355522e9b10ce45976587686d329",
+  "model_hash": "94da4215c1ffcb17709e47aa6a40754fd571cc60b25b7505054b34e159e7e5f8",
   "ledger_hash": "0520d15481bab5f38101029c93b73751e11887db7e87ced098e1662b3df8712a",
   "engine": {
     "name": "cfdl-engine",
-    "version": "0.8.0"
+    "version": "0.9.0"
   },
   "warnings": [
     "Lifecycle 'covenant edge compliant -> trapped' when evaluation failed [EXPR_EVAL]: series_sum: series `ops.noi` is not available in this context; using false."

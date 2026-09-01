@@ -8,6 +8,46 @@ This project follows Semantic Versioning: https://semver.org/
 
 ## [Unreleased]
 
+## [0.9.0] - 2026-09-01
+
+The reporting plane: metrics, slices, and statements. 17 commits since 0.8.0.
+
+A model now declares how its results are read, not only how its cash flows.
+`results_version` moved from 0.8 to 0.12.
+
+**Metrics (§7.85).** A metric is evaluated once, at the horizon, over the
+finished projection — and may fold any series the valuation plane publishes:
+a stream by either spelling, a waterfall step, `entity.<symbol>.net_cash_flow`,
+`account.<name>`, an entity field, a money subtotal, `model.net_cash_flow`.
+An unpublished name is refused at compile (`E1365`), not read as zero. Every
+Monte Carlo metric — engine, pack, and declared — gets a distribution: the
+full percentile set p01–p99 and a `trials` count.
+
+**Series reductions (§7.86).** Four more folds beside `series_sum` and
+`series_avg`: `series_max`, `series_min`, `series_prod`, `series_count`.
+Every fold reads the per-period aggregate. An empty selection returns each
+fold's identity — sum 0, product 1, count 0 — and `series_max`/`series_min`,
+which have none, publish null.
+
+**Slices and statements (§7.55, parts one through six).** A slice may bound
+the periods it reports (`window from <date> to <date>`). A model declares its
+own statements — generated from a structure, or authored row by row, never
+both (`E1369`) — reports them at its own `grain`, and a model with no
+statement gets a default entity hierarchy marked `default`. A row may present
+a published `series`: a fold of the ledger that claims nothing and stays out
+of the bottom line (`E1370` refuses a claim clause beside it). A pack's
+statements lower into the same shape and render through the same evaluator.
+
+**The model and the ledger.** The compiled document carries a `views` part.
+`model_hash` identifies the model — the IR without its views. `ledger_hash`
+identifies the result — the journal and transitions beside the series. Two
+users who look at identical results differently share a model hash.
+
+**The teaching surfaces.** cfdl.dev and learn.cfdl.dev caught up with all of
+the above; the Argus parity document was refreshed, and structured finance
+and energy received parity documents of their own (`docs/38`, `docs/39`).
+The diagnostic parity gate now covers warnings.
+
 ### Changed: one statement evaluator, two producers (§7.55 part six — closed)
 
 A pack's `statements.toml` now lowers into the same shape a model's statements

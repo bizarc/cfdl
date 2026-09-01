@@ -1,10 +1,10 @@
 {
   "results_version": "0.12",
-  "model_hash": "57bc991bde1207ea2b4b2494fae7fd8b238645d9d4750097263188275df01704",
+  "model_hash": "a2c104357aba982fc63ce7aa81b6aed12509ce238f33ff4d20dbb4f0c01adfa8",
   "ledger_hash": "68642f909637849537b80c816c158acceecf140503af0ac0042a1eda9c2921c6",
   "engine": {
     "name": "cfdl-engine",
-    "version": "0.8.0"
+    "version": "0.9.0"
   },
   "warnings": [
     "Lifecycle 'trigger edge normal -> trapped' when evaluation failed [EXPR_EVAL]: series_sum: series `ops.rent` is not available in this context; using false."
