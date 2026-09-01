@@ -17,7 +17,16 @@ export interface SeriesIndex {
 export interface Series {
   index: SeriesIndex;
   values: MoneyOrNumber[];
+  /** Where in each period the cash falls: 0 open, 0.5 mid, 1 close. Absent on aggregates and fields. */
+  offset?: number;
+  /** The owning entity (`asset.tower`). Absent on aggregates. */
+  entity?: string;
+  /** The stream's declared category, when the model states one. */
+  category?: string;
 }
+
+/** A scalar the engine publishes: money, a bare number, a string, a boolean, or null. */
+export type Scalar = MoneyOrNumber | string | boolean | null;
 
 export interface MetricSummary {
   type?: string;
@@ -31,7 +40,10 @@ export interface MetricSummary {
 
 export interface Results {
   results_version?: string;
+  /** Identifies the MODEL: the compiled IR without its views (slices and statements). */
   model_hash?: string;
+  /** Identifies the RESULT: the series plus the journal and the transitions. */
+  ledger_hash?: string;
   engine?: { name?: string; version?: string };
   warnings?: string[];
   deterministic?: {
@@ -53,12 +65,59 @@ export interface Results {
   };
   domain_metrics?: { metrics?: Record<string, MoneyOrNumber> };
   statements?: StatementsSection;
+  /** Declared slices: named partial selections with their matched streams and figures. */
+  slices?: SliceResult[];
+  /** The model's entity graph — who is part of what, published so results stand alone. */
+  graph?: ResultsGraph;
 }
 
-/** A pack's declared statements, rendered against this run. */
+/**
+ * Statements rendered against this run: the model's own declarations, the
+ * active pack's, or — when neither declares one — a default entity-hierarchy
+ * statement marked `default`. Absent only for a model with no entities.
+ */
 export interface StatementsSection {
+  /** The pack whose statements these are. Absent when the model declared them. */
   pack?: string;
   statements?: Statement[];
+}
+
+/** A declared slice and what it came to. No reconciliation block, by design. */
+export interface SliceResult {
+  id: string;
+  /** The selection as lineage: what the slice stated. */
+  selection?: {
+    entities?: string[];
+    types?: string[];
+    categories?: string[];
+    streams?: string[];
+    except_streams?: string[];
+    except_categories?: string[];
+    except_entities?: string[];
+    /** The reporting bound: the only periods the slice's figures fold over. */
+    window?: { from: string; to: string };
+  };
+  /** Every stream it matched — empty is published, not omitted. */
+  streams?: string[];
+  net?: Series;
+  metrics?: Record<string, Scalar>;
+}
+
+export interface ResultsGraph {
+  entities?: GraphEntity[];
+}
+
+export interface GraphEntity {
+  /** The reference the model uses everywhere — `asset.tower`. */
+  symbol: string;
+  /** asset, party, or container. */
+  family: string;
+  /** The ontology type the declaration states, when it states one. */
+  type?: string;
+  /** The stable identity the model carries for a layer above it. */
+  id?: string;
+  /** The `part of` parent, when the model groups this entity. */
+  parent?: string;
 }
 
 export interface Statement {
@@ -74,6 +133,8 @@ export interface Statement {
     residual?: number;
   };
   diagnostics?: { code?: string; severity?: string; message?: string }[];
+  /** Declared metrics published beside the statement — one number each, at the horizon. */
+  metrics?: Record<string, Scalar>;
 }
 
 /**

@@ -109,6 +109,8 @@ values override `deterministic` values for that scenario only.
 
 ## Where results land
 
-`deterministic.metrics`, one `scenarios.<name>` block per scenario, and
-`monte_carlo.metrics` with mean/stdev/min/max and p50 per metric — see the
+`deterministic.metrics`, one scenario summary per scenario, and
+`monte_carlo.metrics` with mean/stdev/min/max, percentiles p01–p99, and
+`trials` — the count of trials that published that name — for every metric,
+model-declared ones included. See the
 [Results schema](/docs/specification/results-schema).

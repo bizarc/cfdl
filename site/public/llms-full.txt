@@ -5532,13 +5532,14 @@ against it by `make results-schema`.
         "model_total",
         "residual"
       ],
-      "description": "Does the statement account for the model's cash? Published always and asserted rather than corrected: a bottom line that quietly differs from model.total is the failure this exists to make visible.",
+      "description": "Does the statement account for the cash it is accountable for? Published always and asserted rather than corrected: a bottom line that quietly differs from the statement's universe is the failure this exists to make visible.",
       "properties": {
         "bottom_line": {
           "type": "number"
         },
         "model_total": {
-          "type": "number"
+          "type": "number",
+          "description": "The total of the statement's universe: model.total for an unfiltered statement, the slice's total when the statement declares one."
         },
         "residual": {
           "type": "number"
@@ -7227,7 +7228,8 @@ Fields that move:
   `inputs.`: an input may be supplied entirely by the run configuration, which
   the compiler never sees, so an unresolved input is the engine's to refuse.
 - `E1134_SERIES_READ_IN_LOGIC` — an event's guard or action value, a field's
-  rule, or an option's election or payoff calls `series_sum`/`series_avg`. All
+  rule, or an option's election or payoff calls a series reduction
+  (`series_sum` and its five siblings). All
   of these are evaluated before any stream has a value, so the read binds
   nothing: the engine substitutes `false` in a guard and `0` in a rule, warns
   once per period, and publishes a full set of numbers under `status: ok` — an
@@ -7253,7 +7255,7 @@ Fields that move:
 - `E1341_WATERFALL_FORWARD_REF` — a step's `paid.<step>` names a step declared
   later in the same waterfall. Steps pay in declaration order, so a later step
   has not paid anything when an earlier one is evaluated.
-- `E1342_WATERFALL_SERIES_NOT_VISIBLE` — `series_sum`/`series_avg` names a step
+- `E1342_WATERFALL_SERIES_NOT_VISIBLE` — a series reduction names a step
   of this waterfall or of a later one. Steps publish when their waterfall
   finishes, so the read would aggregate to zero and say nothing. An EARLIER
   waterfall is the documented composition and still compiles.
@@ -7286,7 +7288,7 @@ Fields that move:
   different deals rather than two spellings of one. The omission used to lower
   to a one-shot in the first period, distributing whatever that period happened
   to produce; there is no default right often enough to be silent.
-- `E1346_STREAM_READS_WATERFALL_STEP` — a STREAM's `series_sum`/`series_avg`
+- `E1346_STREAM_READS_WATERFALL_STEP` — a STREAM's series reduction
   names a waterfall step. Every waterfall runs after every stream and a step's
   series is visible to a later waterfall's `from` and to nothing else, so the
   read could only ever aggregate to zero. Model the quantity the step pays as a
@@ -7305,7 +7307,7 @@ Fields that move:
 - `E1369_STATEMENT_AUTHORED_AND_GENERATED` — a statement states both a `structure` and its own rows, or neither. A generated statement partitions the cash by construction, because a hierarchy covers its own tree; an authored one partitions it by the author's care. Mixed, neither guarantee holds — an authored row claims streams the generated rows already claimed, so the bottom line double-counts and the reconciliation that makes a statement trustworthy becomes noise. A statement stating neither would render nothing. `docs/13` §7.55.
 - `E1368_STATEMENT_UNKNOWN_REFERENCE` — a statement filters by a slice, or shows a metric, that the model does not declare. A presentation that silently shows nothing is the failure §7.55 exists to end.
 - `E1370_STATEMENT_SERIES_ROW_CLAIMS` — an authored row draws a published `series` beside a claim clause (`category`, `stream`, `slice`, `entity`, or a ratio's `of`/`to`). A series row presents a fold of the ledger, claims no streams and stays out of the bottom line; a claim clause beside it could only be resolved by a precedence the reader cannot see, which is a silently ignored clause. Refused instead. `docs/13` §7.55.
-- `E1365_METRIC_UNKNOWN_SERIES` — a metric folds a series name this model does not publish. `series_sum`/`series_avg` return 0.0 for a selector that matches nothing, which is right for a `.*` selector and wrong for a name spelled out in full; in a metric it is worse than wrong, because a fold publishes ONE number under a name the author chose, with no series beside it to show the zero (`docs/13` §7.85). A metric may fold any series the valuation plane publishes: a stream by its own name or as `stream.<name>`, a waterfall step, `entity.<symbol>.net_cash_flow`, `account.<name>`, an entity field, a money subtotal, or `model.net_cash_flow`. A RATIO subtotal is refused with its own hint — its undefined periods publish as null rather than zero, and what a fold should do with null has not been decided.
+- `E1365_METRIC_UNKNOWN_SERIES` — a metric folds a series name this model does not publish. `series_sum`/`series_avg` (and each sibling reduction, to its own identity) return 0.0 for a selector that matches nothing, which is right for a `.*` selector and wrong for a name spelled out in full; in a metric it is worse than wrong, because a fold publishes ONE number under a name the author chose, with no series beside it to show the zero (`docs/13` §7.85). A metric may fold any series the valuation plane publishes: a stream by its own name or as `stream.<name>`, a waterfall step, `entity.<symbol>.net_cash_flow`, `account.<name>`, an entity field, a money subtotal, or `model.net_cash_flow`. A RATIO subtotal is refused with its own hint — its undefined periods publish as null rather than zero, and what a fold should do with null has not been decided.
 - `E1304_UNRESOLVED_OPTION_REF` — an event exercises an option that is not declared. Checked in the compiler rather than the resolver, because options are not in the symbol tables.
 - `E1310_ENTITY_BLOCK_WITHOUT_TYPE` — an entity uses a block but declares no type, so there is nothing to check the block against.
 - `E1311_UNKNOWN_ENTITY_TYPE` — an entity declares a type the active ontology does not define. The known types are listed.
@@ -7418,9 +7420,10 @@ see what is wrong with it.
   per stream. The bare form stays legal where the contract lowers exactly one,
   because there is then nothing to disambiguate.
 
-- `W5022_UNKNOWN_SERIES_REFERENCE` — a `series_sum`/`series_avg` names a series
-  no stream, contract or waterfall step produces, so it aggregates to zero and
-  whatever reads it is reading nothing. A warning rather than an error because a
+- `W5022_UNKNOWN_SERIES_REFERENCE` — a series reduction (`series_sum`,
+  `series_avg`, `series_min`, `series_max`, `series_prod`, `series_count`)
+  names a series no stream, contract or waterfall step produces, so it reduces
+  over nothing and whatever reads it is reading nothing. A warning rather than an error because a
   literal name matching nothing is also a pack idiom: `cre.exit` sums NOI
   components by name whether or not the property declared each one. Selectors
   ending in `.*` are exempt, and are how a model states that matching nothing is
@@ -20402,9 +20405,9 @@ entity asset tower : Asset.Real
 entity party lender : Party
 ```
 
-The **family** (`asset`, `party`, or `container` for a grouping such as a fund) and the **name** (`tower`, `lender`) combine into the reference you use everywhere else: `asset.tower`, `party.lender`. The **type** after the colon (`Asset.Real`, `Party`) says what kind of thing this is in a vocabulary the tooling understands — real assets, financial assets, intangibles, parties to a transaction. When you later adopt an industry pack, the pack extends this vocabulary with domain types and checks your entities against it — and each pack type states what it specializes (`CRE.Asset.RealProperty` refines `Asset.Real`), so "is a" is a recorded fact rather than a naming convention. Contracts, in turn, check that they attach to an entity of a type that makes sense. A lease on a `Party` is a nonsense the compiler can refuse only because the model said what things *are*, not just what they are called.
+The **family** (`asset`, `party`, or `container` for a grouping such as a fund) and the **name** (`tower`, `lender`) combine into the reference you use everywhere else: `asset.tower`, `party.lender`. The **type** after the colon (`Asset.Real`, `Party`) says what kind of thing this is in a vocabulary the tooling understands — real assets, financial assets, intangibles, parties to a transaction. When you later adopt an industry pack, the pack extends this vocabulary with domain types and checks your entities against it — and each pack type states what it specializes (`CRE.Asset.RealProperty` refines `Asset.Real`), so "is a" is a recorded fact rather than a naming convention. Refinement carries substance, not just a label: a type inherits every field its master declares, so what you learn about a master holds for everything downstream of it. Contracts have masters too — the language ships abstract ones like `Contract.Debt` and `Contract.Lease` that exist only to be refined, never instantiated — and contracts check that they attach to an entity of a type that makes sense. A lease on a `Party` is a nonsense the compiler can refuse only because the model said what things *are*, not just what they are called.
 
-Entities can also nest — a building that is `part of` a portfolio, a unit that is `part of` a building — which gives roll-ups something real to roll up along. The capstone uses this; for now just know the structure is there.
+Entities can also nest — a building that is `part of` a portfolio, a unit that is `part of` a building — which gives roll-ups something real to roll up along. `part of` is one relation from a small declared vocabulary the ontology carries: a party `owns` an asset or a fund, a contract is `secured_by` the asset behind it, a party `guarantees` a contract or `is_counterparty_to` one. Today these edges are declarative — validated and published in the results graph, driving no cash themselves — but they are how a model records who holds what, and what stands behind which obligation, as facts rather than as comments. The capstone uses the nesting; for now just know the structure is there.
 
 What should be an entity? The cast, not the props. The building, the operating company, the loan, the counterparty — things that could plausibly have their own statement of cash flows. The rent number is not an entity; it is a claim *about* an entity, which is the next idea.
 
@@ -20542,11 +20545,15 @@ A run produces one document with a consistent anatomy, whether the model is this
 
 **Annual rollup.** The same cash regrouped by calendar year — the view a committee actually reads, and the bridge to how results are compared against a source document that reports annually.
 
-**Metrics.** NPV, IRR, and — once packs are involved — domain metrics like coverage ratios. Each metric carries its inputs in the output (the discount rate used, the as-of date), so a metric is never a bare number you have to reconstruct context for.
+**Metrics.** NPV, IRR, and — once packs are involved — domain metrics like coverage ratios. Each metric carries its inputs in the output (the discount rate used, the as-of date), so a metric is never a bare number you have to reconstruct context for. The prefix says who minted the number: `model.*` is the engine's, `domain.*` the active pack's, and `metric.<name>` one the *model* declared — a figure the deal solved for, evaluated once at the horizon over the finished projection (Part III introduces declaring them).
 
 **The graph, and who owns what.** A top-level `graph` lists every entity — its symbol, family, type, `part of` parent, and (when the model carries one) its stable `id`. Each stream series states its owning `entity` and its `category` beside the values. Together these mean the document stands alone: you can attribute any stream's cash to the thing that owns it without the model open in another window.
 
-**Slices.** A model that declares slices publishes each one: the selection it stated, the streams it matched, a net series, and total/NPV/IRR over the match. A slice never carries a reconciliation block — it is partial by design, and the document shows it as partial.
+**Slices.** A model that declares slices publishes each one: the selection it stated, the streams it matched, a net series, and total/NPV/IRR over the match. A slice may also state a `window` — a pair of dates bounding the *periods*, where every other clause bounds the streams — and the window is published as part of the lineage, because it is the one part of a selection that removes cash a reader can still see in the series beside it. A slice never carries a reconciliation block — it is partial by design, and the document shows it as partial.
+
+**Statements.** Every results document with an entity in it carries at least one statement — rows with labels, depths, and a display sign, ending in a bottom line that reconciles against the model's cash. Where they come from is a three-way precedence: the model's own declared statements when it has them, the active pack's otherwise, and — when neither declares one — a default rendering of the entity hierarchy, marked `default`, so a reader holding results sees the model's shape rather than a flat list of series. A statement filtered by a slice reconciles against the *slice's* total, not the model's.
+
+**Two hashes.** The document states a `model_hash` — identifying the compiled model, taken *without* its views (slices and statements organize; they produce no cash) — and a `ledger_hash` over what came out: the series, the journal, the transitions. The machinery chapter in Part II tells the full story; for now, know that "same model?" and "same result?" are separately answerable questions.
 
 ## Discounting: the two knobs that change everything
 
@@ -20814,7 +20821,11 @@ The library is small and chosen — every function earns its place in cash-flow 
 
 **Dates.** `date`, `edate` (shift by months, the Excel EDATE), `eomonth`, `days_between`, `months_between`, `year_frac` (day-count-aware year fractions — the bridge between "a rate per annum" and "this period's accrual"), `is_business_day`, `add_business_days`, `roll`.
 
-**Aggregation.** `sum`, `avg` over a list; `series_sum` and `series_avg` over another stream's published series — the construct that lets a fee be "2% of collections" without restating collections. It has an evaluation-order story worth understanding before you lean on it, told in the machinery chapter.
+**Aggregation.** `sum`, `avg` over a list; and six reductions over another stream's published series — `series_sum`, `series_avg`, `series_min`, `series_max`, `series_prod`, `series_count`, each taking a name (or a `prefix.*` selector) and an inclusive period window. `series_sum` is the construct that lets a fee be "2% of collections" without restating collections. When a selector matches several streams, they are added together *within each period first*, and the fold runs over that combined series — for a sum the order never mattered, but for a maximum it decides the answer: the peak of the combined position and the largest single cell are different numbers. An empty selection returns each fold's own identity (sum 0, product 1, count 0); `series_max` and `series_min` have none and return null, which compares (`==`) but refuses to order or add — an absence can never quietly become a number. The family has an evaluation-order story worth understanding before you lean on it, told in the machinery chapter.
+
+One trap worth naming before you meet it in a review. `max(series_sum("dbt.*", 0, time.t), 0)` does not compute a peak anything — `series_sum` is one number, the lifetime net over the window, and `max` of one number and zero is a floor, not a peak. Peak outstanding debt is `series_max` over the series that *carries the balance* — an entity field, read under the key the results publish it under. A running total synthesized from flows alone is a scan rather than a reduction, and there is no scan. If you find yourself labelling a `series_sum` a "peak," the model is claiming a lifetime net and calling it a high-water mark.
+
+(One scope note for later: a declared `metric` evaluates in this same expression environment, plus the keys the finished results publish — waterfall steps, account balances, `entity.<name>.net_cash_flow`, `model.net_cash_flow`. Part III introduces metrics properly.)
 
 **Domain.** `cpr_to_smm` (annual prepayment rate to monthly, the standard mortgage conversion), `macrs_rate` (US tax depreciation schedules), `curve_value` (chapter 7).
 
@@ -21557,7 +21568,9 @@ The model can carry its own run policy as a statement: `run monte_carlo trials 2
 }
 ```
 
-Each trial draws every distributed assumption once, runs the full model, and records the results. The output then reports the distribution of every metric alongside your deterministic case: mean, standard deviation, min and max, and percentiles from p01 to p99.
+Each trial draws every distributed assumption once, runs the full model, and records the results. A trial *is* a complete deterministic run, and every metric it computed is carried — the engine's `model.*`, the pack's `domain.*`, and any `metric.<name>` the model declared — so a figure the deal solved for gets a distribution, not just the built-ins. The output then reports the distribution of every metric alongside your deterministic case: mean, standard deviation, min and max, and percentiles from p01 to p99, computed with linear interpolation between order statistics (the same method R calls type 7), so a percentile of two thousand trials is not hostage to whichever single trial sits nearest the rank.
+
+Each summary also states its own `trials` — the count of trials that *published* that metric, and it matters because the count is not always the trial count. `model.irr` exists only where the flows solve for a rate; a path whose flows never change sign publishes none, and without the count, a mean over three trials and a mean over two thousand would read identically. Per-entity distributions come the same way: every trial carries `entity.<symbol>.total`, and the published entity graph says what each symbol is and whose it is — the join that lets you put a distribution on one building of a portfolio.
 
 Two properties of the machinery matter to a practitioner. **The seed makes trials reproducible**: same model, same configuration, same two thousand paths, byte for byte, on any machine. "The p05 was −1.2 million" is a checkable statement in a committee memo, not a weather report. And **each assumption owns its own draw stream**, derived from the seed and the assumption independently — so adding a new distributed assumption does not reshuffle the draws of existing ones. Add a cost distribution and your rent paths stay *identical*, which means the change in the output is attributable to the assumption you added. Between-run comparability of this kind is exactly what add-in Monte Carlo tools quietly fail to provide.
 
@@ -21723,7 +21736,7 @@ A model goes from text to results through fixed stages. Each stage has one job a
 2. **Parsing** turns tokens into a syntax tree. Refusals are structural: a malformed schedule, a stream name with one segment, a keyword where an expression belongs.
 3. **Resolution** builds the import graph and the symbol table, then resolves every name — entities, streams, phases, fields — to its declaration. Refusals: cycles, escapes from the model root, duplicates, references to nothing. After this stage, no name in the model is unbound. That property is what chapter 2's "reference to nobody" refusal was teaching.
 4. **Validation** checks model-level shape: exactly one time grid, schedules inside the horizon, required clauses present. With a pack in play, the pack's own validations run here too. A contract missing a required term is refused in the pack's vocabulary.
-5. **Lowering and emission** produce the **IR** — the intermediate representation. Contracts expand into the streams they imply. Every schedule becomes an explicit set of dated occurrences. Every identifier gets a stable ID, and the whole is written as one JSON document against a published schema.
+5. **Lowering and emission** produce the **IR** — the intermediate representation. Contracts expand into the streams they imply. Every schedule becomes an explicit set of dated occurrences. Every identifier gets a stable ID, and the whole is written as one JSON document against a published schema. Declared slices and statements are filed in their own part of the document, `views` — presentation kept apart from computation, for a reason the hashes below make precise.
 6. **The engine** evaluates the IR under a run configuration and emits results — the other published schema.
 
 The division of labor explains a distinction you have already felt. Everything *structural* fails before any number exists, in stages 1–5. Everything *numerical* surfaces at evaluation: a division by zero in some period, a `prev` read in period 0. When something goes wrong, first ask which stage owns the failure. The next chapter's diagnostic codes are organized along the same seam.
@@ -21738,7 +21751,7 @@ The IR is the model after every convenience is expanded: names resolved, schedul
 
 **The IR is diffable at the semantic level.** A source diff shows what you edited. An IR diff shows what changed in meaning. A reorganization produces an empty IR diff; an assumption edit produces exactly the affected expressions. For a model that moves money, review consequential changes at both levels.
 
-The model also carries a **canonical hash**: a fingerprint of the IR, recorded in the results. The question "which model produced this number?" has a cryptographic answer. A committee memo can cite a model the way it cites a document version.
+The results also carry two fingerprints, and the split between them is a claim about what identity means. The **model hash** is taken over the IR *without its `views`*: a slice filters and a statement organizes, and neither produces cash, so two users who look at identical results differently are running the same model and share the hash. A declared metric is *not* excluded — it is a figure the model claims, so it belongs to the model and moves the hash. The **ledger hash** covers what came out: the series, the journal, and the transitions. The run configuration is hashed by neither — a discount rate is a question asked of the model, not part of it. Between them, the question "which model produced this number?" has a cryptographic answer. A committee memo can cite a model the way it cites a document version.
 
 ## Evaluation: the period walk
 
@@ -21752,7 +21765,7 @@ Reproducibility falls out of two further choices you have already met. Arithmeti
 
 Chapter 9 promised the story behind `series_sum`'s evaluation order. Here it is.
 
-Every stream's reads are visible in its source: `series_sum("collections", ...)` names what the stream depends on. The engine therefore reads the dependency graph straight off the model and evaluates in **waves**. Streams that read no series are wave 0, and they evaluate first, because nothing they read can depend on their peers. A reader evaluates one wave past the deepest stream it reads: a fee on collections is wave 1, a kicker on that fee is wave 2, and so on to any depth. Each wave runs against a store in which everything the wave names is already **finished**. A series read never sees a half-computed number, because the whole series it reads was committed a wave earlier.
+Every stream's reads are visible in its source: `series_sum("collections", ...)` names what the stream depends on — and the same is true of all six reductions, `series_avg` through `series_count`; the dependency machinery makes no distinction between folding a sum and folding a maximum. The engine therefore reads the dependency graph straight off the model and evaluates in **waves**. Streams that read no series are wave 0, and they evaluate first, because nothing they read can depend on their peers. A reader evaluates one wave past the deepest stream it reads: a fee on collections is wave 1, a kicker on that fee is wave 2, and so on to any depth. Each wave runs against a store in which everything the wave names is already **finished**. A series read never sees a half-computed number, because the whole series it reads was committed a wave earlier.
 
 One thing survives as a refusal, because no ordering can satisfy it: **a cycle**. The fee reads the kicker and the kicker reads the fee; no wave can hold either. The engine names the loop (`'fee' -> 'kicker' -> 'fee'`) rather than iterate toward a fixed point. That is the same circularity the language refuses everywhere else.
 
@@ -21825,7 +21838,7 @@ The debugging discipline this course has built piecewise, assembled:
 2. **When the model compiles but a number is wrong, descend.** Apply chapter 3's four steps: which streams, which periods, which settings, then the claim. The wrongness is always *located*, and the series tell you where.
 3. **When the model compiles but a number is missing, check the existence gates.** A guard that is never true, an event that never fired, a schedule whose window is empty, a waterfall step starved by seniority. Missing cash is almost always a *condition*, not an amount.
 4. **When two runs disagree, diff the configurations, then the IRs.** Deterministic evaluation means the disagreement has a cause in the inputs. The previous chapter gave you both diffs.
-5. **When you and a colleague disagree, exchange the model hash and the seed.** If the hashes match and the numbers differ, the difference is configuration. The conversation is now about a small JSON file, not about trust.
+5. **When you and a colleague disagree, exchange the `model_hash` and the seed.** If the hashes match and the numbers differ, the difference is configuration. The conversation is now about a small JSON file, not about trust. Two corollaries sharpen the exchange. The hash is taken over the model *without its views*, so a colleague who added a slice or a statement still shares your `model_hash` — different presentations are not different models, and the hash refuses to pretend they are. And the results carry a second fingerprint, `ledger_hash`, over what came out: the series, the journal, and the transitions. A differing `ledger_hash` on a matching `model_hash` therefore implicates the whole ledger — not only a series, but possibly a journal entry or a transition that fired differently — and the journal is where to look next.
 
 Three habits have no place in the method. Do not rerun unchanged code hoping for different output; the engine is deterministic. Do not adjust magnitudes to "see what moves"; every claim is legible, so read the claim. Do not delete and retype; the span already names the offending text. These habits come from debugging nondeterministic systems. Here they are worse than wasted: they destroy the audit trail of deliberate claims that is the model's whole value.
 
@@ -21916,6 +21929,14 @@ Ask what the sentence you would say aloud *is about*, and the construct follows:
 - *"This is a standard deal in a domain."* → a **contract** (next chapter): a pack's named economics, stated by its terms.
 
 The question is about the *claim*, never the computation — every construct here can be imitated with streams and arithmetic, which is precisely why the framework matters. The constructs exist to make the model say what kind of thing each claim is; choosing by computational convenience throws that information away.
+
+One tier sits apart from all of these, because its claims are not about cash at all but about *reading* it:
+
+- *"The deal solved for this figure."* → a **metric** — one number, evaluated at the horizon over the finished projection, published beside the engine's own.
+- *"Look at just this part."* → a **slice** — a named partial selection, deliberately partial and shown as partial.
+- *"Present the results this way."* → a **statement** — the rows a reader meets, generated from a hierarchy or authored line by line.
+
+None of the three changes a value, and none changes what the model *is* in a specific, checkable sense: a slice and a statement are views, excluded from the model's hash, so a colleague who adds one still shares your model identity. A metric does move the hash — a figure the model claims belongs to the model — but it still produces no cash. The sorting instinct carries over unchanged: if the sentence is about what the deal *does*, it lives in the tiers above; if it is about what the reader *sees*, it lives here, and nothing here can quietly alter a number.
 
 ## Calibration pairs
 
@@ -22059,7 +22080,7 @@ Three lines. What they replace, you can write yourself by now: the rent stream, 
 
 **Domain validation.** The pack checks what the core language cannot know: a lease missing its base rent, an occupancy outside [0,1], an exit with no cap rate. Each is refused at compile, in domain vocabulary, before any number exists. Your deal is reviewed against the domain's checklist every time it compiles.
 
-**Statements and metrics.** Contracts declare what cash *is*: this stream is base rent, that one is debt service. So the pack can categorize, subtotal, and derive. NOI, DSCR, and EBITDA arrive in results as named metrics with lineage, and output organizes as the domain's statement rather than a flat list of streams. This is what your packless models' hand-designed name taxonomy was approximating; the pack makes it structural.
+**Categorization and domain metrics.** Statements themselves are the language's: a model may declare its own (Part III), and even packless, results render a default entity-hierarchy statement rather than a flat list of streams. What the pack contributes is the *content* a domain statement needs. Its contracts declare what cash **is** — this stream is base rent, that one is debt service — by attaching a category to every stream they lower, so subtotals and derivations become structural. NOI, DSCR, and EBITDA arrive in results as named metrics with lineage, and the pack ships its own statements — the domain's pro forma — alongside any the model declares. This is what your packless models' hand-designed name taxonomy was approximating; the pack fills it in with the domain's judgment.
 
 Four packs ship:
 
@@ -22156,7 +22177,7 @@ contract cre.construction_stub {
 }
 ```
 
-A hand-written stream carries one thing a contract's does not have to: its `category`, the pack's word for what this cash *is*. The pack's own lowering rules attach a category to every stream they emit, and the statements aggregate by category rather than by name. A bespoke stream without one lands in no row, and the operating statement reports it as unclassified rather than silently drop it. Land is capital put into the building, so it reports where the draws report.
+A hand-written stream carries one thing a contract's does not have to: its `category`, the *language's* word for what this cash *is* — a dotted path whose root is one of three the language settles, `operating`, `investing`, or `financing`, the sections a cash flow statement is read in. The pack's own lowering rules attach a category to every stream they emit (that is the pack's contribution: knowing what a `cre.permanent_debt` payment is), and the statements aggregate by category rather than by name. A bespoke stream without one lands in no row, and the operating statement reports it as unclassified rather than silently drop it. Land is capital put into the building, so it reports where the draws report.
 
 The land uses chapter 4's payment-in-advance idiom — closings happen at the start of a month, and the `start` placement says so. The construction program is the pack's `construction_stub`: level draws over the term, the standard treatment, stated by one term. (A draw *schedule* from a contractor's S-curve would be the bespoke alternative — a hand stream reading a curve — and upgrading the stub to one is an end-of-part exercise.)
 
@@ -22535,7 +22556,7 @@ time calendar <daily|monthly|quarterly|annual> from <date> for <N>
 phase <name> from <date> to <date>
 ```
 
-One time grid per model; header statements live in the root file only. Everything else — entities, assumptions, curves, streams, contracts, events, options, waterfalls — may live in any file, in any order. Order never carries meaning.
+One time grid per model; header statements live in the root file only. Everything else — entities, assumptions, curves, streams, contracts, events, options, waterfalls, metrics, slices, statements — may live in any file, in any order. Order never carries meaning (metrics excepted: they compose in declaration order).
 
 ## Entities and fields
 
@@ -22551,17 +22572,21 @@ entity <family> <name> : <Type> {                --         container
 
 Reads, from any expression: `asset.x.field` (this period, at close), `prev.asset.x.field` (prior close), `entity.field` (the attached entity's own field). Rules see only the completed prior column — same-period cycles are unwritable.
 
+Types form a `refines` chain ending at a master. The language base ships abstract contract masters (`Contract.Debt`, `Contract.Lease`, `Contract.Option`, …) that bind no lowering and cannot be instantiated — they exist so a slice's `type Contract.Debt` reaches every pack's debt transitively, and fields inherit down the chain.
+
 ## Streams
 
 ```text
 stream <a>.<b>[.<c>] on entity <family>.<name> <inflow|outflow> currency <CCY> {
-  schedule <see below>
-  [active when <boolean expr>]
+  [category <dotted.path>]                       -- bare, like `currency USD`;
+  schedule <see below>                           --   rooted operating |
+  [active when <boolean expr>                    --   investing | financing
+   | active in state <name>]
   amount = <expr>
 }
 ```
 
-Names are dotted, at least two segments, unique. Direction is declared; amounts are written positive.
+Names are dotted, at least two segments, unique. Direction is declared; amounts are written positive. `category` says what the cash *is* — a dotted path into the cash flow statement, first segment `operating`, `investing`, or `financing`. `active in state` gates on the owner's lifecycle, checked against the declared machine — where a string comparison against `entity.status` could be misspelled and false forever.
 
 ## Schedules
 
@@ -22585,9 +22610,12 @@ assume <name> ~ Normal(mean=, stdev=, clip=[lo, hi])
              ~ LogNormal(mu=, sigma=)     ~ Uniform(min=, max=)
              ~ Triangular(min=, mode=, max=)
 curve <name> <step|linear> { <date>: <value>  ... }
+quantile <name> <step|linear> [by exceedance] [ref <id>] { <share>: <value>  ... }
 ```
 
 Read as `inputs.<name>` and `curve_value("<name>", <date>)`. Deterministic runs use central values: Normal → mean, LogNormal → exp(mu + sigma²/2), Uniform → midpoint, Triangular → (min + mode + max) / 3 — *not* the mode. Curves clamp outside their stated range.
+
+A `quantile` is a curve turned sideways: indexed by cumulative share rather than by date, for a quantity whose *dispersion* drives the answer. Shares in 0..1, values non-decreasing; `by exceedance` writes the points worst-first, the way a duration curve reads, and is authoring surface only. Read with `quantile_at`, `quantile_mean`, `quantile_of` (expression table below). Never sampled: it is declared data.
 
 ## Lifecycles and accounts
 
@@ -22645,17 +22673,48 @@ waterfall <a>.<b> on entity <ref> {
   from <expr>                                -- the pot; fields and series work
   pay <step> to <family>.<name> = <expr>     -- receives min(max(0,owed),remaining)
 }
+```
 
+Waterfall step expressions may read `remaining`, `owed.<step>`, `paid.<step>` (earlier steps only). The five step shapes: stated amount, capped (`min`), pay-to-target (balance − target), shortfall (`owed.x − paid.x`), sweep (`remaining`).
+
+## Metrics, slices, statements
+
+The figures-and-views tier: constructs that read a finished projection and produce no cash.
+
+```text
+metric <name> = <expr>                       -- one number at the horizon; folds
+                                             --   published series; composes in
+                                             --   declaration order
 slice <name> {                               -- a named partial selection
   entity <family>.<name>                     -- plus its part-of descendants
   type <TypeId>                              -- matches through refines
   category "<path or path.*>"                -- quoted; series_sum's dialect
   stream "<selector>"
   except stream "<selector>"                 -- kinds intersect; excepts subtract
+  window from <date> to <date>               -- bounds the PERIODS, not the
+}                                            --   streams; at most one
+
+statement <name> {                           -- generated: the tree renders
+  label     "<title>"
+  structure <entity|category>
+  depth     <N>                              -- level of aggregation
+  [grain <calendar>]                         -- re-buckets values; total stays
+  [slice <name>]                             --   lifetime; ratios recompute
+  [metrics  <a>, <b>]                        -- declared metrics, beside the rows
+}
+statement <name> {                           -- authored: the rows are stated
+  label    "<title>"
+  line     "<label>"  { category "<sel>" | stream "<sel>" | slice <name>
+                        | entity <family>.<name> [display positive] [depth <N>] }
+  subtotal "<label>"  { category "<sel>" }   -- folds rows stated elsewhere
+  spacer
+  ratio    "<label>"  { of <slice> to <slice> display positive }
 }
 ```
 
-Waterfall step expressions may read `remaining`, `owed.<step>`, `paid.<step>` (earlier steps only). The five step shapes: stated amount, capped (`min`), pay-to-target (balance − target), shortfall (`owed.x − paid.x`), sweep (`remaining`).
+A `metric` is evaluated once, at the horizon, over the finished projection. It may fold any series the model *publishes* — a stream by either spelling (`ops.rev` or `stream.ops.rev`), a waterfall step, `entity.<sym>.net_cash_flow`, `account.<name>`, an entity field, a money subtotal, `model.net_cash_flow` — and folding an unpublished name is refused at compile (E1365), not read as zero. `irr(party.x)` and `moic(party.x)` are legal *only* in a metric: folds over the party's own account, refused elsewhere (E1355).
+
+A statement is authored or generated, never both, and never neither. `slice` filters orthogonally to the structure, and a sliced statement reconciles against the *slice's* total. A slice and a statement are **views** — they change no value and move neither hash; a metric is a figure the model claims, and does move the model hash. A model that declares no statement gets a default one: the entity hierarchy, marked `default` in results.
 
 ## Expressions
 
@@ -22669,8 +22728,11 @@ Scopes: `time.t` (period index from 0), `time.date`, `time.phase` · `inputs.*` 
 | Conditional | `if(cond, then, else)` |
 | Dates | `date` `edate` `eomonth` `days_between` `months_between` `year_frac` `is_business_day` `add_business_days` `roll` |
 | TVM | `pv` `fv` `pmt(rate, nper, pv)` `ipmt` `ppmt` `nper` `rate` |
-| Series | `series_sum("name", from_t, to_t)` `series_avg` — dependency-ordered; chains to any depth, cycles refused |
+| Series | `series_sum` `series_avg` `series_min` `series_max` `series_prod` `series_count`, each `("name", from_t, to_t)` — dependency-ordered; chains to any depth, cycles refused |
+| Quantiles | `quantile_at("name", share)` `quantile_mean("name", from, to)` — exact partial expectation · `quantile_of("name", value)` — the inverse: threshold → share |
 | Domain | `cpr_to_smm` `macrs_rate(year, life)` `curve_value` |
+
+Every series reduction folds the **per-period aggregate**: streams a selector matches are added within each period first, then the fold runs over that one series. An empty selection returns each fold's identity — sum 0, product 1, count 0 — and `series_max`/`series_min`, which have none, return null. `series_avg` divides by the *requested* window length; `series_count` counts the periods whose aggregate is non-zero, and `if(series_count("x.*", 0, t) == 0, 0, series_max("x.*", 0, t))` is how a legitimately-empty selector says so.
 
 Full signatures: the expressions reference at [cfdl.dev](https://cfdl.dev/docs/reference/expressions).
 

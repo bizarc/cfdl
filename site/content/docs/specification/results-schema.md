@@ -889,13 +889,14 @@ against it by `make results-schema`.
         "model_total",
         "residual"
       ],
-      "description": "Does the statement account for the model's cash? Published always and asserted rather than corrected: a bottom line that quietly differs from model.total is the failure this exists to make visible.",
+      "description": "Does the statement account for the cash it is accountable for? Published always and asserted rather than corrected: a bottom line that quietly differs from the statement's universe is the failure this exists to make visible.",
       "properties": {
         "bottom_line": {
           "type": "number"
         },
         "model_total": {
-          "type": "number"
+          "type": "number",
+          "description": "The total of the statement's universe: model.total for an unfiltered statement, the slice's total when the statement declares one."
         },
         "residual": {
           "type": "number"

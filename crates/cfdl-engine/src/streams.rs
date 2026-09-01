@@ -417,11 +417,12 @@ pub(crate) fn check_series_names(ir: &Ir, warnings: &mut Vec<String>) {
                 continue;
             }
             warnings.push(format!(
-                "W5022_UNKNOWN_SERIES_REFERENCE: in {where_}, `series_sum`/`series_avg` names \
-                 series '{referenced}', which no stream, contract or waterfall step in this \
-                 model produces. It aggregates to zero, so anything reading it is reading \
-                 nothing. Check the spelling; a selector ending in `.*` states that matching \
-                 nothing is intended."
+                "W5022_UNKNOWN_SERIES_REFERENCE: in {where_}, a series reduction \
+                 (`series_sum`, `series_avg`, `series_min`, `series_max`, `series_prod`, \
+                 `series_count`) names series '{referenced}', which no stream, contract or \
+                 waterfall step in this model produces. It reduces over nothing, so anything \
+                 reading it is reading nothing. Check the spelling; a selector ending in `.*` \
+                 states that matching nothing is intended."
             ));
         }
     }

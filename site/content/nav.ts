@@ -134,6 +134,7 @@ export const NAV: NavSection[] = [
       { title: "Pack contracts", slug: "/docs/reference/packs" },
       { title: "Glossary", slug: "/docs/glossary" },
       { title: "Metrics", slug: "/docs/reference/metrics" },
+      { title: "Slices", slug: "/docs/reference/slices" },
       { title: "Statements", slug: "/docs/reference/statements" },
       { title: "Diagnostics", slug: "/docs/reference/diagnostics" },
     ],

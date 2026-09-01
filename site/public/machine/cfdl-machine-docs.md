@@ -5539,13 +5539,14 @@ against it by `make results-schema`.
         "model_total",
         "residual"
       ],
-      "description": "Does the statement account for the model's cash? Published always and asserted rather than corrected: a bottom line that quietly differs from model.total is the failure this exists to make visible.",
+      "description": "Does the statement account for the cash it is accountable for? Published always and asserted rather than corrected: a bottom line that quietly differs from the statement's universe is the failure this exists to make visible.",
       "properties": {
         "bottom_line": {
           "type": "number"
         },
         "model_total": {
-          "type": "number"
+          "type": "number",
+          "description": "The total of the statement's universe: model.total for an unfiltered statement, the slice's total when the statement declares one."
         },
         "residual": {
           "type": "number"
@@ -7236,7 +7237,8 @@ Fields that move:
   `inputs.`: an input may be supplied entirely by the run configuration, which
   the compiler never sees, so an unresolved input is the engine's to refuse.
 - `E1134_SERIES_READ_IN_LOGIC` — an event's guard or action value, a field's
-  rule, or an option's election or payoff calls `series_sum`/`series_avg`. All
+  rule, or an option's election or payoff calls a series reduction
+  (`series_sum` and its five siblings). All
   of these are evaluated before any stream has a value, so the read binds
   nothing: the engine substitutes `false` in a guard and `0` in a rule, warns
   once per period, and publishes a full set of numbers under `status: ok` — an
@@ -7262,7 +7264,7 @@ Fields that move:
 - `E1341_WATERFALL_FORWARD_REF` — a step's `paid.<step>` names a step declared
   later in the same waterfall. Steps pay in declaration order, so a later step
   has not paid anything when an earlier one is evaluated.
-- `E1342_WATERFALL_SERIES_NOT_VISIBLE` — `series_sum`/`series_avg` names a step
+- `E1342_WATERFALL_SERIES_NOT_VISIBLE` — a series reduction names a step
   of this waterfall or of a later one. Steps publish when their waterfall
   finishes, so the read would aggregate to zero and say nothing. An EARLIER
   waterfall is the documented composition and still compiles.
@@ -7295,7 +7297,7 @@ Fields that move:
   different deals rather than two spellings of one. The omission used to lower
   to a one-shot in the first period, distributing whatever that period happened
   to produce; there is no default right often enough to be silent.
-- `E1346_STREAM_READS_WATERFALL_STEP` — a STREAM's `series_sum`/`series_avg`
+- `E1346_STREAM_READS_WATERFALL_STEP` — a STREAM's series reduction
   names a waterfall step. Every waterfall runs after every stream and a step's
   series is visible to a later waterfall's `from` and to nothing else, so the
   read could only ever aggregate to zero. Model the quantity the step pays as a
@@ -7314,7 +7316,7 @@ Fields that move:
 - `E1369_STATEMENT_AUTHORED_AND_GENERATED` — a statement states both a `structure` and its own rows, or neither. A generated statement partitions the cash by construction, because a hierarchy covers its own tree; an authored one partitions it by the author's care. Mixed, neither guarantee holds — an authored row claims streams the generated rows already claimed, so the bottom line double-counts and the reconciliation that makes a statement trustworthy becomes noise. A statement stating neither would render nothing. `docs/13` §7.55.
 - `E1368_STATEMENT_UNKNOWN_REFERENCE` — a statement filters by a slice, or shows a metric, that the model does not declare. A presentation that silently shows nothing is the failure §7.55 exists to end.
 - `E1370_STATEMENT_SERIES_ROW_CLAIMS` — an authored row draws a published `series` beside a claim clause (`category`, `stream`, `slice`, `entity`, or a ratio's `of`/`to`). A series row presents a fold of the ledger, claims no streams and stays out of the bottom line; a claim clause beside it could only be resolved by a precedence the reader cannot see, which is a silently ignored clause. Refused instead. `docs/13` §7.55.
-- `E1365_METRIC_UNKNOWN_SERIES` — a metric folds a series name this model does not publish. `series_sum`/`series_avg` return 0.0 for a selector that matches nothing, which is right for a `.*` selector and wrong for a name spelled out in full; in a metric it is worse than wrong, because a fold publishes ONE number under a name the author chose, with no series beside it to show the zero (`docs/13` §7.85). A metric may fold any series the valuation plane publishes: a stream by its own name or as `stream.<name>`, a waterfall step, `entity.<symbol>.net_cash_flow`, `account.<name>`, an entity field, a money subtotal, or `model.net_cash_flow`. A RATIO subtotal is refused with its own hint — its undefined periods publish as null rather than zero, and what a fold should do with null has not been decided.
+- `E1365_METRIC_UNKNOWN_SERIES` — a metric folds a series name this model does not publish. `series_sum`/`series_avg` (and each sibling reduction, to its own identity) return 0.0 for a selector that matches nothing, which is right for a `.*` selector and wrong for a name spelled out in full; in a metric it is worse than wrong, because a fold publishes ONE number under a name the author chose, with no series beside it to show the zero (`docs/13` §7.85). A metric may fold any series the valuation plane publishes: a stream by its own name or as `stream.<name>`, a waterfall step, `entity.<symbol>.net_cash_flow`, `account.<name>`, an entity field, a money subtotal, or `model.net_cash_flow`. A RATIO subtotal is refused with its own hint — its undefined periods publish as null rather than zero, and what a fold should do with null has not been decided.
 - `E1304_UNRESOLVED_OPTION_REF` — an event exercises an option that is not declared. Checked in the compiler rather than the resolver, because options are not in the symbol tables.
 - `E1310_ENTITY_BLOCK_WITHOUT_TYPE` — an entity uses a block but declares no type, so there is nothing to check the block against.
 - `E1311_UNKNOWN_ENTITY_TYPE` — an entity declares a type the active ontology does not define. The known types are listed.
@@ -7427,9 +7429,10 @@ see what is wrong with it.
   per stream. The bare form stays legal where the contract lowers exactly one,
   because there is then nothing to disambiguate.
 
-- `W5022_UNKNOWN_SERIES_REFERENCE` — a `series_sum`/`series_avg` names a series
-  no stream, contract or waterfall step produces, so it aggregates to zero and
-  whatever reads it is reading nothing. A warning rather than an error because a
+- `W5022_UNKNOWN_SERIES_REFERENCE` — a series reduction (`series_sum`,
+  `series_avg`, `series_min`, `series_max`, `series_prod`, `series_count`)
+  names a series no stream, contract or waterfall step produces, so it reduces
+  over nothing and whatever reads it is reading nothing. A warning rather than an error because a
   literal name matching nothing is also a pack idiom: `cre.exit` sums NOI
   components by name whether or not the property declared each one. Selectors
   ending in `.*` are exempt, and are how a model states that matching nothing is

@@ -17,8 +17,9 @@ for it, and how to get a particular result.
 | [Run configuration](/docs/reference/run-config) | Discount rate, scenarios, Monte Carlo, and the rest of `run.json` |
 | [Expressions](/docs/reference/expressions) | What is in scope in an amount, the operators, and every builtin function |
 | [Pack contracts](/docs/reference/packs) | Every contract each pack offers, the terms it reads and the streams it emits |
-| [Metrics](/docs/reference/metrics) | Model and domain metrics, and how they relate to per-period subtotals |
-| [Statements](/docs/reference/statements) | The pro forma CFDL produces per period, and how to read one |
+| [Metrics](/docs/reference/metrics) | Model, domain and model-declared metrics, and how they relate to per-period subtotals |
+| [Slices](/docs/reference/slices) | Named partial selections of a model's streams, and what each publishes |
+| [Statements](/docs/reference/statements) | The pro forma CFDL produces per period — a model can declare one — and how to read it |
 | [Diagnostics](/docs/reference/diagnostics) | Every code CFDL can report, what the ranges mean, and how to read one |
 
 ## Related

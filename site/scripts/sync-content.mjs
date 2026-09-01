@@ -1247,7 +1247,7 @@ const BUILTIN_GROUPS = [
   ["Domain", ["macrs_rate", "cpr_to_smm", "cpr_to_periodic"]],
   ["Choice", ["if"]],
   ["Curves", ["curve_value"]],
-  ["Series folds", ["series_sum", "series_avg"]],
+  ["Series folds", ["series_sum", "series_avg", "series_min", "series_max", "series_prod", "series_count"]],
 ];
 
 function expressionBuiltins() {
@@ -1271,6 +1271,12 @@ function expressionBuiltins() {
     "utf8",
   );
   for (const match of evalSrc.matchAll(/name == "([a-z_0-9]+)"/g)) {
+    found.add(match[1]);
+  }
+  // The series folds dispatch through `SeriesReduction::of`, whose arms read
+  // `"series_sum" => Some(Self::Sum)` — neither a funcs.rs table entry nor a
+  // `name ==` comparison, so both scrapes above miss them.
+  for (const match of evalSrc.matchAll(/"(series_[a-z_0-9]+)"\s*=>\s*Some\(Self::/g)) {
     found.add(match[1]);
   }
   if (found.size === 0) {

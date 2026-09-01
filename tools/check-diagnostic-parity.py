@@ -13,6 +13,10 @@ A register nobody checks is worse than no register: an agent reads `docs/08` as
 the repair catalog, and a promised code that never fires teaches it to expect
 a diagnostic that will not come.
 
+Extended 2026-09-01 to warnings (W-codes) after the same drift was caught in
+review: a W-code's emission was deleted in a refactor and no gate noticed,
+while five documents kept describing it.
+
 Four things must agree:
 
   1. what the CRATES emit         a code literal in crates/**/*.rs
@@ -30,7 +34,7 @@ import sys
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 DOC = ROOT / "docs" / "08_diagnostics.md"
-CODE = re.compile(r"E\d{4}_[A-Z0-9_]+")
+CODE = re.compile(r"[EW]\d{4}_[A-Z0-9_]+")
 
 # Codes that exist only as test data, with why. Not language surface.
 TEST_ONLY = {
@@ -40,6 +44,15 @@ TEST_ONLY = {
     "E0003_B": "diagnostic ordering test",
     "E6099_X": "pack validation loader test",
     "E7001_WRONG_PACK": "pack mismatch test in the validation loader",
+}
+
+# Documented codes nothing has ever emitted (git -S finds no history). Their
+# fate — build the check or retire the entry — is a register decision to take
+# deliberately, not a gate side effect. Every addition here needs that decision
+# scheduled; do not let this list grow as a way past the gate.
+DOCUMENTED_ONLY = {
+    "W3001_EXPR_TYPE_UNKNOWN": "register entry predates any implementation",
+    "W3002_OBS_REF_EXTRACTION_FAILED": "register entry predates any implementation",
 }
 
 
@@ -73,7 +86,7 @@ def main() -> int:
             f"      Add it to docs/08, or stop emitting it."
         )
 
-    for code in sorted(documented - set(emitted)):
+    for code in sorted(documented - set(emitted) - set(DOCUMENTED_ONLY)):
         problems.append(
             f"  {code}\n"
             f"      documented in docs/08, emitted by nothing.\n"
