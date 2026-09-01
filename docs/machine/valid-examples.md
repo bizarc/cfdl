@@ -2,7 +2,7 @@
 
 # CFDL valid examples — the golden corpus
 
-CFDL 0.7.0. Every model below compiles, and its IR and
+CFDL 0.8.0. Every model below compiles, and its IR and
 results are byte-asserted against goldens in CI (`fixtures/valid/`,
 137 models.
 

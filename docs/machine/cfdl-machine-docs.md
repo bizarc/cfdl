@@ -1,6 +1,6 @@
 <!-- GENERATED machine docs bundle by tools/gen-machine-docs.py — do not edit by hand. Regenerate: make machine-docs -->
 
-# CFDL machine documentation bundle — v0.7.0
+# CFDL machine documentation bundle — v0.8.0
 
 > CFDL (Cash Flow Domain Language) is a declarative language for financial
 > cash-flow models with a deterministic compile -> run cycle, structured

@@ -1,0 +1,135 @@
+{
+  "deterministic": {
+    "metrics": {
+      "entity.asset.tlb.total": {
+        "amount": -42.75,
+        "currency": "USD"
+      },
+      "model.npv": {
+        "amount": -42.75,
+        "currency": "USD"
+      },
+      "model.total": {
+        "amount": -42.75,
+        "currency": "USD"
+      },
+      "run.annual_discount_rate": 0.0,
+      "run.periods_per_year": 1.0,
+      "stream.opco.interest.total": {
+        "amount": -42.75,
+        "currency": "USD"
+      }
+    },
+    "series": {
+      "asset.tlb.balance": {
+        "index": {
+          "calendar": "annual",
+          "periods": 4,
+          "start": "2026-01-01"
+        },
+        "values": [
+          275.0,
+          250.0,
+          225.0,
+          200.0
+        ]
+      },
+      "entity.asset.tlb.net_cash_flow": {
+        "index": {
+          "calendar": "annual",
+          "periods": 4,
+          "start": "2026-01-01"
+        },
+        "values": [
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": -15.75,
+            "currency": "USD"
+          },
+          {
+            "amount": -14.25,
+            "currency": "USD"
+          },
+          {
+            "amount": -12.75,
+            "currency": "USD"
+          }
+        ]
+      },
+      "model.net_cash_flow": {
+        "index": {
+          "calendar": "annual",
+          "periods": 4,
+          "start": "2026-01-01"
+        },
+        "values": [
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": -15.75,
+            "currency": "USD"
+          },
+          {
+            "amount": -14.25,
+            "currency": "USD"
+          },
+          {
+            "amount": -12.75,
+            "currency": "USD"
+          }
+        ]
+      },
+      "stream.opco.interest": {
+        "index": {
+          "calendar": "annual",
+          "periods": 4,
+          "start": "2026-01-01"
+        },
+        "offset": 1.0,
+        "values": [
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": -15.75,
+            "currency": "USD"
+          },
+          {
+            "amount": -14.25,
+            "currency": "USD"
+          },
+          {
+            "amount": -12.75,
+            "currency": "USD"
+          }
+        ]
+      }
+    },
+    "status": "ok"
+  },
+  "engine": {
+    "name": "cfdl-engine",
+    "version": "0.7.0"
+  },
+  "ledger_hash": "f3b0a598662d389abc1ad7fa112ac5c5d9cfcb257cd562d3935fd839296d021a",
+  "model_hash": "fcf410a3362e0c8d6a5fd7bd68b6411bf308d01b36cefcb7b9185ed30889f229",
+  "monte_carlo": {
+    "metrics": {},
+    "seed": 0,
+    "status": "not_run",
+    "trial_summaries": [],
+    "trials": 1
+  },
+  "results_version": "0.5",
+  "scenarios": {
+    "status": "not_run",
+    "summaries": []
+  },
+  "warnings": []
+}

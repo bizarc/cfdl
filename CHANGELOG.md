@@ -8,6 +8,76 @@ This project follows Semantic Versioning: https://semver.org/
 
 ## [Unreleased]
 
+---
+
+## [0.8.0] - 2026-08-31
+
+The period walk, the ontology, and cadence-neutral packs. Breaking: see below.
+446 commits since 0.7.0.
+
+The engine evaluates a model period by period: state, then streams, then
+distributions. It computes results once, at the end, over the finished
+projection.
+
+**The period walk (M1).** `docs/28` specifies it and `docs/29` records the
+implementation.
+
+- Logic reads settled cash strictly backward.
+- Forward reads belong to the valuation plane.
+- An account holds cash that carries between periods.
+- A declared lifecycle machine gives an entity states and transitions that act.
+- The journal records each causal act and its outcome.
+- The golden corpus asserts that a walked model and its unwalked equivalent
+  agree.
+
+**What the walk made possible (M2).**
+
+- An event fires on a rising edge and does not latch, so a covenant can breach
+  and then cure (`docs/34`).
+- A DSCR cash trap cures on a period.
+- A reserve balance earns interest.
+- The AmeriCredit reserve is an account.
+- Declared state gates a contract. `activate contract` is withdrawn.
+
+**The ontology.** `results_version` moved from 0.3 to 0.8.
+
+- Master types and `refines`.
+- The container family.
+- A relation vocabulary.
+- Entity field inheritance.
+- A stable entity id, and the entity graph in results.
+- Slices, which name a partial selection.
+
+**The packs.**
+
+- All four packs lower onto any cadence.
+- Pack stream names follow one dialect.
+- Day count is a shared primitive.
+- A payment term states when cash moves, not when it is earned.
+- Every pack validation runs. Two thirds of them did not run before.
+
+**External reconciliation.** Benchmarks reconcile against published
+third-party figures from these sources:
+
+- HUD's underwriting Sample.
+- MIT OpenCourseWare 11.431J.
+- A published auto-ABS amortisation.
+- A disclosed DCF in a merger filing.
+- A national laboratory's project-finance model.
+- The published MBS industry reference.
+
+**The machine surface.** `cfdl-mcp`, the machine documentation surface,
+benchmark exemplars, and the agent-eval harness (`docs/32` phases 1 to 3).
+
+**Breaking changes.** No migration path is provided.
+
+- The Portfolio types are containers.
+- Pack stream names take the `[domain].[category].[line]` form.
+- Three diagnostic codes are renumbered.
+- `activate contract` and `deactivate contract` are withdrawn.
+- WAL and payback are measured on the discounting time axis.
+- `cre.permanent_debt` and `energy.debt_service` lower to a whole instrument.
+
 ### Fixed: `container` reaches the expression environment (spec audit)
 
 The family was first-class everywhere except the expression layer: FOUR
