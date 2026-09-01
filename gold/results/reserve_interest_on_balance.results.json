@@ -1,10 +1,10 @@
 {
   "results_version": "0.12",
-  "model_hash": "082127a8717f98e974a90ddd71101e002d2296b0802fa091e98fd29ff8f397a5",
+  "model_hash": "5034a4cb624cb8802ddffed594af57dca32b55c5bd7e64ebe64e4443c8e45e70",
   "ledger_hash": "67b4e69fad5145ee873570c0be16627ce42da0b3e838c5db1c009dc6e6b54e08",
   "engine": {
     "name": "cfdl-engine",
-    "version": "0.8.0"
+    "version": "0.9.0"
   },
   "warnings": [
     "Stream 'funding.top_up' amount evaluation failed [EXPR_UNKNOWN_NAME]: unknown variable `prev.dsra`; using 0."

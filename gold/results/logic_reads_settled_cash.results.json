@@ -1,10 +1,10 @@
 {
   "results_version": "0.12",
-  "model_hash": "89ffa79a25d83b358cbb9725e6f8696066cc8a632bcf05826dfa18f819152b31",
+  "model_hash": "26be5ea83d0694a0f16c44f9ef096dfec0879e4fd74a1adc1fc7b8b945ef6840",
   "ledger_hash": "ac9287177e9c2a8bc68760ec37bcf3309fb6e626f14608841baaabb988b6c036",
   "engine": {
     "name": "cfdl-engine",
-    "version": "0.8.0"
+    "version": "0.9.0"
   },
   "warnings": [
     "Event 'delinquent' when evaluation failed [EXPR_EVAL]: series_sum: series `cre.rent` is not available in this context; using false."

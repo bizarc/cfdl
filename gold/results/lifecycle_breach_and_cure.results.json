@@ -1,10 +1,10 @@
 {
   "results_version": "0.12",
-  "model_hash": "b421e853b28cf4b90004dd9cf78d6e9ce00d28dfab12227207545f0fb882eb08",
+  "model_hash": "81ca4868924228bc520c33e16046ea957ab8368463c2fa40544df475e1c5ee74",
   "ledger_hash": "01122cf404077be8c001bb2410ecb2ecefc89c8edf50090ecca734108a513363",
   "engine": {
     "name": "cfdl-engine",
-    "version": "0.8.0"
+    "version": "0.9.0"
   },
   "warnings": [
     "Lifecycle 'unit edge leased -> delinquent' when evaluation failed [EXPR_EVAL]: series_sum: series `core.rent` is not available in this context; using false."

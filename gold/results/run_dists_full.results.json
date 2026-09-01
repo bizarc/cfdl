@@ -1,10 +1,10 @@
 {
   "results_version": "0.12",
-  "model_hash": "2ae948a47f69d8ae6063862af833dfd02908dd1fcf5a7975aa069efddf639383",
+  "model_hash": "081f60e3deaae15468c27cc2c8afae248cdfffc7f0ecd6b49bf2c21c65851138",
   "ledger_hash": "8b7a589b140db5bf8252e2ccabb677a8c3c8abf14640e153fedb328414aec803",
   "engine": {
     "name": "cfdl-engine",
-    "version": "0.8.0"
+    "version": "0.9.0"
   },
   "warnings": [
     "Stream 'plant.revenue' amount evaluation failed [EXPR_UNKNOWN_NAME]: unknown variable `inputs.n`; using 0.",

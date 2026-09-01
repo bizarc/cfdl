@@ -2,7 +2,7 @@
 
 # CFDL diagnostics — repair catalog
 
-CFDL 0.8.0. For each diagnostic code with a minimal failing
+CFDL 0.9.0. For each diagnostic code with a minimal failing
 example (`fixtures/invalid/`), this catalog shows the example, the exact
 diagnostics it produces (`gold/diag/`, byte-asserted in CI), and — where one
 is recorded — the minimal compile-verified fix (`fixtures/repairs/`).

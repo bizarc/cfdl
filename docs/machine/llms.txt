@@ -7,7 +7,7 @@
 > vocabulary a pack's lowering rule turns into streams, and streams are the
 > cash.
 
-Version 0.8.0. Machine artifacts on this site are generated from the
+Version 0.9.0. Machine artifacts on this site are generated from the
 repository's normative sources under CI; if this file and a doc page ever
 disagree, the repository is the source of truth.
 
