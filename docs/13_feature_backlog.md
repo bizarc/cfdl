@@ -1053,13 +1053,39 @@ Fixtures: `valid/statement_authored_rows` (curated labels, a flipped expense, a
 claiming-nothing subtotal, a spacer, and the ratio) and
 `invalid/statement_authored_and_generated` (`E1369`). No existing golden moved.
 
-**What remains.** Generated-row ordering — generation iterates a `BTreeSet`, so
-category rows sort `financing`, `investing`, `operating`, while
-`cfdl_pack::CATEGORY_ROOTS` defines the canonical order and is unused. Derived
-labels for generated rows. A default entity-tree statement when a model
-declares none, which closes §7.43's residue. And a pack's statements are still
-declared in TOML rather than in the language — the evaluator converged, the
-surface has not.
+**Shipped 2026-09-01, part four: a generated statement reads as one.** Three
+presentation defects, two of which a single-root single-category fixture could
+not show.
+
+**Depth first.** Rows were sorted by (depth, symbol), which is BREADTH first:
+two funds holding two properties each came out as both funds followed by all
+the properties in one flat block, with nothing saying which belonged to which.
+A parent is now followed by its own subtree. Siblings sort by symbol —
+declaration order would read better and is not available, because the IR sorts
+entities by their stable key so its bytes do not depend on where a declaration
+sits in a file. (The earlier note here claiming the IR preserves declaration
+order was wrong.)
+
+**The category roots have a canonical order.** `cfdl_pack::CATEGORY_ROOTS` is
+operating, investing, financing — the order a cash flow statement is read in —
+and generation iterated a `BTreeSet`, putting financing first. Below a root
+there is no canonical order, so siblings sort alphabetically: arbitrary, but
+stated in the spec rather than emergent.
+
+**Labels are derived.** The last path segment, underscores opened out, first
+letter capitalized, so `operating.revenue.base_rent` reads "Base rent" and
+`asset.north` reads "North". A generated statement is meant to need no
+declarations, and a row reading its own selector is a presentation that has not
+been presented. An authored row states its own label.
+
+Fixture: `valid/statement_generated_order` — two funds and three properties
+across three category roots, which is the smallest model that shows either
+ordering defect. Of the existing goldens only labels moved: no value, no
+ordering, no hash.
+
+**What remains.** A default entity-tree statement when a model declares none,
+closing §7.43's residue. And a pack's statements are still declared in TOML
+rather than in the language — the evaluator converged, the surface has not.
 
 ---
 

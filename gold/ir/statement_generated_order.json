@@ -1,0 +1,243 @@
+{
+  "ir_version": "0.1",
+  "model": {
+    "name": "statement-generated-order",
+    "currency": "USD"
+  },
+  "time": {
+    "calendar": "annual",
+    "start": "2026-01-01",
+    "periods": 2
+  },
+  "phases": [],
+  "entities": [
+    {
+      "id": "5f8170c00c7e7794c68ccde5c5aa63cd",
+      "symbol": "asset.alpha",
+      "type": "Asset.Financial",
+      "fields": {},
+      "state": {},
+      "parent": "container.north_fund"
+    },
+    {
+      "id": "94519a64567ea102ae8188f8835cb2ca",
+      "symbol": "asset.beta",
+      "type": "Asset.Financial",
+      "fields": {},
+      "state": {},
+      "parent": "container.north_fund"
+    },
+    {
+      "id": "ddb57a0e37387ba5fce1aa77421bf3ef",
+      "symbol": "asset.gamma",
+      "type": "Asset.Financial",
+      "fields": {},
+      "state": {},
+      "parent": "container.south_fund"
+    },
+    {
+      "id": "881f3e8658e09ba602e04c06c9fc9c47",
+      "symbol": "container.north_fund",
+      "type": "Container.Fund",
+      "fields": {},
+      "state": {}
+    },
+    {
+      "id": "3bf7331c33480bfa69a154ad73bbd180",
+      "symbol": "container.south_fund",
+      "type": "Container.Fund",
+      "fields": {},
+      "state": {}
+    }
+  ],
+  "assumptions": {
+    "constants": {},
+    "random": {}
+  },
+  "views": {
+    "statements": [
+      {
+        "name": "by_entity",
+        "structure": "entity",
+        "depth": 2,
+        "provenance": {
+          "source_file": "model.cfdl",
+          "source_span": {
+            "start_line": 56,
+            "start_col": 1,
+            "end_line": 56,
+            "end_col": 51
+          }
+        }
+      },
+      {
+        "name": "by_section",
+        "structure": "category",
+        "depth": 2,
+        "provenance": {
+          "source_file": "model.cfdl",
+          "source_span": {
+            "start_line": 57,
+            "start_col": 1,
+            "end_line": 57,
+            "end_col": 51
+          }
+        }
+      }
+    ]
+  },
+  "contracts": [],
+  "streams": [
+    {
+      "id": "2bea5988eb937ef30e95baee2d88cbe6",
+      "name": "alpha.base_rent",
+      "owner": {
+        "symbol": "asset.alpha"
+      },
+      "direction": "inflow",
+      "currency": "USD",
+      "category": "operating.revenue.base_rent",
+      "schedule": {
+        "kind": "Every",
+        "every": "annual",
+        "from": "2026-01-01",
+        "to": "2027-01-01"
+      },
+      "amount": {
+        "lang": "cfdl",
+        "src": "100.0"
+      },
+      "active_when": {
+        "lang": "cfdl",
+        "src": "true"
+      },
+      "provenance": {
+        "source_file": "model.cfdl",
+        "source_span": {
+          "start_line": 32,
+          "start_col": 1,
+          "end_line": 36,
+          "end_col": 1
+        }
+      }
+    },
+    {
+      "id": "be2018c21cf92bb6b598a33f042773a5",
+      "name": "beta.base_rent",
+      "owner": {
+        "symbol": "asset.beta"
+      },
+      "direction": "inflow",
+      "currency": "USD",
+      "category": "operating.revenue.base_rent",
+      "schedule": {
+        "kind": "Every",
+        "every": "annual",
+        "from": "2026-01-01",
+        "to": "2027-01-01"
+      },
+      "amount": {
+        "lang": "cfdl",
+        "src": "50.0"
+      },
+      "active_when": {
+        "lang": "cfdl",
+        "src": "true"
+      },
+      "provenance": {
+        "source_file": "model.cfdl",
+        "source_span": {
+          "start_line": 38,
+          "start_col": 1,
+          "end_line": 42,
+          "end_col": 1
+        }
+      }
+    },
+    {
+      "id": "96c45471d89cb5790579f0c3c1e68de4",
+      "name": "gamma.debt",
+      "owner": {
+        "symbol": "asset.gamma"
+      },
+      "direction": "outflow",
+      "currency": "USD",
+      "category": "financing.debt.service",
+      "schedule": {
+        "kind": "Every",
+        "every": "annual",
+        "from": "2026-01-01",
+        "to": "2027-01-01"
+      },
+      "amount": {
+        "lang": "cfdl",
+        "src": "40.0"
+      },
+      "active_when": {
+        "lang": "cfdl",
+        "src": "true"
+      },
+      "provenance": {
+        "source_file": "model.cfdl",
+        "source_span": {
+          "start_line": 50,
+          "start_col": 1,
+          "end_line": 54,
+          "end_col": 1
+        }
+      }
+    },
+    {
+      "id": "a630bbbacc984319c0f6dc668d38f737",
+      "name": "gamma.sale",
+      "owner": {
+        "symbol": "asset.gamma"
+      },
+      "direction": "inflow",
+      "currency": "USD",
+      "category": "investing.disposition.sale",
+      "schedule": {
+        "kind": "Every",
+        "every": "annual",
+        "from": "2027-01-01",
+        "to": "2027-01-01"
+      },
+      "amount": {
+        "lang": "cfdl",
+        "src": "900.0"
+      },
+      "active_when": {
+        "lang": "cfdl",
+        "src": "true"
+      },
+      "provenance": {
+        "source_file": "model.cfdl",
+        "source_span": {
+          "start_line": 44,
+          "start_col": 1,
+          "end_line": 48,
+          "end_col": 1
+        }
+      }
+    }
+  ],
+  "events": [],
+  "options": [],
+  "runs": [
+    {
+      "kind": "deterministic"
+    }
+  ],
+  "required_observables": [],
+  "required_refs": [],
+  "provenance": {
+    "sources": [
+      "model.cfdl"
+    ],
+    "compiler": {
+      "name": "cfdl",
+      "version": "0.8.0",
+      "hash": "5fdb54f1ea1d7d1e626a7dbad0b08339"
+    }
+  }
+}

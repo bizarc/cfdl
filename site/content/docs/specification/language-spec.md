@@ -1420,6 +1420,16 @@ Rules:
   the engine does not build is refused (`E1367`), as is a category statement in
   a model whose streams declare no category — either would render one residual
   row and nothing else.
+- Generated rows are ordered so the result reads as a hierarchy: DEPTH FIRST
+  for an entity structure, so a parent is followed by its own subtree rather
+  than by every other node at its level. Category ROOTS follow the canonical
+  order — operating, investing, financing, the order a cash flow statement is
+  read in — and siblings below a root sort alphabetically, which is arbitrary
+  but stable.
+- A generated row's LABEL is derived from the name it was generated from: the
+  last path segment, underscores opened out, first letter capitalized, so
+  `operating.revenue.base_rent` reads "Base rent". An authored row states its
+  own.
 - `depth` sets the LEVEL OF AGGREGATION, and the rows follow from the tree.
   **A subtotal is not declared.** A node whose children are shown is a
   `subtotal`; a node whose children are cut off by `depth` is a `line`,

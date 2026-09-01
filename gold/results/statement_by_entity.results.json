@@ -207,7 +207,7 @@
         "rows": [
           {
             "kind": "subtotal",
-            "label": "container.fund",
+            "label": "Fund",
             "depth": 0,
             "display_sign": 1.0,
             "values": [
@@ -228,7 +228,7 @@
           },
           {
             "kind": "line",
-            "label": "asset.north",
+            "label": "North",
             "depth": 1,
             "display_sign": 1.0,
             "values": [
@@ -252,7 +252,7 @@
           },
           {
             "kind": "line",
-            "label": "asset.south",
+            "label": "South",
             "depth": 1,
             "display_sign": 1.0,
             "values": [
@@ -297,7 +297,7 @@
         "rows": [
           {
             "kind": "line",
-            "label": "container.fund",
+            "label": "Fund",
             "depth": 0,
             "display_sign": 1.0,
             "values": [
@@ -343,7 +343,7 @@
         "rows": [
           {
             "kind": "subtotal",
-            "label": "operating",
+            "label": "Operating",
             "depth": 0,
             "display_sign": 1.0,
             "values": [
@@ -364,7 +364,7 @@
           },
           {
             "kind": "subtotal",
-            "label": "operating.revenue",
+            "label": "Revenue",
             "depth": 1,
             "display_sign": 1.0,
             "values": [
@@ -385,7 +385,7 @@
           },
           {
             "kind": "line",
-            "label": "operating.revenue.base_rent",
+            "label": "Base rent",
             "depth": 2,
             "display_sign": 1.0,
             "values": [
@@ -431,7 +431,7 @@
         "rows": [
           {
             "kind": "subtotal",
-            "label": "container.fund",
+            "label": "Fund",
             "depth": 0,
             "display_sign": 1.0,
             "values": [
@@ -452,7 +452,7 @@
           },
           {
             "kind": "line",
-            "label": "asset.north",
+            "label": "North",
             "depth": 1,
             "display_sign": 1.0,
             "values": [
@@ -476,7 +476,7 @@
           },
           {
             "kind": "line",
-            "label": "asset.south",
+            "label": "South",
             "depth": 1,
             "display_sign": 1.0,
             "values": [
