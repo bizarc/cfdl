@@ -405,8 +405,8 @@
             ],
             "total": 15600000.0,
             "streams": [
-              "stream.plant.opex",
-              "stream.plant.revenue"
+              "plant.opex",
+              "plant.revenue"
             ]
           }
         ],

@@ -476,8 +476,8 @@
             ],
             "total": 850.0,
             "streams": [
-              "stream.credit.balance_probe",
-              "stream.credit.repayment"
+              "credit.balance_probe",
+              "credit.repayment"
             ]
           },
           {

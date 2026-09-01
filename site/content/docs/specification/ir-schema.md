@@ -1953,6 +1953,10 @@ against it by `make ir-schema`.
           "type": "string",
           "description": "A declared slice whose streams the row draws."
         },
+        "series": {
+          "type": "string",
+          "description": "A published series key the row presents (`domain.cre.noi`, `model.net_cash_flow`). A fold OF the ledger rather than cash in it, so the row claims no streams and its figure stays out of the bottom line; a claim clause beside it is refused (E1370). An absent key publishes no values and no total."
+        },
         "entity": {
           "type": "string"
         },

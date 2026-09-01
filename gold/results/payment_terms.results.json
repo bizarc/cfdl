@@ -855,11 +855,11 @@
             ],
             "total": 30000.0,
             "streams": [
-              "stream.co.net0",
-              "stream.co.net2m",
-              "stream.co.net30",
-              "stream.co.net45",
-              "stream.co.on_time"
+              "co.net0",
+              "co.net2m",
+              "co.net30",
+              "co.net45",
+              "co.on_time"
             ]
           }
         ],

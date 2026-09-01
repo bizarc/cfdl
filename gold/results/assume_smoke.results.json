@@ -233,7 +233,7 @@
             ],
             "total": 1545.0,
             "streams": [
-              "stream.fee.management"
+              "fee.management"
             ]
           }
         ],

@@ -51,19 +51,18 @@ pub fn enrich_results(
         .and_then(|reg| reg.pack(pack_name))
         .map(|pack| pack.manifest.categories.clone())
         .unwrap_or_default();
-    results.statements = cfdl_statement::compute(
-        pack_name,
-        &statement_specs,
-        &subtotal_specs,
-        &categories,
-        &waterfall_series,
-        &recommended,
-        results,
-    );
+    // ONE EVALUATOR. A pack's statements are lowered into the same shape a
+    // model's use and rendered by the same code, because while there were two
+    // renderers they drifted — the pack's bucketed rows to the grain and
+    // recomputed ratios from their inputs, the model's did neither.
+    let lowered: Vec<cfdl_statement::ModelStatement> = statement_specs
+        .iter()
+        .map(|spec| cfdl_statement::lower_pack_statement(spec, &subtotal_specs))
+        .collect();
     // A MODEL'S OWN STATEMENTS, beside the pack's (`docs/13` §7.55). One
-    // evaluator, two producers: a pack enumerates its rows, a model names a
-    // structure and a depth and the rows follow from the tree. The pack path
-    // above is untouched, so a packed model renders exactly what it rendered.
+    // evaluator, two producers: a pack's TOML statements LOWER above into the
+    // model-statement shape, a model declares its own, and both render through
+    // the same `generate`.
     let model_statements = ir_value
         .as_ref()
         .map(cfdl_statement::model_statements)
@@ -71,12 +70,15 @@ pub fn enrich_results(
     // Called unconditionally: with no declared statements this is where the
     // DEFAULT presentation is assembled (`docs/13` §7.43), and guarding on an
     // empty list here would make that unreachable.
-    cfdl_statement::attach_model_statements(
-        &model_statements,
-        &categories,
-        &waterfall_series,
-        results,
-    );
+    // A pack's first, then the model's, then the default if neither provided
+    // one. Declaration order with the pack ahead, as before.
+    let mut all = lowered;
+    all.extend(model_statements);
+    cfdl_statement::attach_model_statements(&all, &categories, &waterfall_series, results);
+    // `W5023` is a fact about the MODEL's vocabulary rather than any one
+    // statement's rows, so it is computed once and carried on the default
+    // statement.
+    cfdl_statement::attach_vocabulary_diagnostics(&categories, &recommended, pack_name, results);
 }
 
 /// Run an in-memory IR and enrich the results when a pack is named.

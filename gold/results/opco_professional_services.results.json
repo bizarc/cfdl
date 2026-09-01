@@ -3883,7 +3883,7 @@
             ],
             "total": 36300000.0,
             "streams": [
-              "stream.exit.pe_sale"
+              "exit.pe_sale"
             ]
           },
           {
@@ -4135,14 +4135,14 @@
             ],
             "total": 12489395.718323,
             "streams": [
-              "stream.opex.compensation",
-              "stream.opex.facilities",
-              "stream.opex.ga",
-              "stream.opex.sales_marketing",
-              "stream.opex.working_capital",
-              "stream.rev.licensing",
-              "stream.rev.project_fees",
-              "stream.rev.retainers"
+              "opex.compensation",
+              "opex.facilities",
+              "opex.ga",
+              "opex.sales_marketing",
+              "opex.working_capital",
+              "rev.licensing",
+              "rev.project_fees",
+              "rev.retainers"
             ]
           }
         ],

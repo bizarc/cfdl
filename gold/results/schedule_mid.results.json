@@ -256,10 +256,10 @@
             ],
             "total": 2200.0,
             "streams": [
-              "stream.co.flow_due",
-              "stream.co.flow_end",
-              "stream.co.flow_mid",
-              "stream.co.oneshot_mid"
+              "co.flow_due",
+              "co.flow_end",
+              "co.flow_mid",
+              "co.oneshot_mid"
             ]
           }
         ],

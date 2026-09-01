@@ -598,7 +598,7 @@
             ],
             "total": -1000.0,
             "streams": [
-              "stream.capex.build"
+              "capex.build"
             ]
           }
         ],

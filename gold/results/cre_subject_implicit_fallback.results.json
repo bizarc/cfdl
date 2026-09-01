@@ -1447,7 +1447,7 @@
             ],
             "total": -288000.0,
             "streams": [
-              "stream.cre.opex.line"
+              "cre.opex.line"
             ]
           },
           {

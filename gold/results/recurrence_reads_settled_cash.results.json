@@ -350,7 +350,7 @@
             ],
             "total": 1014600.241056,
             "streams": [
-              "stream.rent.total"
+              "rent.total"
             ]
           }
         ],

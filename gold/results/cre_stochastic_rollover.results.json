@@ -3575,9 +3575,9 @@
             ],
             "total": 939999.999992,
             "streams": [
-              "stream.asset.downtime_loss",
-              "stream.asset.rollover_rent",
-              "stream.asset.turnover_costs"
+              "asset.downtime_loss",
+              "asset.rollover_rent",
+              "asset.turnover_costs"
             ]
           }
         ],

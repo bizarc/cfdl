@@ -218,7 +218,7 @@
             ],
             "total": -7.5,
             "streams": [
-              "stream.testpack.avg_balance_interest"
+              "testpack.avg_balance_interest"
             ]
           }
         ],

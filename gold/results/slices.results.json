@@ -274,8 +274,8 @@
             ],
             "total": 420.0,
             "streams": [
-              "stream.a.merch",
-              "stream.a.royalties"
+              "a.merch",
+              "a.royalties"
             ]
           },
           {
@@ -299,7 +299,7 @@
             ],
             "total": 210.0,
             "streams": [
-              "stream.b.royalties"
+              "b.royalties"
             ]
           }
         ],

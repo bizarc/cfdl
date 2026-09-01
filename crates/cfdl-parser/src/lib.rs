@@ -396,6 +396,10 @@ pub struct StatementRowStmt {
     pub streams: Vec<String>,
     /// A declared slice, whose net series the row draws.
     pub slice: Option<String>,
+    /// A PUBLISHED SERIES key — `domain.cre.noi`, `entity.asset.x.net_cash_flow`.
+    /// A fold OF the ledger rather than cash in it, so a row drawing one
+    /// claims nothing and never reaches the bottom line.
+    pub series: Option<String>,
     /// An entity reference; the row draws that entity and its descendants.
     pub entity: Option<String>,
     /// `ratio` rows: two declared slices, numerator then denominator.
@@ -3736,6 +3740,7 @@ impl<'a> Parser<'a> {
             categories: Vec::new(),
             streams: Vec::new(),
             slice: None,
+            series: None,
             entity: None,
             ratio_of: None,
             display: None,
@@ -3768,6 +3773,20 @@ impl<'a> Parser<'a> {
                             self.push_expected(
                                 value_tok.span,
                                 "Expected a declared slice name after 'slice'.".to_string(),
+                            );
+                            return None;
+                        }
+                    }
+                }
+                TokenKind::Ident(ref ident) if ident == "series" => {
+                    let value_tok = self.bump();
+                    match value_tok.kind {
+                        TokenKind::String(ref v) => row.series = Some(v.clone()),
+                        _ => {
+                            self.push_expected(
+                                value_tok.span,
+                                "Expected a quoted published series key after 'series'."
+                                    .to_string(),
                             );
                             return None;
                         }
@@ -3841,7 +3860,7 @@ impl<'a> Parser<'a> {
                     self.push_expected(
                         tok.span,
                         format!(
-                            "Unexpected '{word}' in a statement row. A row draws from 'category', 'stream', 'slice' or 'entity', a ratio states 'of <slice> to <slice>', and 'display' and 'depth' set presentation."
+                            "Unexpected '{word}' in a statement row. A row draws from 'category', 'stream', 'slice', 'entity' or a published 'series', a ratio states 'of <slice> to <slice>', and 'display' and 'depth' set presentation."
                         ),
                     );
                     return None;
@@ -3994,6 +4013,7 @@ impl<'a> Parser<'a> {
                         categories: Vec::new(),
                         streams: Vec::new(),
                         slice: None,
+                        series: None,
                         entity: None,
                         ratio_of: None,
                         display: None,

@@ -3899,10 +3899,10 @@
             ],
             "total": 34703307.692308,
             "streams": [
-              "stream.ancillary.income",
-              "stream.cre.exit.sale",
-              "stream.cre.opex.line",
-              "stream.cre.revenue.line"
+              "ancillary.income",
+              "cre.exit.sale",
+              "cre.opex.line",
+              "cre.revenue.line"
             ]
           }
         ],

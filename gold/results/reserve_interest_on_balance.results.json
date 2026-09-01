@@ -988,8 +988,8 @@
             ],
             "total": 12135.025,
             "streams": [
-              "stream.ops.reserve_interest",
-              "stream.ops.revenue"
+              "ops.reserve_interest",
+              "ops.revenue"
             ]
           },
           {

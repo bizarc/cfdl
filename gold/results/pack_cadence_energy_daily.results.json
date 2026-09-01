@@ -50790,9 +50790,9 @@
             ],
             "total": 1119407.157625,
             "streams": [
-              "stream.energy.capacity.revenue",
-              "stream.energy.om.expense",
-              "stream.energy.ppa.revenue"
+              "energy.capacity.revenue",
+              "energy.om.expense",
+              "energy.ppa.revenue"
             ]
           }
         ],

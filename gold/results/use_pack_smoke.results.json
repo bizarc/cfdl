@@ -393,8 +393,8 @@
           },
           {
             "kind": "residual",
-            "label": "Not shown by this structure",
-            "depth": 0,
+            "label": "Unclassified",
+            "depth": 1,
             "display_sign": 1.0,
             "values": [
               {
@@ -448,7 +448,7 @@
             ],
             "total": 14808.0,
             "streams": [
-              "stream.testpack.lowered"
+              "testpack.lowered"
             ]
           }
         ],
@@ -456,7 +456,13 @@
           "bottom_line": 14808.0,
           "model_total": 14808.0,
           "residual": 0.0
-        }
+        },
+        "diagnostics": [
+          {
+            "code": "W3500_STATEMENT_UNCLASSIFIED_STREAM",
+            "message": "1 stream(s) are in no row of statement 'by_entity', so the bottom line is short by 14808.00: testpack.lowered. Classify them, or give the statement a row that claims them."
+          }
+        ]
       }
     ]
   },

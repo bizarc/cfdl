@@ -793,7 +793,7 @@
             ],
             "total": 2000000.0,
             "streams": [
-              "stream.cre.exit.sale"
+              "cre.exit.sale"
             ]
           }
         ],

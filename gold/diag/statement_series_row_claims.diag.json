@@ -1,0 +1,17 @@
+[
+  {
+    "code": "E1370_STATEMENT_SERIES_ROW_CLAIMS",
+    "severity": "error",
+    "message": "Statement 'memo' has a row drawing series 'model.net_cash_flow' beside a claim clause.",
+    "file": "model.cfdl",
+    "span": {
+      "start_line": 20,
+      "start_col": 1,
+      "end_line": 23,
+      "end_col": 1
+    },
+    "path": null,
+    "hint": "A row draws a published series or claims cash, never both. Remove the `series`, or the other draw clauses.",
+    "notes": []
+  }
+]

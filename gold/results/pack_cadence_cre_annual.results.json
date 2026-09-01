@@ -533,13 +533,13 @@
             ],
             "total": 3546254.493061,
             "streams": [
-              "stream.cre.exit.proceeds",
-              "stream.cre.exit.selling_costs",
-              "stream.cre.opex.line",
-              "stream.cre.unit.abatement.tenant_a",
-              "stream.cre.unit.base_rent.tenant_a",
-              "stream.cre.unit.recoveries.tenant_a",
-              "stream.cre.unit.ti_lc.tenant_a"
+              "cre.exit.proceeds",
+              "cre.exit.selling_costs",
+              "cre.opex.line",
+              "cre.unit.abatement.tenant_a",
+              "cre.unit.base_rent.tenant_a",
+              "cre.unit.recoveries.tenant_a",
+              "cre.unit.ti_lc.tenant_a"
             ]
           }
         ],

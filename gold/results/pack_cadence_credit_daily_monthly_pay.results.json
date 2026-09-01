@@ -90972,12 +90972,12 @@
             ],
             "total": 1267589.993116,
             "streams": [
-              "stream.credit.pool.interest.book",
-              "stream.credit.pool.penalty.book",
-              "stream.credit.pool.prepay.book",
-              "stream.credit.pool.recoveries.book",
-              "stream.credit.pool.sched_principal.book",
-              "stream.credit.pool.servicing.book"
+              "credit.pool.interest.book",
+              "credit.pool.penalty.book",
+              "credit.pool.prepay.book",
+              "credit.pool.recoveries.book",
+              "credit.pool.sched_principal.book",
+              "credit.pool.servicing.book"
             ]
           }
         ],

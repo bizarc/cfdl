@@ -272,7 +272,7 @@
             ],
             "total": 3500.0,
             "streams": [
-              "stream.loan.balance_report"
+              "loan.balance_report"
             ]
           },
           {

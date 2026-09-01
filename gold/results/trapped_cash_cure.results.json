@@ -1127,7 +1127,7 @@
             ],
             "total": 1100.0,
             "streams": [
-              "stream.ops.rent"
+              "ops.rent"
             ]
           },
           {

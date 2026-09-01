@@ -84,6 +84,7 @@ statement_row   = ( "line" | "subtotal" | "ratio" ) STRING
 row_clause      = "category" STRING
                 | "stream" STRING
                 | "slice" IDENT
+                | "series" STRING
                 | "entity" QNAME
                 | "of" IDENT "to" IDENT
                 | "display" IDENT

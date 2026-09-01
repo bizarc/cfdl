@@ -454,13 +454,13 @@
             ],
             "total": -3000.0,
             "streams": [
-              "stream.loan.debt_service"
+              "loan.debt_service"
             ]
           },
           {
             "kind": "residual",
-            "label": "Not shown by this structure",
-            "depth": 0,
+            "label": "Unclassified",
+            "depth": 1,
             "display_sign": 1.0,
             "values": [
               {
@@ -514,7 +514,7 @@
             ],
             "total": 9750.0,
             "streams": [
-              "stream.option.refi_savings"
+              "option.refi_savings"
             ]
           }
         ],
@@ -522,7 +522,13 @@
           "bottom_line": 6750.0,
           "model_total": 6750.0,
           "residual": 0.0
-        }
+        },
+        "diagnostics": [
+          {
+            "code": "W3500_STATEMENT_UNCLASSIFIED_STREAM",
+            "message": "1 stream(s) are in no row of statement 'by_entity', so the bottom line is short by 9750.00: option.refi_savings. Classify them, or give the statement a row that claims them."
+          }
+        ]
       }
     ]
   },

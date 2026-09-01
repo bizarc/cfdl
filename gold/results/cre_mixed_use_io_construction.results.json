@@ -8013,7 +8013,7 @@
             ],
             "total": -2700000.0,
             "streams": [
-              "stream.loan.io_interest"
+              "loan.io_interest"
             ]
           },
           {
@@ -8409,7 +8409,7 @@
             ],
             "total": -4110000.0,
             "streams": [
-              "stream.loan.perm_debt_service"
+              "loan.perm_debt_service"
             ]
           },
           {
@@ -8805,11 +8805,11 @@
             ],
             "total": 39183863.636364,
             "streams": [
-              "stream.cre.exit.sale",
-              "stream.cre.opex.line",
-              "stream.office.base_rent",
-              "stream.resi.base_rent",
-              "stream.retail.base_rent"
+              "cre.exit.sale",
+              "cre.opex.line",
+              "office.base_rent",
+              "resi.base_rent",
+              "retail.base_rent"
             ]
           }
         ],

@@ -11,7 +11,7 @@ Diagnostics are the repair signal: read the `code`, `message`, `span`, and
 `hint`, change the model, recompile. The catalog is how an agent learns what
 each code looks like in the flesh before it meets one.
 
-**Coverage:** 212 codes in the docs/08 §7 register; 98 exemplified here; 70 of 103 examples carry a recorded fix.
+**Coverage:** 213 codes in the docs/08 §7 register; 99 exemplified here; 70 of 104 examples carry a recorded fix.
 
 ## active_in_unknown_state — E1332_UNKNOWN_ACTIVE_STATE
 
@@ -3431,6 +3431,41 @@ statement both {
 
 - `E1369_STATEMENT_AUTHORED_AND_GENERATED` (error): Statement 'both' states both a structure and its own rows.
   - hint: A statement either names a `structure` and lets the rows follow from the tree, or states its rows. Remove one.
+
+Fix: not yet recorded.
+
+## statement_series_row_claims — E1370_STATEMENT_SERIES_ROW_CLAIMS
+
+Failing example:
+
+```cfdl
+version 0.1
+model "statement-series-row-claims"
+time calendar annual from 2026-01 for 3
+
+// A ROW DRAWS A PUBLISHED SERIES OR CLAIMS CASH, NEVER BOTH (`E1370`).
+//
+// A series row presents a fold and claims nothing; a category claims streams
+// into the bottom line. Both on one row could only be resolved by a precedence
+// the reader cannot see, which is a silently ignored clause — the failure
+// §7.55 exists to end. Refused instead.
+
+entity asset property : Asset.Financial
+
+stream ops.rent on entity asset.property inflow currency USD {
+  schedule every year from 2026-01 to 2028-01
+  category operating.revenue.base_rent
+  amount = 1000
+}
+
+statement memo {
+  label "Operating memo"
+  line "Net (memo)" { series "model.net_cash_flow" category "operating.*" }
+}
+```
+
+- `E1370_STATEMENT_SERIES_ROW_CLAIMS` (error): Statement 'memo' has a row drawing series 'model.net_cash_flow' beside a claim clause.
+  - hint: A row draws a published series or claims cash, never both. Remove the `series`, or the other draw clauses.
 
 Fix: not yet recorded.
 

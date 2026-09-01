@@ -235,8 +235,8 @@
             ],
             "total": 3000.0,
             "streams": [
-              "stream.dbt.draw",
-              "stream.dbt.repay"
+              "dbt.draw",
+              "dbt.repay"
             ]
           }
         ],

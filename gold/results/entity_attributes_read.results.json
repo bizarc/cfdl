@@ -387,13 +387,13 @@
             ],
             "total": 108000.0,
             "streams": [
-              "stream.cre.rent.suite"
+              "cre.rent.suite"
             ]
           },
           {
             "kind": "residual",
-            "label": "Not shown by this structure",
-            "depth": 0,
+            "label": "Unclassified",
+            "depth": 1,
             "display_sign": 1.0,
             "values": [
               {
@@ -411,8 +411,8 @@
             ],
             "total": 222000.0,
             "streams": [
-              "stream.cre.opex",
-              "stream.cre.rent.tower"
+              "cre.opex",
+              "cre.rent.tower"
             ]
           }
         ],
@@ -420,7 +420,13 @@
           "bottom_line": 330000.0,
           "model_total": 330000.0,
           "residual": 0.0
-        }
+        },
+        "diagnostics": [
+          {
+            "code": "W3500_STATEMENT_UNCLASSIFIED_STREAM",
+            "message": "2 stream(s) are in no row of statement 'by_entity', so the bottom line is short by 222000.00: cre.opex, cre.rent.tower. Classify them, or give the statement a row that claims them."
+          }
+        ]
       }
     ]
   },

@@ -2907,10 +2907,10 @@
             ],
             "total": -655803.25536,
             "streams": [
-              "stream.energy.capex.outlay",
-              "stream.energy.capex.outlay.final_draw",
-              "stream.energy.om.expense",
-              "stream.energy.ppa.revenue"
+              "energy.capex.outlay",
+              "energy.capex.outlay.final_draw",
+              "energy.om.expense",
+              "energy.ppa.revenue"
             ]
           }
         ],

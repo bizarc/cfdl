@@ -2030,8 +2030,8 @@
             ],
             "total": 1241057.556572,
             "streams": [
-              "stream.opco.opex.recurring",
-              "stream.opco.revenue.recurring"
+              "opco.opex.recurring",
+              "opco.revenue.recurring"
             ]
           }
         ],

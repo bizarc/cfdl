@@ -243,7 +243,7 @@
             ],
             "total": 78.0,
             "streams": [
-              "stream.unit.age_probe"
+              "unit.age_probe"
             ]
           }
         ],

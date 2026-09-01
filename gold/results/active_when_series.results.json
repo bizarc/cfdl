@@ -173,8 +173,8 @@
             ],
             "total": 350.0,
             "streams": [
-              "stream.base.revenue",
-              "stream.bonus.fee"
+              "base.revenue",
+              "bonus.fee"
             ]
           }
         ],

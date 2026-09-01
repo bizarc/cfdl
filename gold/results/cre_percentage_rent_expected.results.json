@@ -349,8 +349,8 @@
             ],
             "total": 14812.5,
             "streams": [
-              "stream.cre.pct_rent.overage.dist",
-              "stream.cre.pct_rent.overage.point"
+              "cre.pct_rent.overage.dist",
+              "cre.pct_rent.overage.point"
             ]
           }
         ],

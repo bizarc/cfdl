@@ -1068,9 +1068,9 @@
             ],
             "total": 436000.0,
             "streams": [
-              "stream.cre.exit.sale",
-              "stream.cre.opex.line",
-              "stream.cre.revenue.line"
+              "cre.exit.sale",
+              "cre.opex.line",
+              "cre.revenue.line"
             ]
           }
         ],

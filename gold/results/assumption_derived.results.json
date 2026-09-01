@@ -154,7 +154,7 @@
             ],
             "total": 51000.0,
             "streams": [
-              "stream.base.rent"
+              "base.rent"
             ]
           }
         ],

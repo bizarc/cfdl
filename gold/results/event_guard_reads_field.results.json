@@ -263,7 +263,7 @@
             ],
             "total": -6.0,
             "streams": [
-              "stream.credit.amortization"
+              "credit.amortization"
             ]
           },
           {

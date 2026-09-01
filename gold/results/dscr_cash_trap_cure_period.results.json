@@ -1694,8 +1694,8 @@
             ],
             "total": 66000.0,
             "streams": [
-              "stream.debt.service",
-              "stream.ops.noi"
+              "debt.service",
+              "ops.noi"
             ]
           },
           {

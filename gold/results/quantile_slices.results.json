@@ -355,10 +355,10 @@
             ],
             "total": 135893.647059,
             "streams": [
-              "stream.battery.arbitrage",
-              "stream.battery.arbitrage_step",
-              "stream.battery.computed_slice",
-              "stream.battery.inverse"
+              "battery.arbitrage",
+              "battery.arbitrage_step",
+              "battery.computed_slice",
+              "battery.inverse"
             ]
           }
         ],

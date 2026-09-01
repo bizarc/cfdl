@@ -710,7 +710,7 @@
             ],
             "total": 5599.999998,
             "streams": [
-              "stream.lease.rent"
+              "lease.rent"
             ]
           }
         ],

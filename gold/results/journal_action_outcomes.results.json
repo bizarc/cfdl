@@ -644,15 +644,15 @@
             ],
             "total": 36000.0,
             "streams": [
-              "stream.capex.floor2",
-              "stream.ops.baseline",
-              "stream.rent.floor2"
+              "capex.floor2",
+              "ops.baseline",
+              "rent.floor2"
             ]
           },
           {
             "kind": "residual",
-            "label": "Not shown by this structure",
-            "depth": 0,
+            "label": "Unclassified",
+            "depth": 1,
             "display_sign": 1.0,
             "values": [
               {
@@ -706,7 +706,7 @@
             ],
             "total": 0.0,
             "streams": [
-              "stream.option.renewal"
+              "option.renewal"
             ]
           }
         ],
@@ -714,7 +714,13 @@
           "bottom_line": 36000.0,
           "model_total": 36000.0,
           "residual": 0.0
-        }
+        },
+        "diagnostics": [
+          {
+            "code": "W3500_STATEMENT_UNCLASSIFIED_STREAM",
+            "message": "1 stream(s) are in no row of statement 'by_entity', so the bottom line is short by 0.00: option.renewal. Classify them, or give the statement a row that claims them."
+          }
+        ]
       }
     ]
   },
