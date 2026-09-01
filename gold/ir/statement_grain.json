@@ -1,0 +1,205 @@
+{
+  "ir_version": "0.1",
+  "model": {
+    "name": "statement-grain",
+    "currency": "USD"
+  },
+  "time": {
+    "calendar": "monthly",
+    "start": "2026-01-01",
+    "periods": 12
+  },
+  "phases": [],
+  "entities": [
+    {
+      "id": "78addbcb4fef35f6390fdcd3b175e0e8",
+      "symbol": "asset.co",
+      "type": "Asset.Financial",
+      "fields": {},
+      "state": {}
+    }
+  ],
+  "assumptions": {
+    "constants": {},
+    "random": {}
+  },
+  "views": {
+    "slices": [
+      {
+        "name": "noi",
+        "categories": [
+          "operating.*"
+        ],
+        "provenance": {
+          "source_file": "model.cfdl",
+          "source_span": {
+            "start_line": 44,
+            "start_col": 1,
+            "end_line": 44,
+            "end_col": 36
+          }
+        }
+      },
+      {
+        "name": "ds",
+        "categories": [
+          "financing.debt.service"
+        ],
+        "provenance": {
+          "source_file": "model.cfdl",
+          "source_span": {
+            "start_line": 45,
+            "start_col": 1,
+            "end_line": 45,
+            "end_col": 47
+          }
+        }
+      }
+    ],
+    "statements": [
+      {
+        "name": "by_month",
+        "label": "Monthly",
+        "rows": [
+          {
+            "kind": "line",
+            "label": "Net operating income",
+            "slice": "noi"
+          },
+          {
+            "kind": "ratio",
+            "label": "DSCR",
+            "numerator": "noi",
+            "denominator": "ds",
+            "display": "positive"
+          }
+        ],
+        "provenance": {
+          "source_file": "model.cfdl",
+          "source_span": {
+            "start_line": 47,
+            "start_col": 1,
+            "end_line": 51,
+            "end_col": 1
+          }
+        }
+      },
+      {
+        "name": "by_year",
+        "label": "Annual",
+        "grain": "annual",
+        "rows": [
+          {
+            "kind": "line",
+            "label": "Net operating income",
+            "slice": "noi"
+          },
+          {
+            "kind": "ratio",
+            "label": "DSCR",
+            "numerator": "noi",
+            "denominator": "ds",
+            "display": "positive"
+          }
+        ],
+        "provenance": {
+          "source_file": "model.cfdl",
+          "source_span": {
+            "start_line": 53,
+            "start_col": 1,
+            "end_line": 58,
+            "end_col": 1
+          }
+        }
+      }
+    ]
+  },
+  "contracts": [],
+  "streams": [
+    {
+      "id": "709702395960de93886cffa0dfae4a22",
+      "name": "fin.ds",
+      "owner": {
+        "symbol": "asset.co"
+      },
+      "direction": "outflow",
+      "currency": "USD",
+      "category": "financing.debt.service",
+      "schedule": {
+        "kind": "Every",
+        "every": "monthly",
+        "from": "2026-01-01",
+        "to": "2026-12-01"
+      },
+      "amount": {
+        "lang": "cfdl",
+        "src": "if(time.t < 6.0, 20.0, 100.0)"
+      },
+      "active_when": {
+        "lang": "cfdl",
+        "src": "true"
+      },
+      "provenance": {
+        "source_file": "model.cfdl",
+        "source_span": {
+          "start_line": 38,
+          "start_col": 1,
+          "end_line": 42,
+          "end_col": 1
+        }
+      }
+    },
+    {
+      "id": "ca61fbec0cbf9a44c2d5ff65fee8ff71",
+      "name": "ops.noi",
+      "owner": {
+        "symbol": "asset.co"
+      },
+      "direction": "inflow",
+      "currency": "USD",
+      "category": "operating.revenue.base_rent",
+      "schedule": {
+        "kind": "Every",
+        "every": "monthly",
+        "from": "2026-01-01",
+        "to": "2026-12-01"
+      },
+      "amount": {
+        "lang": "cfdl",
+        "src": "120.0"
+      },
+      "active_when": {
+        "lang": "cfdl",
+        "src": "true"
+      },
+      "provenance": {
+        "source_file": "model.cfdl",
+        "source_span": {
+          "start_line": 32,
+          "start_col": 1,
+          "end_line": 36,
+          "end_col": 1
+        }
+      }
+    }
+  ],
+  "events": [],
+  "options": [],
+  "runs": [
+    {
+      "kind": "deterministic"
+    }
+  ],
+  "required_observables": [],
+  "required_refs": [],
+  "provenance": {
+    "sources": [
+      "model.cfdl"
+    ],
+    "compiler": {
+      "name": "cfdl",
+      "version": "0.8.0",
+      "hash": "5fdb54f1ea1d7d1e626a7dbad0b08339"
+    }
+  }
+}
