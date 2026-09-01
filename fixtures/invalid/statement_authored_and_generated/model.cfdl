@@ -1,0 +1,26 @@
+version 0.1
+model "statement-authored-and-generated"
+time calendar annual from 2026-01 for 2
+
+// A STATEMENT IS AUTHORED OR GENERATED, NEVER BOTH.
+//
+// `docs/13` §7.55. A generated statement partitions the cash by construction —
+// a hierarchy covers its own tree, so the lines always add to the whole. An
+// authored statement partitions it by the author's care. Mixed, neither
+// guarantee holds: the authored line below claims the same stream the
+// generated rows already claimed, so the bottom line would count it twice and
+// the reconciliation that makes a statement trustworthy would become noise.
+
+entity asset co : Asset.Financial
+
+stream ops.rent on entity asset.co inflow currency USD {
+  schedule every year from 2026-01 to 2027-01
+  category operating.revenue.base_rent
+  amount = 100
+}
+
+statement both {
+  structure entity
+  depth     2
+  line "Rent" { category "operating.revenue.base_rent" }
+}

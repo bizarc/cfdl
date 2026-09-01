@@ -1,0 +1,17 @@
+[
+  {
+    "code": "E1369_STATEMENT_AUTHORED_AND_GENERATED",
+    "severity": "error",
+    "message": "Statement 'both' states both a structure and its own rows.",
+    "file": "model.cfdl",
+    "span": {
+      "start_line": 22,
+      "start_col": 1,
+      "end_line": 26,
+      "end_col": 1
+    },
+    "path": null,
+    "hint": "A statement either names a `structure` and lets the rows follow from the tree, or states its rows. Remove one.",
+    "notes": []
+  }
+]

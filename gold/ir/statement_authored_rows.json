@@ -1,0 +1,236 @@
+{
+  "ir_version": "0.1",
+  "model": {
+    "name": "statement-authored-rows",
+    "currency": "USD"
+  },
+  "time": {
+    "calendar": "annual",
+    "start": "2026-01-01",
+    "periods": 3
+  },
+  "phases": [],
+  "entities": [
+    {
+      "id": "25e2dcf6b842bdfd68d77edc067f5580",
+      "symbol": "asset.property",
+      "type": "Asset.Financial",
+      "fields": {},
+      "state": {}
+    }
+  ],
+  "assumptions": {
+    "constants": {},
+    "random": {}
+  },
+  "views": {
+    "slices": [
+      {
+        "name": "noi",
+        "categories": [
+          "operating.*"
+        ],
+        "provenance": {
+          "source_file": "model.cfdl",
+          "source_span": {
+            "start_line": 48,
+            "start_col": 1,
+            "end_line": 48,
+            "end_col": 46
+          }
+        }
+      },
+      {
+        "name": "debt_service",
+        "categories": [
+          "financing.debt.service"
+        ],
+        "provenance": {
+          "source_file": "model.cfdl",
+          "source_span": {
+            "start_line": 49,
+            "start_col": 1,
+            "end_line": 49,
+            "end_col": 57
+          }
+        }
+      }
+    ],
+    "statements": [
+      {
+        "name": "operating",
+        "label": "Operating statement",
+        "rows": [
+          {
+            "kind": "line",
+            "label": "Base rental revenue",
+            "categories": [
+              "operating.revenue.base_rent"
+            ]
+          },
+          {
+            "kind": "line",
+            "label": "Less: operating costs",
+            "categories": [
+              "operating.expense.*"
+            ],
+            "display": "positive"
+          },
+          {
+            "kind": "subtotal",
+            "label": "Net operating income",
+            "categories": [
+              "operating.*"
+            ]
+          },
+          {
+            "kind": "spacer"
+          },
+          {
+            "kind": "line",
+            "label": "Debt service",
+            "slice": "debt_service",
+            "display": "positive"
+          },
+          {
+            "kind": "ratio",
+            "label": "DSCR",
+            "numerator": "noi",
+            "denominator": "debt_service",
+            "display": "positive"
+          }
+        ],
+        "provenance": {
+          "source_file": "model.cfdl",
+          "source_span": {
+            "start_line": 51,
+            "start_col": 1,
+            "end_line": 65,
+            "end_col": 1
+          }
+        }
+      }
+    ]
+  },
+  "contracts": [],
+  "streams": [
+    {
+      "id": "8a11b56a84fcf402ebd9870e98089eca",
+      "name": "fin.debt_service",
+      "owner": {
+        "symbol": "asset.property"
+      },
+      "direction": "outflow",
+      "currency": "USD",
+      "category": "financing.debt.service",
+      "schedule": {
+        "kind": "Every",
+        "every": "annual",
+        "from": "2026-01-01",
+        "to": "2028-01-01"
+      },
+      "amount": {
+        "lang": "cfdl",
+        "src": "400.0"
+      },
+      "active_when": {
+        "lang": "cfdl",
+        "src": "true"
+      },
+      "provenance": {
+        "source_file": "model.cfdl",
+        "source_span": {
+          "start_line": 42,
+          "start_col": 1,
+          "end_line": 46,
+          "end_col": 1
+        }
+      }
+    },
+    {
+      "id": "e6190672d67c52929b01321e3fcbf7d5",
+      "name": "ops.opex",
+      "owner": {
+        "symbol": "asset.property"
+      },
+      "direction": "outflow",
+      "currency": "USD",
+      "category": "operating.expense.other",
+      "schedule": {
+        "kind": "Every",
+        "every": "annual",
+        "from": "2026-01-01",
+        "to": "2028-01-01"
+      },
+      "amount": {
+        "lang": "cfdl",
+        "src": "300.0"
+      },
+      "active_when": {
+        "lang": "cfdl",
+        "src": "true"
+      },
+      "provenance": {
+        "source_file": "model.cfdl",
+        "source_span": {
+          "start_line": 36,
+          "start_col": 1,
+          "end_line": 40,
+          "end_col": 1
+        }
+      }
+    },
+    {
+      "id": "66609d28cefa7b01a7112672c7194068",
+      "name": "ops.rent",
+      "owner": {
+        "symbol": "asset.property"
+      },
+      "direction": "inflow",
+      "currency": "USD",
+      "category": "operating.revenue.base_rent",
+      "schedule": {
+        "kind": "Every",
+        "every": "annual",
+        "from": "2026-01-01",
+        "to": "2028-01-01"
+      },
+      "amount": {
+        "lang": "cfdl",
+        "src": "1000.0"
+      },
+      "active_when": {
+        "lang": "cfdl",
+        "src": "true"
+      },
+      "provenance": {
+        "source_file": "model.cfdl",
+        "source_span": {
+          "start_line": 30,
+          "start_col": 1,
+          "end_line": 34,
+          "end_col": 1
+        }
+      }
+    }
+  ],
+  "events": [],
+  "options": [],
+  "runs": [
+    {
+      "kind": "deterministic"
+    }
+  ],
+  "required_observables": [],
+  "required_refs": [],
+  "provenance": {
+    "sources": [
+      "model.cfdl"
+    ],
+    "compiler": {
+      "name": "cfdl",
+      "version": "0.8.0",
+      "hash": "5fdb54f1ea1d7d1e626a7dbad0b08339"
+    }
+  }
+}

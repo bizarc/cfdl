@@ -519,166 +519,296 @@ pub fn generate(
         }
     };
 
-    match spec.structure.as_str() {
-        "entity" => {
-            // The tree `graph` publishes: symbol -> parent.
-            let entities: Vec<(&str, Option<&str>)> = results
-                .graph
-                .as_ref()
-                .map(|g| {
-                    g.entities
-                        .iter()
-                        .map(|e| (e.symbol.as_str(), e.parent.as_deref()))
-                        .collect()
-                })
-                .unwrap_or_default();
-            let depth_of = |symbol: &str| -> u32 {
-                let mut d = 0;
-                let mut cursor = symbol;
-                while let Some((_, Some(parent))) =
-                    entities.iter().find(|(s, _)| *s == cursor).copied()
-                {
-                    d += 1;
-                    cursor = parent;
-                    if d > 64 {
-                        break;
-                    }
-                }
-                d
+    // AUTHORED, OR GENERATED — never both. A generated statement partitions
+    // the cash by construction, an authored one by the author's care, and a
+    // mixture guarantees neither: an authored `line` beside generated rows
+    // claims streams they already claimed, so the bottom line double-counts.
+    // The compiler refuses the combination; this is the evaluator's half.
+    if !spec.rows.is_empty() {
+        for row in &spec.rows {
+            let display_sign = match row.display.as_deref() {
+                Some("positive") | Some("negative") => -1.0,
+                _ => 1.0,
             };
-            let has_shown_child = |symbol: &str, d: u32| -> bool {
-                d + 1 < depth_limit && entities.iter().any(|(_, p)| *p == Some(symbol))
-            };
-            // Parents before children, and stable within a level.
-            let mut ordered: Vec<(&str, u32)> =
-                entities.iter().map(|(s, _)| (*s, depth_of(s))).collect();
-            ordered.sort_by(|a, b| a.1.cmp(&b.1).then(a.0.cmp(b.0)));
-            for (symbol, d) in ordered {
-                if d >= depth_limit {
+            if row.kind == "spacer" {
+                rows.push(StatementRow {
+                    kind: "spacer".to_string(),
+                    label: String::new(),
+                    depth: row.depth,
+                    display_sign: 1.0,
+                    values: vec![],
+                    total: None,
+                    streams: vec![],
+                });
+                continue;
+            }
+            if row.kind == "ratio" {
+                // TWO DECLARED SLICES. A slice is already a named selection
+                // with a per-period net, so a ratio needs no row identifiers.
+                let net_of = |name: &Option<String>| -> Option<Vec<f64>> {
+                    let name = name.as_ref()?;
+                    let all = results.slices.as_ref()?;
+                    let found = all.iter().find(|s| &s.id == name)?;
+                    Some(
+                        found
+                            .net
+                            .values
+                            .iter()
+                            .map(|v| match v {
+                                SeriesValue::Money(m) => m.amount,
+                                SeriesValue::Number(n) => *n,
+                                _ => 0.0,
+                            })
+                            .collect(),
+                    )
+                };
+                let (Some(num), Some(den)) = (net_of(&row.numerator), net_of(&row.denominator))
+                else {
+                    continue;
+                };
+                // A zero denominator publishes null, the rule a pack ratio
+                // already follows: a coverage ratio with no debt service is
+                // genuinely undefined, not zero.
+                let values: Vec<SeriesValue> = (0..periods)
+                    .map(|t| {
+                        let d = den.get(t).copied().unwrap_or(0.0);
+                        if d.abs() > f64::EPSILON {
+                            SeriesValue::Number(round6(num.get(t).copied().unwrap_or(0.0) / d))
+                        } else {
+                            SeriesValue::Null
+                        }
+                    })
+                    .collect();
+                rows.push(StatementRow {
+                    kind: "ratio".to_string(),
+                    label: row.label.clone(),
+                    depth: row.depth,
+                    display_sign,
+                    values,
+                    // Summing a ratio means nothing, so a ratio carries no
+                    // total and never reaches the bottom line.
+                    total: None,
+                    streams: vec![],
+                });
+                continue;
+            }
+            let mut acc = vec![0.0_f64; periods];
+            let mut drawn: Vec<String> = Vec::new();
+            for key in cash_keys {
+                let name = key
+                    .strip_prefix("stream.")
+                    .or_else(|| key.strip_prefix("option."))
+                    .unwrap_or(key);
+                let by_category = stream_categories
+                    .get(name)
+                    .is_some_and(|c| row.categories.iter().any(|p| matches_prefix(p, c)));
+                let by_name =
+                    !row.streams.is_empty() && cfdl_expr::selector_matches_any(&row.streams, name);
+                let by_slice = row.slice.as_ref().is_some_and(|slice_name| {
+                    results.slices.as_ref().is_some_and(|all| {
+                        all.iter()
+                            .find(|s| &s.id == slice_name)
+                            .is_some_and(|s| s.streams.iter().any(|n| n == name))
+                    })
+                });
+                let by_entity = row.entity.as_ref().is_some_and(|symbol| {
+                    series
+                        .get(*key)
+                        .and_then(|s| s.entity.as_deref())
+                        .is_some_and(|owner| owner == symbol)
+                });
+                if !(by_category || by_name || by_slice || by_entity) {
                     continue;
                 }
-                let is_subtotal = has_shown_child(symbol, d);
-                // FOLDS ITS SUBTREE rather than reading the published
-                // `entity.<symbol>.net_cash_flow` rollup. The rollup is the
-                // same number and would be cheaper, but it is computed over
-                // ALL of the entity's cash — so a statement scoped to a slice
-                // would silently ignore the filter. Folding the streams the
-                // row actually covers is the only version that stays correct
-                // when something narrows them.
-                let mut values = vec![0.0_f64; periods];
-                let mut drawn: Vec<String> = Vec::new();
-                for key in cash_keys {
-                    let Some(owner) = series.get(*key).and_then(|s| s.entity.as_deref()) else {
-                        continue;
-                    };
-                    let mut cursor = Some(owner);
-                    let mut under = false;
-                    while let Some(current) = cursor {
-                        if current == symbol {
-                            under = true;
+                // A SUBTOTAL CLAIMS NOTHING. It folds rows stated elsewhere,
+                // so counting its streams would double them in the bottom line.
+                if row.kind != "subtotal" {
+                    claimed.insert((*key).clone());
+                    drawn.push((*key).clone());
+                }
+                if let Some(s) = series.get(*key) {
+                    for (t, v) in s.values.iter().enumerate().take(periods) {
+                        if in_window[t] {
+                            if let SeriesValue::Money(m) = v {
+                                acc[t] += m.amount;
+                            }
+                        }
+                    }
+                }
+            }
+            drawn.sort();
+            rows.push(StatementRow {
+                kind: row.kind.clone(),
+                label: row.label.clone(),
+                depth: row.depth,
+                display_sign,
+                total: Some(round6(acc.iter().sum())),
+                values: money(&acc, results),
+                streams: drawn,
+            });
+        }
+    } else {
+        match spec.structure.as_str() {
+            "entity" => {
+                // The tree `graph` publishes: symbol -> parent.
+                let entities: Vec<(&str, Option<&str>)> = results
+                    .graph
+                    .as_ref()
+                    .map(|g| {
+                        g.entities
+                            .iter()
+                            .map(|e| (e.symbol.as_str(), e.parent.as_deref()))
+                            .collect()
+                    })
+                    .unwrap_or_default();
+                let depth_of = |symbol: &str| -> u32 {
+                    let mut d = 0;
+                    let mut cursor = symbol;
+                    while let Some((_, Some(parent))) =
+                        entities.iter().find(|(s, _)| *s == cursor).copied()
+                    {
+                        d += 1;
+                        cursor = parent;
+                        if d > 64 {
                             break;
                         }
-                        cursor = entities
-                            .iter()
-                            .find(|(s, _)| *s == current)
-                            .and_then(|(_, p)| *p);
                     }
-                    if !under {
+                    d
+                };
+                let has_shown_child = |symbol: &str, d: u32| -> bool {
+                    d + 1 < depth_limit && entities.iter().any(|(_, p)| *p == Some(symbol))
+                };
+                // Parents before children, and stable within a level.
+                let mut ordered: Vec<(&str, u32)> =
+                    entities.iter().map(|(s, _)| (*s, depth_of(s))).collect();
+                ordered.sort_by(|a, b| a.1.cmp(&b.1).then(a.0.cmp(b.0)));
+                for (symbol, d) in ordered {
+                    if d >= depth_limit {
                         continue;
                     }
-                    // A LINE claims its subtree's streams; a subtotal claims
-                    // nothing, because the rows beneath it will.
-                    if !is_subtotal {
-                        claimed.insert((*key).clone());
-                        drawn.push((*key).clone());
-                    }
-                    if let Some(s) = series.get(*key) {
-                        for (t, v) in s.values.iter().enumerate().take(periods) {
-                            if in_window[t] {
-                                if let SeriesValue::Money(m) = v {
-                                    values[t] += m.amount;
+                    let is_subtotal = has_shown_child(symbol, d);
+                    // FOLDS ITS SUBTREE rather than reading the published
+                    // `entity.<symbol>.net_cash_flow` rollup. The rollup is the
+                    // same number and would be cheaper, but it is computed over
+                    // ALL of the entity's cash — so a statement scoped to a slice
+                    // would silently ignore the filter. Folding the streams the
+                    // row actually covers is the only version that stays correct
+                    // when something narrows them.
+                    let mut values = vec![0.0_f64; periods];
+                    let mut drawn: Vec<String> = Vec::new();
+                    for key in cash_keys {
+                        let Some(owner) = series.get(*key).and_then(|s| s.entity.as_deref()) else {
+                            continue;
+                        };
+                        let mut cursor = Some(owner);
+                        let mut under = false;
+                        while let Some(current) = cursor {
+                            if current == symbol {
+                                under = true;
+                                break;
+                            }
+                            cursor = entities
+                                .iter()
+                                .find(|(s, _)| *s == current)
+                                .and_then(|(_, p)| *p);
+                        }
+                        if !under {
+                            continue;
+                        }
+                        // A LINE claims its subtree's streams; a subtotal claims
+                        // nothing, because the rows beneath it will.
+                        if !is_subtotal {
+                            claimed.insert((*key).clone());
+                            drawn.push((*key).clone());
+                        }
+                        if let Some(s) = series.get(*key) {
+                            for (t, v) in s.values.iter().enumerate().take(periods) {
+                                if in_window[t] {
+                                    if let SeriesValue::Money(m) = v {
+                                        values[t] += m.amount;
+                                    }
                                 }
                             }
                         }
                     }
-                }
-                drawn.sort();
-                rows.push(StatementRow {
-                    kind: if is_subtotal { "subtotal" } else { "line" }.to_string(),
-                    label: symbol.to_string(),
-                    depth: d,
-                    display_sign: 1.0,
-                    total: Some(round6(values.iter().sum())),
-                    values: money(&values, results),
-                    streams: drawn,
-                });
-            }
-        }
-        "category" => {
-            // The category tree, from the paths the streams declare.
-            let mut nodes: BTreeSet<String> = BTreeSet::new();
-            for category in stream_categories.values() {
-                let parts: Vec<&str> = category.split('.').collect();
-                for take in 1..=parts.len() {
-                    if (take as u32) <= depth_limit {
-                        nodes.insert(parts[..take].join("."));
-                    }
+                    drawn.sort();
+                    rows.push(StatementRow {
+                        kind: if is_subtotal { "subtotal" } else { "line" }.to_string(),
+                        label: symbol.to_string(),
+                        depth: d,
+                        display_sign: 1.0,
+                        total: Some(round6(values.iter().sum())),
+                        values: money(&values, results),
+                        streams: drawn,
+                    });
                 }
             }
-            let ordered: Vec<String> = nodes.iter().cloned().collect();
-            for node in &ordered {
-                let d = node.matches('.').count() as u32;
-                let is_subtotal = ordered
-                    .iter()
-                    .any(|other| other != node && other.starts_with(&format!("{node}.")));
-                let mut acc = vec![0.0_f64; periods];
-                let mut drawn: Vec<String> = Vec::new();
-                for key in cash_keys {
-                    let name = key
-                        .strip_prefix("stream.")
-                        .or_else(|| key.strip_prefix("option."))
-                        .unwrap_or(key);
-                    let under = stream_categories
-                        .get(name)
-                        .is_some_and(|c| c == node || c.starts_with(&format!("{node}.")));
-                    if !under {
-                        continue;
+            "category" => {
+                // The category tree, from the paths the streams declare.
+                let mut nodes: BTreeSet<String> = BTreeSet::new();
+                for category in stream_categories.values() {
+                    let parts: Vec<&str> = category.split('.').collect();
+                    for take in 1..=parts.len() {
+                        if (take as u32) <= depth_limit {
+                            nodes.insert(parts[..take].join("."));
+                        }
                     }
-                    if !is_subtotal {
-                        claimed.insert((*key).clone());
-                        drawn.push((*key).clone());
-                    }
-                    if let Some(s) = series.get(*key) {
-                        for (t, v) in s.values.iter().enumerate().take(periods) {
-                            if in_window[t] {
-                                if let SeriesValue::Money(m) = v {
-                                    acc[t] += m.amount;
+                }
+                let ordered: Vec<String> = nodes.iter().cloned().collect();
+                for node in &ordered {
+                    let d = node.matches('.').count() as u32;
+                    let is_subtotal = ordered
+                        .iter()
+                        .any(|other| other != node && other.starts_with(&format!("{node}.")));
+                    let mut acc = vec![0.0_f64; periods];
+                    let mut drawn: Vec<String> = Vec::new();
+                    for key in cash_keys {
+                        let name = key
+                            .strip_prefix("stream.")
+                            .or_else(|| key.strip_prefix("option."))
+                            .unwrap_or(key);
+                        let under = stream_categories
+                            .get(name)
+                            .is_some_and(|c| c == node || c.starts_with(&format!("{node}.")));
+                        if !under {
+                            continue;
+                        }
+                        if !is_subtotal {
+                            claimed.insert((*key).clone());
+                            drawn.push((*key).clone());
+                        }
+                        if let Some(s) = series.get(*key) {
+                            for (t, v) in s.values.iter().enumerate().take(periods) {
+                                if in_window[t] {
+                                    if let SeriesValue::Money(m) = v {
+                                        acc[t] += m.amount;
+                                    }
                                 }
                             }
                         }
                     }
+                    drawn.sort();
+                    rows.push(StatementRow {
+                        kind: if is_subtotal { "subtotal" } else { "line" }.to_string(),
+                        label: node.clone(),
+                        depth: d,
+                        display_sign: 1.0,
+                        total: Some(round6(acc.iter().sum())),
+                        values: money(&acc, results),
+                        streams: drawn,
+                    });
                 }
-                drawn.sort();
-                rows.push(StatementRow {
-                    kind: if is_subtotal { "subtotal" } else { "line" }.to_string(),
-                    label: node.clone(),
-                    depth: d,
-                    display_sign: 1.0,
-                    total: Some(round6(acc.iter().sum())),
-                    values: money(&acc, results),
-                    streams: drawn,
-                });
             }
-        }
-        other => {
-            diagnostics.push(StatementDiagnostic {
-                code: "W3503_STATEMENT_UNKNOWN_STRUCTURE".to_string(),
-                message: format!(
-                    "Statement '{}' asks for structure '{other}', which this engine cannot \
+            other => {
+                diagnostics.push(StatementDiagnostic {
+                    code: "W3503_STATEMENT_UNKNOWN_STRUCTURE".to_string(),
+                    message: format!(
+                        "Statement '{}' asks for structure '{other}', which this engine cannot \
                      build. Known structures: entity, category.",
-                    spec.name
-                ),
-            });
+                        spec.name
+                    ),
+                });
+            }
         }
     }
 
@@ -858,6 +988,7 @@ pub struct ModelStatement {
     pub name: String,
     #[serde(default)]
     pub label: Option<String>,
+    #[serde(default)]
     pub structure: String,
     #[serde(default)]
     pub depth: Option<u32>,
@@ -867,6 +998,32 @@ pub struct ModelStatement {
     pub slice: Option<String>,
     #[serde(default)]
     pub metrics: Vec<String>,
+    #[serde(default)]
+    pub rows: Vec<ModelStatementRow>,
+}
+
+/// One authored row, as the IR carries it.
+#[derive(Debug, Clone, serde::Deserialize)]
+pub struct ModelStatementRow {
+    pub kind: String,
+    #[serde(default)]
+    pub label: String,
+    #[serde(default)]
+    pub depth: u32,
+    #[serde(default)]
+    pub categories: Vec<String>,
+    #[serde(default)]
+    pub streams: Vec<String>,
+    #[serde(default)]
+    pub slice: Option<String>,
+    #[serde(default)]
+    pub entity: Option<String>,
+    #[serde(default)]
+    pub numerator: Option<String>,
+    #[serde(default)]
+    pub denominator: Option<String>,
+    #[serde(default)]
+    pub display: Option<String>,
 }
 
 /// The model statements an IR carries, if any.

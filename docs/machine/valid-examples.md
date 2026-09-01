@@ -4,7 +4,7 @@
 
 CFDL 0.8.0. Every model below compiles, and its IR and
 results are byte-asserted against goldens in CI (`fixtures/valid/`,
-143 models.
+144 models.
 
 `gold/ir/`, `gold/results/`). Each is single-purpose: the directory name
 says what it exercises. This is what right looks like — positive few-shot
@@ -5161,6 +5161,76 @@ stream capex.build on entity asset.site outflow currency USD {
   schedule every month from state_enter(asset.site, building) for 6 periods
   amount = 100
   active in state building
+}
+```
+
+## statement_authored_rows
+
+```cfdl
+version 0.1
+model "statement-authored-rows"
+time calendar annual from 2026-01 for 3
+
+// A STATEMENT MAY STATE ITS OWN ROWS.
+//
+// `docs/13` §7.55. A generated statement names a `structure` and a `depth` and
+// the rows follow from the tree, which is right when the tree IS the
+// presentation. A pro forma is not that: its rows carry curated labels, its
+// expenses are shown positive under "Less:", and it has a coverage ratio at the
+// bottom that is a node of no hierarchy at all.
+//
+// AUTHORED OR GENERATED, NEVER BOTH (`E1369`). A generated statement partitions
+// the cash by construction; an authored one partitions it by the author's care.
+// Mixed, neither holds — an authored line beside generated rows would claim
+// streams the generated rows already claimed, and the bottom line would
+// double-count.
+//
+// THE DISPLAY SIGN NEVER CHANGES WHAT IS SUMMED. `values` carries the signed
+// amount, so a consumer that ignores `display_sign` still adds up correctly;
+// the sign is how a reader is shown the number, not what it is.
+//
+// A RATIO DIVIDES TWO DECLARED SLICES. A slice is already a named selection
+// with a per-period net, so a ratio needs no row identifiers — and a coverage
+// ratio in a period with no debt service publishes `null`, not zero, which is
+// the rule a pack ratio already follows.
+
+entity asset property : Asset.Financial
+
+stream ops.rent on entity asset.property inflow currency USD {
+  schedule every year from 2026-01 to 2028-01
+  category operating.revenue.base_rent
+  amount = 1000
+}
+
+stream ops.opex on entity asset.property outflow currency USD {
+  schedule every year from 2026-01 to 2028-01
+  category operating.expense.other
+  amount = 300
+}
+
+stream fin.debt_service on entity asset.property outflow currency USD {
+  schedule every year from 2026-01 to 2028-01
+  category financing.debt.service
+  amount = 400
+}
+
+slice noi           { category "operating.*" }
+slice debt_service  { category "financing.debt.service" }
+
+statement operating {
+  label "Operating statement"
+
+  line     "Base rental revenue"    { category "operating.revenue.base_rent" }
+  line     "Less: operating costs"  { category "operating.expense.*" display positive }
+  subtotal "Net operating income"   { category "operating.*" depth 0 }
+  spacer
+  line     "Debt service"           { slice debt_service display positive }
+  // DEBT SERVICE IS STORED NEGATIVE, because an outflow is negative cash, so
+  // NOI over it is arithmetically -1.75. No practitioner writes a coverage
+  // ratio negative. `display` flips how the number is SHOWN and leaves
+  // `values` signed, which is the same rule every other row follows: a
+  // consumer that ignores the display sign still reads the arithmetic.
+  ratio    "DSCR"                   { of noi to debt_service display positive }
 }
 ```
 

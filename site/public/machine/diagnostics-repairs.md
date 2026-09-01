@@ -11,7 +11,7 @@ Diagnostics are the repair signal: read the `code`, `message`, `span`, and
 `hint`, change the model, recompile. The catalog is how an agent learns what
 each code looks like in the flesh before it meets one.
 
-**Coverage:** 211 codes in the docs/08 §7 register; 97 exemplified here; 70 of 102 examples carry a recorded fix.
+**Coverage:** 212 codes in the docs/08 §7 register; 98 exemplified here; 70 of 103 examples carry a recorded fix.
 
 ## active_in_unknown_state — E1332_UNKNOWN_ACTIVE_STATE
 
@@ -3393,6 +3393,44 @@ slice s { type Contract.Imaginary }
 
 - `E1363_SLICE_UNKNOWN_TYPE` (error): Slice 's' selects type 'Contract.Imaginary', which the active ontology does not define.
   - hint: Known contract types: Contract.Construction, Contract.Debt, Contract.Derivative, Contract.Insurance, Contract.Lease, Contract.Offtake, Contract.Option, Contract.Purchase, Contract.Sale, Contract.Service, Contract.Tax.
+
+Fix: not yet recorded.
+
+## statement_authored_and_generated — E1369_STATEMENT_AUTHORED_AND_GENERATED
+
+Failing example:
+
+```cfdl
+version 0.1
+model "statement-authored-and-generated"
+time calendar annual from 2026-01 for 2
+
+// A STATEMENT IS AUTHORED OR GENERATED, NEVER BOTH.
+//
+// `docs/13` §7.55. A generated statement partitions the cash by construction —
+// a hierarchy covers its own tree, so the lines always add to the whole. An
+// authored statement partitions it by the author's care. Mixed, neither
+// guarantee holds: the authored line below claims the same stream the
+// generated rows already claimed, so the bottom line would count it twice and
+// the reconciliation that makes a statement trustworthy would become noise.
+
+entity asset co : Asset.Financial
+
+stream ops.rent on entity asset.co inflow currency USD {
+  schedule every year from 2026-01 to 2027-01
+  category operating.revenue.base_rent
+  amount = 100
+}
+
+statement both {
+  structure entity
+  depth     2
+  line "Rent" { category "operating.revenue.base_rent" }
+}
+```
+
+- `E1369_STATEMENT_AUTHORED_AND_GENERATED` (error): Statement 'both' states both a structure and its own rows.
+  - hint: A statement either names a `structure` and lets the rows follow from the tree, or states its rows. Remove one.
 
 Fix: not yet recorded.
 

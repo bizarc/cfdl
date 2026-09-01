@@ -603,6 +603,10 @@ struct IrStatement {
     name: String,
     #[serde(skip_serializing_if = "Option::is_none")]
     label: Option<String>,
+    /// Absent for an AUTHORED statement, which states rows instead. Omitted
+    /// rather than emitted empty: an empty string is a value that means "no
+    /// value", which a consumer has to know to disregard.
+    #[serde(skip_serializing_if = "String::is_empty")]
     structure: String,
     #[serde(skip_serializing_if = "Option::is_none")]
     depth: Option<u32>,
@@ -612,7 +616,34 @@ struct IrStatement {
     slice: Option<String>,
     #[serde(skip_serializing_if = "Vec::is_empty")]
     metrics: Vec<String>,
+    /// Authored rows, for a statement that enumerates rather than generates.
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    rows: Vec<IrStatementRow>,
     provenance: IrNodeProvenance,
+}
+
+/// One authored row.
+#[derive(Debug, Serialize)]
+struct IrStatementRow {
+    kind: String,
+    #[serde(skip_serializing_if = "String::is_empty")]
+    label: String,
+    #[serde(skip_serializing_if = "is_zero_u32")]
+    depth: u32,
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    categories: Vec<String>,
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    streams: Vec<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    slice: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    entity: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    numerator: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    denominator: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    display: Option<String>,
 }
 
 #[derive(Debug, Serialize)]
@@ -4149,6 +4180,22 @@ fn build_ir(
                 grain: statement_stmt.grain.clone(),
                 slice: statement_stmt.slice.clone(),
                 metrics: statement_stmt.metrics.clone(),
+                rows: statement_stmt
+                    .rows
+                    .iter()
+                    .map(|r| IrStatementRow {
+                        kind: r.kind.clone(),
+                        label: r.label.clone(),
+                        depth: r.depth,
+                        categories: r.categories.clone(),
+                        streams: r.streams.clone(),
+                        slice: r.slice.clone(),
+                        entity: r.entity.clone(),
+                        numerator: r.ratio_of.as_ref().map(|(n, _)| n.clone()),
+                        denominator: r.ratio_of.as_ref().map(|(_, d)| d.clone()),
+                        display: r.display.clone(),
+                    })
+                    .collect(),
                 provenance: IrNodeProvenance {
                     source_file: source_stmt.file.clone(),
                     source_span: map_span(statement_stmt.span),
@@ -4515,6 +4562,67 @@ fn check_statements(
         let mut push = |code: &str, message: String, hint: String| {
             found.push((code.to_string(), message, hint));
         };
+        // AUTHORED OR GENERATED, NEVER BOTH. A generated statement partitions
+        // the cash by construction; an authored one partitions it by the
+        // author's care. Mixed, neither holds: an authored `line` beside
+        // generated rows claims streams the generated rows already claimed, so
+        // the bottom line double-counts and the reconciliation that makes a
+        // statement trustworthy becomes noise.
+        if !statement.rows.is_empty() && !statement.structure.is_empty() {
+            push(
+                "E1369_STATEMENT_AUTHORED_AND_GENERATED",
+                format!(
+                    "Statement '{}' states both a structure and its own rows.",
+                    statement.name
+                ),
+                "A statement either names a `structure` and lets the rows follow from the tree, or states its rows. Remove one."
+                    .to_string(),
+            );
+        } else if statement.rows.is_empty() && statement.structure.is_empty() {
+            push(
+                "E1369_STATEMENT_AUTHORED_AND_GENERATED",
+                format!(
+                    "Statement '{}' states neither a structure nor any rows, so it would render nothing.",
+                    statement.name
+                ),
+                "Name a `structure` to generate rows from a hierarchy, or state rows.".to_string(),
+            );
+        }
+        if !statement.rows.is_empty() {
+            // An authored row draws from a declared slice; a ratio divides two.
+            for row in &statement.rows {
+                for referenced in [&row.slice, &row.numerator, &row.denominator]
+                    .into_iter()
+                    .flatten()
+                {
+                    if !slice_names.contains(referenced.as_str()) {
+                        push(
+                            "E1368_STATEMENT_UNKNOWN_REFERENCE",
+                            format!(
+                                "Statement '{}' has a row drawing slice '{referenced}', which this model does not declare.",
+                                statement.name
+                            ),
+                            "A row draws a declared slice; check the spelling.".to_string(),
+                        );
+                    }
+                }
+            }
+            // A generated statement's structure is checked below; an authored
+            // one has none to check.
+            for (code, message, hint) in found {
+                diagnostics.push(Diagnostic {
+                    code,
+                    severity: "error".to_string(),
+                    message,
+                    file: file.clone(),
+                    span: span.clone(),
+                    path: None,
+                    hint: Some(hint),
+                    notes: vec![],
+                });
+            }
+            continue;
+        }
         if !STATEMENT_STRUCTURES.contains(&statement.structure.as_str()) {
             push(
                 "E1367_STATEMENT_UNKNOWN_STRUCTURE",

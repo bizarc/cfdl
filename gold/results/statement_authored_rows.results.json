@@ -1,0 +1,399 @@
+{
+  "results_version": "0.12",
+  "model_hash": "0dea02571c9be13e162b2a9dbaeaf642ffee247766d93466b5990f7a719ec733",
+  "ledger_hash": "37849d2e6b42e13fe36153ebb28731f5fb59e150cfbd7b898f7ee56d4cb3e730",
+  "engine": {
+    "name": "cfdl-engine",
+    "version": "0.8.0"
+  },
+  "warnings": [],
+  "deterministic": {
+    "status": "ok",
+    "metrics": {
+      "entity.asset.property.total": {
+        "amount": 900.0,
+        "currency": "USD"
+      },
+      "model.npv": {
+        "amount": 746.055597,
+        "currency": "USD"
+      },
+      "model.total": {
+        "amount": 900.0,
+        "currency": "USD"
+      },
+      "model.wal_years": 2.0,
+      "run.annual_discount_rate": 0.1,
+      "run.periods_per_year": 1.0,
+      "stream.fin.debt_service.total": {
+        "amount": -1200.0,
+        "currency": "USD"
+      },
+      "stream.ops.opex.total": {
+        "amount": -900.0,
+        "currency": "USD"
+      },
+      "stream.ops.rent.total": {
+        "amount": 3000.0,
+        "currency": "USD"
+      }
+    },
+    "series": {
+      "entity.asset.property.net_cash_flow": {
+        "index": {
+          "calendar": "annual",
+          "start": "2026-01-01",
+          "periods": 3
+        },
+        "values": [
+          {
+            "amount": 300.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 300.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 300.0,
+            "currency": "USD"
+          }
+        ]
+      },
+      "model.net_cash_flow": {
+        "index": {
+          "calendar": "annual",
+          "start": "2026-01-01",
+          "periods": 3
+        },
+        "values": [
+          {
+            "amount": 300.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 300.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 300.0,
+            "currency": "USD"
+          }
+        ]
+      },
+      "stream.fin.debt_service": {
+        "index": {
+          "calendar": "annual",
+          "start": "2026-01-01",
+          "periods": 3
+        },
+        "offset": 1.0,
+        "entity": "asset.property",
+        "category": "financing.debt.service",
+        "values": [
+          {
+            "amount": -400.0,
+            "currency": "USD"
+          },
+          {
+            "amount": -400.0,
+            "currency": "USD"
+          },
+          {
+            "amount": -400.0,
+            "currency": "USD"
+          }
+        ]
+      },
+      "stream.ops.opex": {
+        "index": {
+          "calendar": "annual",
+          "start": "2026-01-01",
+          "periods": 3
+        },
+        "offset": 1.0,
+        "entity": "asset.property",
+        "category": "operating.expense.other",
+        "values": [
+          {
+            "amount": -300.0,
+            "currency": "USD"
+          },
+          {
+            "amount": -300.0,
+            "currency": "USD"
+          },
+          {
+            "amount": -300.0,
+            "currency": "USD"
+          }
+        ]
+      },
+      "stream.ops.rent": {
+        "index": {
+          "calendar": "annual",
+          "start": "2026-01-01",
+          "periods": 3
+        },
+        "offset": 1.0,
+        "entity": "asset.property",
+        "category": "operating.revenue.base_rent",
+        "values": [
+          {
+            "amount": 1000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 1000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 1000.0,
+            "currency": "USD"
+          }
+        ]
+      }
+    }
+  },
+  "scenarios": {
+    "status": "not_run",
+    "summaries": []
+  },
+  "monte_carlo": {
+    "status": "not_run",
+    "trials": 1,
+    "seed": 0,
+    "metrics": {},
+    "trial_summaries": []
+  },
+  "statements": {
+    "statements": [
+      {
+        "id": "operating",
+        "label": "Operating statement",
+        "default": false,
+        "grain": {
+          "calendar": "annual",
+          "start": "2026-01-01",
+          "labels": [
+            "2026",
+            "2027",
+            "2028"
+          ]
+        },
+        "rows": [
+          {
+            "kind": "line",
+            "label": "Base rental revenue",
+            "depth": 0,
+            "display_sign": 1.0,
+            "values": [
+              {
+                "amount": 1000.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 1000.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 1000.0,
+                "currency": "USD"
+              }
+            ],
+            "total": 3000.0,
+            "streams": [
+              "stream.ops.rent"
+            ]
+          },
+          {
+            "kind": "line",
+            "label": "Less: operating costs",
+            "depth": 0,
+            "display_sign": -1.0,
+            "values": [
+              {
+                "amount": -300.0,
+                "currency": "USD"
+              },
+              {
+                "amount": -300.0,
+                "currency": "USD"
+              },
+              {
+                "amount": -300.0,
+                "currency": "USD"
+              }
+            ],
+            "total": -900.0,
+            "streams": [
+              "stream.ops.opex"
+            ]
+          },
+          {
+            "kind": "subtotal",
+            "label": "Net operating income",
+            "depth": 0,
+            "display_sign": 1.0,
+            "values": [
+              {
+                "amount": 700.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 700.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 700.0,
+                "currency": "USD"
+              }
+            ],
+            "total": 2100.0
+          },
+          {
+            "kind": "spacer",
+            "depth": 0,
+            "display_sign": 1.0
+          },
+          {
+            "kind": "line",
+            "label": "Debt service",
+            "depth": 0,
+            "display_sign": -1.0,
+            "values": [
+              {
+                "amount": -400.0,
+                "currency": "USD"
+              },
+              {
+                "amount": -400.0,
+                "currency": "USD"
+              },
+              {
+                "amount": -400.0,
+                "currency": "USD"
+              }
+            ],
+            "total": -1200.0,
+            "streams": [
+              "stream.fin.debt_service"
+            ]
+          },
+          {
+            "kind": "ratio",
+            "label": "DSCR",
+            "depth": 0,
+            "display_sign": -1.0,
+            "values": [
+              -1.75,
+              -1.75,
+              -1.75
+            ]
+          }
+        ],
+        "reconciliation": {
+          "bottom_line": 900.0,
+          "model_total": 900.0,
+          "residual": 0.0
+        }
+      }
+    ]
+  },
+  "graph": {
+    "entities": [
+      {
+        "symbol": "asset.property",
+        "family": "asset",
+        "type": "Asset.Financial"
+      }
+    ]
+  },
+  "slices": [
+    {
+      "id": "noi",
+      "selection": {
+        "categories": [
+          "operating.*"
+        ]
+      },
+      "streams": [
+        "ops.opex",
+        "ops.rent"
+      ],
+      "net": {
+        "index": {
+          "calendar": "annual",
+          "start": "2026-01-01",
+          "periods": 3
+        },
+        "values": [
+          {
+            "amount": 700.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 700.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 700.0,
+            "currency": "USD"
+          }
+        ]
+      },
+      "metrics": {
+        "npv": {
+          "amount": 1740.796394,
+          "currency": "USD"
+        },
+        "total": {
+          "amount": 2100.0,
+          "currency": "USD"
+        }
+      }
+    },
+    {
+      "id": "debt_service",
+      "selection": {
+        "categories": [
+          "financing.debt.service"
+        ]
+      },
+      "streams": [
+        "fin.debt_service"
+      ],
+      "net": {
+        "index": {
+          "calendar": "annual",
+          "start": "2026-01-01",
+          "periods": 3
+        },
+        "values": [
+          {
+            "amount": -400.0,
+            "currency": "USD"
+          },
+          {
+            "amount": -400.0,
+            "currency": "USD"
+          },
+          {
+            "amount": -400.0,
+            "currency": "USD"
+          }
+        ]
+      },
+      "metrics": {
+        "npv": {
+          "amount": -994.740796,
+          "currency": "USD"
+        },
+        "total": {
+          "amount": -1200.0,
+          "currency": "USD"
+        }
+      }
+    }
+  ]
+}

@@ -1446,6 +1446,40 @@ Rules:
   one number at the horizon and every row is a series, so the figures sit in
   their own map rather than as a row kind. An undeclared slice or metric is
   refused (`E1368`).
+**A statement may state its own rows instead.** A generated statement is right
+when the tree IS the presentation; a pro forma is not that, because its rows
+carry curated labels, its expenses are shown positive under "Less:", and it
+ends in a coverage ratio that is a node of no hierarchy.
+
+```cfdl
+statement operating {
+  label    "Operating statement"
+  line     "Base rental revenue"   { category "operating.revenue.base_rent" }
+  line     "Less: operating costs" { category "operating.expense.*" display positive }
+  subtotal "Net operating income"  { category "operating.*" }
+  spacer
+  ratio    "DSCR"                  { of noi to debt_service display positive }
+}
+```
+
+- A statement is AUTHORED OR GENERATED, never both, and never neither
+  (`E1369`). A generated statement partitions the cash by construction; an
+  authored one partitions it by the author's care. Mixed, neither holds.
+- A row draws from `category`, `stream`, `slice` or `entity`. A `subtotal` row
+  folds rows stated elsewhere and CLAIMS nothing, so it never doubles the
+  bottom line.
+- A `ratio` divides two declared SLICES — a slice is already a named selection
+  with a per-period net, so a ratio needs no row identifiers. A zero
+  denominator publishes `null`, not zero. A ratio carries no total, because
+  summing one means nothing.
+- `display` says how to RENDER the sign and never what is summed: `values`
+  carries the signed amount, so a consumer that ignores it still adds up
+  correctly. An outflow is negative cash, so a coverage ratio is arithmetically
+  negative and `display positive` is how it is shown.
+- A row's `depth` is an indent. The STATEMENT's `depth` is a level of
+  aggregation — an authored row states where it sits, a generated one is told
+  by the tree.
+
 - Every clause word is CONTEXTUAL; only `statement` is reserved.
 - **A statement is a VIEW.** It changes no value and no identity: the compiler
   files it under the document's `views`, which `model_hash` is taken over
@@ -1748,7 +1782,24 @@ statement_clause = "label" STRING
                  | "depth" NUMBER
                  | "grain" ( "annual" | IDENT )
                  | "slice" IDENT
-                 | "metrics" IDENT { "," IDENT } ;
+                 | "metrics" IDENT { "," IDENT }
+                 | statement_row ;
+
+(* An AUTHORED row, for a statement that enumerates rather than generates.
+   A statement does one or the other, never both (E1369). Braces are what
+   make `slice` the row's SOURCE here and the statement's FILTER outside. A
+   ratio divides two declared slices, because a slice is already a named
+   selection with a per-period net. *)
+statement_row   = ( "line" | "subtotal" | "ratio" ) STRING
+                    "{" row_clause* "}"
+                | "spacer" ;
+row_clause      = "category" STRING
+                | "stream" STRING
+                | "slice" IDENT
+                | "entity" QNAME
+                | "of" IDENT "to" IDENT
+                | "display" IDENT
+                | "depth" NUMBER ;
 slice_clause    = "entity" QNAME
                 | "type" ( QNAME | IDENT )
                 | "category" STRING
@@ -4429,10 +4480,9 @@ against it by `make ir-schema`.
       "additionalProperties": false,
       "required": [
         "name",
-        "structure",
         "provenance"
       ],
-      "description": "A declared presentation: which hierarchy to show, and to what level. It carries no rows — the rows are generated from the structure after the run, and depth decides which are shown, so an interior node is a subtotal by virtue of where it sits.",
+      "description": "A declared presentation: which hierarchy to show, and to what level. It carries no rows — the rows are generated from the structure after the run, and depth decides which are shown, so an interior node is a subtotal by virtue of where it sits. A statement is authored or generated, never both and never neither (E1369): a generated statement partitions the cash by construction, an authored one by the author's care, and mixed neither guarantee holds.",
       "properties": {
         "name": {
           "type": "string"
@@ -4469,8 +4519,29 @@ against it by `make ir-schema`.
         },
         "provenance": {
           "$ref": "#/$defs/NodeProvenance"
+        },
+        "rows": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/StatementRow"
+          },
+          "description": "Authored rows, for a statement that enumerates rather than generates. A statement does one or the other, never both (E1369): a generated statement partitions the cash by construction, an authored one by the author's care."
         }
-      }
+      },
+      "oneOf": [
+        {
+          "required": [
+            "structure"
+          ],
+          "description": "A GENERATED statement: the rows follow from the named hierarchy, down to `depth`."
+        },
+        {
+          "required": [
+            "rows"
+          ],
+          "description": "An AUTHORED statement: the rows are stated, with their own labels and display signs."
+        }
+      ]
     },
     "Views": {
       "type": "object",
@@ -4488,6 +4559,63 @@ against it by `make ir-schema`.
           "items": {
             "$ref": "#/$defs/Statement"
           }
+        }
+      }
+    },
+    "StatementRow": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind"
+      ],
+      "properties": {
+        "kind": {
+          "type": "string",
+          "enum": [
+            "line",
+            "subtotal",
+            "ratio",
+            "spacer"
+          ]
+        },
+        "label": {
+          "type": "string"
+        },
+        "depth": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Indent, for presentation. Distinct from the statement's own depth, which is a level of aggregation."
+        },
+        "categories": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "streams": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "slice": {
+          "type": "string",
+          "description": "A declared slice whose streams the row draws."
+        },
+        "entity": {
+          "type": "string"
+        },
+        "numerator": {
+          "type": "string",
+          "description": "ratio rows: the declared slice on top."
+        },
+        "denominator": {
+          "type": "string",
+          "description": "ratio rows: the declared slice underneath. A zero denominator publishes null, not zero."
+        },
+        "display": {
+          "type": "string",
+          "description": "How to RENDER the sign. Never changes what is summed: values carries the signed amount, so a consumer ignoring this still adds up."
         }
       }
     }
@@ -7155,6 +7283,7 @@ Fields that move:
 - `E1364_SLICE_CATEGORY_ROOT` — a slice's category selector is not rooted in operating, investing or financing. A selector that could never match anything is a typo, not a choice.
 - `E1366_DUPLICATE_STATEMENT` — two statements share a name. Same rule as a metric and a slice: one name, one presentation.
 - `E1367_STATEMENT_UNKNOWN_STRUCTURE` — a statement presents a hierarchy the engine does not build, or asks for a category hierarchy in a model whose streams declare no category. Either would render as one residual row and nothing else — technically complete and useless — so it is refused rather than shipped empty. Known structures: `entity` (the `part of` tree the results graph publishes) and `category` (the dotted path). `docs/13` §7.55.
+- `E1369_STATEMENT_AUTHORED_AND_GENERATED` — a statement states both a `structure` and its own rows, or neither. A generated statement partitions the cash by construction, because a hierarchy covers its own tree; an authored one partitions it by the author's care. Mixed, neither guarantee holds — an authored row claims streams the generated rows already claimed, so the bottom line double-counts and the reconciliation that makes a statement trustworthy becomes noise. A statement stating neither would render nothing. `docs/13` §7.55.
 - `E1368_STATEMENT_UNKNOWN_REFERENCE` — a statement filters by a slice, or shows a metric, that the model does not declare. A presentation that silently shows nothing is the failure §7.55 exists to end.
 - `E1365_METRIC_UNKNOWN_SERIES` — a metric folds a series name this model does not publish. `series_sum`/`series_avg` return 0.0 for a selector that matches nothing, which is right for a `.*` selector and wrong for a name spelled out in full; in a metric it is worse than wrong, because a fold publishes ONE number under a name the author chose, with no series beside it to show the zero (`docs/13` §7.85). A metric may fold any series the valuation plane publishes: a stream by its own name or as `stream.<name>`, a waterfall step, `entity.<symbol>.net_cash_flow`, `account.<name>`, an entity field, a money subtotal, or `model.net_cash_flow`. A RATIO subtotal is refused with its own hint — its undefined periods publish as null rather than zero, and what a fold should do with null has not been decided.
 - `E1304_UNRESOLVED_OPTION_REF` — an event exercises an option that is not declared. Checked in the compiler rather than the resolver, because options are not in the symbol tables.
