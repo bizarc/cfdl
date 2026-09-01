@@ -115,6 +115,19 @@ statement operating {
 }
 ```
 
+A row may instead draw a **published series** — a fold the run already
+computed, such as a pack subtotal or the model's own net:
+
+```cfdl
+  subtotal "Net cash flow (memo)" { series "model.net_cash_flow" }
+```
+
+A series row presents that fold beside the claimed rows and claims nothing
+itself: its figure stays out of the bottom line, so a memo of `domain.cre.noi`
+never double-counts the cash it summarizes. A claim clause beside a `series`
+is refused (`E1370`), and a key the run does not publish renders no values
+rather than a column of zeros.
+
 A statement is authored or generated, never both (`E1369`). A generated
 statement may also carry a `slice` — an orthogonal filter, so any structure
 can be shown for any selection — and `metrics`, naming declared metrics to

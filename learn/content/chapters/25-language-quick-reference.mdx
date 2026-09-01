@@ -171,6 +171,9 @@ statement <name> {                           -- authored: the rows are stated
   line     "<label>"  { category "<sel>" | stream "<sel>" | slice <name>
                         | entity <family>.<name> [display positive] [depth <N>] }
   subtotal "<label>"  { category "<sel>" }   -- folds rows stated elsewhere
+  subtotal "<label>"  { series "<key>" }     -- presents a published fold; claims
+                                             -- nothing, out of the bottom line;
+                                             -- a claim beside it is E1370
   spacer
   ratio    "<label>"  { of <slice> to <slice> display positive }
 }
