@@ -62,50 +62,12 @@ pub fn run(ir_json: &str, config_json: Option<String>, pack: Option<String>) -> 
         Ok(results) => results,
         Err(err) => return json!({"ok": false, "error": err.to_string()}).to_string(),
     };
-    if let Some(pack_name) = pack.filter(|p| !p.is_empty()) {
-        let registry = cfdl_pack::PackRegistry::load_embedded().ok();
-        let specs = registry
-            .as_ref()
-            .map(|reg| reg.metric_specs(&pack_name))
-            .unwrap_or_default();
-        results.domain_metrics = cfdl_metrics::compute(&pack_name, &specs, &results);
-        // Statements read a stream's CATEGORY, which lives on the IR rather
-        // than in results. Parsing it back here keeps the results document from
-        // carrying a field only this consumer wants.
-        let subtotal_specs = registry
-            .as_ref()
-            .map(|reg| reg.subtotal_specs(&pack_name))
-            .unwrap_or_default();
-        let statement_specs = registry
-            .as_ref()
-            .map(|reg| reg.statement_specs(&pack_name))
-            .unwrap_or_default();
-        // Parsed once: the statement needs both what each stream is and which
-        // series are waterfall steps rather than cash.
-        let ir_value = serde_json::from_str::<serde_json::Value>(ir_json).ok();
-        let categories = ir_value
-            .as_ref()
-            .map(cfdl_statement::stream_categories)
-            .unwrap_or_default();
-        let waterfall_series = ir_value
-            .as_ref()
-            .map(cfdl_statement::waterfall_series)
-            .unwrap_or_default();
-        let recommended = registry
-            .as_ref()
-            .and_then(|reg| reg.pack(&pack_name))
-            .map(|pack| pack.manifest.categories.clone())
-            .unwrap_or_default();
-        results.statements = cfdl_statement::compute(
-            &pack_name,
-            &statement_specs,
-            &subtotal_specs,
-            &categories,
-            &waterfall_series,
-            &recommended,
-            &results,
-        );
-    }
+    // ONE FACADE, NOT A COPY — see the same note in `cfdl-py`. Enrichment runs
+    // with or without a pack, because a pack-less model is exactly the case a
+    // model-declared statement exists for.
+    let registry = cfdl_pack::PackRegistry::load_embedded().ok();
+    let pack_name = pack.filter(|p| !p.is_empty()).unwrap_or_default();
+    cfdl_run::enrich_results(&mut results, Some(ir_json), &pack_name, registry.as_ref());
     match serde_json::to_value(&results) {
         Ok(value) => json!({"ok": true, "results": value}).to_string(),
         Err(err) => json!({"ok": false, "error": err.to_string()}).to_string(),

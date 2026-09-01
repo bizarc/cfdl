@@ -1397,6 +1397,13 @@ See the Pack Interface specification for details on how packs define output cate
 
 ---
 
+- **A slice is a VIEW, and changes no identity.** It filters a completed
+  result; it produces no cash. The compiler files it under the document's
+  `views`, which `model_hash` is taken over WITHOUT — so two users who look at
+  identical results differently share a model hash, and a slice moves neither
+  hash. A declared METRIC is not a view: it is a figure the model claims, so it
+  belongs to the model and does move `model_hash`.
+
 ### 15.5 Statements (normative)
 
 A model MAY declare a statement — how its results are organized. A statement
@@ -1440,7 +1447,10 @@ Rules:
   their own map rather than as a row kind. An undeclared slice or metric is
   refused (`E1368`).
 - Every clause word is CONTEXTUAL; only `statement` is reserved.
-- A statement changes no value, so it does not move `ledger_hash`.
+- **A statement is a VIEW.** It changes no value and no identity: the compiler
+  files it under the document's `views`, which `model_hash` is taken over
+  without, so adding a statement moves neither hash. Views may be declared
+  beside the streams they present, or kept in their own file and `import`ed.
 
 A pack declares its own statements the same way, and both render through one
 evaluator.
@@ -2739,14 +2749,6 @@ against it by `make ir-schema`.
       },
       "description": "Reserved. Metrics are computed at run time by the engine and by the active pack, so a compile output does not carry them; no compiler emits this field."
     },
-    "slices": {
-      "type": "array",
-      "minItems": 0,
-      "items": {
-        "$ref": "#/$defs/Slice"
-      },
-      "description": "Declared slices — named, deliberately partial selections (docs/01 §15.4). Clause kinds intersect, values within a kind union, excepts subtract. `type_streams` is the compiler's expansion of the `type` clauses, resolved at compile because only the compiler holds the ontology the transitive match walks. Omitted when a model declares none."
-    },
     "waterfalls": {
       "type": "array",
       "minItems": 0,
@@ -2825,12 +2827,9 @@ against it by `make ir-schema`.
     "provenance": {
       "$ref": "#/$defs/Provenance"
     },
-    "statements": {
-      "type": "array",
-      "items": {
-        "$ref": "#/$defs/Statement"
-      },
-      "description": "Declared presentations (docs/13 §7.55)."
+    "views": {
+      "$ref": "#/$defs/Views",
+      "description": "Lenses on a completed result — never part of the model. `model_hash` is taken over this document WITHOUT `views`, so adding a slice or a statement changes no identity: two users who look at identical results differently are running the same model. A declared metric is not here; it is a figure the model claims."
     }
   },
   "$defs": {
@@ -4472,6 +4471,25 @@ against it by `make ir-schema`.
           "$ref": "#/$defs/NodeProvenance"
         }
       }
+    },
+    "Views": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "Slices filter and statements organize. Anything added here is outside the model's identity by construction.",
+      "properties": {
+        "slices": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Slice"
+          }
+        },
+        "statements": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Statement"
+          }
+        }
+      }
     }
   }
 }
@@ -4516,17 +4534,17 @@ against it by `make results-schema`.
   "properties": {
     "results_version": {
       "type": "string",
-      "const": "0.11",
-      "description": "Schema version of this document. 0.11 adds model-declared statements: `pack` on the statements section is optional, and a statement may carry `metrics`. 0.10 adds `window` to a slice's selection — a reporting bound whose periods are the only ones the slice folds. 0.9 carries every metric a Monte Carlo trial computed into its trial summary, summarises each of them across the trials with the full set of percentiles, and adds `trials` to a metric summary — the count of trials that published that name. 0.8 adds `slices` — declared partial selections with their matched streams, net series and figures, and no reconciliation block by design. 0.7 publishes the model's entity graph (`graph`) and attributes each stream series to its owning entity and category. 0.6 nests an act's own acts under it as `children`. 0.5 added the machine's `transition` journal action. 0.4 added the account journal actions. 0.3 added `ledger_hash`, the optional `inputs` section, and `category` on IR streams."
+      "const": "0.12",
+      "description": "Schema version of this document. 0.12 separates the model from its views: `model_hash` covers the IR without `views` (slices and statements), and `ledger_hash` now covers the journal and transitions beside the series. 0.11 adds model-declared statements: `pack` on the statements section is optional, and a statement may carry `metrics`. 0.10 adds `window` to a slice's selection — a reporting bound whose periods are the only ones the slice folds. 0.9 carries every metric a Monte Carlo trial computed into its trial summary, summarises each of them across the trials with the full set of percentiles, and adds `trials` to a metric summary — the count of trials that published that name. 0.8 adds `slices` — declared partial selections with their matched streams, net series and figures, and no reconciliation block by design. 0.7 publishes the model's entity graph (`graph`) and attributes each stream series to its owning entity and category. 0.6 nests an act's own acts under it as `children`. 0.5 added the machine's `transition` journal action. 0.4 added the account journal actions. 0.3 added `ledger_hash`, the optional `inputs` section, and `category` on IR streams."
     },
     "model_hash": {
       "type": "string",
-      "description": "Hash of canonical IR for traceability",
+      "description": "Identifies the MODEL: a hash of the compiled IR without its `views`. A slice filters and a statement organizes, and neither produces cash, so two users who look at identical results differently are running the same model and share this hash. A declared metric is NOT excluded — it is a figure the model claims.",
       "minLength": 8
     },
     "ledger_hash": {
       "type": "string",
-      "description": "SHA-256 over the canonical form of the deterministic ledger — `deterministic.series` and `deterministic.annual_rollup`. Together with `model_hash` and `engine` this closes the chain: identical inputs on an identical engine must reproduce an identical ledger_hash. It covers the LEDGER, not the metrics: NPV and IRR are derived FROM the ledger, so including them would make the hash move for a reason the ledger did not. It is therefore invariant to the discount rate, which is correct — the ledger is cash before discounting."
+      "description": "Identifies the RESULT: SHA-256 over the canonical form of the ledger — `deterministic.series` and `annual_rollup`, plus the journal and the transitions, because a ledger has journal entries in it and the trace of what the model did belongs to what came out. It covers the LEDGER, not the metrics: NPV and IRR are derived FROM the ledger, so including them would make the hash move for a reason the ledger did not, and `domain.*` folds are excluded on the same argument. It is invariant to the discount rate, which is correct — the ledger is cash before discounting. The RUN CONFIGURATION is deliberately not hashed here: folding it in would give three prepayment speeds over one model three different hashes, with no way to tell whether the cash moved or only a setting, and comparing results across runs is the point."
     },
     "engine": {
       "type": "object",

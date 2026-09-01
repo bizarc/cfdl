@@ -385,12 +385,19 @@ struct Ir {
     /// Omitted when a model declares none, so existing IR is byte-identical.
     #[serde(skip_serializing_if = "Vec::is_empty")]
     metrics: Vec<IrMetric>,
-    #[serde(skip_serializing_if = "Vec::is_empty")]
-    slices: Vec<IrSlice>,
-    /// Declared presentations (`docs/13` §7.55). Omitted when a model declares
-    /// none, so existing IR is byte-identical.
-    #[serde(skip_serializing_if = "Vec::is_empty")]
-    statements: Vec<IrStatement>,
+    /// VIEWS — lenses on a completed result, never part of the model.
+    ///
+    /// A slice filters and a statement organizes; neither produces cash, and
+    /// two users who look at identical results differently are running the
+    /// same model. So they live under their own key and `model_hash` is taken
+    /// over the document WITHOUT it — anything added here is outside the
+    /// model's identity by construction, rather than by a rule someone has to
+    /// remember to extend.
+    ///
+    /// A metric is NOT here. It is a figure the model claims, asserted by
+    /// every benchmark's `expected_metrics.json`, so it stays in the model.
+    #[serde(skip_serializing_if = "IrViews::is_empty")]
+    views: IrViews,
     contracts: Vec<IrContract>,
     streams: Vec<IrStream>,
     /// What each pack-lowered stream consumed, keyed by stream name. Omitted
@@ -568,6 +575,21 @@ struct IrSlice {
     #[serde(skip_serializing_if = "Option::is_none")]
     window: Option<IrDateRange>,
     provenance: IrNodeProvenance,
+}
+
+/// The lenses a model declares over its own results.
+#[derive(Debug, Serialize, Default)]
+struct IrViews {
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    slices: Vec<IrSlice>,
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    statements: Vec<IrStatement>,
+}
+
+impl IrViews {
+    fn is_empty(&self) -> bool {
+        self.slices.is_empty() && self.statements.is_empty()
+    }
 }
 
 /// A declared presentation: which hierarchy, to what level, for what filter.
@@ -4312,8 +4334,10 @@ fn build_ir(
         lifecycles: ir_lifecycles,
         waterfalls: ir_waterfalls,
         metrics: ir_metrics,
-        slices: ir_slices,
-        statements: ir_statements,
+        views: IrViews {
+            slices: ir_slices,
+            statements: ir_statements,
+        },
         contracts: contracts
             .into_iter()
             .map(|(_, contract)| contract)
@@ -4479,10 +4503,10 @@ fn check_statements(
     spans: &BTreeMap<String, (String, cfdl_parser::Span)>,
 ) -> Vec<Diagnostic> {
     let mut diagnostics = Vec::new();
-    let slice_names: BTreeSet<&str> = ir.slices.iter().map(|s| s.name.as_str()).collect();
+    let slice_names: BTreeSet<&str> = ir.views.slices.iter().map(|s| s.name.as_str()).collect();
     let metric_names: BTreeSet<&str> = ir.metrics.iter().map(|m| m.name.as_str()).collect();
     let categorised = ir.streams.iter().any(|s| s.category.is_some());
-    for statement in &ir.statements {
+    for statement in &ir.views.statements {
         let (file, span) = spans
             .get(&statement.name)
             .map(|(f, s)| (Some(f.clone()), Some(map_span(*s))))
