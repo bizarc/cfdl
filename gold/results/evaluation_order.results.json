@@ -1211,6 +1211,90 @@
     "metrics": {},
     "trial_summaries": []
   },
+  "statements": {
+    "statements": [
+      {
+        "id": "by_entity",
+        "label": "Cash by entity",
+        "default": true,
+        "grain": {
+          "calendar": "monthly",
+          "start": "2017-01-01",
+          "labels": [
+            "2017-01",
+            "2017-02",
+            "2017-03",
+            "2017-04"
+          ]
+        },
+        "rows": [
+          {
+            "kind": "line",
+            "label": "Pool",
+            "depth": 0,
+            "display_sign": 1.0,
+            "values": [
+              {
+                "amount": 256281.093912,
+                "currency": "USD"
+              },
+              {
+                "amount": 256281.093912,
+                "currency": "USD"
+              },
+              {
+                "amount": 256281.093911,
+                "currency": "USD"
+              },
+              {
+                "amount": 256281.093911,
+                "currency": "USD"
+              }
+            ],
+            "total": 1025124.375646,
+            "streams": [
+              "stream.credit.pool.interest.one",
+              "stream.credit.pool.penalty.one",
+              "stream.credit.pool.prepay.one",
+              "stream.credit.pool.recoveries.one",
+              "stream.credit.pool.sched_principal.one",
+              "stream.credit.pool.servicing.one"
+            ]
+          },
+          {
+            "kind": "line",
+            "label": "Investor",
+            "depth": 0,
+            "display_sign": 1.0,
+            "values": [
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              }
+            ],
+            "total": 0.0
+          }
+        ],
+        "reconciliation": {
+          "bottom_line": 1025124.375646,
+          "model_total": 1025124.375647,
+          "residual": -1e-6
+        }
+      }
+    ]
+  },
   "graph": {
     "entities": [
       {

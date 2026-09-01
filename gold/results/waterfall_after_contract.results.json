@@ -1295,6 +1295,141 @@
     "metrics": {},
     "trial_summaries": []
   },
+  "statements": {
+    "statements": [
+      {
+        "id": "by_entity",
+        "label": "Cash by entity",
+        "default": true,
+        "grain": {
+          "calendar": "monthly",
+          "start": "2018-10-01",
+          "labels": [
+            "2018-10",
+            "2018-11",
+            "2018-12",
+            "2019-01",
+            "2019-02",
+            "2019-03"
+          ]
+        },
+        "rows": [
+          {
+            "kind": "subtotal",
+            "label": "Trust",
+            "depth": 0,
+            "display_sign": 1.0,
+            "values": [
+              {
+                "amount": 203514.546773,
+                "currency": "USD"
+              },
+              {
+                "amount": 203514.546773,
+                "currency": "USD"
+              },
+              {
+                "amount": 203514.546773,
+                "currency": "USD"
+              },
+              {
+                "amount": 203514.546773,
+                "currency": "USD"
+              },
+              {
+                "amount": 203514.546773,
+                "currency": "USD"
+              },
+              {
+                "amount": 203514.546773,
+                "currency": "USD"
+              }
+            ],
+            "total": 1221087.280638
+          },
+          {
+            "kind": "line",
+            "label": "Pool",
+            "depth": 1,
+            "display_sign": 1.0,
+            "values": [
+              {
+                "amount": 203514.546773,
+                "currency": "USD"
+              },
+              {
+                "amount": 203514.546773,
+                "currency": "USD"
+              },
+              {
+                "amount": 203514.546773,
+                "currency": "USD"
+              },
+              {
+                "amount": 203514.546773,
+                "currency": "USD"
+              },
+              {
+                "amount": 203514.546773,
+                "currency": "USD"
+              },
+              {
+                "amount": 203514.546773,
+                "currency": "USD"
+              }
+            ],
+            "total": 1221087.280638,
+            "streams": [
+              "stream.credit.pool.interest.pool",
+              "stream.credit.pool.penalty.pool",
+              "stream.credit.pool.prepay.pool",
+              "stream.credit.pool.recoveries.pool",
+              "stream.credit.pool.sched_principal.pool",
+              "stream.credit.pool.servicing.pool"
+            ]
+          },
+          {
+            "kind": "line",
+            "label": "Holders",
+            "depth": 0,
+            "display_sign": 1.0,
+            "values": [
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              }
+            ],
+            "total": 0.0
+          }
+        ],
+        "reconciliation": {
+          "bottom_line": 1221087.280638,
+          "model_total": 1221087.280638,
+          "residual": 0.0
+        }
+      }
+    ]
+  },
   "graph": {
     "entities": [
       {

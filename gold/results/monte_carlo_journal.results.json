@@ -1557,6 +1557,100 @@
       }
     }
   },
+  "statements": {
+    "statements": [
+      {
+        "id": "by_entity",
+        "label": "Cash by entity",
+        "default": true,
+        "grain": {
+          "calendar": "monthly",
+          "start": "2026-01-01",
+          "labels": [
+            "2026-01",
+            "2026-02",
+            "2026-03",
+            "2026-04",
+            "2026-05",
+            "2026-06",
+            "2026-07",
+            "2026-08",
+            "2026-09",
+            "2026-10",
+            "2026-11",
+            "2026-12"
+          ]
+        },
+        "rows": [
+          {
+            "kind": "line",
+            "label": "Pool",
+            "depth": 0,
+            "display_sign": 1.0,
+            "values": [
+              {
+                "amount": 20.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 19.2,
+                "currency": "USD"
+              },
+              {
+                "amount": 18.4,
+                "currency": "USD"
+              },
+              {
+                "amount": 17.6,
+                "currency": "USD"
+              },
+              {
+                "amount": 16.8,
+                "currency": "USD"
+              },
+              {
+                "amount": 16.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 15.2,
+                "currency": "USD"
+              },
+              {
+                "amount": 14.4,
+                "currency": "USD"
+              },
+              {
+                "amount": 13.6,
+                "currency": "USD"
+              },
+              {
+                "amount": 12.8,
+                "currency": "USD"
+              },
+              {
+                "amount": 12.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 11.2,
+                "currency": "USD"
+              }
+            ],
+            "total": 187.2,
+            "streams": [
+              "stream.credit.fee"
+            ]
+          }
+        ],
+        "reconciliation": {
+          "bottom_line": 187.2,
+          "model_total": 187.2,
+          "residual": 0.0
+        }
+      }
+    ]
+  },
   "graph": {
     "entities": [
       {

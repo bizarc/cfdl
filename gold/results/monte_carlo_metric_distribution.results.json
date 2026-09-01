@@ -2199,6 +2199,96 @@
       }
     }
   },
+  "statements": {
+    "statements": [
+      {
+        "id": "by_entity",
+        "label": "Cash by entity",
+        "default": true,
+        "grain": {
+          "calendar": "annual",
+          "start": "2026-01-01",
+          "labels": [
+            "2026",
+            "2027",
+            "2028",
+            "2029",
+            "2030"
+          ]
+        },
+        "rows": [
+          {
+            "kind": "subtotal",
+            "label": "Fund",
+            "depth": 0,
+            "display_sign": 1.0,
+            "values": [
+              {
+                "amount": -1000.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 80.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 80.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 80.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 1280.0,
+                "currency": "USD"
+              }
+            ],
+            "total": 520.0
+          },
+          {
+            "kind": "line",
+            "label": "Holding",
+            "depth": 1,
+            "display_sign": 1.0,
+            "values": [
+              {
+                "amount": -1000.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 80.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 80.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 80.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 1280.0,
+                "currency": "USD"
+              }
+            ],
+            "total": 520.0,
+            "streams": [
+              "stream.deal.acquisition",
+              "stream.deal.exit",
+              "stream.deal.rent"
+            ]
+          }
+        ],
+        "reconciliation": {
+          "bottom_line": 520.0,
+          "model_total": 520.0,
+          "residual": 0.0
+        }
+      }
+    ]
+  },
   "graph": {
     "entities": [
       {

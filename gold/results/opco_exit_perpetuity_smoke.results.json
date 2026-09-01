@@ -536,6 +536,67 @@
     "metrics": {},
     "trial_summaries": []
   },
+  "statements": {
+    "statements": [
+      {
+        "id": "by_entity",
+        "label": "Cash by entity",
+        "default": true,
+        "grain": {
+          "calendar": "annual",
+          "start": "2026-01-01",
+          "labels": [
+            "2026",
+            "2027",
+            "2028",
+            "2029",
+            "2030"
+          ]
+        },
+        "rows": [
+          {
+            "kind": "line",
+            "label": "Firm",
+            "depth": 0,
+            "display_sign": 1.0,
+            "values": [
+              {
+                "amount": 1000.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 1040.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 1081.6,
+                "currency": "USD"
+              },
+              {
+                "amount": 1124.864,
+                "currency": "USD"
+              },
+              {
+                "amount": 21154.942293,
+                "currency": "USD"
+              }
+            ],
+            "total": 25401.406293,
+            "streams": [
+              "stream.firm.fcff",
+              "stream.opco.exit.selling_costs",
+              "stream.opco.exit.value"
+            ]
+          }
+        ],
+        "reconciliation": {
+          "bottom_line": 25401.406293,
+          "model_total": 25401.406293,
+          "residual": 0.0
+        }
+      }
+    ]
+  },
   "graph": {
     "entities": [
       {

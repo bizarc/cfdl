@@ -3589,6 +3589,240 @@
     "metrics": {},
     "trial_summaries": []
   },
+  "statements": {
+    "statements": [
+      {
+        "id": "by_entity",
+        "label": "Cash by entity",
+        "default": true,
+        "grain": {
+          "calendar": "monthly",
+          "start": "2025-01-01",
+          "labels": [
+            "2025-01",
+            "2025-02",
+            "2025-03",
+            "2025-04",
+            "2025-05",
+            "2025-06",
+            "2025-07",
+            "2025-08",
+            "2025-09",
+            "2025-10",
+            "2025-11",
+            "2025-12",
+            "2026-01",
+            "2026-02",
+            "2026-03",
+            "2026-04",
+            "2026-05",
+            "2026-06",
+            "2026-07",
+            "2026-08",
+            "2026-09",
+            "2026-10",
+            "2026-11",
+            "2026-12",
+            "2027-01",
+            "2027-02",
+            "2027-03",
+            "2027-04",
+            "2027-05",
+            "2027-06",
+            "2027-07",
+            "2027-08",
+            "2027-09",
+            "2027-10",
+            "2027-11",
+            "2027-12",
+            "2028-01",
+            "2028-02",
+            "2028-03"
+          ]
+        },
+        "rows": [
+          {
+            "kind": "line",
+            "label": "Buyer",
+            "depth": 0,
+            "display_sign": 1.0,
+            "values": [
+              {
+                "amount": 46637.038354,
+                "currency": "USD"
+              },
+              {
+                "amount": 45846.142786,
+                "currency": "USD"
+              },
+              {
+                "amount": 45065.844043,
+                "currency": "USD"
+              },
+              {
+                "amount": 45583.874158,
+                "currency": "USD"
+              },
+              {
+                "amount": 44770.473287,
+                "currency": "USD"
+              },
+              {
+                "amount": 43968.140763,
+                "currency": "USD"
+              },
+              {
+                "amount": 43176.739768,
+                "currency": "USD"
+              },
+              {
+                "amount": 42396.135099,
+                "currency": "USD"
+              },
+              {
+                "amount": 41626.193155,
+                "currency": "USD"
+              },
+              {
+                "amount": 40866.781914,
+                "currency": "USD"
+              },
+              {
+                "amount": 40117.770922,
+                "currency": "USD"
+              },
+              {
+                "amount": 39379.031266,
+                "currency": "USD"
+              },
+              {
+                "amount": 38650.435563,
+                "currency": "USD"
+              },
+              {
+                "amount": 37931.857936,
+                "currency": "USD"
+              },
+              {
+                "amount": 37223.174005,
+                "currency": "USD"
+              },
+              {
+                "amount": 36524.260863,
+                "currency": "USD"
+              },
+              {
+                "amount": 35834.997058,
+                "currency": "USD"
+              },
+              {
+                "amount": 35155.262583,
+                "currency": "USD"
+              },
+              {
+                "amount": 34484.938854,
+                "currency": "USD"
+              },
+              {
+                "amount": 33823.908691,
+                "currency": "USD"
+              },
+              {
+                "amount": 33172.056313,
+                "currency": "USD"
+              },
+              {
+                "amount": 32529.267308,
+                "currency": "USD"
+              },
+              {
+                "amount": 31895.428624,
+                "currency": "USD"
+              },
+              {
+                "amount": 31270.428555,
+                "currency": "USD"
+              },
+              {
+                "amount": 30654.156719,
+                "currency": "USD"
+              },
+              {
+                "amount": 30046.504054,
+                "currency": "USD"
+              },
+              {
+                "amount": 29447.362786,
+                "currency": "USD"
+              },
+              {
+                "amount": 28856.62643,
+                "currency": "USD"
+              },
+              {
+                "amount": 28274.189766,
+                "currency": "USD"
+              },
+              {
+                "amount": 27699.948825,
+                "currency": "USD"
+              },
+              {
+                "amount": 27133.800878,
+                "currency": "USD"
+              },
+              {
+                "amount": 26575.644423,
+                "currency": "USD"
+              },
+              {
+                "amount": 26025.379158,
+                "currency": "USD"
+              },
+              {
+                "amount": 25482.905988,
+                "currency": "USD"
+              },
+              {
+                "amount": 24979.240545,
+                "currency": "USD"
+              },
+              {
+                "amount": 24484.051676,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              }
+            ],
+            "total": 1267589.993116,
+            "streams": [
+              "stream.credit.pool.interest.book",
+              "stream.credit.pool.penalty.book",
+              "stream.credit.pool.prepay.book",
+              "stream.credit.pool.recoveries.book",
+              "stream.credit.pool.sched_principal.book",
+              "stream.credit.pool.servicing.book"
+            ]
+          }
+        ],
+        "reconciliation": {
+          "bottom_line": 1267589.993116,
+          "model_total": 1267589.993121,
+          "residual": -5e-6
+        }
+      }
+    ]
+  },
   "graph": {
     "entities": [
       {

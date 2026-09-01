@@ -8,6 +8,23 @@ This project follows Semantic Versioning: https://semver.org/
 
 ## [Unreleased]
 
+### Added: a model with no statement gets a default one (§7.55 part five, §7.43)
+
+When neither the model nor a pack provides a presentation, the entity hierarchy
+is rendered as a default and marked `default`, so a reader holding results sees
+the model's shape rather than a flat list of series keyed by symbol.
+
+§7.43 asked for exactly this — "each node's cash with its children beneath it,
+no declarations and no pack" — and called it a product decision, which it was
+until the generator existed.
+
+**A fallback, not a declaration.** It is assembled when results are rendered and
+never enters the compiled document, so it moves neither `model_hash` nor
+`ledger_hash`. It yields to any declared statement, a pack's included.
+
+130 result goldens gained a section: 36,694 insertions and zero deletions, so
+nothing existing moved. A median of twelve values added per document.
+
 ### Fixed: a generated statement reads as a hierarchy (§7.55 part four)
 
 Three presentation defects, two of which a single-root single-category fixture

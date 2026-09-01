@@ -1479,6 +1479,14 @@ statement operating {
 A pack declares its own statements the same way, and both render through one
 evaluator.
 
+**A model that declares no statement gets one.** When neither the model nor a
+pack provides a presentation, the entity hierarchy is rendered as a default,
+marked `default`, so a reader holding results sees the model's shape rather
+than a flat list of series keyed by symbol. It is assembled when results are
+rendered and never enters the compiled document, so it changes neither hash;
+and it yields to any declared statement, because a declaration means the
+presentation question is already answered.
+
 
 ## 16. Expressions (CFDL expression language)
 

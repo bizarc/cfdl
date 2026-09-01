@@ -312,6 +312,56 @@
     "metrics": {},
     "trial_summaries": []
   },
+  "statements": {
+    "statements": [
+      {
+        "id": "by_entity",
+        "label": "Cash by entity",
+        "default": true,
+        "grain": {
+          "calendar": "annual",
+          "start": "2026-01-01",
+          "labels": [
+            "2026",
+            "2027",
+            "2028"
+          ]
+        },
+        "rows": [
+          {
+            "kind": "line",
+            "label": "Store",
+            "depth": 0,
+            "display_sign": 1.0,
+            "values": [
+              {
+                "amount": 4937.5,
+                "currency": "USD"
+              },
+              {
+                "amount": 4937.5,
+                "currency": "USD"
+              },
+              {
+                "amount": 4937.5,
+                "currency": "USD"
+              }
+            ],
+            "total": 14812.5,
+            "streams": [
+              "stream.cre.pct_rent.overage.dist",
+              "stream.cre.pct_rent.overage.point"
+            ]
+          }
+        ],
+        "reconciliation": {
+          "bottom_line": 14812.5,
+          "model_total": 14812.5,
+          "residual": 0.0
+        }
+      }
+    ]
+  },
   "graph": {
     "entities": [
       {

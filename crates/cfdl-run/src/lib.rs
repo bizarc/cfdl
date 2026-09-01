@@ -68,14 +68,15 @@ pub fn enrich_results(
         .as_ref()
         .map(cfdl_statement::model_statements)
         .unwrap_or_default();
-    if !model_statements.is_empty() {
-        cfdl_statement::attach_model_statements(
-            &model_statements,
-            &categories,
-            &waterfall_series,
-            results,
-        );
-    }
+    // Called unconditionally: with no declared statements this is where the
+    // DEFAULT presentation is assembled (`docs/13` §7.43), and guarding on an
+    // empty list here would make that unreachable.
+    cfdl_statement::attach_model_statements(
+        &model_statements,
+        &categories,
+        &waterfall_series,
+        results,
+    );
 }
 
 /// Run an in-memory IR and enrich the results when a pack is named.

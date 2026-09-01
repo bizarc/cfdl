@@ -1888,6 +1888,161 @@
     "metrics": {},
     "trial_summaries": []
   },
+  "statements": {
+    "statements": [
+      {
+        "id": "by_entity",
+        "label": "Cash by entity",
+        "default": true,
+        "grain": {
+          "calendar": "monthly",
+          "start": "2026-01-01",
+          "labels": [
+            "2026-01",
+            "2026-02",
+            "2026-03",
+            "2026-04",
+            "2026-05",
+            "2026-06",
+            "2026-07",
+            "2026-08",
+            "2026-09",
+            "2026-10",
+            "2026-11",
+            "2026-12",
+            "2027-01",
+            "2027-02",
+            "2027-03",
+            "2027-04",
+            "2027-05",
+            "2027-06",
+            "2027-07",
+            "2027-08",
+            "2027-09",
+            "2027-10",
+            "2027-11",
+            "2027-12"
+          ]
+        },
+        "rows": [
+          {
+            "kind": "line",
+            "label": "Business",
+            "depth": 0,
+            "display_sign": 1.0,
+            "values": [
+              {
+                "amount": 40000.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 40948.879293,
+                "currency": "USD"
+              },
+              {
+                "amount": 41906.762306,
+                "currency": "USD"
+              },
+              {
+                "amount": 42873.734472,
+                "currency": "USD"
+              },
+              {
+                "amount": 43849.882037,
+                "currency": "USD"
+              },
+              {
+                "amount": 44835.292064,
+                "currency": "USD"
+              },
+              {
+                "amount": 45830.052443,
+                "currency": "USD"
+              },
+              {
+                "amount": 46834.251896,
+                "currency": "USD"
+              },
+              {
+                "amount": 47847.979991,
+                "currency": "USD"
+              },
+              {
+                "amount": 48871.327142,
+                "currency": "USD"
+              },
+              {
+                "amount": 49904.384621,
+                "currency": "USD"
+              },
+              {
+                "amount": 50947.24457,
+                "currency": "USD"
+              },
+              {
+                "amount": 52000.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 53062.744809,
+                "currency": "USD"
+              },
+              {
+                "amount": 54135.573783,
+                "currency": "USD"
+              },
+              {
+                "amount": 55218.582609,
+                "currency": "USD"
+              },
+              {
+                "amount": 56311.867881,
+                "currency": "USD"
+              },
+              {
+                "amount": 57415.527112,
+                "currency": "USD"
+              },
+              {
+                "amount": 58529.658736,
+                "currency": "USD"
+              },
+              {
+                "amount": 59654.362124,
+                "currency": "USD"
+              },
+              {
+                "amount": 60789.73759,
+                "currency": "USD"
+              },
+              {
+                "amount": 61935.886399,
+                "currency": "USD"
+              },
+              {
+                "amount": 63092.910776,
+                "currency": "USD"
+              },
+              {
+                "amount": 64260.913918,
+                "currency": "USD"
+              }
+            ],
+            "total": 1241057.556572,
+            "streams": [
+              "stream.opco.opex.recurring",
+              "stream.opco.revenue.recurring"
+            ]
+          }
+        ],
+        "reconciliation": {
+          "bottom_line": 1241057.556572,
+          "model_total": 1241057.556571,
+          "residual": 1e-6
+        }
+      }
+    ]
+  },
   "graph": {
     "entities": [
       {

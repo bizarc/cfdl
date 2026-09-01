@@ -1083,9 +1083,28 @@ across three category roots, which is the smallest model that shows either
 ordering defect. Of the existing goldens only labels moved: no value, no
 ordering, no hash.
 
-**What remains.** A default entity-tree statement when a model declares none,
-closing §7.43's residue. And a pack's statements are still declared in TOML
-rather than in the language — the evaluator converged, the surface has not.
+**Shipped 2026-09-01, part five: the default statement.** A model that declares
+no statement, with no pack providing one, is rendered as its entity hierarchy
+and marked `default`. §7.43 asked for exactly this — "each node's cash with its
+children beneath it, no declarations and no pack" — and called it a product
+decision, which it was until the generator existed.
+
+**A fallback, not a declaration.** It is assembled when results are rendered and
+never enters the compiled document, so it moves neither `model_hash` nor
+`ledger_hash` — verified: no IR golden changed and no hash moved. It yields to
+any declared statement, a pack's included, because a declaration means the
+presentation question is already answered.
+
+The measurement that settled the size objection: a median of twelve values
+added per document, and the largest addition is about 1,200 cells on a file
+already 1.7MB. 130 result goldens gained a section; 36,694 insertions and zero
+deletions, so nothing existing moved.
+
+**What remains: the pack surface.** A pack's statements are still declared in
+TOML rather than in the language. The evaluator converged in part two — model
+statements render beside a pack's through one path — but the two surfaces have
+not. That is the last item, and it is a lowering job rather than a language
+one: `statements.toml` becoming another producer of the same views shape.
 
 ---
 

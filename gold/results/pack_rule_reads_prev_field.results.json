@@ -176,6 +176,60 @@
     "metrics": {},
     "trial_summaries": []
   },
+  "statements": {
+    "statements": [
+      {
+        "id": "by_entity",
+        "label": "Cash by entity",
+        "default": true,
+        "grain": {
+          "calendar": "monthly",
+          "start": "2026-01-01",
+          "labels": [
+            "2026-01",
+            "2026-02",
+            "2026-03",
+            "2026-04"
+          ]
+        },
+        "rows": [
+          {
+            "kind": "line",
+            "label": "Borrower",
+            "depth": 0,
+            "display_sign": 1.0,
+            "values": [
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": -1.5,
+                "currency": "USD"
+              },
+              {
+                "amount": -2.5,
+                "currency": "USD"
+              },
+              {
+                "amount": -3.5,
+                "currency": "USD"
+              }
+            ],
+            "total": -7.5,
+            "streams": [
+              "stream.testpack.avg_balance_interest"
+            ]
+          }
+        ],
+        "reconciliation": {
+          "bottom_line": -7.5,
+          "model_total": -7.5,
+          "residual": 0.0
+        }
+      }
+    ]
+  },
   "graph": {
     "entities": [
       {

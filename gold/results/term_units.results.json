@@ -249,6 +249,55 @@
     "metrics": {},
     "trial_summaries": []
   },
+  "statements": {
+    "statements": [
+      {
+        "id": "by_entity",
+        "label": "Cash by entity",
+        "default": true,
+        "grain": {
+          "calendar": "annual",
+          "start": "2026-01-01",
+          "labels": [
+            "2026",
+            "2027",
+            "2028"
+          ]
+        },
+        "rows": [
+          {
+            "kind": "line",
+            "label": "Plant",
+            "depth": 0,
+            "display_sign": 1.0,
+            "values": [
+              {
+                "amount": 7000000.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 7000000.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 7000000.0,
+                "currency": "USD"
+              }
+            ],
+            "total": 21000000.0,
+            "streams": [
+              "stream.energy.ptc.credit"
+            ]
+          }
+        ],
+        "reconciliation": {
+          "bottom_line": 21000000.0,
+          "model_total": 21000000.0,
+          "residual": 0.0
+        }
+      }
+    ]
+  },
   "graph": {
     "entities": [
       {

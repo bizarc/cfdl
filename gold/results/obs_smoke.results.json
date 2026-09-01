@@ -138,6 +138,55 @@
     "metrics": {},
     "trial_summaries": []
   },
+  "statements": {
+    "statements": [
+      {
+        "id": "by_entity",
+        "label": "Cash by entity",
+        "default": true,
+        "grain": {
+          "calendar": "monthly",
+          "start": "2026-01-01",
+          "labels": [
+            "2026-01",
+            "2026-02",
+            "2026-03"
+          ]
+        },
+        "rows": [
+          {
+            "kind": "line",
+            "label": "Borrower",
+            "depth": 0,
+            "display_sign": 1.0,
+            "values": [
+              {
+                "amount": -1000.0,
+                "currency": "USD"
+              },
+              {
+                "amount": -1000.0,
+                "currency": "USD"
+              },
+              {
+                "amount": -1000.0,
+                "currency": "USD"
+              }
+            ],
+            "total": -3000.0,
+            "streams": [
+              "stream.debt.rate_payment"
+            ]
+          }
+        ],
+        "reconciliation": {
+          "bottom_line": -3000.0,
+          "model_total": -3000.0,
+          "residual": 0.0
+        }
+      }
+    ]
+  },
   "graph": {
     "entities": [
       {

@@ -658,6 +658,70 @@
       }
     }
   },
+  "statements": {
+    "statements": [
+      {
+        "id": "by_entity",
+        "label": "Cash by entity",
+        "default": true,
+        "grain": {
+          "calendar": "monthly",
+          "start": "2026-01-01",
+          "labels": [
+            "2026-01",
+            "2026-02",
+            "2026-03",
+            "2026-04",
+            "2026-05",
+            "2026-06"
+          ]
+        },
+        "rows": [
+          {
+            "kind": "line",
+            "label": "Borrower",
+            "depth": 0,
+            "display_sign": 1.0,
+            "values": [
+              {
+                "amount": 933.333333,
+                "currency": "USD"
+              },
+              {
+                "amount": 933.333333,
+                "currency": "USD"
+              },
+              {
+                "amount": 933.333333,
+                "currency": "USD"
+              },
+              {
+                "amount": 933.333333,
+                "currency": "USD"
+              },
+              {
+                "amount": 933.333333,
+                "currency": "USD"
+              },
+              {
+                "amount": 933.333333,
+                "currency": "USD"
+              }
+            ],
+            "total": 5599.999998,
+            "streams": [
+              "stream.lease.rent"
+            ]
+          }
+        ],
+        "reconciliation": {
+          "bottom_line": 5599.999998,
+          "model_total": 5600.0,
+          "residual": -2e-6
+        }
+      }
+    ]
+  },
   "graph": {
     "entities": [
       {

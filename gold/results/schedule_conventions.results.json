@@ -294,6 +294,91 @@
     "metrics": {},
     "trial_summaries": []
   },
+  "statements": {
+    "statements": [
+      {
+        "id": "by_entity",
+        "label": "Cash by entity",
+        "default": true,
+        "grain": {
+          "calendar": "daily",
+          "start": "2026-07-01",
+          "labels": [
+            "2026-07-01",
+            "2026-07-02",
+            "2026-07-03",
+            "2026-07-04",
+            "2026-07-05",
+            "2026-07-06",
+            "2026-07-07",
+            "2026-07-08",
+            "2026-07-09",
+            "2026-07-10"
+          ]
+        },
+        "rows": [
+          {
+            "kind": "line",
+            "label": "Borrower",
+            "depth": 0,
+            "display_sign": 1.0,
+            "values": [
+              {
+                "amount": -10.0,
+                "currency": "USD"
+              },
+              {
+                "amount": -10.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": -10.0,
+                "currency": "USD"
+              },
+              {
+                "amount": -10.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 100.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": -10.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              }
+            ],
+            "total": 50.0,
+            "streams": [
+              "stream.fee.daily",
+              "stream.fee.rolled_payment"
+            ]
+          }
+        ],
+        "reconciliation": {
+          "bottom_line": 50.0,
+          "model_total": 50.0,
+          "residual": 0.0
+        }
+      }
+    ]
+  },
   "graph": {
     "entities": [
       {

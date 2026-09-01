@@ -1191,6 +1191,160 @@
     "metrics": {},
     "trial_summaries": []
   },
+  "statements": {
+    "statements": [
+      {
+        "id": "by_entity",
+        "label": "Cash by entity",
+        "default": true,
+        "grain": {
+          "calendar": "monthly",
+          "start": "2026-01-01",
+          "labels": [
+            "2026-01",
+            "2026-02",
+            "2026-03",
+            "2026-04",
+            "2026-05",
+            "2026-06",
+            "2026-07",
+            "2026-08",
+            "2026-09",
+            "2026-10",
+            "2026-11",
+            "2026-12",
+            "2027-01",
+            "2027-02",
+            "2027-03",
+            "2027-04",
+            "2027-05",
+            "2027-06",
+            "2027-07",
+            "2027-08",
+            "2027-09",
+            "2027-10",
+            "2027-11",
+            "2027-12"
+          ]
+        },
+        "rows": [
+          {
+            "kind": "line",
+            "label": "Property",
+            "depth": 0,
+            "display_sign": 1.0,
+            "values": [
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 1388.888889,
+                "currency": "USD"
+              },
+              {
+                "amount": 2777.777778,
+                "currency": "USD"
+              },
+              {
+                "amount": 4166.666667,
+                "currency": "USD"
+              },
+              {
+                "amount": 5555.555556,
+                "currency": "USD"
+              },
+              {
+                "amount": 6944.444444,
+                "currency": "USD"
+              },
+              {
+                "amount": 8333.333333,
+                "currency": "USD"
+              },
+              {
+                "amount": 9722.222222,
+                "currency": "USD"
+              },
+              {
+                "amount": 11111.111111,
+                "currency": "USD"
+              },
+              {
+                "amount": 12500.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 13888.888889,
+                "currency": "USD"
+              },
+              {
+                "amount": 15277.777778,
+                "currency": "USD"
+              },
+              {
+                "amount": 16666.666667,
+                "currency": "USD"
+              },
+              {
+                "amount": 18055.555556,
+                "currency": "USD"
+              },
+              {
+                "amount": 19444.444444,
+                "currency": "USD"
+              },
+              {
+                "amount": 20833.333333,
+                "currency": "USD"
+              },
+              {
+                "amount": 22222.222222,
+                "currency": "USD"
+              },
+              {
+                "amount": 23611.111111,
+                "currency": "USD"
+              },
+              {
+                "amount": 25000.0,
+                "currency": "USD"
+              }
+            ],
+            "total": 237500.0,
+            "streams": [
+              "stream.cre.lease.base_rent"
+            ]
+          }
+        ],
+        "reconciliation": {
+          "bottom_line": 237500.0,
+          "model_total": 237500.0,
+          "residual": 0.0
+        }
+      }
+    ]
+  },
   "graph": {
     "entities": [
       {
