@@ -471,7 +471,12 @@ pub fn generate(
     let in_window: Vec<bool> = match sliced.and_then(|s| s.selection.window.as_ref()) {
         None => vec![true; periods],
         Some(window) => {
-            let index = results.deterministic.series.values().next().map(|s| &s.index);
+            let index = results
+                .deterministic
+                .series
+                .values()
+                .next()
+                .map(|s| &s.index);
             let dates = index
                 .map(|ix| {
                     cfdl_engine::timeline_dates(&ix.start, &ix.calendar, ix.periods as usize)
@@ -830,14 +835,7 @@ pub fn attach_model_statements(
                     buckets: (0..periods).map(|i| vec![i]).collect(),
                     labels: (0..periods).map(|i| i.to_string()).collect(),
                 });
-            generate(
-                spec,
-                &grain,
-                &borrowed,
-                stream_categories,
-                results,
-                periods,
-            )
+            generate(spec, &grain, &borrowed, stream_categories, results, periods)
         })
         .collect();
     match &mut results.statements {

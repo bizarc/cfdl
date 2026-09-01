@@ -260,8 +260,7 @@ pub fn resolve_symbols(output: &ResolveOutput) -> Result<SymbolTables, Vec<Resol
     let mut tables = SymbolTables::default();
     let mut diagnostics = Vec::new();
     let mut seen_slices: std::collections::BTreeSet<String> = std::collections::BTreeSet::new();
-    let mut seen_statements: std::collections::BTreeSet<String> =
-        std::collections::BTreeSet::new();
+    let mut seen_statements: std::collections::BTreeSet<String> = std::collections::BTreeSet::new();
     let mut stream_decls = Vec::new();
     let mut contract_decls = Vec::new();
 
