@@ -1,5 +1,5 @@
 <!-- GENERATED llms-full.txt by tools/gen-machine-docs.py — do not edit by hand. Regenerate: make machine-docs -->
-# CFDL machine documentation bundle — v0.7.0
+# CFDL machine documentation bundle — v0.8.0
 
 > CFDL (Cash Flow Domain Language) is a declarative language for financial
 > cash-flow models with a deterministic compile -> run cycle, structured
@@ -8727,7 +8727,7 @@ Templates (starting points; the `skeleton` MCP tool assembles them into a compil
 # Valid examples — the golden corpus
 # CFDL valid examples — the golden corpus
 
-CFDL 0.7.0. Every model below compiles, and its IR and
+CFDL 0.8.0. Every model below compiles, and its IR and
 results are byte-asserted against goldens in CI (`fixtures/valid/`,
 141 models.
 
@@ -15037,7 +15037,7 @@ waterfall abs.distribution on entity asset.trust {
 # Benchmark exemplars
 # CFDL benchmark exemplars
 
-CFDL 0.7.0. 18 of the registered benchmark
+CFDL 0.8.0. 18 of the registered benchmark
 cases, curated so every core-language mechanism and every
 meaningfully-composed pack pattern appears at least once. Each model
 compiles, runs, and matches an external reference within stated tolerances

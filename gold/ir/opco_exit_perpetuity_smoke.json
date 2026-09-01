@@ -310,8 +310,8 @@
     ],
     "compiler": {
       "name": "cfdl",
-      "version": "0.7.0",
-      "hash": "e34c911fc30e425c340680e8ce0ae3cc",
+      "version": "0.8.0",
+      "hash": "114f031d6b8afa610704e9e4f15a3ff2",
       "notes": [
         "active_pack=opco@0.1.0"
       ]
