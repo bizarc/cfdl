@@ -8,6 +8,27 @@ This project follows Semantic Versioning: https://semver.org/
 
 ## [Unreleased]
 
+### Fixed: a model statement reports at its own grain, and its ratio is recomputed at it
+
+Two defects in the statement construct, both latent — no fixture used `grain`
+on a model statement, so nothing in the corpus exercised either.
+
+**The rows were not bucketed.** An annual statement over a monthly model
+published two grain labels against twenty-four monthly values. A reader lining
+values up against labels read one month as the year, with twenty-two values
+under no label. `total` is the lifetime figure over the raw periods; `values`
+is now the series the labels describe.
+
+**A ratio is not re-bucketed, it is recomputed.** An annual coverage ratio is
+annual NOI over annual debt service — not the mean of twelve monthly ratios,
+and no function of a column of ratios gives it. On the fixture the correct
+answer is -2.0 and averaging gives -3.6, an 80% error. The pack renderer takes
+the subtotal specs for exactly this reason; the model path divides its two
+slices after bucketing.
+
+Fixture: `valid/statement_grain`, whose debt service varies within the year so
+the two answers differ. No existing golden moved.
+
 ### Added: a model with no statement gets a default one (§7.55 part five, §7.43)
 
 When neither the model nor a pack provides a presentation, the entity hierarchy

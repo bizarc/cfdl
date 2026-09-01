@@ -1,0 +1,729 @@
+{
+  "results_version": "0.12",
+  "model_hash": "38e1933cbf58e6be9ec08a7d7ef275f977b12398d13711ece58403da8806c5ae",
+  "ledger_hash": "b21dc2999571531c4fd66933db3989b6c16775da17302a479489bfeab41bfabe",
+  "engine": {
+    "name": "cfdl-engine",
+    "version": "0.8.0"
+  },
+  "warnings": [],
+  "deterministic": {
+    "status": "ok",
+    "metrics": {
+      "entity.asset.co.total": {
+        "amount": 720.0,
+        "currency": "USD"
+      },
+      "model.npv": {
+        "amount": 694.893039,
+        "currency": "USD"
+      },
+      "model.total": {
+        "amount": 720.0,
+        "currency": "USD"
+      },
+      "model.wal_years": 0.375,
+      "run.annual_discount_rate": 0.1,
+      "run.periods_per_year": 12.0,
+      "stream.fin.ds.total": {
+        "amount": -720.0,
+        "currency": "USD"
+      },
+      "stream.ops.noi.total": {
+        "amount": 1440.0,
+        "currency": "USD"
+      }
+    },
+    "series": {
+      "entity.asset.co.net_cash_flow": {
+        "index": {
+          "calendar": "monthly",
+          "start": "2026-01-01",
+          "periods": 12
+        },
+        "values": [
+          {
+            "amount": 100.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 100.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 100.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 100.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 100.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 100.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 20.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 20.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 20.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 20.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 20.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 20.0,
+            "currency": "USD"
+          }
+        ]
+      },
+      "model.net_cash_flow": {
+        "index": {
+          "calendar": "monthly",
+          "start": "2026-01-01",
+          "periods": 12
+        },
+        "values": [
+          {
+            "amount": 100.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 100.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 100.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 100.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 100.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 100.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 20.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 20.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 20.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 20.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 20.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 20.0,
+            "currency": "USD"
+          }
+        ]
+      },
+      "stream.fin.ds": {
+        "index": {
+          "calendar": "monthly",
+          "start": "2026-01-01",
+          "periods": 12
+        },
+        "offset": 1.0,
+        "entity": "asset.co",
+        "category": "financing.debt.service",
+        "values": [
+          {
+            "amount": -20.0,
+            "currency": "USD"
+          },
+          {
+            "amount": -20.0,
+            "currency": "USD"
+          },
+          {
+            "amount": -20.0,
+            "currency": "USD"
+          },
+          {
+            "amount": -20.0,
+            "currency": "USD"
+          },
+          {
+            "amount": -20.0,
+            "currency": "USD"
+          },
+          {
+            "amount": -20.0,
+            "currency": "USD"
+          },
+          {
+            "amount": -100.0,
+            "currency": "USD"
+          },
+          {
+            "amount": -100.0,
+            "currency": "USD"
+          },
+          {
+            "amount": -100.0,
+            "currency": "USD"
+          },
+          {
+            "amount": -100.0,
+            "currency": "USD"
+          },
+          {
+            "amount": -100.0,
+            "currency": "USD"
+          },
+          {
+            "amount": -100.0,
+            "currency": "USD"
+          }
+        ]
+      },
+      "stream.ops.noi": {
+        "index": {
+          "calendar": "monthly",
+          "start": "2026-01-01",
+          "periods": 12
+        },
+        "offset": 1.0,
+        "entity": "asset.co",
+        "category": "operating.revenue.base_rent",
+        "values": [
+          {
+            "amount": 120.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 120.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 120.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 120.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 120.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 120.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 120.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 120.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 120.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 120.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 120.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 120.0,
+            "currency": "USD"
+          }
+        ]
+      }
+    },
+    "annual_rollup": {
+      "series": {
+        "model.net_cash_flow": {
+          "index": {
+            "calendar": "annual",
+            "start": "2026-01-01",
+            "periods": 1
+          },
+          "values": [
+            {
+              "amount": 720.0,
+              "currency": "USD"
+            }
+          ]
+        },
+        "stream.fin.ds": {
+          "index": {
+            "calendar": "annual",
+            "start": "2026-01-01",
+            "periods": 1
+          },
+          "values": [
+            {
+              "amount": -720.0,
+              "currency": "USD"
+            }
+          ]
+        },
+        "stream.ops.noi": {
+          "index": {
+            "calendar": "annual",
+            "start": "2026-01-01",
+            "periods": 1
+          },
+          "values": [
+            {
+              "amount": 1440.0,
+              "currency": "USD"
+            }
+          ]
+        }
+      }
+    }
+  },
+  "scenarios": {
+    "status": "not_run",
+    "summaries": []
+  },
+  "monte_carlo": {
+    "status": "not_run",
+    "trials": 1,
+    "seed": 0,
+    "metrics": {},
+    "trial_summaries": []
+  },
+  "statements": {
+    "statements": [
+      {
+        "id": "by_month",
+        "label": "Monthly",
+        "default": false,
+        "grain": {
+          "calendar": "monthly",
+          "start": "2026-01-01",
+          "labels": [
+            "2026-01",
+            "2026-02",
+            "2026-03",
+            "2026-04",
+            "2026-05",
+            "2026-06",
+            "2026-07",
+            "2026-08",
+            "2026-09",
+            "2026-10",
+            "2026-11",
+            "2026-12"
+          ]
+        },
+        "rows": [
+          {
+            "kind": "line",
+            "label": "Net operating income",
+            "depth": 0,
+            "display_sign": 1.0,
+            "values": [
+              {
+                "amount": 120.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 120.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 120.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 120.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 120.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 120.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 120.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 120.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 120.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 120.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 120.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 120.0,
+                "currency": "USD"
+              }
+            ],
+            "total": 1440.0,
+            "streams": [
+              "stream.ops.noi"
+            ]
+          },
+          {
+            "kind": "ratio",
+            "label": "DSCR",
+            "depth": 0,
+            "display_sign": -1.0,
+            "values": [
+              -6.0,
+              -6.0,
+              -6.0,
+              -6.0,
+              -6.0,
+              -6.0,
+              -1.2,
+              -1.2,
+              -1.2,
+              -1.2,
+              -1.2,
+              -1.2
+            ]
+          },
+          {
+            "kind": "residual",
+            "label": "Not shown by this structure",
+            "depth": 0,
+            "display_sign": 1.0,
+            "values": [
+              {
+                "amount": -20.0,
+                "currency": "USD"
+              },
+              {
+                "amount": -20.0,
+                "currency": "USD"
+              },
+              {
+                "amount": -20.0,
+                "currency": "USD"
+              },
+              {
+                "amount": -20.0,
+                "currency": "USD"
+              },
+              {
+                "amount": -20.0,
+                "currency": "USD"
+              },
+              {
+                "amount": -20.0,
+                "currency": "USD"
+              },
+              {
+                "amount": -100.0,
+                "currency": "USD"
+              },
+              {
+                "amount": -100.0,
+                "currency": "USD"
+              },
+              {
+                "amount": -100.0,
+                "currency": "USD"
+              },
+              {
+                "amount": -100.0,
+                "currency": "USD"
+              },
+              {
+                "amount": -100.0,
+                "currency": "USD"
+              },
+              {
+                "amount": -100.0,
+                "currency": "USD"
+              }
+            ],
+            "total": -720.0,
+            "streams": [
+              "stream.fin.ds"
+            ]
+          }
+        ],
+        "reconciliation": {
+          "bottom_line": 720.0,
+          "model_total": 720.0,
+          "residual": 0.0
+        }
+      },
+      {
+        "id": "by_year",
+        "label": "Annual",
+        "default": false,
+        "grain": {
+          "calendar": "annual",
+          "start": "2026-01-01",
+          "labels": [
+            "2026"
+          ]
+        },
+        "rows": [
+          {
+            "kind": "line",
+            "label": "Net operating income",
+            "depth": 0,
+            "display_sign": 1.0,
+            "values": [
+              {
+                "amount": 1440.0,
+                "currency": "USD"
+              }
+            ],
+            "total": 1440.0,
+            "streams": [
+              "stream.ops.noi"
+            ]
+          },
+          {
+            "kind": "ratio",
+            "label": "DSCR",
+            "depth": 0,
+            "display_sign": -1.0,
+            "values": [
+              -2.0
+            ]
+          },
+          {
+            "kind": "residual",
+            "label": "Not shown by this structure",
+            "depth": 0,
+            "display_sign": 1.0,
+            "values": [
+              {
+                "amount": -720.0,
+                "currency": "USD"
+              }
+            ],
+            "total": -720.0,
+            "streams": [
+              "stream.fin.ds"
+            ]
+          }
+        ],
+        "reconciliation": {
+          "bottom_line": 720.0,
+          "model_total": 720.0,
+          "residual": 0.0
+        }
+      }
+    ]
+  },
+  "graph": {
+    "entities": [
+      {
+        "symbol": "asset.co",
+        "family": "asset",
+        "type": "Asset.Financial"
+      }
+    ]
+  },
+  "slices": [
+    {
+      "id": "noi",
+      "selection": {
+        "categories": [
+          "operating.*"
+        ]
+      },
+      "streams": [
+        "ops.noi"
+      ],
+      "net": {
+        "index": {
+          "calendar": "monthly",
+          "start": "2026-01-01",
+          "periods": 12
+        },
+        "values": [
+          {
+            "amount": 120.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 120.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 120.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 120.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 120.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 120.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 120.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 120.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 120.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 120.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 120.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 120.0,
+            "currency": "USD"
+          }
+        ]
+      },
+      "metrics": {
+        "npv": {
+          "amount": 1368.05854,
+          "currency": "USD"
+        },
+        "total": {
+          "amount": 1440.0,
+          "currency": "USD"
+        }
+      }
+    },
+    {
+      "id": "ds",
+      "selection": {
+        "categories": [
+          "financing.debt.service"
+        ]
+      },
+      "streams": [
+        "fin.ds"
+      ],
+      "net": {
+        "index": {
+          "calendar": "monthly",
+          "start": "2026-01-01",
+          "periods": 12
+        },
+        "values": [
+          {
+            "amount": -20.0,
+            "currency": "USD"
+          },
+          {
+            "amount": -20.0,
+            "currency": "USD"
+          },
+          {
+            "amount": -20.0,
+            "currency": "USD"
+          },
+          {
+            "amount": -20.0,
+            "currency": "USD"
+          },
+          {
+            "amount": -20.0,
+            "currency": "USD"
+          },
+          {
+            "amount": -20.0,
+            "currency": "USD"
+          },
+          {
+            "amount": -100.0,
+            "currency": "USD"
+          },
+          {
+            "amount": -100.0,
+            "currency": "USD"
+          },
+          {
+            "amount": -100.0,
+            "currency": "USD"
+          },
+          {
+            "amount": -100.0,
+            "currency": "USD"
+          },
+          {
+            "amount": -100.0,
+            "currency": "USD"
+          },
+          {
+            "amount": -100.0,
+            "currency": "USD"
+          }
+        ]
+      },
+      "metrics": {
+        "npv": {
+          "amount": -673.1655,
+          "currency": "USD"
+        },
+        "total": {
+          "amount": -720.0,
+          "currency": "USD"
+        }
+      }
+    }
+  ]
+}

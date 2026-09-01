@@ -566,10 +566,20 @@ pub fn generate(
                 else {
                     continue;
                 };
+                // RECOMPUTED FROM RE-BUCKETED INPUTS, never re-bucketed
+                // itself. An annual coverage ratio is annual NOI over annual
+                // debt service; it is NOT the mean of twelve monthly ratios,
+                // and no function of a column of ratios gives it. The pack
+                // renderer takes the subtotal SPECS for exactly this reason —
+                // handing an arm the ratio values and a grain makes averaging
+                // them the obvious thing to write. Here the inputs are two
+                // slices, so the same discipline is to divide AFTER bucketing.
+                let num = grain.sum(&num);
+                let den = grain.sum(&den);
                 // A zero denominator publishes null, the rule a pack ratio
                 // already follows: a coverage ratio with no debt service is
                 // genuinely undefined, not zero.
-                let values: Vec<SeriesValue> = (0..periods)
+                let values: Vec<SeriesValue> = (0..num.len().max(den.len()))
                     .map(|t| {
                         let d = den.get(t).copied().unwrap_or(0.0);
                         if d.abs() > f64::EPSILON {
@@ -642,8 +652,10 @@ pub fn generate(
                 label: row.label.clone(),
                 depth: row.depth,
                 display_sign,
+                // `total` is the lifetime figure over the RAW periods;
+                // `values` is what a reader lines up against `grain.labels`.
                 total: Some(round6(acc.iter().sum())),
-                values: money(&acc, results),
+                values: money(&grain.sum(&acc), results),
                 streams: drawn,
             });
         }
@@ -750,7 +762,7 @@ pub fn generate(
                         depth: d,
                         display_sign: 1.0,
                         total: Some(round6(values.iter().sum())),
-                        values: money(&values, results),
+                        values: money(&grain.sum(&values), results),
                         streams: drawn,
                     });
                 }
@@ -821,7 +833,7 @@ pub fn generate(
                         depth: d,
                         display_sign: 1.0,
                         total: Some(round6(acc.iter().sum())),
-                        values: money(&acc, results),
+                        values: money(&grain.sum(&acc), results),
                         streams: drawn,
                     });
                 }
@@ -868,7 +880,7 @@ pub fn generate(
             depth: 0,
             display_sign: 1.0,
             total: Some(round6(residual_acc.iter().sum())),
-            values: money(&residual_acc, results),
+            values: money(&grain.sum(&residual_acc), results),
             streams: residual_streams,
         });
     }

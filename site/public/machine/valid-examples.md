@@ -4,7 +4,7 @@
 
 CFDL 0.8.0. Every model below compiles, and its IR and
 results are byte-asserted against goldens in CI (`fixtures/valid/`,
-145 models.
+146 models.
 
 `gold/ir/`, `gold/results/`). Each is single-purpose: the directory name
 says what it exercises. This is what right looks like — positive few-shot
@@ -5382,6 +5382,69 @@ stream gamma.debt on entity asset.gamma outflow currency USD {
 
 statement by_entity  { structure entity   depth 2 }
 statement by_section { structure category depth 2 }
+```
+
+## statement_grain
+
+```cfdl
+version 0.1
+model "statement-grain"
+time calendar monthly from 2026-01 for 12
+
+// A STATEMENT REPORTS AT ITS OWN GRAIN, AND A RATIO IS RECOMPUTED AT IT.
+//
+// `docs/13` §7.55. Two defects, both latent: no fixture used `grain` on a
+// model statement, so nothing in the corpus exercised either.
+//
+// THE ROWS WERE NOT BUCKETED. An annual statement over a monthly model
+// published two grain labels against twenty-four monthly values — a reader
+// lining values up against labels read one month as the year, and had
+// twenty-two values with no label to sit under. `total` is the lifetime figure
+// over the RAW periods; `values` is the series the labels describe.
+//
+// A RATIO IS NOT RE-BUCKETED, IT IS RECOMPUTED. An annual coverage ratio is
+// annual NOI over annual debt service. It is NOT the mean of twelve monthly
+// ratios and no function of a column of ratios gives it. Debt service here is
+// 20 a month for six months and 100 for six, so the two answers differ and the
+// fixture can tell them apart:
+//
+//   annual NOI / annual DS  = 1,440 / -720 = -2.0   <- correct
+//   mean of monthly ratios  = (6*-6 + 6*-1.2) / 12  = -3.6
+//
+// The pack renderer takes the subtotal SPECS for exactly this reason: handing
+// an arm the ratio values and a grain makes averaging them the obvious thing
+// to write. Here the inputs are two slices, so the same discipline is to
+// divide AFTER bucketing.
+
+entity asset co : Asset.Financial
+
+stream ops.noi on entity asset.co inflow currency USD {
+  schedule every month from 2026-01 to 2026-12
+  category operating.revenue.base_rent
+  amount = 120
+}
+
+stream fin.ds on entity asset.co outflow currency USD {
+  schedule every month from 2026-01 to 2026-12
+  category financing.debt.service
+  amount = if(time.t < 6, 20, 100)
+}
+
+slice noi { category "operating.*" }
+slice ds  { category "financing.debt.service" }
+
+statement by_month {
+  label "Monthly"
+  line  "Net operating income" { slice noi }
+  ratio "DSCR"                 { of noi to ds display positive }
+}
+
+statement by_year {
+  label "Annual"
+  grain annual
+  line  "Net operating income" { slice noi }
+  ratio "DSCR"                 { of noi to ds display positive }
+}
 ```
 
 ## statement_residual
