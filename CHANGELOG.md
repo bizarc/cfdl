@@ -8,6 +8,26 @@ This project follows Semantic Versioning: https://semver.org/
 
 ## [Unreleased]
 
+### Fixed: a generated statement reads as a hierarchy (§7.55 part four)
+
+Three presentation defects, two of which a single-root single-category fixture
+could not show.
+
+- **Depth first.** Rows were sorted by (depth, symbol), which is *breadth*
+  first: two funds holding two properties each came out as both funds followed
+  by all the properties in one flat block, with nothing saying which belonged
+  to which. A parent is now followed by its own subtree.
+- **The category roots have a canonical order.** `CATEGORY_ROOTS` is
+  operating, investing, financing — the order a cash flow statement is read in
+  — and generation iterated a `BTreeSet`, putting financing first. Siblings
+  below a root sort alphabetically: arbitrary, but stated rather than emergent.
+- **Labels are derived.** The last path segment, underscores opened out, first
+  letter capitalized, so `operating.revenue.base_rent` reads "Base rent". An
+  authored row states its own.
+
+Fixture: `valid/statement_generated_order`. Of the existing goldens only labels
+moved — no value, no ordering, no hash.
+
 ### Added: a statement may state its own rows (§7.55 part three)
 
 A generated statement is right when the tree IS the presentation. A pro forma

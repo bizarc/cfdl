@@ -661,27 +661,39 @@ pub fn generate(
                             .collect()
                     })
                     .unwrap_or_default();
-                let depth_of = |symbol: &str| -> u32 {
-                    let mut d = 0;
-                    let mut cursor = symbol;
-                    while let Some((_, Some(parent))) =
-                        entities.iter().find(|(s, _)| *s == cursor).copied()
-                    {
-                        d += 1;
-                        cursor = parent;
-                        if d > 64 {
-                            break;
-                        }
-                    }
-                    d
-                };
                 let has_shown_child = |symbol: &str, d: u32| -> bool {
                     d + 1 < depth_limit && entities.iter().any(|(_, p)| *p == Some(symbol))
                 };
-                // Parents before children, and stable within a level.
-                let mut ordered: Vec<(&str, u32)> =
-                    entities.iter().map(|(s, _)| (*s, depth_of(s))).collect();
-                ordered.sort_by(|a, b| a.1.cmp(&b.1).then(a.0.cmp(b.0)));
+                // DEPTH FIRST — a parent, then ITS subtree, then the next
+                // parent. Sorting by (depth, symbol) is breadth first and reads
+                // as a list rather than a hierarchy: two funds holding two
+                // properties each came out as both funds followed by all the
+                // properties in one flat block, with nothing saying which
+                // belonged to which. A single-root fixture cannot show that,
+                // which is why it survived the first cut.
+                //
+                // Siblings sort by symbol. Declaration order would read better
+                // and is not available: the IR sorts entities by their stable
+                // key, so its bytes do not depend on where a declaration sits.
+                fn walk<'a>(
+                    parent: Option<&str>,
+                    depth: u32,
+                    entities: &[(&'a str, Option<&'a str>)],
+                    out: &mut Vec<(&'a str, u32)>,
+                ) {
+                    let mut children: Vec<&'a str> = entities
+                        .iter()
+                        .filter(|(_, p)| *p == parent)
+                        .map(|(s, _)| *s)
+                        .collect();
+                    children.sort_unstable();
+                    for child in children {
+                        out.push((child, depth));
+                        walk(Some(child), depth + 1, entities, out);
+                    }
+                }
+                let mut ordered: Vec<(&str, u32)> = Vec::new();
+                walk(None, 0, &entities, &mut ordered);
                 for (symbol, d) in ordered {
                     if d >= depth_limit {
                         continue;
@@ -734,7 +746,7 @@ pub fn generate(
                     drawn.sort();
                     rows.push(StatementRow {
                         kind: if is_subtotal { "subtotal" } else { "line" }.to_string(),
-                        label: symbol.to_string(),
+                        label: derived_label(symbol),
                         depth: d,
                         display_sign: 1.0,
                         total: Some(round6(values.iter().sum())),
@@ -754,7 +766,22 @@ pub fn generate(
                         }
                     }
                 }
-                let ordered: Vec<String> = nodes.iter().cloned().collect();
+                // THE ROOTS HAVE A CANONICAL ORDER and it is not alphabetical.
+                // `cfdl_pack::CATEGORY_ROOTS` is operating, investing, financing —
+                // the order a cash flow statement is read in — and iterating the
+                // set alphabetically put financing first, which is backwards for
+                // any statement anyone would want. Below a root there is no
+                // canonical order, so siblings sort alphabetically: arbitrary, but
+                // stated and stable rather than emergent.
+                let root_rank = |node: &str| -> usize {
+                    let root = node.split('.').next().unwrap_or_default();
+                    cfdl_pack::CATEGORY_ROOTS
+                        .iter()
+                        .position(|r| *r == root)
+                        .unwrap_or(usize::MAX)
+                };
+                let mut ordered: Vec<String> = nodes.iter().cloned().collect();
+                ordered.sort_by(|a, b| root_rank(a).cmp(&root_rank(b)).then(a.cmp(b)));
                 for node in &ordered {
                     let d = node.matches('.').count() as u32;
                     let is_subtotal = ordered
@@ -790,7 +817,7 @@ pub fn generate(
                     drawn.sort();
                     rows.push(StatementRow {
                         kind: if is_subtotal { "subtotal" } else { "line" }.to_string(),
-                        label: node.clone(),
+                        label: derived_label(node),
                         depth: d,
                         display_sign: 1.0,
                         total: Some(round6(acc.iter().sum())),
@@ -979,6 +1006,24 @@ pub fn attach_model_statements(
                 statements: rendered,
             })
         }
+    }
+}
+
+/// A readable label for a generated row, from the name it was generated from.
+///
+/// `operating.revenue.base_rent` becomes "Base rent" and `asset.north` becomes
+/// "North": the last path segment, underscores opened out, first letter
+/// capitalised. A generated statement is meant to need no declarations, and a
+/// row reading `operating.revenue.base_rent` where a pack row says "Base rental
+/// revenue" is a presentation that has not been presented. An AUTHORED row
+/// states its own label and never comes here.
+fn derived_label(path: &str) -> String {
+    let last = path.rsplit('.').next().unwrap_or(path);
+    let opened = last.replace('_', " ");
+    let mut chars = opened.chars();
+    match chars.next() {
+        Some(first) => first.to_uppercase().collect::<String>() + chars.as_str(),
+        None => opened,
     }
 }
 

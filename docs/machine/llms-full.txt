@@ -1431,6 +1431,16 @@ Rules:
   the engine does not build is refused (`E1367`), as is a category statement in
   a model whose streams declare no category — either would render one residual
   row and nothing else.
+- Generated rows are ordered so the result reads as a hierarchy: DEPTH FIRST
+  for an entity structure, so a parent is followed by its own subtree rather
+  than by every other node at its level. Category ROOTS follow the canonical
+  order — operating, investing, financing, the order a cash flow statement is
+  read in — and siblings below a root sort alphabetically, which is arbitrary
+  but stable.
+- A generated row's LABEL is derived from the name it was generated from: the
+  last path segment, underscores opened out, first letter capitalized, so
+  `operating.revenue.base_rent` reads "Base rent". An authored row states its
+  own.
 - `depth` sets the LEVEL OF AGGREGATION, and the rows follow from the tree.
   **A subtotal is not declared.** A node whose children are shown is a
   `subtotal`; a node whose children are cut off by `depth` is a `line`,
@@ -9060,7 +9070,7 @@ Templates (starting points; the `skeleton` MCP tool assembles them into a compil
 
 CFDL 0.8.0. Every model below compiles, and its IR and
 results are byte-asserted against goldens in CI (`fixtures/valid/`,
-144 models.
+145 models.
 
 `gold/ir/`, `gold/results/`). Each is single-purpose: the directory name
 says what it exercises. This is what right looks like — positive few-shot
@@ -14375,6 +14385,68 @@ statement north_only {
 }
 
 metric total_rent = series_sum("north.rent", 0, 2) + series_sum("south.rent", 0, 2)
+```
+
+## statement_generated_order
+
+```cfdl
+version 0.1
+model "statement-generated-order"
+time calendar annual from 2026-01 for 2
+
+// A GENERATED STATEMENT READS AS A HIERARCHY, AND IN THE RIGHT ORDER.
+//
+// `docs/13` §7.55. Two things were wrong, and a single-root single-category
+// fixture could show neither.
+//
+// DEPTH FIRST. Sorting rows by (depth, symbol) is breadth first: two funds
+// holding two properties each came out as both funds followed by all four
+// properties in one flat block, with nothing saying which belonged to which.
+// A parent is now followed by its own subtree.
+//
+// THE CATEGORY ROOTS HAVE A CANONICAL ORDER and it is not alphabetical.
+// `CATEGORY_ROOTS` is operating, investing, financing — the order a cash flow
+// statement is read in — and iterating the set alphabetically put financing
+// first. Below a root there is no canonical order, so siblings sort
+// alphabetically: arbitrary, but stated and stable.
+//
+// LABELS ARE DERIVED. A generated statement is meant to need no declarations,
+// and a row reading `operating.revenue.base_rent` is a presentation that has
+// not been presented. The last segment, underscores opened out, capitalised.
+
+entity container north_fund : Container.Fund
+entity container south_fund : Container.Fund
+
+entity asset alpha : Asset.Financial { part of container.north_fund }
+entity asset beta  : Asset.Financial { part of container.north_fund }
+entity asset gamma : Asset.Financial { part of container.south_fund }
+
+stream alpha.base_rent on entity asset.alpha inflow currency USD {
+  schedule every year from 2026-01 to 2027-01
+  category operating.revenue.base_rent
+  amount = 100
+}
+
+stream beta.base_rent on entity asset.beta inflow currency USD {
+  schedule every year from 2026-01 to 2027-01
+  category operating.revenue.base_rent
+  amount = 50
+}
+
+stream gamma.sale on entity asset.gamma inflow currency USD {
+  schedule every year from 2027-01 to 2027-01
+  category investing.disposition.sale
+  amount = 900
+}
+
+stream gamma.debt on entity asset.gamma outflow currency USD {
+  schedule every year from 2026-01 to 2027-01
+  category financing.debt.service
+  amount = 40
+}
+
+statement by_entity  { structure entity   depth 2 }
+statement by_section { structure category depth 2 }
 ```
 
 ## statement_residual

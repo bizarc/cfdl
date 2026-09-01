@@ -1,0 +1,540 @@
+{
+  "results_version": "0.12",
+  "model_hash": "91dd635e0211ac57a5c3a89dfbe4dc7cd78b886af6138b79dec121530efeef9f",
+  "ledger_hash": "beafde2b94faffd1dfedd5ba8c1b63f21c64fa96f907c73f1751691dc5821ce8",
+  "engine": {
+    "name": "cfdl-engine",
+    "version": "0.8.0"
+  },
+  "warnings": [],
+  "deterministic": {
+    "status": "ok",
+    "metrics": {
+      "entity.asset.alpha.total": {
+        "amount": 200.0,
+        "currency": "USD"
+      },
+      "entity.asset.beta.total": {
+        "amount": 100.0,
+        "currency": "USD"
+      },
+      "entity.asset.gamma.total": {
+        "amount": 820.0,
+        "currency": "USD"
+      },
+      "entity.container.north_fund.total": {
+        "amount": 300.0,
+        "currency": "USD"
+      },
+      "entity.container.south_fund.total": {
+        "amount": 820.0,
+        "currency": "USD"
+      },
+      "model.npv": {
+        "amount": 934.710744,
+        "currency": "USD"
+      },
+      "model.total": {
+        "amount": 1120.0,
+        "currency": "USD"
+      },
+      "model.wal_years": 1.901786,
+      "run.annual_discount_rate": 0.1,
+      "run.periods_per_year": 1.0,
+      "stream.alpha.base_rent.total": {
+        "amount": 200.0,
+        "currency": "USD"
+      },
+      "stream.beta.base_rent.total": {
+        "amount": 100.0,
+        "currency": "USD"
+      },
+      "stream.gamma.debt.total": {
+        "amount": -80.0,
+        "currency": "USD"
+      },
+      "stream.gamma.sale.total": {
+        "amount": 900.0,
+        "currency": "USD"
+      }
+    },
+    "series": {
+      "entity.asset.alpha.net_cash_flow": {
+        "index": {
+          "calendar": "annual",
+          "start": "2026-01-01",
+          "periods": 2
+        },
+        "values": [
+          {
+            "amount": 100.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 100.0,
+            "currency": "USD"
+          }
+        ]
+      },
+      "entity.asset.beta.net_cash_flow": {
+        "index": {
+          "calendar": "annual",
+          "start": "2026-01-01",
+          "periods": 2
+        },
+        "values": [
+          {
+            "amount": 50.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 50.0,
+            "currency": "USD"
+          }
+        ]
+      },
+      "entity.asset.gamma.net_cash_flow": {
+        "index": {
+          "calendar": "annual",
+          "start": "2026-01-01",
+          "periods": 2
+        },
+        "values": [
+          {
+            "amount": -40.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 860.0,
+            "currency": "USD"
+          }
+        ]
+      },
+      "entity.container.north_fund.net_cash_flow": {
+        "index": {
+          "calendar": "annual",
+          "start": "2026-01-01",
+          "periods": 2
+        },
+        "values": [
+          {
+            "amount": 150.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 150.0,
+            "currency": "USD"
+          }
+        ]
+      },
+      "entity.container.south_fund.net_cash_flow": {
+        "index": {
+          "calendar": "annual",
+          "start": "2026-01-01",
+          "periods": 2
+        },
+        "values": [
+          {
+            "amount": -40.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 860.0,
+            "currency": "USD"
+          }
+        ]
+      },
+      "model.net_cash_flow": {
+        "index": {
+          "calendar": "annual",
+          "start": "2026-01-01",
+          "periods": 2
+        },
+        "values": [
+          {
+            "amount": 110.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 1010.0,
+            "currency": "USD"
+          }
+        ]
+      },
+      "stream.alpha.base_rent": {
+        "index": {
+          "calendar": "annual",
+          "start": "2026-01-01",
+          "periods": 2
+        },
+        "offset": 1.0,
+        "entity": "asset.alpha",
+        "category": "operating.revenue.base_rent",
+        "values": [
+          {
+            "amount": 100.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 100.0,
+            "currency": "USD"
+          }
+        ]
+      },
+      "stream.beta.base_rent": {
+        "index": {
+          "calendar": "annual",
+          "start": "2026-01-01",
+          "periods": 2
+        },
+        "offset": 1.0,
+        "entity": "asset.beta",
+        "category": "operating.revenue.base_rent",
+        "values": [
+          {
+            "amount": 50.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 50.0,
+            "currency": "USD"
+          }
+        ]
+      },
+      "stream.gamma.debt": {
+        "index": {
+          "calendar": "annual",
+          "start": "2026-01-01",
+          "periods": 2
+        },
+        "offset": 1.0,
+        "entity": "asset.gamma",
+        "category": "financing.debt.service",
+        "values": [
+          {
+            "amount": -40.0,
+            "currency": "USD"
+          },
+          {
+            "amount": -40.0,
+            "currency": "USD"
+          }
+        ]
+      },
+      "stream.gamma.sale": {
+        "index": {
+          "calendar": "annual",
+          "start": "2026-01-01",
+          "periods": 2
+        },
+        "offset": 1.0,
+        "entity": "asset.gamma",
+        "category": "investing.disposition.sale",
+        "values": [
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 900.0,
+            "currency": "USD"
+          }
+        ]
+      }
+    }
+  },
+  "scenarios": {
+    "status": "not_run",
+    "summaries": []
+  },
+  "monte_carlo": {
+    "status": "not_run",
+    "trials": 1,
+    "seed": 0,
+    "metrics": {},
+    "trial_summaries": []
+  },
+  "statements": {
+    "statements": [
+      {
+        "id": "by_entity",
+        "label": "by_entity",
+        "default": false,
+        "grain": {
+          "calendar": "annual",
+          "start": "2026-01-01",
+          "labels": [
+            "2026",
+            "2027"
+          ]
+        },
+        "rows": [
+          {
+            "kind": "subtotal",
+            "label": "North fund",
+            "depth": 0,
+            "display_sign": 1.0,
+            "values": [
+              {
+                "amount": 150.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 150.0,
+                "currency": "USD"
+              }
+            ],
+            "total": 300.0
+          },
+          {
+            "kind": "line",
+            "label": "Alpha",
+            "depth": 1,
+            "display_sign": 1.0,
+            "values": [
+              {
+                "amount": 100.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 100.0,
+                "currency": "USD"
+              }
+            ],
+            "total": 200.0,
+            "streams": [
+              "stream.alpha.base_rent"
+            ]
+          },
+          {
+            "kind": "line",
+            "label": "Beta",
+            "depth": 1,
+            "display_sign": 1.0,
+            "values": [
+              {
+                "amount": 50.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 50.0,
+                "currency": "USD"
+              }
+            ],
+            "total": 100.0,
+            "streams": [
+              "stream.beta.base_rent"
+            ]
+          },
+          {
+            "kind": "subtotal",
+            "label": "South fund",
+            "depth": 0,
+            "display_sign": 1.0,
+            "values": [
+              {
+                "amount": -40.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 860.0,
+                "currency": "USD"
+              }
+            ],
+            "total": 820.0
+          },
+          {
+            "kind": "line",
+            "label": "Gamma",
+            "depth": 1,
+            "display_sign": 1.0,
+            "values": [
+              {
+                "amount": -40.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 860.0,
+                "currency": "USD"
+              }
+            ],
+            "total": 820.0,
+            "streams": [
+              "stream.gamma.debt",
+              "stream.gamma.sale"
+            ]
+          }
+        ],
+        "reconciliation": {
+          "bottom_line": 1120.0,
+          "model_total": 1120.0,
+          "residual": 0.0
+        }
+      },
+      {
+        "id": "by_section",
+        "label": "by_section",
+        "default": false,
+        "grain": {
+          "calendar": "annual",
+          "start": "2026-01-01",
+          "labels": [
+            "2026",
+            "2027"
+          ]
+        },
+        "rows": [
+          {
+            "kind": "subtotal",
+            "label": "Operating",
+            "depth": 0,
+            "display_sign": 1.0,
+            "values": [
+              {
+                "amount": 150.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 150.0,
+                "currency": "USD"
+              }
+            ],
+            "total": 300.0
+          },
+          {
+            "kind": "line",
+            "label": "Revenue",
+            "depth": 1,
+            "display_sign": 1.0,
+            "values": [
+              {
+                "amount": 150.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 150.0,
+                "currency": "USD"
+              }
+            ],
+            "total": 300.0,
+            "streams": [
+              "stream.alpha.base_rent",
+              "stream.beta.base_rent"
+            ]
+          },
+          {
+            "kind": "subtotal",
+            "label": "Investing",
+            "depth": 0,
+            "display_sign": 1.0,
+            "values": [
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 900.0,
+                "currency": "USD"
+              }
+            ],
+            "total": 900.0
+          },
+          {
+            "kind": "line",
+            "label": "Disposition",
+            "depth": 1,
+            "display_sign": 1.0,
+            "values": [
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 900.0,
+                "currency": "USD"
+              }
+            ],
+            "total": 900.0,
+            "streams": [
+              "stream.gamma.sale"
+            ]
+          },
+          {
+            "kind": "subtotal",
+            "label": "Financing",
+            "depth": 0,
+            "display_sign": 1.0,
+            "values": [
+              {
+                "amount": -40.0,
+                "currency": "USD"
+              },
+              {
+                "amount": -40.0,
+                "currency": "USD"
+              }
+            ],
+            "total": -80.0
+          },
+          {
+            "kind": "line",
+            "label": "Debt",
+            "depth": 1,
+            "display_sign": 1.0,
+            "values": [
+              {
+                "amount": -40.0,
+                "currency": "USD"
+              },
+              {
+                "amount": -40.0,
+                "currency": "USD"
+              }
+            ],
+            "total": -80.0,
+            "streams": [
+              "stream.gamma.debt"
+            ]
+          }
+        ],
+        "reconciliation": {
+          "bottom_line": 1120.0,
+          "model_total": 1120.0,
+          "residual": 0.0
+        }
+      }
+    ]
+  },
+  "graph": {
+    "entities": [
+      {
+        "symbol": "asset.alpha",
+        "family": "asset",
+        "type": "Asset.Financial",
+        "parent": "container.north_fund"
+      },
+      {
+        "symbol": "asset.beta",
+        "family": "asset",
+        "type": "Asset.Financial",
+        "parent": "container.north_fund"
+      },
+      {
+        "symbol": "asset.gamma",
+        "family": "asset",
+        "type": "Asset.Financial",
+        "parent": "container.south_fund"
+      },
+      {
+        "symbol": "container.north_fund",
+        "family": "container",
+        "type": "Container.Fund"
+      },
+      {
+        "symbol": "container.south_fund",
+        "family": "container",
+        "type": "Container.Fund"
+      }
+    ]
+  }
+}

@@ -1,0 +1,57 @@
+version 0.1
+model "statement-generated-order"
+time calendar annual from 2026-01 for 2
+
+// A GENERATED STATEMENT READS AS A HIERARCHY, AND IN THE RIGHT ORDER.
+//
+// `docs/13` §7.55. Two things were wrong, and a single-root single-category
+// fixture could show neither.
+//
+// DEPTH FIRST. Sorting rows by (depth, symbol) is breadth first: two funds
+// holding two properties each came out as both funds followed by all four
+// properties in one flat block, with nothing saying which belonged to which.
+// A parent is now followed by its own subtree.
+//
+// THE CATEGORY ROOTS HAVE A CANONICAL ORDER and it is not alphabetical.
+// `CATEGORY_ROOTS` is operating, investing, financing — the order a cash flow
+// statement is read in — and iterating the set alphabetically put financing
+// first. Below a root there is no canonical order, so siblings sort
+// alphabetically: arbitrary, but stated and stable.
+//
+// LABELS ARE DERIVED. A generated statement is meant to need no declarations,
+// and a row reading `operating.revenue.base_rent` is a presentation that has
+// not been presented. The last segment, underscores opened out, capitalised.
+
+entity container north_fund : Container.Fund
+entity container south_fund : Container.Fund
+
+entity asset alpha : Asset.Financial { part of container.north_fund }
+entity asset beta  : Asset.Financial { part of container.north_fund }
+entity asset gamma : Asset.Financial { part of container.south_fund }
+
+stream alpha.base_rent on entity asset.alpha inflow currency USD {
+  schedule every year from 2026-01 to 2027-01
+  category operating.revenue.base_rent
+  amount = 100
+}
+
+stream beta.base_rent on entity asset.beta inflow currency USD {
+  schedule every year from 2026-01 to 2027-01
+  category operating.revenue.base_rent
+  amount = 50
+}
+
+stream gamma.sale on entity asset.gamma inflow currency USD {
+  schedule every year from 2027-01 to 2027-01
+  category investing.disposition.sale
+  amount = 900
+}
+
+stream gamma.debt on entity asset.gamma outflow currency USD {
+  schedule every year from 2026-01 to 2027-01
+  category financing.debt.service
+  amount = 40
+}
+
+statement by_entity  { structure entity   depth 2 }
+statement by_section { structure category depth 2 }
