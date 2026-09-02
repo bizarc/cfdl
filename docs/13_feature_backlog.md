@@ -3001,55 +3001,48 @@ Provenance: found building the clean-up call into `americredit_2017_1`,
 1-2 September 2026, after two wrong diagnoses recorded here and withdrawn.
 Related: §7.97, §7.74, `docs/34` D3, `docs/38` item 4.
 
-### 7.97 A guard's series selector is unchecked, and an unknown name folds to zero
+### 7.97 A guard reads a declared name, not a selector — WITHDRAWN
 
-*Belongs with the language and engine (section 5).*
+*Withdrawn 2 September 2026, the day it was raised. Kept because the wrong
+version of it is easy to re-derive, and because the discipline it landed on is
+the useful part.*
 
-A guard — on a lifecycle edge or a named event — may fold a series over a
-backward window. If the selector names something the causal plane does not
-publish, nothing is reported: it matches nothing, the fold returns its identity,
-and the guard proceeds on a zero it never computed.
+**What was claimed.** That a guard folding a series selector which resolves to
+nothing proceeds on a zero it never computed, with no diagnostic, and that a
+guard's selector should therefore be validated the way a metric's is (`E1365`).
 
-That is `§7.38`'s silence one construct over, and it is worse here than in a
-stream. The natural shape of a guard is a comparison against zero — "has this
-emptied out", "did anything arrive", "did the ratio fall to nothing" — so a
-selector that resolves to an empty selection and a condition that has genuinely
-gone to zero are indistinguishable. The failure mode is not a wrong number in a
-column; it is a transition firing in the first period, on a model that looks
-correct.
+**Why that is not a gap.** The protection already exists, for names. An account
+balance and a field are read by DECLARED NAME, and an undeclared one is refused
+with precisely the argument this entry was about to make:
 
-Observed: a guard written against a name the walk does not resolve fired at t=1
-on a quantity that was plainly non-zero at t=0, with no diagnostic at compile or
-run.
+```
+unresolved name: `prev.collectionz` is not declared — each read as zero.
+Declare it, supply it in the run configuration, or correct the name.
+```
 
-**A metric is not the comparison, and reaching for one is the mistake this entry
-should not encourage.** A metric folds a series that is checked (`E1365`), and
-it is tempting to read that as an asymmetry to close. It is not. A metric is
-evaluated ONCE, at the horizon, over the finished projection: it is a
-valuation-plane reading by construction, and the set of series it may fold is
-larger precisely because the projection is over. A guard reads settled history
-DURING the walk and must not reach into what has not happened yet. That a metric
-can fold something a guard cannot is the separation holding, and any fix framed
-as "let a guard see what a metric sees" is wrong at the premise.
+A selector is not a name. It is a pattern over published series, and matching
+nothing is a legitimate outcome that a model may state on purpose — `§7.95`
+settles that, and `"nothing.*"` says it on its face. Validating patterns in
+guards would make the unchecked path safe instead of using the checked path that
+is already there.
 
-**Nor is a new read what is wanted.** The causal plane already carries running
-quantities, in two vehicles a guard can see: an `account`, whose balance is
-settled state and is read as such, and a field, whose recurrence carries a value
-forward. A model needing an aggregate a guard will test should materialize it in
-one of those — which is what `benchmarks/credit/americredit_2017_1` does, with a
-field on the container summing its parts' surviving fractions. The vehicles are
-there and they are the right shape; nothing in this entry asks for another.
+**The discipline, which is the part worth keeping.** A guard should read a
+declared name. The causal plane carries running quantities in two vehicles built
+for it — an `account`, whose balance is settled state, and a field, whose
+recurrence carries a value forward — and both are resolved and refused when
+misspelled. A model needing an aggregate a guard will test should materialize it
+in one of those rather than folding a pattern at the point of the test.
+`benchmarks/credit/americredit_2017_1` does this: the trust carries a field
+summing its parts' surviving fractions, and the edge reads the field.
 
-What is missing is narrower still: a guard's selector should be resolved against
-what the CAUSAL plane publishes and refused when it cannot be, rather than
-silently treated as an empty selection. `§7.95` is the neighbouring decision — a fold's
-identity over an empty selection is the right answer when the emptiness is
-declared (`"nothing.*"` says so on its face), and the wrong one when the name is
-simply unresolvable here.
+Note also what was wrong with the original framing beyond the conclusion. It
+used a metric as the yardstick — "a metric's selector is checked, a guard's is
+not" — and a metric is evaluated once at the horizon over the finished
+projection. Its larger foldable set is the plane separation holding, not an
+asymmetry to close, and any request shaped as "let a guard see what a metric
+sees" is wrong at the premise.
 
-Provenance: found writing a guard for the AmeriCredit trust's wind-up,
-2 September 2026; the first framing of this entry used a metric as the yardstick
-and was withdrawn for the reason recorded above. Related: §7.38, §7.95, §7.98.
+Related: §7.95, §7.38, §7.98.
 
 ### 7.98 The relation is published as a graph, and the model cannot ask it anything
 

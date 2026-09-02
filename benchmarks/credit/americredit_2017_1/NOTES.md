@@ -347,17 +347,27 @@ The state is evaluated as a period opens. A pool is carried into the period,
 collects, and the period ends; so the guard reads `pool_prior` — the pool the
 trust carried in — and fires at period 48. The redemption price is paid at 47,
 on the last distribution made while the trust still owns the receivables, and
-the pot says exactly that by asking whether the pools are still paying:
+the pot says exactly that, as the period the pool crosses the threshold:
 
 ```cfdl
-if(series_sum("credit.pool.interest.*", time.t, time.t) > 0.0
+if(container.trust.pool_prior > inputs.call_threshold
    and container.trust.pool_bal <= inputs.call_threshold, container.trust.pool_bal, 0.0)
 ```
 
-The hand-written version needed both edges of a rising edge — `pool_bal <= X and
-pool_prior > X` — because nothing else remembered whether the call had happened.
-Here the pools' own cash is the second half, and it is a same-period read, which
-the container's derived state could not supply.
+**That two-sided test was in the model from the start and it was never the
+defect.** What was wrong with the original was the threshold written out as a
+literal thirty times, not the comparison, and it is worth recording that the
+first two attempts to "improve" it made it worse: reading the trust's own status
+put a hand-asserted state where a derived one belongs, and folding
+`series_sum("credit.pool.interest.*", …)` replaced two checked field reads with
+an unchecked pattern. A misspelled field is refused; a selector that matches
+nothing folds to zero in silence, and here that silence would have stopped the
+largest distribution in the deal.
+
+The pot needs a SAME-PERIOD answer, which is the other reason it reads the trust
+rather than its state: a container's derived state lags its parts by one period
+by construction, so `wound_up` arrives too late to gate the redeeming
+distribution and would be the wrong question anyway.
 
 ### The pool is extinguished, not silenced
 

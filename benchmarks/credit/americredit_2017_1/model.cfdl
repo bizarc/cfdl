@@ -655,12 +655,15 @@ waterfall notes.distribution on entity container.trust {
   schedule every month from 2017-02 to 2022-11
 
   // Collections for this distribution, and at the first one the January
-  // pools' extra month. The redemption price joins the pot on the
-  // distribution the clean-up call is first available.
+  // pools' extra month. The redemption price joins the pot on the distribution
+  // the clean-up call is first available — the period the pool crosses the
+  // threshold, which is two reads of a declared field rather than a pattern.
+  // A misspelled field is refused; a selector matching nothing folds to zero
+  // in silence, and that silence would stop the largest distribution here.
   from series_sum("credit.pool.sched_principal.*", if(time.t == 1.0, 0.0, time.t), time.t)
        + series_sum("credit.pool.prepay.*", if(time.t == 1.0, 0.0, time.t), time.t)
        + series_sum("credit.pool.interest.*", if(time.t == 1.0, 0.0, time.t), time.t)
-       + if(series_sum("credit.pool.interest.*", time.t, time.t) > 0.0
+       + if(container.trust.pool_prior > inputs.call_threshold
             and container.trust.pool_bal <= inputs.call_threshold, container.trust.pool_bal, 0.0)
 
   //  1. the servicer. The pack carries the fee as a negative series on each
