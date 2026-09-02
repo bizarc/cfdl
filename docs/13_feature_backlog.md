@@ -2955,3 +2955,153 @@ periods).
 Provenance: deferred out of §7.85 on 31 August 2026, sharpened while building
 §7.86's four reductions, and settled the same day rather than left as an open
 question — the decision is cheap to record now and expensive to re-derive.
+
+### 7.96 A party owns at most one account
+
+*Belongs with the language and engine (section 5). Found converting
+`benchmarks/credit/auto_abs_tranches` onto accounts, 2 September 2026.*
+
+**What could not be expressed:** a noteholder's two positions. A class of
+notes has a principal position — what has been repaid, which is what its
+remaining claim is stated against — and an interest position, what it has
+earned. Both are cash allocated to the same party, and `docs/01` §10.6 says a
+party owns at most one account, so `pay a2_interest to party.a2_holders` and
+`pay a2_principal to party.a2_holders` land in one balance and the class's
+claim, `face − principal repaid`, cannot be read from it.
+
+**What forced the discovery:** the case's principal steps read
+`prev.<class>_principal` as the class's cumulative repayment. The interest
+steps had to go somewhere else, and the only spelling the rule allows is a
+STRUCTURE-owned account per class (`account a2_interest { from 0.0 }`, paid
+by `to account`), which records the cash correctly and attributes it to
+nobody: the holder's `entity.party.*.net_cash_flow` carries principal only,
+and the interest a class earned is visible in an account that no party owns.
+Seven such accounts in one model, each a workaround for one sentence.
+
+**Why the rule exists, and why it is the wrong rule.** §10.6 keeps "their
+account" resolvable: `pay <step> to <party>` lands in the party's account
+without naming it, and with two the destination is ambiguous. That is a
+reason to require the explicit form when a party owns more than one, not to
+forbid the second account. A party with several positions is the ordinary
+case in every structured deal — principal and interest on a note, capital and
+preferred return on a partnership interest, a lender's advances and its
+recoveries — and each is a claim the waterfall pays separately.
+
+**The shape.** Lift the limit: a party MAY own several accounts. `pay <step>
+to <party>` keeps its meaning while the party owns exactly one; when it owns
+more, the bare form is refused at compile with the accounts named, and the
+step says `to account <name>`. Party-level returns (`irr(party.x)`,
+`moic(party.x)`, `entity.party.x.net_cash_flow`) fold across every account
+the party owns, which is what they mean today with one. Nothing else moves:
+the balance law, `prev.<account>`, and the journal are per account already.
+
+Related: §7.76 (the account adoption pass, whose reserve was the first
+account), `docs/28` §5.1 (where the one-account rule is stated as a
+resolution convenience), `docs/17` §13.
+
+### 7.97 A field that reads a waterfall step reads zero, in silence
+
+*Belongs with the language and engine (section 5). Found by a probe during
+the benchmark review, 2 September 2026, and the reason the review's
+"balance a waterfall reduces by paying it" framing was withdrawn.*
+
+**What happens.** A field recurrence reading a waterfall step's series at the
+previous period —
+
+```cfdl
+entity asset trust : Asset.Financial {
+  bal init 1000.0 next prev - series_sum("dist.principal", time.t - 1, time.t - 1)
+}
+```
+
+— compiles clean, runs with no warning, and reads zero every period. In the
+probe the balance never moved and a step capped at `min(remaining,
+asset.trust.bal)` paid 1,800 of collections against a 1,000 balance. The
+walk's read table (`docs/28` §4) makes a field's read of series at `t − 1`
+legal, and `fixtures/valid/recurrence_reads_settled_cash` pins it for a
+STREAM's series; a waterfall step's series is not available to the causal
+plane at all, and nothing says so.
+
+**Why this is a capability entry and not only a defect.** The silence is the
+same class as §7.38 and §7.95, and the refusal that closes it exists for the
+neighbouring reader: `E1346_STREAM_READS_WATERFALL_STEP` refuses a STREAM
+that names a step, on the stated ground that every waterfall runs after every
+stream. A field's rule has the same relationship to a waterfall and no such
+check. What the probe settled beyond the diagnostic is the modeling rule the
+benchmark programme now carries: **a waterfall never influences or updates a
+balance in the causal plane.** What a waterfall does is allocate cash to
+parties, whose ACCOUNTS hold their claims; a class's remaining claim is
+`face − principal in its holder's account`, read as `prev.<account>`, and
+every structural test — an overcollateralization target, a step-down, a
+turbo — is an expression over accounts and pool state. Under that rule there
+is no reason for a field to read a step, and the read should be refused the
+way `E1346` refuses it for a stream.
+
+**The shape.** Extend `E1346` (or a sibling) to field rules, event guards and
+account inflows: a `series_sum`/`series_avg` naming a waterfall step in any
+causal-plane reader is refused at compile with the step named. Then retire
+the framing this entry replaces: `docs/17` §5's "a balance a waterfall
+reduces by paying it", `docs/26` "A liability stack" (the paragraph that
+says a diverging distribution forces a balance field), and
+`benchmarks/credit/americredit_2017_1/NOTES.md` "Why the waterfall reads a
+field" — each of which asks for a balance the waterfall writes, and each of
+which is answered by the holder's account.
+
+Related: §7.38, §7.95, §7.74, `docs/28` §4 and §5.1, `docs/17` §5 and §13.
+`benchmarks/credit/auto_abs_tranches` is the first case written under the
+rule: no class carries a balance, and the published grid is asserted as the
+holders' account balances.
+
+### 7.98 The remaining pool balance is not readable in the causal plane
+
+*Belongs with the language and the credit pack (sections 2 and 5). Found
+converting `benchmarks/credit/auto_abs_tranches`, 2 September 2026; the same
+absence made `americredit_2017_1` restate its pool as a closed form.*
+
+**What could not be expressed:** "what the trust still owns". A container's
+`part of` relation folds its members' CASH — `entity.container.trust.
+net_cash_flow` — and folds nothing else. The credit pack lowers each pool's
+interest, principal, prepayments and servicing as streams and carries one
+piece of state, the surviving fraction, but publishes no balance series per
+pool; the balance is inside every rule's closed form. The reporting plane has
+it — `domain.credit.balance_outstanding` and `domain.credit.pool_factor` are
+statement subtotals a reader can see — and a guard, a field or a step cannot
+read `domain.*`, because a subtotal is a fold over the settled ledger and
+inside the walk the ledger has not settled (`docs/01` §13.1).
+
+**What forced the discovery.** `auto_abs_tranches` does not need the balance:
+a no-loss sequential deal tests nothing against the pool. The next deal shape
+does, and the one case that has it shows the cost: AmeriCredit's
+overcollateralization target and clean-up call both read the pool balance the
+trust carried in, and the trust restates it as `pool_bal`/`pool_prior` — a
+closed form summing twelve pools' amortization arithmetic, written a second
+time beside the contracts that already carry it. Every trust with a target,
+a trigger or a call will need the same field, and every one will restate the
+pack.
+
+**The shape**, in two halves that are separately useful:
+
+1. **The pack publishes the balance as a field.** `credit.pool_level_pay` and
+   its siblings declare a rule field `credit_<family>_balance{{contract.
+   suffix_ident}}` beside the survival fraction — the opening balance the
+   rules already compute, carried as state so a guard can read
+   `asset.p01.credit_level_pay_balance_p01` by declared name (the discipline
+   `docs/28` §4 and the withdrawn selector-validation entry both land on: a
+   guard reads a name, never a pattern).
+2. **A container can fold its members' fields.** `part of` today gives the
+   parent its members' cash; a parent should be able to declare a field
+   that is the relation's fold of a member field — `pool_balance = sum of
+   parts' credit_level_pay_balance` — rather than twelve `prev.asset.pNN.…`
+   reads written by hand. That is the same request as reading the relation
+   the run already publishes as `graph.entities`, stated for the one query
+   every SPV asks: what do I hold, and how much of it is left.
+
+Until both land, a trust that needs its balance in a guard materializes it
+as a field summing named member fields, which is what AmeriCredit does and
+what `auto_abs_tranches`' NOTES.md records as the gap the clean-up call will
+meet.
+
+Related: §7.88 (a container is not a kind of asset), §7.89 (the relation
+vocabulary), §7.74 (Intex scope — every trigger there reads a pool balance),
+§7.97 (why the balance must come from the collateral and never from the
+waterfall).
