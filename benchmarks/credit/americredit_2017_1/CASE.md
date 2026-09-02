@@ -63,36 +63,6 @@ Clause 19 is then the top-up it is: whatever the balance is short of the
 required amount. On this deal, with no losses assumed, that is zero at every
 period — because the balance is at target, which is what the clause says.
 
-The **clean-up call** is what ends the deal, and it is an occurrence rather than
-a condition a pool sits in. Once the pool falls to 10% of its original balance
-the servicer may purchase the receivables; the published tables assume it does,
-which is why they stop. Each of the twelve assumed pools is a loan pool carrying
-the credit pack's own machine, and the election drives their
-`amortizing -> retired` edge. Once-ness is the topology — nothing leaves
-`retired` — rather than any latch on the event.
-
-The two halves land a period apart, and deliberately. A pool is carried into a
-period, collects, and the period ends. The redeeming distribution is the last one
-made while the trust still owns the receivables, so the redemption price joins
-that pot. When the *next* period opens, the pool carried in has fallen to the
-threshold — the purchase has settled — and that is where the transition belongs
-and where the published tables put their first zero.
-
-The cash then stops because the pool is gone, not because anything switches it
-off. A level-pay pool contract carries a surviving fraction, and every stream it
-produces is a balance times an amortization factor times that fraction; the
-election writes it to zero, and a pool with no surviving balance pays nothing.
-The state and the cash are the same fact rather than two that must be kept in
-step.
-
-The **trust is a container**, and it winds itself up. It holds the twelve pools;
-the pools hold the receivables. What it still owns is its parts' surviving
-fractions summed, and when that reaches zero the trust moves to `wound_up` — one
-period after the pools retire, because a container can only act on a settled
-part, and winding up any earlier would end the trust before its pools' last
-period of activity had been counted. Nothing asserts the trust's state; it
-follows from what the trust contains.
-
 All twenty-two clauses are written out. Ten of them — the parity steps and the
 final-maturity steps — pay nothing at every period and every speed, because the
 pool always covers the notes and every class retires years early. They are there
@@ -102,8 +72,7 @@ because the deal has them.
 
 The model agrees with the reference to **5 cents**, across all seven classes,
 every clause of the waterfall and all 63 periods — 32 asserted series, not the
-balances alone, and the clauses are asserted past the call as well as up to it:
-zero, in every period after the trust is retired. Against the published grid, the reference reproduces:
+balances alone. Against the published grid, the reference reproduces:
 
 | | |
 |---|---:|
@@ -146,8 +115,15 @@ Every published weighted average life is reproduced, to call and to maturity.
 - **The weighted average lives.** All 48 are reproduced by the reference and
   none is asserted by the case: `docs/20` §3.1 — a published life still has no
   series or metric to check it against.
-- **The other three speeds' call dates.** The call date moves with the speed,
-  and the reference reproduces all four; the case asserts the one it runs.
+- **Anything after the clean-up call.** The call retires the notes at period 47
+  and there is no trust left to distribute from, so the cash columns end there.
+  The model's contracts keep amortizing past it, because a contract runs for
+  its declared term and nothing can end it early; the certificateholder absorbs
+  what they produce and `model.total` includes it.
+- **Mutation testing.** `docs/20` §3.3 asks for it and it has not been run. The
+  hole `docs/20` §3.2 warns about is present by construction here: the
+  certificateholder's step-down release absorbs whatever the notes are not
+  paid, so a residual assertion is one-sided.
 
 ## What the expectations are, and are not
 
@@ -163,14 +139,6 @@ same class terms the reference carries, so a transcription error would appear
 in both. What guards the inputs is the published grid itself — 195 informative
 cells at four speeds is not something a mistyped balance or coupon survives.
 
-`model.total` is the reference's too. The trust's net cash is every collection
-on the receivables less the servicing fee taken out of them, over the collection
-periods the trust owns and no others, and the reference computes it that way
-without reference to the model — so the figure carries the clean-up call in it:
-collections stop when the servicer buys the loans. The redemption price is not
-part of it, since the trust passes that straight out to the noteholders rather
-than earning it.
-
+`model.total` is a regression anchor from this model, not an external figure.
 Every external assertion is the independent reference against the published
-grid, and `expected.csv` holds that reference's own output: every class balance
-and every clause of the distribution, in every period of the book.
+grid; `expected.csv` holds that reference's per-period class balances.

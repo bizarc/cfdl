@@ -32,7 +32,7 @@ of 2026-08-31:
 
 | item | remains |
 |---|---|
-| §7.74 | the deal mechanics: coupled interest/principal waterfalls on a trigger, a step's shortfall as a published series, deferred/PIK interest, servicer advances. The clean-up call — a case, not a construct — closed 2026-09-01 on `americredit_2017_1` (`docs/38` item 4), and cost three new entries, §7.96 to §7.98 |
+| §7.74 | the deal mechanics: coupled interest/principal waterfalls on a trigger, a step's shortfall as a published series, deferred/PIK interest, servicer advances, the clean-up call (a case, not a construct) |
 | §7.76 | part two only, and now only for the packs other than credit — a reserve contract shape where a document demands one (DSRA, replacement reserve, FF&E). Credit's shipped 2026-08-31 on `americredit_2017_1` (#247), clause 19's reserve as `account reserve` funded at closing with the top-up as its step. CREST is NOT the cheapest opening, contrary to what this row said: its ~$4,606 is one rounded aggregate against three unknowns, the port's reserve schedule was never carried into the repo, and the case has no close period to fund from — see `docs/13` §7.76 |
 | §7.77 | the external-reference benchmark — a published credit agreement with a cash-trap schedule; a sourcing problem, not a language gap |
 | §7.75 | the dispatch model that makes `mwh_cycled_year` an output — gated on a dispatch reference that runs (SAM segfaulted front-of-meter), not on the engine; also M3's last energy item |
