@@ -488,24 +488,36 @@ balance fields at all — each step is cumulative collections against the class'
 original size and the amount senior to it, `series_sum(..., 0, time.t)` less the
 same one period back — so the balance is derived from cash and never stored.
 
-That idiom does not reach this deal. The turbo runs toward a target stated
+**That case predates both the account and the walk, and reasoning from it was a
+mistake.** It carries no balance fields because when it was written there was no
+other way; it is not a pattern to copy. The reference documentation gives the
+intended shape directly, and it is neither of the two idioms above.
+
+`docs/28` §5 states it: a waterfall step publishes as the series
+`<waterfall>.<step>`, and a balance READS its allocation strictly backward —
+`series_sum("notes.distribution.a1_principal", time.t - 1, time.t - 1)` — so a
+class balance is what it was, less what the waterfall actually paid it. The
+waterfall allocates and publishes; the balance reads; neither owns the other.
+That would remove the duplication entirely, and it needs no new construct.
+
+It does not work today. The read compiles, runs, and returns zero in silence: the
+state stage is handed a settled-cash store built from streams alone, and a
+waterfall step publishes into results rather than into that store. A field
+reading a plain stream series backward works correctly, which is how the gap was
+isolated. Filed as `docs/13` §7.100.
+
+So the duplication stands for now, and the reason has changed: it is not that the
+language cannot express the balance, it is that the expression the design
+prescribes silently reads zero. The old idiom does not reach this deal either. The turbo runs toward a target stated
 against the reserve balance, and the step-down is a function of the note
 balances themselves, so there is no cumulative closed form of collections that
-gives a class's balance. The two other candidates are both refused:
-
-- **The waterfall reading its own output.** `series_sum("notes.distribution.a1_principal",
-  0, time.t - 1)` is strictly backward and settled, and is refused anyway —
-  `E1342_WATERFALL_SERIES_NOT_VISIBLE`, "which this waterfall has not finished
-  paying". The refusal is on the series, not on the window.
-- **An account.** An account is a location cash sits in. A note balance is a
-  liability, and paying a noteholder does not draw down an account.
-
-So the field is the only vehicle, and the waterfall reading it follows. What is
-actually missing is a balance a waterfall REDUCES BY PAYING IT — a liability the
-steps amortize, rather than a recurrence that restates what the steps did. The
-case has carried the duplication since it shipped, and it predates the account
-and the walk; whether the right answer is to widen the account or to add
-something else is a design question, not a defect in this model.
+gives a class's balance. Two things the design rules out, recorded so they are not re-proposed. A
+waterfall reading its OWN output is refused deliberately
+(`E1342_WATERFALL_SERIES_NOT_VISIBLE`, and `docs/28` §5 preserves the
+separation). And a step that decrements a balance is rejected in the same
+section — "a step is not a debit: it is A CLAIM ON CASH FLOWS UNDER RULES AT
+TIMES, not a posting engine". The direction is one way: the balance reads the
+step, never the reverse.
 
 An entry for this was removed from `docs/13` as closed (#115) while the
 duplication it named was still here, and the case went on citing the number.

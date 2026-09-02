@@ -3126,3 +3126,72 @@ Both halves of that are wrong (§7.98), and the name is what made it look right.
 Provenance: named while reviewing the AmeriCredit trust's wind-up, after the
 container roll-up was used as a liveness proxy and the reading was rejected.
 Related: §7.98, §7.97, §7.88, §7.43.
+
+### 7.100 A balance cannot read its allocation — the walk's own §5 is unimplemented
+
+*Belongs with the language and engine (section 5). Roadmap: M2, and it is the
+unfinished half of what M1 was for.*
+
+`docs/28` §5 states the mechanism by which a liability tracks what a waterfall
+paid it, and states that it needs nothing new:
+
+> **And that needs no new construct.** A waterfall step already publishes as the
+> series `<waterfall>.<step>`, so a note's balance reads its allocation the way
+> it reads anything else — `series_sum("dist.principal_a1", time.t - 1, time.t
+> - 1)` — strictly backward, under §4's rule. […] The waterfall allocates and
+> publishes; the balance reads. Neither owns the other.
+
+It does not work. The read compiles, runs, and returns **zero**, in silence.
+
+**Where it stops.** The state stage reads a settled-cash store it is handed
+before each period (`observe_cash`), and that store is built from streams alone
+(`crates/cfdl-engine/src/lib.rs`):
+
+```rust
+let mut full: BTreeMap<String, Vec<f64>> = ir
+    .streams.iter()
+    .map(|s| (s.name.clone(), vec![0.0_f64; timeline.len()]))
+    .collect();
+```
+
+A waterfall step publishes as a series in RESULTS, which is what §5 observes,
+and never enters the store a field resolves against. So the selector matches
+nothing and folds to its identity — §7.38's silence, in the most load-bearing
+place it has yet appeared, because the expression that silently reads zero is a
+balance that consequently never amortizes.
+
+Probed both ways to be sure the gap is this and not something wider. A field
+reading a plain STREAM series backward works exactly as specified —
+`cum init 0 next prev + series_sum("pool.principal", time.t - 1, time.t - 1)`
+gives `[0, 100, 200, 300, 400]`. The same field reading a waterfall step gives a
+balance that never moves.
+
+**What it costs, concretely.** `benchmarks/credit/americredit_2017_1` states the
+distribution arithmetic TWICE — once at the current period inside the waterfall's
+twenty-two clauses, and once lagged inside seven balance recurrences that restate
+the same step-down and turbo — because a balance cannot read what it was paid.
+The model's own header says so, and blames a limitation that has since half
+lifted: a field could read no series at all when the case was written, and now
+reads stream series but not step series. Nothing keeps the two copies in step but
+care, and the case asserts every clause individually for exactly that reason.
+
+**What this is not.** Not `prev.<waterfall>.<step>`, and not a step that
+decrements a balance — §5 rejects both by name, the first as the liability
+reaching into the waterfall and the second because "a step is not a debit: it is
+A CLAIM ON CASH FLOWS UNDER RULES AT TIMES, not a posting engine". Not a
+waterfall reading its own output either, which is separately and deliberately
+refused (`E1342_WATERFALL_SERIES_NOT_VISIBLE`, `distributions.rs`). The design is
+settled and one-directional; only the plumbing is missing.
+
+**Two things to settle in doing it.** Whether the store gains step series for
+every waterfall or only where a field references one; and whether an unresolvable
+name in a field's rule should be refused rather than folded to zero, which is the
+§7.97 discipline arriving from the other side — a step series is a NAME the model
+declared, not a pattern over the world, and reading a declared name as zero is
+what the account and field resolvers already refuse.
+
+Provenance: found reasoning from `docs/28` rather than from a sibling case, after
+`auto_abs_tranches` was used as the model for how a tranche balance is carried
+and turned out to predate both the account and the walk. 2 September 2026.
+Related: §7.38, §7.97 (withdrawn), `docs/28` §5 and §5.1, and the entry deleted
+as closed in #115 whose duplication this is.
