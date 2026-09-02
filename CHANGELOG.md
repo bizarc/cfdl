@@ -8,6 +8,39 @@ This project follows Semantic Versioning: https://semver.org/
 
 ## [Unreleased]
 
+### Changed
+
+**The AmeriCredit clean-up call is an occurrence, and the trust is a container
+(`docs/38` item 4).** `benchmarks/credit/americredit_2017_1` carried the call as
+arithmetic — the 10% pool threshold written out thirty times, a hand-written
+rising edge in the pot — and did not end the deal: the twelve pool contracts
+amortized to the end of the book and the certificateholder absorbed
+$100,885,317.21 of collections on receivables the servicer had already bought.
+
+The deal now runs on the machines the pack already declared. Each of the twelve
+pools is a `Credit.Asset.LoanPool` carrying `credit.pool`, and the election
+drives their `amortizing -> retired` edge — once by topology, not by any latch —
+guarded on the pool the trust carries INTO the period, so the transition lands
+where the published tables put their first zero. The cash stops because the pool
+is gone: the event zeroes `credit_level_pay_survival`, the one recurrence every
+lowered stream multiplies by, so a purchased pool has no surviving balance rather
+than suppressed streams.
+
+The trust is now a `Container.SPV` rather than a loan pool, and **winds itself
+up when it is empty** — its parts' surviving fractions, summed, reaching zero —
+one period after the pools retire, because a container can only see a settled
+part. Nothing asserts its state.
+
+All 179 series are bit-identical through the call; `model.total` falls to
+1,115,050,449.22, which the reference now derives independently. `expected.csv`
+is generated rather than assembled by hand, and asserts every clause as zero
+after the call where the file had been blank.
+
+Three backlog entries came out of it, none closed: a pack declares a lifecycle
+state and connects it to nothing (`docs/13` §7.96), an entity's aggregate is
+unreadable in the causal plane and silently reads zero (§7.97), and the
+containment relation aggregates cash and nothing else (§7.98).
+
 ## [0.9.0] - 2026-09-01
 
 The reporting plane: metrics, slices, and statements. 17 commits since 0.8.0.
