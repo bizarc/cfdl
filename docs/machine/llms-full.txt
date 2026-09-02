@@ -18372,33 +18372,31 @@ waterfall g3.interest on entity asset.trust {
 
 ## credit/auto_abs_tranches
 
-The note classes of an auto ABS: one ordered waterfall paying six classes by seniority, reconciled against the issuer's published percent-outstanding grid at every distribution date.
+The note classes of an auto ABS: the trust as a container, collections as accounts, and ordered waterfalls paying seven classes by seniority, reconciled against the issuer's published percent-outstanding grid at every distribution date.
 
-One ordered waterfall paying six classes by seniority, over 48 distribution
-dates.
+The trust as a container, the notes as claims on its cash, and the priority of
+payments as two ordered allocations from the two amounts the indenture defines.
 
-A class is untouched until everything senior to it is repaid, then takes
-principal until it is gone. One expression says that, and says it identically
-before, during and after the class pays down:
+Interest collected, net of the servicer's fee and the trust's own expense, is
+one account; principal collected is another. Each distribution date allocates
+the first to the classes' coupons and the second to their principal, by
+seniority. Every holder owns an account that receives its principal, and that
+account IS the class's position: what a class is still owed is its face less
+what its holder has been paid, so a step reads the account the previous
+distributions filled and states its claim in one line:
 
 ```cfdl
 pay a3_principal to party.a3_holders =
-      min(remaining,
-          min(max(C - inputs.a3_senior, 0.0), inputs.a3_original)
-          - if(time.t == 0.0, 0.0,
-               min(max(C_prev - inputs.a3_senior, 0.0), inputs.a3_original)))
+      min(remaining, inputs.a3_face - if(time.t == 0.0, 0.0, prev.a3_principal))
 ```
 
-`C` is cumulative pool principal. A retired class contributes zero without
-being switched off, and declaration order is seniority.
+Declaration order is seniority. A retired class contributes zero because its
+claim is zero, without being switched off. Nothing restates the waterfall and
+no class carries a balance of its own.
 
-The classes carry no balance of their own. A balance would be a second copy of
-what the pool already knows, kept in step by nobody — the cascade reads the
-cumulative principal the collateral produces and derives every class's position
-from it.
-
-Because the collateral was already reconciled, a break here can only be the
-waterfall.
+The published grid is therefore asserted directly, not by differencing: each
+class's percent outstanding is its face less its account, and the account
+balances sit in `expected.csv` beside the payments they explain.
 
 ```cfdl
 version 0.1
@@ -18410,207 +18408,211 @@ time calendar monthly from 2018-10 for 64
 //
 // `auto_abs_wal` reconciles this deal's COLLATERAL — 43 sub-pools amortizing
 // to an aggregate the issuer states to the cent. It stops there, and says so:
-// the per-class columns need a sequential-pay waterfall, which did not exist
-// when it was written. This case is that third axis.
+// the per-class columns need a sequential-pay waterfall. This case is that
+// axis: the same 43 sub-pools, one priority of payments, seven note classes.
 //
-// The same exhibit publishes, for each of six note classes and every monthly
-// distribution date, the percent of that class still outstanding. Because the
-// collateral underneath is already right, anything that breaks here is the
-// waterfall and nothing else.
+// THE TRUST IS A CONTAINER, AND THE NOTES ARE CLAIMS ON ITS CASH. Each month
+// the receivables pay interest and principal; the trust's fees come out of
+// those collections; interest is paid on each
+// class at its coupon; and principal repays the classes strictly in order of
+// seniority. Interest collected and principal collected are the two amounts the
+// indenture defines, each an account the trust holds, and each distribution
+// date allocates them by the priority of payments.
 //
-// SEQUENTIAL PAY NEEDS NO STATE OF ITS OWN. A class is outstanding until
-// everything senior to it has been retired, and a step can read what it has
-// already been paid — so each step caps itself at its own remaining balance
-// and passes the rest down. Declaration order IS seniority.
+// A CLASS'S POSITION IS ITS HOLDER'S ACCOUNT. What a class has been repaid is
+// the principal allocated to its holder so far, so what it is still owed is
+// its face less that account. No class carries a balance of its own, and
+// nothing restates the waterfall: each step reads the account the previous
+// distributions filled. Declaration order IS seniority, and a retired class
+// contributes zero because its claim is zero.
 //
-// The one-month gap between `time.t` and the window bound is the deal's own
+// The one-month gap between collection and distribution is the deal's own
 // convention: receivables pay on the last day of the month and the notes pay
 // on the 15th of the next.
 //
 // NO LOSSES ARE ASSUMED, by the exhibit's own terms — it states the receivables
 // prepay at a constant ABS rate "with no defaults, losses or repurchases". So
-// overcollateralization never has to build and no trigger can trip. This case
-// checks sequential pay; the loss-driven machinery belongs to a deal that can
-// lose money.
+// overcollateralization never has to build and no trigger can trip. The $13.75m
+// by which the pool exceeds the notes, and interest collected beyond interest
+// paid, accumulate in the trust's own accounts.
 
-entity asset trust : Credit.Asset.LoanPool {
-  collateral_type = "auto"
-}
+entity container trust : Container.SPV
 
 entity asset p01 : Credit.Asset.LoanPool {
   collateral_type = "auto"
-  part of asset.trust
+  part of container.trust
 }
 entity asset p02 : Credit.Asset.LoanPool {
   collateral_type = "auto"
-  part of asset.trust
+  part of container.trust
 }
 entity asset p03 : Credit.Asset.LoanPool {
   collateral_type = "auto"
-  part of asset.trust
+  part of container.trust
 }
 entity asset p04 : Credit.Asset.LoanPool {
   collateral_type = "auto"
-  part of asset.trust
+  part of container.trust
 }
 entity asset p06 : Credit.Asset.LoanPool {
   collateral_type = "auto"
-  part of asset.trust
+  part of container.trust
 }
 entity asset p07 : Credit.Asset.LoanPool {
   collateral_type = "auto"
-  part of asset.trust
+  part of container.trust
 }
 entity asset p08 : Credit.Asset.LoanPool {
   collateral_type = "auto"
-  part of asset.trust
+  part of container.trust
 }
 entity asset p09 : Credit.Asset.LoanPool {
   collateral_type = "auto"
-  part of asset.trust
+  part of container.trust
 }
 entity asset p11 : Credit.Asset.LoanPool {
   collateral_type = "auto"
-  part of asset.trust
+  part of container.trust
 }
 entity asset p12 : Credit.Asset.LoanPool {
   collateral_type = "auto"
-  part of asset.trust
+  part of container.trust
 }
 entity asset p13 : Credit.Asset.LoanPool {
   collateral_type = "auto"
-  part of asset.trust
+  part of container.trust
 }
 entity asset p14 : Credit.Asset.LoanPool {
   collateral_type = "auto"
-  part of asset.trust
+  part of container.trust
 }
 entity asset p16 : Credit.Asset.LoanPool {
   collateral_type = "auto"
-  part of asset.trust
+  part of container.trust
 }
 entity asset p17 : Credit.Asset.LoanPool {
   collateral_type = "auto"
-  part of asset.trust
+  part of container.trust
 }
 entity asset p18 : Credit.Asset.LoanPool {
   collateral_type = "auto"
-  part of asset.trust
+  part of container.trust
 }
 entity asset p19 : Credit.Asset.LoanPool {
   collateral_type = "auto"
-  part of asset.trust
+  part of container.trust
 }
 entity asset p21 : Credit.Asset.LoanPool {
   collateral_type = "auto"
-  part of asset.trust
+  part of container.trust
 }
 entity asset p22 : Credit.Asset.LoanPool {
   collateral_type = "auto"
-  part of asset.trust
+  part of container.trust
 }
 entity asset p23 : Credit.Asset.LoanPool {
   collateral_type = "auto"
-  part of asset.trust
+  part of container.trust
 }
 entity asset p24 : Credit.Asset.LoanPool {
   collateral_type = "auto"
-  part of asset.trust
+  part of container.trust
 }
 entity asset p26 : Credit.Asset.LoanPool {
   collateral_type = "auto"
-  part of asset.trust
+  part of container.trust
 }
 entity asset p27 : Credit.Asset.LoanPool {
   collateral_type = "auto"
-  part of asset.trust
+  part of container.trust
 }
 entity asset p28 : Credit.Asset.LoanPool {
   collateral_type = "auto"
-  part of asset.trust
+  part of container.trust
 }
 entity asset p29 : Credit.Asset.LoanPool {
   collateral_type = "auto"
-  part of asset.trust
+  part of container.trust
 }
 entity asset p31 : Credit.Asset.LoanPool {
   collateral_type = "auto"
-  part of asset.trust
+  part of container.trust
 }
 entity asset p32 : Credit.Asset.LoanPool {
   collateral_type = "auto"
-  part of asset.trust
+  part of container.trust
 }
 entity asset p33 : Credit.Asset.LoanPool {
   collateral_type = "auto"
-  part of asset.trust
+  part of container.trust
 }
 entity asset p34 : Credit.Asset.LoanPool {
   collateral_type = "auto"
-  part of asset.trust
+  part of container.trust
 }
 entity asset p36 : Credit.Asset.LoanPool {
   collateral_type = "auto"
-  part of asset.trust
+  part of container.trust
 }
 entity asset p37 : Credit.Asset.LoanPool {
   collateral_type = "auto"
-  part of asset.trust
+  part of container.trust
 }
 entity asset p38 : Credit.Asset.LoanPool {
   collateral_type = "auto"
-  part of asset.trust
+  part of container.trust
 }
 entity asset p39 : Credit.Asset.LoanPool {
   collateral_type = "auto"
-  part of asset.trust
+  part of container.trust
 }
 entity asset p40 : Credit.Asset.LoanPool {
   collateral_type = "auto"
-  part of asset.trust
+  part of container.trust
 }
 entity asset p41 : Credit.Asset.LoanPool {
   collateral_type = "auto"
-  part of asset.trust
+  part of container.trust
 }
 entity asset p42 : Credit.Asset.LoanPool {
   collateral_type = "auto"
-  part of asset.trust
+  part of container.trust
 }
 entity asset p43 : Credit.Asset.LoanPool {
   collateral_type = "auto"
-  part of asset.trust
+  part of container.trust
 }
 entity asset p44 : Credit.Asset.LoanPool {
   collateral_type = "auto"
-  part of asset.trust
+  part of container.trust
 }
 entity asset p45 : Credit.Asset.LoanPool {
   collateral_type = "auto"
-  part of asset.trust
+  part of container.trust
 }
 entity asset p46 : Credit.Asset.LoanPool {
   collateral_type = "auto"
-  part of asset.trust
+  part of container.trust
 }
 entity asset p47 : Credit.Asset.LoanPool {
   collateral_type = "auto"
-  part of asset.trust
+  part of container.trust
 }
 entity asset p48 : Credit.Asset.LoanPool {
   collateral_type = "auto"
-  part of asset.trust
+  part of container.trust
 }
 entity asset p49 : Credit.Asset.LoanPool {
   collateral_type = "auto"
-  part of asset.trust
+  part of container.trust
 }
 entity asset p50 : Credit.Asset.LoanPool {
   collateral_type = "auto"
-  part of asset.trust
+  part of container.trust
 }
 
 entity party servicer : Credit.Party.Servicer { name = "Servicer" }
+entity party a1_holders : Credit.Party.Investor { name = "Class A-1 noteholders" }
 entity party a2_holders : Credit.Party.Investor { name = "Class A-2 noteholders" }
 entity party a3_holders : Credit.Party.Investor { name = "Class A-3 noteholders" }
 entity party a4_holders : Credit.Party.Investor { name = "Class A-4 noteholders" }
@@ -19091,126 +19093,141 @@ contract credit.pool_level_pay.p50 on entity asset.p50 {
   }
 }
 
-// Class principal amounts, from the trust's October 2018 Form 10-D.
-assume a2_original = 112026644.00
-assume a3_original = 271370000.00
-assume a4_original = 86010000.00
-assume b_original = 22220000.00
-assume c_original = 18510000.00
-assume d_original = 13750000.00
+// ---------------------------------------------------------------------------
+// The notes. Faces are each class's balance at the exhibit's cut-off, which is
+// the base its percent-outstanding grid is stated on: A-1 was paid in full in
+// January 2018 and is carried at zero; A-2 had amortized to 112,026,644 (the
+// trust's Form 10-D); the rest stood at their original principal. Coupons and
+// the 30/360 day count are the exhibit's.
+// ---------------------------------------------------------------------------
+assume a1_face   = 0.00
+assume a2_face   = 112026644.00
+assume a3_face   = 271370000.00
+assume a4_face   = 86010000.00
+assume b_face   = 22220000.00
+assume c_face   = 18510000.00
+assume d_face   = 13750000.00
 
-assume a2_senior   = 0.00
-assume a3_senior   = 112026644.00
-assume a4_senior   = 383396644.00
-assume b_senior   = 469406644.00
-assume c_senior   = 491626644.00
-assume d_senior   = 510136644.00
-
-assume a2_coupon   = 0.0153
-assume a3_coupon   = 0.0174
-assume a4_coupon   = 0.0201
-assume b_coupon   = 0.0224
-assume c_coupon   = 0.0237
-assume d_coupon   = 0.0291
+assume a1_coupon = 0.0110
+assume a2_coupon = 0.0153
+assume a3_coupon = 0.0174
+assume a4_coupon = 0.0201
+assume b_coupon = 0.0224
+assume c_coupon = 0.0237
+assume d_coupon = 0.0291
 
 // ---------------------------------------------------------------------------
-// The priority of payments
-//
-// Principal collected on the receivables, shared out by seniority. A class
-// takes what it is still owed and the rest falls through; when a class is
-// retired its step pays zero for the remainder of the deal, which is what
-// "sequential" means.
+// The trust's expenses, one item each. The servicing fee is 1.00% per annum
+// on the pool balance the trust carried into the month — the initial pool
+// less the principal collected so far — and the administration fee is $1,500
+// a month. Neither the servicer nor the administrator is modeled as a payee:
+// the fees leave the trust's cash before anything reaches the notes, which is
+// all the published grid depends on.
 // ---------------------------------------------------------------------------
+assume initial_pool = 537640787.96
 
-waterfall notes.principal on entity asset.trust {
+stream credit.trust.servicing_fee on entity container.trust outflow currency USD {
   schedule every month from 2018-10 to 2024-01
+  category operating.expense.servicing
+  amount = 0.01 / 12.0 * (inputs.initial_pool
+             - if(time.t == 0.0, 0.0,
+                  series_sum("credit.pool.sched_principal.*", 0, time.t - 1)
+                  + series_sum("credit.pool.prepay.*", 0, time.t - 1)))
+}
 
-  // THE POT IS THE POOL'S PRINCIPAL. The exhibit tabulates principal
-  // outstanding, so interest is beside the point: it is collected and paid,
-  // but it never retires a note.
-  // NARROWER THAN `available`, deliberately: this waterfall allocates the
-  // principal collections the exhibit tabulates, not the deal's whole cash. `docs/03` §3.2
-  // keeps the `from` expression free for exactly this.
+stream credit.trust.admin_fee on entity container.trust outflow currency USD {
+  schedule every month from 2018-10 to 2024-01
+  category operating.expense.servicing
+  amount = 1500.0
+}
+
+// ---------------------------------------------------------------------------
+// The accounts. The indenture defines two amounts on each distribution date,
+// and each is a location cash sits in: AVAILABLE INTEREST — the interest
+// collected, net of the trust's fees — and the
+// PRINCIPAL DISTRIBUTABLE AMOUNT — the principal collected. Each holder owns an
+// account that receives its principal, which IS the class's position, and a
+// separate interest account beside it, so what has been repaid and what has
+// been earned are never mixed.
+// ---------------------------------------------------------------------------
+account interest_collections {
+  from series_sum("credit.pool.interest.*", time.t, time.t)
+     + series_sum("credit.trust.servicing_fee", time.t, time.t)
+     + series_sum("credit.trust.admin_fee", time.t, time.t)
+}
+
+account principal_collections {
   from series_sum("credit.pool.sched_principal.*", time.t, time.t)
-        + series_sum("credit.pool.prepay.*", time.t, time.t)
+     + series_sum("credit.pool.prepay.*", time.t, time.t)
+}
 
-  // Class A-2. It is untouched until nothing is repaid, then takes
-  // principal until it is gone. Retired classes contribute zero, so the same
-  // expression describes the class before, during and after its pay-down.
+account a1_principal { owner party.a1_holders }
+account a2_principal { owner party.a2_holders }
+account a3_principal { owner party.a3_holders }
+account a4_principal { owner party.a4_holders }
+account b_principal { owner party.b_holders }
+account c_principal { owner party.c_holders }
+account d_principal { owner party.d_holders }
+
+account a1_interest { from 0.0 }
+account a2_interest { from 0.0 }
+account a3_interest { from 0.0 }
+account a4_interest { from 0.0 }
+account b_interest { from 0.0 }
+account c_interest { from 0.0 }
+account d_interest { from 0.0 }
+
+// ---------------------------------------------------------------------------
+// Interest, on each distribution date: every class at its coupon on the
+// balance it carried in — its face less the principal its holder's account
+// already holds. Interest collected beyond the coupons stays in the trust's
+// interest account.
+// ---------------------------------------------------------------------------
+waterfall notes.interest on entity container.trust {
+  schedule every month from 2018-10 to 2024-01
+  from interest_collections
+
+  pay a1_interest to account a1_interest =
+        min(remaining, (inputs.a1_face - if(time.t == 0.0, 0.0, prev.a1_principal)) * inputs.a1_coupon / 12.0)
+  pay a2_interest to account a2_interest =
+        min(remaining, (inputs.a2_face - if(time.t == 0.0, 0.0, prev.a2_principal)) * inputs.a2_coupon / 12.0)
+  pay a3_interest to account a3_interest =
+        min(remaining, (inputs.a3_face - if(time.t == 0.0, 0.0, prev.a3_principal)) * inputs.a3_coupon / 12.0)
+  pay a4_interest to account a4_interest =
+        min(remaining, (inputs.a4_face - if(time.t == 0.0, 0.0, prev.a4_principal)) * inputs.a4_coupon / 12.0)
+  pay b_interest to account b_interest =
+        min(remaining, (inputs.b_face - if(time.t == 0.0, 0.0, prev.b_principal)) * inputs.b_coupon / 12.0)
+  pay c_interest to account c_interest =
+        min(remaining, (inputs.c_face - if(time.t == 0.0, 0.0, prev.c_principal)) * inputs.c_coupon / 12.0)
+  pay d_interest to account d_interest =
+        min(remaining, (inputs.d_face - if(time.t == 0.0, 0.0, prev.d_principal)) * inputs.d_coupon / 12.0)
+}
+
+// ---------------------------------------------------------------------------
+// Principal, strictly by seniority. A step states what its class is still
+// owed and the engine pays it out of what remains, so nothing reaches a class
+// until every class above it is gone. At the first distribution no account
+// has a prior balance, so the claim is the face. The $13.75m by which the pool
+// exceeds the notes stays in the principal account as the trust's own cash.
+// ---------------------------------------------------------------------------
+waterfall notes.principal on entity container.trust {
+  schedule every month from 2018-10 to 2024-01
+  from principal_collections
+
+  pay a1_principal to party.a1_holders =
+        min(remaining, inputs.a1_face - if(time.t == 0.0, 0.0, prev.a1_principal))
   pay a2_principal to party.a2_holders =
-        min(remaining,
-            min(max((series_sum("credit.pool.sched_principal.*", 0, time.t)
-                       + series_sum("credit.pool.prepay.*", 0, time.t))
-                    - inputs.a2_senior, 0.0), inputs.a2_original)
-            - if(time.t == 0.0, 0.0,
-                 min(max((series_sum("credit.pool.sched_principal.*", 0, time.t - 1)
-                       + series_sum("credit.pool.prepay.*", 0, time.t - 1))
-                         - inputs.a2_senior, 0.0), inputs.a2_original)))
-
-  // Class A-3. It is untouched until the 112,026,644 senior to it is repaid, then takes
-  // principal until it is gone. Retired classes contribute zero, so the same
-  // expression describes the class before, during and after its pay-down.
+        min(remaining, inputs.a2_face - if(time.t == 0.0, 0.0, prev.a2_principal))
   pay a3_principal to party.a3_holders =
-        min(remaining,
-            min(max((series_sum("credit.pool.sched_principal.*", 0, time.t)
-                       + series_sum("credit.pool.prepay.*", 0, time.t))
-                    - inputs.a3_senior, 0.0), inputs.a3_original)
-            - if(time.t == 0.0, 0.0,
-                 min(max((series_sum("credit.pool.sched_principal.*", 0, time.t - 1)
-                       + series_sum("credit.pool.prepay.*", 0, time.t - 1))
-                         - inputs.a3_senior, 0.0), inputs.a3_original)))
-
-  // Class A-4. It is untouched until the 383,396,644 senior to it is repaid, then takes
-  // principal until it is gone. Retired classes contribute zero, so the same
-  // expression describes the class before, during and after its pay-down.
+        min(remaining, inputs.a3_face - if(time.t == 0.0, 0.0, prev.a3_principal))
   pay a4_principal to party.a4_holders =
-        min(remaining,
-            min(max((series_sum("credit.pool.sched_principal.*", 0, time.t)
-                       + series_sum("credit.pool.prepay.*", 0, time.t))
-                    - inputs.a4_senior, 0.0), inputs.a4_original)
-            - if(time.t == 0.0, 0.0,
-                 min(max((series_sum("credit.pool.sched_principal.*", 0, time.t - 1)
-                       + series_sum("credit.pool.prepay.*", 0, time.t - 1))
-                         - inputs.a4_senior, 0.0), inputs.a4_original)))
-
-  // Class B. It is untouched until the 469,406,644 senior to it is repaid, then takes
-  // principal until it is gone. Retired classes contribute zero, so the same
-  // expression describes the class before, during and after its pay-down.
+        min(remaining, inputs.a4_face - if(time.t == 0.0, 0.0, prev.a4_principal))
   pay b_principal to party.b_holders =
-        min(remaining,
-            min(max((series_sum("credit.pool.sched_principal.*", 0, time.t)
-                       + series_sum("credit.pool.prepay.*", 0, time.t))
-                    - inputs.b_senior, 0.0), inputs.b_original)
-            - if(time.t == 0.0, 0.0,
-                 min(max((series_sum("credit.pool.sched_principal.*", 0, time.t - 1)
-                       + series_sum("credit.pool.prepay.*", 0, time.t - 1))
-                         - inputs.b_senior, 0.0), inputs.b_original)))
-
-  // Class C. It is untouched until the 491,626,644 senior to it is repaid, then takes
-  // principal until it is gone. Retired classes contribute zero, so the same
-  // expression describes the class before, during and after its pay-down.
+        min(remaining, inputs.b_face - if(time.t == 0.0, 0.0, prev.b_principal))
   pay c_principal to party.c_holders =
-        min(remaining,
-            min(max((series_sum("credit.pool.sched_principal.*", 0, time.t)
-                       + series_sum("credit.pool.prepay.*", 0, time.t))
-                    - inputs.c_senior, 0.0), inputs.c_original)
-            - if(time.t == 0.0, 0.0,
-                 min(max((series_sum("credit.pool.sched_principal.*", 0, time.t - 1)
-                       + series_sum("credit.pool.prepay.*", 0, time.t - 1))
-                         - inputs.c_senior, 0.0), inputs.c_original)))
-
-  // Class D. It is untouched until the 510,136,644 senior to it is repaid, then takes
-  // principal until it is gone. Retired classes contribute zero, so the same
-  // expression describes the class before, during and after its pay-down.
+        min(remaining, inputs.c_face - if(time.t == 0.0, 0.0, prev.c_principal))
   pay d_principal to party.d_holders =
-        min(remaining,
-            min(max((series_sum("credit.pool.sched_principal.*", 0, time.t)
-                       + series_sum("credit.pool.prepay.*", 0, time.t))
-                    - inputs.d_senior, 0.0), inputs.d_original)
-            - if(time.t == 0.0, 0.0,
-                 min(max((series_sum("credit.pool.sched_principal.*", 0, time.t - 1)
-                       + series_sum("credit.pool.prepay.*", 0, time.t - 1))
-                         - inputs.d_senior, 0.0), inputs.d_original)))
+        min(remaining, inputs.d_face - if(time.t == 0.0, 0.0, prev.d_principal))
 }
 ```
 
