@@ -234,17 +234,11 @@ declared list of mutations.
 
 Provenance: applied by hand to `gnma_remic_group16` (5 mutations) and
 `fnma_remic_2019_2_g3` (8 mutations, one of which found §3.2), August 2026.
-`americredit_2017_1` has the shape §3.2 warns about — the certificateholder's
-step-down release absorbs whatever the notes are not paid, so a residual
-assertion there is one-sided by construction — and what stands against it is
-that `expected.csv` asserts every clause column individually rather than the
-remainder alone.
+`americredit_2017_1` shipped without it and has the shape §3.2 warns about: the
+certificateholder's step-down release absorbs whatever the notes are not paid,
+so a residual assertion there would be one-sided by construction.
 
-Recorded as a programme decision still open, not as a per-case obligation: this
-remains something the repository does not do, ask for, or record, and adding a
-mutation list to one case's write-up makes that case look verified in a way the
-others are not. Either the habit is adopted for the suite, with a place to
-record it, or it stays an occasional check a maintainer runs by hand.
+---
 
 ## 4. Method notes worth keeping
 
