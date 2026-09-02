@@ -54,7 +54,7 @@ Worth recording for a second reason: the model already had this right on the
 cash side and wrong on the balance side. Clause 1 pays the pack's own servicing
 series, which accrues per contract per period and therefore charged the
 January pools twice without being told to; the balance recurrence carried its
-own copy of the arithmetic and charged one month. That is backlog 7.37 in
+own copy of the arithmetic and charged one month. That is the duplication in
 miniature — the two halves of the same deal, drifting because nothing holds
 them together.
 
@@ -155,7 +155,7 @@ notes are not paid.
 ## The model, and the arithmetic it has to state twice
 
 A class balance is a field. A field cannot read what the waterfall paid it —
-see `docs/13` §7.37 — so `model.cfdl` states the distribution twice: once
+see below — so `model.cfdl` states the distribution twice: once
 lagged, inside the seven balance fields, and once at the current period, inside
 the twenty-two clauses that pay the cash. Nothing enforces that they agree.
 That is the case's structural weakness and it is worth knowing before reading
@@ -475,3 +475,38 @@ servicer bought what was left.
 - **One speed.** The case runs at 1.50% ABS. The other three published speeds
   are this model with `abs_speed` changed, and `docs/20` §2.3 is the reason
   they are not four directories.
+
+## Why the waterfall reads a field, and what it would take not to
+
+The seven class balances are fields, and every interest and principal step reads
+one. That is the duplication above: the distribution arithmetic appears once
+lagged inside the balance recurrences and once at the current period inside the
+waterfall, and nothing keeps the two in step but care.
+
+It is not how a tranche case has to be written. `auto_abs_tranches` carries NO
+balance fields at all — each step is cumulative collections against the class's
+original size and the amount senior to it, `series_sum(..., 0, time.t)` less the
+same one period back — so the balance is derived from cash and never stored.
+
+That idiom does not reach this deal. The turbo runs toward a target stated
+against the reserve balance, and the step-down is a function of the note
+balances themselves, so there is no cumulative closed form of collections that
+gives a class's balance. The two other candidates are both refused:
+
+- **The waterfall reading its own output.** `series_sum("notes.distribution.a1_principal",
+  0, time.t - 1)` is strictly backward and settled, and is refused anyway —
+  `E1342_WATERFALL_SERIES_NOT_VISIBLE`, "which this waterfall has not finished
+  paying". The refusal is on the series, not on the window.
+- **An account.** An account is a location cash sits in. A note balance is a
+  liability, and paying a noteholder does not draw down an account.
+
+So the field is the only vehicle, and the waterfall reading it follows. What is
+actually missing is a balance a waterfall REDUCES BY PAYING IT — a liability the
+steps amortize, rather than a recurrence that restates what the steps did. The
+case has carried the duplication since it shipped, and it predates the account
+and the walk; whether the right answer is to widen the account or to add
+something else is a design question, not a defect in this model.
+
+An entry for this was removed from `docs/13` as closed (#115) while the
+duplication it named was still here, and the case went on citing the number.
+The citation is gone; the duplication is described where a reader will find it.
