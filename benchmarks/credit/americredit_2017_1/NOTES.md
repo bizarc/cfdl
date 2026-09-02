@@ -54,7 +54,7 @@ Worth recording for a second reason: the model already had this right on the
 cash side and wrong on the balance side. Clause 1 pays the pack's own servicing
 series, which accrues per contract per period and therefore charged the
 January pools twice without being told to; the balance recurrence carried its
-own copy of the arithmetic and charged one month. That is backlog 7.37 in
+own copy of the arithmetic and charged one month. That is the duplication in
 miniature — the two halves of the same deal, drifting because nothing holds
 them together.
 
@@ -155,7 +155,7 @@ notes are not paid.
 ## The model, and the arithmetic it has to state twice
 
 A class balance is a field. A field cannot read what the waterfall paid it —
-see `docs/13` §7.37 — so `model.cfdl` states the distribution twice: once
+see below — so `model.cfdl` states the distribution twice: once
 lagged, inside the seven balance fields, and once at the current period, inside
 the twenty-two clauses that pay the cash. Nothing enforces that they agree.
 That is the case's structural weakness and it is worth knowing before reading
@@ -308,11 +308,156 @@ rounded number moves **260 cells**, by at most **0.0044 dollars**, on figures of
 about twelve million — the model moving onto the reference's own arithmetic.
 The published assertions are unaffected at the case's tolerance.
 
-The same shape remains in two other places and is deliberately left alone:
-5,059,849.65 is 0.50% of the initial pool (the step-down floor) and
-101,196,992.93 is 10% of it (the clean-up call), each still written out
-twenty-eight times. `assume initial_pool` now exists, so both are one edit
-away; this change was the reserve.
+The same shape remained in two other places. 101,196,992.93 — 10% of the
+initial pool, the clean-up call threshold — was written out thirty times and is
+now `assume call_threshold`. 5,059,849.65, the step-down floor at 0.50% of the
+initial pool, is still a literal in twenty-eight places and is one edit away.
+
+## The clean-up call, and what it ended
+
+The call was in this model from the start, as arithmetic: a pool-balance
+comparison in every principal step, and in the pot a hand-written rising edge —
+`pool_bal <= X and pool_prior > X` — to catch the one distribution that pays the
+redemption price. It reproduced the published tables exactly. What it did not do
+was end the deal.
+
+**The deal ran twenty-three periods past its own end.** The twelve pool
+contracts kept amortizing to the end of the book, the certificateholder took
+every dollar of it through clause 22, and `model.total` asserted the result:
+$100,885,317.21 of collections on receivables the servicer had already bought.
+The case said so in its own "does not assert" list and cited backlog 7.39 for
+it — *a contract cannot be bought out*.
+
+**The machine was already declared, and unused.** `Credit.Asset.LoanPool` binds
+`credit.pool`, whose own description in `packs/credit/ontology/types.toml` says
+a clean-up call "is NOT a state: it is an occurrence, and it drives
+`amortizing -> retired` as an event with a no-return topology" — written when
+`docs/36` §2.2 retired `called` as a state. All thirteen entities in this model
+carry that machine and none of them ever left `amortizing`;
+`deterministic.transitions` was empty.
+
+The case also carried a stale citation, "backlog 7.39 — a contract cannot be
+bought out", for a gap that had since closed. That is the failure mode a
+deleted-on-close backlog invites: the entry disappears and the work waiting on
+it does not notice.
+
+### Why the transition is a period after the redemption
+
+The state is evaluated as a period opens. A pool is carried into the period,
+collects, and the period ends; so the guard reads `pool_prior` — the pool the
+trust carried in — and fires at period 48. The redemption price is paid at 47,
+on the last distribution made while the trust still owns the receivables, and
+the pot says exactly that, as the period the pool crosses the threshold:
+
+```cfdl
+if(container.trust.pool_prior > inputs.call_threshold
+   and container.trust.pool_bal <= inputs.call_threshold, container.trust.pool_bal, 0.0)
+```
+
+**That two-sided test was in the model from the start and it was never the
+defect.** What was wrong with the original was the threshold written out as a
+literal thirty times, not the comparison, and it is worth recording that the
+first two attempts to "improve" it made it worse: reading the trust's own status
+put a hand-asserted state where a derived one belongs, and folding
+`series_sum("credit.pool.interest.*", …)` replaced two checked field reads with
+an unchecked pattern. A misspelled field is refused; a selector that matches
+nothing folds to zero in silence, and here that silence would have stopped the
+largest distribution in the deal.
+
+The pot needs a SAME-PERIOD answer, which is the other reason it reads the trust
+rather than its state: a container's derived state lags its parts by one period
+by construction, so `wound_up` arrives too late to gate the redeeming
+distribution and would be the wrong question anyway.
+
+### The pool is extinguished, not silenced
+
+`credit.pool_level_pay` carries exactly one piece of state. Scheduled
+amortization is a closed form in elapsed periods, but attrition is a recurrence
+— `credit_level_pay_survival<suffix>`, `field_init 1`,
+`field_next prev * ((1 - default rate) - prepay rate)` — and every one of the six
+streams the contract lowers is balance x amortization factor x that fraction.
+
+So a purchased pool is expressed by writing zero into it. The recurrence resumes
+from zero, `prev * anything` stays zero, and all six streams are zero for good.
+No stream is gated and no contract is switched off: the pool has no surviving
+balance, which is what `retired` means.
+
+The first version did gate, with `deactivate stream` on all seventy-two lowered
+streams. The cash was identical to the byte — the entire difference between the
+two runs was twenty survival fields, which under the gated version went on
+declaring that 48.78% of pool p01 was still performing while its streams were
+silent:
+
+```
+asset.p01 survival, periods 45-51
+  deactivate: [0.487805, 0.487805, 0.487805, 0.487805, 0.487805, 0.487805, 0.487805]
+  survival  : [0.487805, 0.487805, 0.487805, 0.0,      0.0,      0.0,      0.0]
+```
+
+A declared state and a behavior that disagree, with only the behavior enforced.
+The current spelling cannot drift that way because one fact drives both.
+
+**The pack should do this and cannot.** It declares the `retired` state and it
+declares the survival recurrence and connects them nowhere, so `retired` has no
+consequence for any model but this one. The entry action that would fix it —
+`on enter retired { set <survival> = 0 }` — cannot be written, because the field
+name is templated per contract instance while a lifecycle is per type. Recorded
+at `docs/13` §7.96.
+
+### The trust winds up because it is empty
+
+The trust is a `Container.SPV`, not a loan pool. It holds the twelve pools; the
+pools hold the receivables; the servicer buys the receivables. Typing it as a
+`Credit.Asset.LoanPool` is what made the first version retire the trust and
+leave its twelve pools amortizing.
+
+Its wind-up is derived rather than asserted. The container carries what it still
+owns — its parts' surviving fractions, summed through `prev` — and the edge
+reads it:
+
+```cfdl
+amortizing -> wound_up when container.trust.surviving == 0.0
+```
+
+It lands at period 49, one period after the pools retire at 48, and that is
+correct rather than a lag to remove: state is evaluated as a period opens, so
+the trust can only see a settled pool. Winding it up any earlier would end the
+trust before its pools' last period of activity had been counted — and period 47
+is the redeeming distribution, the largest in the deal.
+
+Which is also why the redemption clause in the pot asks the POOLS whether the
+trust still owns them, rather than asking the trust its own status: the pot
+needs a same-period answer, and a container's derived state is a period behind
+by construction.
+
+**What this cost.** Summing twelve named fields is an enumeration of something
+the run already knows. Containment is materialized and published — `graph.entities`
+carries one row per entity naming its parent, and twelve of those rows say
+`container.trust` holds twelve pools — so the trust reconstructs by hand a fact
+its own results state. Nothing lets a model ask the relation how many parts it
+has, or how many are still amortizing. Recorded at `docs/13` §7.98.
+
+A wrong turn worth recording, because it looks reasonable: the first attempt
+guarded on the container's aggregated cash. It is the wrong question twice over —
+a container's cash cannot say whether it still holds anything, since a container
+with twelve live pools nets zero in any idle period — and the guard also failed
+silently, folding an unresolvable selector to zero and firing in the first
+period. That silence is `docs/13` §7.97.
+
+### What moved, and what did not
+
+Nothing at or before the call. All 179 series the run publishes are
+bit-identical through period 47 — 8,592 cells, none of them differing — so the
+published grid, the 48 weighted average lives and the five-cent reconciliation
+are untouched; every changed cell is at period 48 or later. What moved is what should: `model.total` falls by the phantom
+$100,885,317.21, the certificateholder's total by $100,874,067.21, and
+`model.wal_years` from 1.89 to 1.65.
+
+One consequence is worth reading rather than fixing. The pack's
+`domain.credit.principal_paid_to_date` now stops at $916,770,831.19 instead of
+running to the initial pool, and the difference is $95,199,098.09 — the
+redemption price exactly. That is correct: the trust collected the rest, and the
+servicer bought what was left.
 
 ## What the model does not carry
 
@@ -322,11 +467,46 @@ away; this change was the reserve.
   the deal has them.
 - **The parity clauses are inert for the same reason.** The pool always exceeds
   the notes, so clauses 4, 7, 10, 13 and 16 pay nothing.
-- **Anything after the clean-up call.** The call retires the notes at period 47
-  and the trust is over, so the cash columns stop there. The model's twelve
-  contracts keep amortizing for another eleven periods because a contract
-  cannot be bought out — backlog 7.39 — and the certificateholder takes what
-  they produce. `model.total` includes it.
+- **The pool's closed form runs past the call.** `pool_bal` keeps amortizing to
+  the end of the book after the trust is retired, and that is the receivables'
+  balance rather than the trust's — the servicer owns them and they carry on
+  paying somebody. Nothing reads it after period 48 except the call guard,
+  which cannot fire twice.
 - **One speed.** The case runs at 1.50% ABS. The other three published speeds
   are this model with `abs_speed` changed, and `docs/20` §2.3 is the reason
   they are not four directories.
+
+## Why the waterfall reads a field, and what it would take not to
+
+The seven class balances are fields, and every interest and principal step reads
+one. That is the duplication above: the distribution arithmetic appears once
+lagged inside the balance recurrences and once at the current period inside the
+waterfall, and nothing keeps the two in step but care.
+
+It is not how a tranche case has to be written. `auto_abs_tranches` carries NO
+balance fields at all — each step is cumulative collections against the class's
+original size and the amount senior to it, `series_sum(..., 0, time.t)` less the
+same one period back — so the balance is derived from cash and never stored.
+
+That idiom does not reach this deal. The turbo runs toward a target stated
+against the reserve balance, and the step-down is a function of the note
+balances themselves, so there is no cumulative closed form of collections that
+gives a class's balance. The two other candidates are both refused:
+
+- **The waterfall reading its own output.** `series_sum("notes.distribution.a1_principal",
+  0, time.t - 1)` is strictly backward and settled, and is refused anyway —
+  `E1342_WATERFALL_SERIES_NOT_VISIBLE`, "which this waterfall has not finished
+  paying". The refusal is on the series, not on the window.
+- **An account.** An account is a location cash sits in. A note balance is a
+  liability, and paying a noteholder does not draw down an account.
+
+So the field is the only vehicle, and the waterfall reading it follows. What is
+actually missing is a balance a waterfall REDUCES BY PAYING IT — a liability the
+steps amortize, rather than a recurrence that restates what the steps did. The
+case has carried the duplication since it shipped, and it predates the account
+and the walk; whether the right answer is to widen the account or to add
+something else is a design question, not a defect in this model.
+
+An entry for this was removed from `docs/13` as closed (#115) while the
+duplication it named was still here, and the case went on citing the number.
+The citation is gone; the duplication is described where a reader will find it.

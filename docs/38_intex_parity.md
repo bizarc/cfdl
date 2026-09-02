@@ -125,16 +125,42 @@ recoverable-advances balance as one of the reserves every domain has under a
 different name. The item is naming that shape in the credit pack and shipping
 a case, not new machinery. Backlog: `docs/13` §7.74.
 
-## Item 4 — the clean-up call, exercised
+## Item 4 — the clean-up call, exercised. **Closed.**
 
-**What could not be expressed:** nothing — the gap is a missing case. The
+**What could not be expressed:** nothing — the gap was a missing case. The
 pack-lifecycle review retired `called` as a state ("a clean-up call is an
 occurrence, not a condition a pool sits in," `docs/36` §2.2, landed in
 `packs/credit/ontology/types.toml` — the pool machine is now `warehouse`,
 `revolving`, `amortizing`, `rapid_amortization`, `retired`), so the election
-is an event driving `amortizing -> retired` whose guard reads pool factor —
-expressible today. No shipped case exercises it. A benchmark deal with a call
-is the ask, not a construct. Backlog: `docs/13` §7.74.
+is an event driving `amortizing -> retired` whose guard reads pool factor.
+
+**Closed 1 September 2026 on `benchmarks/credit/americredit_2017_1`**, which
+had carried the call as arithmetic since it shipped — a pool-balance comparison
+written out thirty times, and a hand-written rising edge in the pot to catch the
+one distribution that pays the redemption price. It reproduced the published
+tables and did not end the deal: the twelve pool contracts amortized to the end
+of the book and the certificateholder absorbed $100,885,317.21 of collections on
+receivables the servicer had already bought, inside an asserted `model.total`.
+
+What the case now spells: `assume call_threshold = 0.10 * inputs.initial_pool`;
+one event driving the pack machine's edge, guarded on the pool the trust carries
+INTO the period, so the transition lands where the published tables put their
+first zero and the redemption is paid on the last distribution made while the
+trust still owns the loans; once-ness from the topology rather than a latch; and
+and the cash stops because the event zeroes the survival recurrence every
+lowered stream multiplies by, so a purchased pool has no balance rather than
+suppressed streams. The trust is a `Container.SPV` that winds itself up when its
+parts' surviving fractions reach zero. All 179 series are bit-identical through the call; the transition is
+published in `deterministic.transitions`; and the clause columns are now
+asserted as zero after it, where they had been blank.
+
+Three backlog entries came out of it, none closed: the credit pack declares
+`retired` and the survival recurrence and connects them nowhere, so the state has
+no consequence for any other model (`docs/13` §7.96); an entity's aggregate is
+unreadable in a guard and silently reads zero (§7.97); and the containment
+relation aggregates cash and answers nothing else about itself (§7.98).
+
+Backlog: `docs/13` §7.74.
 
 ## Item 5 — valuation solvers and the make-whole
 

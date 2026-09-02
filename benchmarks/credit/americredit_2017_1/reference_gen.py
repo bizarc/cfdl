@@ -256,9 +256,105 @@ def run(speed: float, call: bool = True, n: int = DATES, lines: list | None = No
             lines.append(line)
         if all(v == 0.0 for v in balance.values()):
             outstanding += [{c: 0.0 for c in CLASSES}] * (n - m - 1)
+            if lines is not None:
+                # The deal is over. The servicer purchased the receivables, so
+                # there are no collections to allocate and every clause of the
+                # waterfall pays nothing. The reference says so explicitly
+                # rather than falling silent, because a blank asserts nothing:
+                # a model that kept distributing after the clean-up call would
+                # pass a case whose cash columns simply stopped, which is what
+                # this one did until the call became an occurrence.
+                lines += [dict.fromkeys(line, 0.0)] * (n - m - 1)
             break
 
     return outstanding, {c: wal[c] / ORIG[c] for c in CLASSES}
+
+
+
+# `expected.csv` column names: the model's series ids. A class is `A-1` to the
+# prospectus and `a1` to the model, which is the only translation here.
+COLUMN_KEY = {"A-1": "a1", "A-2": "a2", "A-3": "a3", "B": "b", "C": "c", "D": "d", "E": "e"}
+# (key in a `lines` entry, name in the model) for every clause the case asserts.
+CLAUSES = (
+    [("servicing", "servicing"), ("trustee_fees", "trustee_fees")]
+    + [
+        (f"{c}_{leg}", f"{COLUMN_KEY[c]}_{leg}")
+        for leg in ("interest", "principal", "accelerated")
+        for c in CLASSES
+    ]
+    + [("residual", "residual")]
+)
+
+
+def write_expected(speed: float = 0.0150, n: int = DATES) -> None:
+    """Regenerate `expected.csv` at the case's asserted speed.
+
+    The case states that its expectations are this reference's, and until now
+    nothing enforced that: the file was assembled by hand and could drift from
+    the script that is supposed to justify it. It is written here so the claim
+    is checkable — regenerate and diff.
+
+    Row t carries the balances each class takes INTO distribution t and the
+    cash that distribution paid. Those are two different indices into one
+    loop: the balance taken into distribution t is what distribution t-1 left,
+    which is why `outstanding` is read one period back. Periods 0 and 1 both
+    carry the original balances — the closing date, and the first distribution,
+    which has not yet paid principal when its balances are struck.
+
+    Period 0 is the closing date: no distribution has occurred, so its clause
+    cells are blank rather than zero — nothing happened, which is not the same
+    claim as nothing was paid.
+    """
+    lines: list[dict] = []
+    outstanding, _ = run(speed, lines=lines, n=n)
+    header = (
+        ["period"]
+        + [f"container.trust.bal_{COLUMN_KEY[c]}" for c in CLASSES]
+        + [f"notes.distribution.{name}" for _, name in CLAUSES]
+    )
+    rows = [header]
+    for t in range(n + 1):
+        carried = outstanding[max(t - 1, 0)]
+        row = [str(t)] + ["%.2f" % (carried[c] * ORIG[c]) for c in CLASSES]
+        if t == 0:
+            row += [""] * len(CLAUSES)
+        else:
+            line = lines[t - 1]
+            row += ["%.2f" % line[key] for key, _ in CLAUSES]
+        rows.append(row)
+    with open(HERE / "expected.csv", "w", newline="\n") as f:
+        csv.writer(f).writerows(rows)
+
+
+
+def model_total(speed: float = 0.0150, n: int = DATES) -> float:
+    """The trust's net cash over the deal — what `expected_metrics.json` asserts.
+
+    Every dollar the trust receives is a collection on the receivables less the
+    servicing fee taken out of them, and it receives them only for as long as it
+    owns them. The clean-up call is therefore visible in this one figure: it is
+    the sum over the collection periods up to and including the one the
+    redeeming distribution pays for, and nothing after.
+
+    The redemption price itself is not in it. The servicer pays the trust for
+    the receivables and the trust pays the money straight out to the
+    noteholders, so it passes through the distribution rather than being cash
+    the trust earned; it is the pot of clause 18 onward, not a collection.
+
+    Before the call was modeled as an occurrence this figure was
+    $100,885,317.21 larger — twenty-three periods of collections on receivables
+    the servicer had already bought.
+    """
+    flows = [pool_flows(*pool, speed, n) for pool in POOLS]
+    lines: list[dict] = []
+    run(speed, lines=lines, n=n)
+    last = max(i for i, line in enumerate(lines) if any(v != 0.0 for v in line.values()))
+    total = 0.0
+    for m in range(last + 1):
+        total += sum(f[m][1] for f in flows)  # principal collected
+        total += sum(f[m][2] for f in flows)  # interest collected
+        total -= sum(f[m][3] for f in flows) * SERVICING / 12.0
+    return total
 
 
 def check() -> int:
@@ -286,6 +382,7 @@ def check() -> int:
             rows.append(row)
     with open(HERE / "reference_grid.csv", "w", newline="\n") as f:
         csv.writer(f).writerows(rows)
+    write_expected()
 
     wal_published = {
         (r["class"], r["basis"]): r
@@ -309,6 +406,7 @@ def check() -> int:
         f"({0.5 * len(clean) / (len(clean) + 1):.4f} predicted)"
     )
     print(f"published lives reproduced: {48 - len(wal_misses)} of 48")
+    print(f"model.total (trust net cash): {model_total():,.2f}")
     for s, c, date, error in misses:
         print(f"  MISS {c:4} {date} at {s * 100:.2f}% ABS by {error:.2f}pp")
     for basis, s, c, got, want in wal_misses:

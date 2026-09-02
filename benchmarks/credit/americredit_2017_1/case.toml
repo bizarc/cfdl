@@ -11,24 +11,32 @@
 #
 # The expectations are the reference implementation's, not the prospectus's:
 # the published grid is whole percentages, and `reference_gen.py` is what
-# checks against it — 184 of 195 informative cells inside the grid's own
-# rounding floor, 46 of the 48 published lives exact. The tolerances here are
+# checks against it — 192 of 195 informative cells inside the grid's own
+# rounding floor, all 48 published lives exact. (This comment read 184 and 46
+# for a while after the reserve account moved both; regenerate and read the
+# script's own output rather than trusting it.) The tolerances here are
 # therefore tight rather than rounding-derived, because both sides are ours and
 # a dollar of drift between them is a defect rather than a rounding artefact.
 # Worst observed disagreement is 4.4 cents on a $305m class.
+#
+# `expected.csv` is written by `reference_gen.py` now, rather than assembled by
+# hand from it. The claim that the expectations are the reference's was not
+# checkable before that, and the two had already drifted: every clause cell
+# after the clean-up call was blank, which asserts nothing about a deal that
+# is supposed to have ended.
 summary = "The note classes of a sub-prime auto ABS that builds its own overcollateralization: a 22-step waterfall where excess cash accelerates principal toward a target and principal beyond it is retained rather than paid."
 pack = "credit"
 period_tolerance = 1.00
 
 # The balances come from the recurrence and the cash from the waterfall, and
-# nothing in the language keeps the two in step (backlog 7.37). So every clause
+# nothing in the language keeps the two in step. So every clause
 # is asserted as well as every balance: if the waterfall and the fields drift
 # apart, a cash column breaks even though the grid still matches.
 [tolerance]
-"asset.trust.bal_a1" = 1.00
-"asset.trust.bal_a2" = 1.00
-"asset.trust.bal_a3" = 1.00
-"asset.trust.bal_b" = 1.00
-"asset.trust.bal_c" = 1.00
-"asset.trust.bal_d" = 1.00
-"asset.trust.bal_e" = 1.00
+"container.trust.bal_a1" = 1.00
+"container.trust.bal_a2" = 1.00
+"container.trust.bal_a3" = 1.00
+"container.trust.bal_b" = 1.00
+"container.trust.bal_c" = 1.00
+"container.trust.bal_d" = 1.00
+"container.trust.bal_e" = 1.00

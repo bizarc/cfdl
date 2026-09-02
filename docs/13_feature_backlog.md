@@ -1674,7 +1674,7 @@ reserve accounts, plus bond analytics over the result). The collateral side
 and the reserve mechanics are the larger half and are done; what remains, per
 `docs/38`: the coupled-waterfall trio of `docs/17` §5 (cross-linked pots, the
 shortfall series, deferred/PIK), the externally-referenced trigger case
-(§7.77's remainder), servicer advances, a clean-up call case, valuation
+(§7.77's remainder), servicer advances, valuation
 solvers and the make-whole, per-period stochastic draws, the analyst output
 surface (§7.22, §7.23, §7.26), the unexercised class types and structured
 collateral (`docs/20` §2), multi-currency, and a loan-level scale
@@ -1947,7 +1947,7 @@ sourcing rather than on language: see the entry.
 | §7.76 | the account adoption pass: the reserve every pack's references assume and no pack could model |
 | §7.77 | the DSCR cash trap — the first covenant whose breach has consequences, and can end |
 | §7.75 | storage state of charge, which turns `mwh_cycled_year` from an assumption into an output |
-| §7.74 | the deal mechanics still open after the machine: coupled interest/principal waterfalls, a step's shortfall, PIK on an unpaid step, servicer advances, the clean-up call |
+| §7.74 | the deal mechanics still open after the machine: coupled interest/principal waterfalls, a step's shortfall, PIK on an unpaid step, servicer advances. The clean-up call closed 2026-09-01 on `americredit_2017_1` (`docs/38` item 4) |
 
 **What M2 is not.** Declared metrics (§7.25, since shipped) and
 participant-level returns (§7.72) are M4 — both since shipped — and `docs/31` W4 pulled the first forward on the
@@ -2955,3 +2955,174 @@ periods).
 Provenance: deferred out of §7.85 on 31 August 2026, sharpened while building
 §7.86's four reductions, and settled the same day rather than left as an open
 question — the decision is cheap to record now and expensive to re-derive.
+
+### 7.96 A pack declares a lifecycle state and connects it to nothing
+
+*Belongs with the credit pack (section 2) and the pack interface.*
+
+`packs/credit/ontology/types.toml` declares `credit.pool` with a `retired`
+state, and its own description says a clean-up call "drives `amortizing ->
+retired` as an event with a no-return topology". `packs/credit/lowering/rules.toml`
+then lowers six streams per pool, every one of them of the form
+
+```
+{{contract.balance}} × <closed-form amortization factor> × field.credit_level_pay_survival
+```
+
+Nothing connects the two. A pool may enter `retired` and go on paying interest,
+principal and prepayments for the rest of the book, because no rule observes the
+machine the same pack declares. `retired` is a state with no consequence.
+
+The fix is one line of the pack's own vocabulary — an entry action on the
+machine, `on enter retired { set <survival> = 0 }`, which is precisely what
+`docs/34` D3 says entry actions are for: "a pack's `types.toml` machine declares
+the state's meaning once and every model using the type inherits it".
+
+**Why the pack cannot write it today.** The survival field's name is templated
+per contract — `credit_level_pay_survival{{contract.suffix_ident}}` — so a model
+declaring `contract credit.pool_level_pay.p01` gets
+`credit_level_pay_survival_p01`. An entry action belongs to the lifecycle, which
+is per TYPE, and cannot name a field whose identifier depends on which contract
+instance produced it. The two grains do not meet. Either the action needs a way
+to name a rule-declared field generically, or a rule needs a way to say which of
+its fields is extinguished on which state.
+
+Until then every model must do it entity by entity, which is what
+`benchmarks/credit/americredit_2017_1` does: twelve status writes and twelve
+survival writes in one event. It is correct and it is not reusable.
+
+Note what this is NOT. It is not a request for `deactivate stream` to take a
+selector: gating streams would leave the pool's declared state and its cash
+disagreeing, which is the defect, not the fix. And it is not `active in state`
+on a lowering rule — the rule schema has no such field (`docs/07`), but adding
+one would suppress cash rather than extinguish the balance producing it.
+
+Provenance: found building the clean-up call into `americredit_2017_1`,
+1-2 September 2026, after two wrong diagnoses recorded here and withdrawn.
+Related: §7.97, §7.74, `docs/34` D3, `docs/38` item 4.
+
+### 7.97 A guard reads a declared name, not a selector — WITHDRAWN
+
+*Withdrawn 2 September 2026, the day it was raised. Kept because the wrong
+version of it is easy to re-derive, and because the discipline it landed on is
+the useful part.*
+
+**What was claimed.** That a guard folding a series selector which resolves to
+nothing proceeds on a zero it never computed, with no diagnostic, and that a
+guard's selector should therefore be validated the way a metric's is (`E1365`).
+
+**Why that is not a gap.** The protection already exists, for names. An account
+balance and a field are read by DECLARED NAME, and an undeclared one is refused
+with precisely the argument this entry was about to make:
+
+```
+unresolved name: `prev.collectionz` is not declared — each read as zero.
+Declare it, supply it in the run configuration, or correct the name.
+```
+
+A selector is not a name. It is a pattern over published series, and matching
+nothing is a legitimate outcome that a model may state on purpose — `§7.95`
+settles that, and `"nothing.*"` says it on its face. Validating patterns in
+guards would make the unchecked path safe instead of using the checked path that
+is already there.
+
+**The discipline, which is the part worth keeping.** A guard should read a
+declared name. The causal plane carries running quantities in two vehicles built
+for it — an `account`, whose balance is settled state, and a field, whose
+recurrence carries a value forward — and both are resolved and refused when
+misspelled. A model needing an aggregate a guard will test should materialize it
+in one of those rather than folding a pattern at the point of the test.
+`benchmarks/credit/americredit_2017_1` does this: the trust carries a field
+summing its parts' surviving fractions, and the edge reads the field.
+
+Note also what was wrong with the original framing beyond the conclusion. It
+used a metric as the yardstick — "a metric's selector is checked, a guard's is
+not" — and a metric is evaluated once at the horizon over the finished
+projection. Its larger foldable set is the plane separation holding, not an
+asymmetry to close, and any request shaped as "let a guard see what a metric
+sees" is wrong at the premise.
+
+Related: §7.95, §7.38, §7.98.
+
+### 7.98 The relation is published as a graph, and the model cannot ask it anything
+
+*Belongs with the language and engine (section 5), and with the ontology.*
+
+Containment is not implicit. The engine materializes it, and every run publishes
+it — `graph.entities`, one row per entity, each naming its parent:
+
+```json
+{ "symbol": "asset.p01", "family": "asset",
+  "type": "Credit.Asset.LoanPool", "parent": "container.trust" }
+```
+
+Twelve such rows say that `container.trust` holds twelve pools. The run knows
+it, states it, and hands it to any consumer. The MODEL cannot ask.
+
+So a container that should wind up when it is empty — the defining behavior of
+an SPV, and the reason to have the concept at all — has to reconstruct by hand
+a fact the same run already emits. `americredit_2017_1` sums twelve named fields
+to discover that its twelve parts are gone, and the enumeration is linear in the
+collateral: a loan-level pool (`docs/38` item 11) makes it unwritable.
+
+What is missing is a read over the relation the graph already records — how many
+parts, how many in a given state, whether any remain — available where a guard
+can use it. `part of` is the only construct that knows, and it currently exposes
+one projection of what it knows, into results, after the fact.
+
+**A slice is not the answer**, though it looks like one: `slice` already selects
+by entity reference, by `part of` descendants, by container membership and by
+type through `refines`. It is reporting-only by design, and reaching into the
+document plane for a causal predicate is the layering error that fence exists to
+prevent. The selection vocabulary being there is evidence the question is
+natural, not evidence that slices should answer it.
+
+Note what this is not: it is not a request to read an entity's aggregated CASH
+in a guard. A container's cash cannot answer a structural question — a container
+holding twelve live pools nets zero in any idle period — and reaching for a cash
+total to decide whether something still exists is the mistake this entry exists
+to name.
+
+Provenance: raised while making the AmeriCredit trust derive its wind-up,
+2 September 2026, after two wrong framings — one asking for slices in guards,
+one asking to read a container's cash. Related: §7.43 (the graph the valuation
+plane publishes), §7.88, §7.89, §7.97, `docs/38` item 11.
+
+### 7.99 A container's roll-up is not a net cash flow, and must not be named one
+
+*Decision, taken 2 September 2026. Belongs with the language and engine
+(section 5), and with the ontology.*
+
+The engine publishes `entity.<symbol>.net_cash_flow` for every entity. For a
+CONTAINER that series is a consolidation: the cash of what the container holds,
+aggregated by `part of`, together with the container's own — deal-level fees and
+expenses. **The quantity is right. The name is wrong.**
+
+An SPV is a conduit. It collects what its collateral produces and pays it out;
+it does not accrue. "Net cash flow" names a residual belonging to an owner —
+which is what an asset produces and what a party receives — and applying it to a
+vehicle invites the figure to be read as value accruing to the vehicle. A trust
+that has distributed every dollar it collected has a net cash flow of nothing in
+the sense the term carries, and a consolidation of a billion dollars.
+
+It is not a theoretical objection. The name drew exactly the misuse it invites:
+the AmeriCredit trust's wind-up was first written as a guard on the container's
+"net cash flow" — a cash total asked whether the vehicle still held anything.
+Both halves of that are wrong (§7.98), and the name is what made it look right.
+
+**Decided:**
+
+1. A container's published roll-up is a **consolidation**, and its name must say
+   so. `net_cash_flow` stays for asset and party entities, where it means what
+   it says.
+2. The roll-up is never the answer to a structural question. Whether a container
+   still holds anything belongs to the relation (§7.98), not to a cash total: a
+   container holding twelve live pools consolidates to zero in any idle period.
+3. The rename touches `results_version` and the surfaces that read it
+   (`docs/06`, the statement and metric selectors, `docs/38`'s output surface),
+   so it is scoped as its own change. Recorded here so the name is not defended
+   on the grounds that it is what the engine currently emits.
+
+Provenance: named while reviewing the AmeriCredit trust's wind-up, after the
+container roll-up was used as a liveness proxy and the reading was rejected.
+Related: §7.98, §7.97, §7.88, §7.43.
