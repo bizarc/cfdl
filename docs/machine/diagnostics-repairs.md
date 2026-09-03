@@ -3392,7 +3392,7 @@ slice s { type Contract.Imaginary }
 ```
 
 - `E1363_SLICE_UNKNOWN_TYPE` (error): Slice 's' selects type 'Contract.Imaginary', which the active ontology does not define.
-  - hint: Known contract types: Contract.Construction, Contract.Debt, Contract.Derivative, Contract.Insurance, Contract.Lease, Contract.Offtake, Contract.Option, Contract.Purchase, Contract.Sale, Contract.Service, Contract.Tax.
+  - hint: Known contract types: Contract.CapitalExpenditure, Contract.Construction, Contract.Debt, Contract.Deduction, Contract.Derivative, Contract.Expense, Contract.Insurance, Contract.Lease, Contract.Line, Contract.Offtake, Contract.Option, Contract.Purchase, Contract.Revenue, Contract.Sale, Contract.Service, Contract.Tax, Contract.WorkingCapital.
 
 Fix: not yet recorded.
 

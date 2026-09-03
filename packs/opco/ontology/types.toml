@@ -175,30 +175,35 @@ required = false
 
 [[contracts]]
 type_id = "OpCo.Contract.RevenueLine"
+refines = "Contract.Revenue"
 contract_name = "opco.revenue_line"
 subject_family = "asset"
 parties = ["owner"]
 
 [[contracts]]
 type_id = "OpCo.Contract.OperatingExpenseLine"
+refines = "Contract.Expense"
 contract_name = "opco.opex_line"
 subject_family = "asset"
 parties = ["owner"]
 
 [[contracts]]
 type_id = "OpCo.Contract.CapexLine"
+refines = "Contract.CapitalExpenditure"
 contract_name = "opco.capex_line"
 subject_family = "asset"
 parties = ["owner"]
 
 [[contracts]]
 type_id = "OpCo.Contract.WorkingCapital"
+refines = "Contract.WorkingCapital"
 contract_name = "opco.working_capital"
 subject_family = "asset"
 parties = ["owner"]
 
 [[contracts]]
 type_id = "OpCo.Contract.WorkingCapitalPolicy"
+refines = "Contract.WorkingCapital"
 contract_name = "opco.working_capital_policy"
 subject_family = "asset"
 parties = ["owner"]
@@ -218,6 +223,10 @@ contract_name = "opco.cash_taxes"
 subject_family = "asset"
 parties = ["taxpayer"]
 
+[[contracts.roles]]
+name = "authority"
+unbound = true
+
 [[contracts]]
 type_id = "OpCo.Contract.Acquisition"
 refines = "Contract.Purchase"
@@ -232,12 +241,20 @@ contract_name = "opco.exit_multiple"
 subject_family = "asset"
 parties = ["seller"]
 
+[[contracts.roles]]
+name = "buyer"
+unbound = true
+
 [[contracts]]
 type_id = "OpCo.Contract.ExitAtEbitdaMultiple"
 refines = "Contract.Sale"
 contract_name = "opco.exit_ebitda"
 subject_family = "asset"
 parties = ["seller"]
+
+[[contracts.roles]]
+name = "buyer"
+unbound = true
 
 [[contracts]]
 type_id = "OpCo.Contract.ExitAtPerpetuity"
@@ -246,11 +263,14 @@ contract_name = "opco.exit_perpetuity"
 subject_family = "asset"
 parties = ["seller"]
 
+[[contracts.roles]]
+name = "buyer"
+unbound = true
+
 # --- Options: contracts with an election ---------------------------------
 # An option names no lowering rule. Its cash is the payoff of an election, which
 # the engine resolves directly — so unlike every other contract type here, there
 # is no rule to bind to.
-
 [[contracts]]
 type_id = "OpCo.Contract.EquityOption"
 refines = "Contract.Option"

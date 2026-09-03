@@ -1,11 +1,12 @@
 # Master contract types — the construct, stated top-down
 
-Status: **design, stage 0 of seven** — principles and the roster settled
-in discussion 2 September 2026; nothing below is built yet beyond the
-skeleton `docs/13` §7.92 shipped (a `refines` edge, eleven abstract names,
-`is_a`, and `slice … { type <Master> }`). Stages 1–7 are listed at the end
-and each lands as its own change. Repository-only; the site carries the
-result, not the argument.
+Status: **stage 1 of seven built** — principles and the roster settled in
+discussion 2 September 2026; R1–R3 decided the same day (§4.12, §7, §8).
+Stage 1 (the ontology model in `cfdl-pack`: fields, roles with
+specialization, lines, side, the effective walks, the load checks, the
+roster below in the language base, and every pack's roles specialized)
+is in. Stages 2–7 are listed at the end and each lands as its own change.
+Repository-only; the site carries the result, not the argument.
 
 ## 1. Why this document exists
 
@@ -100,20 +101,24 @@ promise is checkable.
 
 ## 4. The roster
 
-Fourteen masters: the eleven in the base today, plus three for the
-general lines (§4.12, decision R1). For each: the roles, the fields
+Seventeen masters: the eleven counterparty masters, `Contract.Line`, and
+its five specializations for the general lines (§4.12, decision R1). For each: the roles, the fields
 (required unless marked opt, with the default where one is a fact of the
 instrument rather than of a deal), the lines, and the side. The argument
 is given where the choice was not obvious.
 
 ### 4.1 `Contract.Debt`
-Roles `lender`, `borrower`. Fields: `principal`; `rate` (annual nominal);
-`day_count` (opt; the model's convention when absent); `payment_frequency`
-(opt; the calendar's when absent); `amortization` (opt: `level_pay`,
-`interest_only`, `bullet`, `custom`; a refinement fixes it — a pool type
-is `level_pay` by definition); `amort_months` (opt; the horizon the payment
-is struck on, which may exceed the term); `io_months` (opt, 0);
-`funded_at_close` (opt, 1); `balloon_at_maturity` (opt, 0). Lines:
+Roles `lender`, `borrower`. Fields: `principal`; `interest_rate` (annual
+nominal); `day_count` (opt; the model's convention when absent);
+`payment_frequency` (opt; the calendar's when absent); `amortization` (opt:
+`level_pay`, `interest_only`, `bullet`, `custom`; a refinement fixes it — a
+pool type is `level_pay` by definition); `amortization_months` (opt; the
+horizon the payment is struck on, which may exceed the term);
+`interest_only_months` (opt, 0); `funded_at_close` (opt, 1);
+`balloon_at_maturity` (opt, 0). Master names are full words: a master is
+read by people who do not know the pack's abbreviations, so `rate`,
+`amort_months` and `io_months` are the packs' spellings and not the
+master's (decision R2's naming review). Lines:
 `proceeds`, `interest`, `principal`. Side: open on the master — the
 subject is the borrower for a mortgage and the lender for a held pool —
 and each refinement fixes it. The credit pack's `balance` is this
@@ -139,9 +144,10 @@ have exactly this shape.
 
 ### 4.4 `Contract.Sale`
 Roles `seller`, `buyer`. Fields: `selling_costs` (opt, 0), and ONE
-valuation basis, required as a group: `value`; or `cap_rate` with `noi`;
-or `multiple` with `base`; or `discount_rate` with `growth_rate` and
-`base`. Lines: `proceeds`, `selling_costs`. One-shot. Side: seller
+valuation basis, required as a group: `value`; or `cap_rate` with
+`income`; or `multiple` with `base`; or `discount_rate` with `growth_rate`
+and `base`. (`income`, not `noi`: net operating income is CRE's word for
+the income a cap rate is applied to, and the master is not CRE's.) Lines: `proceeds`, `selling_costs`. One-shot. Side: seller
 receives. The "required as a group" form (`any_of`) is new to the field
 model and is needed here and on the rent of §4.2.
 
@@ -163,7 +169,7 @@ servicing and administration fees (`benchmarks/credit/auto_abs_tranches`)
 are the case that will want them.
 
 ### 4.7 `Contract.Tax`
-Roles `taxpayer`, `authority`. Fields: `rate` or `amount` (one
+Roles `taxpayer`, `authority`. Fields: `tax_rate` or `amount` (one
 required); `basis` (opt). Lines: `paid` or `benefit`, fixed by the
 refinement. Side: taxpayer pays, or receives a benefit. The weakest
 master to state a core for — a cash tax, an investment credit, a
@@ -182,8 +188,11 @@ nothing today (`docs/13` §7.67).
 ### 4.9 `Contract.Construction`
 Roles `owner`, `contractor`. Fields: `budget`; `draw_curve` (a declared
 curve, per `cre.construction_loan`'s argument that a draw schedule is data
-and not a term); `retainage` (opt, 0). Line: `draw`. Side: owner pays.
-`cre.construction_stub` is its first refinement.
+and not a term); `retainage` (opt, 0). Line: `draw`. Side: owner pays. No refinement yet:
+`cre.construction_stub` was expected to be the first, and is not — its
+roles are `owner` and `lender`, it lowers a draw a lender funds, and that
+is a debt facility, so it refines `Contract.Debt` (`owner` refines
+`borrower`).
 
 ### 4.10 `Contract.Derivative`
 Roles `party`, `counterparty`. Fields: `notional`; `reference` (a
@@ -198,22 +207,28 @@ HUD's mortgage insurance premium is the standing case
 (`benchmarks/cre/hud_home_multifamily`), which today is a hand stream
 because the debt contract rightly refused to carry it.
 
-### 4.12 `Contract.Revenue`, `Contract.Expense`, `Contract.CapitalExpenditure` — decision R1
+### 4.12 `Contract.Line` and its kinds — decision R1
 Role `owner` (the model's own party; no counterparty). Fields: `amount`
-or `amount_year` (one required); `growth_rate` (opt, 0). Lines:
-`revenue`, `expense`, `capex` respectively. Side: fixed by the master.
+or `amount_year` (one required); `growth_rate` (opt, 0). `Contract.Line`
+is the pure master and is itself abstract; it is specialized, still
+abstractly, into the kinds a statement distinguishes, and a pack refines
+those:
 
-*Why three and not one.* A single `Contract.Line` with a `kind` would
-make "all revenue" a field test rather than a type, and selection by type
-is the payoff. Three masters cost three names. *Why not the counterparty
-masters.* An opex line under `Contract.Service` would have to name a
-provider it does not have, and a capex line under `Contract.Purchase` a
-seller; the packs' own declarations say `owner` and nothing else, which
-is the fact these masters record. *Working capital.* `opco.working_capital`
-and its policy variant are a balance, not a line, and the plan places
-them under `Contract.Expense` with the policy as an added field pending a
-better home; a `Contract.WorkingCapital` master is the alternative if a
-second pack needs one.
+| kind | line | side |
+|---|---|---|
+| `Contract.Revenue` | `revenue` | receives |
+| `Contract.Deduction` | `deduction` | pays — a contra-revenue line: vacancy, credit loss, an abatement stated as a line |
+| `Contract.Expense` | `expense` | pays |
+| `Contract.CapitalExpenditure` | `capex` | pays |
+| `Contract.WorkingCapital` | `working_capital` | open — a balance movement, so it varies by period |
+
+*Decided 2 September 2026 (R1):* one pure master, specialized by kind, so
+"all revenue" is a type and the packs specialize further
+(`cre.opex_line` refines `Contract.Expense`; `cre.vacancy_loss` refines
+`Contract.Deduction`; `opco.working_capital` and its policy refine
+`Contract.WorkingCapital`). Deduction and WorkingCapital are the two
+kinds the packs already distinguish that the first three did not cover;
+a further kind is added when a pack needs one, never speculatively.
 
 ## 5. Roles
 
@@ -286,30 +301,30 @@ the master's field, the pack's name is renamed:
 | pack term today | master field | packs |
 |---|---|---|
 | `balance` | `principal` | credit (three pool types) |
+| `rate` (on debt) | `interest_rate` | cre, credit, energy, opco |
+| `amort_months` | `amortization_months` | cre, opco |
+| `io_months` | `interest_only_months` | cre, opco |
+| `tax_rate` (on tax) | `tax_rate` | already the master's word |
 | `ppa_price`, `price`, `payment_year` | `price` | energy |
 | `mwh_year` | `quantity` | energy |
 | `price_escalation` | `escalation` | energy |
 | `om_year` | `fee_year` | energy |
-| `base_rent_year` | `rent_year` | cre |
+| `base_rent_year`, `rent_year` | `rent_year` | cre |
 | `base_rent` | `rent` | cre |
+| `noi_value` | `income` | cre |
 
-*How.* Each rename ships with a deprecated alias declared on the
-refinement — `[[contracts.fields]] name = "balance" deprecated_for =
-"principal"` — that the compiler accepts with `W5024_DEPRECATED_TERM`
-naming the replacement. Every benchmark, fixture, template, learn chapter
-and site example is migrated in the same change, so the alias exists for
-models outside the repository. The alias is removed at the packs' next
-minor version (`0.1.0` → `0.2.0`), which is also when the packs' version
-first means something. *Why not a hard rename.* The repository has no
-downstream consumers today, so a hard rename would be cheaper here; the
-alias is for the pack format's own sake — it is the first time a pack
-changes a term's name, and the mechanism should exist before a pack with
-users needs it.
+*How — decided 2 September 2026:* a HARD rename, in one change per pack
+or one for all. The language is pre-release with no downstream consumers,
+so there is no deprecated alias and no warning code; every benchmark,
+fixture, template, learn chapter and site example is migrated in the same
+change, and an old name is simply an unknown term. The master's names were
+reviewed for correctness first (full words, no pack abbreviations, no
+domain jargon — §4.1, §4.4, §4.7), because a hard rename is done once.
 
-Bounds that every refinement of a master shares (`rate ≥ 0`,
-`amort_months > 0`, `principal > 0`) move to the master field and are
-checked once; a pack's `validations.toml` keeps the bounds that are its
-own.
+Bounds that every refinement of a master shares (`interest_rate ≥ 0`,
+`amortization_months > 0`, `principal > 0`) move to the master field and
+are checked once; a pack's `validations.toml` keeps the bounds that are
+its own.
 
 ## 8. What the compiler checks — decision R3
 
@@ -325,11 +340,13 @@ compiler refuses an unknown term with a near-miss hint
 roles (`E1322`, now naming the master role too). A model's `parties`
 block is serialized, closing the "parsed and discarded" status.
 
-*Scope.* The two-token declaration the grammar already allows —
-`contract cre.lease_unit tenant_a` (`docs/13` §7.63) — is the follow-on,
-not this pass: carrying the resolved type is what every stage needs; the
-spelling is ergonomics on top of it, and the fused form keeps working
-either way.
+*Scope — decided 2 September 2026:* the two-token declaration the grammar
+already allows — `contract cre.lease_unit tenant_a` (`docs/13` §7.63) —
+lands in the same stage as the type carry rather than as a follow-on:
+leaving it open would carry the string-surgery it exists to remove into
+every consumer the stage touches. The fused `cre.lease_unit.tenant_a`
+spelling keeps working; models migrate to the two-token form as they are
+next touched.
 
 ## 9. What a contract is not
 
@@ -342,10 +359,17 @@ contract names, and their accounts hold what they received (`docs/13`
 
 ## 10. Stages
 
-1. **Ontology model** (`crates/cfdl-pack`): `OntologyContract` gains
-   `fields`, `lines`, `side`, `roles` with specialization; `effective_*`
-   for contracts; load validation mirroring the entity side plus line
-   coverage and template coverage; the roster of §4 in `language_base()`.
+1. **Ontology model** (`crates/cfdl-pack`) — **built.** `OntologyContract`
+   carries `fields`, `lines`, `side` and `roles` with specialization and
+   unbound markers; `effective_fields` covers contracts, with
+   `effective_roles`, `effective_lines`, `effective_side` and `master_of`
+   beside it; load validation mirrors the entity side (subject family,
+   strengthen-only fields, every master role covered, specialization
+   targets exist) and adds line coverage where a type's rules name their
+   lines; the roster of §4 is in `language_base()`; every pack's roles
+   are specialized and every pack type now refines a master. Template
+   coverage of required fields waits for stage 2, where the packs' terms
+   take the masters' names.
 2. **Pack conformance**: role specializations, `line` on every rule,
    term renames with aliases (§7), line types refine §4.12, bounds moved
    to masters; every benchmark byte-identical.
