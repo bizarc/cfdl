@@ -57,8 +57,10 @@ operation from summing five *already-rounded* components, and the two differ by
 up to half of the last published place. 5e-7 is exactly that half, and the
 floor any case here can assert to.
 
-One thing the case does **not** validate: the reference's actual purpose is to
-solve the tariff that clears a target equity return, sweeping the rate until net
-present value crosses zero. CFDL has no solve-to-target construct, so the solved
-rate — 23.15 c/kWh — is carried across as a constant. Everything downstream of
-the tariff is checked period by period; the solve itself is not.
+**What the case asserts, and where it starts.** The reference solves for the
+tariff that clears a target equity return, sweeping the rate until net present
+value crosses zero. That solved rate — 23.15 c/kWh — is the input here, stated
+as a constant, and the case asserts the cash flow it produces: every line, every
+year. The rate search is upstream of what this case checks: its result is the
+starting point, and the figures asserted are the cash flow that follows from
+it.
