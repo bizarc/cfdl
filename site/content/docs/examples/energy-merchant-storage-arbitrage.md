@@ -19,34 +19,35 @@ inside a declared tolerance. See [benchmark methodology](/docs/benchmarks).
 A 20 MW / 80 MWh merchant battery, front of meter, earning an intraday
 arbitrage spread across one year at a daily grain.
 
-The economics are simple to state and awkward to model. The asset charges when
-power is cheap and discharges when it is dear, so its revenue depends on the
-*dispersion* of prices within a day rather than on their level. What it can
-reach depends on its duration: a four-hour battery discharges into roughly the
-three dearest hours of a day, not the sixteen-hour on-peak block.
+The economics are simple to state and awkward to model. The battery charges
+when power is cheap and discharges when power is expensive, so its revenue
+depends on how far prices spread within a day rather than on their level. What
+the battery can capture depends on its duration: a four-hour battery discharges
+into roughly the three most expensive hours of a day, not into the sixteen-hour
+on-peak block.
 
-And the battery decides nothing. It is a constraint set — power, usable energy,
-round-trip efficiency, and what a cycle costs in wear. Whether it runs on a
-given day is an operating decision, and the case is about expressing that
-decision declaratively rather than assuming its outcome.
+The battery itself decides nothing. It is a constraint set — power, usable
+energy, round-trip efficiency, and what a cycle costs in wear. Whether the
+battery runs on a given day is an operating decision, and this case is about
+expressing that decision declaratively rather than assuming its outcome.
 
 ## The reference
 
-A **provably optimal dispatch**, solved as a linear program: maximise arbitrage
+A **provably optimal dispatch**, solved as a linear program: maximize arbitrage
 margin subject to power limits, the state-of-charge window, round-trip
 efficiency, and a warranty cap of one equivalent full cycle a day. Each day is
-solved independently, which is the best a daily-grain model can do.
+solved on its own, which is the best result a daily-grain model can reach.
 
-An optimum rather than a tool, deliberately. A national laboratory's
-project-finance model was tried first and its dispatch is documented as
-"automated but suboptimal", performing "no optimization around the cost of
-energy and power" — so agreement with it would be evidence of nothing, and
-disagreement evidence of nothing either. A linear program's optimum is a proof.
+The reference is an optimum rather than a tool, and that choice is deliberate.
+A national laboratory's project-finance model was measured first. Its dispatch
+is documented as "automated but suboptimal", performing "no optimization around
+the cost of energy and power", and it reaches 27% of the optimum on this price
+year. A linear program's optimum is a proof, so it is the stronger target.
 
 The reference shares no code with the model and reaches its answer by a
-different method: optimisation over 8,760 hours against closed-form arithmetic
-over daily blocks. Both consume the same stated price series, and the price
-year is synthetic and seeded, so any reader can regenerate it.
+different method: optimization over 8,760 hours, against closed-form arithmetic
+over daily blocks. Both consume the same stated price series. The price year is
+synthetic and seeded, so any reader can regenerate it.
 
 ## What it exercises
 
@@ -55,22 +56,24 @@ year is synthetic and seeded, so any reader can regenerate it.
 | Pack | none — core language only |
 | Declared | one lifecycle, two curves, two streams, two metrics |
 | Language features | a model-declared lifecycle with guarded edges, `active in state`, `curve_value`, `series_count` |
-| Conventions | IEEE Std 762 unit states, TBx block pricing at the asset's duration, round-trip loss taken wholly on charge |
+| Conventions | IEEE Std 762 unit states, TBx block pricing at the battery's duration, round-trip loss taken entirely on charge |
 
-The energy pack has no storage dispatch contract, and this case does not wait
-for one. Its existing storage rule prices a battery as `mwh_cycled_year *
-spread`, which asks the modeller to state the quantity a dispatch model exists
-to compute. Written in core language instead, cycling is an **output**.
+The case is written in the core language, with no pack and no contract, which is
+the stronger claim: the language expresses this deal with no domain vocabulary
+at all.
 
-The run/idle decision is a guarded edge on a state machine, in the industry's
-own vocabulary: IEEE Std 762 separates availability from dispatch, and a unit
-that is available but not synchronised is in **reserve shutdown**. An idle day
-is not a zero in an expression — it is a battery in reserve shutdown, and the
-cash follows the state.
+Cycling is an **output**. The count of days the battery ran, and the energy
+those days moved, both follow from the operating policy. A dispatch model
+computes the same two figures, which is what makes the comparison meaningful.
+
+The run-or-idle decision is a guarded edge on a state machine, in the industry's
+own vocabulary. IEEE Std 762 separates availability from dispatch, and a unit
+that is available but not synchronized is in **reserve shutdown**. An idle day
+is a battery in reserve shutdown, and the cash follows the state.
 
 ## The result
 
-The model reproduces the optimal dispatch **exactly on volume and to 0.13% on
+The model reproduces the optimal dispatch **exactly on volume, and to 0.13% on
 margin**:
 
 | | model | optimum | |
@@ -81,23 +84,26 @@ margin**:
 | cost | 627,109 | 627,377 | 0.04% |
 | margin | 732,474 | 731,545 | 0.13% |
 
-Asserted: both cash columns on every one of the 365 days, plus the annual
-margin, the day count and the energy discharged. The median day agrees exactly.
+The case asserts both cash columns on every one of the 365 days, together with
+the annual margin, the day count, and the energy discharged. The median day
+agrees exactly.
 
 ## The delta
 
-**The model is a slight upper bound, and the reason is precise.** It reads the
-day's TBx block prices, which treat the dear and cheap slices as independent
-and therefore ignore ordering *within* the day. A battery cannot discharge at
-09:00 using energy it buys at 14:00, and the optimum respects that while the
-blocks do not. The effect is bounded: the largest daily deviation is $71.16 on
-revenue and $56.95 on cost, against daily revenues averaging $3,723.
+**The model is a slight upper bound, and the reason is precise.** The model
+reads the day's TBx block prices, and those blocks treat the expensive and
+cheap slices as independent. Treating them as independent ignores the order of
+hours within the day: a battery cannot discharge at 09:00 on energy it buys at
+14:00. The optimum respects that order and the blocks do not. The effect is
+bounded, and the largest daily deviation is $71.16 on revenue and $56.95 on
+cost, against daily revenues averaging $3,723.
 
-That residual is a property of the daily grain, not an error in the arithmetic.
-A second figure sizes what the grain itself costs: solving the same year as one
-program, with charge carried across midnight, earns 766,648 against the
-daily-independent 731,545 — **4.8% more**. Storage value that a daily model
-cannot see, measured rather than asserted.
+That residual is a property of the daily grain rather than an error in the
+arithmetic. A second figure measures what the grain itself costs. Solving the
+same year as one program, with charge carried across midnight, earns 766,648
+against the daily-independent 731,545 — **4.8% more**. That difference is
+storage value a daily model cannot capture, and this case measures it rather
+than assuming it.
 
 ## The model
 
@@ -108,31 +114,24 @@ time calendar daily from 2026-01-01 for 365
 
 // A 20 MW / 80 MWh merchant battery earning an intraday arbitrage spread.
 //
-// CORE LANGUAGE, NO PACK. The energy pack has no storage dispatch contract —
-// `energy.storage_arbitrage` prices a battery as `mwh_cycled_year * spread`,
-// which asks the modeller to state the thing a dispatch model exists to
-// compute — and this case deliberately does not wait for one. What it shows is
-// the stronger claim: the language expresses the asset with no domain
-// vocabulary.
-//
 // THE BATTERY DECIDES NOTHING. It is a constraint set — power, usable energy,
 // round-trip efficiency, and what a cycle costs in wear. Whether it runs on a
-// given day is an OPERATING DECISION, declared as a guarded edge on a state
-// machine rather than computed inside a price.
+// given day is an operating decision, and that decision is declared here as a
+// guarded edge on a state machine.
 //
-// THE STATES ARE THE INDUSTRY'S. IEEE Std 762, as NERC GADS operationalises it,
+// THE STATES ARE THE INDUSTRY'S. IEEE Std 762, as NERC GADS operationalizes it,
 // separates AVAILABILITY from DISPATCH: a unit that is available but not
-// synchronised is in RESERVE SHUTDOWN, and economic curtailment is exactly
-// that. An idle day is not a zero in an expression; it is a battery in reserve
-// shutdown, and the cash follows the state.
+// synchronized is in RESERVE SHUTDOWN, and economic curtailment is exactly
+// that. An idle day is a battery in reserve shutdown, and the cash follows the
+// state.
 //
-// WHAT THE MODELLER BRINGS is the day's achievable spread AT THIS ASSET'S
-// DURATION — the mean of the dearest hours it can reach against the cheapest it
-// can draw from. That is the market's own battery product, the top-bottom or
-// TBx spread, quoted at a duration because a one-hour and a four-hour asset see
-// different spreads from identical prices. An on-peak/off-peak block is the
-// wrong product here: it averages sixteen hours including mid-day and
-// understates what a four-hour asset sees by several times.
+// THE MARKET INPUT IS THE DAY'S ACHIEVABLE SPREAD AT THIS BATTERY'S DURATION —
+// the mean of the most expensive hours it can discharge into, against the
+// cheapest it can charge from. That is the market's own battery product, the
+// top-bottom or TBx spread, quoted at a duration because a one-hour and a
+// four-hour battery capture different spreads from identical prices. An
+// on-peak/off-peak block averages sixteen hours including mid-day, and
+// understates what a four-hour battery captures by several times.
 
 entity asset battery {
   lifecycle facility
@@ -140,9 +139,9 @@ entity asset battery {
 
 entity party operator { name = "Operator" }
 
-// ── the asset, from primitives ──────────────────────────────────────────────
-// Round-trip efficiency is COMPUTED from the conversion chain and the cell, not
-// supplied as a single figure and not read back from the reference.
+// ── the battery, from primitives ────────────────────────────────────────────
+// Round-trip efficiency is COMPUTED from the conversion chain and the cell,
+// rather than supplied as one figure.
 assume power_mw    = 20.0
 assume nameplate   = 80.0
 assume soc_min     = 0.15
@@ -152,758 +151,26 @@ assume eff_dc_ac   = 0.96
 assume eff_cell    = 0.9757
 assume round_trip  = inputs.eff_ac_dc * inputs.eff_dc_ac * inputs.eff_cell
 
-// What one cycle moves. Discharge is bounded by the usable window; charging
-// must put in more than comes out, by the round-trip loss.
+// What one cycle moves. Discharge is bounded by the usable window, and
+// charging must put in more than comes out, by the round-trip loss.
 assume usable_mwh  = inputs.nameplate * (inputs.soc_max - inputs.soc_min)
 assume charge_mwh  = inputs.usable_mwh / inputs.round_trip
 
-// The wear a cycle costs, per MWh discharged. Zero here because the reference
-// maximises gross arbitrage margin, so a hurdle on one side only would make the
-// two models answer different questions. It is declared rather than omitted
-// because degradation is real and this is where an underwriter states it.
+// The wear a cycle costs, per MWh discharged, and the hurdle a day must clear
+// to be worth running. Zero on this deal, so that the model and the reference
+// both maximize gross arbitrage margin. An underwriter states degradation
+// here.
 assume cycle_cost_mwh = 0.0
 
-// ── the market, at this asset's duration ────────────────────────────────────
-curve capture_price {
-  2026-01-01: 44.4857
-  2026-01-02: 48.6738
-  2026-01-03: 54.9370
-  2026-01-04: 35.1458
-  2026-01-05: 40.3363
-  2026-01-06: 45.8456
-  2026-01-07: 58.8295
-  2026-01-08: 44.2938
-  2026-01-09: 34.8924
-  2026-01-10: 33.8077
-  2026-01-11: 41.6466
-  2026-01-12: 33.3279
-  2026-01-13: 50.0539
-  2026-01-14: 49.8252
-  2026-01-15: 34.8103
-  2026-01-16: 50.5383
-  2026-01-17: 42.7219
-  2026-01-18: 44.4513
-  2026-01-19: 29.9996
-  2026-01-20: 52.8748
-  2026-01-21: 47.1053
-  2026-01-22: 35.9160
-  2026-01-23: 48.4559
-  2026-01-24: 46.5330
-  2026-01-25: 40.5475
-  2026-01-26: 48.3677
-  2026-01-27: 44.2652
-  2026-01-28: 40.1657
-  2026-01-29: 37.0535
-  2026-01-30: 36.5839
-  2026-01-31: 53.4535
-  2026-02-01: 36.0566
-  2026-02-02: 30.2969
-  2026-02-03: 38.9423
-  2026-02-04: 43.5473
-  2026-02-05: 34.3242
-  2026-02-06: 42.5400
-  2026-02-07: 341.4533
-  2026-02-08: 36.1421
-  2026-02-09: 42.8825
-  2026-02-10: 53.1687
-  2026-02-11: 35.9649
-  2026-02-12: 43.9165
-  2026-02-13: 46.6573
-  2026-02-14: 35.9762
-  2026-02-15: 44.1223
-  2026-02-16: 38.8322
-  2026-02-17: 44.2984
-  2026-02-18: 32.7284
-  2026-02-19: 38.5667
-  2026-02-20: 34.6254
-  2026-02-21: 50.1693
-  2026-02-22: 40.6274
-  2026-02-23: 29.5649
-  2026-02-24: 47.6485
-  2026-02-25: 40.1723
-  2026-02-26: 35.6397
-  2026-02-27: 49.8994
-  2026-02-28: 39.9929
-  2026-03-01: 44.3575
-  2026-03-02: 49.6462
-  2026-03-03: 49.0094
-  2026-03-04: 45.2760
-  2026-03-05: 40.7111
-  2026-03-06: 33.6341
-  2026-03-07: 26.0334
-  2026-03-08: 38.3358
-  2026-03-09: 36.3436
-  2026-03-10: 42.6758
-  2026-03-11: 32.5839
-  2026-03-12: 52.0692
-  2026-03-13: 30.3314
-  2026-03-14: 43.0077
-  2026-03-15: 36.3236
-  2026-03-16: 38.1388
-  2026-03-17: 536.3038
-  2026-03-18: 36.5282
-  2026-03-19: 33.1907
-  2026-03-20: 52.9992
-  2026-03-21: 40.7997
-  2026-03-22: 28.2271
-  2026-03-23: 41.6884
-  2026-03-24: 26.6601
-  2026-03-25: 32.4964
-  2026-03-26: 46.5901
-  2026-03-27: 30.6831
-  2026-03-28: 43.0817
-  2026-03-29: 31.2506
-  2026-03-30: 37.8904
-  2026-03-31: 49.7352
-  2026-04-01: 39.2198
-  2026-04-02: 34.9208
-  2026-04-03: 33.6132
-  2026-04-04: 37.3784
-  2026-04-05: 30.4627
-  2026-04-06: 46.0566
-  2026-04-07: 40.6820
-  2026-04-08: 39.1389
-  2026-04-09: 41.4085
-  2026-04-10: 43.6245
-  2026-04-11: 33.6246
-  2026-04-12: 29.6547
-  2026-04-13: 36.4280
-  2026-04-14: 38.1482
-  2026-04-15: 40.9136
-  2026-04-16: 31.2452
-  2026-04-17: 36.1465
-  2026-04-18: 38.2078
-  2026-04-19: 42.0131
-  2026-04-20: 42.4295
-  2026-04-21: 48.7518
-  2026-04-22: 40.5325
-  2026-04-23: 43.0419
-  2026-04-24: 35.8664
-  2026-04-25: 299.3920
-  2026-04-26: 51.5485
-  2026-04-27: 31.2577
-  2026-04-28: 32.4114
-  2026-04-29: 31.1474
-  2026-04-30: 29.1599
-  2026-05-01: 29.4856
-  2026-05-02: 46.3136
-  2026-05-03: 40.4058
-  2026-05-04: 28.6498
-  2026-05-05: 20.1399
-  2026-05-06: 35.9478
-  2026-05-07: 542.4278
-  2026-05-08: 47.2282
-  2026-05-09: 35.8439
-  2026-05-10: 48.6846
-  2026-05-11: 53.0493
-  2026-05-12: 38.1496
-  2026-05-13: 41.8142
-  2026-05-14: 35.9178
-  2026-05-15: 32.5853
-  2026-05-16: 33.8852
-  2026-05-17: 41.7690
-  2026-05-18: 50.4346
-  2026-05-19: 36.6616
-  2026-05-20: 36.8453
-  2026-05-21: 34.4253
-  2026-05-22: 35.0192
-  2026-05-23: 42.3025
-  2026-05-24: 37.0956
-  2026-05-25: 40.5806
-  2026-05-26: 43.4332
-  2026-05-27: 34.3044
-  2026-05-28: 201.2261
-  2026-05-29: 41.1229
-  2026-05-30: 41.7474
-  2026-05-31: 34.4893
-  2026-06-01: 31.0101
-  2026-06-02: 22.7636
-  2026-06-03: 30.9129
-  2026-06-04: 34.0220
-  2026-06-05: 40.4659
-  2026-06-06: 40.1379
-  2026-06-07: 46.5055
-  2026-06-08: 38.9359
-  2026-06-09: 26.9320
-  2026-06-10: 34.2624
-  2026-06-11: 46.2650
-  2026-06-12: 42.5690
-  2026-06-13: 543.9604
-  2026-06-14: 43.1923
-  2026-06-15: 51.0224
-  2026-06-16: 47.4905
-  2026-06-17: 43.5492
-  2026-06-18: 54.4122
-  2026-06-19: 42.6511
-  2026-06-20: 38.2679
-  2026-06-21: 35.9703
-  2026-06-22: 38.7052
-  2026-06-23: 41.7114
-  2026-06-24: 32.5894
-  2026-06-25: 48.2465
-  2026-06-26: 43.4586
-  2026-06-27: 39.4080
-  2026-06-28: 37.8499
-  2026-06-29: 47.3774
-  2026-06-30: 44.4944
-  2026-07-01: 39.7501
-  2026-07-02: 54.3197
-  2026-07-03: 39.5815
-  2026-07-04: 48.2760
-  2026-07-05: 59.2005
-  2026-07-06: 39.2091
-  2026-07-07: 33.1439
-  2026-07-08: 43.3145
-  2026-07-09: 49.2725
-  2026-07-10: 47.6517
-  2026-07-11: 49.3911
-  2026-07-12: 50.8315
-  2026-07-13: 48.6006
-  2026-07-14: 32.7793
-  2026-07-15: 325.8319
-  2026-07-16: 47.7431
-  2026-07-17: 37.5735
-  2026-07-18: 37.4765
-  2026-07-19: 50.4375
-  2026-07-20: 44.6250
-  2026-07-21: 47.2449
-  2026-07-22: 46.9163
-  2026-07-23: 38.4395
-  2026-07-24: 40.4980
-  2026-07-25: 593.8463
-  2026-07-26: 46.7762
-  2026-07-27: 49.8173
-  2026-07-28: 457.1103
-  2026-07-29: 47.6310
-  2026-07-30: 58.9591
-  2026-07-31: 57.0691
-  2026-08-01: 45.2478
-  2026-08-02: 38.8819
-  2026-08-03: 51.9026
-  2026-08-04: 51.4594
-  2026-08-05: 54.2703
-  2026-08-06: 41.2546
-  2026-08-07: 56.4490
-  2026-08-08: 40.1807
-  2026-08-09: 46.8627
-  2026-08-10: 45.3654
-  2026-08-11: 52.4916
-  2026-08-12: 39.9623
-  2026-08-13: 47.1439
-  2026-08-14: 41.6017
-  2026-08-15: 57.5664
-  2026-08-16: 46.3841
-  2026-08-17: 52.7257
-  2026-08-18: 53.3127
-  2026-08-19: 55.5615
-  2026-08-20: 46.0702
-  2026-08-21: 45.2946
-  2026-08-22: 55.8888
-  2026-08-23: 57.9336
-  2026-08-24: 54.8779
-  2026-08-25: 56.3989
-  2026-08-26: 49.5608
-  2026-08-27: 37.1311
-  2026-08-28: 49.9859
-  2026-08-29: 50.9739
-  2026-08-30: 552.0914
-  2026-08-31: 42.8903
-  2026-09-01: 51.1945
-  2026-09-02: 47.1491
-  2026-09-03: 55.1182
-  2026-09-04: 48.4507
-  2026-09-05: 50.5811
-  2026-09-06: 54.0358
-  2026-09-07: 70.3266
-  2026-09-08: 45.7038
-  2026-09-09: 62.6500
-  2026-09-10: 53.6183
-  2026-09-11: 54.5883
-  2026-09-12: 56.4468
-  2026-09-13: 61.1010
-  2026-09-14: 52.5353
-  2026-09-15: 60.2383
-  2026-09-16: 62.2558
-  2026-09-17: 52.5843
-  2026-09-18: 51.6392
-  2026-09-19: 62.7334
-  2026-09-20: 45.1189
-  2026-09-21: 63.9193
-  2026-09-22: 54.3589
-  2026-09-23: 49.8139
-  2026-09-24: 54.9169
-  2026-09-25: 43.2448
-  2026-09-26: 62.8021
-  2026-09-27: 42.9285
-  2026-09-28: 41.3691
-  2026-09-29: 61.2298
-  2026-09-30: 57.3023
-  2026-10-01: 67.2413
-  2026-10-02: 52.6197
-  2026-10-03: 56.0319
-  2026-10-04: 389.1315
-  2026-10-05: 55.7849
-  2026-10-06: 51.8942
-  2026-10-07: 55.3453
-  2026-10-08: 44.5268
-  2026-10-09: 60.4026
-  2026-10-10: 61.5405
-  2026-10-11: 50.8441
-  2026-10-12: 53.2000
-  2026-10-13: 62.4434
-  2026-10-14: 52.3010
-  2026-10-15: 38.8120
-  2026-10-16: 48.7279
-  2026-10-17: 39.9615
-  2026-10-18: 57.3919
-  2026-10-19: 44.3923
-  2026-10-20: 45.5525
-  2026-10-21: 40.9259
-  2026-10-22: 54.1934
-  2026-10-23: 55.1335
-  2026-10-24: 39.4706
-  2026-10-25: 36.3824
-  2026-10-26: 56.2079
-  2026-10-27: 477.9290
-  2026-10-28: 47.8264
-  2026-10-29: 48.7974
-  2026-10-30: 43.6226
-  2026-10-31: 55.3436
-  2026-11-01: 55.5932
-  2026-11-02: 50.9139
-  2026-11-03: 56.1241
-  2026-11-04: 51.2692
-  2026-11-05: 65.8587
-  2026-11-06: 56.7524
-  2026-11-07: 68.7812
-  2026-11-08: 51.3697
-  2026-11-09: 46.6912
-  2026-11-10: 36.6928
-  2026-11-11: 57.3906
-  2026-11-12: 68.4868
-  2026-11-13: 47.5040
-  2026-11-14: 58.9852
-  2026-11-15: 47.7964
-  2026-11-16: 72.8996
-  2026-11-17: 55.3389
-  2026-11-18: 52.5935
-  2026-11-19: 49.2427
-  2026-11-20: 51.5957
-  2026-11-21: 45.0131
-  2026-11-22: 58.2556
-  2026-11-23: 56.5243
-  2026-11-24: 40.5571
-  2026-11-25: 42.9262
-  2026-11-26: 51.4693
-  2026-11-27: 41.1437
-  2026-11-28: 51.8894
-  2026-11-29: 46.2378
-  2026-11-30: 55.3681
-  2026-12-01: 44.5772
-  2026-12-02: 48.7447
-  2026-12-03: 55.9982
-  2026-12-04: 53.3908
-  2026-12-05: 50.1014
-  2026-12-06: 51.8877
-  2026-12-07: 40.9667
-  2026-12-08: 50.9533
-  2026-12-09: 55.7545
-  2026-12-10: 54.7798
-  2026-12-11: 47.3068
-  2026-12-12: 60.4595
-  2026-12-13: 54.9052
-  2026-12-14: 46.0387
-  2026-12-15: 47.8401
-  2026-12-16: 53.0851
-  2026-12-17: 59.3821
-  2026-12-18: 36.6964
-  2026-12-19: 46.1812
-  2026-12-20: 54.8208
-  2026-12-21: 37.5383
-  2026-12-22: 46.3104
-  2026-12-23: 62.9237
-  2026-12-24: 46.5987
-  2026-12-25: 53.7754
-  2026-12-26: 37.3864
-  2026-12-27: 58.4823
-  2026-12-28: 43.5207
-  2026-12-29: 44.8880
-  2026-12-30: 42.9613
-  2026-12-31: 54.1304
-}
-
-curve cost_price {
-  2026-01-01: 24.1935
-  2026-01-02: 25.1837
-  2026-01-03: 32.2257
-  2026-01-04: 15.0496
-  2026-01-05: 17.0158
-  2026-01-06: 23.9081
-  2026-01-07: 35.0547
-  2026-01-08: 23.5766
-  2026-01-09: 12.7667
-  2026-01-10: 14.9806
-  2026-01-11: 21.0442
-  2026-01-12: 14.4992
-  2026-01-13: 24.7658
-  2026-01-14: 32.0819
-  2026-01-15: 11.3945
-  2026-01-16: 31.5125
-  2026-01-17: 21.6005
-  2026-01-18: 25.5034
-  2026-01-19: 8.9339
-  2026-01-20: 33.7076
-  2026-01-21: 24.7897
-  2026-01-22: 18.7084
-  2026-01-23: 29.3841
-  2026-01-24: 25.4127
-  2026-01-25: 20.2776
-  2026-01-26: 27.3228
-  2026-01-27: 20.2716
-  2026-01-28: 15.9356
-  2026-01-29: 16.1890
-  2026-01-30: 15.9939
-  2026-01-31: 26.9044
-  2026-02-01: 12.2178
-  2026-02-02: 12.6427
-  2026-02-03: 18.0492
-  2026-02-04: 21.3152
-  2026-02-05: 14.9838
-  2026-02-06: 19.6533
-  2026-02-07: 22.9017
-  2026-02-08: 15.6319
-  2026-02-09: 22.3135
-  2026-02-10: 34.5880
-  2026-02-11: 13.4518
-  2026-02-12: 21.7923
-  2026-02-13: 30.1907
-  2026-02-14: 15.6411
-  2026-02-15: 22.6617
-  2026-02-16: 19.2031
-  2026-02-17: 25.1006
-  2026-02-18: 12.7037
-  2026-02-19: 16.1849
-  2026-02-20: 14.4352
-  2026-02-21: 30.1491
-  2026-02-22: 20.1365
-  2026-02-23: 11.3581
-  2026-02-24: 27.6201
-  2026-02-25: 18.6303
-  2026-02-26: 12.7115
-  2026-02-27: 27.4020
-  2026-02-28: 18.4144
-  2026-03-01: 25.7322
-  2026-03-02: 31.6063
-  2026-03-03: 27.1075
-  2026-03-04: 26.3130
-  2026-03-05: 21.8551
-  2026-03-06: 14.6271
-  2026-03-07: 8.3660
-  2026-03-08: 19.4043
-  2026-03-09: 15.5169
-  2026-03-10: 24.3475
-  2026-03-11: 13.3394
-  2026-03-12: 28.6960
-  2026-03-13: 11.5898
-  2026-03-14: 19.8849
-  2026-03-15: 16.1754
-  2026-03-16: 20.6737
-  2026-03-17: 26.2487
-  2026-03-18: 13.4510
-  2026-03-19: 12.0372
-  2026-03-20: 31.9055
-  2026-03-21: 20.9161
-  2026-03-22: 9.9238
-  2026-03-23: 18.8687
-  2026-03-24: 6.3739
-  2026-03-25: 13.9161
-  2026-03-26: 26.3030
-  2026-03-27: 12.9670
-  2026-03-28: 25.2085
-  2026-03-29: 7.1030
-  2026-03-30: 18.1206
-  2026-03-31: 25.8990
-  2026-04-01: 17.9094
-  2026-04-02: 17.5306
-  2026-04-03: 13.2146
-  2026-04-04: 16.4335
-  2026-04-05: 8.2459
-  2026-04-06: 25.1276
-  2026-04-07: 18.3715
-  2026-04-08: 21.7827
-  2026-04-09: 18.4811
-  2026-04-10: 22.1290
-  2026-04-11: 10.8194
-  2026-04-12: 6.4059
-  2026-04-13: 18.0898
-  2026-04-14: 14.5053
-  2026-04-15: 22.6728
-  2026-04-16: 7.0384
-  2026-04-17: 15.9128
-  2026-04-18: 17.0134
-  2026-04-19: 17.9834
-  2026-04-20: 22.4405
-  2026-04-21: 28.4135
-  2026-04-22: 23.8634
-  2026-04-23: 19.9264
-  2026-04-24: 13.8489
-  2026-04-25: 9.2590
-  2026-04-26: 25.4985
-  2026-04-27: 8.3877
-  2026-04-28: 11.7150
-  2026-04-29: 9.8719
-  2026-04-30: 10.9087
-  2026-05-01: 7.1785
-  2026-05-02: 21.3135
-  2026-05-03: 19.7816
-  2026-05-04: 5.6452
-  2026-05-05: 3.0052
-  2026-05-06: 15.0162
-  2026-05-07: 12.9800
-  2026-05-08: 27.3368
-  2026-05-09: 15.8187
-  2026-05-10: 29.1976
-  2026-05-11: 32.1767
-  2026-05-12: 15.5267
-  2026-05-13: 21.1294
-  2026-05-14: 14.7367
-  2026-05-15: 9.2804
-  2026-05-16: 13.4735
-  2026-05-17: 20.5136
-  2026-05-18: 29.1943
-  2026-05-19: 12.3541
-  2026-05-20: 17.2448
-  2026-05-21: 13.1323
-  2026-05-22: 14.1309
-  2026-05-23: 22.3295
-  2026-05-24: 13.8620
-  2026-05-25: 18.1909
-  2026-05-26: 22.2463
-  2026-05-27: 12.8720
-  2026-05-28: 12.3381
-  2026-05-29: 22.0587
-  2026-05-30: 21.0904
-  2026-05-31: 13.3009
-  2026-06-01: 7.8143
-  2026-06-02: 4.6347
-  2026-06-03: 8.8452
-  2026-06-04: 11.4638
-  2026-06-05: 15.8814
-  2026-06-06: 16.9999
-  2026-06-07: 24.8831
-  2026-06-08: 20.3600
-  2026-06-09: 6.0039
-  2026-06-10: 17.2199
-  2026-06-11: 27.7978
-  2026-06-12: 18.3210
-  2026-06-13: 18.7696
-  2026-06-14: 21.3941
-  2026-06-15: 31.6251
-  2026-06-16: 26.9507
-  2026-06-17: 22.8895
-  2026-06-18: 34.0181
-  2026-06-19: 22.5099
-  2026-06-20: 13.1674
-  2026-06-21: 17.9225
-  2026-06-22: 18.9746
-  2026-06-23: 18.0921
-  2026-06-24: 8.9458
-  2026-06-25: 23.8879
-  2026-06-26: 26.2409
-  2026-06-27: 14.7997
-  2026-06-28: 16.2787
-  2026-06-29: 22.6037
-  2026-06-30: 24.0249
-  2026-07-01: 18.3717
-  2026-07-02: 31.2363
-  2026-07-03: 18.5896
-  2026-07-04: 26.7223
-  2026-07-05: 34.7578
-  2026-07-06: 17.8404
-  2026-07-07: 13.8574
-  2026-07-08: 20.3106
-  2026-07-09: 25.7010
-  2026-07-10: 23.0258
-  2026-07-11: 30.0707
-  2026-07-12: 33.5293
-  2026-07-13: 26.7639
-  2026-07-14: 10.2133
-  2026-07-15: 8.2949
-  2026-07-16: 25.9870
-  2026-07-17: 15.7093
-  2026-07-18: 13.9575
-  2026-07-19: 28.8591
-  2026-07-20: 20.6210
-  2026-07-21: 26.0039
-  2026-07-22: 25.6304
-  2026-07-23: 17.2817
-  2026-07-24: 21.4227
-  2026-07-25: 39.1060
-  2026-07-26: 27.6722
-  2026-07-27: 27.6702
-  2026-07-28: 25.9344
-  2026-07-29: 24.3562
-  2026-07-30: 36.7340
-  2026-07-31: 37.1226
-  2026-08-01: 25.1189
-  2026-08-02: 15.7448
-  2026-08-03: 29.1168
-  2026-08-04: 30.5679
-  2026-08-05: 34.8524
-  2026-08-06: 20.0170
-  2026-08-07: 34.1259
-  2026-08-08: 17.8294
-  2026-08-09: 23.0643
-  2026-08-10: 24.4818
-  2026-08-11: 30.5967
-  2026-08-12: 21.3832
-  2026-08-13: 24.4591
-  2026-08-14: 20.2028
-  2026-08-15: 35.9161
-  2026-08-16: 23.1395
-  2026-08-17: 32.6584
-  2026-08-18: 32.6711
-  2026-08-19: 33.0309
-  2026-08-20: 29.0544
-  2026-08-21: 24.9331
-  2026-08-22: 35.6167
-  2026-08-23: 37.3313
-  2026-08-24: 33.6186
-  2026-08-25: 39.9915
-  2026-08-26: 31.3104
-  2026-08-27: 20.3557
-  2026-08-28: 29.1073
-  2026-08-29: 29.7818
-  2026-08-30: 22.0854
-  2026-08-31: 19.0830
-  2026-09-01: 29.2102
-  2026-09-02: 22.2465
-  2026-09-03: 34.6723
-  2026-09-04: 29.8139
-  2026-09-05: 29.7818
-  2026-09-06: 35.1003
-  2026-09-07: 46.8604
-  2026-09-08: 30.8506
-  2026-09-09: 41.3953
-  2026-09-10: 29.7463
-  2026-09-11: 29.4356
-  2026-09-12: 37.1640
-  2026-09-13: 44.3518
-  2026-09-14: 31.0004
-  2026-09-15: 35.6069
-  2026-09-16: 41.7716
-  2026-09-17: 30.2253
-  2026-09-18: 33.0471
-  2026-09-19: 38.2051
-  2026-09-20: 24.8085
-  2026-09-21: 43.1109
-  2026-09-22: 27.9540
-  2026-09-23: 28.4283
-  2026-09-24: 33.3285
-  2026-09-25: 23.4582
-  2026-09-26: 41.1283
-  2026-09-27: 21.6184
-  2026-09-28: 23.6109
-  2026-09-29: 37.9740
-  2026-09-30: 35.6915
-  2026-10-01: 49.6530
-  2026-10-02: 29.7349
-  2026-10-03: 33.7984
-  2026-10-04: 19.5848
-  2026-10-05: 39.2489
-  2026-10-06: 32.6283
-  2026-10-07: 33.4661
-  2026-10-08: 28.0639
-  2026-10-09: 38.1768
-  2026-10-10: 40.9624
-  2026-10-11: 31.4927
-  2026-10-12: 29.0894
-  2026-10-13: 43.5832
-  2026-10-14: 31.1358
-  2026-10-15: 21.6334
-  2026-10-16: 27.8233
-  2026-10-17: 17.1893
-  2026-10-18: 34.4965
-  2026-10-19: 17.4583
-  2026-10-20: 28.9290
-  2026-10-21: 24.4296
-  2026-10-22: 31.5050
-  2026-10-23: 34.4057
-  2026-10-24: 19.0718
-  2026-10-25: 15.8666
-  2026-10-26: 31.1624
-  2026-10-27: 34.0237
-  2026-10-28: 28.5816
-  2026-10-29: 27.4886
-  2026-10-30: 23.5028
-  2026-10-31: 34.1854
-  2026-11-01: 33.0438
-  2026-11-02: 29.0407
-  2026-11-03: 34.9375
-  2026-11-04: 30.4909
-  2026-11-05: 46.5691
-  2026-11-06: 36.1616
-  2026-11-07: 50.9860
-  2026-11-08: 29.4308
-  2026-11-09: 24.2492
-  2026-11-10: 16.8260
-  2026-11-11: 35.2484
-  2026-11-12: 49.4959
-  2026-11-13: 29.5622
-  2026-11-14: 33.4945
-  2026-11-15: 29.3627
-  2026-11-16: 49.4744
-  2026-11-17: 35.2551
-  2026-11-18: 30.2247
-  2026-11-19: 26.5851
-  2026-11-20: 28.6416
-  2026-11-21: 24.0793
-  2026-11-22: 37.8042
-  2026-11-23: 28.2716
-  2026-11-24: 19.9150
-  2026-11-25: 24.5103
-  2026-11-26: 34.5851
-  2026-11-27: 17.5713
-  2026-11-28: 30.6589
-  2026-11-29: 25.4210
-  2026-11-30: 33.8928
-  2026-12-01: 21.1274
-  2026-12-02: 30.1236
-  2026-12-03: 35.0696
-  2026-12-04: 32.0386
-  2026-12-05: 31.4296
-  2026-12-06: 30.8243
-  2026-12-07: 19.9977
-  2026-12-08: 30.4914
-  2026-12-09: 38.3422
-  2026-12-10: 35.4944
-  2026-12-11: 26.7247
-  2026-12-12: 39.0448
-  2026-12-13: 36.6047
-  2026-12-14: 27.4329
-  2026-12-15: 25.3293
-  2026-12-16: 34.5959
-  2026-12-17: 39.3274
-  2026-12-18: 18.4126
-  2026-12-19: 21.9481
-  2026-12-20: 31.4551
-  2026-12-21: 17.2917
-  2026-12-22: 26.2394
-  2026-12-23: 41.2349
-  2026-12-24: 22.6285
-  2026-12-25: 26.9022
-  2026-12-26: 14.2158
-  2026-12-27: 36.9739
-  2026-12-28: 23.7971
-  2026-12-29: 23.9449
-  2026-12-30: 20.3248
-  2026-12-31: 34.8772
-}
+// ── the market, at this battery's duration ──────────────────────────────────
+// The two daily curves are 365 points each, generated from the price year, and
+// live in their own file so that the deal is legible beside the data.
+import "prices.cfdl"
 
 // ── the operating decision ──────────────────────────────────────────────────
-// A model-declared machine carries guards on its edges directly. (A model may
-// not state edges on a PACK machine — E1357 — which is why this one is its
-// own.) The comparison is the day's margin against the wear it would cost.
+// The machine is declared here and carries the guards on its edges. Each day
+// the battery compares the margin a cycle would earn against the wear it would
+// cost, and moves between service and reserve shutdown on the answer.
 lifecycle facility {
   initial in_service
   state in_service, reserve_shutdown
@@ -933,8 +200,9 @@ stream market.charge on entity asset.battery outflow currency USD {
 }
 
 // ── outputs, not assumptions ────────────────────────────────────────────────
-// Cycling is what the policy PRODUCES. A dispatch model exists to compute it,
-// so a model that states it cannot be validated against one.
+// Cycling is what the operating policy PRODUCES: the count of days the battery
+// ran, and the energy those days moved. A dispatch model computes the same two
+// figures, which is what makes them comparable.
 metric days_run = series_count("market.discharge", 0, 364)
 metric mwh_out  = series_count("market.discharge", 0, 364) * inputs.usable_mwh
 ```
