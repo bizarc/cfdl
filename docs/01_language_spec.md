@@ -484,9 +484,15 @@ Rules:
 - Monetary amounts default to the model currency; streams declare currency
   explicitly.
 - Effects come from the active pack's lowering rules, which expand the
-  contract into streams in the IR. Explicit `effects`/`parties`/`tags`
-  blocks are **tolerated by the parser but not represented in IR** in v0.1
-  (reserved; see `10_implementation_status.md`).
+  contract into streams in the IR. A `parties { <role> = <party> }` block
+  binds parties to the roles the contract's TYPE declares, checked against
+  the effective roles of its master chain (`docs/40` §5). Explicit
+  `effects`/`tags` blocks are **tolerated by the parser but not
+  represented in IR** in v0.1 (reserved; see `10_implementation_status.md`).
+- A contract's type is the master chain its pack type refines
+  (`docs/40`): its terms are checked against that chain's effective
+  fields, and a master itself cannot be declared — a model reaches a type
+  through a pack's concrete refinement.
 
 ### 8.2 Terms block
 - `terms { ... }` is a set of named values.

@@ -272,15 +272,30 @@ concept, widened endpoints), `owns`/`owned_by`,
 published, no engine semantics.
 
 Contract types take the same field, and the language base ships the abstract
-masters they refine (`docs/13` §7.92): `Contract.Debt`, `Contract.Lease`,
+masters they refine (`docs/40`): `Contract.Debt`, `Contract.Lease`,
 `Contract.Purchase`, `Contract.Sale`, `Contract.Offtake`, `Contract.Service`,
 `Contract.Tax`, `Contract.Option`, `Contract.Construction`,
-`Contract.Derivative`, `Contract.Insurance`. A master is `abstract = true`:
-it exists to be refined, binds no lowering rule (refused at load if it
-does), and — since a model reaches a contract type only through its rule —
-cannot be instantiated. The roster is indicator-based and extensible;
-absence of a refinement in today's packs is not evidence a master is
-unneeded.
+`Contract.Derivative`, `Contract.Insurance`, and for the statement-line
+generators `Contract.Revenue`, `Contract.Expense` and
+`Contract.CapitalExpenditure`. A master is `abstract = true`: it exists to
+be refined, binds no lowering rule (refused at load if it does), and cannot
+be instantiated — a model that names one on an `option` is refused. The
+roster is indicator-based and extensible; absence of a refinement in
+today's packs is not evidence a master is unneeded.
+
+**A master is defined from what the agreement IS, and a pack conforms to
+it.** A master declares its roles, its fields (the terms — there is no
+separate term schema), the LINES of cash its refinements produce, and
+which SIDE the subject is on. A refinement inherits all of it, may
+strengthen a field or add one, may specialize a role (`landlord` refines
+`lessor`; a domain word never appears on a master), may add lines, and
+may not retype, re-unit, weaken or drop anything the master declared.
+Pack load checks that a concrete type's rules emit every effective line
+(each rule names its `line`) and that its template renders every required
+effective field. Categories stay the pack's (§6.10): the master says a
+debt produces interest, the pack says where a borrower's interest sits in
+the statement. The roster, the argument for each core, and the staged
+delivery are in `docs/40_master_contracts.md`.
 
 **Lifecycles.** A type MAY declare a lifecycle — the same finite state
 machine a model declares with a `lifecycle` block (`docs/28` §6.1): the core
@@ -373,28 +388,34 @@ Rules:
 - Alias resolution must be deterministic.
 - Packs must not create ambiguous alias collisions within a single loaded environment.
 
-### 6.3 Contract term schemas
-A pack MAY provide schemas for contract terms per TypeId.
+### 6.3 Contract terms are fields
 
-Example:
-```json
-{
-  "contracts": [
-    {
-      "type_id": "Contract.Lease",
-      "terms": {
-        "base_rent": {"type": "Money", "required": true},
-        "rent_growth": {"type": "Rate", "required": false},
-        "start_date": {"type": "Date", "required": false}
-      }
-    }
-  ]
-}
+There is no separate term schema. A contract type's terms are its FIELDS,
+declared on the master and inherited down the refinement chain exactly as
+an entity's are (§6.1), in `types.toml`:
+
+```toml
+[[contracts]]
+type_id = "CRE.Contract.PermanentDebt"
+refines = "Contract.Debt"
+contract_name = "cre.permanent_debt"
+
+[[contracts.fields]]        # strengthens an inherited master field
+name = "amort_months"
+field_type = "integer"
+required = true
+unit = "months"
 ```
 
-Compiler usage:
-- If schema exists, the compiler MUST validate required terms and types.
-- Schema validation errors are `E4003_INVALID_CONTRACT_TERMS`.
+The master's fields are the schema; the lowering rule consumes them by
+name (`{{contract.principal}}`); the template renders the required ones;
+`validations.toml` bounds their values. The compiler checks a model's
+`terms` against the EFFECTIVE roster: an unknown term is refused with a
+near-miss hint, a missing required field is refused, and a unit stated on
+a term is checked against the field's (`E5024`). A rule that consumes a
+term the type does not declare is a pack-load error, so the three sources
+that once had to agree by care — rules, templates, validations — are
+checked against one declaration. See `docs/40` §3 and §8.
 
 ### 6.4 Lowering rules (contract → effects)
 A pack MAY provide lowering rules that generate `effects` from `terms`.
@@ -509,6 +530,43 @@ the standard set — the nine expense lines a statement usually shows, with
 sensible defaults — as editor snippets. The modeller starts from the
 convention and is free to name their own instance; anything unclaimed lands on
 the statement's residual row rather than vanishing.
+
+**A refinement when the cash shape differs; a term when only the
+settlement differs.** Credit's level-pay, interest-only and floating pools
+are three refinements because the amortization profile and the rate basis
+differ. An interest-only period, a balloon, capitalized interest and a
+PIK period are TERMS on one instrument (`io_months`, `balloon_at_maturity`,
+`capitalize_interest`, `pik_months`) because they change when the same
+instrument settles, not what it is. Under that rule the roster grows by
+instrument and the terms stay what a term sheet states.
+
+**Every rule names the line it emits.** `line = "interest"` on a
+`[[rules]]` entry ties the stream to a line the contract's master declared
+(`docs/40` §6). Pack load checks coverage; the category the stream carries
+is still the pack's classification of that line.
+
+**Scheduled cash is the contract's; discretionary cash is the
+waterfall's.** A debt contract lowers its draws, interest and scheduled
+principal and carries its own balance as a lowered field. Repayment that
+depends on what cash is available — a sweep, proceeds of a sale — is a
+waterfall step allocating to the lender's party account, and the
+contract's balance never reads the waterfall (`docs/13` §7.97). Where a
+deal repays from a named cash source, the contract takes a series or
+curve reference as a term, as `cre.construction_loan` takes its draw
+curve.
+
+**A contract paying finer than the model calendar aggregates into the
+period rather than being refused**, and its day count is a year fraction
+the placeholder expands to, so a monthly-paying mortgage runs on an
+annual model and act/act falls out of the same expansion (`docs/13`
+§7.16, §7.57). Statutory or workbook rounding belongs on the rule as a
+`round_step` term, never in a case's hand stream.
+
+**Parties in roles are real.** A model's `parties { landlord = party.acme
+}` is validated against the type's effective roles — the master's,
+specialized by the pack — and carried into the IR under both the pack's
+word and the master role, so `party.acme` is a lessor to any reader that
+does not know CRE.
 
 ### Schedule interval
 
