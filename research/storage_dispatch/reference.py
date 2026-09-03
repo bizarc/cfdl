@@ -101,7 +101,7 @@ def sam_reference(price):
 
 
 def daily_blocks(price, dis_hours, chg_hours):
-    """Daily TBx block prices: the volume-weighted mean of the x dearest hours
+    """Daily TBx block prices: the volume-weighted mean of the x most expensive hours
     and the x cheapest hours of each day.
 
     This is the market's own battery product — TB2, TB4, "top-bottom spread" —
@@ -114,8 +114,8 @@ def daily_blocks(price, dis_hours, chg_hours):
     dispatch decision: it says which hours the product references, not when the
     battery runs. Whether it runs at all is the model's to decide."""
     d = np.sort(price.reshape(365, 24), axis=1)
-    def block(hrs, dear):
-        col = d[:, ::-1] if dear else d
+    def block(hrs, expensive):
+        col = d[:, ::-1] if expensive else d
         n, frac = int(hrs), hrs - int(hrs)
         w = np.zeros(24); w[:n] = 1.0
         if frac > 0: w[n] = frac

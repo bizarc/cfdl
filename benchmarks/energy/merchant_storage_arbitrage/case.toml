@@ -8,8 +8,8 @@
 # dispatch as a linear program instead, and an LP optimum is a proof rather than
 # an assertion.
 #
-# TOLERANCES ARE A MODELLING DIFFERENCE, NOT DRIFT. The model reads the day's
-# TBx block prices, which treat the dear and cheap slices as independent and so
+# TOLERANCES ARE A MODELING DIFFERENCE, NOT DRIFT. The model reads the day's
+# TBx block prices, which treat the expensive and cheap slices as independent and so
 # ignore ordering WITHIN the day — a battery cannot discharge at 09:00 on energy
 # it buys at 14:00. That makes the model a slight upper bound. The effect is
 # bounded and measured: the largest daily deviation is $71.16 on revenue and

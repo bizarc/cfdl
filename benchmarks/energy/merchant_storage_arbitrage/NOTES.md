@@ -5,7 +5,7 @@
 The first reference attempted was NREL's SAM, through PySAM. It was abandoned,
 and the reasons are worth keeping because they are not obvious from its output.
 
-**SAM does not optimise, and says so.** NREL/TP-6A20-68614 §1: "Instead of
+**SAM does not optimize, and says so.** NREL/TP-6A20-68614 §1: "Instead of
 performing a cost-based optimization, SAM provides options that provide
 automated but SUBOPTIMAL dispatch to achieve specified goals", with the stated
 reasons being accessibility and licensing rather than anything technical. §5
@@ -43,15 +43,15 @@ test first.
 ## Why the model is a slight upper bound
 
 0.13% above the optimum on margin, and the cause is structural rather than
-numerical. The model reads the day's TBx blocks — the mean of the dearest hours
+numerical. The model reads the day's TBx blocks — the mean of the most expensive hours
 it can reach and the cheapest it can draw from — and those are computed as two
 independent slices of the sorted day. Sorting discards ORDER, so the blocks
 permit a combination the clock does not: discharging at 09:00 on energy bought
 at 14:00.
 
 The optimum respects ordering, so it is always the smaller number. The gap is
-bounded by how often the day's cheapest hours fall after its dearest, which on
-this price shape is seldom — the median day agrees exactly, and the worst is
+bounded by how often the day's cheapest hours fall after its most expensive, which on
+this price shape is rare — the median day agrees exactly, and the worst is
 $71.16 on a daily revenue averaging $3,723.
 
 Left as it is rather than corrected. Fixing it needs intraday ordering, which
