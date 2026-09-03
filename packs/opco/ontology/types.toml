@@ -216,6 +216,12 @@ contract_name = "opco.term_debt"
 subject_family = "asset"
 parties = ["borrower", "lender"]
 
+[[contracts.lines]]
+name = "proceeds"
+
+[[contracts.lines]]
+name = "principal"
+
 [[contracts]]
 type_id = "OpCo.Contract.CashTaxes"
 refines = "Contract.Tax"
@@ -226,6 +232,9 @@ parties = ["taxpayer"]
 [[contracts.roles]]
 name = "authority"
 unbound = true
+
+[[contracts.lines]]
+name = "paid"
 
 [[contracts]]
 type_id = "OpCo.Contract.Acquisition"
@@ -256,6 +265,9 @@ parties = ["seller"]
 name = "buyer"
 unbound = true
 
+[[contracts.lines]]
+name = "selling_costs"
+
 [[contracts]]
 type_id = "OpCo.Contract.ExitAtPerpetuity"
 refines = "Contract.Sale"
@@ -266,6 +278,9 @@ parties = ["seller"]
 [[contracts.roles]]
 name = "buyer"
 unbound = true
+
+[[contracts.lines]]
+name = "selling_costs"
 
 # --- Options: contracts with an election ---------------------------------
 # An option names no lowering rule. Its cash is the payoff of an election, which

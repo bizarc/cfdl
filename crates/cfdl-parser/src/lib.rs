@@ -5602,7 +5602,7 @@ mod fuzz_tests {
 
     #[test]
     fn mutated_valid_source_never_panics() {
-        let base = "version 0.1\nmodel \"m\"\ntime calendar monthly from 2026-01 for 12\nphase p from 2026-01 to 2026-06\nentity legal borrower\nassume growth ~ Normal(mean=0.03, stdev=0.01, clip=[0.0, 0.08])\ncontract cre.lease on entity legal.borrower {\n  term 2026-01..2026-12\n  terms { base_rent = 25000 }\n}\nstream legal.rent on entity legal.borrower inflow currency USD {\n  schedule every month from 2026-01 to 2026-12 convention following calendar \"us\" except [2026-03-01]\n  amount = 1000 * pow(1.03, time.t / 12.0)\n  active when entity.status != \"gone\"\n}\nevent stop when time.t >= 6 {\n  deactivate stream legal.rent\n}\noption o1 type Option.X {\n  exercise when time.t == 3\n  payoff 100 - 1\n}\nrun monte_carlo trials 10 seed 42\n";
+        let base = "version 0.1\nmodel \"m\"\ntime calendar monthly from 2026-01 for 12\nphase p from 2026-01 to 2026-06\nentity legal borrower\nassume growth ~ Normal(mean=0.03, stdev=0.01, clip=[0.0, 0.08])\ncontract cre.lease on entity legal.borrower {\n  term 2026-01..2026-12\n  terms { rent = 25000 }\n}\nstream legal.rent on entity legal.borrower inflow currency USD {\n  schedule every month from 2026-01 to 2026-12 convention following calendar \"us\" except [2026-03-01]\n  amount = 1000 * pow(1.03, time.t / 12.0)\n  active when entity.status != \"gone\"\n}\nevent stop when time.t >= 6 {\n  deactivate stream legal.rent\n}\noption o1 type Option.X {\n  exercise when time.t == 3\n  payoff 100 - 1\n}\nrun monte_carlo trials 10 seed 42\n";
         lex_parse_no_panic(base);
         let bytes: Vec<char> = base.chars().collect();
         let mut rng = Rng(0xDEADBEEF);

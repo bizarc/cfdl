@@ -60,18 +60,18 @@ check = "term_range_within_timeline"
 [[validations]]
 contract = "opco.exit_multiple"
 code = "E7020_OPCO_EXIT_MISSING_MULTIPLE"
-message = "OpCo exit is missing required term 'exit_multiple'."
+message = "OpCo exit is missing required term 'multiple'."
 check = "term_number"
-term = "exit_multiple"
+term = "multiple"
 when = "always"
 on_invalid = "report"
 
 [[validations]]
 contract = "opco.exit_multiple"
 code = "E7021_OPCO_EXIT_INVALID_MULTIPLE"
-message = "OpCo exit 'exit_multiple' must be greater than 0."
+message = "OpCo exit 'multiple' must be greater than 0."
 check = "term_number"
-term = "exit_multiple"
+term = "multiple"
 when = "present"
 on_invalid = "skip"
 exclusive_min = 0.0
@@ -79,9 +79,9 @@ exclusive_min = 0.0
 [[validations]]
 contract = "opco.exit_multiple"
 code = "E7022_OPCO_EXIT_MISSING_BASE_VALUE"
-message = "OpCo exit requires numeric term 'base_value'."
+message = "OpCo exit requires numeric term 'base'."
 check = "term_number"
-term = "base_value"
+term = "base"
 when = "always"
 on_invalid = "report"
 
@@ -96,9 +96,9 @@ check = "term_range_within_timeline"
 [[validations]]
 contract = "opco.exit_ebitda"
 code = "E7024_OPCO_EXIT_EBITDA_INVALID_MULTIPLE"
-message = "OpCo EBITDA exit requires 'exit_multiple' greater than 0."
+message = "OpCo EBITDA exit requires 'multiple' greater than 0."
 check = "term_number"
-term = "exit_multiple"
+term = "multiple"
 when = "always"
 on_invalid = "report"
 exclusive_min = 0.0
@@ -108,9 +108,9 @@ exclusive_min = 0.0
 [[validations]]
 contract = "opco.term_debt"
 code = "E7030_OPCO_DEBT_INVALID_AMORT"
-message = "OpCo term debt requires 'amort_months' greater than 0."
+message = "OpCo term debt requires 'amortization_months' greater than 0."
 check = "term_number"
-term = "amort_months"
+term = "amortization_months"
 when = "always"
 on_invalid = "report"
 exclusive_min = 0.0
@@ -118,9 +118,9 @@ exclusive_min = 0.0
 [[validations]]
 contract = "opco.term_debt"
 code = "E7031_OPCO_DEBT_INVALID_RATE"
-message = "OpCo term debt requires a non-negative 'rate'."
+message = "OpCo term debt requires a non-negative 'interest_rate'."
 check = "term_number"
-term = "rate"
+term = "interest_rate"
 when = "always"
 on_invalid = "report"
 min = 0.0
@@ -174,9 +174,9 @@ right = "growth_rate"
 [[validations]]
 contract = "opco.exit_perpetuity"
 code = "E7026_OPCO_PERPETUITY_MISSING_BASE_VALUE"
-message = "OpCo exit perpetuity is missing required term 'base_value' — the terminal-period flow the perpetuity is struck on."
+message = "OpCo exit perpetuity is missing required term 'base' — the terminal-period flow the perpetuity is struck on."
 check = "term_number"
-term = "base_value"
+term = "base"
 when = "always"
 on_invalid = "report"
 

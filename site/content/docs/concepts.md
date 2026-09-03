@@ -53,7 +53,7 @@ Both documents have published JSON Schemas — see the
 - **Streams** — dated cash flow series with a schedule and an amount
   expression. The lowest-level building block.
 - **Contracts** — pack-templated bundles of streams declared with business
-  terms (`contract cre.lease { terms { base_rent = 25000 } }`). The compiler
+  terms (`contract cre.lease { terms { rent = 25000 } }`). The compiler
   expands them into streams using the pack's rules.
 - **Events and options** — an event is a condition and a one-time change
   (`event expiry when time.t >= 24 { set entity asset.suite.status = "vacant" }`);

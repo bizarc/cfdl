@@ -65,6 +65,7 @@
 
 id = "opco_revenue_line"
 contract_name = "opco.revenue_line"
+line = "revenue"
 stream_name = "opco.revenue.recurring{{contract.dot_suffix}}"
 owner_entity = "${subject}"
 direction = "inflow"
@@ -90,6 +91,7 @@ amount_year = "USD/yr"
 [[rules]]
 id = "opco_opex_line"
 contract_name = "opco.opex_line"
+line = "expense"
 stream_name = "opco.opex.recurring{{contract.dot_suffix}}"
 owner_entity = "${subject}"
 direction = "outflow"
@@ -113,6 +115,7 @@ growth_rate = "0"
 [[rules]]
 id = "opco_working_capital"
 contract_name = "opco.working_capital"
+line = "working_capital"
 stream_name = "opco.working_capital.adjustment{{contract.dot_suffix}}"
 owner_entity = "${subject}"
 direction = "outflow"
@@ -127,11 +130,12 @@ schedule_to = "{{contract.term_end}}"
 [[rules]]
 id = "opco_exit_multiple"
 contract_name = "opco.exit_multiple"
+line = "proceeds"
 stream_name = "opco.exit.value"
 owner_entity = "${subject}"
 direction = "inflow"
 category = "investing.disposal.proceeds"
-amount_expr = "{{contract.base_value}} * {{contract.exit_multiple}}"
+amount_expr = "{{contract.base}} * {{contract.multiple}}"
 # A disposal is taken at the END of the holding period, so it discounts
 # the full n periods. `on_date` alone would settle it at the period's
 # open — one month early on a monthly model, a whole year on an annual.
@@ -155,6 +159,7 @@ schedule_to = ""
 [[rules]]
 id = "opco_working_capital_policy"
 contract_name = "opco.working_capital_policy"
+line = "working_capital"
 stream_name = "opco.working_capital.adjustment{{contract.dot_suffix}}"
 owner_entity = "${subject}"
 direction = "outflow"
@@ -177,6 +182,7 @@ release_at_end = "0"
 [[rules]]
 id = "opco_capex_line"
 contract_name = "opco.capex_line"
+line = "capex"
 stream_name = "opco.capex.line{{contract.dot_suffix}}"
 owner_entity = "${subject}"
 direction = "outflow"
@@ -207,6 +213,7 @@ pct_of_revenue = "0"
 [[rules]]
 id = "opco_term_debt_proceeds"
 contract_name = "opco.term_debt"
+line = "proceeds"
 stream_name = "opco.debt.proceeds{{contract.dot_suffix}}"
 owner_entity = "${subject}"
 direction = "inflow"
@@ -222,33 +229,35 @@ funded_at_close = "1"
 [[rules]]
 id = "opco_term_debt_interest"
 contract_name = "opco.term_debt"
+line = "interest"
 stream_name = "opco.debt.interest{{contract.dot_suffix}}"
 owner_entity = "${subject}"
 direction = "outflow"
 category = "financing.debt.interest_paid"
-amount_expr = "if({{time.elapsed_periods}} < {{whole_periods.io_months}}, {{contract.principal}} * ({{contract.rate}} / {{model.accrual_divisor}}), -ipmt({{contract.rate}} / {{model.accrual_divisor}}, {{time.elapsed_periods}} - {{whole_periods.io_months}} + 1, {{whole_periods.amort_months}}, {{contract.principal}}))"
+amount_expr = "if({{time.elapsed_periods}} < {{whole_periods.interest_only_months}}, {{contract.principal}} * ({{contract.interest_rate}} / {{model.accrual_divisor}}), -ipmt({{contract.interest_rate}} / {{model.accrual_divisor}}, {{time.elapsed_periods}} - {{whole_periods.interest_only_months}} + 1, {{whole_periods.amortization_months}}, {{contract.principal}}))"
 schedule_kind = "every"
 schedule_from = "{{contract.term_start}}"
 schedule_to = "{{contract.term_end}}"
 
 [rules.defaults]
-io_months = "0"
+interest_only_months = "0"
 
 [[rules]]
 id = "opco_term_debt_principal"
 contract_name = "opco.term_debt"
+line = "principal"
 stream_name = "opco.debt.principal{{contract.dot_suffix}}"
 owner_entity = "${subject}"
 direction = "outflow"
 category = "financing.debt.principal"
 # Scheduled amortization plus the balloon (remaining balance) at term_end.
-amount_expr = "if({{time.elapsed_periods}} < {{whole_periods.io_months}}, 0, -ppmt({{contract.rate}} / {{model.accrual_divisor}}, {{time.elapsed_periods}} - {{whole_periods.io_months}} + 1, {{whole_periods.amort_months}}, {{contract.principal}})) + if({{time.periods_to_term_end}} == 0, -fv({{contract.rate}} / {{model.accrual_divisor}}, {{time.elapsed_periods}} - {{whole_periods.io_months}} + 1, pmt({{contract.rate}} / {{model.accrual_divisor}}, {{whole_periods.amort_months}}, {{contract.principal}}), {{contract.principal}}), 0)"
+amount_expr = "if({{time.elapsed_periods}} < {{whole_periods.interest_only_months}}, 0, -ppmt({{contract.interest_rate}} / {{model.accrual_divisor}}, {{time.elapsed_periods}} - {{whole_periods.interest_only_months}} + 1, {{whole_periods.amortization_months}}, {{contract.principal}})) + if({{time.periods_to_term_end}} == 0, -fv({{contract.interest_rate}} / {{model.accrual_divisor}}, {{time.elapsed_periods}} - {{whole_periods.interest_only_months}} + 1, pmt({{contract.interest_rate}} / {{model.accrual_divisor}}, {{whole_periods.amortization_months}}, {{contract.principal}}), {{contract.principal}}), 0)"
 schedule_kind = "every"
 schedule_from = "{{contract.term_start}}"
 schedule_to = "{{contract.term_end}}"
 
 [rules.defaults]
-io_months = "0"
+interest_only_months = "0"
 
 # ---------------------------------------------------------------------------
 # opco.cash_taxes — cash taxes on (EBITDA - D&A - interest), floored at 0
@@ -260,6 +269,7 @@ io_months = "0"
 [[rules]]
 id = "opco_cash_taxes"
 contract_name = "opco.cash_taxes"
+line = "paid"
 stream_name = "opco.taxes.cash{{contract.dot_suffix}}"
 owner_entity = "${subject}"
 direction = "outflow"
@@ -286,11 +296,12 @@ tax_rate = "0"
 [[rules]]
 id = "opco_exit_ebitda"
 contract_name = "opco.exit_ebitda"
+line = "proceeds"
 stream_name = "opco.exit.value"
 owner_entity = "${subject}"
 direction = "inflow"
 category = "investing.disposal.proceeds"
-amount_expr = "{{contract.exit_multiple}} * (series_sum(\"opco.revenue.recurring.*\", time.t - {{model.periods_per_year}} + 1, time.t) + series_sum(\"opco.opex.recurring.*\", time.t - {{model.periods_per_year}} + 1, time.t))"
+amount_expr = "{{contract.multiple}} * (series_sum(\"opco.revenue.recurring.*\", time.t - {{model.periods_per_year}} + 1, time.t) + series_sum(\"opco.opex.recurring.*\", time.t - {{model.periods_per_year}} + 1, time.t))"
 # A disposal is taken at the END of the holding period, so it discounts
 # the full n periods. `on_date` alone would settle it at the period's
 # open — one month early on a monthly model, a whole year on an annual.
@@ -305,13 +316,14 @@ selling_costs = "0"
 [[rules]]
 id = "opco_exit_ebitda_selling_costs"
 contract_name = "opco.exit_ebitda"
+line = "selling_costs"
 stream_name = "opco.exit.selling_costs"
 owner_entity = "${subject}"
 direction = "outflow"
 category = "investing.disposal.selling_costs"
 # The identical trailing-EBITDA window, times the cost rate; gross less costs
 # is the old net, so net cash flow is unchanged.
-amount_expr = "{{contract.exit_multiple}} * (series_sum(\"opco.revenue.recurring.*\", time.t - {{model.periods_per_year}} + 1, time.t) + series_sum(\"opco.opex.recurring.*\", time.t - {{model.periods_per_year}} + 1, time.t)) * {{contract.selling_costs}}"
+amount_expr = "{{contract.multiple}} * (series_sum(\"opco.revenue.recurring.*\", time.t - {{model.periods_per_year}} + 1, time.t) + series_sum(\"opco.opex.recurring.*\", time.t - {{model.periods_per_year}} + 1, time.t)) * {{contract.selling_costs}}"
 schedule_kind = "on_date"
 schedule_placement = "end"
 schedule_from = "{{contract.term_start}}"
@@ -328,6 +340,7 @@ selling_costs = "0"
 [[rules]]
 id = "opco_acquisition_price"
 contract_name = "opco.acquisition"
+line = "price"
 stream_name = "opco.acquisition.price{{contract.dot_suffix}}"
 owner_entity = "${subject}"
 direction = "outflow"
@@ -372,11 +385,12 @@ schedule_to = ""
 [[rules]]
 id = "opco_exit_perpetuity"
 contract_name = "opco.exit_perpetuity"
+line = "proceeds"
 stream_name = "opco.exit.value{{contract.dot_suffix}}"
 owner_entity = "${subject}"
 direction = "inflow"
 category = "investing.disposal.proceeds"
-amount_expr = "{{contract.base_value}} * (1 + {{contract.growth_rate}}) / ({{contract.discount_rate}} - {{contract.growth_rate}})"
+amount_expr = "{{contract.base}} * (1 + {{contract.growth_rate}}) / ({{contract.discount_rate}} - {{contract.growth_rate}})"
 # A disposal is taken at the END of the holding period, so it discounts
 # the full n periods. `on_date` alone would settle it at the period's
 # open — one month early on a monthly model, a whole year on an annual.
@@ -392,11 +406,12 @@ selling_costs = "0"
 [[rules]]
 id = "opco_exit_perpetuity_selling_costs"
 contract_name = "opco.exit_perpetuity"
+line = "selling_costs"
 stream_name = "opco.exit.selling_costs{{contract.dot_suffix}}"
 owner_entity = "${subject}"
 direction = "outflow"
 category = "investing.disposal.selling_costs"
-amount_expr = "{{contract.base_value}} * (1 + {{contract.growth_rate}}) / ({{contract.discount_rate}} - {{contract.growth_rate}}) * {{contract.selling_costs}}"
+amount_expr = "{{contract.base}} * (1 + {{contract.growth_rate}}) / ({{contract.discount_rate}} - {{contract.growth_rate}}) * {{contract.selling_costs}}"
 schedule_kind = "on_date"
 schedule_placement = "end"
 schedule_from = "{{contract.term_start}}"

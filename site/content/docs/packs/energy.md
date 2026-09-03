@@ -23,15 +23,15 @@ each classified so it lands on the right line of a
 <!-- cfdl:generated contracts-energy -->
 | Contract | Terms it reads | Streams it emits |
 |---|---|---|
-| `energy.ppa` | `availability`, `degradation`, `escalation`, `mwh_year`, `ppa_price` | `energy.ppa.revenue[.suffix]` |
-| `energy.merchant` | `availability`, `degradation`, `mwh_year`, `price`, `price_escalation` | `energy.merchant.revenue[.suffix]` |
-| `energy.storage_arbitrage` | `degradation`, `mwh_cycled_year`, `spread` | `energy.storage.margin[.suffix]` |
-| `energy.capacity` | `payment_year` | `energy.capacity.revenue[.suffix]` |
-| `energy.om` | `escalation`, `om_year` | `energy.om.expense[.suffix]` |
-| `energy.itc` | `credit` | `energy.itc.credit[.suffix]` |
+| `energy.ppa` | `availability`, `degradation`, `escalation`, `price`, `quantity` | `energy.ppa.revenue[.suffix]` |
+| `energy.merchant` | `availability`, `degradation`, `escalation`, `price`, `quantity` | `energy.merchant.revenue[.suffix]` |
+| `energy.storage_arbitrage` | `degradation`, `price`, `quantity` | `energy.storage.margin[.suffix]` |
+| `energy.capacity` | `price` | `energy.capacity.revenue[.suffix]` |
+| `energy.om` | `escalation`, `fee_year` | `energy.om.expense[.suffix]` |
+| `energy.itc` | `amount` | `energy.itc.credit[.suffix]` |
 | `energy.capex` | `amount` | `energy.capex.outlay[.suffix]` |
-| `energy.debt_service` | `funded_at_close`, `principal`, `rate` | `energy.debt.proceeds[.suffix]`, `energy.debt.interest[.suffix]`, `energy.debt.principal[.suffix]` |
-| `energy.ptc` | `availability`, `credit_per_mwh`, `degradation`, `escalation`, `mwh_year`, `round_step` | `energy.ptc.credit[.suffix]` |
+| `energy.debt_service` | `funded_at_close`, `interest_rate`, `principal` | `energy.debt.proceeds[.suffix]`, `energy.debt.interest[.suffix]`, `energy.debt.principal[.suffix]` |
+| `energy.ptc` | `amount`, `availability`, `degradation`, `escalation`, `quantity`, `round_step` | `energy.ptc.credit[.suffix]` |
 | `energy.macrs_shield` | `basis`, `life`, `tax_rate` | `energy.macrs.shield[.suffix]` |
 <!-- /cfdl:generated contracts-energy -->
 

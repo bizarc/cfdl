@@ -29,7 +29,7 @@ contract cre.opex_line on entity asset.tower {
   term 2025-01..2028-12
   terms {
     amount_year = 300000
-    escalation = 0.025
+    growth_rate = 0.025
   }
 }
 
@@ -42,7 +42,7 @@ contract cre.opex_line on entity asset.tower {
 contract cre.exit_forward on entity asset.tower {
   term 2027-12..2027-12
   terms {
-    exit_cap = 0.065
+    cap_rate = 0.065
     selling_costs = 0.02
   }
 }

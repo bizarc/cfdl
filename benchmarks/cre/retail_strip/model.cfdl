@@ -60,15 +60,15 @@ contract cre.opex_line on entity asset.strip_center {
   term 2026-01..2032-12
   terms {
     amount_year = 240000
-    escalation = 0.03
+    growth_rate = 0.03
   }
 }
 
 contract cre.exit on entity asset.strip_center {
   term 2032-12..2032-12
   terms {
-    noi_forward_year = 640000
-    exit_cap = 0.0675
+    income = 640000
+    cap_rate = 0.0675
     selling_costs = 0.015
   }
 }

@@ -114,8 +114,8 @@ Terms:
 
 | term | meaning | default |
 |---|---|---|
-| `balance` | original pool balance | required |
-| `rate` | annual note rate (must be > 0) | required |
+| `principal` | original pool balance | required |
+| `interest_rate` | annual note rate (must be > 0) | required |
 | `term_months` | amortization term in months | required |
 | `cpr` | annual conditional prepayment rate | `0` |
 | `cdr` | annual conditional default rate | `0` |
@@ -147,7 +147,7 @@ themselves, so a longer term is harmless.
 Interest-only pool with a principal bullet at maturity. Balance declines
 only through prepayment and default; the final period pays no SMM
 prepayment — the whole surviving balance pays as the bullet. Same terms as
-`pool_level_pay` (`rate` may be anything, including 0). Adds stream
+`pool_level_pay` (`interest_rate` may be anything, including 0). Adds stream
 `credit.pool.bullet`.
 
 ### `credit.pool_float_io_bullet`
@@ -223,7 +223,7 @@ benchmark purchases at a 1-point discount.
 > retail credit — it is about 3% of the collateral in the published auto-ABS
 > pool this pack is checked against. `credit.pool_level_pay` amortizes it
 > straight line with no interest. This was previously accepted-and-NaN rather
-> than supported: the `rate` validation asked only for non-negative, and the
+> than supported: the `interest_rate` validation asked only for non-negative, and the
 > closed form is 0/0 at zero.
 
 ## Not in v0.1
@@ -251,8 +251,8 @@ entity asset buyer : Credit.Asset.LoanPool
 contract credit.pool_level_pay.auto_a on entity asset.buyer {
   term 2026-01..2036-06
   terms {
-    balance = 25000000
-    rate = 0.065
+    principal = 25000000
+    interest_rate = 0.065
     term_months = 120
     cpr = 0.08
     cdr = 0.02
@@ -300,7 +300,7 @@ curve sofr linear {
 contract credit.pool_float_io_bullet.bridge on entity asset.buyer {
   term 2026-01..2028-12
   terms {
-    balance = 15000000
+    principal = 15000000
     index_curve = "sofr"
     margin = 0.0275
     rate_floor = 0.065

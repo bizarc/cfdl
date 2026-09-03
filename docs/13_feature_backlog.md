@@ -158,7 +158,7 @@ diurnal generation and an evening-peak load.
 - Reconfigured front-of-meter for merchant arbitrage, the native library
   **segfaulted** (exit 139).
 
-The first result is the important one, and it sharpens the item: `mwh_cycled_year`
+The first result is the important one, and it sharpens the item: `quantity` (the storage rule's MWh cycled)
 is an **input** to our rule and the primary **output** of a dispatch model. The
 quantity we ask the modeller to state is the thing the reference exists to
 compute. So the two cannot be compared without first deciding the answer — which
@@ -200,7 +200,7 @@ anything. What is expressible today is a price curve varying by year, which is
 a different object on a different axis and would not close this item.
 
 **And it breaks the circularity the paragraph above identifies.** Unlike
-`mwh_cycled_year`, a price duration curve is a summary of the hourly price
+`quantity` (the storage rule's MWh cycled), a price duration curve is a summary of the hourly price
 series the dispatch model ALSO takes as input — so it is an input on both sides.
 Cycled energy then becomes an output of our rule, derived from power rating,
 duration and efficiency, and comparable to the reference's output. That is
@@ -1693,7 +1693,7 @@ modeled rather than assumed." The walk's phases 3 and 4 are that state: a
 state-of-charge balance — a field or an account — stepped per period, charged
 and discharged by streams the balance reads strictly backward.
 
-**What it changes:** `mwh_cycled_year` stops being an assumed input and
+**What it changes:** `quantity` (the storage rule's MWh cycled) stops being an assumed input and
 becomes an output of dispatch against a price shape, which is the circularity
 §7.1 says blocks validation against a dispatch reference. It is also the
 state the `energy.storage_dispatch` quantile rule (`docs/27` §9 stage 4)
@@ -1958,7 +1958,7 @@ sourcing rather than on language: see the entry.
 | §7.41 | the freeform `from <expr>` pot, the one unchecked selection left after the account |
 | §7.76 | the account adoption pass: the reserve every pack's references assume and no pack could model |
 | §7.77 | the DSCR cash trap — the first covenant whose breach has consequences, and can end |
-| §7.75 | storage state of charge, which turns `mwh_cycled_year` from an assumption into an output |
+| §7.75 | storage state of charge, which turns `quantity` (the storage rule's MWh cycled) from an assumption into an output |
 | §7.74 | the deal mechanics still open after the machine: coupled interest/principal waterfalls, a step's shortfall, PIK on an unpaid step, servicer advances, the clean-up call |
 
 **What M2 is not.** Declared metrics (§7.25, since shipped) and

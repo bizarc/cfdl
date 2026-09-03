@@ -2,7 +2,7 @@
   {
     "code": "E5010_TERM_UNKNOWN_INPUT",
     "severity": "error",
-    "message": "Contract 'energy.ppa.plant_a' term 'mwh_year' references input 'anual_yield', which is not declared. Add `assume anual_yield = <value>` or `assume anual_yield ~ <Dist>(...)`.",
+    "message": "Contract 'energy.ppa.plant_a' term 'quantity' references input 'anual_yield', which is not declared. Add `assume anual_yield = <value>` or `assume anual_yield ~ <Dist>(...)`.",
     "file": "model.cfdl",
     "span": {
       "start_line": 15,

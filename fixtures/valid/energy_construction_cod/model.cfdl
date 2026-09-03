@@ -25,8 +25,8 @@ contract energy.capex.final_draw on entity asset.microgrid {
 contract energy.ppa on entity asset.microgrid {
   term 2027-01..2029-12
   terms {
-    mwh_year = 2400
-    ppa_price = 90
+    quantity = 2400
+    price = 90
     escalation = 0.02
     degradation = 0.01
   }
@@ -35,7 +35,7 @@ contract energy.ppa on entity asset.microgrid {
 contract energy.om on entity asset.microgrid {
   term 2027-01..2029-12
   terms {
-    om_year = 36000
+    fee_year = 36000
     escalation = 0.02
   }
 }

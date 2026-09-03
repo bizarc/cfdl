@@ -1,11 +1,13 @@
 # Master contract types — the construct, stated top-down
 
-Status: **stage 1 of seven built** — principles and the roster settled in
+Status: **stages 1 and 2 of seven built** — principles and the roster settled in
 discussion 2 September 2026; R1–R3 decided the same day (§4.12, §7, §8).
 Stage 1 (the ontology model in `cfdl-pack`: fields, roles with
 specialization, lines, side, the effective walks, the load checks, the
 roster below in the language base, and every pack's roles specialized)
-is in. Stages 2–7 are listed at the end and each lands as its own change.
+is in. Stage 2 (the packs conform: hard renames to the masters' names,
+`line` on every rule, template coverage as a load check) is in. Stages 3–7
+are listed at the end and each lands as its own change.
 Repository-only; the site carries the result, not the argument.
 
 ## 1. Why this document exists
@@ -108,14 +110,19 @@ instrument rather than of a deal), the lines, and the side. The argument
 is given where the choice was not obvious.
 
 ### 4.1 `Contract.Debt`
-Roles `lender`, `borrower`. Fields: `principal`; `interest_rate` (annual
-nominal); `day_count` (opt; the model's convention when absent);
+Roles `lender`, `borrower`. Fields: the amount borrowed, stated one way
+(`principal`, or a facility's `commitment`, or a `draw_curve` the facility
+funds against — one required); the rate, stated one way (`interest_rate`
+fixed, or `index_curve` with `margin` floating — one required); `day_count` (opt; the model's convention when absent);
 `payment_frequency` (opt; the calendar's when absent); `amortization` (opt:
 `level_pay`, `interest_only`, `bullet`, `custom`; a refinement fixes it — a
 pool type is `level_pay` by definition); `amortization_months` (opt; the
 horizon the payment is struck on, which may exceed the term);
 `interest_only_months` (opt, 0); `funded_at_close` (opt, 1);
-`balloon_at_maturity` (opt, 0). Master names are full words: a master is
+`balloon_at_maturity` (opt, 0). Line: `interest` — what EVERY debt produces;
+`proceeds` and `principal` are lines a refinement adds, because a purchased
+pool has no proceeds and a construction facility repays nothing inside the
+model. Side: open. Master names are full words: a master is
 read by people who do not know the pack's abbreviations, so `rate`,
 `amort_months` and `io_months` are the packs' spellings and not the
 master's (decision R2's naming review). Lines:
@@ -129,8 +136,9 @@ pool's outstanding and a loan's original is `amort_months` versus
 ### 4.2 `Contract.Lease`
 Roles `lessor`, `lessee`. Fields: a rent stated one way — `rent` (per
 period) or `rent_year` (annual), one required; `escalation` (opt, 0);
-`free_rent_months` (opt, 0). Lines: `rent`, `abatement`. Side: lessee
-pays. Recoveries, expense stops, TI/LC, rollover probability and
+`free_rent_months` (opt, 0). Line: `rent` (`abatement` is a refinement's
+addition). Side: open — the subject is the lessor in a property model and
+the lessee in a tenant's. Recoveries, expense stops, TI/LC, rollover probability and
 percentage rent are CRE's extensions, which is why `CRE.Contract.Lease`
 is itself a pack-level master and the only two-level chain in the packs
 today. That chain is the pattern: a master states what every lease has, a
@@ -147,14 +155,16 @@ Roles `seller`, `buyer`. Fields: `selling_costs` (opt, 0), and ONE
 valuation basis, required as a group: `value`; or `cap_rate` with
 `income`; or `multiple` with `base`; or `discount_rate` with `growth_rate`
 and `base`. (`income`, not `noi`: net operating income is CRE's word for
-the income a cap rate is applied to, and the master is not CRE's.) Lines: `proceeds`, `selling_costs`. One-shot. Side: seller
-receives. The "required as a group" form (`any_of`) is new to the field
+the income a cap rate is applied to, and the master is not CRE's.) Line: `proceeds` (`selling_costs` where a refinement charges them).
+One-shot. Side: seller receives. The "required as a group" form (`any_of`) is new to the field
 model and is needed here and on the rent of §4.2.
 
 ### 4.5 `Contract.Offtake`
-Roles `seller`, `offtaker`. Fields: `quantity` (per year, in the pack's
-unit); `price` (per unit); `escalation` (opt, 0); `degradation` (opt, 0);
-`availability` (opt, 1). Line: `revenue`. Side: seller receives. A
+Roles `seller`, `offtaker`. Fields: `price` (per unit, or per year where
+the payment is for availability); `quantity` (opt — per year, in the pack's
+unit; absent for a capacity payment, which pays for availability rather
+than volume); `escalation` (opt, 0); `degradation` (opt, 0); `availability`
+(opt, 1). Line: `revenue`. Side: open. A
 merchant sale names only the seller — its offtaker is the market — and
 the master allows a role to be unbound where the refinement says so.
 Energy's `ppa_price`, `price` and `payment_year` are one field; its
@@ -162,7 +172,7 @@ Energy's `ppa_price`, `price` and `payment_year` are one field; its
 
 ### 4.6 `Contract.Service`
 Roles `provider`, `recipient`. Fields: `fee` or `fee_year` (one required);
-`escalation` (opt, 0). Line: `expense`. Side: recipient pays. O&M is
+`escalation` (opt, 0). Line: `expense`. Side: open. O&M is
 the first refinement; a management agreement, a servicing agreement and
 an administration agreement are the next, and the auto ABS trust's
 servicing and administration fees (`benchmarks/credit/auto_abs_tranches`)
@@ -170,8 +180,9 @@ are the case that will want them.
 
 ### 4.7 `Contract.Tax`
 Roles `taxpayer`, `authority`. Fields: `tax_rate` or `amount` (one
-required); `basis` (opt). Lines: `paid` or `benefit`, fixed by the
-refinement. Side: taxpayer pays, or receives a benefit. The weakest
+required); `basis` (opt). Lines: none on the master — a refinement adds
+`paid` or `benefit`, because no single line is common to a cash tax, a
+credit and a depreciation shield. Side: open. The weakest
 master to state a core for — a cash tax, an investment credit, a
 production credit and a depreciation shield share only "an obligation or
 attribute against a revenue authority, with a period" — and that is what
@@ -189,10 +200,12 @@ nothing today (`docs/13` §7.67).
 Roles `owner`, `contractor`. Fields: `budget`; `draw_curve` (a declared
 curve, per `cre.construction_loan`'s argument that a draw schedule is data
 and not a term); `retainage` (opt, 0). Line: `draw`. Side: owner pays. No refinement yet:
-`cre.construction_stub` was expected to be the first, and is not — its
-roles are `owner` and `lender`, it lowers a draw a lender funds, and that
-is a debt facility, so it refines `Contract.Debt` (`owner` refines
-`borrower`).
+`cre.construction_stub` was expected to be the first, and the load check
+settled what it is — a flat draw of an `amount` over a term, emitting no
+interest and repaying nothing, which is a capital-expenditure line. It
+refines `Contract.CapitalExpenditure`, and its `lender` role, which nothing
+read, is gone: a refinement's roles are its master's roles, specialized,
+and a party the agreement never pays or reads is not a role.
 
 ### 4.10 `Contract.Derivative`
 Roles `party`, `counterparty`. Fields: `notional`; `reference` (a
@@ -202,15 +215,19 @@ on a floating loan is the first thing a project-finance case will ask for.
 
 ### 4.11 `Contract.Insurance`
 Roles `insurer`, `insured`. Fields: `premium`; `coverage` (opt);
-`deductible` (opt). Lines: `premium`, `claim` (opt). Side: insured pays.
+`deductible` (opt). Line: `premium` (`claim` where a refinement models
+recoveries). Side: insured pays.
 HUD's mortgage insurance premium is the standing case
 (`benchmarks/cre/hud_home_multifamily`), which today is a hand stream
 because the debt contract rightly refused to carry it.
 
 ### 4.12 `Contract.Line` and its kinds — decision R1
-Role `owner` (the model's own party; no counterparty). Fields: `amount`
-or `amount_year` (one required); `growth_rate` (opt, 0). `Contract.Line`
-is the pure master and is itself abstract; it is specialized, still
+Role `owner` (the model's own party; no counterparty). Fields: `amount`,
+`amount_year`, `growth_rate` (opt, 0) — all optional on `Contract.Line`
+itself, because a line may be derived (a vacancy allowance is a rate on a
+base; a working-capital policy is days); the plain kinds Revenue, Expense
+and CapitalExpenditure strengthen `amount`/`amount_year` into a required
+group. `Contract.Line` is the pure master and is itself abstract; it is specialized, still
 abstractly, into the kinds a statement distinguishes, and a pack refines
 those:
 
@@ -304,17 +321,22 @@ the master's field, the pack's name is renamed:
 | `rate` (on debt) | `interest_rate` | cre, credit, energy, opco |
 | `amort_months` | `amortization_months` | cre, opco |
 | `io_months` | `interest_only_months` | cre, opco |
-| `tax_rate` (on tax) | `tax_rate` | already the master's word |
+| `credit` (ITC), `credit_per_mwh` (PTC) | `amount` | energy |
+| `exit_cap` | `cap_rate` | cre |
+| `exit_multiple`, `base_value` | `multiple`, `base` | opco |
+| `escalation` on opex/revenue lines | `growth_rate` | cre |
+| `mwh_cycled_year`, `spread` | `quantity`, `price` | energy (storage) |
+| `payment_year` (capacity) | `price` | energy |
 | `ppa_price`, `price`, `payment_year` | `price` | energy |
 | `mwh_year` | `quantity` | energy |
 | `price_escalation` | `escalation` | energy |
 | `om_year` | `fee_year` | energy |
 | `base_rent_year`, `rent_year` | `rent_year` | cre |
 | `base_rent` | `rent` | cre |
-| `noi_value` | `income` | cre |
+| `noi_value`, `noi_forward_year` | `income` | cre |
 
-*How — decided 2 September 2026:* a HARD rename, in one change per pack
-or one for all. The language is pre-release with no downstream consumers,
+*How — decided 2 September 2026, done in stage 2:* a HARD rename, one
+change for all four packs. The language is pre-release with no downstream consumers,
 so there is no deprecated alias and no warning code; every benchmark,
 fixture, template, learn chapter and site example is migrated in the same
 change, and an old name is simply an unknown term. The master's names were
@@ -322,9 +344,18 @@ reviewed for correctness first (full words, no pack abbreviations, no
 domain jargon — §4.1, §4.4, §4.7), because a hard rename is done once.
 
 Bounds that every refinement of a master shares (`interest_rate ≥ 0`,
-`amortization_months > 0`, `principal > 0`) move to the master field and
-are checked once; a pack's `validations.toml` keeps the bounds that are
-its own.
+`amortization_months > 0`, `principal > 0`) will move to the master field
+in stage 3, when the compiler reads the effective roster; until then a
+pack's `validations.toml` carries them under the new names.
+
+*Left for stage 3, found by the template check:* three CRE types state no
+rent of their own — `cre.rollover` (renewal and market rents) and the two
+percentage-rent types (sales and a breakpoint) — and `cre.vacancy_loss` and
+`opco.working_capital_policy` state a rate on a base or days rather than
+an amount. They are lease clauses and derived lines. The masters do not
+bend for them: whether a clause inherits its parent instance's obligation,
+or a derived line satisfies an amount group by construction, is decided
+where the compiler checks a model, not by weakening the master.
 
 ## 8. What the compiler checks — decision R3
 
@@ -370,9 +401,13 @@ contract names, and their accounts hold what they received (`docs/13`
    are specialized and every pack type now refines a master. Template
    coverage of required fields waits for stage 2, where the packs' terms
    take the masters' names.
-2. **Pack conformance**: role specializations, `line` on every rule,
-   term renames with aliases (§7), line types refine §4.12, bounds moved
-   to masters; every benchmark byte-identical.
+2. **Pack conformance** — **built.** Every rule names its `line` and the
+   check is live for all four packs; the terms are renamed to the masters'
+   names across packs, templates, validations, every model, every learn
+   chapter and every pack README (§7); a contract template must render
+   every required effective field and one member of each group, checked at
+   load; credit's template no longer renders `smm`/`mdr`. Every benchmark
+   `expected.csv` is byte-identical.
 3. **Compiler**: resolve-once type carry, the four diagnostics of §8,
    effective-roster term and role checks, parties in the IR.
 4. **Results and tools**: contracts as graph nodes with master and

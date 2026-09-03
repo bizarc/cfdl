@@ -82,10 +82,10 @@ Growth is annual-compound stepped continuously on the model clock:
 
 ### Financing
 
-- `opco.term_debt` — scheduled term loan: `principal`, `rate`,
-  `io_months` (default 0), `amort_months`; optional `funded_at_close`
+- `opco.term_debt` — scheduled term loan: `principal`, `interest_rate`,
+  `interest_only_months` (default 0), `amortization_months`; optional `funded_at_close`
   (default 1) controls the proceeds inflow at `term_start`. After the IO
-  period the loan amortizes level-pay over `amort_months`; the remaining
+  period the loan amortizes level-pay over `amortization_months`; the remaining
   balance pays as a balloon at the contract's `term_end`. Streams
   `opco.debt.proceeds`, `opco.debt.interest`, `opco.debt.principal`.
   **Cash sweeps and revolvers are stated in the model rather than lowered,
@@ -107,7 +107,7 @@ Growth is annual-compound stepped continuously on the model clock:
 
 - `opco.exit_multiple` — `base_value * exit_multiple` at the contract's
   `term_start`.
-- `opco.exit_ebitda` — `exit_multiple` × trailing-12-month EBITDA derived
+- `opco.exit_ebitda` — `multiple` × trailing-12-month EBITDA derived
   from the modeled streams, net of `selling_costs`, at `term_start`.
 
 ### `opco.exit_perpetuity`
@@ -123,7 +123,7 @@ TV = base_value * (1 + growth_rate) / (discount_rate - growth_rate)   # gross; s
 
 | term | meaning | default |
 |---|---|---|
-| `base_value` | the terminal-period flow, **before** the `(1 + g)` step | *required* |
+| `base` | the terminal-period flow, **before** the `(1 + g)` step | *required* |
 | `growth_rate` | perpetual growth; state `0` for a flat perpetuity | *required* |
 | `discount_rate` | terminal capitalization rate | *required* |
 | `selling_costs` | fraction deducted from proceeds | `0` |
@@ -137,7 +137,7 @@ this rate *capitalizes* it.
 
 **Match the rate to the flow.** A cost of equity belongs against a dividend or
 FCFE; a cost of capital belongs against FCFF. The contract is deliberately
-neutral about which `base_value` is, and cannot detect a mismatch.
+neutral about which `base` is, and cannot detect a mismatch.
 
 `E7025` guards the one thing that must hold: `discount_rate > growth_rate`. The
 exit settles at the end of its period and carries no `mid` — a terminal value is
@@ -215,7 +215,7 @@ contract opco.capex_line on entity asset.target {
 
 contract opco.term_debt on entity asset.target {
   term 2026-01..2030-12
-  terms { principal = 20000000 rate = 0.09 amort_months = 84 }
+  terms { principal = 20000000 interest_rate = 0.09 amortization_months = 84 }
 }
 ```
 
@@ -236,9 +236,9 @@ contract opco.term_debt on entity asset.target {
   term 2026-01..2030-12
   terms {
     principal = 14000000
-    rate = 0.085
-    io_months = 12
-    amort_months = 84
+    interest_rate = 0.085
+    interest_only_months = 12
+    amortization_months = 84
   }
 }
 ```
@@ -249,7 +249,7 @@ forward):
 ```cfdl
 contract opco.exit_ebitda on entity asset.target {
   term 2030-12..2030-12
-  terms { exit_multiple = 8.5 }
+  terms { multiple = 8.5 }
 }
 ```
 

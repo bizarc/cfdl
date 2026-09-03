@@ -109,9 +109,9 @@ contract opco.term_debt on entity asset.target {
   term 2026-01..2030-12
   terms {
     principal = 21000000
-    rate = 0.085
-    io_months = 12
-    amort_months = 84
+    interest_rate = 0.085
+    interest_only_months = 12
+    amortization_months = 84
   }
 }
 
@@ -136,7 +136,7 @@ contract opco.acquisition on entity asset.target {
 contract opco.exit_ebitda on entity asset.target {
   term 2030-12..2030-12
   terms {
-    exit_multiple = 8.5
+    multiple = 8.5
     selling_costs = 0.015
   }
 }

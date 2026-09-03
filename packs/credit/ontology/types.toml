@@ -301,6 +301,21 @@ refines = "lender"
 name = "borrower"
 unbound = true
 
+[[contracts.lines]]
+name = "principal"
+
+[[contracts.lines]]
+name = "prepayment"
+
+[[contracts.lines]]
+name = "recovery"
+
+[[contracts.lines]]
+name = "servicing"
+
+[[contracts.lines]]
+name = "penalty"
+
 [[contracts]]
 type_id = "Credit.Contract.InterestOnlyPool"
 refines = "Contract.Debt"
@@ -314,6 +329,21 @@ refines = "lender"
 [[contracts.roles]]
 name = "borrower"
 unbound = true
+
+[[contracts.lines]]
+name = "prepayment"
+
+[[contracts.lines]]
+name = "principal"
+
+[[contracts.lines]]
+name = "recovery"
+
+[[contracts.lines]]
+name = "servicing"
+
+[[contracts.lines]]
+name = "penalty"
 
 [[contracts]]
 type_id = "Credit.Contract.FloatingInterestOnlyPool"
@@ -329,6 +359,21 @@ refines = "lender"
 [[contracts.roles]]
 name = "borrower"
 unbound = true
+
+[[contracts.lines]]
+name = "prepayment"
+
+[[contracts.lines]]
+name = "principal"
+
+[[contracts.lines]]
+name = "recovery"
+
+[[contracts.lines]]
+name = "servicing"
+
+[[contracts.lines]]
+name = "penalty"
 
 [[contracts]]
 type_id = "Credit.Contract.Purchase"

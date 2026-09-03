@@ -57,7 +57,7 @@
       }
     },
     "files": {
-      "model.cfdl": "version 0.1\nmodel \"tutorial-simple-contract\"\nuse pack \"cre\" version \"0.1.0\"\ntime calendar monthly from 2026-01 for 48\n\nentity asset property : CRE.Asset.RealProperty\n\ncontract cre.lease {\n  term 2026-01..2029-12\n  terms {\n    base_rent = 25000\n  }\n}\n"
+      "model.cfdl": "version 0.1\nmodel \"tutorial-simple-contract\"\nuse pack \"cre\" version \"0.1.0\"\ntime calendar monthly from 2026-01 for 48\n\nentity asset property : CRE.Asset.RealProperty\n\ncontract cre.lease {\n  term 2026-01..2029-12\n  terms {\n    rent = 25000\n  }\n}\n"
     }
   },
   {
@@ -184,7 +184,7 @@
       }
     },
     "files": {
-      "model.cfdl": "version 0.1\nmodel \"cre-developer-example\"\nuse pack \"cre\" version \"0.1.0\"\ntime calendar monthly from 2026-01 for 72\n\nentity asset property : CRE.Asset.RealProperty\n\ncontract cre.construction_stub {\n  term 2026-01..2026-06\n  terms {\n    amount = 45000\n  }\n}\n\ncontract cre.lease {\n  term 2026-07..2031-12\n  terms {\n    base_rent = 25000\n  }\n}\n\n// Ops income and expense as pack contracts, so the pack classifies them and\n// the operating statement can claim them. Hand-written streams carry no\n// category, and a statement folds categories rather than stream names.\ncontract cre.revenue_line {\n  term 2028-01..2031-12\n  terms {\n    amount = 30000\n  }\n}\n\ncontract cre.opex_line {\n  term 2028-01..2031-12\n  terms {\n    amount = 12000\n  }\n}\n\ncontract cre.exit_cap {\n  term 2031-12..2031-12\n  terms {\n    exit_cap = 0.06\n    noi_value = 180000\n  }\n}\n"
+      "model.cfdl": "version 0.1\nmodel \"cre-developer-example\"\nuse pack \"cre\" version \"0.1.0\"\ntime calendar monthly from 2026-01 for 72\n\nentity asset property : CRE.Asset.RealProperty\n\ncontract cre.construction_stub {\n  term 2026-01..2026-06\n  terms {\n    amount = 45000\n  }\n}\n\ncontract cre.lease {\n  term 2026-07..2031-12\n  terms {\n    rent = 25000\n  }\n}\n\n// Ops income and expense as pack contracts, so the pack classifies them and\n// the operating statement can claim them. Hand-written streams carry no\n// category, and a statement folds categories rather than stream names.\ncontract cre.revenue_line {\n  term 2028-01..2031-12\n  terms {\n    amount = 30000\n  }\n}\n\ncontract cre.opex_line {\n  term 2028-01..2031-12\n  terms {\n    amount = 12000\n  }\n}\n\ncontract cre.exit_cap {\n  term 2031-12..2031-12\n  terms {\n    cap_rate = 0.06\n    income = 180000\n  }\n}\n"
     }
   },
   {
@@ -204,7 +204,7 @@
       }
     },
     "files": {
-      "model.cfdl": "version 0.1\nmodel \"opco-basic-example\"\nuse pack \"opco\" version \"0.1.0\"\ntime calendar monthly from 2026-01 for 72\n\nentity asset business : OpCo.Asset.Enterprise\n\n// Revenue and opex as pack contracts, so the pack classifies them and the\n// statements can claim them. Hand-written streams carry no category, and a\n// statement folds categories rather than stream names.\ncontract opco.revenue_line {\n  term 2026-01..2031-12\n  terms {\n    amount = 120000\n  }\n}\n\ncontract opco.opex_line {\n  term 2026-01..2031-12\n  terms {\n    amount = 70000\n  }\n}\n\ncontract opco.working_capital {\n  term 2026-01..2031-12\n  terms {\n    amount = 3000\n  }\n}\n\ncontract opco.exit_multiple {\n  term 2031-12..2031-12\n  terms {\n    exit_period = 72\n    exit_multiple = 6.5\n    base_value = 800000\n  }\n}\n"
+      "model.cfdl": "version 0.1\nmodel \"opco-basic-example\"\nuse pack \"opco\" version \"0.1.0\"\ntime calendar monthly from 2026-01 for 72\n\nentity asset business : OpCo.Asset.Enterprise\n\n// Revenue and opex as pack contracts, so the pack classifies them and the\n// statements can claim them. Hand-written streams carry no category, and a\n// statement folds categories rather than stream names.\ncontract opco.revenue_line {\n  term 2026-01..2031-12\n  terms {\n    amount = 120000\n  }\n}\n\ncontract opco.opex_line {\n  term 2026-01..2031-12\n  terms {\n    amount = 70000\n  }\n}\n\ncontract opco.working_capital {\n  term 2026-01..2031-12\n  terms {\n    amount = 3000\n  }\n}\n\ncontract opco.exit_multiple {\n  term 2031-12..2031-12\n  terms {\n    exit_period = 72\n    multiple = 6.5\n    base = 800000\n  }\n}\n"
     }
   },
   {
@@ -229,7 +229,7 @@
       }
     },
     "files": {
-      "contracts.cfdl": "contract cre.construction_stub {\n  term 2026-01..2026-06\n  terms {\n    amount = 45000\n  }\n}\n\ncontract cre.lease {\n  term 2026-07..2031-12\n  terms {\n    base_rent = 25000\n  }\n}\n\n// Ops income and expense as pack contracts, so the pack classifies them and\n// the operating statement can claim them. Hand-written streams carry no\n// category, and a statement folds categories rather than stream names.\ncontract cre.revenue_line {\n  term 2028-01..2031-12\n  terms {\n    amount = 30000\n  }\n}\n\ncontract cre.opex_line {\n  term 2028-01..2031-12\n  terms {\n    amount = 12000\n  }\n}\n\ncontract cre.exit_cap {\n  term 2031-12..2031-12\n  terms {\n    exit_cap = 0.06\n    noi_value = 180000\n  }\n}\n",
+      "contracts.cfdl": "contract cre.construction_stub {\n  term 2026-01..2026-06\n  terms {\n    amount = 45000\n  }\n}\n\ncontract cre.lease {\n  term 2026-07..2031-12\n  terms {\n    rent = 25000\n  }\n}\n\n// Ops income and expense as pack contracts, so the pack classifies them and\n// the operating statement can claim them. Hand-written streams carry no\n// category, and a statement folds categories rather than stream names.\ncontract cre.revenue_line {\n  term 2028-01..2031-12\n  terms {\n    amount = 30000\n  }\n}\n\ncontract cre.opex_line {\n  term 2028-01..2031-12\n  terms {\n    amount = 12000\n  }\n}\n\ncontract cre.exit_cap {\n  term 2031-12..2031-12\n  terms {\n    cap_rate = 0.06\n    income = 180000\n  }\n}\n",
       "model.cfdl": "version 0.1\nmodel \"cre-multi-file-example\"\nuse pack \"cre\" version \"0.1.0\"\ntime calendar monthly from 2026-01 for 72\n\nimport \"time.cfdl\"\nimport \"structure.cfdl\"\nimport \"contracts.cfdl\"\n",
       "structure.cfdl": "entity asset property : CRE.Asset.RealProperty\n",
       "time.cfdl": "phase construction from 2026-01 to 2026-12\nphase lease_up from 2027-01 to 2027-12\nphase perm from 2028-01 to 2031-12\n"

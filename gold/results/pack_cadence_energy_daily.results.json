@@ -1,6 +1,6 @@
 {
   "results_version": "0.12",
-  "model_hash": "5601b6519e27c7fb3e45bfd85cbc5a017bcba4d06790d7848bc0a3ac63434b91",
+  "model_hash": "15cd596419aa21ec7f1ebfad9a0a5d01fcd98e2ee3d76295cc8ae4dee1a3ea45",
   "ledger_hash": "9844e5b2e9667475e149a3647c3a85391c8fbc47336d1887ef888898f0df087c",
   "engine": {
     "name": "cfdl-engine",
@@ -19,8 +19,8 @@
           "availability": "1",
           "degradation": "0.005",
           "escalation": "0.02",
-          "mwh_year": "4200",
-          "ppa_price": "85"
+          "price": "85",
+          "quantity": "4200"
         }
       },
       {
@@ -28,14 +28,14 @@
         "stream": "energy.om.expense",
         "terms": {
           "escalation": "0.025",
-          "om_year": "48000"
+          "fee_year": "48000"
         }
       },
       {
         "contract": "energy.capacity",
         "stream": "energy.capacity.revenue",
         "terms": {
-          "payment_year": "60000"
+          "price": "60000"
         }
       }
     ]

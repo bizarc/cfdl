@@ -60,8 +60,8 @@ entity asset loan_d : Credit.Asset.Loan {
 contract credit.pool_level_pay.a on entity asset.loan_a {
   term 2026-01..2056-12
   terms {
-    balance = 40000000
-    rate = 0.08
+    principal = 40000000
+    interest_rate = 0.08
     term_months = 360
     cpr = 0.11361512828387077
     cdr = 0.11361512828387077
@@ -73,8 +73,8 @@ contract credit.pool_level_pay.a on entity asset.loan_a {
 contract credit.pool_level_pay.b on entity asset.loan_b {
   term 2026-01..2056-12
   terms {
-    balance = 30000000
-    rate = 0.08
+    principal = 30000000
+    interest_rate = 0.08
     term_months = 360
     cpr = 0.11361512828387077
     cdr = 0.11361512828387077
@@ -86,8 +86,8 @@ contract credit.pool_level_pay.b on entity asset.loan_b {
 contract credit.pool_level_pay.c on entity asset.loan_c {
   term 2026-01..2056-12
   terms {
-    balance = 20000000
-    rate = 0.08
+    principal = 20000000
+    interest_rate = 0.08
     term_months = 360
     cpr = 0.11361512828387077
     cdr = 0.11361512828387077
@@ -99,8 +99,8 @@ contract credit.pool_level_pay.c on entity asset.loan_c {
 contract credit.pool_level_pay.d on entity asset.loan_d {
   term 2026-01..2056-12
   terms {
-    balance = 10000000
-    rate = 0.08
+    principal = 10000000
+    interest_rate = 0.08
     term_months = 360
     cpr = 0.11361512828387077
     cdr = 0.11361512828387077

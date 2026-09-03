@@ -34,7 +34,7 @@ contract cre.opex_line on entity asset.property {
 contract cre.exit_cap on entity asset.property {
   term 2030-12..2030-12
   terms {
-    exit_cap = 0.052
-    noi_value = 1432200
+    cap_rate = 0.052
+    income = 1432200
   }
 }

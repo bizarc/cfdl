@@ -1,6 +1,6 @@
 {
   "results_version": "0.12",
-  "model_hash": "bef46b9ebb6d82f3c9629f1333adcd31dfe832cfdb83a340eedaf7aa17946838",
+  "model_hash": "19c1401dfa835898786fa498d78b7bc6c83f993c3e6740cf793a363963c778ff",
   "ledger_hash": "d199f86fb1bfc4a3d91914786376e3f0ae6dd4f0fa7792857f9c0711e0feda96",
   "engine": {
     "name": "cfdl-engine",
@@ -19,11 +19,11 @@
         ],
         "stream": "energy.ptc.credit",
         "terms": {
+          "amount": "27.50",
           "availability": "1",
-          "credit_per_mwh": "27.50",
           "degradation": "0",
           "escalation": "0",
-          "mwh_year": "250000",
+          "quantity": "250000",
           "round_step": "1.00"
         }
       }

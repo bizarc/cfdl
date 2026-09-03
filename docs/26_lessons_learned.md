@@ -380,7 +380,7 @@ assume installed_cost = 100000000
 assume itc_rate       = 0.30
 
 contract energy.itc on entity asset.pv {
-  terms { credit = inputs.installed_cost * inputs.itc_rate }
+  terms { amount = inputs.installed_cost * inputs.itc_rate }
 }
 
 contract energy.macrs_shield on entity asset.pv {

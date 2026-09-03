@@ -456,8 +456,8 @@
       "stream": "opco.exit.value",
       "contract": "opco.exit_multiple",
       "terms": {
-        "base_value": "800000",
-        "exit_multiple": "6.5"
+        "base": "800000",
+        "multiple": "6.5"
       }
     }
   ],

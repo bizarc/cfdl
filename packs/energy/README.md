@@ -19,7 +19,7 @@ no hardcoded amounts.
 
 ## Conventions
 
-- Annual quantities (`mwh_year`, `om_year`, `payment_year`) spread evenly
+- Annual quantities (`quantity`, `fee_year`, `price`) spread evenly
   across the rule's own periods: `X_year / periods_per_year`, which is the
   model's calendar unless a rule declares its own `schedule_every`.
 - Escalation and degradation step **annually**: `factor ^ floor(t / 12)`,
@@ -53,7 +53,7 @@ no hardcoded amounts.
 > assume itc_rate       = 0.30
 >
 > contract energy.itc on entity asset.pv {
->   terms { credit = inputs.installed_cost * inputs.itc_rate }
+>   terms { amount = inputs.installed_cost * inputs.itc_rate }
 > }
 >
 > contract energy.macrs_shield on entity asset.pv {
@@ -82,15 +82,15 @@ no hardcoded amounts.
 
 | Contract | Required terms | Optional (default) |
 |---|---|---|
-| `energy.ppa` | `mwh_year`, `ppa_price` | `escalation` (0), `degradation` (0), `availability` (1) |
-| `energy.merchant` | `mwh_year`, `price` | `price_escalation` (0), `degradation` (0), `availability` (1) |
-| `energy.storage_arbitrage` | `mwh_cycled_year`, `spread` | `degradation` (0) |
-| `energy.capacity` | `payment_year` | — |
-| `energy.om` | `om_year` | `escalation` (0) |
-| `energy.itc` | `credit` | — (fires on `term_start`) |
+| `energy.ppa` | `quantity`, `price` | `escalation` (0), `degradation` (0), `availability` (1) |
+| `energy.merchant` | `quantity`, `price` | `escalation` (0), `degradation` (0), `availability` (1) |
+| `energy.storage_arbitrage` | `quantity`, `price` | `degradation` (0) |
+| `energy.capacity` | `price` | — |
+| `energy.om` | `fee_year` | `escalation` (0) |
+| `energy.itc` | `amount` | — (fires on `term_start`) |
 | `energy.capex` | `amount` | — (fires on `term_start`) |
-| `energy.debt_service` | `rate`, `term_months`, `principal` | `funded_at_close` (1) |
-| `energy.ptc` | `mwh_year`, `credit_per_mwh` | `escalation` (0), `degradation` (0), `availability` (1); term bounds the credit window |
+| `energy.debt_service` | `interest_rate`, `term_months`, `principal` | `funded_at_close` (1) |
+| `energy.ptc` | `quantity`, `amount` | `escalation` (0), `degradation` (0), `availability` (1); term bounds the credit window |
 | `energy.macrs_shield` | `basis`, `tax_rate` | `life` (5; also 7/15/20) — IRS Pub 946 GDS half-year tables via `macrs_rate()` |
 
 Tax attributes (ITC, PTC, MACRS shield) report under
@@ -122,8 +122,8 @@ contract energy.capex on entity asset.microgrid {
 contract energy.ppa on entity asset.microgrid {
   term 2026-01..2050-12
   terms {
-    mwh_year = 4200
-    ppa_price = 85
+    quantity = 4200
+    price = 85
     escalation = 0.02
     degradation = 0.005
   }
@@ -131,7 +131,7 @@ contract energy.ppa on entity asset.microgrid {
 
 contract energy.om on entity asset.microgrid {
   term 2026-01..2050-12
-  terms { om_year = 70000 escalation = 0.025 }
+  terms { fee_year = 70000 escalation = 0.025 }
 }
 ```
 
@@ -156,7 +156,7 @@ under tax benefits, not EBITDA):
 ```cfdl
 contract energy.itc on entity asset.microgrid {
   term 2026-12..2026-12
-  terms { credit = 720000 }
+  terms { amount = 720000 }
 }
 ```
 
@@ -165,7 +165,7 @@ contract energy.itc on entity asset.microgrid {
 ```cfdl
 contract energy.debt_service on entity asset.microgrid {
   term 2026-01..2045-12
-  terms { rate = 0.06 term_months = 240 principal = 1600000 }
+  terms { interest_rate = 0.06 term_months = 240 principal = 1600000 }
 }
 ```
 

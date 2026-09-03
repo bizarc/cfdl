@@ -225,11 +225,11 @@
       "terms": {
         "amount": "30000",
         "amount_year": "0",
-        "escalation": "0"
+        "growth_rate": "0"
       },
       "defaults_applied": [
         "amount_year",
-        "escalation"
+        "growth_rate"
       ]
     }
   ],

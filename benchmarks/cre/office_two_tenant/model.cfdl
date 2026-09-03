@@ -65,7 +65,7 @@ contract cre.opex_line on entity asset.tower {
   term 2026-01..2036-12
   terms {
     amount_year = 300000
-    escalation = 0.025
+    growth_rate = 0.025
   }
 }
 
@@ -74,7 +74,7 @@ contract cre.opex_line on entity asset.tower {
 contract cre.exit_forward on entity asset.tower {
   term 2035-12..2035-12
   terms {
-    exit_cap = 0.065
+    cap_rate = 0.065
     selling_costs = 0.02
   }
 }
@@ -97,8 +97,8 @@ contract cre.permanent_debt on entity asset.tower {
   term 2026-01..2035-12
   terms {
     principal = 6000000
-    rate = 0.055
-    amort_months = 300
+    interest_rate = 0.055
+    amortization_months = 300
     funded_at_close = 0
   }
 }

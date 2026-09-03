@@ -18,11 +18,12 @@
 [[rules]]
 id = "energy_ppa_revenue"
 contract_name = "energy.ppa"
+line = "revenue"
 stream_name = "energy.ppa.revenue{{contract.dot_suffix}}"
 owner_entity = "${subject}"
 direction = "inflow"
 category = "operating.revenue.energy"
-amount_expr = "({{contract.mwh_year}} / {{model.periods_per_year}}) * {{contract.availability}} * pow(1 - {{contract.degradation}}, {{time.elapsed_years}}) * {{contract.ppa_price}} * pow(1 + {{contract.escalation}}, {{time.elapsed_years}})"
+amount_expr = "({{contract.quantity}} / {{model.periods_per_year}}) * {{contract.availability}} * pow(1 - {{contract.degradation}}, {{time.elapsed_years}}) * {{contract.price}} * pow(1 + {{contract.escalation}}, {{time.elapsed_years}})"
 schedule_kind = "every"
 schedule_from = "{{contract.term_start}}"
 schedule_to = "{{contract.term_end}}"
@@ -34,39 +35,41 @@ availability = "1"
 
 
 [rules.units]
-mwh_year = "MWh/yr"
-ppa_price = "USD/MWh"
+quantity = "MWh/yr"
+price = "USD/MWh"
 
 [[rules]]
 id = "energy_merchant_revenue"
 contract_name = "energy.merchant"
+line = "revenue"
 stream_name = "energy.merchant.revenue{{contract.dot_suffix}}"
 owner_entity = "${subject}"
 direction = "inflow"
 category = "operating.revenue.energy"
-amount_expr = "({{contract.mwh_year}} / {{model.periods_per_year}}) * {{contract.availability}} * pow(1 - {{contract.degradation}}, {{time.elapsed_years}}) * {{contract.price}} * pow(1 + {{contract.price_escalation}}, {{time.elapsed_years}})"
+amount_expr = "({{contract.quantity}} / {{model.periods_per_year}}) * {{contract.availability}} * pow(1 - {{contract.degradation}}, {{time.elapsed_years}}) * {{contract.price}} * pow(1 + {{contract.escalation}}, {{time.elapsed_years}})"
 schedule_kind = "every"
 schedule_from = "{{contract.term_start}}"
 schedule_to = "{{contract.term_end}}"
 
 [rules.defaults]
-price_escalation = "0"
+escalation = "0"
 degradation = "0"
 availability = "1"
 
 
 [rules.units]
-mwh_year = "MWh/yr"
+quantity = "MWh/yr"
 price = "USD/MWh"
 
 [[rules]]
 id = "energy_storage_arbitrage"
 contract_name = "energy.storage_arbitrage"
+line = "revenue"
 stream_name = "energy.storage.margin{{contract.dot_suffix}}"
 owner_entity = "${subject}"
 direction = "inflow"
 category = "operating.revenue.energy"
-amount_expr = "({{contract.mwh_cycled_year}} / {{model.periods_per_year}}) * {{contract.spread}} * pow(1 - {{contract.degradation}}, {{time.elapsed_years}})"
+amount_expr = "({{contract.quantity}} / {{model.periods_per_year}}) * {{contract.price}} * pow(1 - {{contract.degradation}}, {{time.elapsed_years}})"
 schedule_kind = "every"
 schedule_from = "{{contract.term_start}}"
 schedule_to = "{{contract.term_end}}"
@@ -76,33 +79,35 @@ degradation = "0"
 
 
 [rules.units]
-mwh_cycled_year = "MWh/yr"
-spread = "USD/MWh"
+quantity = "MWh/yr"
+price = "USD/MWh"
 
 [[rules]]
 id = "energy_capacity_payment"
 contract_name = "energy.capacity"
+line = "revenue"
 stream_name = "energy.capacity.revenue{{contract.dot_suffix}}"
 owner_entity = "${subject}"
 direction = "inflow"
 category = "operating.revenue.energy"
-amount_expr = "{{contract.payment_year}} / {{model.periods_per_year}}"
+amount_expr = "{{contract.price}} / {{model.periods_per_year}}"
 schedule_kind = "every"
 schedule_from = "{{contract.term_start}}"
 schedule_to = "{{contract.term_end}}"
 
 
 [rules.units]
-payment_year = "USD/yr"
+price = "USD/yr"
 
 [[rules]]
 id = "energy_om_expense"
 contract_name = "energy.om"
+line = "expense"
 stream_name = "energy.om.expense{{contract.dot_suffix}}"
 owner_entity = "${subject}"
 direction = "outflow"
 category = "operating.expense.om"
-amount_expr = "({{contract.om_year}} / {{model.periods_per_year}}) * pow(1 + {{contract.escalation}}, {{time.elapsed_years}})"
+amount_expr = "({{contract.fee_year}} / {{model.periods_per_year}}) * pow(1 + {{contract.escalation}}, {{time.elapsed_years}})"
 schedule_kind = "every"
 schedule_from = "{{contract.term_start}}"
 schedule_to = "{{contract.term_end}}"
@@ -112,27 +117,29 @@ escalation = "0"
 
 
 [rules.units]
-om_year = "USD/yr"
+fee_year = "USD/yr"
 
 [[rules]]
 id = "energy_itc_credit"
 contract_name = "energy.itc"
+line = "benefit"
 stream_name = "energy.itc.credit{{contract.dot_suffix}}"
 owner_entity = "${subject}"
 direction = "inflow"
 category = "operating.income_tax.benefit"
-amount_expr = "{{contract.credit}}"
+amount_expr = "{{contract.amount}}"
 schedule_kind = "on_date"
 schedule_from = "{{contract.term_start}}"
 schedule_to = ""
 
 
 [rules.units]
-credit = "USD"
+amount = "USD"
 
 [[rules]]
 id = "energy_capex"
 contract_name = "energy.capex"
+line = "capex"
 stream_name = "energy.capex.outlay{{contract.dot_suffix}}"
 owner_entity = "${subject}"
 direction = "outflow"
@@ -157,6 +164,7 @@ amount = "USD"
 [[rules]]
 id = "energy_debt_proceeds"
 contract_name = "energy.debt_service"
+line = "proceeds"
 stream_name = "energy.debt.proceeds{{contract.dot_suffix}}"
 owner_entity = "${subject}"
 direction = "inflow"
@@ -175,13 +183,14 @@ principal = "USD"
 [[rules]]
 id = "energy_debt_interest"
 contract_name = "energy.debt_service"
+line = "interest"
 stream_name = "energy.debt.interest{{contract.dot_suffix}}"
 owner_entity = "${subject}"
 direction = "outflow"
 category = "financing.debt.interest_paid"
 # ipmt() returns the Excel-convention negative interest for a positive pv;
 # negate for a positive outflow amount.
-amount_expr = "-ipmt({{contract.rate}} / {{model.accrual_divisor}}, {{time.elapsed_periods}} + 1, {{whole_periods.term_months}}, {{contract.principal}})"
+amount_expr = "-ipmt({{contract.interest_rate}} / {{model.accrual_divisor}}, {{time.elapsed_periods}} + 1, {{whole_periods.term_months}}, {{contract.principal}})"
 schedule_kind = "every"
 schedule_from = "{{contract.term_start}}"
 schedule_to = "{{contract.term_end}}"
@@ -193,11 +202,12 @@ term_months = "months"
 [[rules]]
 id = "energy_debt_principal"
 contract_name = "energy.debt_service"
+line = "principal"
 stream_name = "energy.debt.principal{{contract.dot_suffix}}"
 owner_entity = "${subject}"
 direction = "outflow"
 category = "financing.debt.principal"
-amount_expr = "-ppmt({{contract.rate}} / {{model.accrual_divisor}}, {{time.elapsed_periods}} + 1, {{whole_periods.term_months}}, {{contract.principal}})"
+amount_expr = "-ppmt({{contract.interest_rate}} / {{model.accrual_divisor}}, {{time.elapsed_periods}} + 1, {{whole_periods.term_months}}, {{contract.principal}})"
 schedule_kind = "every"
 schedule_from = "{{contract.term_start}}"
 schedule_to = "{{contract.term_end}}"
@@ -209,6 +219,7 @@ term_months = "months"
 [[rules]]
 id = "energy_ptc_credit"
 contract_name = "energy.ptc"
+line = "benefit"
 stream_name = "energy.ptc.credit{{contract.dot_suffix}}"
 owner_entity = "${subject}"
 direction = "inflow"
@@ -234,7 +245,7 @@ category = "operating.income_tax.benefit"
 #
 # `round_step` defaults to 0.10 for that convention. Set it to 0 to disable
 # rounding for a jurisdiction that does not round, or to another tick.
-amount_expr = "({{contract.mwh_year}} / {{model.periods_per_year}}) * {{contract.availability}} * pow(1 - {{contract.degradation}}, {{time.elapsed_years}}) * if({{contract.round_step}} > 0, round_to({{contract.credit_per_mwh}} * pow(1 + {{contract.escalation}}, {{time.elapsed_years}}), {{contract.round_step}}), {{contract.credit_per_mwh}} * pow(1 + {{contract.escalation}}, {{time.elapsed_years}}))"
+amount_expr = "({{contract.quantity}} / {{model.periods_per_year}}) * {{contract.availability}} * pow(1 - {{contract.degradation}}, {{time.elapsed_years}}) * if({{contract.round_step}} > 0, round_to({{contract.amount}} * pow(1 + {{contract.escalation}}, {{time.elapsed_years}}), {{contract.round_step}}), {{contract.amount}} * pow(1 + {{contract.escalation}}, {{time.elapsed_years}}))"
 schedule_kind = "every"
 schedule_from = "{{contract.term_start}}"
 schedule_to = "{{contract.term_end}}"
@@ -247,13 +258,14 @@ availability = "1"
 
 
 [rules.units]
-mwh_year = "MWh/yr"
-credit_per_mwh = "USD/MWh"
+quantity = "MWh/yr"
+amount = "USD/MWh"
 round_step = "USD/MWh"
 
 [[rules]]
 id = "energy_macrs_shield"
 contract_name = "energy.macrs_shield"
+line = "benefit"
 stream_name = "energy.macrs.shield{{contract.dot_suffix}}"
 owner_entity = "${subject}"
 direction = "inflow"

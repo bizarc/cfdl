@@ -1,6 +1,6 @@
 {
   "results_version": "0.12",
-  "model_hash": "e677bc76b844f654b554e9fb24b7786cbdb41b0dfbfa7cb1feca8368ffc70ee3",
+  "model_hash": "8853abeab12a2b1a7368f72f742ea2aedc3ece66d4fecc9343666aa2bbee74aa",
   "ledger_hash": "7a19c17b71b237d62790b6ce691b805b09278e32d999dd19483ceee92a8dca5c",
   "engine": {
     "name": "cfdl-engine",
@@ -22,9 +22,9 @@
         "terms": {
           "availability": "0.95",
           "degradation": "0.007",
-          "mwh_year": "105000",
+          "escalation": "0.015",
           "price": "42",
-          "price_escalation": "0.015"
+          "quantity": "105000"
         }
       },
       {
@@ -34,11 +34,11 @@
         ],
         "stream": "energy.ptc.credit",
         "terms": {
+          "amount": "27.5",
           "availability": "0.95",
-          "credit_per_mwh": "27.5",
           "degradation": "0.007",
           "escalation": "0.02",
-          "mwh_year": "105000",
+          "quantity": "105000",
           "round_step": "1.00"
         }
       },
@@ -56,23 +56,23 @@
         "stream": "energy.om.expense",
         "terms": {
           "escalation": "0.02",
-          "om_year": "1300000"
+          "fee_year": "1300000"
         }
       },
       {
         "contract": "energy.debt_service",
         "stream": "energy.debt.interest",
         "terms": {
-          "principal": "25000000",
-          "rate": "0.055"
+          "interest_rate": "0.055",
+          "principal": "25000000"
         }
       },
       {
         "contract": "energy.debt_service",
         "stream": "energy.debt.principal",
         "terms": {
-          "principal": "25000000",
-          "rate": "0.055"
+          "interest_rate": "0.055",
+          "principal": "25000000"
         }
       },
       {

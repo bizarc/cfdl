@@ -1,6 +1,6 @@
 {
   "results_version": "0.12",
-  "model_hash": "a5dd0bc87394f8df601220a2607e699ee29bc69f48624e0e0f5c72fbe741d5d2",
+  "model_hash": "64edb96eaee1fc29d1388aef66ee5a8714504f07e30c89b1bbfe7f5683a12ae1",
   "ledger_hash": "e3d02926cfde89c5cde8e3c64ee43275725bee41abee2e4f12a58aac6f0e56f8",
   "engine": {
     "name": "cfdl-engine",
@@ -13,7 +13,7 @@
         "contract": "opco.exit_perpetuity",
         "stream": "opco.exit.value",
         "terms": {
-          "base_value": "1169.858560",
+          "base": "1169.858560",
           "discount_rate": "0.085",
           "growth_rate": "0.025"
         }
@@ -25,7 +25,7 @@
         ],
         "stream": "opco.exit.selling_costs",
         "terms": {
-          "base_value": "1169.858560",
+          "base": "1169.858560",
           "discount_rate": "0.085",
           "growth_rate": "0.025",
           "selling_costs": "0"

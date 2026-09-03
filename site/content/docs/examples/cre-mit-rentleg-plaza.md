@@ -199,7 +199,7 @@ contract cre.opex_line {
   term 2001-01..2006-01
   terms {
     amount_year = inputs.opex_psf_full * inputs.building_sf
-    escalation = inputs.opex_growth
+    growth_rate = inputs.opex_growth
     pct_fixed = inputs.opex_pct_fixed
     occupancy = curve_value("occupancy", time.date)
   }
@@ -317,7 +317,7 @@ stream cre.capex on entity asset.rentleg outflow currency USD {
 contract cre.exit_forward on entity asset.rentleg {
   term 2005-01..2005-01
   terms {
-    exit_cap = 0.10
+    cap_rate = 0.10
     selling_costs = 0.05
   }
 }

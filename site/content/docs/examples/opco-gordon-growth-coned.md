@@ -101,7 +101,7 @@ assume cost_of_equity  = 0.077     // CAPM: 0.041 + 0.8 x 0.045
 contract opco.exit_perpetuity.g041 on entity asset.utility {
   term 2026-01..2026-01
   terms {
-    base_value = inputs.current_dps
+    base = inputs.current_dps
     growth_rate = 0.041
     discount_rate = inputs.cost_of_equity
   }
@@ -110,7 +110,7 @@ contract opco.exit_perpetuity.g041 on entity asset.utility {
 contract opco.exit_perpetuity.g031 on entity asset.utility {
   term 2026-01..2026-01
   terms {
-    base_value = inputs.current_dps
+    base = inputs.current_dps
     growth_rate = 0.031
     discount_rate = inputs.cost_of_equity
   }
@@ -119,7 +119,7 @@ contract opco.exit_perpetuity.g031 on entity asset.utility {
 contract opco.exit_perpetuity.g021 on entity asset.utility {
   term 2026-01..2026-01
   terms {
-    base_value = inputs.current_dps
+    base = inputs.current_dps
     growth_rate = 0.021
     discount_rate = inputs.cost_of_equity
   }
@@ -128,7 +128,7 @@ contract opco.exit_perpetuity.g021 on entity asset.utility {
 contract opco.exit_perpetuity.g011 on entity asset.utility {
   term 2026-01..2026-01
   terms {
-    base_value = inputs.current_dps
+    base = inputs.current_dps
     growth_rate = 0.011
     discount_rate = inputs.cost_of_equity
   }
@@ -137,7 +137,7 @@ contract opco.exit_perpetuity.g011 on entity asset.utility {
 contract opco.exit_perpetuity.g001 on entity asset.utility {
   term 2026-01..2026-01
   terms {
-    base_value = inputs.current_dps
+    base = inputs.current_dps
     growth_rate = 0.001
     discount_rate = inputs.cost_of_equity
   }
@@ -146,7 +146,7 @@ contract opco.exit_perpetuity.g001 on entity asset.utility {
 contract opco.exit_perpetuity.gm009 on entity asset.utility {
   term 2026-01..2026-01
   terms {
-    base_value = inputs.current_dps
+    base = inputs.current_dps
     growth_rate = -0.009
     discount_rate = inputs.cost_of_equity
   }
@@ -155,7 +155,7 @@ contract opco.exit_perpetuity.gm009 on entity asset.utility {
 contract opco.exit_perpetuity.gm019 on entity asset.utility {
   term 2026-01..2026-01
   terms {
-    base_value = inputs.current_dps
+    base = inputs.current_dps
     growth_rate = -0.019
     discount_rate = inputs.cost_of_equity
   }
@@ -164,7 +164,7 @@ contract opco.exit_perpetuity.gm019 on entity asset.utility {
 contract opco.exit_perpetuity.gm029 on entity asset.utility {
   term 2026-01..2026-01
   terms {
-    base_value = inputs.current_dps
+    base = inputs.current_dps
     growth_rate = -0.029
     discount_rate = inputs.cost_of_equity
   }
@@ -173,7 +173,7 @@ contract opco.exit_perpetuity.gm029 on entity asset.utility {
 contract opco.exit_perpetuity.gm039 on entity asset.utility {
   term 2026-01..2026-01
   terms {
-    base_value = inputs.current_dps
+    base = inputs.current_dps
     growth_rate = -0.039
     discount_rate = inputs.cost_of_equity
   }

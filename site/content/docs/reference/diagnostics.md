@@ -207,7 +207,7 @@ register, so it cannot fall behind the language.
 | `E6032_CRE_UNIT_INVALID_PRO_RATA` | Pack domain validations | `pro_rata_share` is a fraction between 0 and 1 |
 | `E6040_CRE_ROLLOVER_INVALID_PROBABILITY` | Pack domain validations | `renewal_probability` is a probability between 0 and 1 |
 | `E6041_CRE_ROLLOVER_INVALID_DOWNTIME` | Pack domain validations | `downtime_months` is a whole number of months, 0 or more pair: the first owns absent-or-unparseable, the second parsed-but-not-positive for the nominal annual rate |
-| `E6054_CRE_DEBT_INVALID_AMORT` | Pack domain validations | `amort_months` strikes the payment and is normally longer than the loan's term |
+| `E6054_CRE_DEBT_INVALID_AMORT` | Pack domain validations | `amortization_months` strikes the payment and is normally longer than the loan's term |
 | `E6055_CRE_DEBT_INVALID_IO_MONTHS` | Pack domain validations | whole months, 0 or more |
 | `E6056_CRE_DEBT_INVALID_BALLOON_FLAG` | Pack domain validations | `balloon_at_maturity` is 0 or 1 |
 | `E6057_CRE_CONSTRUCTION_INVALID_EQUITY_COMMITMENT` | Pack domain validations | zero or greater; zero is an all-debt build and legal, so the bound is not exclusive |

@@ -276,7 +276,7 @@
       "stream": "opco.exit.value",
       "contract": "opco.exit_perpetuity",
       "terms": {
-        "base_value": "1169.858560",
+        "base": "1169.858560",
         "discount_rate": "0.085",
         "growth_rate": "0.025"
       }
@@ -285,7 +285,7 @@
       "stream": "opco.exit.selling_costs",
       "contract": "opco.exit_perpetuity",
       "terms": {
-        "base_value": "1169.858560",
+        "base": "1169.858560",
         "discount_rate": "0.085",
         "growth_rate": "0.025",
         "selling_costs": "0"

@@ -124,8 +124,8 @@ entity asset plant : Energy.Asset.GenerationFacility
 contract energy.ppa on entity asset.plant {
   term 2026-01..2050-01
   terms {
-    mwh_year    = 3161.59715 "MWh/yr"
-    ppa_price   = 231.50 "USD/MWh"
+    quantity    = 3161.59715 "MWh/yr"
+    price   = 231.50 "USD/MWh"
     degradation = 0.005
     escalation  = 0
   }
@@ -143,7 +143,7 @@ contract energy.ppa on entity asset.plant {
 contract energy.om.fixed on entity asset.plant {
   term 2026-01..2050-01
   terms {
-    om_year    = 13000
+    fee_year    = 13000
     escalation = 0.016
   }
 }
@@ -152,7 +152,7 @@ contract energy.om.fixed on entity asset.plant {
 contract energy.om.insurance on entity asset.plant {
   term 2026-01..2050-01
   terms {
-    om_year    = 28000
+    fee_year    = 28000
     escalation = 0.016
   }
 }
@@ -161,7 +161,7 @@ contract energy.om.insurance on entity asset.plant {
 contract energy.om.land_lease on entity asset.plant {
   term 2026-01..2050-01
   terms {
-    om_year    = 5000
+    fee_year    = 5000
     escalation = 0.016
   }
 }
@@ -173,7 +173,7 @@ contract energy.om.land_lease on entity asset.plant {
 contract energy.om.pilot on entity asset.plant {
   term 2026-01..2050-01
   terms {
-    om_year    = 50000
+    fee_year    = 50000
     escalation = -0.1
   }
 }
@@ -210,7 +210,7 @@ stream energy.royalty.expense on entity asset.plant outflow currency USD {
 contract energy.debt_service on entity asset.plant {
   term 2026-01..2043-01
   terms {
-    rate        = 0.07
+    interest_rate        = 0.07
     term_months = 216
     principal   = 3150000
     funded_at_close = 0

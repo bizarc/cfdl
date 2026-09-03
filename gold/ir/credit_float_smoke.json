@@ -552,10 +552,10 @@
       "terms": {
         "abs_speed": "0",
         "age_months": "0",
-        "balance": "1200000",
         "cdr": "0.03",
         "cpr": "0.10",
         "payment_frequency": "",
+        "principal": "1200000",
         "psa_speed": "0",
         "sda_speed": "0"
       },
@@ -573,12 +573,12 @@
       "terms": {
         "abs_speed": "0",
         "age_months": "0",
-        "balance": "1200000",
         "cdr": "0.03",
         "cpr": "0.10",
         "index_curve": "sofr",
         "margin": "0.03",
         "payment_frequency": "",
+        "principal": "1200000",
         "psa_speed": "0",
         "rate_cap": "0.10",
         "rate_floor": "0.0725",
@@ -598,11 +598,11 @@
       "terms": {
         "abs_speed": "0",
         "age_months": "0",
-        "balance": "1200000",
         "cdr": "0.03",
         "cpr": "0.10",
         "payment_frequency": "",
         "prepay_penalty_rate": "0",
+        "principal": "1200000",
         "psa_speed": "0",
         "sda_speed": "0"
       },
@@ -621,10 +621,10 @@
       "terms": {
         "abs_speed": "0",
         "age_months": "0",
-        "balance": "1200000",
         "cdr": "0.03",
         "cpr": "0.10",
         "payment_frequency": "",
+        "principal": "1200000",
         "psa_speed": "0",
         "sda_speed": "0"
       },
@@ -642,10 +642,10 @@
       "terms": {
         "abs_speed": "0",
         "age_months": "0",
-        "balance": "1200000",
         "cdr": "0.03",
         "cpr": "0.10",
         "payment_frequency": "",
+        "principal": "1200000",
         "psa_speed": "0",
         "sda_speed": "0",
         "severity": "0.50"
@@ -664,10 +664,10 @@
       "terms": {
         "abs_speed": "0",
         "age_months": "0",
-        "balance": "1200000",
         "cdr": "0.03",
         "cpr": "0.10",
         "payment_frequency": "",
+        "principal": "1200000",
         "psa_speed": "0",
         "sda_speed": "0",
         "servicing_fee": "0"

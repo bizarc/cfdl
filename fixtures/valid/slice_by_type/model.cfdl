@@ -15,9 +15,9 @@ contract cre.permanent_debt on entity asset.tower {
   term 2026-01..2030-12
   terms {
     principal = 6000000
-    rate = 0.055
-    amort_months = 300
-    io_months = 24
+    interest_rate = 0.055
+    amortization_months = 300
+    interest_only_months = 24
     balloon_at_maturity = 1
   }
 }

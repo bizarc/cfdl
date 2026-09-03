@@ -1,6 +1,6 @@
 {
   "results_version": "0.12",
-  "model_hash": "2e76fdc2cbbd56023adc5869b6f18056076d7205745de5156c1be008b2b5a7c7",
+  "model_hash": "80f6b5d27adce2c908cb17197cdc43873e5b47798c9ca212bd918876fbac24a1",
   "ledger_hash": "2349f890ad7c9e6c159411bc667cc271391edeab4a690255c8aff1b60c57efeb",
   "engine": {
     "name": "cfdl-engine",
@@ -16,8 +16,8 @@
           "availability": "1.0",
           "degradation": "0.005",
           "escalation": "0.0",
-          "mwh_year": "5000",
-          "ppa_price": "3000"
+          "price": "3000",
+          "quantity": "5000"
         }
       }
     ]

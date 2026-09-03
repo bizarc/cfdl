@@ -14,7 +14,7 @@ contract cre.permanent_debt on entity asset.tower {
   category financing.debt.interest_paid
   terms {
     principal = 1000000
-    rate = 0.05
-    amort_months = 300
+    interest_rate = 0.05
+    amortization_months = 300
   }
 }

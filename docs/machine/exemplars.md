@@ -998,7 +998,7 @@ contract cre.opex_line on entity asset.tower {
   term 2026-01..2036-12
   terms {
     amount_year = 300000
-    escalation = 0.025
+    growth_rate = 0.025
   }
 }
 
@@ -1007,7 +1007,7 @@ contract cre.opex_line on entity asset.tower {
 contract cre.exit_forward on entity asset.tower {
   term 2035-12..2035-12
   terms {
-    exit_cap = 0.065
+    cap_rate = 0.065
     selling_costs = 0.02
   }
 }
@@ -1030,8 +1030,8 @@ contract cre.permanent_debt on entity asset.tower {
   term 2026-01..2035-12
   terms {
     principal = 6000000
-    rate = 0.055
-    amort_months = 300
+    interest_rate = 0.055
+    amortization_months = 300
     funded_at_close = 0
   }
 }
@@ -1114,15 +1114,15 @@ contract cre.opex_line on entity asset.strip_center {
   term 2026-01..2032-12
   terms {
     amount_year = 240000
-    escalation = 0.03
+    growth_rate = 0.03
   }
 }
 
 contract cre.exit on entity asset.strip_center {
   term 2032-12..2032-12
   terms {
-    noi_forward_year = 640000
-    exit_cap = 0.0675
+    income = 640000
+    cap_rate = 0.0675
     selling_costs = 0.015
   }
 }
@@ -1215,7 +1215,7 @@ contract cre.construction_loan on entity asset.tower {
   terms {
     draw_curve        = "required_funding"
     equity_commitment = 110738000
-    rate              = 0.08
+    interest_rate              = 0.08
     // "Funding is assumed to occur ratably throughout the quarter", so a
     // quarter's own draw earns half a quarter of interest.
     draw_accrual_fraction = 0.5
@@ -2166,8 +2166,8 @@ entity asset buyer : Credit.Asset.LoanPool
 contract credit.pool_level_pay.auto_a on entity asset.buyer {
   term 2026-01..2036-06
   terms {
-    balance = 25000000
-    rate = 0.065
+    principal = 25000000
+    interest_rate = 0.065
     term_months = 120
     cpr = 0.08
     cdr = 0.02
@@ -2226,7 +2226,7 @@ entity asset buyer : Credit.Asset.LoanPool
 contract credit.pool_float_io_bullet.bridge_f on entity asset.buyer {
   term 2026-01..2029-05
   terms {
-    balance = 15000000
+    principal = 15000000
     index_curve = "sofr"
     margin = 0.0275
     rate_floor = 0.07
@@ -2331,8 +2331,8 @@ entity asset loan_d : Credit.Asset.Loan {
 contract credit.pool_level_pay.a on entity asset.loan_a {
   term 2026-01..2056-12
   terms {
-    balance = 40000000
-    rate = 0.08
+    principal = 40000000
+    interest_rate = 0.08
     term_months = 360
     cpr = 0.11361512828387077
     cdr = 0.11361512828387077
@@ -2344,8 +2344,8 @@ contract credit.pool_level_pay.a on entity asset.loan_a {
 contract credit.pool_level_pay.b on entity asset.loan_b {
   term 2026-01..2056-12
   terms {
-    balance = 30000000
-    rate = 0.08
+    principal = 30000000
+    interest_rate = 0.08
     term_months = 360
     cpr = 0.11361512828387077
     cdr = 0.11361512828387077
@@ -2357,8 +2357,8 @@ contract credit.pool_level_pay.b on entity asset.loan_b {
 contract credit.pool_level_pay.c on entity asset.loan_c {
   term 2026-01..2056-12
   terms {
-    balance = 20000000
-    rate = 0.08
+    principal = 20000000
+    interest_rate = 0.08
     term_months = 360
     cpr = 0.11361512828387077
     cdr = 0.11361512828387077
@@ -2370,8 +2370,8 @@ contract credit.pool_level_pay.c on entity asset.loan_c {
 contract credit.pool_level_pay.d on entity asset.loan_d {
   term 2026-01..2056-12
   terms {
-    balance = 10000000
-    rate = 0.08
+    principal = 10000000
+    interest_rate = 0.08
     term_months = 360
     cpr = 0.11361512828387077
     cdr = 0.11361512828387077
@@ -2535,8 +2535,8 @@ entity party residual : Credit.Party.Investor { name = "Classes R and RL" }
 contract credit.pool_level_pay.g3 on entity asset.pool {
   term 2019-02..2033-06
   terms {
-    balance = 148372434
-    rate = 0.05451
+    principal = 148372434
+    interest_rate = 0.05451
     term_months = 173
     age_months = 175
     psa_speed = 1.98
@@ -2848,8 +2848,8 @@ entity party d_holders : Credit.Party.Investor { name = "Class D noteholders" }
 contract credit.pool_level_pay.p01 on entity asset.p01 {
   term 2018-10..2020-03
   terms {
-    balance = 5616021.32
-    rate = 0.00000
+    principal = 5616021.32
+    interest_rate = 0.00000
     term_months = 18
     cpr = 0
     cdr = 0
@@ -2859,8 +2859,8 @@ contract credit.pool_level_pay.p01 on entity asset.p01 {
 contract credit.pool_level_pay.p02 on entity asset.p02 {
   term 2018-10..2021-01
   terms {
-    balance = 2616054.82
-    rate = 0.00000
+    principal = 2616054.82
+    interest_rate = 0.00000
     term_months = 28
     cpr = 0
     cdr = 0
@@ -2870,8 +2870,8 @@ contract credit.pool_level_pay.p02 on entity asset.p02 {
 contract credit.pool_level_pay.p03 on entity asset.p03 {
   term 2018-10..2022-06
   terms {
-    balance = 4635948.89
-    rate = 0.00000
+    principal = 4635948.89
+    interest_rate = 0.00000
     term_months = 45
     cpr = 0
     cdr = 0
@@ -2881,8 +2881,8 @@ contract credit.pool_level_pay.p03 on entity asset.p03 {
 contract credit.pool_level_pay.p04 on entity asset.p04 {
   term 2018-10..2022-12
   terms {
-    balance = 2205909.75
-    rate = 0.00000
+    principal = 2205909.75
+    interest_rate = 0.00000
     term_months = 51
     cpr = 0
     cdr = 0
@@ -2892,8 +2892,8 @@ contract credit.pool_level_pay.p04 on entity asset.p04 {
 contract credit.pool_level_pay.p06 on entity asset.p06 {
   term 2018-10..2019-11
   terms {
-    balance = 147440.15
-    rate = 0.00915
+    principal = 147440.15
+    interest_rate = 0.00915
     term_months = 14
     cpr = 0
     cdr = 0
@@ -2903,8 +2903,8 @@ contract credit.pool_level_pay.p06 on entity asset.p06 {
 contract credit.pool_level_pay.p07 on entity asset.p07 {
   term 2018-10..2021-03
   terms {
-    balance = 216238.15
-    rate = 0.00992
+    principal = 216238.15
+    interest_rate = 0.00992
     term_months = 30
     cpr = 0
     cdr = 0
@@ -2914,8 +2914,8 @@ contract credit.pool_level_pay.p07 on entity asset.p07 {
 contract credit.pool_level_pay.p08 on entity asset.p08 {
   term 2018-10..2022-07
   terms {
-    balance = 354043.75
-    rate = 0.00907
+    principal = 354043.75
+    interest_rate = 0.00907
     term_months = 46
     cpr = 0
     cdr = 0
@@ -2925,8 +2925,8 @@ contract credit.pool_level_pay.p08 on entity asset.p08 {
 contract credit.pool_level_pay.p09 on entity asset.p09 {
   term 2018-10..2022-12
   terms {
-    balance = 342126.24
-    rate = 0.00905
+    principal = 342126.24
+    interest_rate = 0.00905
     term_months = 51
     cpr = 0
     cdr = 0
@@ -2936,8 +2936,8 @@ contract credit.pool_level_pay.p09 on entity asset.p09 {
 contract credit.pool_level_pay.p11 on entity asset.p11 {
   term 2018-10..2020-02
   terms {
-    balance = 610459.31
-    rate = 0.01906
+    principal = 610459.31
+    interest_rate = 0.01906
     term_months = 17
     cpr = 0
     cdr = 0
@@ -2947,8 +2947,8 @@ contract credit.pool_level_pay.p11 on entity asset.p11 {
 contract credit.pool_level_pay.p12 on entity asset.p12 {
   term 2018-10..2021-04
   terms {
-    balance = 1144291.74
-    rate = 0.01951
+    principal = 1144291.74
+    interest_rate = 0.01951
     term_months = 31
     cpr = 0
     cdr = 0
@@ -2958,8 +2958,8 @@ contract credit.pool_level_pay.p12 on entity asset.p12 {
 contract credit.pool_level_pay.p13 on entity asset.p13 {
   term 2018-10..2022-02
   terms {
-    balance = 699535.89
-    rate = 0.01949
+    principal = 699535.89
+    interest_rate = 0.01949
     term_months = 41
     cpr = 0
     cdr = 0
@@ -2969,8 +2969,8 @@ contract credit.pool_level_pay.p13 on entity asset.p13 {
 contract credit.pool_level_pay.p14 on entity asset.p14 {
   term 2018-10..2022-12
   terms {
-    balance = 201897.47
-    rate = 0.01869
+    principal = 201897.47
+    interest_rate = 0.01869
     term_months = 51
     cpr = 0
     cdr = 0
@@ -2980,8 +2980,8 @@ contract credit.pool_level_pay.p14 on entity asset.p14 {
 contract credit.pool_level_pay.p16 on entity asset.p16 {
   term 2018-10..2020-02
   terms {
-    balance = 13918351.08
-    rate = 0.02594
+    principal = 13918351.08
+    interest_rate = 0.02594
     term_months = 17
     cpr = 0
     cdr = 0
@@ -2991,8 +2991,8 @@ contract credit.pool_level_pay.p16 on entity asset.p16 {
 contract credit.pool_level_pay.p17 on entity asset.p17 {
   term 2018-10..2021-04
   terms {
-    balance = 26181002.53
-    rate = 0.02626
+    principal = 26181002.53
+    interest_rate = 0.02626
     term_months = 31
     cpr = 0
     cdr = 0
@@ -3002,8 +3002,8 @@ contract credit.pool_level_pay.p17 on entity asset.p17 {
 contract credit.pool_level_pay.p18 on entity asset.p18 {
   term 2018-10..2022-02
   terms {
-    balance = 28740527.64
-    rate = 0.02684
+    principal = 28740527.64
+    interest_rate = 0.02684
     term_months = 41
     cpr = 0
     cdr = 0
@@ -3013,8 +3013,8 @@ contract credit.pool_level_pay.p18 on entity asset.p18 {
 contract credit.pool_level_pay.p19 on entity asset.p19 {
   term 2018-10..2022-12
   terms {
-    balance = 9735143.46
-    rate = 0.02794
+    principal = 9735143.46
+    interest_rate = 0.02794
     term_months = 51
     cpr = 0
     cdr = 0
@@ -3024,8 +3024,8 @@ contract credit.pool_level_pay.p19 on entity asset.p19 {
 contract credit.pool_level_pay.p21 on entity asset.p21 {
   term 2018-10..2020-02
   terms {
-    balance = 14533243.98
-    rate = 0.03678
+    principal = 14533243.98
+    interest_rate = 0.03678
     term_months = 17
     cpr = 0
     cdr = 0
@@ -3035,8 +3035,8 @@ contract credit.pool_level_pay.p21 on entity asset.p21 {
 contract credit.pool_level_pay.p22 on entity asset.p22 {
   term 2018-10..2021-04
   terms {
-    balance = 26195374.46
-    rate = 0.03667
+    principal = 26195374.46
+    interest_rate = 0.03667
     term_months = 31
     cpr = 0
     cdr = 0
@@ -3046,8 +3046,8 @@ contract credit.pool_level_pay.p22 on entity asset.p22 {
 contract credit.pool_level_pay.p23 on entity asset.p23 {
   term 2018-10..2022-03
   terms {
-    balance = 37348352.52
-    rate = 0.03671
+    principal = 37348352.52
+    interest_rate = 0.03671
     term_months = 42
     cpr = 0
     cdr = 0
@@ -3057,8 +3057,8 @@ contract credit.pool_level_pay.p23 on entity asset.p23 {
 contract credit.pool_level_pay.p24 on entity asset.p24 {
   term 2018-10..2023-01
   terms {
-    balance = 19509631.08
-    rate = 0.03673
+    principal = 19509631.08
+    interest_rate = 0.03673
     term_months = 52
     cpr = 0
     cdr = 0
@@ -3068,8 +3068,8 @@ contract credit.pool_level_pay.p24 on entity asset.p24 {
 contract credit.pool_level_pay.p26 on entity asset.p26 {
   term 2018-10..2020-02
   terms {
-    balance = 12183065.19
-    rate = 0.04661
+    principal = 12183065.19
+    interest_rate = 0.04661
     term_months = 17
     cpr = 0
     cdr = 0
@@ -3079,8 +3079,8 @@ contract credit.pool_level_pay.p26 on entity asset.p26 {
 contract credit.pool_level_pay.p27 on entity asset.p27 {
   term 2018-10..2021-04
   terms {
-    balance = 20323443.61
-    rate = 0.04674
+    principal = 20323443.61
+    interest_rate = 0.04674
     term_months = 31
     cpr = 0
     cdr = 0
@@ -3090,8 +3090,8 @@ contract credit.pool_level_pay.p27 on entity asset.p27 {
 contract credit.pool_level_pay.p28 on entity asset.p28 {
   term 2018-10..2022-03
   terms {
-    balance = 32071657.98
-    rate = 0.04690
+    principal = 32071657.98
+    interest_rate = 0.04690
     term_months = 42
     cpr = 0
     cdr = 0
@@ -3101,8 +3101,8 @@ contract credit.pool_level_pay.p28 on entity asset.p28 {
 contract credit.pool_level_pay.p29 on entity asset.p29 {
   term 2018-10..2023-01
   terms {
-    balance = 20332473.43
-    rate = 0.04674
+    principal = 20332473.43
+    interest_rate = 0.04674
     term_months = 52
     cpr = 0
     cdr = 0
@@ -3112,8 +3112,8 @@ contract credit.pool_level_pay.p29 on entity asset.p29 {
 contract credit.pool_level_pay.p31 on entity asset.p31 {
   term 2018-10..2020-02
   terms {
-    balance = 6428613.14
-    rate = 0.05572
+    principal = 6428613.14
+    interest_rate = 0.05572
     term_months = 17
     cpr = 0
     cdr = 0
@@ -3123,8 +3123,8 @@ contract credit.pool_level_pay.p31 on entity asset.p31 {
 contract credit.pool_level_pay.p32 on entity asset.p32 {
   term 2018-10..2021-05
   terms {
-    balance = 16325861.98
-    rate = 0.05566
+    principal = 16325861.98
+    interest_rate = 0.05566
     term_months = 32
     cpr = 0
     cdr = 0
@@ -3134,8 +3134,8 @@ contract credit.pool_level_pay.p32 on entity asset.p32 {
 contract credit.pool_level_pay.p33 on entity asset.p33 {
   term 2018-10..2022-04
   terms {
-    balance = 34020451.15
-    rate = 0.05608
+    principal = 34020451.15
+    interest_rate = 0.05608
     term_months = 43
     cpr = 0
     cdr = 0
@@ -3145,8 +3145,8 @@ contract credit.pool_level_pay.p33 on entity asset.p33 {
 contract credit.pool_level_pay.p34 on entity asset.p34 {
   term 2018-10..2023-01
   terms {
-    balance = 22175932.04
-    rate = 0.05615
+    principal = 22175932.04
+    interest_rate = 0.05615
     term_months = 52
     cpr = 0
     cdr = 0
@@ -3156,8 +3156,8 @@ contract credit.pool_level_pay.p34 on entity asset.p34 {
 contract credit.pool_level_pay.p36 on entity asset.p36 {
   term 2018-10..2020-03
   terms {
-    balance = 4214767.90
-    rate = 0.06583
+    principal = 4214767.90
+    interest_rate = 0.06583
     term_months = 18
     cpr = 0
     cdr = 0
@@ -3167,8 +3167,8 @@ contract credit.pool_level_pay.p36 on entity asset.p36 {
 contract credit.pool_level_pay.p37 on entity asset.p37 {
   term 2018-10..2021-05
   terms {
-    balance = 10197295.25
-    rate = 0.06567
+    principal = 10197295.25
+    interest_rate = 0.06567
     term_months = 32
     cpr = 0
     cdr = 0
@@ -3178,8 +3178,8 @@ contract credit.pool_level_pay.p37 on entity asset.p37 {
 contract credit.pool_level_pay.p38 on entity asset.p38 {
   term 2018-10..2022-04
   terms {
-    balance = 28511150.24
-    rate = 0.06580
+    principal = 28511150.24
+    interest_rate = 0.06580
     term_months = 43
     cpr = 0
     cdr = 0
@@ -3189,8 +3189,8 @@ contract credit.pool_level_pay.p38 on entity asset.p38 {
 contract credit.pool_level_pay.p39 on entity asset.p39 {
   term 2018-10..2023-01
   terms {
-    balance = 21518975.29
-    rate = 0.06583
+    principal = 21518975.29
+    interest_rate = 0.06583
     term_months = 52
     cpr = 0
     cdr = 0
@@ -3200,8 +3200,8 @@ contract credit.pool_level_pay.p39 on entity asset.p39 {
 contract credit.pool_level_pay.p40 on entity asset.p40 {
   term 2018-10..2024-01
   terms {
-    balance = 210992.57
-    rate = 0.06671
+    principal = 210992.57
+    interest_rate = 0.06671
     term_months = 64
     cpr = 0
     cdr = 0
@@ -3211,8 +3211,8 @@ contract credit.pool_level_pay.p40 on entity asset.p40 {
 contract credit.pool_level_pay.p41 on entity asset.p41 {
   term 2018-10..2020-02
   terms {
-    balance = 2314366.62
-    rate = 0.07537
+    principal = 2314366.62
+    interest_rate = 0.07537
     term_months = 17
     cpr = 0
     cdr = 0
@@ -3222,8 +3222,8 @@ contract credit.pool_level_pay.p41 on entity asset.p41 {
 contract credit.pool_level_pay.p42 on entity asset.p42 {
   term 2018-10..2021-04
   terms {
-    balance = 6049009.56
-    rate = 0.07527
+    principal = 6049009.56
+    interest_rate = 0.07527
     term_months = 31
     cpr = 0
     cdr = 0
@@ -3233,8 +3233,8 @@ contract credit.pool_level_pay.p42 on entity asset.p42 {
 contract credit.pool_level_pay.p43 on entity asset.p43 {
   term 2018-10..2022-04
   terms {
-    balance = 17752272.88
-    rate = 0.07538
+    principal = 17752272.88
+    interest_rate = 0.07538
     term_months = 43
     cpr = 0
     cdr = 0
@@ -3244,8 +3244,8 @@ contract credit.pool_level_pay.p43 on entity asset.p43 {
 contract credit.pool_level_pay.p44 on entity asset.p44 {
   term 2018-10..2023-02
   terms {
-    balance = 17560641.20
-    rate = 0.07526
+    principal = 17560641.20
+    interest_rate = 0.07526
     term_months = 53
     cpr = 0
     cdr = 0
@@ -3255,8 +3255,8 @@ contract credit.pool_level_pay.p44 on entity asset.p44 {
 contract credit.pool_level_pay.p45 on entity asset.p45 {
   term 2018-10..2024-01
   terms {
-    balance = 133227.13
-    rate = 0.07709
+    principal = 133227.13
+    interest_rate = 0.07709
     term_months = 64
     cpr = 0
     cdr = 0
@@ -3266,8 +3266,8 @@ contract credit.pool_level_pay.p45 on entity asset.p45 {
 contract credit.pool_level_pay.p46 on entity asset.p46 {
   term 2018-10..2020-02
   terms {
-    balance = 4089106.53
-    rate = 0.09923
+    principal = 4089106.53
+    interest_rate = 0.09923
     term_months = 17
     cpr = 0
     cdr = 0
@@ -3277,8 +3277,8 @@ contract credit.pool_level_pay.p46 on entity asset.p46 {
 contract credit.pool_level_pay.p47 on entity asset.p47 {
   term 2018-10..2021-04
   terms {
-    balance = 9761650.69
-    rate = 0.09773
+    principal = 9761650.69
+    interest_rate = 0.09773
     term_months = 31
     cpr = 0
     cdr = 0
@@ -3288,8 +3288,8 @@ contract credit.pool_level_pay.p47 on entity asset.p47 {
 contract credit.pool_level_pay.p48 on entity asset.p48 {
   term 2018-10..2022-05
   terms {
-    balance = 26285138.49
-    rate = 0.09619
+    principal = 26285138.49
+    interest_rate = 0.09619
     term_months = 44
     cpr = 0
     cdr = 0
@@ -3299,8 +3299,8 @@ contract credit.pool_level_pay.p48 on entity asset.p48 {
 contract credit.pool_level_pay.p49 on entity asset.p49 {
   term 2018-10..2023-02
   terms {
-    balance = 29949234.04
-    rate = 0.09622
+    principal = 29949234.04
+    interest_rate = 0.09622
     term_months = 53
     cpr = 0
     cdr = 0
@@ -3310,8 +3310,8 @@ contract credit.pool_level_pay.p49 on entity asset.p49 {
 contract credit.pool_level_pay.p50 on entity asset.p50 {
   term 2018-10..2023-11
   terms {
-    balance = 279866.82
-    rate = 0.09836
+    principal = 279866.82
+    interest_rate = 0.09836
     term_months = 62
     cpr = 0
     cdr = 0
@@ -3506,8 +3506,8 @@ contract energy.capex on entity asset.pv {
 contract energy.ppa on entity asset.pv {
   term 2026-01..2050-01
   terms {
-    mwh_year = 250000 "MWh/yr"
-    ppa_price = 45 "USD/MWh"
+    quantity = 250000 "MWh/yr"
+    price = 45 "USD/MWh"
     escalation = 0.02
     degradation = 0.005
   }
@@ -3517,7 +3517,7 @@ contract energy.ppa on entity asset.pv {
 contract energy.om on entity asset.pv {
   term 2026-01..2050-01
   terms {
-    om_year = 1500000
+    fee_year = 1500000
     escalation = 0.02
   }
 }
@@ -3530,7 +3530,7 @@ contract energy.om on entity asset.pv {
 contract energy.debt_service on entity asset.pv {
   term 2026-01..2043-01
   terms {
-    rate = 0.06
+    interest_rate = 0.06
     term_months = 216
     principal = 60000000
     funded_at_close = 0
@@ -3540,7 +3540,7 @@ contract energy.debt_service on entity asset.pv {
 // The ITC on the full installed cost, taken in the first operating year.
 contract energy.itc on entity asset.pv {
   term 2026-01..2026-01
-  terms { credit = inputs.installed_cost * inputs.itc_rate }
+  terms { amount = inputs.installed_cost * inputs.itc_rate }
 }
 
 // 5-year MACRS on the REDUCED basis: taking the investment credit removes
@@ -3612,9 +3612,9 @@ contract energy.capex on entity asset.wind {
 contract energy.merchant on entity asset.wind {
   term 2026-01..2050-01
   terms {
-    mwh_year = 250000
+    quantity = 250000
     price = 45
-    price_escalation = 0.02
+    escalation = 0.02
     degradation = 0.005
   }
 }
@@ -3622,7 +3622,7 @@ contract energy.merchant on entity asset.wind {
 // A flat capacity contract — no escalation, which is what the rule supports.
 contract energy.capacity on entity asset.wind {
   term 2026-01..2050-01
-  terms { payment_year = 4000000 }
+  terms { price = 4000000 }
 }
 
 // Production tax credit: $27.50/MWh base, 2.5%/yr inflation adjustment, ten
@@ -3631,8 +3631,8 @@ contract energy.capacity on entity asset.wind {
 contract energy.ptc on entity asset.wind {
   term 2026-01..2035-01
   terms {
-    mwh_year = 250000 "MWh/yr"
-    credit_per_mwh = 27.50 "USD/MWh"
+    quantity = 250000 "MWh/yr"
+    amount = 27.50 "USD/MWh"
     escalation = 0.025
     degradation = 0.005
   }
@@ -3641,7 +3641,7 @@ contract energy.ptc on entity asset.wind {
 contract energy.om on entity asset.wind {
   term 2026-01..2050-01
   terms {
-    om_year = 1500000
+    fee_year = 1500000
     escalation = 0.02
   }
 }
@@ -3653,7 +3653,7 @@ contract energy.om on entity asset.wind {
 contract energy.debt_service on entity asset.wind {
   term 2026-01..2043-01
   terms {
-    rate = 0.06
+    interest_rate = 0.06
     term_months = 216
     principal = 60000000
     funded_at_close = 0
@@ -3951,9 +3951,9 @@ contract opco.term_debt on entity asset.target {
   term 2026-01..2030-12
   terms {
     principal = 21000000
-    rate = 0.085
-    io_months = 12
-    amort_months = 84
+    interest_rate = 0.085
+    interest_only_months = 12
+    amortization_months = 84
   }
 }
 
@@ -3978,7 +3978,7 @@ contract opco.acquisition on entity asset.target {
 contract opco.exit_ebitda on entity asset.target {
   term 2030-12..2030-12
   terms {
-    exit_multiple = 8.5
+    multiple = 8.5
     selling_costs = 0.015
   }
 }

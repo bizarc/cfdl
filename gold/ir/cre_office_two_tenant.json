@@ -998,7 +998,7 @@
       "terms": {
         "amount": "0",
         "amount_year": "300000",
-        "escalation": "0.025",
+        "growth_rate": "0.025",
         "occupancy": "1",
         "pct_fixed": "1"
       },
@@ -1012,14 +1012,14 @@
       "stream": "cre.exit.proceeds",
       "contract": "cre.exit_forward",
       "terms": {
-        "exit_cap": "0.065"
+        "cap_rate": "0.065"
       }
     },
     {
       "stream": "cre.exit.selling_costs",
       "contract": "cre.exit_forward",
       "terms": {
-        "exit_cap": "0.065",
+        "cap_rate": "0.065",
         "selling_costs": "0.02"
       }
     }

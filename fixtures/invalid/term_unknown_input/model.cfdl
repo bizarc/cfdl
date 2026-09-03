@@ -12,8 +12,8 @@ assume annual_yield = 5000
 contract energy.ppa.plant_a on entity asset.plant {
   term 2026-01..2026-12
   terms {
-    mwh_year = inputs.anual_yield
-    ppa_price = 3000
+    quantity = inputs.anual_yield
+    price = 3000
     escalation = 0.0
     degradation = 0.005
     availability = 1.0

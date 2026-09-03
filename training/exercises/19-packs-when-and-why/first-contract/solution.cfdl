@@ -11,7 +11,7 @@ entity asset office : CRE.Asset.RealProperty
 contract cre.lease {
   term 2026-01..2028-12
   terms {
-    base_rent = 42000
+    rent = 42000
   }
 }
 

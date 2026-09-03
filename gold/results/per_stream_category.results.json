@@ -1,6 +1,6 @@
 {
   "results_version": "0.12",
-  "model_hash": "1c90113bc8885c51a420d54a3d8dc7b98d2852939f0aac6e8808930974321fbc",
+  "model_hash": "50b87025bed3573d97e52f6acb890417e4c022886775ba644908d680be8b7d7d",
   "ledger_hash": "7d11f0a53e33ba96bca65982fa296408fb57d9ea5c986bdae989323fe5966345",
   "engine": {
     "name": "cfdl-engine",
@@ -16,9 +16,9 @@
         ],
         "stream": "cre.debt.interest",
         "terms": {
+          "interest_rate": "0.05",
           "payment_frequency": "",
-          "principal": "1000000",
-          "rate": "0.05"
+          "principal": "1000000"
         }
       },
       {
@@ -30,9 +30,9 @@
         "stream": "cre.debt.principal",
         "terms": {
           "balloon_at_maturity": "0",
+          "interest_rate": "0.05",
           "payment_frequency": "",
-          "principal": "1000000",
-          "rate": "0.05"
+          "principal": "1000000"
         }
       },
       {
@@ -50,7 +50,7 @@
         "contract": "cre.opex_line.rooms",
         "defaults_applied": [
           "amount",
-          "escalation",
+          "growth_rate",
           "occupancy",
           "pct_fixed"
         ],
@@ -58,7 +58,7 @@
         "terms": {
           "amount": "0",
           "amount_year": "12000",
-          "escalation": "0",
+          "growth_rate": "0",
           "occupancy": "1",
           "pct_fixed": "1"
         }

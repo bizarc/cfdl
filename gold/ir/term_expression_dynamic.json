@@ -286,8 +286,8 @@
         "availability": "1.0",
         "degradation": "0.0",
         "escalation": "inputs.esc_base + 0.005",
-        "mwh_year": "curve_value(\"production\", time.date)",
-        "ppa_price": "3000"
+        "price": "3000",
+        "quantity": "curve_value(\"production\", time.date)"
       }
     }
   ],

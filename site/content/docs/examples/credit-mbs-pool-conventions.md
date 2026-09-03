@@ -85,8 +85,8 @@ entity asset buyer : Credit.Asset.LoanPool
 contract credit.pool_level_pay.a on entity asset.buyer {
   term 2026-01..2056-12
   terms {
-    balance = 100000000
-    rate = 0.08
+    principal = 100000000
+    interest_rate = 0.08
     term_months = 360
     cpr = 0.11361512828387077
     cdr = 0.11361512828387077

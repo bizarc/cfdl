@@ -285,8 +285,8 @@
         "availability": "1.0",
         "degradation": "inputs.degradation",
         "escalation": "0.0",
-        "mwh_year": "inputs.annual_yield",
-        "ppa_price": "3000"
+        "price": "3000",
+        "quantity": "inputs.annual_yield"
       }
     }
   ],

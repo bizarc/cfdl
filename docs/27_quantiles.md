@@ -19,7 +19,7 @@ existing commitments.
 
 `energy.storage_arbitrage` prices a battery as
 `mwh_cycled_year * spread * (1 - degradation)^y`. Backlog 7.1 records that the
-rule has no external validation and that the reason is circular: `mwh_cycled_year`
+rule has no external validation and that the reason is circular: `quantity` (the storage rule's MWh cycled)
 is an input to our rule and the primary *output* of the dispatch model it would
 be validated against, so the two cannot be compared without first deciding the
 answer.

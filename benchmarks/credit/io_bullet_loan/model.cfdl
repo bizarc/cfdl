@@ -11,8 +11,8 @@ entity asset buyer : Credit.Asset.LoanPool
 contract credit.pool_io_bullet.bridge_a on entity asset.buyer {
   term 2026-01..2031-04
   terms {
-    balance = 10000000
-    rate = 0.0725
+    principal = 10000000
+    interest_rate = 0.0725
     term_months = 60
     cpr = 0.05
     cdr = 0.015

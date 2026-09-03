@@ -174,7 +174,7 @@ A contract states when its cash moves relative to when it was earned:
 contract energy.ppa.plant_a on entity project.plant {
   term 2026-01..2050-12
   payment net 45
-  terms { ppa_price = 3000 }
+  terms { price = 3000 }
 }
 ```
 

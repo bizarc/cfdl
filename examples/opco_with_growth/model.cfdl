@@ -39,7 +39,7 @@ contract opco.exit_multiple {
   term 2031-12..2031-12
   terms {
     exit_period = 72
-    exit_multiple = inputs.exit_multiple
-    base_value = inputs.exit_base_value
+    multiple = inputs.exit_multiple
+    base = inputs.exit_base_value
   }
 }

@@ -1,6 +1,6 @@
 {
   "results_version": "0.12",
-  "model_hash": "9605dfac139a503f3d9ce06d34ca17fc311d59935e188a37cbfd25c7e76ca023",
+  "model_hash": "77d6390fab1535bf05c77cca85ae2111fec8a0bc7457e3dcbd2834c9f8668b3f",
   "ledger_hash": "3edea2d15f605f8b3c1457b1833d28b63beb69f3ca7ac677e87053f756ae3f03",
   "engine": {
     "name": "cfdl-engine",
@@ -13,7 +13,7 @@
         "contract": "cre.opex_line.rooms",
         "defaults_applied": [
           "amount_year",
-          "escalation",
+          "growth_rate",
           "occupancy",
           "pct_fixed"
         ],
@@ -21,7 +21,7 @@
         "terms": {
           "amount": "1000",
           "amount_year": "0",
-          "escalation": "0",
+          "growth_rate": "0",
           "occupancy": "1",
           "pct_fixed": "1"
         }
@@ -30,7 +30,7 @@
         "contract": "cre.opex_line.food_beverage",
         "defaults_applied": [
           "amount_year",
-          "escalation",
+          "growth_rate",
           "occupancy",
           "pct_fixed"
         ],
@@ -38,7 +38,7 @@
         "terms": {
           "amount": "400",
           "amount_year": "0",
-          "escalation": "0",
+          "growth_rate": "0",
           "occupancy": "1",
           "pct_fixed": "1"
         }
@@ -47,7 +47,7 @@
         "contract": "cre.opex_line.property_tax",
         "defaults_applied": [
           "amount_year",
-          "escalation",
+          "growth_rate",
           "occupancy",
           "pct_fixed"
         ],
@@ -55,7 +55,7 @@
         "terms": {
           "amount": "200",
           "amount_year": "0",
-          "escalation": "0",
+          "growth_rate": "0",
           "occupancy": "1",
           "pct_fixed": "1"
         }

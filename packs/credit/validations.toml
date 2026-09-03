@@ -23,7 +23,7 @@ contracts = [
   "credit.pool_float_io_bullet",
 ]
 code = "E9001_CREDIT_INVALID_BALANCE"
-message = "Credit pool 'balance' must be greater than 0."
+message = "Credit pool 'principal' must be greater than 0."
 check = "term_number"
 term = "balance"
 when = "present"
@@ -33,9 +33,9 @@ exclusive_min = 0.0
 [[validations]]
 contracts = ["credit.pool_level_pay", "credit.pool_io_bullet"]
 code = "E9002_CREDIT_INVALID_RATE"
-message = "Credit pool 'rate' must be a non-negative annual rate."
+message = "Credit pool 'interest_rate' must be a non-negative annual rate."
 check = "term_number"
-term = "rate"
+term = "interest_rate"
 when = "present"
 on_invalid = "report"
 min = 0.0

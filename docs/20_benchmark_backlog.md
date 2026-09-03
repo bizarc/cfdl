@@ -325,7 +325,7 @@ learned about driving SAM, including two inputs it silently ignores.
 **It does NOT close the energy pack's last uncovered rule**, and the entry above
 was wrong to assume a case would. The case is core-spelled and never declares
 `energy.storage_arbitrage`; what it demonstrates is that the rule's SHAPE is
-wrong, since `mwh_cycled_year` is an input to it and the output of any dispatch
+wrong, since `quantity` (the storage rule's MWh cycled) is an input to it and the output of any dispatch
 model. `docs/13` §7.3 stands at energy 9/10 validated until a contract exists to
 validate.
 

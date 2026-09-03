@@ -88,8 +88,8 @@ Apply over stabilized operations only — during lease-up, vacancy is already in
 |---|---|---|---|
 | `principal` | yes | — | Loan amount |
 | `rate` | yes | — | Annual rate |
-| `amort_months` | yes | — | Strikes the payment; normally longer than the term |
-| `io_months` | no | 0 | Interest-only period |
+| `amortization_months` | yes | — | Strikes the payment; normally longer than the term |
+| `interest_only_months` | no | 0 | Interest-only period |
 | `balloon_at_maturity` | no | 0 | Off by default: the payoff belongs to the reversion, so periodic DSCR stays meaningful. `1` opts in |
 | `payment_frequency` | no | grid | Payment cadence override |
 
@@ -97,9 +97,9 @@ Apply over stabilized operations only — during lease-up, vacancy is already in
 
 Three forms, one decision: where does the NOI come from?
 
-**`cre.exit_cap`** → `cre.exit.sale` (investing.disposal.reversion, inflow) = `noi_value / exit_cap`. You state the NOI. | Required: `noi_value`, `exit_cap`.
+**`cre.exit_cap`** → `cre.exit.sale` (investing.disposal.reversion, inflow) = `income / cap_rate`. You state the NOI. | Required: `noi_value`, `exit_cap`.
 
-**`cre.exit`** → `cre.exit.proceeds` = `noi_forward_year / exit_cap` **gross**, with `cre.exit.selling_costs` (investing.disposal.selling_costs, outflow) lowering beside it — gross less costs is the net, and the statement shows both. You state a *named forward window* — reconcile it against the modeled final year. | Required: `noi_forward_year`, `exit_cap`. Default: `selling_costs = 0`.
+**`cre.exit`** → `cre.exit.proceeds` = `income / cap_rate` **gross**, with `cre.exit.selling_costs` (investing.disposal.selling_costs, outflow) lowering beside it — gross less costs is the net, and the statement shows both. You state a *named forward window* — reconcile it against the modeled final year. | Required: `noi_forward_year`, `exit_cap`. Default: `selling_costs = 0`.
 
 **`cre.exit_forward`** → the same two streams, with forward NOI *derived* from the modeled streams over the twelve months after the sale date. It cannot drift and cannot be committee-edited, and it requires a projection tail so the window has data — with the operating terms extended through the tail, so the forward year exists to be read. | Required: `exit_cap`. Default: `selling_costs = 0`.
 

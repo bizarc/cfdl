@@ -576,7 +576,7 @@ CRE pack codes:
   pair: the first owns absent-or-unparseable, the second parsed-but-not-positive
 - `E6052_CRE_DEBT_MISSING_RATE` / `E6053_CRE_DEBT_INVALID_RATE` — the same pair
   for the nominal annual rate
-- `E6054_CRE_DEBT_INVALID_AMORT` — `amort_months` strikes the payment and is
+- `E6054_CRE_DEBT_INVALID_AMORT` — `amortization_months` strikes the payment and is
   normally longer than the loan's term
 - `E6055_CRE_DEBT_INVALID_IO_MONTHS` — whole months, 0 or more
 - `E6056_CRE_DEBT_INVALID_BALLOON_FLAG` — `balloon_at_maturity` is 0 or 1

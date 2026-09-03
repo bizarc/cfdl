@@ -62,7 +62,7 @@ entity party investor : Credit.Party.Investor { name = "Investor" }
 // A pack contract, so the credit subtotals (cumulative among them) exist.
 contract credit.pool_level_pay.one on entity asset.pool {
   term 2017-01..2017-06
-  terms { balance = 1000000 rate = 0.12 term_months = 6 cpr = 0 cdr = 0 }
+  terms { principal = 1000000 interest_rate = 0.12 term_months = 6 cpr = 0 cdr = 0 }
 }
 
 stream trust.fee_income on entity asset.trust inflow currency USD {

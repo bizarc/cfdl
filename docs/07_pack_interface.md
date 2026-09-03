@@ -415,15 +415,22 @@ name = "buyer"
 unbound = true
 ```
 
+A field may carry `one_of = "<group>"`: fields sharing a group are
+alternatives and a contract must state at least one of them (a debt's
+amount is `principal`, `commitment` or `draw_curve`; its rate is
+`interest_rate` or `index_curve` with `margin`). A refinement's roles are
+its master's roles, specialized — it may not add a party the agreement does
+not have.
+
 `parties = ["lender", "borrower"]` stays the shorthand for roles inherited
 by the master's own word. A master also declares `lines` (`[[contracts.lines]]
 name = "interest"`) and, where it serves one side only, `side = "pays"` or
 `"receives"`; a refinement inherits both, may add lines, and fixes a side
 the master left open. Each lowering rule names the line it emits
 (`line = "interest"` on the `[[rules]]` entry), and load checks that a
-type's rules cover its effective lines. The check is opt-in per type
-until every pack names its lines: a type none of whose rules names a line
-is not checked.
+type's rules cover its effective lines. Every shipped rule names its line. A
+contract template must render every required effective field and one member
+of each `one_of` group, also checked at load.
 
 The master's fields are the schema; the lowering rule consumes them by
 name (`{{contract.principal}}`); the template renders the required ones;
@@ -553,7 +560,7 @@ the statement's residual row rather than vanishing.
 settlement differs.** Credit's level-pay, interest-only and floating pools
 are three refinements because the amortization profile and the rate basis
 differ. An interest-only period, a balloon, capitalized interest and a
-PIK period are TERMS on one instrument (`io_months`, `balloon_at_maturity`,
+PIK period are TERMS on one instrument (`interest_only_months`, `balloon_at_maturity`,
 `capitalize_interest`, `pik_months`) because they change when the same
 instrument settles, not what it is. Under that rule the roster grows by
 instrument and the terms stay what a term sheet states.
@@ -1152,7 +1159,7 @@ act/365 is about 1.4% of interest.
 
 Use it for every **nominal** rate — note rates, servicing strips, floating
 index-plus-margin. Do not use it for annual *quantities* (`rent_year`,
-`om_year`), which spread by `{{model.periods_per_year}}` regardless of day
+`fee_year`), which spread by `{{model.periods_per_year}}` regardless of day
 count.
 
 **Amortization is a second, separate basis.** An amortizing loan strikes its

@@ -16,7 +16,7 @@ entity asset plant : Energy.Asset.GenerationFacility
 contract energy.ptc on entity asset.plant {
   term 2026-01..2028-01
   terms {
-    mwh_year       = 250000 "MWh/yr"
-    credit_per_mwh = 2.75 "c/kWh"
+    quantity       = 250000 "MWh/yr"
+    amount = 2.75 "c/kWh"
   }
 }

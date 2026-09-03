@@ -578,7 +578,7 @@ time calendar monthly from 2026-01 for 24
 entity legal lender
 contract credit.pool_level_pay.probe on entity legal.lender {
   term 2026-01..2027-12
-  terms { balance = 1200000 rate = 0.06 term_months = 24 cpr = 0 cdr = 0 }
+  terms { principal = 1200000 interest_rate = 0.06 term_months = 24 cpr = 0 cdr = 0 }
 }
 stream loan.interest on entity legal.lender inflow currency USD {
   schedule every month from 2026-01 to 2027-12
@@ -626,7 +626,7 @@ time calendar {calendar} from 2026-01 for {periods}
 entity legal lender
 contract credit.pool_level_pay.p on entity legal.lender {{
   term 2026-01..{term_end}
-  terms {{ balance = 900000 rate = 0.075 term_months = {months} cpr = 0 cdr = 0 }}
+  terms {{ principal = 900000 interest_rate = 0.075 term_months = {months} cpr = 0 cdr = 0 }}
 }}
 """
         b = run_pack_model(src, 0.05, "credit")
@@ -645,7 +645,7 @@ time calendar monthly from 2026-01 for 12
 entity legal lender
 contract credit.pool_io_bullet.b on entity legal.lender {
   term 2026-01..2026-12
-  terms { balance = 500000 rate = 0.05 term_months = 12 cpr = 0 cdr = 0 }
+  terms { principal = 500000 interest_rate = 0.05 term_months = 12 cpr = 0 cdr = 0 }
 }
 """
     b = run_pack_model(src, 0.05, "credit")
@@ -812,7 +812,7 @@ time calendar monthly from 2026-01 for {periods}
 entity fund buyer
 contract credit.pool_io_bullet.p on entity fund.buyer {{
   term 2026-01..{2026 + (months - 1) // 12}-{((months - 1) % 12) + 1:02d}
-  terms {{ balance = 100000000  rate = 0.06  term_months = {months}  {terms} }}
+  terms {{ principal = 100000000  interest_rate = 0.06  term_months = {months}  {terms} }}
 }}
 """
 
@@ -896,7 +896,7 @@ def state_cadence_is_the_payment_clock() -> tuple[float, float]:
     # THE BITE TEST for state schedules. Before states had a clock this
     # compounded once per MODEL period — 365 times a year against 12 — so the
     # daily book and the monthly book disagreed by orders of magnitude.
-    terms = "balance = 1200000  rate = 0.06  term_months = 36  cpr = 0.10  cdr = 0.03"
+    terms = "principal = 1200000  interest_rate = 0.06  term_months = 36  cpr = 0.10  cdr = 0.03"
     def pool(calendar: str, periods: int, freq: str) -> str:
         return f"""version 0.1
 model "cadence-identity"
@@ -931,7 +931,7 @@ time calendar annual from 2026-01 for 3
 entity legal firm
 contract opco.exit_perpetuity.{suffix} on entity legal.firm {{
   term 2026-01..2026-01
-  terms {{ base_value = {base}  growth_rate = {g}  discount_rate = {r} }}
+  terms {{ base = {base}  growth_rate = {g}  discount_rate = {r} }}
 }}
 """
     block = run_pack_model(src, 0.0, "opco")
@@ -1094,7 +1094,7 @@ contract cre.lease_unit.a on entity asset.tower {
 
 contract cre.opex_line.main on entity asset.tower {
   term 2026-01..2029-01
-  terms { amount_year = 40000  escalation = 0.02 }
+  terms { amount_year = 40000  growth_rate = 0.02 }
 }
 
 contract cre.vacancy_loss on entity asset.tower {

@@ -1,6 +1,6 @@
 {
   "results_version": "0.12",
-  "model_hash": "2c244380dd2aa47a4051dcdaf25e8f4a9b6813a498d39f98983d079675a87ea9",
+  "model_hash": "12f5eb18c521a12721032b1ee776babf3d77a4ef4dd9ad04aa22eddb1dd9969b",
   "ledger_hash": "3ce00ff209ff01fd66472a7b8e4ae747cd4e54077d0cc70a639248816eb97910",
   "engine": {
     "name": "cfdl-engine",
@@ -61,16 +61,16 @@
         "contract": "opco.term_debt",
         "stream": "opco.debt.interest",
         "terms": {
-          "principal": "3000000",
-          "rate": "0.09"
+          "interest_rate": "0.09",
+          "principal": "3000000"
         }
       },
       {
         "contract": "opco.term_debt",
         "stream": "opco.debt.principal",
         "terms": {
-          "principal": "3000000",
-          "rate": "0.09"
+          "interest_rate": "0.09",
+          "principal": "3000000"
         }
       },
       {
@@ -109,14 +109,14 @@
         "contract": "opco.exit_ebitda",
         "stream": "opco.exit.value",
         "terms": {
-          "exit_multiple": "7.0"
+          "multiple": "7.0"
         }
       },
       {
         "contract": "opco.exit_ebitda",
         "stream": "opco.exit.selling_costs",
         "terms": {
-          "exit_multiple": "7.0",
+          "multiple": "7.0",
           "selling_costs": "0.02"
         }
       }

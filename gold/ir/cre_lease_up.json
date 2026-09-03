@@ -215,11 +215,11 @@
       "stream": "cre.lease.base_rent",
       "contract": "cre.lease",
       "terms": {
-        "base_rent": "25000",
-        "base_rent_year": "0"
+        "rent": "25000",
+        "rent_year": "0"
       },
       "defaults_applied": [
-        "base_rent_year"
+        "rent_year"
       ]
     }
   ],

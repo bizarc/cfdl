@@ -123,7 +123,7 @@ contract cre.revenue_line.potential_gross on entity asset.property {
   term 2016-02..2025-02
   terms {
     amount_year = 100000.0
-    escalation  = 0.03
+    growth_rate  = 0.03
   }
 }
 
@@ -134,7 +134,7 @@ contract cre.revenue_line.reimbursements on entity asset.property {
   term 2016-02..2025-02
   terms {
     amount_year = 17500.0
-    escalation  = 0.03
+    growth_rate  = 0.03
   }
 }
 
@@ -154,7 +154,7 @@ contract cre.opex_line.real_estate_taxes on entity asset.property {
   term 2016-02..2025-02
   terms {
     amount_year = 10000.0
-    escalation  = 0.03
+    growth_rate  = 0.03
   }
 }
 
@@ -162,7 +162,7 @@ contract cre.opex_line.insurance on entity asset.property {
   term 2016-02..2025-02
   terms {
     amount_year = 2500.0
-    escalation  = 0.03
+    growth_rate  = 0.03
   }
 }
 
@@ -170,7 +170,7 @@ contract cre.opex_line.cam on entity asset.property {
   term 2016-02..2025-02
   terms {
     amount_year = 5000.0
-    escalation  = 0.03
+    growth_rate  = 0.03
   }
 }
 
@@ -181,7 +181,7 @@ contract cre.opex_line.management_fee on entity asset.property {
   term 2016-02..2025-02
   terms {
     amount_year = 3172.5
-    escalation  = 0.03
+    growth_rate  = 0.03
   }
 }
 
@@ -201,8 +201,8 @@ stream cre.capital.reserve on entity asset.property outflow currency USD {
 contract cre.exit_cap.reversion on entity asset.property {
   term 2025-02..2025-02
   terms {
-    noi_value = 111006.84054723257
-    exit_cap  = 0.065
+    income = 111006.84054723257
+    cap_rate  = 0.065
   }
 }
 

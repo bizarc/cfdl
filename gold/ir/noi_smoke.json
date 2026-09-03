@@ -348,11 +348,11 @@
       "terms": {
         "amount": "5000",
         "amount_year": "0",
-        "escalation": "0"
+        "growth_rate": "0"
       },
       "defaults_applied": [
         "amount_year",
-        "escalation"
+        "growth_rate"
       ]
     },
     {
@@ -361,13 +361,13 @@
       "terms": {
         "amount": "2000",
         "amount_year": "0",
-        "escalation": "0",
+        "growth_rate": "0",
         "occupancy": "1",
         "pct_fixed": "1"
       },
       "defaults_applied": [
         "amount_year",
-        "escalation",
+        "growth_rate",
         "occupancy",
         "pct_fixed"
       ]
@@ -376,8 +376,8 @@
       "stream": "cre.exit.sale",
       "contract": "cre.exit_cap",
       "terms": {
-        "exit_cap": "0.09",
-        "noi_value": "36000"
+        "cap_rate": "0.09",
+        "income": "36000"
       }
     }
   ],
