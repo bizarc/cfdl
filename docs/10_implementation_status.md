@@ -41,7 +41,9 @@ Legend: ✅ works end to end (parse → IR → engine) · 🟡 partial, see note
 | `terms { k = v <unit> }` | ✅ | an optional unit is an ASSERTION about what the number means; the rule declares the truth and a mismatch is `E5024`. Units are never converted |
 | `stream ... active in state <name>[, <name>]` | ✅ | lowers to a comparison on the lifecycle state, with the name checked against the owner's declared lifecycle — which a string comparison cannot be |
 | `contract effects { ... }` | 🟡 | the block is **required** (`E2002`) but its contents are block-skipped: a stream declared inside is never emitted. Declare streams at top level or via a pack |
-| `contract parties` / `tags` blocks | 🟡 | accepted and discarded; absent from the IR |
+| `contract ... parties { ... }` block | 🟡 | parsed and role-checked against the contract type's own `parties` (`E1320`–`E1322`); not yet in the IR, and roles do not yet inherit from the master (`docs/40` §5, stage 3) |
+| `contract tags { ... }` | 🟡 | accepted and discarded; absent from the IR |
+| master contract types (`refines`, `abstract`, `type <Master>` in a slice) | 🟡 | the skeleton: a recorded parent, eleven abstract names, `is_a`, slice selection. A master declares no fields, roles do not inherit, no satisfaction check, the IR records every contract as `core.Contract`, and `option ... type` is unchecked. `docs/40` states the construct and stages the rest |
 | `stream` (owner, direction, currency, amount, active when) | ✅ | bare native expressions. An unrecognized item in the body is rejected (`E0004`); it used to be bumped and discarded, so `payment net 60 days` on its own line — and every typo'd key — compiled clean and did nothing |
 | `stream ... { category <path> }` | ✅ | what the stream IS, economically — a dotted path into the cash flow statement (`operating.deduction.abatement`). Aggregation reads this rather than pattern-matching the stream's name. Must name a category the active pack declares (`E5022`); the pack's own vocabulary must be rooted in `operating`, `investing` or `financing` |
 | `schedule on <date>` | ✅ | settles on its own date, undiscounted for the period it lands in |

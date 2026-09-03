@@ -2673,6 +2673,11 @@ results graph. `fixtures/valid/stable_identity` pins the round trip;
 §7.90; subsumes the interface question raised against it. The largest single
 item to come out of the 30 August 2026 ontology review.*
 
+*2 September 2026: the construct is stated top-down in
+`docs/40_master_contracts.md`, which supersedes the mined-core direction
+recorded below and stages the remaining pieces; this entry closes when
+stage 3 lands.*
+
 The pack loader's own comment states the design: "a pack may refine
 `Asset.Real` into `CRE.Asset.RealProperty` without the base disappearing."
 Nothing records the refinement. `OntologyEntity` carries `type_id`, `family`,
