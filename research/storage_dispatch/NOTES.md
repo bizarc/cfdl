@@ -177,7 +177,46 @@ a further misuse or a defect is UNRESOLVED.
 `ssc/cmod_battery.cpp` does call `fps.setup(step_per_hour)` and throws on
 failure, so the series is being built; it is the content that is wrong.
 
-The paper is still worth reading and is
+## NREL/TP-6A20-68614, read — and it changes the claim
+
+*An Overview of the Automated Dispatch Controller Algorithms in SAM*, DiOrio,
+November 2017. Copy at `research/68614.pdf`.
+
+**SAM's automated dispatch is deliberately suboptimal, and the report says so
+in its own words.** From §1:
+
+> The dispatch algorithm in SAM varies significantly from the approaches taken
+> in these models. Instead of performing a cost-based optimization, SAM provides
+> options that provide automated but SUBOPTIMAL dispatch to achieve specified
+> goals. Reasons for taking this approach include -- but not limited to -- the
+> consideration that SAM is a public, commercial grade tool and must be
+> accessible to users of varying technical ability
+
+and §5: "these heuristic algorithms do not do any optimization around the cost
+of energy and power." §4.4 is titled *Controller Limitations*.
+
+**This reframes what the benchmark can claim.** "How close does CFDL get to SAM"
+is the wrong question, because SAM is not computing the right answer and does
+not claim to. A CFDL model that computes the theoretical per-day optimum SHOULD
+exceed it, and the excess measures what the heuristic leaves on the table rather
+than what CFDL gets wrong. The honest claim is a statement about both tools, not
+a tolerance.
+
+It also confirms the mechanism read from the source: the controller "is called
+at the beginning of a new 24-hour period", so the windows are fixed daily blocks
+rather than a rolling horizon, and the user may choose "a perfect look-ahead
+forecast (which SAM obtains from the input data) or the previous 24-hour
+profile".
+
+**But it is the wrong document for this case.** It covers BEHIND-THE-METER peak
+shaving -- three controllers for demand-charge reduction -- and §4.4.2 says each
+strategy targets a single value stream with "no consideration of energy costs".
+Front-of-meter merchant arbitrage is out of its scope. The references to chase
+are [3] *Economic Analysis Case Studies of Battery Energy Storage with SAM*
+(NREL/TP-6A20-64987) and the 2020 paper *A Model for Evaluating the
+Configuration and Dispatch of PV Plus Battery Power Plants*.
+
+The paper that would still help is
 *An Overview of the Automated Dispatch Controller Algorithms in the System
 Advisor Model*, and the 2020 paper *A Model for Evaluating the Configuration and
 Dispatch of PV Plus Battery Power Plants*, which is cited as containing the
