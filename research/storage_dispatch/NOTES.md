@@ -131,7 +131,53 @@ From the PySAM `Battery` reference and NREL's battery-storage material:
   and `batt_cycle_cost` is "$/cycle-kWh". Neither value changes the dispatch
   here. Also NOT EXPLAINED.
 
-The authoritative description of the algorithm itself is NREL/TP-6A20-68614,
+## What the SOURCE says — read instead of the paper
+
+`nrel.gov` does not resolve from this environment (nor `docs.nrel.gov` or
+`sam.nrel.gov`), but `github.com` does, and SSC is open source. The
+implementation answers more than the paper would.
+
+**`shared/lib_battery_dispatch_automatic_fom.cpp` — the front-of-meter
+optimiser.** It is a ROLLING HEURISTIC, not a global optimum. The window is
+`idx_lookahead = _forecast_hours * _steps_per_hour`, and prices are copied
+forward from `_forecast_price_rt_series` at each step. Critically, **there is no
+constraint linking end-of-window state of charge to the next window** — each
+window is solved independently. That is why net value does not improve
+monotonically with `batt_look_ahead_hours`, and it is the leading candidate for
+the reference's 73% average cycle depth. A CFDL model computing the theoretical
+per-day optimum should be expected to EXCEED it.
+
+The objective subtracts wear from every opportunity:
+
+```
+revenueToGridCharge = *max_ppa_cost * m_etaDischarge
+                    - usage_cost / m_etaGridCharge - m_cycleCost - m_omCost
+```
+
+Note `max_ppa_cost`: the objective reads the PPA price series, which is
+consistent with the PPA path being the one that works.
+
+**`ssc/common.cpp`, `forecast_price_signal::setup`** — how the price series is
+built. For `forecast_price_signal_model = 1` it reads
+`mp_energy_market_revenue` and computes
+
+```cpp
+size_t n_marketrevenue_per_year = mp_energy_market_revenue_mat.nrows() / (size_t)nyears;
+```
+
+so the matrix must carry `8760 x analysis_period` rows — 219,000 for the
+25-year default — NOT one year. Supplying 8,760 rows takes 350 per year and
+extrapolates. **Correcting the row count changes the answer (12,854 -> 10,009
+MWh) and still does not make the dispatch price-responsive**: real and flat
+price series give identical MWh and identical active days, and the flat series
+still loses money. So the row count is a real requirement and not the whole
+story, and the merchant path remains unusable for dispatch here. Whether that is
+a further misuse or a defect is UNRESOLVED.
+
+`ssc/cmod_battery.cpp` does call `fps.setup(step_per_hour)` and throws on
+failure, so the series is being built; it is the content that is wrong.
+
+The paper is still worth reading and is
 *An Overview of the Automated Dispatch Controller Algorithms in the System
 Advisor Model*, and the 2020 paper *A Model for Evaluating the Configuration and
 Dispatch of PV Plus Battery Power Plants*, which is cited as containing the
