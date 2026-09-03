@@ -184,7 +184,37 @@ impl PackOntology {
                 fields: Vec::new(),
             }
         }
-        fn master(type_id: &str, parties: &[&str], d: &str) -> OntologyContract {
+        fn field(
+            name: &str,
+            field_type: &str,
+            required: bool,
+            unit: Option<&str>,
+            one_of: Option<&str>,
+            d: &str,
+        ) -> OntologyField {
+            OntologyField {
+                name: name.to_string(),
+                field_type: field_type.to_string(),
+                required,
+                unit: unit.map(|u| u.to_string()),
+                one_of: one_of.map(|g| g.to_string()),
+                description: Some(d.to_string()),
+            }
+        }
+        fn line(name: &str, d: &str) -> OntologyLine {
+            OntologyLine {
+                name: name.to_string(),
+                description: Some(d.to_string()),
+            }
+        }
+        fn master(
+            type_id: &str,
+            parties: &[&str],
+            fields: Vec<OntologyField>,
+            lines: Vec<OntologyLine>,
+            side: Option<&str>,
+            d: &str,
+        ) -> OntologyContract {
             OntologyContract {
                 type_id: type_id.to_string(),
                 contract_name: None,
@@ -192,6 +222,31 @@ impl PackOntology {
                 refines: None,
                 is_abstract: true,
                 parties: parties.iter().map(|p| p.to_string()).collect(),
+                roles: Vec::new(),
+                fields,
+                lines,
+                side: side.map(|s| s.to_string()),
+                description: Some(d.to_string()),
+            }
+        }
+        fn specialization(
+            type_id: &str,
+            refines: &str,
+            lines: Vec<OntologyLine>,
+            side: Option<&str>,
+            d: &str,
+        ) -> OntologyContract {
+            OntologyContract {
+                type_id: type_id.to_string(),
+                contract_name: None,
+                subject_family: None,
+                refines: Some(refines.to_string()),
+                is_abstract: true,
+                parties: Vec::new(),
+                roles: Vec::new(),
+                fields: Vec::new(),
+                lines,
+                side: side.map(|s| s.to_string()),
                 description: Some(d.to_string()),
             }
         }
@@ -260,26 +315,107 @@ impl PackOntology {
                         field_type: "string".to_string(),
                         required: false,
                         unit: None,
+                        one_of: None,
                         description: None,
                     }],
                 },
             ],
+            // THE MASTERS, STATED FROM WHAT EACH AGREEMENT IS (docs/40 §4).
+            // Nothing here is mined from a pack: a debt has a principal, a
+            // rate and a term because that is what debt is, and the packs
+            // conform. The three "line" masters at the end are contracts with
+            // the model rather than a counterparty (docs/40 §4.12).
             contracts: vec![
                 master("Contract.Debt", &["lender", "borrower"],
+                    vec![
+                        field("principal", "decimal", true, None, None, "The amount borrowed — a loan's original balance, a pool's outstanding at the cut-off."),
+                        field("interest_rate", "decimal", true, Some("ratio"), None, "Annual nominal interest rate."),
+                        field("day_count", "string", false, None, None, "Accrual convention; the model's when absent."),
+                        field("payment_frequency", "string", false, None, None, "The instrument's own payment rhythm; the calendar's when absent."),
+                        field("amortization", "string", false, None, None, "level_pay | interest_only | bullet | custom — a refinement fixes it."),
+                        field("amortization_months", "integer", false, Some("months"), None, "The horizon the payment is struck on; may exceed the term."),
+                        field("interest_only_months", "integer", false, Some("months"), None, "Interest-only period before amortization begins."),
+                        field("funded_at_close", "integer", false, None, None, "1 — proceeds are drawn at term start; 0 — the reconciliation starts post-financing."),
+                        field("balloon_at_maturity", "integer", false, None, None, "1 — the unamortized balance is repaid at term end."),
+                    ],
+                    vec![
+                        line("proceeds", "Cash advanced under the agreement."),
+                        line("interest", "The cost of the money."),
+                        line("principal", "Repayment of what was advanced."),
+                    ],
+                    None,
                     "Borrowed money and its service — a loan, a facility, a note, a pool of them."),
                 master("Contract.Lease", &["lessor", "lessee"],
+                    vec![
+                        field("rent", "decimal", false, None, Some("rent"), "Rent per period."),
+                        field("rent_year", "decimal", false, None, Some("rent"), "Rent per year, spread by the calendar."),
+                        field("escalation", "decimal", false, Some("ratio"), None, "Annual rent growth."),
+                        field("free_rent_months", "integer", false, Some("months"), None, "Abated months at the start of the term."),
+                    ],
+                    vec![
+                        line("rent", "Rent for the use of the asset."),
+                        line("abatement", "Rent forgiven."),
+                    ],
+                    Some("receives"),
                     "Use of an asset in exchange for rent, and the rent's own mechanics."),
                 master("Contract.Purchase", &["buyer", "seller"],
+                    vec![field("price", "decimal", true, None, None, "What the asset costs.")],
+                    vec![line("price", "The purchase price, paid at term start.")],
+                    Some("pays"),
                     "Acquiring the asset itself."),
                 master("Contract.Sale", &["seller", "buyer"],
+                    vec![
+                        field("selling_costs", "decimal", false, Some("ratio"), None, "Costs of sale as a fraction of proceeds."),
+                        field("value", "decimal", false, None, Some("basis"), "A stated sale value."),
+                        field("cap_rate", "decimal", false, Some("ratio"), Some("basis"), "Capitalization rate applied to `income`."),
+                        field("income", "decimal", false, None, None, "The income the capitalization rate is applied to."),
+                        field("multiple", "decimal", false, None, Some("basis"), "Multiple applied to `base`."),
+                        field("base", "decimal", false, None, None, "The figure a multiple or a perpetuity is struck on."),
+                        field("discount_rate", "decimal", false, Some("ratio"), Some("basis"), "Perpetuity discount rate, with `growth_rate` and `base`."),
+                        field("growth_rate", "decimal", false, Some("ratio"), None, "Perpetuity growth rate."),
+                    ],
+                    vec![
+                        line("proceeds", "Gross proceeds of the disposal."),
+                        line("selling_costs", "Costs of the disposal."),
+                    ],
+                    Some("receives"),
                     "Disposing of the asset itself — an exit, a disposition, a takeout."),
                 master("Contract.Offtake", &["seller", "offtaker"],
+                    vec![
+                        field("quantity", "decimal", true, None, None, "Output sold per year, in the pack's unit."),
+                        field("price", "decimal", true, None, None, "Price per unit of output."),
+                        field("escalation", "decimal", false, Some("ratio"), None, "Annual price growth."),
+                        field("degradation", "decimal", false, Some("ratio"), None, "Annual decline in output."),
+                        field("availability", "decimal", false, Some("ratio"), None, "Fraction of the year the asset delivers."),
+                    ],
+                    vec![line("revenue", "Payment for delivered output.")],
+                    Some("receives"),
                     "Sale of an asset's output — a PPA, a merchant sale, a capacity payment."),
                 master("Contract.Service", &["provider", "recipient"],
+                    vec![
+                        field("fee", "decimal", false, None, Some("fee"), "Fee per period."),
+                        field("fee_year", "decimal", false, None, Some("fee"), "Fee per year, spread by the calendar."),
+                        field("escalation", "decimal", false, Some("ratio"), None, "Annual fee growth."),
+                    ],
+                    vec![line("expense", "Payment for the service.")],
+                    Some("pays"),
                     "Work done on or for the asset — management, operations and maintenance, servicing."),
                 master("Contract.Tax", &["taxpayer", "authority"],
+                    vec![
+                        field("tax_rate", "decimal", false, Some("ratio"), Some("charge"), "Rate applied to the basis."),
+                        field("amount", "decimal", false, None, Some("charge"), "A stated amount."),
+                        field("basis", "decimal", false, None, None, "What the rate is applied to."),
+                    ],
+                    vec![
+                        line("paid", "Tax paid to the authority."),
+                        line("benefit", "A credit or shield received."),
+                    ],
+                    None,
                     "A tax obligation or attribute — cash taxes, a credit, a depreciation shield."),
                 master("Contract.Option", &["grantor", "holder"],
+                    vec![field("strike", "decimal", false, None, None, "The price at which the election is exercised.")],
+                    vec![line("payoff", "Cash the holder takes on exercise.")],
+                    None,
                     "An election — cash the holder chooses to take. Every pack's elections refine this."),
                 // The three below have no refinement in the alpha packs yet.
                 // The packs are indicators, not a sample of their domains:
@@ -287,11 +423,55 @@ impl PackOntology {
                 // deal furniture, and a master that exists before its first
                 // refinement costs nothing — it is abstract.
                 master("Contract.Construction", &["owner", "contractor"],
+                    vec![
+                        field("budget", "decimal", true, None, None, "The contract sum."),
+                        field("draw_curve", "string", true, None, None, "The declared curve the draws follow — data, not a term."),
+                        field("retainage", "decimal", false, Some("ratio"), None, "Fraction of each draw held back."),
+                    ],
+                    vec![line("draw", "Payment against work done.")],
+                    Some("pays"),
                     "Building or improving the asset — an EPC or construction contract."),
                 master("Contract.Derivative", &["party", "counterparty"],
+                    vec![
+                        field("notional", "decimal", true, None, None, "The amount the exposure is struck on."),
+                        field("reference", "string", true, None, None, "The declared curve or quantile the settlement reads."),
+                        field("fixed_rate", "decimal", false, Some("ratio"), Some("strike"), "The fixed leg."),
+                        field("strike", "decimal", false, None, Some("strike"), "The strike of a cap, floor or collar."),
+                    ],
+                    vec![line("settlement", "Net settlement each period.")],
+                    None,
                     "A hedge or exchange of exposures — a swap, a rate cap, a collar."),
                 master("Contract.Insurance", &["insurer", "insured"],
+                    vec![
+                        field("premium", "decimal", true, None, None, "Premium per period."),
+                        field("coverage", "decimal", false, None, None, "The insured amount."),
+                        field("deductible", "decimal", false, None, None, "Retained per claim."),
+                    ],
+                    vec![
+                        line("premium", "Premium paid."),
+                        line("claim", "Proceeds of a claim."),
+                    ],
+                    Some("pays"),
                     "Premiums against losses — property, title, business interruption."),
+                master("Contract.Line", &["owner"],
+                    vec![
+                        field("amount", "decimal", false, None, Some("amount"), "Amount per period."),
+                        field("amount_year", "decimal", false, None, Some("amount"), "Amount per year, spread by the calendar."),
+                        field("growth_rate", "decimal", false, Some("ratio"), None, "Annual growth."),
+                    ],
+                    Vec::new(),
+                    None,
+                    "A line the model states directly — a contract with the model, not a counterparty. Refined by kind below; a pack refines those further."),
+                specialization("Contract.Revenue", "Contract.Line", vec![line("revenue", "Revenue stated directly.")], Some("receives"),
+                    "A general revenue line."),
+                specialization("Contract.Deduction", "Contract.Line", vec![line("deduction", "A reduction of revenue — vacancy, credit loss, abatement stated as a line.")], Some("pays"),
+                    "A contra-revenue line: what is not collected."),
+                specialization("Contract.Expense", "Contract.Line", vec![line("expense", "Expense stated directly.")], Some("pays"),
+                    "A general operating-expense line."),
+                specialization("Contract.CapitalExpenditure", "Contract.Line", vec![line("capex", "Capital spend stated directly.")], Some("pays"),
+                    "A general capital-expenditure line."),
+                specialization("Contract.WorkingCapital", "Contract.Line", vec![line("working_capital", "The period's change in working capital.")], None,
+                    "A working-capital movement stated as a line — a balance change, so its side varies by period."),
             ],
             lifecycles: Vec::new(),
             references: Vec::new(),
@@ -377,8 +557,33 @@ impl PackOntology {
     /// its master's optional `rentable_area` to required. Call on
     /// `merged_with_base()`, like `is_a`.
     pub fn effective_fields(&self, type_id: &str) -> Vec<OntologyField> {
-        // Chain leaf -> root, bounded like is_a.
-        let mut chain: Vec<&OntologyEntity> = Vec::new();
+        let mut fields: Vec<OntologyField> = Vec::new();
+        let rosters: Vec<&[OntologyField]> = if self.entity(type_id).is_some() {
+            self.entity_chain(type_id)
+                .iter()
+                .map(|e| e.fields.as_slice())
+                .collect()
+        } else {
+            self.contract_chain(type_id)
+                .iter()
+                .map(|c| c.fields.as_slice())
+                .collect()
+        };
+        for roster in rosters.iter().rev() {
+            for field in roster.iter() {
+                if let Some(existing) = fields.iter_mut().find(|f| f.name == field.name) {
+                    *existing = field.clone();
+                } else {
+                    fields.push(field.clone());
+                }
+            }
+        }
+        fields
+    }
+
+    /// Leaf -> root, bounded like `is_a`.
+    fn entity_chain(&self, type_id: &str) -> Vec<&OntologyEntity> {
+        let mut chain = Vec::new();
         let mut current = type_id;
         for _ in 0..=self.entities.len() {
             let Some(entity) = self.entities.iter().find(|e| e.type_id == current) else {
@@ -390,17 +595,82 @@ impl PackOntology {
                 None => break,
             }
         }
-        let mut fields: Vec<OntologyField> = Vec::new();
-        for entity in chain.iter().rev() {
-            for field in &entity.fields {
-                if let Some(existing) = fields.iter_mut().find(|f| f.name == field.name) {
-                    *existing = field.clone();
+        chain
+    }
+
+    /// Leaf -> root, bounded like `is_a`.
+    fn contract_chain(&self, type_id: &str) -> Vec<&OntologyContract> {
+        let mut chain = Vec::new();
+        let mut current = type_id;
+        for _ in 0..=self.contracts.len() {
+            let Some(contract) = self.contracts.iter().find(|c| c.type_id == current) else {
+                break;
+            };
+            chain.push(contract);
+            match contract.refines.as_deref() {
+                Some(next) => current = next,
+                None => break,
+            }
+        }
+        chain
+    }
+
+    /// The roles `type_id` carries, resolved to the master's word (docs/40
+    /// §5). Walked root-down: a master's roles come first; a refinement's
+    /// specialization REPLACES the role it refines (the pack's word is what
+    /// a model binds, the master's is what it means); an inherited role is
+    /// carried as is; an unbound marker survives to the leaf. Call on
+    /// `merged_with_base()`.
+    pub fn effective_roles(&self, type_id: &str) -> Vec<EffectiveRole> {
+        let mut roles: Vec<EffectiveRole> = Vec::new();
+        for contract in self.contract_chain(type_id).iter().rev() {
+            for own in contract.declared_roles() {
+                let target = own.refines.clone().unwrap_or_else(|| own.name.clone());
+                if let Some(existing) = roles.iter_mut().find(|r| r.name == target) {
+                    // A specialization (or a restatement) of a role already known.
+                    existing.name = own.name.clone();
+                    existing.unbound = own.unbound;
                 } else {
-                    fields.push(field.clone());
+                    roles.push(EffectiveRole {
+                        name: own.name.clone(),
+                        master: own.refines.clone().unwrap_or_else(|| own.name.clone()),
+                        unbound: own.unbound,
+                    });
                 }
             }
         }
-        fields
+        roles
+    }
+
+    /// The lines `type_id` produces, its masters' included (docs/40 §6).
+    pub fn effective_lines(&self, type_id: &str) -> Vec<OntologyLine> {
+        let mut lines: Vec<OntologyLine> = Vec::new();
+        for contract in self.contract_chain(type_id).iter().rev() {
+            for line in &contract.lines {
+                if !lines.iter().any(|l| l.name == line.name) {
+                    lines.push(line.clone());
+                }
+            }
+        }
+        lines
+    }
+
+    /// The side `type_id` sits on, the most refined declaration winning.
+    pub fn effective_side(&self, type_id: &str) -> Option<String> {
+        self.contract_chain(type_id)
+            .iter()
+            .find_map(|c| c.side.clone())
+    }
+
+    /// The master at the root of `type_id`'s chain — itself for a master.
+    pub fn master_of(&self, type_id: &str) -> Option<String> {
+        self.contract_chain(type_id)
+            .last()
+            .map(|c| c.type_id.clone())
+    }
+
+    pub fn contract(&self, type_id: &str) -> Option<&OntologyContract> {
+        self.contracts.iter().find(|c| c.type_id == type_id)
     }
 
     /// A pack's vocabulary on top of the language's. Pack types win on a
@@ -499,8 +769,56 @@ pub struct OntologyField {
     /// gets rounded to a hundredth of a cent instead of a tenth.
     #[serde(default)]
     pub unit: Option<String>,
+    /// A REQUIRED-AS-A-GROUP marker (docs/40 §4): fields sharing a `one_of`
+    /// name are alternatives, and a contract must state at least one of
+    /// them — a lease's rent is `rent` per period or `rent_year`, a sale's
+    /// value is a cap rate on NOI or a multiple on a base. `required` is
+    /// false on such a field; the group carries the obligation.
+    #[serde(default)]
+    pub one_of: Option<String>,
     #[serde(default)]
     pub description: Option<String>,
+}
+
+/// A party to an agreement, by role (docs/40 §5). A master declares generic
+/// roles — `lessor`, `lender` — and a refinement covers each one either by
+/// inheriting the name or by SPECIALIZING it: `landlord` refines `lessor`. A
+/// domain word never appears on a master. A refinement may also leave a
+/// master role UNBOUND where the agreement has no such party in this form —
+/// a merchant sale's offtaker is the market.
+#[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct OntologyRole {
+    pub name: String,
+    /// The master role this one specializes; absent on a master's own roles.
+    #[serde(default)]
+    pub refines: Option<String>,
+    #[serde(default)]
+    pub unbound: bool,
+    #[serde(default)]
+    pub description: Option<String>,
+}
+
+/// An economically distinct line of cash an agreement produces (docs/40 §6):
+/// a debt produces `proceeds`, `interest` and `principal`. Lines are named
+/// on the master by ROLE; the pack's lowering rules each name the line they
+/// emit, and the CATEGORY each line lands in stays the pack's (docs/35).
+#[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct OntologyLine {
+    pub name: String,
+    #[serde(default)]
+    pub description: Option<String>,
+}
+
+/// A resolved role: the word a type uses and the master role it stands for.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct EffectiveRole {
+    pub name: String,
+    /// The root of the specialization chain — the master's word. Equal to
+    /// `name` for an inherited role.
+    pub master: String,
+    pub unbound: bool,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
@@ -534,11 +852,51 @@ pub struct OntologyContract {
     #[serde(rename = "abstract", default)]
     pub is_abstract: bool,
     /// Role names, not entity references — a party fills a role per contract,
-    /// so the same party can be lessor in one and lender in another.
+    /// so the same party can be lessor in one and lender in another. The
+    /// SHORTHAND for roles that inherit or declare a master's word unchanged;
+    /// a specialization or an unbound role is stated in `roles`.
     #[serde(default)]
     pub parties: Vec<String>,
+    /// Roles with a specialization or an unbound marker (docs/40 §5). A role
+    /// named here and in `parties` is declared twice, which is refused.
+    #[serde(default)]
+    pub roles: Vec<OntologyRole>,
+    /// The terms the agreement states — there is no separate term schema
+    /// (docs/40 §3). Inherited down the refinement chain like an entity's
+    /// fields: a refinement may strengthen or add, never retype, re-unit,
+    /// weaken or drop.
+    #[serde(default)]
+    pub fields: Vec<OntologyField>,
+    /// The lines of cash the agreement produces, by role (docs/40 §6). A
+    /// refinement's lowering rules must emit every effective line.
+    #[serde(default)]
+    pub lines: Vec<OntologyLine>,
+    /// Which way cash runs for the SUBJECT entity: `pays` or `receives`.
+    /// Absent on a master that serves both sides — a Debt is owed by a
+    /// property and held by a trust — and fixed by the refinement.
+    #[serde(default)]
+    pub side: Option<String>,
     #[serde(default)]
     pub description: Option<String>,
+}
+
+impl OntologyContract {
+    /// Every role this type declares itself: the `parties` shorthand plus
+    /// the `roles` entries, as `OntologyRole`s.
+    pub fn declared_roles(&self) -> Vec<OntologyRole> {
+        let mut out: Vec<OntologyRole> = self
+            .parties
+            .iter()
+            .map(|name| OntologyRole {
+                name: name.clone(),
+                refines: None,
+                unbound: false,
+                description: None,
+            })
+            .collect();
+        out.extend(self.roles.iter().cloned());
+        out
+    }
 }
 
 /// A declared state space. The point of declaring it is totality: an entity is
@@ -921,6 +1279,13 @@ pub struct LoweringFile {
 pub struct LoweringRule {
     pub id: String,
     pub contract_name: String,
+    /// The LINE this rule emits, by the role its contract's master declares
+    /// (docs/40 §6): `interest`, `principal`, `revenue`. Absent while a pack
+    /// is migrating; once any rule of a type names its line, every rule of
+    /// that type must, and together they must cover the type's effective
+    /// lines — checked at load.
+    #[serde(default)]
+    pub line: Option<String>,
     pub stream_name: String,
     pub owner_entity: String,
     pub direction: String,
@@ -2006,18 +2371,139 @@ fn parse_ontology(raw: &str, source: &str, pack_name: &str) -> Result<PackOntolo
                     ),
                 });
             }
+            if let Some(side) = contract.side.as_deref() {
+                if side != "pays" && side != "receives" {
+                    return Err(PackLoadError {
+                        message: format!(
+                            "Ontology '{source}': contract '{}' has side '{side}'; a side is 'pays' or 'receives' (docs/40 §6).",
+                            contract.type_id
+                        ),
+                    });
+                }
+            }
+            // A role is declared once: in `parties` or in `roles`, not both.
+            let declared = contract.declared_roles();
+            let mut seen_roles: BTreeSet<&str> = BTreeSet::new();
+            for role in &declared {
+                if !seen_roles.insert(role.name.as_str()) {
+                    return Err(PackLoadError {
+                        message: format!(
+                            "Ontology '{source}': contract '{}' declares role '{}' twice.",
+                            contract.type_id, role.name
+                        ),
+                    });
+                }
+            }
             let Some(parent_id) = &contract.refines else {
+                // A type that refines nothing is its own master: its roles
+                // specialize nothing.
+                if let Some(role) = declared.iter().find(|r| r.refines.is_some()) {
+                    return Err(PackLoadError {
+                        message: format!(
+                            "Ontology '{source}': contract '{}' refines no type, but its role '{}' refines '{}'. A role specializes a master's role, so the type must name a master.",
+                            contract.type_id, role.name, role.refines.as_deref().unwrap_or_default()
+                        ),
+                    });
+                }
                 continue;
             };
-            let known = ontology.contracts.iter().any(|c| c.type_id == *parent_id)
-                || base.contracts.iter().any(|c| c.type_id == *parent_id);
-            if !known {
+            let parent = ontology
+                .contracts
+                .iter()
+                .find(|c| c.type_id == *parent_id)
+                .or_else(|| base.contracts.iter().find(|c| c.type_id == *parent_id));
+            let Some(parent) = parent else {
                 return Err(PackLoadError {
                     message: format!(
                         "Ontology '{source}': contract '{}' refines '{parent_id}', which is not a declared contract type in this pack or the language base.",
                         contract.type_id
                     ),
                 });
+            };
+            if let (Some(own), Some(inherited)) = (
+                contract.subject_family.as_deref(),
+                parent.subject_family.as_deref(),
+            ) {
+                if own != inherited {
+                    return Err(PackLoadError {
+                        message: format!(
+                            "Ontology '{source}': contract '{}' sits on '{own}' but refines '{parent_id}', which sits on '{inherited}'. A refinement keeps its master's subject family.",
+                            contract.type_id
+                        ),
+                    });
+                }
+            }
+            // TERMS ARE FIELDS, AND FIELDS INHERIT (docs/40 §3): the same
+            // strengthen-only rule the entity side applies above.
+            let inherited = merged_view.effective_fields(parent_id);
+            for own in &contract.fields {
+                let Some(master_field) = inherited.iter().find(|f| f.name == own.name) else {
+                    continue;
+                };
+                if own.field_type != master_field.field_type {
+                    return Err(PackLoadError {
+                        message: format!(
+                            "Ontology '{source}': contract '{}' redeclares inherited field '{}' as {}, but '{parent_id}' declares it as {}. A refinement may strengthen a field, not retype it.",
+                            contract.type_id, own.name, own.field_type, master_field.field_type
+                        ),
+                    });
+                }
+                if own.unit.is_some()
+                    && master_field.unit.is_some()
+                    && own.unit != master_field.unit
+                {
+                    return Err(PackLoadError {
+                        message: format!(
+                            "Ontology '{source}': contract '{}' redeclares inherited field '{}' in {:?}, but '{parent_id}' declares it in {:?}.",
+                            contract.type_id, own.name, own.unit, master_field.unit
+                        ),
+                    });
+                }
+                if master_field.required && !own.required {
+                    return Err(PackLoadError {
+                        message: format!(
+                            "Ontology '{source}': contract '{}' redeclares inherited field '{}' as optional, but '{parent_id}' requires it. A refinement may strengthen a field, never weaken it.",
+                            contract.type_id, own.name
+                        ),
+                    });
+                }
+            }
+            // ROLES SPECIALIZE, AND EVERY MASTER ROLE IS COVERED (docs/40 §5).
+            // A specialization names an effective role of the master; a role
+            // the master declares and the refinement neither inherits nor
+            // specializes is a hole a model could never bind.
+            let master_roles = merged_view.effective_roles(parent_id);
+            for role in &declared {
+                if let Some(target) = role.refines.as_deref() {
+                    if !master_roles
+                        .iter()
+                        .any(|r| r.name == target || r.master == target)
+                    {
+                        return Err(PackLoadError {
+                            message: format!(
+                                "Ontology '{source}': contract '{}' role '{}' refines '{target}', which '{parent_id}' does not declare. Its roles are: {}.",
+                                contract.type_id,
+                                role.name,
+                                master_roles.iter().map(|r| r.name.as_str()).collect::<Vec<_>>().join(", ")
+                            ),
+                        });
+                    }
+                }
+            }
+            for master_role in &master_roles {
+                let covered = declared.iter().any(|r| {
+                    r.name == master_role.name
+                        || r.refines.as_deref() == Some(master_role.name.as_str())
+                        || r.refines.as_deref() == Some(master_role.master.as_str())
+                });
+                if !covered {
+                    return Err(PackLoadError {
+                        message: format!(
+                            "Ontology '{source}': contract '{}' does not cover role '{}' of '{parent_id}'. Inherit it, specialize it (`[[contracts.roles]] name = \"<word>\" refines = \"{}\"`), or declare it unbound.",
+                            contract.type_id, master_role.name, master_role.name
+                        ),
+                    });
+                }
             }
         }
         // A cycle can only form among this pack's own types — a base type
@@ -2266,6 +2752,58 @@ fn validate_ontology_against_rules(
                     contract.type_id
                 ),
             });
+        }
+    }
+
+    // A RULE NAMES THE LINE IT EMITS, AND THE LINES COVER THE MASTER'S
+    // (docs/40 §6). Opt-in per type while the packs migrate: once any rule
+    // of a type names a line, every rule of that type must, each must be a
+    // line the type's chain declares, and together they must cover it.
+    let merged_view = ontology.merged_with_base();
+    for contract in &ontology.contracts {
+        let Some(rule_name) = contract.contract_name.as_deref() else {
+            continue;
+        };
+        let own_rules: Vec<&LoweringRule> = rules
+            .iter()
+            .filter(|r| r.contract_name == rule_name)
+            .collect();
+        if own_rules.iter().all(|r| r.line.is_none()) {
+            continue;
+        }
+        let declared: Vec<OntologyLine> = merged_view.effective_lines(&contract.type_id);
+        for rule in &own_rules {
+            let Some(line) = rule.line.as_deref() else {
+                return Err(PackLoadError {
+                    message: format!(
+                        "Ontology '{source}': rule '{}' of contract type '{}' names no line while its siblings do. Every rule of a type names the line it emits.",
+                        rule.id, contract.type_id
+                    ),
+                });
+            };
+            if !declared.iter().any(|l| l.name == line) {
+                return Err(PackLoadError {
+                    message: format!(
+                        "Ontology '{source}': rule '{}' emits line '{line}', which contract type '{}' does not declare. Its lines are: {}.",
+                        rule.id,
+                        contract.type_id,
+                        declared.iter().map(|l| l.name.as_str()).collect::<Vec<_>>().join(", ")
+                    ),
+                });
+            }
+        }
+        for line in &declared {
+            if !own_rules
+                .iter()
+                .any(|r| r.line.as_deref() == Some(line.name.as_str()))
+            {
+                return Err(PackLoadError {
+                    message: format!(
+                        "Ontology '{source}': contract type '{}' promises line '{}' and no rule of '{rule_name}' emits it.",
+                        contract.type_id, line.name
+                    ),
+                });
+            }
         }
     }
 
@@ -4011,5 +4549,396 @@ to = "leased"
             .unwrap()
             .contains("series_sum"));
         assert!(lc.transitions[1].guard.is_none());
+    }
+}
+
+/// The contract side of the master-type mechanism (docs/40): fields inherit
+/// strengthen-only, roles specialize and must cover the master's, lines are
+/// promised by the master and emitted by the rules.
+#[cfg(test)]
+mod master_contract_tests {
+    use super::*;
+    use std::path::Path;
+
+    fn rule_with_line(name: &str, id: &str, line: Option<&str>) -> LoweringRule {
+        let line_toml = line
+            .map(|l| format!("line = \"{l}\"\n"))
+            .unwrap_or_default();
+        let raw = format!(
+            r#"
+[[rules]]
+id = "{id}"
+contract_name = "{name}"
+{line_toml}stream_name = "t.stream.{id}"
+owner_entity = "${{subject}}"
+direction = "inflow"
+category = "operating.revenue.other"
+amount_expr = "1"
+schedule_kind = "every"
+schedule_from = "2026-01"
+schedule_to = "2026-01"
+"#
+        );
+        parse_lowering_rules(&raw, "test")
+            .expect("minimal rule parses")
+            .remove(0)
+    }
+
+    #[test]
+    fn a_refinement_inherits_its_masters_fields_roles_lines_and_side() {
+        let raw = r#"
+[[contracts]]
+type_id = "T.Contract.Mortgage"
+contract_name = "t.mortgage"
+parties = ["lender", "borrower"]
+refines = "Contract.Debt"
+side = "pays"
+
+[[contracts.fields]]
+name = "amortization_months"
+field_type = "integer"
+required = true
+unit = "months"
+"#;
+        let o = parse_ontology(raw, "test", "t").expect("parses");
+        let merged = o.merged_with_base();
+        let fields = merged.effective_fields("T.Contract.Mortgage");
+        let principal = fields
+            .iter()
+            .find(|f| f.name == "principal")
+            .expect("inherited");
+        assert!(principal.required);
+        let amort = fields
+            .iter()
+            .find(|f| f.name == "amortization_months")
+            .expect("strengthened");
+        assert!(amort.required, "the leaf's strengthening wins");
+        let lines: Vec<&str> = merged
+            .effective_lines("T.Contract.Mortgage")
+            .iter()
+            .map(|l| l.name.as_str())
+            .collect::<Vec<_>>()
+            .into_iter()
+            .map(|s| Box::leak(s.to_string().into_boxed_str()) as &str)
+            .collect();
+        assert_eq!(lines, vec!["proceeds", "interest", "principal"]);
+        assert_eq!(
+            merged.effective_side("T.Contract.Mortgage").as_deref(),
+            Some("pays")
+        );
+        assert_eq!(
+            merged.effective_side("Contract.Debt"),
+            None,
+            "the master leaves the side open"
+        );
+        assert_eq!(
+            merged.master_of("T.Contract.Mortgage").as_deref(),
+            Some("Contract.Debt")
+        );
+    }
+
+    #[test]
+    fn a_contract_refinement_may_not_retype_or_weaken_an_inherited_field() {
+        let retype = r#"
+[[contracts]]
+type_id = "T.Contract.Mortgage"
+contract_name = "t.mortgage"
+parties = ["lender", "borrower"]
+refines = "Contract.Debt"
+
+[[contracts.fields]]
+name = "principal"
+field_type = "string"
+required = true
+"#;
+        let err = parse_ontology(retype, "test", "t").expect_err("retype refused");
+        assert!(err.message.contains("not retype"), "{}", err.message);
+
+        let weaken = r#"
+[[contracts]]
+type_id = "T.Contract.Mortgage"
+contract_name = "t.mortgage"
+parties = ["lender", "borrower"]
+refines = "Contract.Debt"
+
+[[contracts.fields]]
+name = "principal"
+field_type = "decimal"
+required = false
+"#;
+        let err = parse_ontology(weaken, "test", "t").expect_err("weakening refused");
+        assert!(err.message.contains("never weaken"), "{}", err.message);
+    }
+
+    #[test]
+    fn a_role_specializes_a_master_role_and_resolves_to_it() {
+        let raw = r#"
+[[contracts]]
+type_id = "T.Contract.Lease"
+contract_name = "t.lease"
+refines = "Contract.Lease"
+
+[[contracts.roles]]
+name = "landlord"
+refines = "lessor"
+
+[[contracts.roles]]
+name = "tenant"
+refines = "lessee"
+
+[[contracts]]
+type_id = "T.Contract.UnitLease"
+contract_name = "t.lease_unit"
+refines = "T.Contract.Lease"
+parties = ["landlord", "tenant"]
+"#;
+        let o = parse_ontology(raw, "test", "t").expect("parses");
+        let merged = o.merged_with_base();
+        let roles = merged.effective_roles("T.Contract.UnitLease");
+        let landlord = roles
+            .iter()
+            .find(|r| r.name == "landlord")
+            .expect("the pack's word");
+        assert_eq!(landlord.master, "lessor", "resolves to the master's word");
+        assert!(roles.iter().all(|r| !r.unbound));
+        assert_eq!(
+            roles.len(),
+            2,
+            "one effective role per master role, not one per spelling"
+        );
+    }
+
+    #[test]
+    fn every_master_role_must_be_covered_or_declared_unbound() {
+        let hole = r#"
+[[contracts]]
+type_id = "T.Contract.Exit"
+contract_name = "t.exit"
+parties = ["seller"]
+refines = "Contract.Sale"
+"#;
+        let err = parse_ontology(hole, "test", "t").expect_err("buyer uncovered");
+        assert!(
+            err.message.contains("does not cover role 'buyer'"),
+            "{}",
+            err.message
+        );
+
+        let unbound = r#"
+[[contracts]]
+type_id = "T.Contract.Exit"
+contract_name = "t.exit"
+parties = ["seller"]
+refines = "Contract.Sale"
+
+[[contracts.roles]]
+name = "buyer"
+unbound = true
+"#;
+        let o = parse_ontology(unbound, "test", "t").expect("an unbound role covers");
+        let roles = o.merged_with_base().effective_roles("T.Contract.Exit");
+        assert!(
+            roles
+                .iter()
+                .find(|r| r.name == "buyer")
+                .expect("kept")
+                .unbound
+        );
+    }
+
+    #[test]
+    fn a_role_specialization_must_name_a_master_role() {
+        let raw = r#"
+[[contracts]]
+type_id = "T.Contract.Lease"
+contract_name = "t.lease"
+refines = "Contract.Lease"
+parties = ["lessee"]
+
+[[contracts.roles]]
+name = "landlord"
+refines = "landowner"
+"#;
+        let err = parse_ontology(raw, "test", "t").expect_err("unknown target refused");
+        assert!(err.message.contains("'landowner'"), "{}", err.message);
+    }
+
+    #[test]
+    fn a_role_may_not_be_declared_twice_and_a_masterless_type_specializes_nothing() {
+        let twice = r#"
+[[contracts]]
+type_id = "T.Contract.Lease"
+contract_name = "t.lease"
+refines = "Contract.Lease"
+parties = ["lessor", "lessee"]
+
+[[contracts.roles]]
+name = "lessor"
+refines = "lessor"
+"#;
+        let err = parse_ontology(twice, "test", "t").expect_err("declared twice");
+        assert!(err.message.contains("twice"), "{}", err.message);
+
+        let orphan = r#"
+[[contracts]]
+type_id = "T.Contract.Thing"
+contract_name = "t.thing"
+
+[[contracts.roles]]
+name = "landlord"
+refines = "lessor"
+"#;
+        let err = parse_ontology(orphan, "test", "t").expect_err("no master to specialize");
+        assert!(err.message.contains("refines no type"), "{}", err.message);
+    }
+
+    #[test]
+    fn a_side_is_pays_or_receives_and_a_subject_family_is_inherited() {
+        let raw = r#"
+[[contracts]]
+type_id = "T.Contract.Mortgage"
+contract_name = "t.mortgage"
+parties = ["lender", "borrower"]
+refines = "Contract.Debt"
+side = "sideways"
+"#;
+        let err = parse_ontology(raw, "test", "t").expect_err("bad side");
+        assert!(
+            err.message.contains("'pays' or 'receives'"),
+            "{}",
+            err.message
+        );
+
+        let raw = r#"
+[[contracts]]
+type_id = "T.Contract.Lease"
+contract_name = "t.lease"
+subject_family = "asset"
+parties = ["lessor", "lessee"]
+refines = "Contract.Lease"
+
+[[contracts]]
+type_id = "T.Contract.UnitLease"
+contract_name = "t.lease_unit"
+subject_family = "party"
+parties = ["lessor", "lessee"]
+refines = "T.Contract.Lease"
+"#;
+        let err = parse_ontology(raw, "test", "t").expect_err("family drift");
+        assert!(err.message.contains("subject family"), "{}", err.message);
+    }
+
+    #[test]
+    fn rules_that_name_lines_must_cover_the_masters_and_name_only_declared_ones() {
+        let raw = r#"
+[[contracts]]
+type_id = "T.Contract.Mortgage"
+contract_name = "t.mortgage"
+parties = ["lender", "borrower"]
+refines = "Contract.Debt"
+"#;
+        let o = parse_ontology(raw, "test", "t").expect("parses");
+        // No rule names a line: the type is not checked (migration).
+        validate_ontology_against_rules(&o, &[rule_with_line("t.mortgage", "a", None)], "test")
+            .expect("opt-in");
+        // One names a line, a sibling does not.
+        let err = validate_ontology_against_rules(
+            &o,
+            &[
+                rule_with_line("t.mortgage", "a", Some("interest")),
+                rule_with_line("t.mortgage", "b", None),
+            ],
+            "test",
+        )
+        .expect_err("siblings must all name lines");
+        assert!(err.message.contains("names no line"), "{}", err.message);
+        // A line the master does not declare.
+        let err = validate_ontology_against_rules(
+            &o,
+            &[rule_with_line("t.mortgage", "a", Some("fees"))],
+            "test",
+        )
+        .expect_err("undeclared line");
+        assert!(err.message.contains("does not declare"), "{}", err.message);
+        // Coverage.
+        let err = validate_ontology_against_rules(
+            &o,
+            &[rule_with_line("t.mortgage", "a", Some("interest"))],
+            "test",
+        )
+        .expect_err("principal and proceeds missing");
+        assert!(err.message.contains("promises line"), "{}", err.message);
+        validate_ontology_against_rules(
+            &o,
+            &[
+                rule_with_line("t.mortgage", "a", Some("proceeds")),
+                rule_with_line("t.mortgage", "b", Some("interest")),
+                rule_with_line("t.mortgage", "c", Some("principal")),
+            ],
+            "test",
+        )
+        .expect("all three lines emitted");
+    }
+
+    #[test]
+    fn the_line_master_is_specialized_by_kind_in_the_base() {
+        let base = PackOntology::language_base();
+        for kind in [
+            "Contract.Revenue",
+            "Contract.Deduction",
+            "Contract.Expense",
+            "Contract.CapitalExpenditure",
+            "Contract.WorkingCapital",
+        ] {
+            assert!(base.is_a(kind, "Contract.Line"), "{kind} is a line");
+            let fields = base.effective_fields(kind);
+            assert!(fields
+                .iter()
+                .any(|f| f.name == "amount" && f.one_of.as_deref() == Some("amount")));
+            assert_eq!(
+                base.effective_lines(kind).len(),
+                1,
+                "{kind} produces one line"
+            );
+        }
+        assert!(
+            base.contracts.iter().all(|c| c.is_abstract),
+            "every base contract type is a master"
+        );
+    }
+
+    #[test]
+    fn every_shipped_pack_type_reaches_a_base_master_with_every_role_resolved() {
+        let root = Path::new(env!("CARGO_MANIFEST_DIR"))
+            .parent()
+            .and_then(|p| p.parent())
+            .expect("workspace root")
+            .join("packs");
+        let registry = PackRegistry::load_from_dir(&root).expect("packs load");
+        let base = PackOntology::language_base();
+        for name in ["cre", "energy", "credit", "opco"] {
+            let pack = registry.pack(name).unwrap_or_else(|| panic!("{name} pack"));
+            let merged = pack.ontology.merged_with_base();
+            for contract in &pack.ontology.contracts {
+                let master = merged
+                    .master_of(&contract.type_id)
+                    .unwrap_or_else(|| panic!("{name}: {} has no chain", contract.type_id));
+                assert!(
+                    base.contracts.iter().any(|c| c.type_id == master),
+                    "{name}: {} ends at '{master}', which is not a language-base master",
+                    contract.type_id
+                );
+                let master_roles = base.effective_roles(&master);
+                for role in merged.effective_roles(&contract.type_id) {
+                    assert!(
+                        master_roles.iter().any(|m| m.name == role.master),
+                        "{name}: {} role '{}' resolves to '{}', not a role of {master}",
+                        contract.type_id,
+                        role.name,
+                        role.master
+                    );
+                }
+            }
+        }
     }
 }

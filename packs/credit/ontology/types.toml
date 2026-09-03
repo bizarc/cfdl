@@ -291,23 +291,44 @@ type_id = "Credit.Contract.LevelPayPool"
 refines = "Contract.Debt"
 contract_name = "credit.pool_level_pay"
 subject_family = "asset"
-parties = ["holder"]
 description = "Amortizing pool with prepayment, default, severity and recovery lag."
+
+[[contracts.roles]]
+name = "holder"
+refines = "lender"
+
+[[contracts.roles]]
+name = "borrower"
+unbound = true
 
 [[contracts]]
 type_id = "Credit.Contract.InterestOnlyPool"
 refines = "Contract.Debt"
 contract_name = "credit.pool_io_bullet"
 subject_family = "asset"
-parties = ["holder"]
+
+[[contracts.roles]]
+name = "holder"
+refines = "lender"
+
+[[contracts.roles]]
+name = "borrower"
+unbound = true
 
 [[contracts]]
 type_id = "Credit.Contract.FloatingInterestOnlyPool"
 refines = "Contract.Debt"
 contract_name = "credit.pool_float_io_bullet"
 subject_family = "asset"
-parties = ["holder"]
 description = "Coupon resets off a declared reference rather than being fixed at origination."
+
+[[contracts.roles]]
+name = "holder"
+refines = "lender"
+
+[[contracts.roles]]
+name = "borrower"
+unbound = true
 
 [[contracts]]
 type_id = "Credit.Contract.Purchase"
@@ -322,13 +343,16 @@ parties = ["buyer", "seller"]
 type_id = "Credit.Contract.CleanUpCall"
 refines = "Contract.Option"
 subject_family = "asset"
-parties = ["issuer", "holder"]
+parties = ["holder"]
 description = "The issuer's right to retire the pool once it falls below a stated size."
+
+[[contracts.roles]]
+name = "issuer"
+refines = "grantor"
 
 # ---------------------------------------------------------------------------
 # References
 # ---------------------------------------------------------------------------
-
 [[references]]
 reference_id = "credit.base_rate"
 kind = "rate_curve"

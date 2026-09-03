@@ -6259,11 +6259,29 @@ refines = "Contract.Debt"
 contract_name = "cre.permanent_debt"
 
 [[contracts.fields]]        # strengthens an inherited master field
-name = "amort_months"
+name = "amortization_months"
 field_type = "integer"
 required = true
 unit = "months"
+
+[[contracts.roles]]         # specializes a master role (docs/40 §5)
+name = "landlord"
+refines = "lessor"
+
+[[contracts.roles]]         # a master role this form of the agreement leaves unbound
+name = "buyer"
+unbound = true
 ```
+
+`parties = ["lender", "borrower"]` stays the shorthand for roles inherited
+by the master's own word. A master also declares `lines` (`[[contracts.lines]]
+name = "interest"`) and, where it serves one side only, `side = "pays"` or
+`"receives"`; a refinement inherits both, may add lines, and fixes a side
+the master left open. Each lowering rule names the line it emits
+(`line = "interest"` on the `[[rules]]` entry), and load checks that a
+type's rules cover its effective lines. The check is opt-in per type
+until every pack names its lines: a type none of whose rules names a line
+is not checked.
 
 The master's fields are the schema; the lowering rule consumes them by
 name (`{{contract.principal}}`); the template renders the required ones;
@@ -9030,21 +9048,21 @@ Contract types (a `contract <name>` declaration lowers to streams through the pa
 
 | type | contract name | parties | description |
 |---|---|---|---|
-| `CRE.Contract.Lease` | `cre.lease` | landlord, tenant |  |
+| `CRE.Contract.Lease` | `cre.lease` |  |  |
 | `CRE.Contract.UnitLease` | `cre.lease_unit` | landlord, tenant | A lease modeled at unit grain, with recoveries and expense stops. |
 | `CRE.Contract.Rollover` | `cre.rollover` | landlord | The probability-weighted outcome at expiry. Names only the landlord: the renewing or replacing tenant is not known when the model is written. |
 | `CRE.Contract.PercentageRent` | `cre.percentage_rent` | landlord, tenant |  |
 | `CRE.Contract.PercentageRentExpected` | `cre.percentage_rent_expected` | landlord, tenant |  |
-| `CRE.Contract.VacancyAllowance` | `cre.vacancy_loss` | landlord |  |
+| `CRE.Contract.VacancyAllowance` | `cre.vacancy_loss` |  |  |
 | `CRE.Contract.OperatingExpense` | `cre.opex_line` | owner | One operating expense line. Instance it per expense for an itemised schedule, or declare one unsuffixed for a single blended figure; the entity it hangs on sets the level. |
 | `CRE.Contract.OperatingRevenue` | `cre.revenue_line` | owner |  |
 | `CRE.Contract.PermanentDebt` | `cre.permanent_debt` | borrower, lender |  |
-| `CRE.Contract.ConstructionFunding` | `cre.construction_stub` | owner, lender |  |
-| `CRE.Contract.ConstructionLoan` | `cre.construction_loan` | owner, lender | A construction facility funded behind an equity commitment: equity draws first, the loan takes the balance once the commitment is exhausted, and interest accrues on the drawn balance through the build. |
+| `CRE.Contract.ConstructionFunding` | `cre.construction_stub` | lender |  |
+| `CRE.Contract.ConstructionLoan` | `cre.construction_loan` | lender | A construction facility funded behind an equity commitment: equity draws first, the loan takes the balance once the commitment is exhausted, and interest accrues on the drawn balance through the build. |
 | `CRE.Contract.Disposition` | `cre.exit` | seller |  |
 | `CRE.Contract.DispositionAtCap` | `cre.exit_cap` | seller |  |
 | `CRE.Contract.DispositionAtForwardCap` | `cre.exit_forward` | seller |  |
-| `CRE.Contract.RenewalOption` | (election) | landlord, tenant | A tenant's right to extend at stated terms. |
+| `CRE.Contract.RenewalOption` | (election) |  | A tenant's right to extend at stated terms. |
 | `CRE.Contract.PurchaseOption` | (election) | grantor, holder | A right to buy the asset at a stated price. |
 
 Metrics: `domain.cre.noi`, `domain.cre.debt_service`, `domain.cre.dscr`, `domain.cre.leasing_costs`
@@ -9082,11 +9100,11 @@ Contract types (a `contract <name>` declaration lowers to streams through the pa
 
 | type | contract name | parties | description |
 |---|---|---|---|
-| `Credit.Contract.LevelPayPool` | `credit.pool_level_pay` | holder | Amortizing pool with prepayment, default, severity and recovery lag. |
-| `Credit.Contract.InterestOnlyPool` | `credit.pool_io_bullet` | holder |  |
-| `Credit.Contract.FloatingInterestOnlyPool` | `credit.pool_float_io_bullet` | holder | Coupon resets off a declared reference rather than being fixed at origination. |
+| `Credit.Contract.LevelPayPool` | `credit.pool_level_pay` |  | Amortizing pool with prepayment, default, severity and recovery lag. |
+| `Credit.Contract.InterestOnlyPool` | `credit.pool_io_bullet` |  |  |
+| `Credit.Contract.FloatingInterestOnlyPool` | `credit.pool_float_io_bullet` |  | Coupon resets off a declared reference rather than being fixed at origination. |
 | `Credit.Contract.Purchase` | `credit.purchase` | buyer, seller |  |
-| `Credit.Contract.CleanUpCall` | (election) | issuer, holder | The issuer's right to retire the pool once it falls below a stated size. |
+| `Credit.Contract.CleanUpCall` | (election) | holder | The issuer's right to retire the pool once it falls below a stated size. |
 
 Metrics: `domain.credit.interest`, `domain.credit.principal`, `domain.credit.recoveries`, `domain.credit.penalties`, `domain.credit.servicing`, `domain.credit.wal_years`, `domain.credit.collections`, `domain.credit.purchase`, `domain.credit.collections_multiple`
 
@@ -9109,13 +9127,13 @@ Contract types (a `contract <name>` declaration lowers to streams through the pa
 | `Energy.Contract.MerchantSale` | `energy.merchant` | seller | Uncontracted sale into the market. The counterparty is the market, so only the seller is named. |
 | `Energy.Contract.StorageArbitrage` | `energy.storage_arbitrage` | seller |  |
 | `Energy.Contract.CapacityPayment` | `energy.capacity` | seller, offtaker |  |
-| `Energy.Contract.OperationsAndMaintenance` | `energy.om` | owner, service_provider |  |
+| `Energy.Contract.OperationsAndMaintenance` | `energy.om` |  |  |
 | `Energy.Contract.ProjectDebt` | `energy.debt_service` | borrower, lender |  |
 | `Energy.Contract.Capex` | `energy.capex` | owner |  |
-| `Energy.Contract.InvestmentTaxCredit` | `energy.itc` | claimant |  |
-| `Energy.Contract.ProductionTaxCredit` | `energy.ptc` | claimant |  |
-| `Energy.Contract.DepreciationShield` | `energy.macrs_shield` | claimant |  |
-| `Energy.Contract.OfftakeExtension` | (election) | seller, offtaker | An offtaker's right to extend the contracted term. |
+| `Energy.Contract.InvestmentTaxCredit` | `energy.itc` |  |  |
+| `Energy.Contract.ProductionTaxCredit` | `energy.ptc` |  |  |
+| `Energy.Contract.DepreciationShield` | `energy.macrs_shield` |  |  |
+| `Energy.Contract.OfftakeExtension` | (election) |  | An offtaker's right to extend the contracted term. |
 
 Metrics: `domain.energy.revenue`, `domain.energy.opex`, `domain.energy.ebitda`, `domain.energy.debt_service`, `domain.energy.dscr`, `domain.energy.tax_benefits`
 

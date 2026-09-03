@@ -401,11 +401,29 @@ refines = "Contract.Debt"
 contract_name = "cre.permanent_debt"
 
 [[contracts.fields]]        # strengthens an inherited master field
-name = "amort_months"
+name = "amortization_months"
 field_type = "integer"
 required = true
 unit = "months"
+
+[[contracts.roles]]         # specializes a master role (docs/40 §5)
+name = "landlord"
+refines = "lessor"
+
+[[contracts.roles]]         # a master role this form of the agreement leaves unbound
+name = "buyer"
+unbound = true
 ```
+
+`parties = ["lender", "borrower"]` stays the shorthand for roles inherited
+by the master's own word. A master also declares `lines` (`[[contracts.lines]]
+name = "interest"`) and, where it serves one side only, `side = "pays"` or
+`"receives"`; a refinement inherits both, may add lines, and fixes a side
+the master left open. Each lowering rule names the line it emits
+(`line = "interest"` on the `[[rules]]` entry), and load checks that a
+type's rules cover its effective lines. The check is opt-in per type
+until every pack names its lines: a type none of whose rules names a line
+is not checked.
 
 The master's fields are the schema; the lowering rule consumes them by
 name (`{{contract.principal}}`); the template renders the required ones;

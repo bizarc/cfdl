@@ -254,7 +254,14 @@ type_id = "CRE.Contract.Lease"
 refines = "Contract.Lease"
 contract_name = "cre.lease"
 subject_family = "asset"
-parties = ["landlord", "tenant"]
+
+[[contracts.roles]]
+name = "landlord"
+refines = "lessor"
+
+[[contracts.roles]]
+name = "tenant"
+refines = "lessee"
 
 [[contracts]]
 type_id = "CRE.Contract.UnitLease"
@@ -272,6 +279,10 @@ subject_family = "asset"
 parties = ["landlord"]
 description = "The probability-weighted outcome at expiry. Names only the landlord: the renewing or replacing tenant is not known when the model is written."
 
+[[contracts.roles]]
+name = "tenant"
+unbound = true
+
 [[contracts]]
 type_id = "CRE.Contract.PercentageRent"
 refines = "CRE.Contract.Lease"
@@ -288,12 +299,17 @@ parties = ["landlord", "tenant"]
 
 [[contracts]]
 type_id = "CRE.Contract.VacancyAllowance"
+refines = "Contract.Deduction"
 contract_name = "cre.vacancy_loss"
 subject_family = "asset"
-parties = ["landlord"]
+
+[[contracts.roles]]
+name = "landlord"
+refines = "owner"
 
 [[contracts]]
 type_id = "CRE.Contract.OperatingExpense"
+refines = "Contract.Expense"
 contract_name = "cre.opex_line"
 subject_family = "asset"
 parties = ["owner"]
@@ -301,6 +317,7 @@ description = "One operating expense line. Instance it per expense for an itemis
 
 [[contracts]]
 type_id = "CRE.Contract.OperatingRevenue"
+refines = "Contract.Revenue"
 contract_name = "cre.revenue_line"
 subject_family = "asset"
 parties = ["owner"]
@@ -314,17 +331,26 @@ parties = ["borrower", "lender"]
 
 [[contracts]]
 type_id = "CRE.Contract.ConstructionFunding"
+refines = "Contract.Debt"
 contract_name = "cre.construction_stub"
 subject_family = "asset"
-parties = ["owner", "lender"]
+parties = ["lender"]
+
+[[contracts.roles]]
+name = "owner"
+refines = "borrower"
 
 [[contracts]]
 type_id = "CRE.Contract.ConstructionLoan"
 refines = "Contract.Debt"
 contract_name = "cre.construction_loan"
 subject_family = "asset"
-parties = ["owner", "lender"]
+parties = ["lender"]
 description = "A construction facility funded behind an equity commitment: equity draws first, the loan takes the balance once the commitment is exhausted, and interest accrues on the drawn balance through the build."
+
+[[contracts.roles]]
+name = "owner"
+refines = "borrower"
 
 [[contracts]]
 type_id = "CRE.Contract.Disposition"
@@ -333,12 +359,20 @@ contract_name = "cre.exit"
 subject_family = "asset"
 parties = ["seller"]
 
+[[contracts.roles]]
+name = "buyer"
+unbound = true
+
 [[contracts]]
 type_id = "CRE.Contract.DispositionAtCap"
 refines = "Contract.Sale"
 contract_name = "cre.exit_cap"
 subject_family = "asset"
 parties = ["seller"]
+
+[[contracts.roles]]
+name = "buyer"
+unbound = true
 
 [[contracts]]
 type_id = "CRE.Contract.DispositionAtForwardCap"
@@ -347,14 +381,24 @@ contract_name = "cre.exit_forward"
 subject_family = "asset"
 parties = ["seller"]
 
-# --- Options: contracts with an election ---------------------------------
+[[contracts.roles]]
+name = "buyer"
+unbound = true
 
+# --- Options: contracts with an election ---------------------------------
 [[contracts]]
 type_id = "CRE.Contract.RenewalOption"
 refines = "Contract.Option"
 subject_family = "asset"
-parties = ["landlord", "tenant"]
 description = "A tenant's right to extend at stated terms."
+
+[[contracts.roles]]
+name = "landlord"
+refines = "grantor"
+
+[[contracts.roles]]
+name = "tenant"
+refines = "holder"
 
 [[contracts]]
 type_id = "CRE.Contract.PurchaseOption"
