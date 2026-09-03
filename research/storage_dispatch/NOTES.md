@@ -38,7 +38,55 @@ asset with no domain vocabulary.
   from the reference. Days run and MWh are `metric`s: outputs, not assumptions,
   which is the circularity `docs/13` §7.1 names.
 
-## Where it stands against the reference
+## THE REFERENCE: a provably optimal LP, not SAM
+
+`optimal.py`. SAM is not a valid target — NREL/TP-6A20-68614 says its dispatch is
+"automated but SUBOPTIMAL" and does "no optimization around the cost of energy
+and power" — so agreement with it would be evidence of nothing. This solves the
+actual problem instead:
+
+    maximise   sum_t price_t * (d_t - c_t)
+    subject to power, state-of-charge and efficiency limits, and a warranty
+               cap of one equivalent full cycle per day
+
+State of charge is carried as its own variable so the constraint matrix is
+sparse; written as cumulative sums it is a dense 8760 x 8760 triangle and does
+not finish. Two horizons: `daily` solves each day independently and is the best
+a DAILY-GRAIN model can do; `annual` carries charge across midnight and is
+always at least as good.
+
+## Where it stands: CFDL matches the optimum
+
+| | CFDL | LP daily | diff | LP annual | SAM |
+|---|---|---|---|---|---|
+| days run | 365 | 365 | 0.00% | 365 | 302 |
+| MWh out | 23,360 | 23,360 | 0.00% | 23,356 | 14,193 |
+| revenue | 1,359,583 | 1,358,922 | 0.05% | 1,350,714 | 678,046 |
+| cost | 627,109 | 627,377 | -0.04% | 584,065 | 483,803 |
+| margin | 732,474 | 731,545 | **0.13%** | 766,648 | 194,243 |
+
+**The CFDL model reproduces the provably optimal daily-grain dispatch to 0.13%
+on margin and exactly on volume.** The physics, the TBx capture characterisation
+and the accounting are all validated by that.
+
+Three things the comparison now separates cleanly:
+
+- **0.13%, CFDL above the optimum.** Not noise, and not an error in the
+  arithmetic: the TBx blocks treat the dear and cheap slices as independent, so
+  they ignore ordering WITHIN the day — a battery cannot discharge at 09:00 on
+  energy it buys at 14:00. The model is a genuine upper bound and this is its
+  size.
+- **+4.8%, annual over daily.** What carrying state of charge across midnight is
+  worth, and therefore what a daily grain gives up by construction. This is the
+  chronology error of `docs/13` §7.1, measured.
+- **SAM at 27% of optimal.** Consistent with a documented heuristic, and the
+  reason it cannot anchor a case.
+
+## What the earlier SAM comparison was worth
+
+Nothing quantitative, and it is left below because the traps are worth keeping.
+
+## Where it stood against SAM
 
 Matched assumptions, gross arbitrage margin, no hurdle on either side:
 
