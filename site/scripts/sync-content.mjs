@@ -650,6 +650,8 @@ const benchmarkTitles = {
   "energy/tax_equity_flip": "Energy: a tax-equity flip, with the date derived",
   "energy/tax_equity_flip_account":
     "Energy: a tax-equity flip, distributing from an account",
+  "energy/merchant_storage_arbitrage":
+    "Energy: a merchant battery dispatched on the day-ahead spread",
   "energy/wind_ptc_macrs": "Energy: wind with PTC and MACRS",
   "opco/banker_dcf_conventions": "OpCo: banker DCF conventions",
   "opco/damodaran_fcff": "OpCo: free cash flow to firm",
