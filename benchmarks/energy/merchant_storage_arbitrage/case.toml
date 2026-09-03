@@ -1,0 +1,23 @@
+# Benchmark case: a merchant battery dispatched on the day-ahead spread, in core
+# CFDL, against a provably optimal reference.
+#
+# THE REFERENCE IS AN OPTIMUM, NOT A TOOL. NREL's SAM was tried first and cannot
+# anchor this: NREL/TP-6A20-68614 states its dispatch is "automated but
+# SUBOPTIMAL" and does "no optimization around the cost of energy and power", so
+# agreement with it would be evidence of nothing. `reference_gen.py` solves the
+# dispatch as a linear program instead, and an LP optimum is a proof rather than
+# an assertion.
+#
+# TOLERANCES ARE A MODELLING DIFFERENCE, NOT DRIFT. The model reads the day's
+# TBx block prices, which treat the dear and cheap slices as independent and so
+# ignore ordering WITHIN the day — a battery cannot discharge at 09:00 on energy
+# it buys at 14:00. That makes the model a slight upper bound. The effect is
+# bounded and measured: the largest daily deviation is $71.16 on revenue and
+# $56.95 on cost, against daily revenues averaging $3,723, and the median day is
+# exact. The per-period tolerance is set just above the observed maximum, and
+# the annual tolerance to 0.2% of margin.
+summary = "A 20 MW / 80 MWh merchant battery dispatched on the day-ahead spread, with the run/idle decision as a state machine in IEEE Std 762's vocabulary and cycling as an output rather than an assumption."
+period_tolerance = 80.0
+
+[tolerance]
+"market.charge" = 60.0

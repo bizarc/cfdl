@@ -1,0 +1,14 @@
+{
+  "model.total": {
+    "value": 732473.55,
+    "tolerance": 1500.0
+  },
+  "metric.days_run": {
+    "value": 365,
+    "tolerance": 0.0
+  },
+  "metric.mwh_out": {
+    "value": 23360.0,
+    "tolerance": 0.01
+  }
+}

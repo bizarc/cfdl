@@ -77,6 +77,7 @@ checked, and a write-up of the reference and the residual.
 |---|---|
 | [Energy: cost-based solar feed-in tariff](/docs/examples/energy-crest-solar-cost-based) | A distributed solar project paid a cost-based feed-in tariff, with an abating payment in lieu of property tax and a revenue-linked royalty. |
 | [Energy: merchant generator with capacity revenue](/docs/examples/energy-merchant-capacity) | A merchant generator earning both energy and capacity revenue, exposed to price rather than to a contracted offtake. |
+| [Energy: a merchant battery dispatched on the day-ahead spread](/docs/examples/energy-merchant-storage-arbitrage) | A 20 MW / 80 MWh merchant battery dispatched on the day-ahead spread, with the run/idle decision as a state machine in IEEE Std 762's vocabulary and cycling as an output rather than an assumption. |
 | [Energy: solar PPA microgrid](/docs/examples/energy-solar-ppa-microgrid) | A solar microgrid selling under a long-term power purchase agreement, with production degradation and a fixed escalator on the contracted price. |
 | [Energy: a tax-equity flip, with the date derived](/docs/examples/energy-tax-equity-flip) | A tax-equity partnership whose flip date is derived from the investor's return rather than stated, reconciled against an external model. |
 | [Energy: a tax-equity flip, distributing from an account](/docs/examples/energy-tax-equity-flip-account) | The twin of tax_equity_flip, with the project's cash as streams settling into an account rather than a hand-carried field. |
@@ -119,7 +120,7 @@ checked, and a write-up of the reference and the residual.
 | [Bespoke: open-pit copper mine](/docs/examples/bespoke-buenavista-del-cobre) | A 41-year open-pit copper mine whose production plan is derived from its reserve statement, with the pit's strip ratio drawn from a distribution and the valuation reported as a range. |
 | [Bespoke: tolled highway PPP concession](/docs/examples/bespoke-ppiaf-toll-highway) | A 125 km toll highway concession from the World Bank's highway PPP toolkit, financed with three debt tranches and topped up each year by an availability subsidy sized to hold debt service cover at 1.30x. |
 
-*43 cases.*
+*44 cases.*
 <!-- /cfdl:generated benchmark-cases -->
 
 ## Beyond the suite

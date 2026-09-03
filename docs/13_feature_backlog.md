@@ -1701,9 +1701,21 @@ prices around: the quantile closes the Jensen gap, the SOC balance closes the
 chronology gap — a 4-hour battery reaching only contiguous hours is a
 constraint on a walked balance, not on a distribution.
 
-**What still gates it:** a dispatch reference that runs (§7.1's SAM attempt
-segfaulted front-of-meter). The construct no longer waits on the engine; the
-case waits on a source. Related: §7.1, §7.3, `docs/27` §9, `docs/30` §2.
+**The gate is open, and the answer was not a tool.**
+`benchmarks/energy/merchant_storage_arbitrage` ships against a provably optimal
+linear program, because SAM's dispatch is documented as "automated but
+SUBOPTIMAL" with "no optimization around the cost of energy and power"
+(NREL/TP-6A20-68614) and reaches 27% of the optimum on that case's price year.
+The full `Battery` module does run front-of-meter — §7.1's segfault was
+`Battwatts` — but running is not the same as being a target.
+
+The case is core-spelled and makes the state-of-charge argument concrete without
+building the contract: cycling is an OUTPUT, the run/idle decision is a guarded
+edge on a machine in IEEE Std 762's vocabulary, and the chronology cost is
+measured at 4.8% — what carrying charge across midnight is worth, and therefore
+what a daily grain gives up. What remains is `energy.storage_dispatch` itself
+(`docs/27` §9 stage 4), which is no longer gated on a reference.
+Related: §7.1, §7.3, `docs/27` §9, `docs/30` §2.
 
 ### 7.76 The account adoption pass: every pack has a reserve it could not model
 

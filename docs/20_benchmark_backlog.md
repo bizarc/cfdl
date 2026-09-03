@@ -309,10 +309,25 @@ return test, an account for the pot — re-asserts the same published figures
 through the machinery the case motivated, and is the walk's first end-to-end
 benchmark rather than fixture.
 
-**5.4 A storage dispatch case.** Blocked on a reference that runs, not on
-the language any longer (`docs/13` §7.75, §7.1's SAM attempt). Whichever
-reference first produces a defensible dispatch schedule — even behind the
-meter — gets the case, and with it the energy pack's last uncovered rule.
+**5.4 A storage dispatch case. SHIPPED**, as
+`benchmarks/energy/merchant_storage_arbitrage`, and not in the way this entry
+expected. The blocker was a reference that runs; the resolution was that no
+TOOL is the right reference. SAM's dispatch is documented as "automated but
+SUBOPTIMAL", performing "no optimization around the cost of energy and power"
+(NREL/TP-6A20-68614 §1 and §5), and its source solves each look-ahead window
+with no state-of-charge constraint linking it to the next. It reaches 27% of the
+optimum on the case's price year, so agreement with it would have been evidence
+of nothing. The reference is a linear program instead — an optimum is a proof,
+not an assertion — and the model reproduces it exactly on volume and to 0.13% on
+margin. `benchmarks/energy/merchant_storage_arbitrage/NOTES.md` carries what was
+learned about driving SAM, including two inputs it silently ignores.
+
+**It does NOT close the energy pack's last uncovered rule**, and the entry above
+was wrong to assume a case would. The case is core-spelled and never declares
+`energy.storage_arbitrage`; what it demonstrates is that the rule's SHAPE is
+wrong, since `mwh_cycled_year` is an input to it and the output of any dispatch
+model. `docs/13` §7.3 stands at energy 9/10 validated until a contract exists to
+validate.
 
 **5.5 A promotion, not an invention: the availability-payment concession.**
 `bespoke/ppiaf_toll_highway` already models three tranches, capitalizing
