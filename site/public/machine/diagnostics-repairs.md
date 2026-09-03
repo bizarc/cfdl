@@ -328,8 +328,8 @@ contract cre.permanent_debt on entity asset.tower {
   category financing.debt.interest_paid
   terms {
     principal = 1000000
-    rate = 0.05
-    amort_months = 300
+    interest_rate = 0.05
+    amortization_months = 300
   }
 }
 ```
@@ -409,13 +409,13 @@ entity asset property : CRE.Asset.RealProperty
 contract cre.exit_cap {
   term 2031-12..2031-12
   terms {
-    exit_cap = 0
-    noi_value = 180000
+    cap_rate = 0
+    income = 180000
   }
 }
 ```
 
-- `E6011_CRE_EXIT_INVALID_EXIT_CAP` (error): CRE exit 'exit_cap' must be greater than 0.
+- `E6011_CRE_EXIT_INVALID_EXIT_CAP` (error): CRE exit 'cap_rate' must be greater than 0.
 
 Minimal fix (compiles):
 
@@ -431,8 +431,8 @@ entity asset property : CRE.Asset.RealProperty
 contract cre.exit_cap {
   term 2031-12..2031-12
   terms {
-    exit_cap = 0.06
-    noi_value = 180000
+    cap_rate = 0.06
+    income = 180000
   }
 }
 ```
@@ -457,7 +457,7 @@ contract cre.lease {
 }
 ```
 
-- `E6001_CRE_LEASE_MISSING_BASE_RENT` (error): CRE lease must state a rent: 'base_rent' (per period) or 'base_rent_year' (annual).
+- `E6001_CRE_LEASE_MISSING_BASE_RENT` (error): CRE lease must state a rent: 'rent' (per period) or 'rent_year' (annual).
 
 Minimal fix (compiles):
 
@@ -473,7 +473,7 @@ entity asset property : CRE.Asset.RealProperty
 contract cre.lease {
   term 2026-07..2027-12
   terms {
-    base_rent_year = 120000
+    rent_year = 120000
     growth = 0.02
   }
 }
@@ -629,8 +629,8 @@ entity asset buyer : Credit.Asset.LoanPool
 contract credit.pool_level_pay.auto_a on entity asset.buyer {
   term 2026-01..2027-12
   terms {
-    balance = 25000000
-    rate = 0.065
+    principal = 25000000
+    interest_rate = 0.065
     term_months = 24
     cpr = 5.0
     cdr = -0.1
@@ -660,8 +660,8 @@ entity asset buyer : Credit.Asset.LoanPool
 contract credit.pool_level_pay.auto_a on entity asset.buyer {
   term 2026-01..2027-12
   terms {
-    balance = 25000000
-    rate = 0.065
+    principal = 25000000
+    interest_rate = 0.065
     term_months = 24
     cpr = 0.15
     cdr = 0.02
@@ -993,8 +993,8 @@ entity asset solar : Energy.Asset.GenerationFacility
 contract energy.ppa on entity asset.solar {
   term 2026-01..2027-12
   terms {
-    mwh_year = 4200
-    ppa_price = 85
+    quantity = 4200
+    price = 85
     availability = 1.4
     degradation = -0.05
   }
@@ -1030,8 +1030,8 @@ entity asset solar : Energy.Asset.GenerationFacility
 contract energy.ppa on entity asset.solar {
   term 2026-01..2027-12
   terms {
-    mwh_year = 4200
-    ppa_price = 85
+    quantity = 4200
+    price = 85
     availability = 0.97
     degradation = 0.005
   }
@@ -2130,13 +2130,13 @@ contract opco.exit_multiple {
   term 2030-12..2030-12
   terms {
     exit_period = 60
-    exit_multiple = 0
-    base_value = 500000
+    multiple = 0
+    base = 500000
   }
 }
 ```
 
-- `E7021_OPCO_EXIT_INVALID_MULTIPLE` (error): OpCo exit 'exit_multiple' must be greater than 0.
+- `E7021_OPCO_EXIT_INVALID_MULTIPLE` (error): OpCo exit 'multiple' must be greater than 0.
 
 Minimal fix (compiles):
 
@@ -2153,8 +2153,8 @@ contract opco.exit_multiple {
   term 2030-12..2030-12
   terms {
     exit_period = 60
-    exit_multiple = 7.0
-    base_value = 500000
+    multiple = 7.0
+    base = 500000
   }
 }
 ```
@@ -2279,8 +2279,8 @@ entity asset loan : Credit.Asset.LoanPool
 contract credit.pool_level_pay on entity asset.loan {
   term 2026-01..2056-01
   terms {
-    balance = 1200000
-    rate = 0.06
+    principal = 1200000
+    interest_rate = 0.06
     term_months = 360
     cpr = 0
     cdr = 0
@@ -2308,8 +2308,8 @@ entity asset loan : Credit.Asset.LoanPool
 contract credit.pool_level_pay on entity asset.loan {
   term 2026-01..2056-01
   terms {
-    balance = 1200000
-    rate = 0.06
+    principal = 1200000
+    interest_rate = 0.06
     term_months = 360
     cpr = 0
     cdr = 0
@@ -2717,8 +2717,8 @@ entity asset buyer : Credit.Asset.LoanPool
 contract credit.pool_io_bullet.p on entity asset.buyer {
   term 2025-01..2025-12
   terms {
-    balance = 1200000
-    rate = 0.06
+    principal = 1200000
+    interest_rate = 0.06
     term_months = 12
     cpr = 0
     cdr = 0
@@ -2746,8 +2746,8 @@ entity asset buyer : Credit.Asset.LoanPool
 contract credit.pool_io_bullet.p on entity asset.buyer {
   term 2025-01..2025-12
   terms {
-    balance = 1200000
-    rate = 0.06
+    principal = 1200000
+    interest_rate = 0.06
     term_months = 12
     cpr = 0
     cdr = 0
@@ -3747,8 +3747,8 @@ assume degr ~ Normal(mean=0.005, stdev=0.2, clip=[0.0, 1.4])
 contract energy.ppa.plant_a on entity asset.plant {
   term 2026-01..2026-12
   terms {
-    mwh_year = 5000
-    ppa_price = 3000
+    quantity = 5000
+    price = 3000
     escalation = 0.0
     degradation = inputs.degr
     availability = 1.0
@@ -3774,8 +3774,8 @@ assume degr ~ Normal(mean=0.005, stdev=0.2, clip=[0.0, 1.0])
 contract energy.ppa.plant_a on entity asset.plant {
   term 2026-01..2026-12
   terms {
-    mwh_year = 5000
-    ppa_price = 3000
+    quantity = 5000
+    price = 3000
     escalation = 0.0
     degradation = inputs.degr
     availability = 1.0
@@ -3802,8 +3802,8 @@ contract cre.permanent_debt on entity asset.tower {
   term 2026-01..2027-12
   terms {
     principal = 6000000
-    rate = 0.05 + 0.005
-    amort_months = 300
+    interest_rate = 0.05 + 0.005
+    amortization_months = 300
     payment_frequency = 1 + 2
   }
 }
@@ -3831,8 +3831,8 @@ contract cre.permanent_debt on entity asset.tower {
   term 2026-01..2027-12
   terms {
     principal = 6000000
-    rate = 0.05 + 0.005
-    amort_months = 300
+    interest_rate = 0.05 + 0.005
+    amortization_months = 300
   }
 }
 ```
@@ -3903,8 +3903,8 @@ entity asset plant : Energy.Asset.GenerationFacility
 contract energy.ppa.plant_a on entity asset.plant {
   term 2026-01..2026-12
   terms {
-    mwh_year = (1000 + 500
-    ppa_price = 3000
+    quantity = (1000 + 500
+    price = 3000
     escalation = 0.0
     degradation = 0.005
     availability = 1.0
@@ -3912,7 +3912,7 @@ contract energy.ppa.plant_a on entity asset.plant {
 }
 ```
 
-- `E5025_TERM_EXPR_INVALID` (error): Contract 'energy.ppa.plant_a' term 'mwh_year' is an expression that does not compile [E3001_EXPR_PARSE_ERROR]: expected `)`, found end of expression
+- `E5025_TERM_EXPR_INVALID` (error): Contract 'energy.ppa.plant_a' term 'quantity' is an expression that does not compile [E3001_EXPR_PARSE_ERROR]: expected `)`, found end of expression
 
 Minimal fix (compiles):
 
@@ -3929,8 +3929,8 @@ entity asset plant : Energy.Asset.GenerationFacility
 contract energy.ppa.plant_a on entity asset.plant {
   term 2026-01..2026-12
   terms {
-    mwh_year = (1000 + 500)
-    ppa_price = 3000
+    quantity = (1000 + 500)
+    price = 3000
     escalation = 0.0
     degradation = 0.005
     availability = 1.0
@@ -3961,13 +3961,13 @@ entity asset plant : Energy.Asset.GenerationFacility
 contract energy.ptc on entity asset.plant {
   term 2026-01..2028-01
   terms {
-    mwh_year       = 250000 "MWh/yr"
-    credit_per_mwh = 2.75 "c/kWh"
+    quantity       = 250000 "MWh/yr"
+    amount = 2.75 "c/kWh"
   }
 }
 ```
 
-- `E5024_TERM_UNIT_MISMATCH` (error): Contract 'energy.ptc' term 'credit_per_mwh' is stated in c/kWh, but the rule expresses it in USD/MWh.
+- `E5024_TERM_UNIT_MISMATCH` (error): Contract 'energy.ptc' term 'amount' is stated in c/kWh, but the rule expresses it in USD/MWh.
   - hint: Restate the value in USD/MWh. Units are not converted: the number in the model is the number the engine uses.
 
 Minimal fix (compiles):
@@ -3986,8 +3986,8 @@ entity asset plant : Energy.Asset.GenerationFacility
 contract energy.ptc on entity asset.plant {
   term 2026-01..2028-01
   terms {
-    mwh_year       = 250000 "MWh/yr"
-    credit_per_mwh = 27.50 "USD/MWh"
+    quantity       = 250000 "MWh/yr"
+    amount = 27.50 "USD/MWh"
   }
 }
 ```
@@ -4011,8 +4011,8 @@ assume annual_yield = 5000
 contract energy.ppa.plant_a on entity asset.plant {
   term 2026-01..2026-12
   terms {
-    mwh_year = inputs.anual_yield
-    ppa_price = 3000
+    quantity = inputs.anual_yield
+    price = 3000
     escalation = 0.0
     degradation = 0.005
     availability = 1.0
@@ -4020,7 +4020,7 @@ contract energy.ppa.plant_a on entity asset.plant {
 }
 ```
 
-- `E5010_TERM_UNKNOWN_INPUT` (error): Contract 'energy.ppa.plant_a' term 'mwh_year' references input 'anual_yield', which is not declared. Add `assume anual_yield = <value>` or `assume anual_yield ~ <Dist>(...)`.
+- `E5010_TERM_UNKNOWN_INPUT` (error): Contract 'energy.ppa.plant_a' term 'quantity' references input 'anual_yield', which is not declared. Add `assume anual_yield = <value>` or `assume anual_yield ~ <Dist>(...)`.
 
 Minimal fix (compiles):
 
@@ -4039,8 +4039,8 @@ assume annual_yield = 5000
 contract energy.ppa.plant_a on entity asset.plant {
   term 2026-01..2026-12
   terms {
-    mwh_year = inputs.annual_yield
-    ppa_price = 3000
+    quantity = inputs.annual_yield
+    price = 3000
     escalation = 0.0
     degradation = 0.005
     availability = 1.0
@@ -4411,7 +4411,7 @@ Documented in docs/08 §7, awaiting a minimal failing fixture:
 - `E6020_CRE_OPS_MISSING_AMOUNT` — 
 - `E6030_CRE_LEASE_AMBIGUOUS_RENT` — a CRE lease states both `base_rent` (per period) and `base_rent_year` (annual). They would be summed; give one.
 - `E6033_CRE_UNIT_INVALID_ESCALATION` — a lease unit's `escalation` is below -1, which would make rent negative on the first step.
-- `E6054_CRE_DEBT_INVALID_AMORT` — `amort_months` strikes the payment and is
+- `E6054_CRE_DEBT_INVALID_AMORT` — `amortization_months` strikes the payment and is
 - `E6055_CRE_DEBT_INVALID_IO_MONTHS` — whole months, 0 or more
 - `E6056_CRE_DEBT_INVALID_BALLOON_FLAG` — `balloon_at_maturity` is 0 or 1
 - `E6057_CRE_CONSTRUCTION_INVALID_EQUITY_COMMITMENT` — zero or greater; zero is

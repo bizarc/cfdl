@@ -15,12 +15,12 @@ contract energy.ppa.plant_a on entity asset.plant {
   term 2026-01..2027-12
   terms {
     // Contractual facts stay literal.
-    ppa_price = 3000
+    price = 3000
     escalation = 0.0
     availability = 1.0
     // Drivers defer to inputs. `degradation` is range-checked by the energy
     // pack, so this also covers a validated term deferring.
-    mwh_year = inputs.annual_yield
+    quantity = inputs.annual_yield
     degradation = inputs.degradation
   }
 }

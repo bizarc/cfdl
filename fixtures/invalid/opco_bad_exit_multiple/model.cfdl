@@ -9,7 +9,7 @@ contract opco.exit_multiple {
   term 2030-12..2030-12
   terms {
     exit_period = 60
-    exit_multiple = 0
-    base_value = 500000
+    multiple = 0
+    base = 500000
   }
 }

@@ -2,7 +2,7 @@
   {
     "code": "E6001_CRE_LEASE_MISSING_BASE_RENT",
     "severity": "error",
-    "message": "CRE lease must state a rent: 'base_rent' (per period) or 'base_rent_year' (annual).",
+    "message": "CRE lease must state a rent: 'rent' (per period) or 'rent_year' (annual).",
     "file": "model.cfdl",
     "span": {
       "start_line": 8,

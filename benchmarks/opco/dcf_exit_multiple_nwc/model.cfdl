@@ -188,7 +188,7 @@ contract opco.working_capital.fy2022 on entity asset.firm {
 contract opco.exit_multiple.terminal on entity asset.firm {
   term 2022-12..2022-12
   terms {
-    base_value    = 57.34229200128001
-    exit_multiple = 7.0
+    base    = 57.34229200128001
+    multiple = 7.0
   }
 }

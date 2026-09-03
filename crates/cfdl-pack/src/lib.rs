@@ -232,6 +232,7 @@ impl PackOntology {
         fn specialization(
             type_id: &str,
             refines: &str,
+            fields: Vec<OntologyField>,
             lines: Vec<OntologyLine>,
             side: Option<&str>,
             d: &str,
@@ -244,7 +245,7 @@ impl PackOntology {
                 is_abstract: true,
                 parties: Vec::new(),
                 roles: Vec::new(),
-                fields: Vec::new(),
+                fields,
                 lines,
                 side: side.map(|s| s.to_string()),
                 description: Some(d.to_string()),
@@ -328,8 +329,12 @@ impl PackOntology {
             contracts: vec![
                 master("Contract.Debt", &["lender", "borrower"],
                     vec![
-                        field("principal", "decimal", true, None, None, "The amount borrowed — a loan's original balance, a pool's outstanding at the cut-off."),
-                        field("interest_rate", "decimal", true, Some("ratio"), None, "Annual nominal interest rate."),
+                        field("principal", "decimal", false, None, Some("amount"), "The amount borrowed — a loan's original balance, a pool's outstanding at the cut-off."),
+                        field("commitment", "decimal", false, None, Some("amount"), "A facility's commitment, where the amount drawn is not fixed at signing."),
+                        field("draw_curve", "string", false, None, Some("amount"), "A declared curve the facility funds against — the amount borrowed stated as a schedule."),
+                        field("interest_rate", "decimal", false, Some("ratio"), Some("interest"), "Annual nominal interest rate, where fixed."),
+                        field("index_curve", "string", false, None, Some("interest"), "The declared curve a floating rate resets off, with `margin`."),
+                        field("margin", "decimal", false, Some("ratio"), None, "Spread over `index_curve`."),
                         field("day_count", "string", false, None, None, "Accrual convention; the model's when absent."),
                         field("payment_frequency", "string", false, None, None, "The instrument's own payment rhythm; the calendar's when absent."),
                         field("amortization", "string", false, None, None, "level_pay | interest_only | bullet | custom — a refinement fixes it."),
@@ -338,11 +343,10 @@ impl PackOntology {
                         field("funded_at_close", "integer", false, None, None, "1 — proceeds are drawn at term start; 0 — the reconciliation starts post-financing."),
                         field("balloon_at_maturity", "integer", false, None, None, "1 — the unamortized balance is repaid at term end."),
                     ],
-                    vec![
-                        line("proceeds", "Cash advanced under the agreement."),
-                        line("interest", "The cost of the money."),
-                        line("principal", "Repayment of what was advanced."),
-                    ],
+                    // What EVERY debt produces is interest. Proceeds and principal are
+                    // lines a refinement adds: a purchased pool has no proceeds, a
+                    // construction facility repays nothing inside the model.
+                    vec![line("interest", "The cost of the money.")],
                     None,
                     "Borrowed money and its service — a loan, a facility, a note, a pool of them."),
                 master("Contract.Lease", &["lessor", "lessee"],
@@ -352,11 +356,8 @@ impl PackOntology {
                         field("escalation", "decimal", false, Some("ratio"), None, "Annual rent growth."),
                         field("free_rent_months", "integer", false, Some("months"), None, "Abated months at the start of the term."),
                     ],
-                    vec![
-                        line("rent", "Rent for the use of the asset."),
-                        line("abatement", "Rent forgiven."),
-                    ],
-                    Some("receives"),
+                    vec![line("rent", "Rent for the use of the asset.")],
+                    None,
                     "Use of an asset in exchange for rent, and the rent's own mechanics."),
                 master("Contract.Purchase", &["buyer", "seller"],
                     vec![field("price", "decimal", true, None, None, "What the asset costs.")],
@@ -374,22 +375,19 @@ impl PackOntology {
                         field("discount_rate", "decimal", false, Some("ratio"), Some("basis"), "Perpetuity discount rate, with `growth_rate` and `base`."),
                         field("growth_rate", "decimal", false, Some("ratio"), None, "Perpetuity growth rate."),
                     ],
-                    vec![
-                        line("proceeds", "Gross proceeds of the disposal."),
-                        line("selling_costs", "Costs of the disposal."),
-                    ],
+                    vec![line("proceeds", "Gross proceeds of the disposal.")],
                     Some("receives"),
                     "Disposing of the asset itself — an exit, a disposition, a takeout."),
                 master("Contract.Offtake", &["seller", "offtaker"],
                     vec![
-                        field("quantity", "decimal", true, None, None, "Output sold per year, in the pack's unit."),
+                        field("quantity", "decimal", false, None, None, "Output sold per year, in the pack's unit; absent where the payment is for availability rather than volume."),
                         field("price", "decimal", true, None, None, "Price per unit of output."),
                         field("escalation", "decimal", false, Some("ratio"), None, "Annual price growth."),
                         field("degradation", "decimal", false, Some("ratio"), None, "Annual decline in output."),
                         field("availability", "decimal", false, Some("ratio"), None, "Fraction of the year the asset delivers."),
                     ],
                     vec![line("revenue", "Payment for delivered output.")],
-                    Some("receives"),
+                    None,
                     "Sale of an asset's output — a PPA, a merchant sale, a capacity payment."),
                 master("Contract.Service", &["provider", "recipient"],
                     vec![
@@ -398,7 +396,7 @@ impl PackOntology {
                         field("escalation", "decimal", false, Some("ratio"), None, "Annual fee growth."),
                     ],
                     vec![line("expense", "Payment for the service.")],
-                    Some("pays"),
+                    None,
                     "Work done on or for the asset — management, operations and maintenance, servicing."),
                 master("Contract.Tax", &["taxpayer", "authority"],
                     vec![
@@ -406,10 +404,9 @@ impl PackOntology {
                         field("amount", "decimal", false, None, Some("charge"), "A stated amount."),
                         field("basis", "decimal", false, None, None, "What the rate is applied to."),
                     ],
-                    vec![
-                        line("paid", "Tax paid to the authority."),
-                        line("benefit", "A credit or shield received."),
-                    ],
+                    // A refinement adds `paid` or `benefit`: no single line is common to
+                    // a cash tax, a credit and a depreciation shield.
+                    Vec::new(),
                     None,
                     "A tax obligation or attribute — cash taxes, a credit, a depreciation shield."),
                 master("Contract.Option", &["grantor", "holder"],
@@ -447,30 +444,41 @@ impl PackOntology {
                         field("coverage", "decimal", false, None, None, "The insured amount."),
                         field("deductible", "decimal", false, None, None, "Retained per claim."),
                     ],
-                    vec![
-                        line("premium", "Premium paid."),
-                        line("claim", "Proceeds of a claim."),
-                    ],
+                    vec![line("premium", "Premium paid.")],
                     Some("pays"),
                     "Premiums against losses — property, title, business interruption."),
                 master("Contract.Line", &["owner"],
                     vec![
-                        field("amount", "decimal", false, None, Some("amount"), "Amount per period."),
-                        field("amount_year", "decimal", false, None, Some("amount"), "Amount per year, spread by the calendar."),
+                        field("amount", "decimal", false, None, None, "Amount per period."),
+                        field("amount_year", "decimal", false, None, None, "Amount per year, spread by the calendar."),
                         field("growth_rate", "decimal", false, Some("ratio"), None, "Annual growth."),
                     ],
                     Vec::new(),
                     None,
                     "A line the model states directly — a contract with the model, not a counterparty. Refined by kind below; a pack refines those further."),
-                specialization("Contract.Revenue", "Contract.Line", vec![line("revenue", "Revenue stated directly.")], Some("receives"),
+                specialization("Contract.Revenue", "Contract.Line", vec![
+                        field("amount", "decimal", false, None, Some("amount"), "Amount per period."),
+                        field("amount_year", "decimal", false, None, Some("amount"), "Amount per year, spread by the calendar."),
+                    ],
+                    vec![line("revenue", "Revenue stated directly.")], Some("receives"),
                     "A general revenue line."),
-                specialization("Contract.Deduction", "Contract.Line", vec![line("deduction", "A reduction of revenue — vacancy, credit loss, abatement stated as a line.")], Some("pays"),
+                specialization("Contract.Deduction", "Contract.Line", Vec::new(),
+                    vec![line("deduction", "A reduction of revenue — vacancy, credit loss, abatement stated as a line.")], Some("pays"),
                     "A contra-revenue line: what is not collected."),
-                specialization("Contract.Expense", "Contract.Line", vec![line("expense", "Expense stated directly.")], Some("pays"),
+                specialization("Contract.Expense", "Contract.Line", vec![
+                        field("amount", "decimal", false, None, Some("amount"), "Amount per period."),
+                        field("amount_year", "decimal", false, None, Some("amount"), "Amount per year, spread by the calendar."),
+                    ],
+                    vec![line("expense", "Expense stated directly.")], Some("pays"),
                     "A general operating-expense line."),
-                specialization("Contract.CapitalExpenditure", "Contract.Line", vec![line("capex", "Capital spend stated directly.")], Some("pays"),
+                specialization("Contract.CapitalExpenditure", "Contract.Line", vec![
+                        field("amount", "decimal", false, None, Some("amount"), "Amount per period."),
+                        field("amount_year", "decimal", false, None, Some("amount"), "Amount per year, spread by the calendar."),
+                    ],
+                    vec![line("capex", "Capital spend stated directly.")], Some("pays"),
                     "A general capital-expenditure line."),
-                specialization("Contract.WorkingCapital", "Contract.Line", vec![line("working_capital", "The period's change in working capital.")], None,
+                specialization("Contract.WorkingCapital", "Contract.Line", Vec::new(),
+                    vec![line("working_capital", "The period's change in working capital.")], None,
                     "A working-capital movement stated as a line — a balance change, so its side varies by period."),
             ],
             lifecycles: Vec::new(),
@@ -1780,6 +1788,7 @@ impl PackRegistry {
                 None => PackOntology::default(),
             };
             validate_ontology_against_rules(&ontology, &lowering_rules, &source)?;
+            validate_templates_against_ontology(&ontology, &templates, &source)?;
             packs.insert(
                 manifest.name.clone(),
                 LoadedPack {
@@ -1981,6 +1990,11 @@ impl PackRegistry {
             validate_ontology_against_rules(
                 &ontology,
                 &lowering_rules,
+                &manifest_path.display().to_string(),
+            )?;
+            validate_templates_against_ontology(
+                &ontology,
+                &templates,
                 &manifest_path.display().to_string(),
             )?;
 
@@ -2825,6 +2839,86 @@ fn validate_ontology_against_rules(
         });
     }
     Ok(())
+}
+
+/// A TEMPLATE RENDERS WHAT THE MASTER REQUIRES (docs/40 §3). A contract
+/// template is the modeller's starting point, and a starting point that omits
+/// a required term is a diagnostic waiting to happen. For every `kind =
+/// "contract"` template whose body declares a typed contract: each required
+/// effective field must be rendered (`<name> =` in the body), and each
+/// `one_of` group must have at least one member rendered.
+fn validate_templates_against_ontology(
+    ontology: &PackOntology,
+    templates: &[PackTemplate],
+    source: &str,
+) -> Result<(), PackLoadError> {
+    if ontology.contracts.is_empty() {
+        return Ok(());
+    }
+    let merged = ontology.merged_with_base();
+    for template in templates {
+        if template.kind.as_deref() != Some("contract") {
+            continue;
+        }
+        let Some(rule_name) = template_contract_name(&template.body) else {
+            continue;
+        };
+        let Some(contract) = ontology.contract_for_rule(rule_name) else {
+            continue;
+        };
+        let fields = merged.effective_fields(&contract.type_id);
+        let rendered = |name: &str| {
+            template.body.lines().any(|line| {
+                line.trim_start().starts_with(name)
+                    && line.trim_start()[name.len()..]
+                        .trim_start()
+                        .starts_with('=')
+            })
+        };
+        for field in fields.iter().filter(|f| f.required) {
+            if !rendered(&field.name) {
+                return Err(PackLoadError {
+                    message: format!(
+                        "Template '{}' ({source}): contract type '{}' requires term '{}' and the template does not render it.",
+                        template.id, contract.type_id, field.name
+                    ),
+                });
+            }
+        }
+        let mut groups: Vec<&str> = fields.iter().filter_map(|f| f.one_of.as_deref()).collect();
+        groups.sort();
+        groups.dedup();
+        for group in groups {
+            let members: Vec<&str> = fields
+                .iter()
+                .filter(|f| f.one_of.as_deref() == Some(group))
+                .map(|f| f.name.as_str())
+                .collect();
+            if !members.iter().any(|m| rendered(m)) {
+                return Err(PackLoadError {
+                    message: format!(
+                        "Template '{}' ({source}): contract type '{}' requires one of {} and the template renders none.",
+                        template.id,
+                        contract.type_id,
+                        members.join(", ")
+                    ),
+                });
+            }
+        }
+    }
+    Ok(())
+}
+
+/// The lowering-rule name a contract template declares: `contract <name>[.<instance>]`.
+fn template_contract_name(body: &str) -> Option<&str> {
+    let rest = body.split("contract ").nth(1)?;
+    let token = rest.split(|c: char| c.is_whitespace() || c == '{').next()?;
+    // `cre.lease_unit.tenant_a` -> `cre.lease_unit`: the first two dotted segments.
+    let mut parts = token.split('.');
+    let pack = parts.next()?;
+    let name = parts.next()?;
+    let end = pack.len() + 1 + name.len();
+    Some(&token[..end])
 }
 
 fn load_validations(
@@ -4607,7 +4701,11 @@ unit = "months"
             .iter()
             .find(|f| f.name == "principal")
             .expect("inherited");
-        assert!(principal.required);
+        assert_eq!(
+            principal.one_of.as_deref(),
+            Some("amount"),
+            "principal, commitment or a draw schedule"
+        );
         let amort = fields
             .iter()
             .find(|f| f.name == "amortization_months")
@@ -4621,7 +4719,7 @@ unit = "months"
             .into_iter()
             .map(|s| Box::leak(s.to_string().into_boxed_str()) as &str)
             .collect();
-        assert_eq!(lines, vec!["proceeds", "interest", "principal"]);
+        assert_eq!(lines, vec!["interest"]);
         assert_eq!(
             merged.effective_side("T.Contract.Mortgage").as_deref(),
             Some("pays")
@@ -4656,13 +4754,13 @@ required = true
 
         let weaken = r#"
 [[contracts]]
-type_id = "T.Contract.Mortgage"
-contract_name = "t.mortgage"
-parties = ["lender", "borrower"]
-refines = "Contract.Debt"
+type_id = "T.Contract.Buyout"
+contract_name = "t.buyout"
+parties = ["buyer", "seller"]
+refines = "Contract.Purchase"
 
 [[contracts.fields]]
-name = "principal"
+name = "price"
 field_type = "decimal"
 required = false
 "#;
@@ -4860,24 +4958,38 @@ refines = "Contract.Debt"
         )
         .expect_err("undeclared line");
         assert!(err.message.contains("does not declare"), "{}", err.message);
-        // Coverage.
+        // Coverage: the master promises `interest`; the type adds `principal`.
+        let with_principal = r#"
+[[contracts]]
+type_id = "T.Contract.Mortgage"
+contract_name = "t.mortgage"
+parties = ["lender", "borrower"]
+refines = "Contract.Debt"
+
+[[contracts.lines]]
+name = "principal"
+"#;
+        let o2 = parse_ontology(with_principal, "test", "t").expect("parses");
         let err = validate_ontology_against_rules(
-            &o,
+            &o2,
             &[rule_with_line("t.mortgage", "a", Some("interest"))],
             "test",
         )
-        .expect_err("principal and proceeds missing");
-        assert!(err.message.contains("promises line"), "{}", err.message);
+        .expect_err("principal missing");
+        assert!(
+            err.message.contains("promises line 'principal'"),
+            "{}",
+            err.message
+        );
         validate_ontology_against_rules(
-            &o,
+            &o2,
             &[
-                rule_with_line("t.mortgage", "a", Some("proceeds")),
                 rule_with_line("t.mortgage", "b", Some("interest")),
                 rule_with_line("t.mortgage", "c", Some("principal")),
             ],
             "test",
         )
-        .expect("all three lines emitted");
+        .expect("both lines emitted");
     }
 
     #[test]
@@ -4892,9 +5004,7 @@ refines = "Contract.Debt"
         ] {
             assert!(base.is_a(kind, "Contract.Line"), "{kind} is a line");
             let fields = base.effective_fields(kind);
-            assert!(fields
-                .iter()
-                .any(|f| f.name == "amount" && f.one_of.as_deref() == Some("amount")));
+            assert!(fields.iter().any(|f| f.name == "amount"));
             assert_eq!(
                 base.effective_lines(kind).len(),
                 1,
@@ -4940,5 +5050,54 @@ refines = "Contract.Debt"
                 }
             }
         }
+    }
+}
+
+#[cfg(test)]
+mod template_coverage_tests {
+    use super::*;
+
+    fn template(body: &str) -> PackTemplate {
+        PackTemplate {
+            id: "t".to_string(),
+            label: None,
+            kind: Some("contract".to_string()),
+            body: body.to_string(),
+            defaults: BTreeMap::new(),
+        }
+    }
+
+    #[test]
+    fn a_contract_template_must_render_every_required_field_and_one_of_each_group() {
+        let raw = r#"
+[[contracts]]
+type_id = "T.Contract.Mortgage"
+contract_name = "t.mortgage"
+parties = ["lender", "borrower"]
+refines = "Contract.Debt"
+"#;
+        let o = parse_ontology(raw, "test", "t").expect("parses");
+        let missing_principal = template(
+            "contract t.mortgage.a {\n  terms {\n    interest_rate = ${interest_rate}\n  }\n}\n",
+        );
+        let err = validate_templates_against_ontology(&o, &[missing_principal], "test")
+            .expect_err("an amount is required");
+        assert!(err.message.contains("principal"), "{}", err.message);
+        let no_rate =
+            template("contract t.mortgage.a {\n  terms {\n    principal = ${principal}\n  }\n}\n");
+        let err = validate_templates_against_ontology(&o, &[no_rate], "test")
+            .expect_err("fixed or floating rate is a required group");
+        assert!(err.message.contains("interest_rate"), "{}", err.message);
+        let floating = template("contract t.mortgage.a {\n  terms {\n    principal = ${principal}\n    index_curve = \"sofr\"\n    margin = 0.02\n  }\n}\n");
+        validate_templates_against_ontology(&o, &[floating], "test")
+            .expect("a floating rate satisfies the group");
+        assert_eq!(
+            template_contract_name("contract cre.lease_unit.tenant_a {"),
+            Some("cre.lease_unit")
+        );
+        assert_eq!(
+            template_contract_name("contract cre.permanent_debt {"),
+            Some("cre.permanent_debt")
+        );
     }
 }

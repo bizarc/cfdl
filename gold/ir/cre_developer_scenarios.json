@@ -485,11 +485,11 @@
       "stream": "cre.lease.base_rent",
       "contract": "cre.lease",
       "terms": {
-        "base_rent": "25000",
-        "base_rent_year": "0"
+        "rent": "25000",
+        "rent_year": "0"
       },
       "defaults_applied": [
-        "base_rent_year"
+        "rent_year"
       ]
     },
     {
@@ -498,11 +498,11 @@
       "terms": {
         "amount": "30000",
         "amount_year": "0",
-        "escalation": "0"
+        "growth_rate": "0"
       },
       "defaults_applied": [
         "amount_year",
-        "escalation"
+        "growth_rate"
       ]
     },
     {
@@ -511,13 +511,13 @@
       "terms": {
         "amount": "12000",
         "amount_year": "0",
-        "escalation": "0",
+        "growth_rate": "0",
         "occupancy": "1",
         "pct_fixed": "1"
       },
       "defaults_applied": [
         "amount_year",
-        "escalation",
+        "growth_rate",
         "occupancy",
         "pct_fixed"
       ]
@@ -526,8 +526,8 @@
       "stream": "cre.exit.sale",
       "contract": "cre.exit_cap",
       "terms": {
-        "exit_cap": "0.06",
-        "noi_value": "180000"
+        "cap_rate": "0.06",
+        "income": "180000"
       }
     }
   ],

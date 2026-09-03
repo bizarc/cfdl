@@ -8,7 +8,7 @@ the next person to reach for it should not rediscover them.
 `reference.py` is the SAM harness as it stood when abandoned. It runs, and its
 numbers are not a dispatch.
 
-## SAM does not optimise, and documents that
+## SAM does not optimize, and documents that
 
 NREL/TP-6A20-68614 (`../68614.pdf`) §1:
 

@@ -53,8 +53,8 @@ entity party residual : Credit.Party.Investor { name = "Classes R and RL" }
 contract credit.pool_level_pay.g3 on entity asset.pool {
   term 2019-02..2049-01
   terms {
-    balance = 148372434
-    rate = 0.075
+    principal = 148372434
+    interest_rate = 0.075
     term_months = 360
     age_months = 0
     psa_speed = 0.0

@@ -13,7 +13,7 @@ frame.** SAM is two layers: a physical simulation (8760-hour production from
 weather files, irradiance, the module/inverter loss stack, wind resource) and
 a financial model that consumes the production. The physical layer is out of
 scope **by design**, not by deferral: CFDL consumes production as an input —
-`mwh_year`, degradation, availability — exactly as a project-finance analyst
+`quantity` (MWh/yr), degradation, availability — exactly as a project-finance analyst
 consumes a P50 from an independent engineer. That is this document's analogue
 of `docs/33`'s UI paragraph, with one difference: the UI decision defers work
 to `docs/32`, while the physical layer is work CFDL should never do. True
@@ -98,7 +98,7 @@ second implementation" to "we agree with NREL."
 `energy.storage_arbitrage` is the pack's one externally-unvalidated rule —
 `mwh_cycled_year * spread`, a dispersion functional evaluated at a point
 (`docs/13` §7.1). The walk made the fix buildable: a state-of-charge balance
-stepped per period turns `mwh_cycled_year` from an assumed input into an
+stepped per period turns `quantity` (the storage rule's MWh cycled) from an assumed input into an
 output of dispatch against a price shape, which is exactly the circularity
 that blocks validation today (`docs/13` §7.75 — the quantity we ask the
 modeller to state is the thing the reference exists to compute).

@@ -53,14 +53,14 @@ contract cre.permanent_debt on entity asset.harbor {
   term 2028-07..2030-12
   terms {
     principal = 9500000
-    rate = 0.058
-    amort_months = 360
-    io_months = 36
+    interest_rate = 0.058
+    amortization_months = 360
+    interest_only_months = 36
   }
 }
 ```
 
-One contract, and the whole instrument emerges. The proceeds arrive at closing as `cre.debt.proceeds`, funding the payoff that leaves at the month's end. Interest and principal lower as their own streams, because a statement shows those lines and a netted payment cannot be un-netted downstream. Earlier revisions of this chapter hand-wrote the proceeds as a separate stream; the contract funds itself now, and a reconciliation whose source starts post-financing opts out with `funded_at_close = 0`. Its terms encode the commercial-mortgage grammar from the pack's design. `amort_months` strikes the payment on a 30-year schedule, while the *term* sets maturity. `io_months = 36` keeps the whole 30-month hold interest-only. That is a bridge-to-sale structure, which is why chapter 23's exit must repay principal in full. The balloon stays off by default for the reason the pack states: coverage is measured on *periodic* debt service, and folding a payoff into the final period's service line would make that month's DSCR meaningless. The payoff belongs to the reversion, where the next chapter puts it.
+One contract, and the whole instrument emerges. The proceeds arrive at closing as `cre.debt.proceeds`, funding the payoff that leaves at the month's end. Interest and principal lower as their own streams, because a statement shows those lines and a netted payment cannot be un-netted downstream. Earlier revisions of this chapter hand-wrote the proceeds as a separate stream; the contract funds itself now, and a reconciliation whose source starts post-financing opts out with `funded_at_close = 0`. Its terms encode the commercial-mortgage grammar from the pack's design. `amortization_months` strikes the payment on a 30-year schedule, while the *term* sets maturity. `interest_only_months = 36` keeps the whole 30-month hold interest-only. That is a bridge-to-sale structure, which is why chapter 23's exit must repay principal in full. The balloon stays off by default for the reason the pack states: coverage is measured on *periodic* debt service, and folding a payoff into the final period's service line would make that month's DSCR meaningless. The payoff belongs to the reversion, where the next chapter puts it.
 
 ## What the numbers say
 

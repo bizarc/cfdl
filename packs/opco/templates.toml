@@ -84,9 +84,9 @@ contract opco.term_debt {
   term ${term_start}..${term_end}
   terms {
     principal = ${principal}
-    rate = ${rate}
-    amort_months = ${amort_months}
-    io_months = ${io_months}
+    interest_rate = ${interest_rate}
+    amortization_months = ${amortization_months}
+    interest_only_months = ${interest_only_months}
   }
 }
 """
@@ -94,9 +94,9 @@ contract opco.term_debt {
 term_start = "2026-01"
 term_end = "2031-12"
 principal = "0"
-rate = "0.08"
-amort_months = "84"
-io_months = "0"
+interest_rate = "0.08"
+amortization_months = "84"
+interest_only_months = "0"
 
 [[templates]]
 id = "opco.cash_taxes"
@@ -144,14 +144,14 @@ body = """
 contract opco.exit_ebitda {
   term ${term_start}..${term_start}
   terms {
-    exit_multiple = ${exit_multiple}
+    multiple = ${multiple}
     selling_costs = ${selling_costs}
   }
 }
 """
 [templates.defaults]
 term_start = "2031-12"
-exit_multiple = "10.0"
+multiple = "10.0"
 selling_costs = "0.02"
 
 [[templates]]

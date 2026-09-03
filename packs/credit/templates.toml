@@ -18,11 +18,9 @@ body = """
 contract credit.pool_level_pay.pool_a {
   term ${term_start}..${term_end}
   terms {
-    balance = ${balance}
-    rate = ${rate}
+    principal = ${principal}
+    interest_rate = ${interest_rate}
     term_months = ${term_months}
-    smm = ${smm}
-    mdr = ${mdr}
     severity = ${severity}
     servicing_fee = ${servicing_fee}
   }
@@ -31,11 +29,9 @@ contract credit.pool_level_pay.pool_a {
 [templates.defaults]
 term_start = "2026-01"
 term_end = "2031-12"
-balance = "10000000"
-rate = "0.06"
+principal = "10000000"
+interest_rate = "0.06"
 term_months = "72"
-smm = "0"
-mdr = "0"
 severity = "0"
 servicing_fee = "0"
 
@@ -47,8 +43,8 @@ body = """
 contract credit.pool_io_bullet.pool_a {
   term ${term_start}..${term_end}
   terms {
-    balance = ${balance}
-    rate = ${rate}
+    principal = ${principal}
+    interest_rate = ${interest_rate}
     term_months = ${term_months}
   }
 }
@@ -56,8 +52,8 @@ contract credit.pool_io_bullet.pool_a {
 [templates.defaults]
 term_start = "2026-01"
 term_end = "2031-12"
-balance = "10000000"
-rate = "0.06"
+principal = "10000000"
+interest_rate = "0.06"
 term_months = "72"
 
 [[templates]]
@@ -68,7 +64,7 @@ body = """
 contract credit.pool_float_io_bullet.pool_a {
   term ${term_start}..${term_end}
   terms {
-    balance = ${balance}
+    principal = ${principal}
     index_curve = "${index_curve}"
     margin = ${margin}
     term_months = ${term_months}
@@ -78,7 +74,7 @@ contract credit.pool_float_io_bullet.pool_a {
 [templates.defaults]
 term_start = "2026-01"
 term_end = "2031-12"
-balance = "10000000"
+principal = "10000000"
 index_curve = "sofr"
 margin = "0.025"
 term_months = "72"

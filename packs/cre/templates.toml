@@ -24,7 +24,7 @@ contract cre.opex_line.property_tax {
   term ${term_start}..${term_end}
   terms {
     amount_year = ${amount_year}
-    escalation = ${escalation}
+    growth_rate = ${growth_rate}
     pct_fixed = 1.0
   }
 }
@@ -33,7 +33,7 @@ contract cre.opex_line.property_tax {
 term_start = "2026-01"
 term_end = "2036-12"
 amount_year = "0"
-escalation = "0.02"
+growth_rate = "0.02"
 
 [[templates]]
 id = "cre.opex_line.insurance"
@@ -44,7 +44,7 @@ contract cre.opex_line.insurance {
   term ${term_start}..${term_end}
   terms {
     amount_year = ${amount_year}
-    escalation = ${escalation}
+    growth_rate = ${growth_rate}
     pct_fixed = 1.0
   }
 }
@@ -53,7 +53,7 @@ contract cre.opex_line.insurance {
 term_start = "2026-01"
 term_end = "2036-12"
 amount_year = "0"
-escalation = "0.05"
+growth_rate = "0.05"
 
 [[templates]]
 id = "cre.opex_line.utilities"
@@ -64,7 +64,7 @@ contract cre.opex_line.utilities {
   term ${term_start}..${term_end}
   terms {
     amount_year = ${amount_year}
-    escalation = ${escalation}
+    growth_rate = ${growth_rate}
     pct_fixed = ${pct_fixed}
     occupancy = curve_value("${occupancy_curve}", time.date)
   }
@@ -74,7 +74,7 @@ contract cre.opex_line.utilities {
 term_start = "2026-01"
 term_end = "2036-12"
 amount_year = "0"
-escalation = "0.03"
+growth_rate = "0.03"
 pct_fixed = "0.30"
 occupancy_curve = "occupancy"
 
@@ -87,7 +87,7 @@ contract cre.opex_line.repairs_maintenance {
   term ${term_start}..${term_end}
   terms {
     amount_year = ${amount_year}
-    escalation = ${escalation}
+    growth_rate = ${growth_rate}
     pct_fixed = ${pct_fixed}
   }
 }
@@ -96,7 +96,7 @@ contract cre.opex_line.repairs_maintenance {
 term_start = "2026-01"
 term_end = "2036-12"
 amount_year = "0"
-escalation = "0.03"
+growth_rate = "0.03"
 pct_fixed = "0.60"
 
 [[templates]]
@@ -108,7 +108,7 @@ contract cre.opex_line.cleaning {
   term ${term_start}..${term_end}
   terms {
     amount_year = ${amount_year}
-    escalation = ${escalation}
+    growth_rate = ${growth_rate}
     pct_fixed = ${pct_fixed}
     occupancy = curve_value("${occupancy_curve}", time.date)
   }
@@ -118,7 +118,7 @@ contract cre.opex_line.cleaning {
 term_start = "2026-01"
 term_end = "2036-12"
 amount_year = "0"
-escalation = "0.03"
+growth_rate = "0.03"
 pct_fixed = "0.15"
 occupancy_curve = "occupancy"
 
@@ -131,7 +131,7 @@ contract cre.opex_line.security {
   term ${term_start}..${term_end}
   terms {
     amount_year = ${amount_year}
-    escalation = ${escalation}
+    growth_rate = ${growth_rate}
     pct_fixed = ${pct_fixed}
   }
 }
@@ -140,7 +140,7 @@ contract cre.opex_line.security {
 term_start = "2026-01"
 term_end = "2036-12"
 amount_year = "0"
-escalation = "0.03"
+growth_rate = "0.03"
 pct_fixed = "0.90"
 
 [[templates]]
@@ -152,7 +152,7 @@ contract cre.opex_line.landscaping {
   term ${term_start}..${term_end}
   terms {
     amount_year = ${amount_year}
-    escalation = ${escalation}
+    growth_rate = ${growth_rate}
     pct_fixed = 1.0
   }
 }
@@ -161,7 +161,7 @@ contract cre.opex_line.landscaping {
 term_start = "2026-01"
 term_end = "2036-12"
 amount_year = "0"
-escalation = "0.03"
+growth_rate = "0.03"
 
 # A management fee is usually a percentage of effective gross income. Both
 # spellings ship: this one states a FIXED fee, which some agreements do, and
@@ -176,7 +176,7 @@ contract cre.opex_line.management {
   term ${term_start}..${term_end}
   terms {
     amount_year = ${amount_year}
-    escalation = ${escalation}
+    growth_rate = ${growth_rate}
     pct_fixed = 1.0
   }
 }
@@ -185,7 +185,7 @@ contract cre.opex_line.management {
 term_start = "2026-01"
 term_end = "2036-12"
 amount_year = "0"
-escalation = "0.03"
+growth_rate = "0.03"
 
 # A management fee stated as a PERCENTAGE OF EFFECTIVE GROSS INCOME, which is
 # what most agreements say. EGI is rent plus recoveries less vacancy — all
@@ -210,7 +210,7 @@ contract cre.opex_line.management {
                    + series_sum("cre.unit.recoveries.*", time.t, time.t)
                    + series_sum("cre.vacancy.loss", time.t, time.t))
                   * time.ppy * ${fee_pct}
-    escalation = 0
+    growth_rate = 0
     pct_fixed = 1.0
   }
 }
@@ -229,7 +229,7 @@ contract cre.opex_line.general_admin {
   term ${term_start}..${term_end}
   terms {
     amount_year = ${amount_year}
-    escalation = ${escalation}
+    growth_rate = ${growth_rate}
     pct_fixed = 1.0
   }
 }
@@ -238,7 +238,7 @@ contract cre.opex_line.general_admin {
 term_start = "2026-01"
 term_end = "2036-12"
 amount_year = "0"
-escalation = "0.03"
+growth_rate = "0.03"
 
 # A single blended figure — the coarse end of the range. One unsuffixed instance
 # emits `cre.opex.line`. Every instance of this contract, named or not, folds
@@ -253,7 +253,7 @@ contract cre.opex_line {
   term ${term_start}..${term_end}
   terms {
     amount_year = ${amount_year}
-    escalation = ${escalation}
+    growth_rate = ${growth_rate}
     pct_fixed = ${pct_fixed}
   }
 }
@@ -262,7 +262,7 @@ contract cre.opex_line {
 term_start = "2026-01"
 term_end = "2036-12"
 amount_year = "0"
-escalation = "0.03"
+growth_rate = "0.03"
 pct_fixed = "1.0"
 
 # --- revenue lines ----------------------------------------------------------
@@ -281,7 +281,7 @@ contract cre.revenue_line.parking {
   term ${term_start}..${term_end}
   terms {
     amount_year = ${amount_year}
-    escalation = ${escalation}
+    growth_rate = ${growth_rate}
   }
 }
 """
@@ -289,7 +289,7 @@ contract cre.revenue_line.parking {
 term_start = "2026-01"
 term_end = "2036-12"
 amount_year = "0"
-escalation = "0.03"
+growth_rate = "0.03"
 
 [[templates]]
 id = "cre.revenue_line.storage"
@@ -300,7 +300,7 @@ contract cre.revenue_line.storage {
   term ${term_start}..${term_end}
   terms {
     amount_year = ${amount_year}
-    escalation = ${escalation}
+    growth_rate = ${growth_rate}
   }
 }
 """
@@ -308,7 +308,7 @@ contract cre.revenue_line.storage {
 term_start = "2026-01"
 term_end = "2036-12"
 amount_year = "0"
-escalation = "0.03"
+growth_rate = "0.03"
 
 [[templates]]
 id = "cre.revenue_line.antenna"
@@ -319,7 +319,7 @@ contract cre.revenue_line.antenna {
   term ${term_start}..${term_end}
   terms {
     amount_year = ${amount_year}
-    escalation = ${escalation}
+    growth_rate = ${growth_rate}
   }
 }
 """
@@ -327,7 +327,7 @@ contract cre.revenue_line.antenna {
 term_start = "2026-01"
 term_end = "2036-12"
 amount_year = "0"
-escalation = "0.02"
+growth_rate = "0.02"
 
 [[templates]]
 id = "cre.revenue_line.laundry_vending"
@@ -338,7 +338,7 @@ contract cre.revenue_line.laundry_vending {
   term ${term_start}..${term_end}
   terms {
     amount_year = ${amount_year}
-    escalation = ${escalation}
+    growth_rate = ${growth_rate}
   }
 }
 """
@@ -346,7 +346,7 @@ contract cre.revenue_line.laundry_vending {
 term_start = "2026-01"
 term_end = "2036-12"
 amount_year = "0"
-escalation = "0.03"
+growth_rate = "0.03"
 
 [[templates]]
 id = "cre.revenue_line.blended"
@@ -357,7 +357,7 @@ contract cre.revenue_line {
   term ${term_start}..${term_end}
   terms {
     amount_year = ${amount_year}
-    escalation = ${escalation}
+    growth_rate = ${growth_rate}
   }
 }
 """
@@ -365,7 +365,7 @@ contract cre.revenue_line {
 term_start = "2026-01"
 term_end = "2036-12"
 amount_year = "0"
-escalation = "0.03"
+growth_rate = "0.03"
 
 # --- instruments ------------------------------------------------------------
 #
@@ -383,9 +383,9 @@ contract cre.permanent_debt {
   term ${term_start}..${term_end}
   terms {
     principal = ${principal}
-    rate = ${rate}
-    amort_months = ${amort_months}
-    io_months = ${io_months}
+    interest_rate = ${interest_rate}
+    amortization_months = ${amortization_months}
+    interest_only_months = ${interest_only_months}
   }
 }
 """
@@ -393,9 +393,9 @@ contract cre.permanent_debt {
 term_start = "2026-01"
 term_end = "2035-12"
 principal = "6000000"
-rate = "0.055"
-amort_months = "360"
-io_months = "0"
+interest_rate = "0.055"
+amortization_months = "360"
+interest_only_months = "0"
 
 [[templates]]
 id = "cre.lease_unit"
@@ -434,14 +434,14 @@ body = """
 contract cre.exit_forward {
   term ${term_start}..${term_start}
   terms {
-    exit_cap = ${exit_cap}
+    cap_rate = ${cap_rate}
     selling_costs = ${selling_costs}
   }
 }
 """
 [templates.defaults]
 term_start = "2035-12"
-exit_cap = "0.065"
+cap_rate = "0.065"
 selling_costs = "0.02"
 
 [[templates]]
@@ -497,7 +497,7 @@ contract cre.construction_loan {
   terms {
     draw_curve = "${draw_curve}"
     equity_commitment = ${equity_commitment}
-    rate = ${rate}
+    interest_rate = ${interest_rate}
   }
 }
 """
@@ -506,5 +506,5 @@ term_start = "2026-01"
 term_end = "2027-12"
 draw_curve = "draws"
 equity_commitment = "0"
-rate = "0.075"
+interest_rate = "0.075"
 

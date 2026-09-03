@@ -19,7 +19,7 @@ use pack "cre" version "0.1.0"
 contract cre.lease {
   term 2026-07..2031-12
   terms {
-    base_rent = 25000
+    rent = 25000
   }
 }
 ```
@@ -59,15 +59,15 @@ statement.
 
 | Contract | Terms it reads | Streams it emits |
 |---|---|---|
-| `energy.ppa` | `availability`, `degradation`, `escalation`, `mwh_year`, `ppa_price` | `energy.ppa.revenue[.suffix]` |
-| `energy.merchant` | `availability`, `degradation`, `mwh_year`, `price`, `price_escalation` | `energy.merchant.revenue[.suffix]` |
-| `energy.storage_arbitrage` | `degradation`, `mwh_cycled_year`, `spread` | `energy.storage.margin[.suffix]` |
-| `energy.capacity` | `payment_year` | `energy.capacity.revenue[.suffix]` |
-| `energy.om` | `escalation`, `om_year` | `energy.om.expense[.suffix]` |
-| `energy.itc` | `credit` | `energy.itc.credit[.suffix]` |
+| `energy.ppa` | `availability`, `degradation`, `escalation`, `price`, `quantity` | `energy.ppa.revenue[.suffix]` |
+| `energy.merchant` | `availability`, `degradation`, `escalation`, `price`, `quantity` | `energy.merchant.revenue[.suffix]` |
+| `energy.storage_arbitrage` | `degradation`, `price`, `quantity` | `energy.storage.margin[.suffix]` |
+| `energy.capacity` | `price` | `energy.capacity.revenue[.suffix]` |
+| `energy.om` | `escalation`, `fee_year` | `energy.om.expense[.suffix]` |
+| `energy.itc` | `amount` | `energy.itc.credit[.suffix]` |
 | `energy.capex` | `amount` | `energy.capex.outlay[.suffix]` |
-| `energy.debt_service` | `funded_at_close`, `principal`, `rate` | `energy.debt.proceeds[.suffix]`, `energy.debt.interest[.suffix]`, `energy.debt.principal[.suffix]` |
-| `energy.ptc` | `availability`, `credit_per_mwh`, `degradation`, `escalation`, `mwh_year`, `round_step` | `energy.ptc.credit[.suffix]` |
+| `energy.debt_service` | `funded_at_close`, `interest_rate`, `principal` | `energy.debt.proceeds[.suffix]`, `energy.debt.interest[.suffix]`, `energy.debt.principal[.suffix]` |
+| `energy.ptc` | `amount`, `availability`, `degradation`, `escalation`, `quantity`, `round_step` | `energy.ptc.credit[.suffix]` |
 | `energy.macrs_shield` | `basis`, `life`, `tax_rate` | `energy.macrs.shield[.suffix]` |
 
 ### `cre`
@@ -75,27 +75,27 @@ statement.
 | Contract | Terms it reads | Streams it emits |
 |---|---|---|
 | `cre.construction_stub` | `amount` | `cre.construction.draws` |
-| `cre.lease` | `base_rent`, `base_rent_year` | `cre.lease.base_rent` |
-| `cre.revenue_line` | `amount`, `amount_year`, `escalation` | `cre.revenue.line[.suffix]` |
-| `cre.exit_cap` | `exit_cap`, `noi_value` | `cre.exit.sale` |
+| `cre.lease` | `rent`, `rent_year` | `cre.lease.base_rent` |
+| `cre.revenue_line` | `amount`, `amount_year`, `growth_rate` | `cre.revenue.line[.suffix]` |
+| `cre.exit_cap` | `cap_rate`, `income` | `cre.exit.sale` |
 | `cre.lease_unit` | `escalation`, `expense_stop_year`, `gross_up_factor`, `lc_total`, `opex_escalation`, `opex_year`, `pro_rata_share`, `rent_year`, `ti_total` | `cre.unit.base_rent.[suffix]`, `cre.unit.abatement.[suffix]`, `cre.unit.recoveries.[suffix]`, `cre.unit.ti_lc.[suffix]` |
 | `cre.rollover` | `market_escalation`, `market_rent_year`, `new_ti_lc`, `renewal_probability`, `renewal_rent_year`, `renewal_ti_lc` | `cre.rollover.rent.[suffix]`, `cre.rollover.ti_lc.[suffix]` |
 | `cre.vacancy_loss` | `potential_gross_year`, `rate` | `cre.vacancy.loss` |
-| `cre.opex_line` | `amount`, `amount_year`, `escalation`, `occupancy`, `pct_fixed` | `cre.opex.line[.suffix]` |
-| `cre.exit` | `exit_cap`, `noi_forward_year`, `selling_costs` | `cre.exit.selling_costs`, `cre.exit.proceeds` |
+| `cre.opex_line` | `amount`, `amount_year`, `growth_rate`, `occupancy`, `pct_fixed` | `cre.opex.line[.suffix]` |
+| `cre.exit` | `cap_rate`, `income`, `selling_costs` | `cre.exit.selling_costs`, `cre.exit.proceeds` |
 | `cre.percentage_rent_expected` | `breakpoint_year`, `overage_pct`, `sales_growth`, `sales_quantile` | `cre.pct_rent.overage[.suffix]` |
 | `cre.percentage_rent` | `breakpoint_year`, `overage_pct`, `sales_growth`, `sales_year` | `cre.pct_rent.overage[.suffix]` |
-| `cre.exit_forward` | `exit_cap`, `selling_costs` | `cre.exit.proceeds`, `cre.exit.selling_costs` |
-| `cre.permanent_debt` | `balloon_at_maturity`, `funded_at_close`, `payment_frequency`, `principal`, `rate` | `cre.debt.proceeds[.suffix]`, `cre.debt.interest[.suffix]`, `cre.debt.principal[.suffix]` |
-| `cre.construction_loan` | `capitalize_interest`, `draw_accrual_fraction`, `draw_curve`, `equity_commitment`, `rate` | `cre.construction.equity_draw[.suffix]`, `cre.construction.loan_draw[.suffix]`, `cre.construction.interest[.suffix]` |
+| `cre.exit_forward` | `cap_rate`, `selling_costs` | `cre.exit.proceeds`, `cre.exit.selling_costs` |
+| `cre.permanent_debt` | `balloon_at_maturity`, `funded_at_close`, `interest_rate`, `payment_frequency`, `principal` | `cre.debt.proceeds[.suffix]`, `cre.debt.interest[.suffix]`, `cre.debt.principal[.suffix]` |
+| `cre.construction_loan` | `capitalize_interest`, `draw_accrual_fraction`, `draw_curve`, `equity_commitment`, `interest_rate` | `cre.construction.equity_draw[.suffix]`, `cre.construction.loan_draw[.suffix]`, `cre.construction.interest[.suffix]` |
 
 ### `credit`
 
 | Contract | Terms it reads | Streams it emits |
 |---|---|---|
-| `credit.pool_level_pay` | `abs_speed`, `age_months`, `balance`, `cdr`, `cpr`, `payment_frequency`, `prepay_penalty_rate`, `psa_speed`, `rate`, `sda_speed`, `servicing_fee`, `severity` | `credit.pool.interest[.suffix]`, `credit.pool.sched_principal[.suffix]`, `credit.pool.prepay[.suffix]`, `credit.pool.recoveries[.suffix]`, `credit.pool.servicing[.suffix]`, `credit.pool.penalty[.suffix]` |
-| `credit.pool_io_bullet` | `abs_speed`, `age_months`, `balance`, `cdr`, `cpr`, `payment_frequency`, `prepay_penalty_rate`, `psa_speed`, `rate`, `sda_speed`, `servicing_fee`, `severity` | `credit.pool.interest[.suffix]`, `credit.pool.prepay[.suffix]`, `credit.pool.bullet[.suffix]`, `credit.pool.recoveries[.suffix]`, `credit.pool.servicing[.suffix]`, `credit.pool.penalty[.suffix]` |
-| `credit.pool_float_io_bullet` | `abs_speed`, `age_months`, `balance`, `cdr`, `cpr`, `index_curve`, `margin`, `payment_frequency`, `prepay_penalty_rate`, `psa_speed`, `rate_cap`, `rate_floor`, `sda_speed`, `servicing_fee`, `severity` | `credit.pool.interest[.suffix]`, `credit.pool.prepay[.suffix]`, `credit.pool.bullet[.suffix]`, `credit.pool.recoveries[.suffix]`, `credit.pool.servicing[.suffix]`, `credit.pool.penalty[.suffix]` |
+| `credit.pool_level_pay` | `abs_speed`, `age_months`, `cdr`, `cpr`, `interest_rate`, `payment_frequency`, `prepay_penalty_rate`, `principal`, `psa_speed`, `sda_speed`, `servicing_fee`, `severity` | `credit.pool.interest[.suffix]`, `credit.pool.sched_principal[.suffix]`, `credit.pool.prepay[.suffix]`, `credit.pool.recoveries[.suffix]`, `credit.pool.servicing[.suffix]`, `credit.pool.penalty[.suffix]` |
+| `credit.pool_io_bullet` | `abs_speed`, `age_months`, `cdr`, `cpr`, `interest_rate`, `payment_frequency`, `prepay_penalty_rate`, `principal`, `psa_speed`, `sda_speed`, `servicing_fee`, `severity` | `credit.pool.interest[.suffix]`, `credit.pool.prepay[.suffix]`, `credit.pool.bullet[.suffix]`, `credit.pool.recoveries[.suffix]`, `credit.pool.servicing[.suffix]`, `credit.pool.penalty[.suffix]` |
+| `credit.pool_float_io_bullet` | `abs_speed`, `age_months`, `cdr`, `cpr`, `index_curve`, `margin`, `payment_frequency`, `prepay_penalty_rate`, `principal`, `psa_speed`, `rate_cap`, `rate_floor`, `sda_speed`, `servicing_fee`, `severity` | `credit.pool.interest[.suffix]`, `credit.pool.prepay[.suffix]`, `credit.pool.bullet[.suffix]`, `credit.pool.recoveries[.suffix]`, `credit.pool.servicing[.suffix]`, `credit.pool.penalty[.suffix]` |
 | `credit.purchase` | `price` | `credit.purchase.price[.suffix]` |
 
 ### `opco`
@@ -105,14 +105,14 @@ statement.
 | `opco.revenue_line` | `amount`, `amount_year`, `growth_rate` | `opco.revenue.recurring[.suffix]` |
 | `opco.opex_line` | `amount`, `amount_year`, `growth_rate` | `opco.opex.recurring[.suffix]` |
 | `opco.working_capital` | `amount` | `opco.working_capital.adjustment[.suffix]` |
-| `opco.exit_multiple` | `base_value`, `exit_multiple` | `opco.exit.value` |
+| `opco.exit_multiple` | `base`, `multiple` | `opco.exit.value` |
 | `opco.working_capital_policy` | `ap_days`, `ar_days`, `inv_days`, `release_at_end` | `opco.working_capital.adjustment[.suffix]` |
 | `opco.capex_line` | `amount`, `amount_year`, `growth_rate`, `pct_of_revenue` | `opco.capex.line[.suffix]` |
-| `opco.term_debt` | `funded_at_close`, `principal`, `rate` | `opco.debt.proceeds[.suffix]`, `opco.debt.interest[.suffix]`, `opco.debt.principal[.suffix]` |
+| `opco.term_debt` | `funded_at_close`, `interest_rate`, `principal` | `opco.debt.proceeds[.suffix]`, `opco.debt.interest[.suffix]`, `opco.debt.principal[.suffix]` |
 | `opco.cash_taxes` | `da_growth`, `da_monthly`, `da_year`, `tax_rate` | `opco.taxes.cash[.suffix]` |
-| `opco.exit_ebitda` | `exit_multiple`, `selling_costs` | `opco.exit.value`, `opco.exit.selling_costs` |
+| `opco.exit_ebitda` | `multiple`, `selling_costs` | `opco.exit.value`, `opco.exit.selling_costs` |
 | `opco.acquisition` | `price` | `opco.acquisition.price[.suffix]` |
-| `opco.exit_perpetuity` | `base_value`, `discount_rate`, `growth_rate`, `selling_costs` | `opco.exit.value[.suffix]`, `opco.exit.selling_costs[.suffix]` |
+| `opco.exit_perpetuity` | `base`, `discount_rate`, `growth_rate`, `selling_costs` | `opco.exit.value[.suffix]`, `opco.exit.selling_costs[.suffix]` |
 
 <!-- /cfdl:generated pack-contracts -->
 

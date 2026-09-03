@@ -257,8 +257,8 @@
         "availability": "1.0",
         "degradation": "0.005",
         "escalation": "0.0",
-        "mwh_year": "5000",
-        "ppa_price": "3000"
+        "price": "3000",
+        "quantity": "5000"
       }
     }
   ],

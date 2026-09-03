@@ -9,7 +9,7 @@ entity asset property : CRE.Asset.RealProperty
 contract cre.lease {
   term 2026-07..2027-12
   terms {
-    base_rent_year = 120000
+    rent_year = 120000
     growth = 0.02
   }
 }

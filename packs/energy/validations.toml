@@ -55,9 +55,9 @@ min = -1.0
 [[validations]]
 contract = "energy.merchant"
 code = "E8004_ENERGY_INVALID_PRICE_ESCALATION"
-message = "Energy 'price_escalation' must be greater than or equal to -1."
+message = "Energy 'escalation' must be greater than or equal to -1."
 check = "term_number"
-term = "price_escalation"
+term = "escalation"
 when = "present"
 on_invalid = "report"
 min = -1.0
@@ -90,9 +90,9 @@ max = 1.0
 [[validations]]
 contract = "energy.debt_service"
 code = "E8020_ENERGY_DEBT_INVALID_RATE"
-message = "Energy debt 'rate' must be non-negative."
+message = "Energy debt 'interest_rate' must be non-negative."
 check = "term_number"
-term = "rate"
+term = "interest_rate"
 when = "present"
 on_invalid = "report"
 min = 0.0

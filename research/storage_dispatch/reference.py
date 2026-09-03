@@ -3,7 +3,7 @@
 
 Nothing here models the deal. It does three things:
   1. generates the stated price series (seeded, reproducible);
-  2. runs NREL SAM's dispatch optimiser over it, with EVERY assumption set
+  2. runs NREL SAM's dispatch optimizer over it, with EVERY assumption set
      explicitly rather than inherited from a config default;
   3. summarises the price series as a duration curve — sorted prices at
      exceedance levels, which is a descriptive statistic of the data and
@@ -27,12 +27,12 @@ CYCLE_COST    = 0.0       # ZERO on both sides for the base case. SAM's
                           # "$/cycle-kWh" accounting could not be matched to a
                           # $/MWh-throughput hurdle (at 0.02 it dispatched into
                           # a loss), so the objective is pure arbitrage margin
-                          # and degradation is modelled separately.
+                          # and degradation is modeled separately.
                           # cost model, which neither side could see)
 AC_DC_EFF     = 96.0      # %
 DC_AC_EFF     = 96.0      # %
 DC_DC_EFF     = 99.0      # %
-LOOK_AHEAD_HOURS = 24.0   # the optimiser's foresight, STATED: net value rises
+LOOK_AHEAD_HOURS = 24.0   # the optimizer's foresight, STATED: net value rises
                           # monotonically with it, so a reference without a
                           # declared horizon is not a fixed target.
 
@@ -101,7 +101,7 @@ def sam_reference(price):
 
 
 def daily_blocks(price, dis_hours, chg_hours):
-    """Daily TBx block prices: the volume-weighted mean of the x dearest hours
+    """Daily TBx block prices: the volume-weighted mean of the x most expensive hours
     and the x cheapest hours of each day.
 
     This is the market's own battery product — TB2, TB4, "top-bottom spread" —
@@ -114,8 +114,8 @@ def daily_blocks(price, dis_hours, chg_hours):
     dispatch decision: it says which hours the product references, not when the
     battery runs. Whether it runs at all is the model's to decide."""
     d = np.sort(price.reshape(365, 24), axis=1)
-    def block(hrs, dear):
-        col = d[:, ::-1] if dear else d
+    def block(hrs, expensive):
+        col = d[:, ::-1] if expensive else d
         n, frac = int(hrs), hrs - int(hrs)
         w = np.zeros(24); w[:n] = 1.0
         if frac > 0: w[n] = frac

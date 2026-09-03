@@ -101,9 +101,9 @@ contract energy.capex on entity asset.wind {
 contract energy.merchant on entity asset.wind {
   term 2026-01..2050-01
   terms {
-    mwh_year = 250000
+    quantity = 250000
     price = 45
-    price_escalation = 0.02
+    escalation = 0.02
     degradation = 0.005
   }
 }
@@ -111,7 +111,7 @@ contract energy.merchant on entity asset.wind {
 // A flat capacity contract — no escalation, which is what the rule supports.
 contract energy.capacity on entity asset.wind {
   term 2026-01..2050-01
-  terms { payment_year = 4000000 }
+  terms { price = 4000000 }
 }
 
 // Production tax credit: $27.50/MWh base, 2.5%/yr inflation adjustment, ten
@@ -120,8 +120,8 @@ contract energy.capacity on entity asset.wind {
 contract energy.ptc on entity asset.wind {
   term 2026-01..2035-01
   terms {
-    mwh_year = 250000 "MWh/yr"
-    credit_per_mwh = 27.50 "USD/MWh"
+    quantity = 250000 "MWh/yr"
+    amount = 27.50 "USD/MWh"
     escalation = 0.025
     degradation = 0.005
   }
@@ -130,7 +130,7 @@ contract energy.ptc on entity asset.wind {
 contract energy.om on entity asset.wind {
   term 2026-01..2050-01
   terms {
-    om_year = 1500000
+    fee_year = 1500000
     escalation = 0.02
   }
 }
@@ -142,7 +142,7 @@ contract energy.om on entity asset.wind {
 contract energy.debt_service on entity asset.wind {
   term 2026-01..2043-01
   terms {
-    rate = 0.06
+    interest_rate = 0.06
     term_months = 216
     principal = 60000000
     funded_at_close = 0

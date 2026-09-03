@@ -1,6 +1,6 @@
 {
   "results_version": "0.12",
-  "model_hash": "4cf0e6f98c42ecc02a90be1fb434755cf235316f1742abdf4c303c6323680f78",
+  "model_hash": "098a6bf379e76647457f779a228459ce69313c90b408d39f41e67fef231821c4",
   "ledger_hash": "814d4ba8e43d77cc2375b16da90ccbc797a51b442ec87345fb2c14b48275af2a",
   "engine": {
     "name": "cfdl-engine",
@@ -12,12 +12,12 @@
       {
         "contract": "cre.lease",
         "defaults_applied": [
-          "base_rent_year"
+          "rent_year"
         ],
         "stream": "cre.lease.base_rent",
         "terms": {
-          "base_rent": "25000",
-          "base_rent_year": "0"
+          "rent": "25000",
+          "rent_year": "0"
         }
       }
     ]

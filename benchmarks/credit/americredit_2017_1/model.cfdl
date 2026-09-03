@@ -329,8 +329,8 @@ entity asset p12 : Credit.Asset.LoanPool {
 contract credit.pool_level_pay.p01 on entity asset.p01 {
   term 2017-02..2017-09
   terms {
-    balance = 999357.6
-    rate = 0.15789
+    principal = 999357.6
+    interest_rate = 0.15789
     term_months = 8
     age_months = 53
     abs_speed = 0.015
@@ -341,8 +341,8 @@ contract credit.pool_level_pay.p01 on entity asset.p01 {
 contract credit.pool_level_pay.p02 on entity asset.p02 {
   term 2017-02..2018-08
   terms {
-    balance = 18401017.06
-    rate = 0.13368
+    principal = 18401017.06
+    interest_rate = 0.13368
     term_months = 19
     age_months = 53
     abs_speed = 0.015
@@ -353,8 +353,8 @@ contract credit.pool_level_pay.p02 on entity asset.p02 {
 contract credit.pool_level_pay.p03 on entity asset.p03 {
   term 2017-02..2019-04
   terms {
-    balance = 3063342.92
-    rate = 0.13878
+    principal = 3063342.92
+    interest_rate = 0.13878
     term_months = 27
     age_months = 38
     abs_speed = 0.015
@@ -365,8 +365,8 @@ contract credit.pool_level_pay.p03 on entity asset.p03 {
 contract credit.pool_level_pay.p04 on entity asset.p04 {
   term 2017-02..2020-11
   terms {
-    balance = 2629247.98
-    rate = 0.12251
+    principal = 2629247.98
+    interest_rate = 0.12251
     term_months = 46
     age_months = 2
     abs_speed = 0.015
@@ -377,8 +377,8 @@ contract credit.pool_level_pay.p04 on entity asset.p04 {
 contract credit.pool_level_pay.p05 on entity asset.p05 {
   term 2017-02..2021-11
   terms {
-    balance = 21301021.93
-    rate = 0.12953
+    principal = 21301021.93
+    interest_rate = 0.12953
     term_months = 58
     age_months = 3
     abs_speed = 0.015
@@ -389,8 +389,8 @@ contract credit.pool_level_pay.p05 on entity asset.p05 {
 contract credit.pool_level_pay.p06 on entity asset.p06 {
   term 2017-02..2022-11
   terms {
-    balance = 285432214.08
-    rate = 0.12643
+    principal = 285432214.08
+    interest_rate = 0.12643
     term_months = 70
     age_months = 2
     abs_speed = 0.015
@@ -401,8 +401,8 @@ contract credit.pool_level_pay.p06 on entity asset.p06 {
 contract credit.pool_level_pay.p07 on entity asset.p07 {
   term 2017-01..2017-08
   terms {
-    balance = 2076350.36
-    rate = 0.1554
+    principal = 2076350.36
+    interest_rate = 0.1554
     term_months = 8
     age_months = 53
     abs_speed = 0.015
@@ -413,8 +413,8 @@ contract credit.pool_level_pay.p07 on entity asset.p07 {
 contract credit.pool_level_pay.p08 on entity asset.p08 {
   term 2017-01..2018-07
   terms {
-    balance = 37654758.33
-    rate = 0.13736
+    principal = 37654758.33
+    interest_rate = 0.13736
     term_months = 19
     age_months = 53
     abs_speed = 0.015
@@ -425,8 +425,8 @@ contract credit.pool_level_pay.p08 on entity asset.p08 {
 contract credit.pool_level_pay.p09 on entity asset.p09 {
   term 2017-01..2019-03
   terms {
-    balance = 9848795.79
-    rate = 0.13873
+    principal = 9848795.79
+    interest_rate = 0.13873
     term_months = 27
     age_months = 40
     abs_speed = 0.015
@@ -437,8 +437,8 @@ contract credit.pool_level_pay.p09 on entity asset.p09 {
 contract credit.pool_level_pay.p10 on entity asset.p10 {
   term 2017-01..2020-10
   terms {
-    balance = 4675311.33
-    rate = 0.12759
+    principal = 4675311.33
+    interest_rate = 0.12759
     term_months = 46
     age_months = 3
     abs_speed = 0.015
@@ -449,8 +449,8 @@ contract credit.pool_level_pay.p10 on entity asset.p10 {
 contract credit.pool_level_pay.p11 on entity asset.p11 {
   term 2017-01..2021-10
   terms {
-    balance = 43859779.2
-    rate = 0.13173
+    principal = 43859779.2
+    interest_rate = 0.13173
     term_months = 58
     age_months = 3
     abs_speed = 0.015
@@ -461,8 +461,8 @@ contract credit.pool_level_pay.p11 on entity asset.p11 {
 contract credit.pool_level_pay.p12 on entity asset.p12 {
   term 2017-01..2022-10
   terms {
-    balance = 582028732.7
-    rate = 0.12569
+    principal = 582028732.7
+    interest_rate = 0.12569
     term_months = 70
     age_months = 2
     abs_speed = 0.015

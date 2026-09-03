@@ -861,16 +861,16 @@
       "stream": "opco.debt.interest",
       "contract": "opco.term_debt",
       "terms": {
-        "principal": "3000000",
-        "rate": "0.09"
+        "interest_rate": "0.09",
+        "principal": "3000000"
       }
     },
     {
       "stream": "opco.debt.principal",
       "contract": "opco.term_debt",
       "terms": {
-        "principal": "3000000",
-        "rate": "0.09"
+        "interest_rate": "0.09",
+        "principal": "3000000"
       }
     },
     {
@@ -909,14 +909,14 @@
       "stream": "opco.exit.value",
       "contract": "opco.exit_ebitda",
       "terms": {
-        "exit_multiple": "7.0"
+        "multiple": "7.0"
       }
     },
     {
       "stream": "opco.exit.selling_costs",
       "contract": "opco.exit_ebitda",
       "terms": {
-        "exit_multiple": "7.0",
+        "multiple": "7.0",
         "selling_costs": "0.02"
       }
     }

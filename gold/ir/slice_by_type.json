@@ -350,9 +350,9 @@
       "stream": "cre.debt.interest",
       "contract": "cre.permanent_debt",
       "terms": {
+        "interest_rate": "0.055",
         "payment_frequency": "",
-        "principal": "6000000",
-        "rate": "0.055"
+        "principal": "6000000"
       },
       "defaults_applied": [
         "payment_frequency"
@@ -363,9 +363,9 @@
       "contract": "cre.permanent_debt",
       "terms": {
         "balloon_at_maturity": "1",
+        "interest_rate": "0.055",
         "payment_frequency": "",
-        "principal": "6000000",
-        "rate": "0.055"
+        "principal": "6000000"
       },
       "defaults_applied": [
         "payment_frequency"

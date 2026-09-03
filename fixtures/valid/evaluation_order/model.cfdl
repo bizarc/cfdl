@@ -47,7 +47,7 @@ entity party investor : Credit.Party.Investor { name = "Investor" }
 
 contract credit.pool_level_pay.one on entity asset.pool {
   term 2017-01..2017-04
-  terms { balance = 1000000 rate = 0.12 term_months = 4 cpr = 0 cdr = 0 }
+  terms { principal = 1000000 interest_rate = 0.12 term_months = 4 cpr = 0 cdr = 0 }
 }
 
 // Fires at period 2, when the field reaches the level.

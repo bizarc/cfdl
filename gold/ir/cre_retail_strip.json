@@ -912,7 +912,7 @@
       "terms": {
         "amount": "0",
         "amount_year": "240000",
-        "escalation": "0.03",
+        "growth_rate": "0.03",
         "occupancy": "1",
         "pct_fixed": "1"
       },
@@ -926,16 +926,16 @@
       "stream": "cre.exit.proceeds",
       "contract": "cre.exit",
       "terms": {
-        "exit_cap": "0.0675",
-        "noi_forward_year": "640000"
+        "cap_rate": "0.0675",
+        "income": "640000"
       }
     },
     {
       "stream": "cre.exit.selling_costs",
       "contract": "cre.exit",
       "terms": {
-        "exit_cap": "0.0675",
-        "noi_forward_year": "640000",
+        "cap_rate": "0.0675",
+        "income": "640000",
         "selling_costs": "0.015"
       }
     }

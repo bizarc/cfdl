@@ -1,6 +1,6 @@
 {
   "results_version": "0.12",
-  "model_hash": "64bce5ed127b1fc45b9f791189f5a3334706652c40206475a4265174d078f47a",
+  "model_hash": "b4cb128d66f6b122dd4c03260153c10273e04e5246b2a668c2023df2f0c0f825",
   "ledger_hash": "de0188dffebdc4ab0a9fd8a03970e5cb3f7e658f189f39afb030cc6c76254020",
   "engine": {
     "name": "cfdl-engine",
@@ -13,8 +13,8 @@
         "contract": "cre.exit_cap",
         "stream": "cre.exit.sale",
         "terms": {
-          "exit_cap": "0.05",
-          "noi_value": "100000"
+          "cap_rate": "0.05",
+          "income": "100000"
         }
       }
     ]

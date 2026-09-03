@@ -148,7 +148,7 @@ contract cre.construction_loan on entity asset.tower {
   terms {
     draw_curve        = "required_funding"
     equity_commitment = 110738000
-    rate              = 0.08
+    interest_rate              = 0.08
     // "Funding is assumed to occur ratably throughout the quarter", so a
     // quarter's own draw earns half a quarter of interest.
     draw_accrual_fraction = 0.5

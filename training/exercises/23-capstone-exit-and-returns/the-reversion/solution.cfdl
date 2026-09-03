@@ -26,7 +26,7 @@ contract cre.construction_stub {
 contract cre.lease {
   term 2027-07..2030-12
   terms {
-    base_rent = 155000
+    rent = 155000
     lease_up_months = 12
   }
 }
@@ -71,7 +71,7 @@ contract cre.opex_line {
   term 2027-07..2030-12
   terms {
     amount_year = 950000
-    escalation = 0.03
+    growth_rate = 0.03
   }
 }
 
@@ -114,9 +114,9 @@ contract cre.permanent_debt on entity asset.harbor {
   term 2028-07..2030-12
   terms {
     principal = 9500000
-    rate = 0.058
-    amort_months = 360
-    io_months = 36
+    interest_rate = 0.058
+    amortization_months = 360
+    interest_only_months = 36
   }
 }
 
@@ -128,8 +128,8 @@ contract cre.permanent_debt on entity asset.harbor {
 contract cre.exit {
   term 2030-12..2030-12
   terms {
-    noi_forward_year = 1550000
-    exit_cap = 0.0625
+    income = 1550000
+    cap_rate = 0.0625
     selling_costs = 0.02
   }
 }

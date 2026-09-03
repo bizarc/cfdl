@@ -254,11 +254,11 @@
       "stream": "energy.ptc.credit",
       "contract": "energy.ptc",
       "terms": {
+        "amount": "27.50",
         "availability": "1",
-        "credit_per_mwh": "27.50",
         "degradation": "0",
         "escalation": "0",
-        "mwh_year": "250000",
+        "quantity": "250000",
         "round_step": "1.00"
       },
       "defaults_applied": [

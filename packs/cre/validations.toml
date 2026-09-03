@@ -14,9 +14,9 @@ code_prefix = "E6"
 [[validations]]
 contract = "cre.lease"
 code = "E6001_CRE_LEASE_MISSING_BASE_RENT"
-message = "CRE lease must state a rent: 'base_rent' (per period) or 'base_rent_year' (annual)."
+message = "CRE lease must state a rent: 'rent' (per period) or 'rent_year' (annual)."
 check = "any_term_present"
-terms = ["base_rent", "base_rent_year"]
+terms = ["rent", "rent_year"]
 
 [[validations]]
 contract = "cre.lease"
@@ -45,18 +45,18 @@ exclusive_min = 0.0
 [[validations]]
 contract = "cre.exit_cap"
 code = "E6010_CRE_EXIT_MISSING_EXIT_CAP"
-message = "CRE exit contract is missing required term 'exit_cap'."
+message = "CRE exit contract is missing required term 'cap_rate'."
 check = "term_number"
-term = "exit_cap"
+term = "cap_rate"
 when = "always"
 on_invalid = "report"
 
 [[validations]]
 contract = "cre.exit_cap"
 code = "E6011_CRE_EXIT_INVALID_EXIT_CAP"
-message = "CRE exit 'exit_cap' must be greater than 0."
+message = "CRE exit 'cap_rate' must be greater than 0."
 check = "term_number"
-term = "exit_cap"
+term = "cap_rate"
 when = "present"
 on_invalid = "skip"
 exclusive_min = 0.0
@@ -64,9 +64,9 @@ exclusive_min = 0.0
 [[validations]]
 contract = "cre.exit_cap"
 code = "E6012_CRE_EXIT_MISSING_NOI_VALUE"
-message = "CRE exit requires either 'noi_ref' or 'noi_value'."
+message = "CRE exit requires either 'noi_ref' or 'income'."
 check = "any_term_present"
-terms = ["noi_ref", "noi_value", "noi"]
+terms = ["noi_ref", "income", "noi"]
 
 # --- cre.revenue_line -------------------------------------------------------
 #
@@ -146,9 +146,9 @@ min = 0.0
 [[validations]]
 contract = "cre.lease"
 code = "E6030_CRE_LEASE_AMBIGUOUS_RENT"
-message = "CRE lease states both 'base_rent' (per period) and 'base_rent_year' (annual); they would be summed. Give one."
+message = "CRE lease states both 'rent' (per period) and 'rent_year' (annual); they would be summed. Give one."
 check = "terms_mutually_exclusive"
-terms = ["base_rent", "base_rent_year"]
+terms = ["rent", "rent_year"]
 
 # --- cre.permanent_debt -----------------------------------------------------
 
@@ -177,18 +177,18 @@ exclusive_min = 0.0
 [[validations]]
 contract = "cre.permanent_debt"
 code = "E6052_CRE_DEBT_MISSING_RATE"
-message = "CRE permanent debt is missing required term 'rate'."
+message = "CRE permanent debt is missing required term 'interest_rate'."
 check = "term_number"
-term = "rate"
+term = "interest_rate"
 when = "always"
 on_invalid = "report"
 
 [[validations]]
 contract = "cre.permanent_debt"
 code = "E6053_CRE_DEBT_INVALID_RATE"
-message = "CRE permanent debt 'rate' is a nominal annual rate and must be 0 or more."
+message = "CRE permanent debt 'interest_rate' is a nominal annual rate and must be 0 or more."
 check = "term_number"
-term = "rate"
+term = "interest_rate"
 when = "present"
 on_invalid = "skip"
 min = 0.0
@@ -196,9 +196,9 @@ min = 0.0
 [[validations]]
 contract = "cre.permanent_debt"
 code = "E6054_CRE_DEBT_INVALID_AMORT"
-message = "CRE permanent debt 'amort_months' must be a whole number of months greater than 0. It strikes the payment and is normally longer than the loan's term."
+message = "CRE permanent debt 'amortization_months' must be a whole number of months greater than 0. It strikes the payment and is normally longer than the loan's term."
 check = "term_number"
-term = "amort_months"
+term = "amortization_months"
 number = "integer"
 when = "always"
 on_invalid = "report"
@@ -207,9 +207,9 @@ exclusive_min = 0.0
 [[validations]]
 contract = "cre.permanent_debt"
 code = "E6055_CRE_DEBT_INVALID_IO_MONTHS"
-message = "CRE permanent debt 'io_months' must be a whole number of months, 0 or more."
+message = "CRE permanent debt 'interest_only_months' must be a whole number of months, 0 or more."
 check = "term_number"
-term = "io_months"
+term = "interest_only_months"
 number = "integer"
 when = "present"
 on_invalid = "report"
@@ -247,9 +247,9 @@ min = 0.0
 [[validations]]
 contract = "cre.construction_loan"
 code = "E6058_CRE_CONSTRUCTION_INVALID_RATE"
-message = "CRE construction loan 'rate' must be a nominal annual rate between 0 and 1 (0.08 for 8%)."
+message = "CRE construction loan 'interest_rate' must be a nominal annual rate between 0 and 1 (0.08 for 8%)."
 check = "term_number"
-term = "rate"
+term = "interest_rate"
 when = "present"
 on_invalid = "skip"
 min = 0.0

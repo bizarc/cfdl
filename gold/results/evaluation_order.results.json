@@ -1,6 +1,6 @@
 {
   "results_version": "0.12",
-  "model_hash": "30eef98be4d31853ee22b378333d1dfb359ef6c2697fabad6447c8e05155ad90",
+  "model_hash": "a267e7a883edaa58a2e9ed9cfc58c2c8f2ecd2bfd9d64454099dfe9f6b83d53a",
   "ledger_hash": "b826d3b4ce27afd2fbd7a668afe15fb461fb6a3d5dfc002ebfefdda7b90b4ab1",
   "engine": {
     "name": "cfdl-engine",
@@ -22,12 +22,12 @@
         "terms": {
           "abs_speed": "0",
           "age_months": "0",
-          "balance": "1000000",
           "cdr": "0",
           "cpr": "0",
+          "interest_rate": "0.12",
           "payment_frequency": "",
+          "principal": "1000000",
           "psa_speed": "0",
-          "rate": "0.12",
           "sda_speed": "0"
         }
       },
@@ -45,13 +45,13 @@
         "terms": {
           "abs_speed": "0",
           "age_months": "0",
-          "balance": "1000000",
           "cdr": "0",
           "cpr": "0",
+          "interest_rate": "0.12",
           "payment_frequency": "",
           "prepay_penalty_rate": "0",
+          "principal": "1000000",
           "psa_speed": "0",
-          "rate": "0.12",
           "sda_speed": "0"
         }
       },
@@ -68,12 +68,12 @@
         "terms": {
           "abs_speed": "0",
           "age_months": "0",
-          "balance": "1000000",
           "cdr": "0",
           "cpr": "0",
+          "interest_rate": "0.12",
           "payment_frequency": "",
+          "principal": "1000000",
           "psa_speed": "0",
-          "rate": "0.12",
           "sda_speed": "0"
         }
       },
@@ -91,12 +91,12 @@
         "terms": {
           "abs_speed": "0",
           "age_months": "0",
-          "balance": "1000000",
           "cdr": "0",
           "cpr": "0",
+          "interest_rate": "0.12",
           "payment_frequency": "",
+          "principal": "1000000",
           "psa_speed": "0",
-          "rate": "0.12",
           "sda_speed": "0",
           "severity": "0"
         }
@@ -114,12 +114,12 @@
         "terms": {
           "abs_speed": "0",
           "age_months": "0",
-          "balance": "1000000",
           "cdr": "0",
           "cpr": "0",
+          "interest_rate": "0.12",
           "payment_frequency": "",
+          "principal": "1000000",
           "psa_speed": "0",
-          "rate": "0.12",
           "sda_speed": "0"
         }
       },
@@ -137,12 +137,12 @@
         "terms": {
           "abs_speed": "0",
           "age_months": "0",
-          "balance": "1000000",
           "cdr": "0",
           "cpr": "0",
+          "interest_rate": "0.12",
           "payment_frequency": "",
+          "principal": "1000000",
           "psa_speed": "0",
-          "rate": "0.12",
           "sda_speed": "0",
           "servicing_fee": "0"
         }

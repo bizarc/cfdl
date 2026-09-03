@@ -487,7 +487,7 @@ Syntax (normative):
 contract cre.lease on entity asset.sunset {
   term 2026-02..2028-01
   terms {
-    base_rent = 42000
+    rent = 42000
     escalation = 0.03
   }
 }
@@ -538,7 +538,7 @@ curve cpi step {
 contract cre.lease on entity asset.sunset {
   term 2026-02..2036-01
   terms {
-    base_rent  = 42000                                  // literal fact
+    rent  = 42000                                  // literal fact
     escalation = curve_value("cpi", time.date) + 0.005  // the agreed formula
   }
 }
@@ -561,8 +561,8 @@ assume annual_yield ~ Normal(mean=5000, stdev=350, clip=[4000, 6000])
 contract energy.ppa.plant_a on entity asset.plant {
   term 2026-01..2050-12
   terms {
-    ppa_price = 3000              // contractual fact
-    mwh_year  = inputs.annual_yield  // driver, supplied per run
+    price = 3000              // contractual fact
+    quantity  = inputs.annual_yield  // driver, supplied per run
   }
 }
 ```
@@ -1696,7 +1696,7 @@ curve sofr linear {
 contract cre.lease on entity asset.sunset {
   term 2027-01..2031-12
   terms {
-    base_rent = inputs.base_rent
+    rent = inputs.base_rent
   }
 }
 
@@ -6265,15 +6265,22 @@ name = "buyer"
 unbound = true
 ```
 
+A field may carry `one_of = "<group>"`: fields sharing a group are
+alternatives and a contract must state at least one of them (a debt's
+amount is `principal`, `commitment` or `draw_curve`; its rate is
+`interest_rate` or `index_curve` with `margin`). A refinement's roles are
+its master's roles, specialized — it may not add a party the agreement does
+not have.
+
 `parties = ["lender", "borrower"]` stays the shorthand for roles inherited
 by the master's own word. A master also declares `lines` (`[[contracts.lines]]
 name = "interest"`) and, where it serves one side only, `side = "pays"` or
 `"receives"`; a refinement inherits both, may add lines, and fixes a side
 the master left open. Each lowering rule names the line it emits
 (`line = "interest"` on the `[[rules]]` entry), and load checks that a
-type's rules cover its effective lines. The check is opt-in per type
-until every pack names its lines: a type none of whose rules names a line
-is not checked.
+type's rules cover its effective lines. Every shipped rule names its line. A
+contract template must render every required effective field and one member
+of each `one_of` group, also checked at load.
 
 The master's fields are the schema; the lowering rule consumes them by
 name (`{{contract.principal}}`); the template renders the required ones;
@@ -6403,7 +6410,7 @@ the statement's residual row rather than vanishing.
 settlement differs.** Credit's level-pay, interest-only and floating pools
 are three refinements because the amortization profile and the rate basis
 differ. An interest-only period, a balloon, capitalized interest and a
-PIK period are TERMS on one instrument (`io_months`, `balloon_at_maturity`,
+PIK period are TERMS on one instrument (`interest_only_months`, `balloon_at_maturity`,
 `capitalize_interest`, `pik_months`) because they change when the same
 instrument settles, not what it is. Under that rule the roster grows by
 instrument and the terms stay what a term sheet states.
@@ -7002,7 +7009,7 @@ act/365 is about 1.4% of interest.
 
 Use it for every **nominal** rate — note rates, servicing strips, floating
 index-plus-margin. Do not use it for annual *quantities* (`rent_year`,
-`om_year`), which spread by `{{model.periods_per_year}}` regardless of day
+`fee_year`), which spread by `{{model.periods_per_year}}` regardless of day
 count.
 
 **Amortization is a second, separate basis.** An amortizing loan strikes its
@@ -7687,7 +7694,7 @@ CRE pack codes:
   pair: the first owns absent-or-unparseable, the second parsed-but-not-positive
 - `E6052_CRE_DEBT_MISSING_RATE` / `E6053_CRE_DEBT_INVALID_RATE` — the same pair
   for the nominal annual rate
-- `E6054_CRE_DEBT_INVALID_AMORT` — `amort_months` strikes the payment and is
+- `E6054_CRE_DEBT_INVALID_AMORT` — `amortization_months` strikes the payment and is
   normally longer than the loan's term
 - `E6055_CRE_DEBT_INVALID_IO_MONTHS` — whole months, 0 or more
 - `E6056_CRE_DEBT_INVALID_BALLOON_FLAG` — `balloon_at_maturity` is 0 or 1
@@ -9044,7 +9051,7 @@ Contract types (a `contract <name>` declaration lowers to streams through the pa
 | `CRE.Contract.OperatingExpense` | `cre.opex_line` | owner | One operating expense line. Instance it per expense for an itemised schedule, or declare one unsuffixed for a single blended figure; the entity it hangs on sets the level. |
 | `CRE.Contract.OperatingRevenue` | `cre.revenue_line` | owner |  |
 | `CRE.Contract.PermanentDebt` | `cre.permanent_debt` | borrower, lender |  |
-| `CRE.Contract.ConstructionFunding` | `cre.construction_stub` | lender |  |
+| `CRE.Contract.ConstructionFunding` | `cre.construction_stub` | owner |  |
 | `CRE.Contract.ConstructionLoan` | `cre.construction_loan` | lender | A construction facility funded behind an equity commitment: equity draws first, the loan takes the balance once the commitment is exhausted, and interest accrues on the drawn balance through the build. |
 | `CRE.Contract.Disposition` | `cre.exit` | seller |  |
 | `CRE.Contract.DispositionAtCap` | `cre.exit_cap` | seller |  |
@@ -9803,7 +9810,7 @@ contract cre.opex_line on entity asset.strip_center {
   term 2026-01..2032-12
   terms {
     amount_year = 240000
-    escalation = 0.03
+    growth_rate = 0.03
   }
 }
 
@@ -9862,7 +9869,7 @@ contract cre.opex_line.management on entity asset.strip_center {
     amount_year = (series_sum("cre.unit.base_rent.*", time.t, time.t)
                    + series_sum("cre.unit.recoveries.*", time.t, time.t)
                    + series_sum("cre.vacancy.loss", time.t, time.t)) * time.ppy * 0.04
-    escalation = 0
+    growth_rate = 0
     pct_fixed = 1.0
   }
 }
@@ -9870,8 +9877,8 @@ contract cre.opex_line.management on entity asset.strip_center {
 contract cre.exit on entity asset.strip_center {
   term 2032-12..2032-12
   terms {
-    noi_forward_year = 640000
-    exit_cap = 0.0675
+    income = 640000
+    cap_rate = 0.0675
     selling_costs = 0.015
   }
 }
@@ -9897,7 +9904,7 @@ contract cre.construction_stub {
 contract cre.lease {
   term 2026-07..2031-12
   terms {
-    base_rent = 25000
+    rent = 25000
   }
 }
 
@@ -9918,8 +9925,8 @@ contract cre.opex_line {
 contract cre.exit_cap {
   term 2031-12..2031-12
   terms {
-    exit_cap = 0.06
-    noi_value = 180000
+    cap_rate = 0.06
+    income = 180000
   }
 }
 ```
@@ -9944,7 +9951,7 @@ contract cre.construction_stub {
 contract cre.lease {
   term 2026-07..2031-12
   terms {
-    base_rent = 25000
+    rent = 25000
   }
 }
 
@@ -9965,9 +9972,9 @@ contract cre.opex_line {
 contract cre.exit_cap {
   term 2031-12..2031-12
   terms {
-    exit_cap = 0.06
-    noi_value = 180000
-    noi_value = 216000
+    cap_rate = 0.06
+    income = 180000
+    income = 216000
   }
 }
 ```
@@ -9994,7 +10001,7 @@ contract cre.construction_stub on entity asset.property {
 contract cre.lease on entity asset.property {
   term 2026-07..2031-12
   terms {
-    base_rent = 25000
+    rent = 25000
   }
 }
 
@@ -10015,8 +10022,8 @@ contract cre.opex_line on entity asset.property {
 contract cre.exit_cap on entity asset.property {
   term 2031-12..2031-12
   terms {
-    exit_cap = 0.06
-    noi_value = 180000
+    cap_rate = 0.06
+    income = 180000
   }
 }
 
@@ -10046,7 +10053,7 @@ entity asset property : CRE.Asset.RealProperty
 contract cre.lease {
   term 2026-07..2027-12
   terms {
-    base_rent = 25000
+    rent = 25000
     lease_up_months = 18
   }
 }
@@ -10078,8 +10085,8 @@ contract cre.opex_line on entity asset.property {
 contract cre.exit_cap on entity asset.property {
   term 2033-12..2033-12
   terms {
-    exit_cap = 0.055
-    noi_value = 1740000
+    cap_rate = 0.055
+    income = 1740000
   }
 }
 
@@ -10162,8 +10169,8 @@ contract cre.opex_line on entity asset.property {
 contract cre.exit_cap on entity asset.property {
   term 2030-12..2030-12
   terms {
-    exit_cap = 0.052
-    noi_value = 1432200
+    cap_rate = 0.052
+    income = 1432200
   }
 }
 ```
@@ -10238,7 +10245,7 @@ contract cre.opex_line on entity asset.tower {
   term 2026-01..2036-12
   terms {
     amount_year = 300000
-    escalation = 0.025
+    growth_rate = 0.025
   }
 }
 
@@ -10247,7 +10254,7 @@ contract cre.opex_line on entity asset.tower {
 contract cre.exit_forward on entity asset.tower {
   term 2035-12..2035-12
   terms {
-    exit_cap = 0.065
+    cap_rate = 0.065
     selling_costs = 0.02
   }
 }
@@ -10337,9 +10344,9 @@ contract cre.permanent_debt on entity asset.tower {
   term 2026-01..2030-12
   terms {
     principal = 6000000
-    rate = 0.055
-    amort_months = 300
-    io_months = 24
+    interest_rate = 0.055
+    amortization_months = 300
+    interest_only_months = 24
     balloon_at_maturity = 1
   }
 }
@@ -10410,15 +10417,15 @@ contract cre.opex_line on entity asset.strip_center {
   term 2026-01..2032-12
   terms {
     amount_year = 240000
-    escalation = 0.03
+    growth_rate = 0.03
   }
 }
 
 contract cre.exit on entity asset.strip_center {
   term 2032-12..2032-12
   terms {
-    noi_forward_year = 640000
-    exit_cap = 0.0675
+    income = 640000
+    cap_rate = 0.0675
     selling_costs = 0.015
   }
 }
@@ -10516,7 +10523,7 @@ entity asset buyer : Credit.Asset.LoanPool
 contract credit.pool_float_io_bullet.smoke on entity asset.buyer {
   term 2026-01..2027-03
   terms {
-    balance = 1200000
+    principal = 1200000
     index_curve = "sofr"
     margin = 0.03
     rate_floor = 0.0725
@@ -10552,8 +10559,8 @@ entity asset buyer : Credit.Asset.LoanPool
 contract credit.pool_level_pay.smoke on entity asset.buyer {
   term 2026-01..2027-03
   terms {
-    balance = 1200000
-    rate = 0.06
+    principal = 1200000
+    interest_rate = 0.06
     term_months = 12
     cpr = 0.10
     cdr = 0.03
@@ -10597,8 +10604,8 @@ entity asset lender : Credit.Asset.LoanPool
 contract credit.pool_level_pay on entity asset.lender {
   term 2026-01..2026-12
   terms {
-    balance = 1200000
-    rate = 0
+    principal = 1200000
+    interest_rate = 0
     term_months = 12
     cpr = 0
     cdr = 0
@@ -10810,8 +10817,8 @@ contract energy.capex.final_draw on entity asset.microgrid {
 contract energy.ppa on entity asset.microgrid {
   term 2027-01..2029-12
   terms {
-    mwh_year = 2400
-    ppa_price = 90
+    quantity = 2400
+    price = 90
     escalation = 0.02
     degradation = 0.01
   }
@@ -10820,7 +10827,7 @@ contract energy.ppa on entity asset.microgrid {
 contract energy.om on entity asset.microgrid {
   term 2027-01..2029-12
   terms {
-    om_year = 36000
+    fee_year = 36000
     escalation = 0.02
   }
 }
@@ -10844,14 +10851,14 @@ contract energy.capex on entity asset.microgrid {
 
 contract energy.itc on entity asset.microgrid {
   term 2026-12..2026-12
-  terms { credit = 720000 }
+  terms { amount = 720000 }
 }
 
 contract energy.ppa on entity asset.microgrid {
   term 2026-01..2050-12
   terms {
-    mwh_year = 4200
-    ppa_price = 85
+    quantity = 4200
+    price = 85
     escalation = 0.02
     degradation = 0.005
   }
@@ -10860,20 +10867,20 @@ contract energy.ppa on entity asset.microgrid {
 contract energy.storage_arbitrage on entity asset.microgrid {
   term 2026-01..2050-12
   terms {
-    mwh_cycled_year = 500
-    spread = 30
+    quantity = 500
+    price = 30
   }
 }
 
 contract energy.capacity on entity asset.microgrid {
   term 2026-01..2050-12
-  terms { payment_year = 60000 }
+  terms { price = 60000 }
 }
 
 contract energy.om on entity asset.microgrid {
   term 2026-01..2050-12
   terms {
-    om_year = 70000
+    fee_year = 70000
     escalation = 0.025
   }
 }
@@ -10881,7 +10888,7 @@ contract energy.om on entity asset.microgrid {
 contract energy.debt_service on entity asset.microgrid {
   term 2026-01..2045-12
   terms {
-    rate = 0.06
+    interest_rate = 0.06
     term_months = 240
     principal = 1600000
   }
@@ -10908,9 +10915,9 @@ contract energy.capex on entity asset.windfarm {
 contract energy.merchant on entity asset.windfarm {
   term 2027-01..2046-12
   terms {
-    mwh_year = 105000
+    quantity = 105000
     price = 42
-    price_escalation = 0.015
+    escalation = 0.015
     degradation = 0.007
     availability = 0.95
   }
@@ -10919,8 +10926,8 @@ contract energy.merchant on entity asset.windfarm {
 contract energy.ptc on entity asset.windfarm {
   term 2027-01..2036-12
   terms {
-    mwh_year = 105000
-    credit_per_mwh = 27.5
+    quantity = 105000
+    amount = 27.5
     escalation = 0.02
     degradation = 0.007
     availability = 0.95
@@ -10939,7 +10946,7 @@ contract energy.macrs_shield on entity asset.windfarm {
 contract energy.om on entity asset.windfarm {
   term 2027-01..2046-12
   terms {
-    om_year = 1300000
+    fee_year = 1300000
     escalation = 0.02
   }
 }
@@ -10947,7 +10954,7 @@ contract energy.om on entity asset.windfarm {
 contract energy.debt_service on entity asset.windfarm {
   term 2027-01..2041-12
   terms {
-    rate = 0.055
+    interest_rate = 0.055
     term_months = 180
     principal = 25000000
   }
@@ -11135,7 +11142,7 @@ entity party investor : Credit.Party.Investor { name = "Investor" }
 
 contract credit.pool_level_pay.one on entity asset.pool {
   term 2017-01..2017-04
-  terms { balance = 1000000 rate = 0.12 term_months = 4 cpr = 0 cdr = 0 }
+  terms { principal = 1000000 interest_rate = 0.12 term_months = 4 cpr = 0 cdr = 0 }
 }
 
 // Fires at period 2, when the field reaches the level.
@@ -11342,9 +11349,9 @@ contract cre.permanent_debt on entity asset.tower {
   term 2026-01..2030-12
   terms {
     principal = 6000000
-    rate = 0.055
-    amort_months = 300
-    io_months = 24
+    interest_rate = 0.055
+    amortization_months = 300
+    interest_only_months = 24
     balloon_at_maturity = 1
   }
 }
@@ -11399,8 +11406,8 @@ entity asset property : CRE.Asset.RealProperty
 contract cre.exit_cap on entity asset.property {
   term 2026-12..2026-12
   terms {
-    exit_cap = 0.05
-    noi_value = 100000
+    cap_rate = 0.05
+    income = 100000
   }
 }
 ```
@@ -12126,8 +12133,8 @@ contract cre.opex_line {
 contract cre.exit_cap on entity asset.property {
   term 2027-01..2027-01
   terms {
-    exit_cap = 0.09
-    noi_value = 36000
+    cap_rate = 0.09
+    income = 36000
   }
 }
 ```
@@ -12183,8 +12190,8 @@ contract opco.exit_multiple {
   term 2031-12..2031-12
   terms {
     exit_period = 72
-    exit_multiple = 6.5
-    base_value = 800000
+    multiple = 6.5
+    base = 800000
   }
 }
 ```
@@ -12218,7 +12225,7 @@ stream firm.fcff on entity asset.firm inflow currency USD {
 contract opco.exit_perpetuity on entity asset.firm {
   term 2030-01..2030-01
   terms {
-    base_value = 1169.858560
+    base = 1169.858560
     growth_rate = 0.025
     discount_rate = 0.085
   }
@@ -12300,9 +12307,9 @@ contract opco.term_debt on entity asset.target {
   term 2026-01..2027-12
   terms {
     principal = 3000000
-    rate = 0.09
-    io_months = 6
-    amort_months = 36
+    interest_rate = 0.09
+    interest_only_months = 6
+    amortization_months = 36
   }
 }
 
@@ -12324,7 +12331,7 @@ contract opco.acquisition on entity asset.target {
 contract opco.exit_ebitda on entity asset.target {
   term 2027-12..2027-12
   terms {
-    exit_multiple = 7.0
+    multiple = 7.0
     selling_costs = 0.02
   }
 }
@@ -12484,8 +12491,8 @@ entity asset buyer : Credit.Asset.LoanPool
 contract credit.pool_level_pay.p on entity asset.buyer {
   term 2025-01..2025-12
   terms {
-    balance = 100000000
-    rate = 0.08
+    principal = 100000000
+    interest_rate = 0.08
     term_months = 360
     cpr = 0
     cdr = 0
@@ -12531,7 +12538,7 @@ contract cre.opex_line on entity asset.tower {
   term 2025-01..2028-01
   terms {
     amount_year = 300000
-    escalation = 0.025
+    growth_rate = 0.025
   }
 }
 
@@ -12544,7 +12551,7 @@ contract cre.opex_line on entity asset.tower {
 contract cre.exit_forward on entity asset.tower {
   term 2027-01..2027-01
   terms {
-    exit_cap = 0.065
+    cap_rate = 0.065
     selling_costs = 0.02
   }
 }
@@ -12584,7 +12591,7 @@ contract cre.opex_line on entity asset.tower {
   term 2025-01..2028-12
   terms {
     amount_year = 300000
-    escalation = 0.025
+    growth_rate = 0.025
   }
 }
 
@@ -12597,7 +12604,7 @@ contract cre.opex_line on entity asset.tower {
 contract cre.exit_forward on entity asset.tower {
   term 2027-12..2027-12
   terms {
-    exit_cap = 0.065
+    cap_rate = 0.065
     selling_costs = 0.02
   }
 }
@@ -12637,7 +12644,7 @@ contract cre.opex_line on entity asset.tower {
   term 2025-01..2028-10
   terms {
     amount_year = 300000
-    escalation = 0.025
+    growth_rate = 0.025
   }
 }
 
@@ -12650,7 +12657,7 @@ contract cre.opex_line on entity asset.tower {
 contract cre.exit_forward on entity asset.tower {
   term 2027-10..2027-10
   terms {
-    exit_cap = 0.065
+    cap_rate = 0.065
     selling_costs = 0.02
   }
 }
@@ -12680,8 +12687,8 @@ entity asset buyer : Credit.Asset.LoanPool
 contract credit.pool_level_pay.book on entity asset.buyer {
   term 2025-01..2028-03
   terms {
-    balance = 1200000
-    rate = 0.06
+    principal = 1200000
+    interest_rate = 0.06
     term_months = 36
     cpr = 0.10
     cdr = 0.03
@@ -12716,8 +12723,8 @@ entity asset buyer : Credit.Asset.LoanPool
 contract credit.pool_level_pay.book on entity asset.buyer {
   term 2025-01..2028-03
   terms {
-    balance = 1200000
-    rate = 0.06
+    principal = 1200000
+    interest_rate = 0.06
     term_months = 36
     cpr = 0.10
     cdr = 0.03
@@ -12753,8 +12760,8 @@ entity asset microgrid : Energy.Asset.GenerationFacility
 contract energy.ppa on entity asset.microgrid {
   term 2025-01..2027-01
   terms {
-    mwh_year = 4200
-    ppa_price = 85
+    quantity = 4200
+    price = 85
     escalation = 0.02
     degradation = 0.005
   }
@@ -12763,14 +12770,14 @@ contract energy.ppa on entity asset.microgrid {
 contract energy.om on entity asset.microgrid {
   term 2025-01..2027-01
   terms {
-    om_year = 48000
+    fee_year = 48000
     escalation = 0.025
   }
 }
 
 contract energy.capacity on entity asset.microgrid {
   term 2025-01..2027-01
-  terms { payment_year = 60000 }
+  terms { price = 60000 }
 }
 ```
 
@@ -12799,8 +12806,8 @@ entity asset microgrid : Energy.Asset.GenerationFacility
 contract energy.ppa on entity asset.microgrid {
   term 2025-01..2027-12-31
   terms {
-    mwh_year = 4200
-    ppa_price = 85
+    quantity = 4200
+    price = 85
     escalation = 0.02
     degradation = 0.005
   }
@@ -12809,14 +12816,14 @@ contract energy.ppa on entity asset.microgrid {
 contract energy.om on entity asset.microgrid {
   term 2025-01..2027-12-31
   terms {
-    om_year = 48000
+    fee_year = 48000
     escalation = 0.025
   }
 }
 
 contract energy.capacity on entity asset.microgrid {
   term 2025-01..2027-12-31
-  terms { payment_year = 60000 }
+  terms { price = 60000 }
 }
 ```
 
@@ -12845,8 +12852,8 @@ entity asset microgrid : Energy.Asset.GenerationFacility
 contract energy.ppa on entity asset.microgrid {
   term 2025-01..2027-12
   terms {
-    mwh_year = 4200
-    ppa_price = 85
+    quantity = 4200
+    price = 85
     escalation = 0.02
     degradation = 0.005
   }
@@ -12855,14 +12862,14 @@ contract energy.ppa on entity asset.microgrid {
 contract energy.om on entity asset.microgrid {
   term 2025-01..2027-12
   terms {
-    om_year = 48000
+    fee_year = 48000
     escalation = 0.025
   }
 }
 
 contract energy.capacity on entity asset.microgrid {
   term 2025-01..2027-12
-  terms { payment_year = 60000 }
+  terms { price = 60000 }
 }
 ```
 
@@ -12891,8 +12898,8 @@ entity asset microgrid : Energy.Asset.GenerationFacility
 contract energy.ppa on entity asset.microgrid {
   term 2025-01..2027-10
   terms {
-    mwh_year = 4200
-    ppa_price = 85
+    quantity = 4200
+    price = 85
     escalation = 0.02
     degradation = 0.005
   }
@@ -12901,14 +12908,14 @@ contract energy.ppa on entity asset.microgrid {
 contract energy.om on entity asset.microgrid {
   term 2025-01..2027-10
   terms {
-    om_year = 48000
+    fee_year = 48000
     escalation = 0.025
   }
 }
 
 contract energy.capacity on entity asset.microgrid {
   term 2025-01..2027-10
-  terms { payment_year = 60000 }
+  terms { price = 60000 }
 }
 ```
 
@@ -13189,8 +13196,8 @@ entity asset plant : Energy.Asset.GenerationFacility
 contract energy.ppa.plant_a on entity asset.plant {
   term 2026-01..2026-12
   terms {
-    mwh_year = 5000
-    ppa_price = 3000
+    quantity = 5000
+    price = 3000
     escalation = 0.0
     degradation = 0.005
     availability = 1.0
@@ -13219,8 +13226,8 @@ entity asset buyer : Credit.Asset.LoanPool
 contract credit.pool_io_bullet.p on entity asset.buyer {
   term 2025-01..2025-12
   terms {
-    balance = 1200000
-    rate = 0.06
+    principal = 1200000
+    interest_rate = 0.06
     term_months = 12
     cpr = 0
     cdr = 0
@@ -13412,8 +13419,8 @@ contract energy.ppa.plant_a on entity asset.plant {
   term 2026-01..2026-12
   payment net 45
   terms {
-    mwh_year = 6000
-    ppa_price = 3000
+    quantity = 6000
+    price = 3000
     escalation = 0.0
     degradation = 0.005
     availability = 1.0
@@ -13442,8 +13449,8 @@ contract cre.permanent_debt on entity asset.tower {
   category cre.debt.interest = operating.expense.interest
   terms {
     principal = 1000000
-    rate = 0.05
-    amort_months = 300
+    interest_rate = 0.05
+    amortization_months = 300
   }
 }
 
@@ -14149,9 +14156,9 @@ contract cre.permanent_debt on entity asset.tower {
   term 2026-01..2030-12
   terms {
     principal = 6000000
-    rate = 0.055
-    amort_months = 300
-    io_months = 24
+    interest_rate = 0.055
+    amortization_months = 300
+    interest_only_months = 24
     balloon_at_maturity = 1
   }
 }
@@ -14725,8 +14732,8 @@ entity asset plant : Energy.Asset.GenerationFacility
 contract energy.ppa.plant_a on entity asset.plant {
   term 2026-01..2026-12
   terms {
-    mwh_year = 1000 + 500
-    ppa_price = 3000
+    quantity = 1000 + 500
+    price = 3000
     escalation = 0.0
     degradation = 0.005
     availability = 1.0
@@ -14760,8 +14767,8 @@ curve production step {
 contract energy.ppa.plant_a on entity asset.plant {
   term 2026-01..2026-12
   terms {
-    mwh_year = curve_value("production", time.date)
-    ppa_price = 3000
+    quantity = curve_value("production", time.date)
+    price = 3000
     escalation = inputs.esc_base + 0.005
     degradation = 0.0
     availability = 1.0
@@ -14789,12 +14796,12 @@ contract energy.ppa.plant_a on entity asset.plant {
   term 2026-01..2027-12
   terms {
     // Contractual facts stay literal.
-    ppa_price = 3000
+    price = 3000
     escalation = 0.0
     availability = 1.0
     // Drivers defer to inputs. `degradation` is range-checked by the energy
     // pack, so this also covers a validated term deferring.
-    mwh_year = inputs.annual_yield
+    quantity = inputs.annual_yield
     degradation = inputs.degradation
   }
 }
@@ -14814,8 +14821,8 @@ entity asset plant : Energy.Asset.GenerationFacility
 contract energy.ptc on entity asset.plant {
   term 2026-01..2028-01
   terms {
-    mwh_year        = 250000 "MWh/yr"
-    credit_per_mwh  = 27.50 "USD/MWh"
+    quantity        = 250000 "MWh/yr"
+    amount  = 27.50 "USD/MWh"
   }
 }
 ```
@@ -15252,8 +15259,8 @@ entity party holders : Credit.Party.Investor { name = "Noteholders" }
 contract credit.pool_level_pay.pool on entity asset.pool {
   term 2018-10..2019-03
   terms {
-    balance = 1200000.0
-    rate = 0.06
+    principal = 1200000.0
+    interest_rate = 0.06
     term_months = 6
     cpr = 0
     cdr = 0
@@ -16861,7 +16868,7 @@ contract cre.opex_line on entity asset.tower {
   term 2026-01..2036-12
   terms {
     amount_year = 300000
-    escalation = 0.025
+    growth_rate = 0.025
   }
 }
 
@@ -16870,7 +16877,7 @@ contract cre.opex_line on entity asset.tower {
 contract cre.exit_forward on entity asset.tower {
   term 2035-12..2035-12
   terms {
-    exit_cap = 0.065
+    cap_rate = 0.065
     selling_costs = 0.02
   }
 }
@@ -16893,8 +16900,8 @@ contract cre.permanent_debt on entity asset.tower {
   term 2026-01..2035-12
   terms {
     principal = 6000000
-    rate = 0.055
-    amort_months = 300
+    interest_rate = 0.055
+    amortization_months = 300
     funded_at_close = 0
   }
 }
@@ -16977,15 +16984,15 @@ contract cre.opex_line on entity asset.strip_center {
   term 2026-01..2032-12
   terms {
     amount_year = 240000
-    escalation = 0.03
+    growth_rate = 0.03
   }
 }
 
 contract cre.exit on entity asset.strip_center {
   term 2032-12..2032-12
   terms {
-    noi_forward_year = 640000
-    exit_cap = 0.0675
+    income = 640000
+    cap_rate = 0.0675
     selling_costs = 0.015
   }
 }
@@ -17078,7 +17085,7 @@ contract cre.construction_loan on entity asset.tower {
   terms {
     draw_curve        = "required_funding"
     equity_commitment = 110738000
-    rate              = 0.08
+    interest_rate              = 0.08
     // "Funding is assumed to occur ratably throughout the quarter", so a
     // quarter's own draw earns half a quarter of interest.
     draw_accrual_fraction = 0.5
@@ -18023,8 +18030,8 @@ entity asset buyer : Credit.Asset.LoanPool
 contract credit.pool_level_pay.auto_a on entity asset.buyer {
   term 2026-01..2036-06
   terms {
-    balance = 25000000
-    rate = 0.065
+    principal = 25000000
+    interest_rate = 0.065
     term_months = 120
     cpr = 0.08
     cdr = 0.02
@@ -18083,7 +18090,7 @@ entity asset buyer : Credit.Asset.LoanPool
 contract credit.pool_float_io_bullet.bridge_f on entity asset.buyer {
   term 2026-01..2029-05
   terms {
-    balance = 15000000
+    principal = 15000000
     index_curve = "sofr"
     margin = 0.0275
     rate_floor = 0.07
@@ -18188,8 +18195,8 @@ entity asset loan_d : Credit.Asset.Loan {
 contract credit.pool_level_pay.a on entity asset.loan_a {
   term 2026-01..2056-12
   terms {
-    balance = 40000000
-    rate = 0.08
+    principal = 40000000
+    interest_rate = 0.08
     term_months = 360
     cpr = 0.11361512828387077
     cdr = 0.11361512828387077
@@ -18201,8 +18208,8 @@ contract credit.pool_level_pay.a on entity asset.loan_a {
 contract credit.pool_level_pay.b on entity asset.loan_b {
   term 2026-01..2056-12
   terms {
-    balance = 30000000
-    rate = 0.08
+    principal = 30000000
+    interest_rate = 0.08
     term_months = 360
     cpr = 0.11361512828387077
     cdr = 0.11361512828387077
@@ -18214,8 +18221,8 @@ contract credit.pool_level_pay.b on entity asset.loan_b {
 contract credit.pool_level_pay.c on entity asset.loan_c {
   term 2026-01..2056-12
   terms {
-    balance = 20000000
-    rate = 0.08
+    principal = 20000000
+    interest_rate = 0.08
     term_months = 360
     cpr = 0.11361512828387077
     cdr = 0.11361512828387077
@@ -18227,8 +18234,8 @@ contract credit.pool_level_pay.c on entity asset.loan_c {
 contract credit.pool_level_pay.d on entity asset.loan_d {
   term 2026-01..2056-12
   terms {
-    balance = 10000000
-    rate = 0.08
+    principal = 10000000
+    interest_rate = 0.08
     term_months = 360
     cpr = 0.11361512828387077
     cdr = 0.11361512828387077
@@ -18392,8 +18399,8 @@ entity party residual : Credit.Party.Investor { name = "Classes R and RL" }
 contract credit.pool_level_pay.g3 on entity asset.pool {
   term 2019-02..2033-06
   terms {
-    balance = 148372434
-    rate = 0.05451
+    principal = 148372434
+    interest_rate = 0.05451
     term_months = 173
     age_months = 175
     psa_speed = 1.98
@@ -18705,8 +18712,8 @@ entity party d_holders : Credit.Party.Investor { name = "Class D noteholders" }
 contract credit.pool_level_pay.p01 on entity asset.p01 {
   term 2018-10..2020-03
   terms {
-    balance = 5616021.32
-    rate = 0.00000
+    principal = 5616021.32
+    interest_rate = 0.00000
     term_months = 18
     cpr = 0
     cdr = 0
@@ -18716,8 +18723,8 @@ contract credit.pool_level_pay.p01 on entity asset.p01 {
 contract credit.pool_level_pay.p02 on entity asset.p02 {
   term 2018-10..2021-01
   terms {
-    balance = 2616054.82
-    rate = 0.00000
+    principal = 2616054.82
+    interest_rate = 0.00000
     term_months = 28
     cpr = 0
     cdr = 0
@@ -18727,8 +18734,8 @@ contract credit.pool_level_pay.p02 on entity asset.p02 {
 contract credit.pool_level_pay.p03 on entity asset.p03 {
   term 2018-10..2022-06
   terms {
-    balance = 4635948.89
-    rate = 0.00000
+    principal = 4635948.89
+    interest_rate = 0.00000
     term_months = 45
     cpr = 0
     cdr = 0
@@ -18738,8 +18745,8 @@ contract credit.pool_level_pay.p03 on entity asset.p03 {
 contract credit.pool_level_pay.p04 on entity asset.p04 {
   term 2018-10..2022-12
   terms {
-    balance = 2205909.75
-    rate = 0.00000
+    principal = 2205909.75
+    interest_rate = 0.00000
     term_months = 51
     cpr = 0
     cdr = 0
@@ -18749,8 +18756,8 @@ contract credit.pool_level_pay.p04 on entity asset.p04 {
 contract credit.pool_level_pay.p06 on entity asset.p06 {
   term 2018-10..2019-11
   terms {
-    balance = 147440.15
-    rate = 0.00915
+    principal = 147440.15
+    interest_rate = 0.00915
     term_months = 14
     cpr = 0
     cdr = 0
@@ -18760,8 +18767,8 @@ contract credit.pool_level_pay.p06 on entity asset.p06 {
 contract credit.pool_level_pay.p07 on entity asset.p07 {
   term 2018-10..2021-03
   terms {
-    balance = 216238.15
-    rate = 0.00992
+    principal = 216238.15
+    interest_rate = 0.00992
     term_months = 30
     cpr = 0
     cdr = 0
@@ -18771,8 +18778,8 @@ contract credit.pool_level_pay.p07 on entity asset.p07 {
 contract credit.pool_level_pay.p08 on entity asset.p08 {
   term 2018-10..2022-07
   terms {
-    balance = 354043.75
-    rate = 0.00907
+    principal = 354043.75
+    interest_rate = 0.00907
     term_months = 46
     cpr = 0
     cdr = 0
@@ -18782,8 +18789,8 @@ contract credit.pool_level_pay.p08 on entity asset.p08 {
 contract credit.pool_level_pay.p09 on entity asset.p09 {
   term 2018-10..2022-12
   terms {
-    balance = 342126.24
-    rate = 0.00905
+    principal = 342126.24
+    interest_rate = 0.00905
     term_months = 51
     cpr = 0
     cdr = 0
@@ -18793,8 +18800,8 @@ contract credit.pool_level_pay.p09 on entity asset.p09 {
 contract credit.pool_level_pay.p11 on entity asset.p11 {
   term 2018-10..2020-02
   terms {
-    balance = 610459.31
-    rate = 0.01906
+    principal = 610459.31
+    interest_rate = 0.01906
     term_months = 17
     cpr = 0
     cdr = 0
@@ -18804,8 +18811,8 @@ contract credit.pool_level_pay.p11 on entity asset.p11 {
 contract credit.pool_level_pay.p12 on entity asset.p12 {
   term 2018-10..2021-04
   terms {
-    balance = 1144291.74
-    rate = 0.01951
+    principal = 1144291.74
+    interest_rate = 0.01951
     term_months = 31
     cpr = 0
     cdr = 0
@@ -18815,8 +18822,8 @@ contract credit.pool_level_pay.p12 on entity asset.p12 {
 contract credit.pool_level_pay.p13 on entity asset.p13 {
   term 2018-10..2022-02
   terms {
-    balance = 699535.89
-    rate = 0.01949
+    principal = 699535.89
+    interest_rate = 0.01949
     term_months = 41
     cpr = 0
     cdr = 0
@@ -18826,8 +18833,8 @@ contract credit.pool_level_pay.p13 on entity asset.p13 {
 contract credit.pool_level_pay.p14 on entity asset.p14 {
   term 2018-10..2022-12
   terms {
-    balance = 201897.47
-    rate = 0.01869
+    principal = 201897.47
+    interest_rate = 0.01869
     term_months = 51
     cpr = 0
     cdr = 0
@@ -18837,8 +18844,8 @@ contract credit.pool_level_pay.p14 on entity asset.p14 {
 contract credit.pool_level_pay.p16 on entity asset.p16 {
   term 2018-10..2020-02
   terms {
-    balance = 13918351.08
-    rate = 0.02594
+    principal = 13918351.08
+    interest_rate = 0.02594
     term_months = 17
     cpr = 0
     cdr = 0
@@ -18848,8 +18855,8 @@ contract credit.pool_level_pay.p16 on entity asset.p16 {
 contract credit.pool_level_pay.p17 on entity asset.p17 {
   term 2018-10..2021-04
   terms {
-    balance = 26181002.53
-    rate = 0.02626
+    principal = 26181002.53
+    interest_rate = 0.02626
     term_months = 31
     cpr = 0
     cdr = 0
@@ -18859,8 +18866,8 @@ contract credit.pool_level_pay.p17 on entity asset.p17 {
 contract credit.pool_level_pay.p18 on entity asset.p18 {
   term 2018-10..2022-02
   terms {
-    balance = 28740527.64
-    rate = 0.02684
+    principal = 28740527.64
+    interest_rate = 0.02684
     term_months = 41
     cpr = 0
     cdr = 0
@@ -18870,8 +18877,8 @@ contract credit.pool_level_pay.p18 on entity asset.p18 {
 contract credit.pool_level_pay.p19 on entity asset.p19 {
   term 2018-10..2022-12
   terms {
-    balance = 9735143.46
-    rate = 0.02794
+    principal = 9735143.46
+    interest_rate = 0.02794
     term_months = 51
     cpr = 0
     cdr = 0
@@ -18881,8 +18888,8 @@ contract credit.pool_level_pay.p19 on entity asset.p19 {
 contract credit.pool_level_pay.p21 on entity asset.p21 {
   term 2018-10..2020-02
   terms {
-    balance = 14533243.98
-    rate = 0.03678
+    principal = 14533243.98
+    interest_rate = 0.03678
     term_months = 17
     cpr = 0
     cdr = 0
@@ -18892,8 +18899,8 @@ contract credit.pool_level_pay.p21 on entity asset.p21 {
 contract credit.pool_level_pay.p22 on entity asset.p22 {
   term 2018-10..2021-04
   terms {
-    balance = 26195374.46
-    rate = 0.03667
+    principal = 26195374.46
+    interest_rate = 0.03667
     term_months = 31
     cpr = 0
     cdr = 0
@@ -18903,8 +18910,8 @@ contract credit.pool_level_pay.p22 on entity asset.p22 {
 contract credit.pool_level_pay.p23 on entity asset.p23 {
   term 2018-10..2022-03
   terms {
-    balance = 37348352.52
-    rate = 0.03671
+    principal = 37348352.52
+    interest_rate = 0.03671
     term_months = 42
     cpr = 0
     cdr = 0
@@ -18914,8 +18921,8 @@ contract credit.pool_level_pay.p23 on entity asset.p23 {
 contract credit.pool_level_pay.p24 on entity asset.p24 {
   term 2018-10..2023-01
   terms {
-    balance = 19509631.08
-    rate = 0.03673
+    principal = 19509631.08
+    interest_rate = 0.03673
     term_months = 52
     cpr = 0
     cdr = 0
@@ -18925,8 +18932,8 @@ contract credit.pool_level_pay.p24 on entity asset.p24 {
 contract credit.pool_level_pay.p26 on entity asset.p26 {
   term 2018-10..2020-02
   terms {
-    balance = 12183065.19
-    rate = 0.04661
+    principal = 12183065.19
+    interest_rate = 0.04661
     term_months = 17
     cpr = 0
     cdr = 0
@@ -18936,8 +18943,8 @@ contract credit.pool_level_pay.p26 on entity asset.p26 {
 contract credit.pool_level_pay.p27 on entity asset.p27 {
   term 2018-10..2021-04
   terms {
-    balance = 20323443.61
-    rate = 0.04674
+    principal = 20323443.61
+    interest_rate = 0.04674
     term_months = 31
     cpr = 0
     cdr = 0
@@ -18947,8 +18954,8 @@ contract credit.pool_level_pay.p27 on entity asset.p27 {
 contract credit.pool_level_pay.p28 on entity asset.p28 {
   term 2018-10..2022-03
   terms {
-    balance = 32071657.98
-    rate = 0.04690
+    principal = 32071657.98
+    interest_rate = 0.04690
     term_months = 42
     cpr = 0
     cdr = 0
@@ -18958,8 +18965,8 @@ contract credit.pool_level_pay.p28 on entity asset.p28 {
 contract credit.pool_level_pay.p29 on entity asset.p29 {
   term 2018-10..2023-01
   terms {
-    balance = 20332473.43
-    rate = 0.04674
+    principal = 20332473.43
+    interest_rate = 0.04674
     term_months = 52
     cpr = 0
     cdr = 0
@@ -18969,8 +18976,8 @@ contract credit.pool_level_pay.p29 on entity asset.p29 {
 contract credit.pool_level_pay.p31 on entity asset.p31 {
   term 2018-10..2020-02
   terms {
-    balance = 6428613.14
-    rate = 0.05572
+    principal = 6428613.14
+    interest_rate = 0.05572
     term_months = 17
     cpr = 0
     cdr = 0
@@ -18980,8 +18987,8 @@ contract credit.pool_level_pay.p31 on entity asset.p31 {
 contract credit.pool_level_pay.p32 on entity asset.p32 {
   term 2018-10..2021-05
   terms {
-    balance = 16325861.98
-    rate = 0.05566
+    principal = 16325861.98
+    interest_rate = 0.05566
     term_months = 32
     cpr = 0
     cdr = 0
@@ -18991,8 +18998,8 @@ contract credit.pool_level_pay.p32 on entity asset.p32 {
 contract credit.pool_level_pay.p33 on entity asset.p33 {
   term 2018-10..2022-04
   terms {
-    balance = 34020451.15
-    rate = 0.05608
+    principal = 34020451.15
+    interest_rate = 0.05608
     term_months = 43
     cpr = 0
     cdr = 0
@@ -19002,8 +19009,8 @@ contract credit.pool_level_pay.p33 on entity asset.p33 {
 contract credit.pool_level_pay.p34 on entity asset.p34 {
   term 2018-10..2023-01
   terms {
-    balance = 22175932.04
-    rate = 0.05615
+    principal = 22175932.04
+    interest_rate = 0.05615
     term_months = 52
     cpr = 0
     cdr = 0
@@ -19013,8 +19020,8 @@ contract credit.pool_level_pay.p34 on entity asset.p34 {
 contract credit.pool_level_pay.p36 on entity asset.p36 {
   term 2018-10..2020-03
   terms {
-    balance = 4214767.90
-    rate = 0.06583
+    principal = 4214767.90
+    interest_rate = 0.06583
     term_months = 18
     cpr = 0
     cdr = 0
@@ -19024,8 +19031,8 @@ contract credit.pool_level_pay.p36 on entity asset.p36 {
 contract credit.pool_level_pay.p37 on entity asset.p37 {
   term 2018-10..2021-05
   terms {
-    balance = 10197295.25
-    rate = 0.06567
+    principal = 10197295.25
+    interest_rate = 0.06567
     term_months = 32
     cpr = 0
     cdr = 0
@@ -19035,8 +19042,8 @@ contract credit.pool_level_pay.p37 on entity asset.p37 {
 contract credit.pool_level_pay.p38 on entity asset.p38 {
   term 2018-10..2022-04
   terms {
-    balance = 28511150.24
-    rate = 0.06580
+    principal = 28511150.24
+    interest_rate = 0.06580
     term_months = 43
     cpr = 0
     cdr = 0
@@ -19046,8 +19053,8 @@ contract credit.pool_level_pay.p38 on entity asset.p38 {
 contract credit.pool_level_pay.p39 on entity asset.p39 {
   term 2018-10..2023-01
   terms {
-    balance = 21518975.29
-    rate = 0.06583
+    principal = 21518975.29
+    interest_rate = 0.06583
     term_months = 52
     cpr = 0
     cdr = 0
@@ -19057,8 +19064,8 @@ contract credit.pool_level_pay.p39 on entity asset.p39 {
 contract credit.pool_level_pay.p40 on entity asset.p40 {
   term 2018-10..2024-01
   terms {
-    balance = 210992.57
-    rate = 0.06671
+    principal = 210992.57
+    interest_rate = 0.06671
     term_months = 64
     cpr = 0
     cdr = 0
@@ -19068,8 +19075,8 @@ contract credit.pool_level_pay.p40 on entity asset.p40 {
 contract credit.pool_level_pay.p41 on entity asset.p41 {
   term 2018-10..2020-02
   terms {
-    balance = 2314366.62
-    rate = 0.07537
+    principal = 2314366.62
+    interest_rate = 0.07537
     term_months = 17
     cpr = 0
     cdr = 0
@@ -19079,8 +19086,8 @@ contract credit.pool_level_pay.p41 on entity asset.p41 {
 contract credit.pool_level_pay.p42 on entity asset.p42 {
   term 2018-10..2021-04
   terms {
-    balance = 6049009.56
-    rate = 0.07527
+    principal = 6049009.56
+    interest_rate = 0.07527
     term_months = 31
     cpr = 0
     cdr = 0
@@ -19090,8 +19097,8 @@ contract credit.pool_level_pay.p42 on entity asset.p42 {
 contract credit.pool_level_pay.p43 on entity asset.p43 {
   term 2018-10..2022-04
   terms {
-    balance = 17752272.88
-    rate = 0.07538
+    principal = 17752272.88
+    interest_rate = 0.07538
     term_months = 43
     cpr = 0
     cdr = 0
@@ -19101,8 +19108,8 @@ contract credit.pool_level_pay.p43 on entity asset.p43 {
 contract credit.pool_level_pay.p44 on entity asset.p44 {
   term 2018-10..2023-02
   terms {
-    balance = 17560641.20
-    rate = 0.07526
+    principal = 17560641.20
+    interest_rate = 0.07526
     term_months = 53
     cpr = 0
     cdr = 0
@@ -19112,8 +19119,8 @@ contract credit.pool_level_pay.p44 on entity asset.p44 {
 contract credit.pool_level_pay.p45 on entity asset.p45 {
   term 2018-10..2024-01
   terms {
-    balance = 133227.13
-    rate = 0.07709
+    principal = 133227.13
+    interest_rate = 0.07709
     term_months = 64
     cpr = 0
     cdr = 0
@@ -19123,8 +19130,8 @@ contract credit.pool_level_pay.p45 on entity asset.p45 {
 contract credit.pool_level_pay.p46 on entity asset.p46 {
   term 2018-10..2020-02
   terms {
-    balance = 4089106.53
-    rate = 0.09923
+    principal = 4089106.53
+    interest_rate = 0.09923
     term_months = 17
     cpr = 0
     cdr = 0
@@ -19134,8 +19141,8 @@ contract credit.pool_level_pay.p46 on entity asset.p46 {
 contract credit.pool_level_pay.p47 on entity asset.p47 {
   term 2018-10..2021-04
   terms {
-    balance = 9761650.69
-    rate = 0.09773
+    principal = 9761650.69
+    interest_rate = 0.09773
     term_months = 31
     cpr = 0
     cdr = 0
@@ -19145,8 +19152,8 @@ contract credit.pool_level_pay.p47 on entity asset.p47 {
 contract credit.pool_level_pay.p48 on entity asset.p48 {
   term 2018-10..2022-05
   terms {
-    balance = 26285138.49
-    rate = 0.09619
+    principal = 26285138.49
+    interest_rate = 0.09619
     term_months = 44
     cpr = 0
     cdr = 0
@@ -19156,8 +19163,8 @@ contract credit.pool_level_pay.p48 on entity asset.p48 {
 contract credit.pool_level_pay.p49 on entity asset.p49 {
   term 2018-10..2023-02
   terms {
-    balance = 29949234.04
-    rate = 0.09622
+    principal = 29949234.04
+    interest_rate = 0.09622
     term_months = 53
     cpr = 0
     cdr = 0
@@ -19167,8 +19174,8 @@ contract credit.pool_level_pay.p49 on entity asset.p49 {
 contract credit.pool_level_pay.p50 on entity asset.p50 {
   term 2018-10..2023-11
   terms {
-    balance = 279866.82
-    rate = 0.09836
+    principal = 279866.82
+    interest_rate = 0.09836
     term_months = 62
     cpr = 0
     cdr = 0
@@ -19363,8 +19370,8 @@ contract energy.capex on entity asset.pv {
 contract energy.ppa on entity asset.pv {
   term 2026-01..2050-01
   terms {
-    mwh_year = 250000 "MWh/yr"
-    ppa_price = 45 "USD/MWh"
+    quantity = 250000 "MWh/yr"
+    price = 45 "USD/MWh"
     escalation = 0.02
     degradation = 0.005
   }
@@ -19374,7 +19381,7 @@ contract energy.ppa on entity asset.pv {
 contract energy.om on entity asset.pv {
   term 2026-01..2050-01
   terms {
-    om_year = 1500000
+    fee_year = 1500000
     escalation = 0.02
   }
 }
@@ -19387,7 +19394,7 @@ contract energy.om on entity asset.pv {
 contract energy.debt_service on entity asset.pv {
   term 2026-01..2043-01
   terms {
-    rate = 0.06
+    interest_rate = 0.06
     term_months = 216
     principal = 60000000
     funded_at_close = 0
@@ -19397,7 +19404,7 @@ contract energy.debt_service on entity asset.pv {
 // The ITC on the full installed cost, taken in the first operating year.
 contract energy.itc on entity asset.pv {
   term 2026-01..2026-01
-  terms { credit = inputs.installed_cost * inputs.itc_rate }
+  terms { amount = inputs.installed_cost * inputs.itc_rate }
 }
 
 // 5-year MACRS on the REDUCED basis: taking the investment credit removes
@@ -19469,9 +19476,9 @@ contract energy.capex on entity asset.wind {
 contract energy.merchant on entity asset.wind {
   term 2026-01..2050-01
   terms {
-    mwh_year = 250000
+    quantity = 250000
     price = 45
-    price_escalation = 0.02
+    escalation = 0.02
     degradation = 0.005
   }
 }
@@ -19479,7 +19486,7 @@ contract energy.merchant on entity asset.wind {
 // A flat capacity contract — no escalation, which is what the rule supports.
 contract energy.capacity on entity asset.wind {
   term 2026-01..2050-01
-  terms { payment_year = 4000000 }
+  terms { price = 4000000 }
 }
 
 // Production tax credit: $27.50/MWh base, 2.5%/yr inflation adjustment, ten
@@ -19488,8 +19495,8 @@ contract energy.capacity on entity asset.wind {
 contract energy.ptc on entity asset.wind {
   term 2026-01..2035-01
   terms {
-    mwh_year = 250000 "MWh/yr"
-    credit_per_mwh = 27.50 "USD/MWh"
+    quantity = 250000 "MWh/yr"
+    amount = 27.50 "USD/MWh"
     escalation = 0.025
     degradation = 0.005
   }
@@ -19498,7 +19505,7 @@ contract energy.ptc on entity asset.wind {
 contract energy.om on entity asset.wind {
   term 2026-01..2050-01
   terms {
-    om_year = 1500000
+    fee_year = 1500000
     escalation = 0.02
   }
 }
@@ -19510,7 +19517,7 @@ contract energy.om on entity asset.wind {
 contract energy.debt_service on entity asset.wind {
   term 2026-01..2043-01
   terms {
-    rate = 0.06
+    interest_rate = 0.06
     term_months = 216
     principal = 60000000
     funded_at_close = 0
@@ -19806,9 +19813,9 @@ contract opco.term_debt on entity asset.target {
   term 2026-01..2030-12
   terms {
     principal = 21000000
-    rate = 0.085
-    io_months = 12
-    amort_months = 84
+    interest_rate = 0.085
+    interest_only_months = 12
+    amortization_months = 84
   }
 }
 
@@ -19833,7 +19840,7 @@ contract opco.acquisition on entity asset.target {
 contract opco.exit_ebitda on entity asset.target {
   term 2030-12..2030-12
   terms {
-    exit_multiple = 8.5
+    multiple = 8.5
     selling_costs = 0.015
   }
 }
@@ -22170,7 +22177,7 @@ Four things arrive with it.
 contract cre.lease {
   term 2026-07..2031-12
   terms {
-    base_rent = 25000
+    rent = 25000
   }
 }
 ```
@@ -22309,7 +22316,7 @@ A building earns like a portfolio of promises, each on its own paper. This chapt
 contract cre.lease {
   term 2027-07..2030-12
   terms {
-    base_rent = 155000
+    rent = 155000
     lease_up_months = 12
   }
 }
@@ -22369,7 +22376,7 @@ contract cre.opex_line {
   term 2027-07..2030-12
   terms {
     amount_year = 950000
-    escalation = 0.03
+    growth_rate = 0.03
   }
 }
 
@@ -22454,14 +22461,14 @@ contract cre.permanent_debt on entity asset.harbor {
   term 2028-07..2030-12
   terms {
     principal = 9500000
-    rate = 0.058
-    amort_months = 360
-    io_months = 36
+    interest_rate = 0.058
+    amortization_months = 360
+    interest_only_months = 36
   }
 }
 ```
 
-One contract, and the whole instrument emerges. The proceeds arrive at closing as `cre.debt.proceeds`, funding the payoff that leaves at the month's end. Interest and principal lower as their own streams, because a statement shows those lines and a netted payment cannot be un-netted downstream. Earlier revisions of this chapter hand-wrote the proceeds as a separate stream; the contract funds itself now, and a reconciliation whose source starts post-financing opts out with `funded_at_close = 0`. Its terms encode the commercial-mortgage grammar from the pack's design. `amort_months` strikes the payment on a 30-year schedule, while the *term* sets maturity. `io_months = 36` keeps the whole 30-month hold interest-only. That is a bridge-to-sale structure, which is why chapter 23's exit must repay principal in full. The balloon stays off by default for the reason the pack states: coverage is measured on *periodic* debt service, and folding a payoff into the final period's service line would make that month's DSCR meaningless. The payoff belongs to the reversion, where the next chapter puts it.
+One contract, and the whole instrument emerges. The proceeds arrive at closing as `cre.debt.proceeds`, funding the payoff that leaves at the month's end. Interest and principal lower as their own streams, because a statement shows those lines and a netted payment cannot be un-netted downstream. Earlier revisions of this chapter hand-wrote the proceeds as a separate stream; the contract funds itself now, and a reconciliation whose source starts post-financing opts out with `funded_at_close = 0`. Its terms encode the commercial-mortgage grammar from the pack's design. `amortization_months` strikes the payment on a 30-year schedule, while the *term* sets maturity. `interest_only_months = 36` keeps the whole 30-month hold interest-only. That is a bridge-to-sale structure, which is why chapter 23's exit must repay principal in full. The balloon stays off by default for the reason the pack states: coverage is measured on *periodic* debt service, and folding a payoff into the final period's service line would make that month's DSCR meaningless. The payoff belongs to the reversion, where the next chapter puts it.
 
 ## What the numbers say
 
@@ -22498,8 +22505,8 @@ Every number so far has been rehearsal. Development deals live or die on the rev
 contract cre.exit {
   term 2030-12..2030-12
   terms {
-    noi_forward_year = 1550000
-    exit_cap = 0.0625
+    income = 1550000
+    cap_rate = 0.0625
     selling_costs = 0.02
   }
 }
@@ -22571,7 +22578,7 @@ assume monthly_draw ~ Triangular(min=680000, mode=700000, max=780000)
 assume exit_cap ~ Normal(mean=0.0625, stdev=0.005, clip=[0.05, 0.08])
 ```
 
-with `base_rent = inputs.office_rent`, `amount = inputs.monthly_draw`, `exit_cap = inputs.exit_cap` in the respective contracts. The chapter-6 line holds under pressure: the *signed* terms — the retail lease, the loan's rate, the breakpoint — stay literal, because they are facts; only opinions got width. The shapes are chapter 12's judgment applied: symmetric market views get Normals, and the construction estimate gets the contractor's own three numbers — floor, bid, blowout — as a Triangular.
+with `rent = inputs.office_rent`, `amount = inputs.monthly_draw`, `cap_rate = inputs.exit_cap` in the respective contracts. The chapter-6 line holds under pressure: the *signed* terms — the retail lease, the loan's rate, the breakpoint — stay literal, because they are facts; only opinions got width. The shapes are chapter 12's judgment applied: symmetric market views get Normals, and the construction estimate gets the contractor's own three numbers — floor, bid, blowout — as a Triangular.
 
 And here the base case moves, on purpose: **a Triangular's deterministic value is the mean of its three points** — (680 + 700 + 780)/3 = 720,000 — not the 700,000 mode. Stating the cost risk's asymmetry made the base construction budget 340,000 heavier and pulled base IRR from 15.6% to about 14.8%. That is not an artifact to suppress; it is the model saying that an estimate with more room above than below *is* a higher expected cost. If the committee wants to underwrite the bid, that is a scenario — which is exactly what the run configuration now carries:
 
@@ -22938,8 +22945,8 @@ Apply over stabilized operations only — during lease-up, vacancy is already in
 |---|---|---|---|
 | `principal` | yes | — | Loan amount |
 | `rate` | yes | — | Annual rate |
-| `amort_months` | yes | — | Strikes the payment; normally longer than the term |
-| `io_months` | no | 0 | Interest-only period |
+| `amortization_months` | yes | — | Strikes the payment; normally longer than the term |
+| `interest_only_months` | no | 0 | Interest-only period |
 | `balloon_at_maturity` | no | 0 | Off by default: the payoff belongs to the reversion, so periodic DSCR stays meaningful. `1` opts in |
 | `payment_frequency` | no | grid | Payment cadence override |
 
@@ -22947,9 +22954,9 @@ Apply over stabilized operations only — during lease-up, vacancy is already in
 
 Three forms, one decision: where does the NOI come from?
 
-**`cre.exit_cap`** → `cre.exit.sale` (investing.disposal.reversion, inflow) = `noi_value / exit_cap`. You state the NOI. | Required: `noi_value`, `exit_cap`.
+**`cre.exit_cap`** → `cre.exit.sale` (investing.disposal.reversion, inflow) = `income / cap_rate`. You state the NOI. | Required: `noi_value`, `exit_cap`.
 
-**`cre.exit`** → `cre.exit.proceeds` = `noi_forward_year / exit_cap` **gross**, with `cre.exit.selling_costs` (investing.disposal.selling_costs, outflow) lowering beside it — gross less costs is the net, and the statement shows both. You state a *named forward window* — reconcile it against the modeled final year. | Required: `noi_forward_year`, `exit_cap`. Default: `selling_costs = 0`.
+**`cre.exit`** → `cre.exit.proceeds` = `income / cap_rate` **gross**, with `cre.exit.selling_costs` (investing.disposal.selling_costs, outflow) lowering beside it — gross less costs is the net, and the statement shows both. You state a *named forward window* — reconcile it against the modeled final year. | Required: `noi_forward_year`, `exit_cap`. Default: `selling_costs = 0`.
 
 **`cre.exit_forward`** → the same two streams, with forward NOI *derived* from the modeled streams over the twelve months after the sale date. It cannot drift and cannot be committee-edited, and it requires a projection tail so the window has data — with the operating terms extended through the tail, so the forward year exists to be read. | Required: `exit_cap`. Default: `selling_costs = 0`.
 

@@ -1,6 +1,6 @@
 {
   "results_version": "0.12",
-  "model_hash": "cd756956dd06248d649d1a3bccc5758b750a3cb46f2f17e4981602e3aca6b1e1",
+  "model_hash": "16dbcd4916a1b1bea5da3219778373a219a818161d95734a5a2dd68f63b1a209",
   "ledger_hash": "a82368efd909680f42ef2d6632d3e0e643911e8c6936f844283ba1bfdf2de791",
   "engine": {
     "name": "cfdl-engine",
@@ -16,9 +16,9 @@
         ],
         "stream": "cre.debt.interest",
         "terms": {
+          "interest_rate": "0.055",
           "payment_frequency": "",
-          "principal": "6000000",
-          "rate": "0.055"
+          "principal": "6000000"
         }
       },
       {
@@ -29,9 +29,9 @@
         "stream": "cre.debt.principal",
         "terms": {
           "balloon_at_maturity": "1",
+          "interest_rate": "0.055",
           "payment_frequency": "",
-          "principal": "6000000",
-          "rate": "0.055"
+          "principal": "6000000"
         }
       },
       {

@@ -9,7 +9,7 @@ entity asset property : CRE.Asset.RealProperty
 contract cre.exit_cap on entity asset.property {
   term 2026-12..2026-12
   terms {
-    exit_cap = 0.05
-    noi_value = 100000
+    cap_rate = 0.05
+    income = 100000
   }
 }

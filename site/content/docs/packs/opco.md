@@ -26,14 +26,14 @@ each classified so it lands on the right line of a
 | `opco.revenue_line` | `amount`, `amount_year`, `growth_rate` | `opco.revenue.recurring[.suffix]` |
 | `opco.opex_line` | `amount`, `amount_year`, `growth_rate` | `opco.opex.recurring[.suffix]` |
 | `opco.working_capital` | `amount` | `opco.working_capital.adjustment[.suffix]` |
-| `opco.exit_multiple` | `base_value`, `exit_multiple` | `opco.exit.value` |
+| `opco.exit_multiple` | `base`, `multiple` | `opco.exit.value` |
 | `opco.working_capital_policy` | `ap_days`, `ar_days`, `inv_days`, `release_at_end` | `opco.working_capital.adjustment[.suffix]` |
 | `opco.capex_line` | `amount`, `amount_year`, `growth_rate`, `pct_of_revenue` | `opco.capex.line[.suffix]` |
-| `opco.term_debt` | `funded_at_close`, `principal`, `rate` | `opco.debt.proceeds[.suffix]`, `opco.debt.interest[.suffix]`, `opco.debt.principal[.suffix]` |
+| `opco.term_debt` | `funded_at_close`, `interest_rate`, `principal` | `opco.debt.proceeds[.suffix]`, `opco.debt.interest[.suffix]`, `opco.debt.principal[.suffix]` |
 | `opco.cash_taxes` | `da_growth`, `da_monthly`, `da_year`, `tax_rate` | `opco.taxes.cash[.suffix]` |
-| `opco.exit_ebitda` | `exit_multiple`, `selling_costs` | `opco.exit.value`, `opco.exit.selling_costs` |
+| `opco.exit_ebitda` | `multiple`, `selling_costs` | `opco.exit.value`, `opco.exit.selling_costs` |
 | `opco.acquisition` | `price` | `opco.acquisition.price[.suffix]` |
-| `opco.exit_perpetuity` | `base_value`, `discount_rate`, `growth_rate`, `selling_costs` | `opco.exit.value[.suffix]`, `opco.exit.selling_costs[.suffix]` |
+| `opco.exit_perpetuity` | `base`, `discount_rate`, `growth_rate`, `selling_costs` | `opco.exit.value[.suffix]`, `opco.exit.selling_costs[.suffix]` |
 <!-- /cfdl:generated contracts-opco -->
 
 A contract can be declared more than once by giving it a suffix, so the pieces

@@ -1,6 +1,7 @@
 [[rules]]
 id = "cre_construction_stub_draws"
 contract_name = "cre.construction_stub"
+line = "capex"
 stream_name = "cre.construction.draws"
 owner_entity = "${subject}"
 direction = "outflow"
@@ -16,6 +17,7 @@ schedule_to = "{{contract.term_end}}"
 [[rules]]
 id = "cre_lease_base_rent"
 contract_name = "cre.lease"
+line = "rent"
 stream_name = "cre.lease.base_rent"
 owner_entity = "${subject}"
 direction = "inflow"
@@ -26,15 +28,15 @@ category = "operating.revenue.base_rent"
 # where m is months since term_start. `lease_up_months = 1` (the default)
 # means fully occupied from the first month — a neutral default that invents
 # no lease-up assumption.
-amount_expr = "({{contract.base_rent}} + {{contract.base_rent_year}} / {{model.periods_per_year}}) * clamp(({{time.elapsed_periods}} + 1) / {{periods.lease_up_months}}, 0, 1)"
+amount_expr = "({{contract.rent}} + {{contract.rent_year}} / {{model.periods_per_year}}) * clamp(({{time.elapsed_periods}} + 1) / {{periods.lease_up_months}}, 0, 1)"
 schedule_kind = "every"
 schedule_from = "{{contract.term_start}}"
 schedule_to = "{{contract.term_end}}"
 
 # `base_rent` is required.
 [rules.defaults]
-base_rent = "0"
-base_rent_year = "0"
+rent = "0"
+rent_year = "0"
 lease_up_months = "1"
 
 # THE operating revenue line item, mirroring `cre.opex_line`: one instanced
@@ -48,11 +50,12 @@ lease_up_months = "1"
 [[rules]]
 id = "cre_revenue_line"
 contract_name = "cre.revenue_line"
+line = "revenue"
 stream_name = "cre.revenue.line{{contract.dot_suffix}}"
 owner_entity = "${subject}"
 direction = "inflow"
 category = "operating.revenue.other"
-amount_expr = "({{contract.amount}} + {{contract.amount_year}} / {{model.periods_per_year}}) * pow(1 + {{contract.escalation}}, {{time.elapsed_years}})"
+amount_expr = "({{contract.amount}} + {{contract.amount_year}} / {{model.periods_per_year}}) * pow(1 + {{contract.growth_rate}}, {{time.elapsed_years}})"
 schedule_kind = "every"
 schedule_from = "{{contract.term_start}}"
 schedule_to = "{{contract.term_end}}"
@@ -60,16 +63,17 @@ schedule_to = "{{contract.term_end}}"
 [rules.defaults]
 amount = "0"
 amount_year = "0"
-escalation = "0"
+growth_rate = "0"
 
 [[rules]]
 id = "cre_exit_cap_sale"
 contract_name = "cre.exit_cap"
+line = "proceeds"
 stream_name = "cre.exit.sale"
 owner_entity = "${subject}"
 direction = "inflow"
 category = "investing.disposal.reversion"
-amount_expr = "{{contract.noi_value}} / {{contract.exit_cap}}"
+amount_expr = "{{contract.income}} / {{contract.cap_rate}}"
 # A disposal is taken at the END of the holding period, so it discounts
 # the full n periods. `on_date` alone would settle it at the period's
 # open — one month early on a monthly model, a whole year on an annual.
@@ -90,6 +94,7 @@ schedule_to = ""
 [[rules]]
 id = "cre_lease_unit_base_rent"
 contract_name = "cre.lease_unit"
+line = "rent"
 stream_name = "cre.unit.base_rent.{{contract.suffix}}"
 owner_entity = "${subject}"
 direction = "inflow"
@@ -119,6 +124,7 @@ rent_year = "USD/yr"
 [[rules]]
 id = "cre_lease_unit_abatement"
 contract_name = "cre.lease_unit"
+line = "abatement"
 stream_name = "cre.unit.abatement.{{contract.suffix}}"
 owner_entity = "${subject}"
 direction = "outflow"
@@ -135,6 +141,7 @@ escalation = "0"
 [[rules]]
 id = "cre_lease_unit_recoveries"
 contract_name = "cre.lease_unit"
+line = "recovery"
 stream_name = "cre.unit.recoveries.{{contract.suffix}}"
 owner_entity = "${subject}"
 direction = "inflow"
@@ -157,6 +164,7 @@ gross_up_factor = "1"
 [[rules]]
 id = "cre_lease_unit_ti_lc"
 contract_name = "cre.lease_unit"
+line = "leasing_cost"
 stream_name = "cre.unit.ti_lc.{{contract.suffix}}"
 owner_entity = "${subject}"
 direction = "outflow"
@@ -173,6 +181,7 @@ lc_total = "0"
 [[rules]]
 id = "cre_rollover_rent"
 contract_name = "cre.rollover"
+line = "rent"
 stream_name = "cre.rollover.rent.{{contract.suffix}}"
 owner_entity = "${subject}"
 direction = "inflow"
@@ -194,6 +203,7 @@ downtime_months = "0"
 [[rules]]
 id = "cre_rollover_ti_lc"
 contract_name = "cre.rollover"
+line = "leasing_cost"
 stream_name = "cre.rollover.ti_lc.{{contract.suffix}}"
 owner_entity = "${subject}"
 direction = "outflow"
@@ -215,6 +225,7 @@ downtime_months = "0"
 [[rules]]
 id = "cre_vacancy_loss"
 contract_name = "cre.vacancy_loss"
+line = "deduction"
 stream_name = "cre.vacancy.loss"
 owner_entity = "${subject}"
 direction = "outflow"
@@ -250,11 +261,12 @@ schedule_to = "{{contract.term_end}}"
 [[rules]]
 id = "cre_opex_line"
 contract_name = "cre.opex_line"
+line = "expense"
 stream_name = "cre.opex.line{{contract.dot_suffix}}"
 owner_entity = "${subject}"
 direction = "outflow"
 category = "operating.expense.opex"
-amount_expr = "({{contract.amount}} + {{contract.amount_year}} / {{model.periods_per_year}}) * pow(1 + {{contract.escalation}}, {{time.elapsed_years}}) * ({{contract.pct_fixed}} + (1 - {{contract.pct_fixed}}) * {{contract.occupancy}})"
+amount_expr = "({{contract.amount}} + {{contract.amount_year}} / {{model.periods_per_year}}) * pow(1 + {{contract.growth_rate}}, {{time.elapsed_years}}) * ({{contract.pct_fixed}} + (1 - {{contract.pct_fixed}}) * {{contract.occupancy}})"
 schedule_kind = "every"
 schedule_from = "{{contract.term_start}}"
 schedule_to = "{{contract.term_end}}"
@@ -263,20 +275,21 @@ schedule_to = "{{contract.term_end}}"
 # Either amount term satisfies E6041; the unstated one contributes zero.
 amount = "0"
 amount_year = "0"
-escalation = "0"
+growth_rate = "0"
 pct_fixed = "1"
 occupancy = "1"
 
 [[rules]]
 id = "cre_exit_selling_costs"
 contract_name = "cre.exit"
+line = "selling_costs"
 stream_name = "cre.exit.selling_costs"
 owner_entity = "${subject}"
 direction = "outflow"
 category = "investing.disposal.selling_costs"
 # The transaction cost as its own line: gross less costs is the old net, so
 # net cash flow is unchanged and the statement can show both.
-amount_expr = "{{contract.noi_forward_year}} / {{contract.exit_cap}} * {{contract.selling_costs}}"
+amount_expr = "{{contract.income}} / {{contract.cap_rate}} * {{contract.selling_costs}}"
 schedule_kind = "on_date"
 schedule_placement = "end"
 schedule_from = "{{contract.term_start}}"
@@ -288,13 +301,14 @@ selling_costs = "0"
 [[rules]]
 id = "cre_exit_forward_noi"
 contract_name = "cre.exit"
+line = "proceeds"
 stream_name = "cre.exit.proceeds"
 owner_entity = "${subject}"
 direction = "inflow"
 category = "investing.disposal.reversion"
 # Sale at term_start: forward-12-month NOI / exit cap, GROSS. Selling costs
 # lower as their own stream, so gross less costs is the old net.
-amount_expr = "{{contract.noi_forward_year}} / {{contract.exit_cap}}"
+amount_expr = "{{contract.income}} / {{contract.cap_rate}}"
 # A disposal is taken at the END of the holding period, so it discounts
 # the full n periods. `on_date` alone would settle it at the period's
 # open — one month early on a monthly model, a whole year on an annual.
@@ -336,6 +350,7 @@ schedule_to = ""
 [[rules]]
 id = "cre_percentage_rent_expected"
 contract_name = "cre.percentage_rent_expected"
+line = "rent"
 stream_name = "cre.pct_rent.overage{{contract.dot_suffix}}"
 owner_entity = "${subject}"
 direction = "inflow"
@@ -354,6 +369,7 @@ breakpoint_year = "USD/yr"
 [[rules]]
 id = "cre_percentage_rent"
 contract_name = "cre.percentage_rent"
+line = "rent"
 stream_name = "cre.pct_rent.overage{{contract.dot_suffix}}"
 owner_entity = "${subject}"
 direction = "inflow"
@@ -371,6 +387,7 @@ sales_growth = "0"
 [[rules]]
 id = "cre_exit_forward_noi_derived"
 contract_name = "cre.exit_forward"
+line = "proceeds"
 stream_name = "cre.exit.proceeds"
 owner_entity = "${subject}"
 direction = "inflow"
@@ -391,7 +408,7 @@ category = "investing.disposal.reversion"
 # `cre.opex.line.taxes`, which the bare pattern did not match. Opex dropped
 # out of forward NOI, NOI was overstated, and the exit price struck off it was
 # too high. Silent, and worth real money.
-amount_expr = "(series_sum(\"cre.unit.base_rent.*\", time.t + 1, time.t + {{model.periods_per_year}}) + series_sum(\"cre.unit.recoveries.*\", time.t + 1, time.t + {{model.periods_per_year}}) + series_sum(\"cre.rollover.rent.*\", time.t + 1, time.t + {{model.periods_per_year}}) + series_sum(\"cre.pct_rent.overage.*\", time.t + 1, time.t + {{model.periods_per_year}}) + series_sum(\"cre.lease.base_rent\", time.t + 1, time.t + {{model.periods_per_year}}) + series_sum(\"cre.revenue.line.*\", time.t + 1, time.t + {{model.periods_per_year}}) + series_sum(\"cre.vacancy.loss\", time.t + 1, time.t + {{model.periods_per_year}}) + series_sum(\"cre.opex.line.*\", time.t + 1, time.t + {{model.periods_per_year}})) / {{contract.exit_cap}}"
+amount_expr = "(series_sum(\"cre.unit.base_rent.*\", time.t + 1, time.t + {{model.periods_per_year}}) + series_sum(\"cre.unit.recoveries.*\", time.t + 1, time.t + {{model.periods_per_year}}) + series_sum(\"cre.rollover.rent.*\", time.t + 1, time.t + {{model.periods_per_year}}) + series_sum(\"cre.pct_rent.overage.*\", time.t + 1, time.t + {{model.periods_per_year}}) + series_sum(\"cre.lease.base_rent\", time.t + 1, time.t + {{model.periods_per_year}}) + series_sum(\"cre.revenue.line.*\", time.t + 1, time.t + {{model.periods_per_year}}) + series_sum(\"cre.vacancy.loss\", time.t + 1, time.t + {{model.periods_per_year}}) + series_sum(\"cre.opex.line.*\", time.t + 1, time.t + {{model.periods_per_year}})) / {{contract.cap_rate}}"
 # A disposal is taken at the END of the holding period, so it discounts
 # the full n periods. `on_date` alone would settle it at the period's
 # open — one month early on a monthly model, a whole year on an annual.
@@ -408,11 +425,12 @@ selling_costs = "0"
 [[rules]]
 id = "cre_exit_forward_selling_costs"
 contract_name = "cre.exit_forward"
+line = "selling_costs"
 stream_name = "cre.exit.selling_costs"
 owner_entity = "${subject}"
 direction = "outflow"
 category = "investing.disposal.selling_costs"
-amount_expr = "(series_sum(\"cre.unit.base_rent.*\", time.t + 1, time.t + {{model.periods_per_year}}) + series_sum(\"cre.unit.recoveries.*\", time.t + 1, time.t + {{model.periods_per_year}}) + series_sum(\"cre.rollover.rent.*\", time.t + 1, time.t + {{model.periods_per_year}}) + series_sum(\"cre.pct_rent.overage.*\", time.t + 1, time.t + {{model.periods_per_year}}) + series_sum(\"cre.lease.base_rent\", time.t + 1, time.t + {{model.periods_per_year}}) + series_sum(\"cre.revenue.line.*\", time.t + 1, time.t + {{model.periods_per_year}}) + series_sum(\"cre.vacancy.loss\", time.t + 1, time.t + {{model.periods_per_year}}) + series_sum(\"cre.opex.line.*\", time.t + 1, time.t + {{model.periods_per_year}})) / {{contract.exit_cap}} * {{contract.selling_costs}}"
+amount_expr = "(series_sum(\"cre.unit.base_rent.*\", time.t + 1, time.t + {{model.periods_per_year}}) + series_sum(\"cre.unit.recoveries.*\", time.t + 1, time.t + {{model.periods_per_year}}) + series_sum(\"cre.rollover.rent.*\", time.t + 1, time.t + {{model.periods_per_year}}) + series_sum(\"cre.pct_rent.overage.*\", time.t + 1, time.t + {{model.periods_per_year}}) + series_sum(\"cre.lease.base_rent\", time.t + 1, time.t + {{model.periods_per_year}}) + series_sum(\"cre.revenue.line.*\", time.t + 1, time.t + {{model.periods_per_year}}) + series_sum(\"cre.vacancy.loss\", time.t + 1, time.t + {{model.periods_per_year}}) + series_sum(\"cre.opex.line.*\", time.t + 1, time.t + {{model.periods_per_year}})) / {{contract.cap_rate}} * {{contract.selling_costs}}"
 schedule_kind = "on_date"
 schedule_placement = "end"
 schedule_from = "{{contract.term_start}}"
@@ -477,6 +495,7 @@ selling_costs = "0"
 [[rules]]
 id = "cre_permanent_debt_proceeds"
 contract_name = "cre.permanent_debt"
+line = "proceeds"
 stream_name = "cre.debt.proceeds{{contract.dot_suffix}}"
 owner_entity = "${subject}"
 direction = "inflow"
@@ -492,6 +511,7 @@ funded_at_close = "1"
 [[rules]]
 id = "cre_permanent_debt_interest"
 contract_name = "cre.permanent_debt"
+line = "interest"
 stream_name = "cre.debt.interest{{contract.dot_suffix}}"
 owner_entity = "${subject}"
 direction = "outflow"
@@ -499,19 +519,20 @@ category = "financing.debt.interest_paid"
 # Interest-only while p < io_months, then the interest leg of the level
 # payment. Accrual and amortization keep their own divisors: an Actual/360
 # loan accrues on real days while its payment is struck on a 30/360 schedule.
-amount_expr = "if({{time.elapsed_periods}} < {{whole_periods.io_months}}, {{contract.principal}} * ({{contract.rate}} / {{model.accrual_divisor}}), -ipmt({{contract.rate}} / {{model.amortization_divisor}}, {{time.elapsed_periods}} - {{whole_periods.io_months}} + 1, {{whole_periods.amort_months}}, {{contract.principal}}))"
+amount_expr = "if({{time.elapsed_periods}} < {{whole_periods.interest_only_months}}, {{contract.principal}} * ({{contract.interest_rate}} / {{model.accrual_divisor}}), -ipmt({{contract.interest_rate}} / {{model.amortization_divisor}}, {{time.elapsed_periods}} - {{whole_periods.interest_only_months}} + 1, {{whole_periods.amortization_months}}, {{contract.principal}}))"
 schedule_kind = "every"
 schedule_every = "{{contract.payment_frequency}}"
 schedule_from = "{{contract.term_start}}"
 schedule_to = "{{contract.term_end}}"
 
 [rules.defaults]
-io_months = "0"
+interest_only_months = "0"
 payment_frequency = ""
 
 [[rules]]
 id = "cre_permanent_debt_principal"
 contract_name = "cre.permanent_debt"
+line = "principal"
 stream_name = "cre.debt.principal{{contract.dot_suffix}}"
 owner_entity = "${subject}"
 direction = "outflow"
@@ -519,14 +540,14 @@ category = "financing.debt.principal"
 # Scheduled amortization, plus the balloon when opted in — off by default,
 # because folding the unamortized balance into the final period makes that
 # period's coverage ratio meaningless; a sale usually repays it instead.
-amount_expr = "if({{time.elapsed_periods}} < {{whole_periods.io_months}}, 0, -ppmt({{contract.rate}} / {{model.amortization_divisor}}, {{time.elapsed_periods}} - {{whole_periods.io_months}} + 1, {{whole_periods.amort_months}}, {{contract.principal}})) + if({{contract.balloon_at_maturity}} == 1 and {{time.periods_to_term_end}} == 0, -fv({{contract.rate}} / {{model.amortization_divisor}}, {{time.elapsed_periods}} - {{whole_periods.io_months}} + 1, pmt({{contract.rate}} / {{model.amortization_divisor}}, {{whole_periods.amort_months}}, {{contract.principal}}), {{contract.principal}}), 0)"
+amount_expr = "if({{time.elapsed_periods}} < {{whole_periods.interest_only_months}}, 0, -ppmt({{contract.interest_rate}} / {{model.amortization_divisor}}, {{time.elapsed_periods}} - {{whole_periods.interest_only_months}} + 1, {{whole_periods.amortization_months}}, {{contract.principal}})) + if({{contract.balloon_at_maturity}} == 1 and {{time.periods_to_term_end}} == 0, -fv({{contract.interest_rate}} / {{model.amortization_divisor}}, {{time.elapsed_periods}} - {{whole_periods.interest_only_months}} + 1, pmt({{contract.interest_rate}} / {{model.amortization_divisor}}, {{whole_periods.amortization_months}}, {{contract.principal}}), {{contract.principal}}), 0)"
 schedule_kind = "every"
 schedule_every = "{{contract.payment_frequency}}"
 schedule_from = "{{contract.term_start}}"
 schedule_to = "{{contract.term_end}}"
 
 [rules.defaults]
-io_months = "0"
+interest_only_months = "0"
 balloon_at_maturity = "0"
 payment_frequency = ""
 
@@ -583,6 +604,7 @@ payment_frequency = ""
 [[rules]]
 id = "cre_construction_loan_equity_draw"
 contract_name = "cre.construction_loan"
+line = "equity_draw"
 stream_name = "cre.construction.equity_draw{{contract.dot_suffix}}"
 owner_entity = "${subject}"
 direction = "inflow"
@@ -607,7 +629,7 @@ category = "financing.equity.contribution"
 amount_expr = "(curve_value(\"{{contract.draw_curve}}\", time.date) / {{model.periods_per_year}}) - min((curve_value(\"{{contract.draw_curve}}\", time.date) / {{model.periods_per_year}}), max(0, field.cre_construction_funded{{contract.suffix_ident}} - {{contract.equity_commitment}}))"
 field_name = "cre_construction_funded{{contract.suffix_ident}}"
 field_init = "(curve_value(\"{{contract.draw_curve}}\", time.date) / {{model.periods_per_year}})"
-field_next = "prev + (curve_value(\"{{contract.draw_curve}}\", time.date) / {{model.periods_per_year}}) + {{contract.capitalize_interest}} * ((max(0, prev - {{contract.equity_commitment}}) + min((curve_value(\"{{contract.draw_curve}}\", time.date) / {{model.periods_per_year}}), max(0, prev + (curve_value(\"{{contract.draw_curve}}\", time.date) / {{model.periods_per_year}}) - {{contract.equity_commitment}})) * {{contract.draw_accrual_fraction}}) * ({{contract.rate}} / {{model.accrual_divisor}}))"
+field_next = "prev + (curve_value(\"{{contract.draw_curve}}\", time.date) / {{model.periods_per_year}}) + {{contract.capitalize_interest}} * ((max(0, prev - {{contract.equity_commitment}}) + min((curve_value(\"{{contract.draw_curve}}\", time.date) / {{model.periods_per_year}}), max(0, prev + (curve_value(\"{{contract.draw_curve}}\", time.date) / {{model.periods_per_year}}) - {{contract.equity_commitment}})) * {{contract.draw_accrual_fraction}}) * ({{contract.interest_rate}} / {{model.accrual_divisor}}))"
 field_from = "{{contract.term_start}}"
 field_to = "{{contract.term_end}}"
 schedule_kind = "every"
@@ -625,6 +647,7 @@ capitalize_interest = "0"
 [[rules]]
 id = "cre_construction_loan_draw"
 contract_name = "cre.construction_loan"
+line = "proceeds"
 stream_name = "cre.construction.loan_draw{{contract.dot_suffix}}"
 owner_entity = "${subject}"
 direction = "inflow"
@@ -633,7 +656,7 @@ category = "financing.debt.proceeds"
 amount_expr = "min((curve_value(\"{{contract.draw_curve}}\", time.date) / {{model.periods_per_year}}), max(0, field.cre_construction_funded{{contract.suffix_ident}} - {{contract.equity_commitment}}))"
 field_name = "cre_construction_funded{{contract.suffix_ident}}"
 field_init = "(curve_value(\"{{contract.draw_curve}}\", time.date) / {{model.periods_per_year}})"
-field_next = "prev + (curve_value(\"{{contract.draw_curve}}\", time.date) / {{model.periods_per_year}}) + {{contract.capitalize_interest}} * ((max(0, prev - {{contract.equity_commitment}}) + min((curve_value(\"{{contract.draw_curve}}\", time.date) / {{model.periods_per_year}}), max(0, prev + (curve_value(\"{{contract.draw_curve}}\", time.date) / {{model.periods_per_year}}) - {{contract.equity_commitment}})) * {{contract.draw_accrual_fraction}}) * ({{contract.rate}} / {{model.accrual_divisor}}))"
+field_next = "prev + (curve_value(\"{{contract.draw_curve}}\", time.date) / {{model.periods_per_year}}) + {{contract.capitalize_interest}} * ((max(0, prev - {{contract.equity_commitment}}) + min((curve_value(\"{{contract.draw_curve}}\", time.date) / {{model.periods_per_year}}), max(0, prev + (curve_value(\"{{contract.draw_curve}}\", time.date) / {{model.periods_per_year}}) - {{contract.equity_commitment}})) * {{contract.draw_accrual_fraction}}) * ({{contract.interest_rate}} / {{model.accrual_divisor}}))"
 field_from = "{{contract.term_start}}"
 field_to = "{{contract.term_end}}"
 schedule_kind = "every"
@@ -651,6 +674,7 @@ capitalize_interest = "0"
 [[rules]]
 id = "cre_construction_loan_interest"
 contract_name = "cre.construction_loan"
+line = "interest"
 stream_name = "cre.construction.interest{{contract.dot_suffix}}"
 owner_entity = "${subject}"
 direction = "outflow"
@@ -662,10 +686,10 @@ category = "financing.debt.service"
 # the period (the default, and what a monthly-requisition build does), 0 for
 # funding at the period's end, 1 at its start. It is a convention, so it is a
 # term; the curve's SHAPE is data, so it is not.
-amount_expr = "(max(0, field.cre_construction_funded{{contract.suffix_ident}} - (curve_value(\"{{contract.draw_curve}}\", time.date) / {{model.periods_per_year}}) - {{contract.equity_commitment}}) + min((curve_value(\"{{contract.draw_curve}}\", time.date) / {{model.periods_per_year}}), max(0, field.cre_construction_funded{{contract.suffix_ident}} - {{contract.equity_commitment}})) * {{contract.draw_accrual_fraction}}) * ({{contract.rate}} / {{model.accrual_divisor}})"
+amount_expr = "(max(0, field.cre_construction_funded{{contract.suffix_ident}} - (curve_value(\"{{contract.draw_curve}}\", time.date) / {{model.periods_per_year}}) - {{contract.equity_commitment}}) + min((curve_value(\"{{contract.draw_curve}}\", time.date) / {{model.periods_per_year}}), max(0, field.cre_construction_funded{{contract.suffix_ident}} - {{contract.equity_commitment}})) * {{contract.draw_accrual_fraction}}) * ({{contract.interest_rate}} / {{model.accrual_divisor}})"
 field_name = "cre_construction_funded{{contract.suffix_ident}}"
 field_init = "(curve_value(\"{{contract.draw_curve}}\", time.date) / {{model.periods_per_year}})"
-field_next = "prev + (curve_value(\"{{contract.draw_curve}}\", time.date) / {{model.periods_per_year}}) + {{contract.capitalize_interest}} * ((max(0, prev - {{contract.equity_commitment}}) + min((curve_value(\"{{contract.draw_curve}}\", time.date) / {{model.periods_per_year}}), max(0, prev + (curve_value(\"{{contract.draw_curve}}\", time.date) / {{model.periods_per_year}}) - {{contract.equity_commitment}})) * {{contract.draw_accrual_fraction}}) * ({{contract.rate}} / {{model.accrual_divisor}}))"
+field_next = "prev + (curve_value(\"{{contract.draw_curve}}\", time.date) / {{model.periods_per_year}}) + {{contract.capitalize_interest}} * ((max(0, prev - {{contract.equity_commitment}}) + min((curve_value(\"{{contract.draw_curve}}\", time.date) / {{model.periods_per_year}}), max(0, prev + (curve_value(\"{{contract.draw_curve}}\", time.date) / {{model.periods_per_year}}) - {{contract.equity_commitment}})) * {{contract.draw_accrual_fraction}}) * ({{contract.interest_rate}} / {{model.accrual_divisor}}))"
 field_from = "{{contract.term_start}}"
 field_to = "{{contract.term_end}}"
 schedule_kind = "every"

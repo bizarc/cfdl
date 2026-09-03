@@ -59,7 +59,7 @@ Walk-enabled, in value order:
 - **State of charge as walked state.** `energy.storage_arbitrage` is the
   pack's one unvalidated rule, and `docs/13` §7.1's third way forward — "needs
   per-period persistent state" — is now buildable: a SOC balance stepped per
-  period turns `mwh_cycled_year` from an assumed input into an output, which
+  period turns `quantity` (the storage rule's MWh cycled) from an assumed input into an output, which
   is the circularity §7.1 says blocks validation. Recorded as `docs/13` §7.75.
 - **Reserve accounts.** The references model them; the pack could not. DSRA
   and major-maintenance funding to target, with `dscr_periodic`

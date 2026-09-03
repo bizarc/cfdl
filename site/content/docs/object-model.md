@@ -153,8 +153,8 @@ A number in a contract's terms can state what it measures.
 contract energy.ptc on entity asset.plant {
   term 2026-01..2028-01
   terms {
-    mwh_year       = 250000 "MWh/yr"
-    credit_per_mwh = 27.50 "USD/MWh"
+    quantity       = 250000 "MWh/yr"
+    amount = 27.50 "USD/MWh"
   }
 }
 ```

@@ -13,14 +13,14 @@ contract energy.capex on entity asset.microgrid {
 
 contract energy.itc on entity asset.microgrid {
   term 2026-12..2026-12
-  terms { credit = 720000 }
+  terms { amount = 720000 }
 }
 
 contract energy.ppa on entity asset.microgrid {
   term 2026-01..2050-12
   terms {
-    mwh_year = 4200
-    ppa_price = 85
+    quantity = 4200
+    price = 85
     escalation = 0.02
     degradation = 0.005
   }
@@ -29,20 +29,20 @@ contract energy.ppa on entity asset.microgrid {
 contract energy.storage_arbitrage on entity asset.microgrid {
   term 2026-01..2050-12
   terms {
-    mwh_cycled_year = 500
-    spread = 30
+    quantity = 500
+    price = 30
   }
 }
 
 contract energy.capacity on entity asset.microgrid {
   term 2026-01..2050-12
-  terms { payment_year = 60000 }
+  terms { price = 60000 }
 }
 
 contract energy.om on entity asset.microgrid {
   term 2026-01..2050-12
   terms {
-    om_year = 70000
+    fee_year = 70000
     escalation = 0.025
   }
 }
@@ -50,7 +50,7 @@ contract energy.om on entity asset.microgrid {
 contract energy.debt_service on entity asset.microgrid {
   term 2026-01..2045-12
   terms {
-    rate = 0.06
+    interest_rate = 0.06
     term_months = 240
     principal = 1600000
   }

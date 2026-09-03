@@ -14,7 +14,7 @@ developer lifecycle:
 > 5 periods monthly, 1.667 quarterly and 0.417 annually, and year one comes out
 > at 480,000 x 7/12 = 280,000 on all three.
 >
-> `base_rent` on `cre.lease` is per-period by definition; `base_rent_year` is
+> `rent` on `cre.lease` is per-period by definition; `rent_year` is
 > its annual sibling and is how to state a lease grid-independently. A lease
 > must give one of the two (`E6001`).
 >
@@ -91,7 +91,7 @@ the drawn balance through the build. Emits three streams — the equity draw
 |---|---|---|
 | `draw_curve` | required | the NAME of a declared `curve` giving required funding as an ANNUALIZED rate |
 | `equity_commitment` | required | equity funds up to this, then the facility takes over |
-| `rate` | required | nominal annual |
+| `interest_rate` | required | nominal annual |
 | `draw_accrual_fraction` | 0.5 | where in the period a draw lands: 0.5 drawn ratably, 0 at the end, 1 at the start |
 | `day_count` | — | drives the accrual divisor, as elsewhere |
 
@@ -144,15 +144,15 @@ amortization schedule.
 | term | meaning | default |
 |---|---|---|
 | `principal` | loan amount | *required* |
-| `rate` | nominal annual rate | *required* |
-| `amort_months` | amortization term — strikes the payment | *required* |
-| `io_months` | interest-only months before amortization begins | `0` |
+| `interest_rate` | nominal annual rate | *required* |
+| `amortization_months` | amortization term — strikes the payment | *required* |
+| `interest_only_months` | interest-only months before amortization begins | `0` |
 | `funded_at_close` | share of principal drawn at `term_start`; `0` for a reconciliation whose source starts post-financing | `1` |
 | `balloon_at_maturity` | `1` pays the unamortized balance as principal at `term_end` | `0` |
 | `payment_frequency` | `day`/`week`/`month`/`quarter`/`year` | the model calendar |
 | `day_count`, `amortization_day_count` | interest accrual and payment bases | `30/360` |
 
-**`amort_months` is normally longer than the term.** A 30-year amortization on a
+**`amortization_months` is normally longer than the term.** A 30-year amortization on a
 10-year loan is the standard commercial structure, and it is why a balloon
 exists at all.
 
@@ -179,10 +179,10 @@ defaults, so a missing one fails compilation with `E5006` naming the term.
 | Contract | Required terms | Optional (default) | Lowers to |
 |---|---|---|---|
 | `cre.construction_stub` | `amount` (per period) | — | `cre.construction.draws` (outflow) |
-| `cre.lease` | `base_rent` (per period) | `lease_up_months` (1 — fully occupied from month one) | `cre.lease.base_rent` (inflow) |
+| `cre.lease` | `rent` (per period) | `lease_up_months` (1 — fully occupied from month one) | `cre.lease.base_rent` (inflow) |
 | `cre.revenue_line{.<id>}` | `amount` (per period) **or** `amount_year` (annual) | `escalation` (0; may be an expression, e.g. `curve_value("cpi", time.date)`) | `cre.revenue.line{.<id>}` (inflow) |
 | `cre.opex_line` | `amount` (per period) **or** `amount_year` (annual) | `escalation` (0), `pct_fixed` (1), `occupancy` (1) — each may hold an expression, e.g. `curve_value("occupancy", time.date)` | `cre.opex.line{.<id>}` (outflow) |
-| `cre.exit_cap` | `noi_value` (annual), `exit_cap` | — | `cre.exit.sale` (inflow, once at `term_start`) |
+| `cre.exit_cap` | `income` (annual), `cap_rate` | — | `cre.exit.sale` (inflow, once at `term_start`) |
 
 `cre.lease` applies an optional straight-line lease-up ramp:
 
@@ -273,11 +273,11 @@ time.date)`), not model years.
 | `cre.rollover.<id>` | `renewal_probability`, `renewal_rent_year`, `market_rent_year` | `market_escalation` (0), `downtime_months` (0), `renewal_ti_lc`/`new_ti_lc` (0). Term starts AT EXPIRY. |
 | `cre.vacancy_loss` | `rate`, `potential_gross_year` | — |
 | `cre.opex_line{.<id>}` | `amount` or `amount_year` | `escalation` (0), `pct_fixed` (1), `occupancy` (1) — expressions welcome. Instance it per expense for an itemized schedule; the entity it hangs on sets the level. |
-| `cre.exit` | `noi_forward_year`, `exit_cap` | `selling_costs` (0); fires at `term_start` |
-| `cre.exit_forward` | `exit_cap` | `selling_costs` (0); NOI derived via `series_sum` over the 12 months after sale |
+| `cre.exit` | `income`, `cap_rate` | `selling_costs` (0); fires at `term_start` |
+| `cre.exit_forward` | `cap_rate` | `selling_costs` (0); NOI derived via `series_sum` over the 12 months after sale |
 | `cre.percentage_rent.<id>` | `sales_year`, `breakpoint_year`, `overage_pct` | `sales_growth` (0) — retail overage rent above the breakpoint |
 | `cre.percentage_rent_expected.<id>` | `sales_quantile`, `breakpoint_year`, `overage_pct` | `sales_growth` (0) — the same overage as an EXPECTATION over a sales distribution |
-| `cre.construction_loan` | `draw_curve` (a curve NAME, stated ANNUALIZED), `equity_commitment`, `rate` | `draw_accrual_fraction` (0.5 — drawn ratably through the period) |
+| `cre.construction_loan` | `draw_curve` (a curve NAME, stated ANNUALIZED), `equity_commitment`, `interest_rate` | `draw_accrual_fraction` (0.5 — drawn ratably through the period) |
 
 Recoveries support expense stops with a `gross_up_factor` (opex grossed to
 stabilized occupancy before the stop test); a base-year structure is the
@@ -381,7 +381,7 @@ contract cre.opex_line on entity asset.tower {
   term 2026-01..2036-12
   terms {
     amount_year = 300000
-    escalation = 0.025
+    growth_rate = 0.025
   }
 }
 
@@ -419,7 +419,7 @@ cfdl run my-office/ir.json --packs packs --pack cre --out my-office/results.json
 ```cfdl
 contract cre.exit_forward on entity asset.tower {
   term 2035-12..2035-12
-  terms { exit_cap = 0.0625 }
+  terms { cap_rate = 0.0625 }
 }
 ```
 
@@ -428,7 +428,7 @@ contract cre.exit_forward on entity asset.tower {
 ```cfdl
 contract cre.opex_line on entity asset.tower {
   term 2026-01..2035-12
-  terms { amount_year = 300000 escalation = 0.025 }
+  terms { amount_year = 300000 growth_rate = 0.025 }
 }
 ```
 

@@ -49,7 +49,7 @@ contract cre.construction_stub {
 contract cre.lease {
   term 2026-07..2031-12
   terms {
-    base_rent = 25000
+    rent = 25000
   }
 }
 
@@ -73,8 +73,8 @@ contract cre.opex_line {
 contract cre.exit_cap {
   term 2031-12..2031-12
   terms {
-    exit_cap = 0.06
-    noi_value = 180000
+    cap_rate = 0.06
+    income = 180000
   }
 }
 

@@ -24,7 +24,7 @@ stream firm.fcff on entity asset.firm inflow currency USD {
 contract opco.exit_perpetuity on entity asset.firm {
   term 2030-01..2030-01
   terms {
-    base_value = 1169.858560
+    base = 1169.858560
     growth_rate = 0.025
     discount_rate = 0.085
   }

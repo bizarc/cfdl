@@ -271,6 +271,15 @@ subject_family = "asset"
 parties = ["landlord", "tenant"]
 description = "A lease modeled at unit grain, with recoveries and expense stops."
 
+[[contracts.lines]]
+name = "abatement"
+
+[[contracts.lines]]
+name = "recovery"
+
+[[contracts.lines]]
+name = "leasing_cost"
+
 [[contracts]]
 type_id = "CRE.Contract.Rollover"
 refines = "CRE.Contract.Lease"
@@ -282,6 +291,9 @@ description = "The probability-weighted outcome at expiry. Names only the landlo
 [[contracts.roles]]
 name = "tenant"
 unbound = true
+
+[[contracts.lines]]
+name = "leasing_cost"
 
 [[contracts]]
 type_id = "CRE.Contract.PercentageRent"
@@ -329,16 +341,18 @@ contract_name = "cre.permanent_debt"
 subject_family = "asset"
 parties = ["borrower", "lender"]
 
+[[contracts.lines]]
+name = "proceeds"
+
+[[contracts.lines]]
+name = "principal"
+
 [[contracts]]
 type_id = "CRE.Contract.ConstructionFunding"
-refines = "Contract.Debt"
+refines = "Contract.CapitalExpenditure"
 contract_name = "cre.construction_stub"
 subject_family = "asset"
-parties = ["lender"]
-
-[[contracts.roles]]
-name = "owner"
-refines = "borrower"
+parties = ["owner"]
 
 [[contracts]]
 type_id = "CRE.Contract.ConstructionLoan"
@@ -352,6 +366,12 @@ description = "A construction facility funded behind an equity commitment: equit
 name = "owner"
 refines = "borrower"
 
+[[contracts.lines]]
+name = "equity_draw"
+
+[[contracts.lines]]
+name = "proceeds"
+
 [[contracts]]
 type_id = "CRE.Contract.Disposition"
 refines = "Contract.Sale"
@@ -362,6 +382,9 @@ parties = ["seller"]
 [[contracts.roles]]
 name = "buyer"
 unbound = true
+
+[[contracts.lines]]
+name = "selling_costs"
 
 [[contracts]]
 type_id = "CRE.Contract.DispositionAtCap"
@@ -384,6 +407,9 @@ parties = ["seller"]
 [[contracts.roles]]
 name = "buyer"
 unbound = true
+
+[[contracts.lines]]
+name = "selling_costs"
 
 # --- Options: contracts with an election ---------------------------------
 [[contracts]]

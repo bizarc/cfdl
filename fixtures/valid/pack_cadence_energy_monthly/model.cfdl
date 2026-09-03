@@ -20,8 +20,8 @@ entity asset microgrid : Energy.Asset.GenerationFacility
 contract energy.ppa on entity asset.microgrid {
   term 2025-01..2027-12
   terms {
-    mwh_year = 4200
-    ppa_price = 85
+    quantity = 4200
+    price = 85
     escalation = 0.02
     degradation = 0.005
   }
@@ -30,12 +30,12 @@ contract energy.ppa on entity asset.microgrid {
 contract energy.om on entity asset.microgrid {
   term 2025-01..2027-12
   terms {
-    om_year = 48000
+    fee_year = 48000
     escalation = 0.025
   }
 }
 
 contract energy.capacity on entity asset.microgrid {
   term 2025-01..2027-12
-  terms { payment_year = 60000 }
+  terms { price = 60000 }
 }

@@ -29,8 +29,8 @@ entity asset loan : Credit.Asset.LoanPool
 contract credit.pool_level_pay on entity asset.loan {
   term 2026-01..2056-01
   terms {
-    balance = 1200000
-    rate = 0.06
+    principal = 1200000
+    interest_rate = 0.06
     term_months = 360
     cpr = 0
     cdr = 0

@@ -20,7 +20,7 @@ assume monthly_draw ~ Triangular(min=680000, mode=700000, max=780000)
 assume exit_cap ~ Normal(mean=0.0625, stdev=0.005, clip=[0.05, 0.08])
 ```
 
-with `base_rent = inputs.office_rent`, `amount = inputs.monthly_draw`, `exit_cap = inputs.exit_cap` in the respective contracts. The chapter-6 line holds under pressure: the *signed* terms — the retail lease, the loan's rate, the breakpoint — stay literal, because they are facts; only opinions got width. The shapes are chapter 12's judgment applied: symmetric market views get Normals, and the construction estimate gets the contractor's own three numbers — floor, bid, blowout — as a Triangular.
+with `rent = inputs.office_rent`, `amount = inputs.monthly_draw`, `cap_rate = inputs.exit_cap` in the respective contracts. The chapter-6 line holds under pressure: the *signed* terms — the retail lease, the loan's rate, the breakpoint — stay literal, because they are facts; only opinions got width. The shapes are chapter 12's judgment applied: symmetric market views get Normals, and the construction estimate gets the contractor's own three numbers — floor, bid, blowout — as a Triangular.
 
 And here the base case moves, on purpose: **a Triangular's deterministic value is the mean of its three points** — (680 + 700 + 780)/3 = 720,000 — not the 700,000 mode. Stating the cost risk's asymmetry made the base construction budget 340,000 heavier and pulled base IRR from 15.6% to about 14.8%. That is not an artifact to suppress; it is the model saying that an estimate with more room above than below *is* a higher expected cost. If the committee wants to underwrite the bid, that is a scenario — which is exactly what the run configuration now carries:
 

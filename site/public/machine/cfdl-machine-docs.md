@@ -488,7 +488,7 @@ Syntax (normative):
 contract cre.lease on entity asset.sunset {
   term 2026-02..2028-01
   terms {
-    base_rent = 42000
+    rent = 42000
     escalation = 0.03
   }
 }
@@ -539,7 +539,7 @@ curve cpi step {
 contract cre.lease on entity asset.sunset {
   term 2026-02..2036-01
   terms {
-    base_rent  = 42000                                  // literal fact
+    rent  = 42000                                  // literal fact
     escalation = curve_value("cpi", time.date) + 0.005  // the agreed formula
   }
 }
@@ -562,8 +562,8 @@ assume annual_yield ~ Normal(mean=5000, stdev=350, clip=[4000, 6000])
 contract energy.ppa.plant_a on entity asset.plant {
   term 2026-01..2050-12
   terms {
-    ppa_price = 3000              // contractual fact
-    mwh_year  = inputs.annual_yield  // driver, supplied per run
+    price = 3000              // contractual fact
+    quantity  = inputs.annual_yield  // driver, supplied per run
   }
 }
 ```
@@ -1698,7 +1698,7 @@ curve sofr linear {
 contract cre.lease on entity asset.sunset {
   term 2027-01..2031-12
   terms {
-    base_rent = inputs.base_rent
+    rent = inputs.base_rent
   }
 }
 
@@ -6273,15 +6273,22 @@ name = "buyer"
 unbound = true
 ```
 
+A field may carry `one_of = "<group>"`: fields sharing a group are
+alternatives and a contract must state at least one of them (a debt's
+amount is `principal`, `commitment` or `draw_curve`; its rate is
+`interest_rate` or `index_curve` with `margin`). A refinement's roles are
+its master's roles, specialized — it may not add a party the agreement does
+not have.
+
 `parties = ["lender", "borrower"]` stays the shorthand for roles inherited
 by the master's own word. A master also declares `lines` (`[[contracts.lines]]
 name = "interest"`) and, where it serves one side only, `side = "pays"` or
 `"receives"`; a refinement inherits both, may add lines, and fixes a side
 the master left open. Each lowering rule names the line it emits
 (`line = "interest"` on the `[[rules]]` entry), and load checks that a
-type's rules cover its effective lines. The check is opt-in per type
-until every pack names its lines: a type none of whose rules names a line
-is not checked.
+type's rules cover its effective lines. Every shipped rule names its line. A
+contract template must render every required effective field and one member
+of each `one_of` group, also checked at load.
 
 The master's fields are the schema; the lowering rule consumes them by
 name (`{{contract.principal}}`); the template renders the required ones;
@@ -6411,7 +6418,7 @@ the statement's residual row rather than vanishing.
 settlement differs.** Credit's level-pay, interest-only and floating pools
 are three refinements because the amortization profile and the rate basis
 differ. An interest-only period, a balloon, capitalized interest and a
-PIK period are TERMS on one instrument (`io_months`, `balloon_at_maturity`,
+PIK period are TERMS on one instrument (`interest_only_months`, `balloon_at_maturity`,
 `capitalize_interest`, `pik_months`) because they change when the same
 instrument settles, not what it is. Under that rule the roster grows by
 instrument and the terms stay what a term sheet states.
@@ -7010,7 +7017,7 @@ act/365 is about 1.4% of interest.
 
 Use it for every **nominal** rate — note rates, servicing strips, floating
 index-plus-margin. Do not use it for annual *quantities* (`rent_year`,
-`om_year`), which spread by `{{model.periods_per_year}}` regardless of day
+`fee_year`), which spread by `{{model.periods_per_year}}` regardless of day
 count.
 
 **Amortization is a second, separate basis.** An amortizing loan strikes its
@@ -7696,7 +7703,7 @@ CRE pack codes:
   pair: the first owns absent-or-unparseable, the second parsed-but-not-positive
 - `E6052_CRE_DEBT_MISSING_RATE` / `E6053_CRE_DEBT_INVALID_RATE` — the same pair
   for the nominal annual rate
-- `E6054_CRE_DEBT_INVALID_AMORT` — `amort_months` strikes the payment and is
+- `E6054_CRE_DEBT_INVALID_AMORT` — `amortization_months` strikes the payment and is
   normally longer than the loan's term
 - `E6055_CRE_DEBT_INVALID_IO_MONTHS` — whole months, 0 or more
 - `E6056_CRE_DEBT_INVALID_BALLOON_FLAG` — `balloon_at_maturity` is 0 or 1
@@ -9057,7 +9064,7 @@ Contract types (a `contract <name>` declaration lowers to streams through the pa
 | `CRE.Contract.OperatingExpense` | `cre.opex_line` | owner | One operating expense line. Instance it per expense for an itemised schedule, or declare one unsuffixed for a single blended figure; the entity it hangs on sets the level. |
 | `CRE.Contract.OperatingRevenue` | `cre.revenue_line` | owner |  |
 | `CRE.Contract.PermanentDebt` | `cre.permanent_debt` | borrower, lender |  |
-| `CRE.Contract.ConstructionFunding` | `cre.construction_stub` | lender |  |
+| `CRE.Contract.ConstructionFunding` | `cre.construction_stub` | owner |  |
 | `CRE.Contract.ConstructionLoan` | `cre.construction_loan` | lender | A construction facility funded behind an equity commitment: equity draws first, the loan takes the balance once the commitment is exhausted, and interest accrues on the drawn balance through the build. |
 | `CRE.Contract.Disposition` | `cre.exit` | seller |  |
 | `CRE.Contract.DispositionAtCap` | `cre.exit_cap` | seller |  |

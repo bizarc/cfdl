@@ -1,6 +1,6 @@
 {
   "results_version": "0.12",
-  "model_hash": "3c7c97f7f028ee4d0e5a8f95232c935e3d43f48e0cdceb1a9a2a5977905ed455",
+  "model_hash": "7dec0f4e5a06f954e2e0b13ea214f68bd0226825265f364e36c6d901aeb2197f",
   "ledger_hash": "790cca1b5ea430e97ab8c232a8ddddfd79c95743ea0c7d968419319382f26c15",
   "engine": {
     "name": "cfdl-engine",
@@ -62,7 +62,7 @@
         "terms": {
           "amount": "0",
           "amount_year": "300000",
-          "escalation": "0.025",
+          "growth_rate": "0.025",
           "occupancy": "1",
           "pct_fixed": "1"
         }
@@ -71,14 +71,14 @@
         "contract": "cre.exit_forward",
         "stream": "cre.exit.proceeds",
         "terms": {
-          "exit_cap": "0.065"
+          "cap_rate": "0.065"
         }
       },
       {
         "contract": "cre.exit_forward",
         "stream": "cre.exit.selling_costs",
         "terms": {
-          "exit_cap": "0.065",
+          "cap_rate": "0.065",
           "selling_costs": "0.02"
         }
       }

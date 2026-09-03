@@ -336,6 +336,12 @@ contract_name = "energy.debt_service"
 subject_family = "asset"
 parties = ["borrower", "lender"]
 
+[[contracts.lines]]
+name = "proceeds"
+
+[[contracts.lines]]
+name = "principal"
+
 [[contracts]]
 type_id = "Energy.Contract.Capex"
 refines = "Contract.CapitalExpenditure"
@@ -359,6 +365,9 @@ refines = "taxpayer"
 name = "authority"
 unbound = true
 
+[[contracts.lines]]
+name = "benefit"
+
 [[contracts]]
 type_id = "Energy.Contract.ProductionTaxCredit"
 refines = "Contract.Tax"
@@ -373,6 +382,9 @@ refines = "taxpayer"
 name = "authority"
 unbound = true
 
+[[contracts.lines]]
+name = "benefit"
+
 [[contracts]]
 type_id = "Energy.Contract.DepreciationShield"
 refines = "Contract.Tax"
@@ -386,6 +398,9 @@ refines = "taxpayer"
 [[contracts.roles]]
 name = "authority"
 unbound = true
+
+[[contracts.lines]]
+name = "benefit"
 
 # --- Options: contracts with an election ---------------------------------
 [[contracts]]

@@ -11,8 +11,8 @@ assume degr ~ Normal(mean=0.005, stdev=0.2, clip=[0.0, 1.4])
 contract energy.ppa.plant_a on entity asset.plant {
   term 2026-01..2026-12
   terms {
-    mwh_year = 5000
-    ppa_price = 3000
+    quantity = 5000
+    price = 3000
     escalation = 0.0
     degradation = inputs.degr
     availability = 1.0

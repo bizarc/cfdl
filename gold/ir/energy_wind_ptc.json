@@ -669,20 +669,20 @@
       "terms": {
         "availability": "0.95",
         "degradation": "0.007",
-        "mwh_year": "105000",
+        "escalation": "0.015",
         "price": "42",
-        "price_escalation": "0.015"
+        "quantity": "105000"
       }
     },
     {
       "stream": "energy.ptc.credit",
       "contract": "energy.ptc",
       "terms": {
+        "amount": "27.5",
         "availability": "0.95",
-        "credit_per_mwh": "27.5",
         "degradation": "0.007",
         "escalation": "0.02",
-        "mwh_year": "105000",
+        "quantity": "105000",
         "round_step": "1.00"
       },
       "defaults_applied": [
@@ -703,23 +703,23 @@
       "contract": "energy.om",
       "terms": {
         "escalation": "0.02",
-        "om_year": "1300000"
+        "fee_year": "1300000"
       }
     },
     {
       "stream": "energy.debt.interest",
       "contract": "energy.debt_service",
       "terms": {
-        "principal": "25000000",
-        "rate": "0.055"
+        "interest_rate": "0.055",
+        "principal": "25000000"
       }
     },
     {
       "stream": "energy.debt.principal",
       "contract": "energy.debt_service",
       "terms": {
-        "principal": "25000000",
-        "rate": "0.055"
+        "interest_rate": "0.055",
+        "principal": "25000000"
       }
     },
     {

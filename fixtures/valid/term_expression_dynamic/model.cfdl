@@ -21,8 +21,8 @@ curve production step {
 contract energy.ppa.plant_a on entity asset.plant {
   term 2026-01..2026-12
   terms {
-    mwh_year = curve_value("production", time.date)
-    ppa_price = 3000
+    quantity = curve_value("production", time.date)
+    price = 3000
     escalation = inputs.esc_base + 0.005
     degradation = 0.0
     availability = 1.0

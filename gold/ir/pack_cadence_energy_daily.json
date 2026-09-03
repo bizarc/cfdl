@@ -389,8 +389,8 @@
         "availability": "1",
         "degradation": "0.005",
         "escalation": "0.02",
-        "mwh_year": "4200",
-        "ppa_price": "85"
+        "price": "85",
+        "quantity": "4200"
       },
       "defaults_applied": [
         "availability"
@@ -401,14 +401,14 @@
       "contract": "energy.om",
       "terms": {
         "escalation": "0.025",
-        "om_year": "48000"
+        "fee_year": "48000"
       }
     },
     {
       "stream": "energy.capacity.revenue",
       "contract": "energy.capacity",
       "terms": {
-        "payment_year": "60000"
+        "price": "60000"
       }
     }
   ],

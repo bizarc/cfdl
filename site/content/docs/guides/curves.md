@@ -41,7 +41,7 @@ curve with margin, floor, and cap:
 contract credit.pool_float_io_bullet.bridge on entity asset.buyer {
   term 2026-01..2029-05
   terms {
-    balance = 15000000
+    principal = 15000000
     index_curve = "sofr"
     margin = 0.0275
     rate_floor = 0.07

@@ -34,8 +34,8 @@ contract energy.capex on entity asset.pv {
 contract energy.ppa on entity asset.pv {
   term 2026-01..2050-01
   terms {
-    mwh_year = 250000 "MWh/yr"
-    ppa_price = 45 "USD/MWh"
+    quantity = 250000 "MWh/yr"
+    price = 45 "USD/MWh"
     escalation = 0.02
     degradation = 0.005
   }
@@ -45,7 +45,7 @@ contract energy.ppa on entity asset.pv {
 contract energy.om on entity asset.pv {
   term 2026-01..2050-01
   terms {
-    om_year = 1500000
+    fee_year = 1500000
     escalation = 0.02
   }
 }
@@ -58,7 +58,7 @@ contract energy.om on entity asset.pv {
 contract energy.debt_service on entity asset.pv {
   term 2026-01..2043-01
   terms {
-    rate = 0.06
+    interest_rate = 0.06
     term_months = 216
     principal = 60000000
     funded_at_close = 0
@@ -68,7 +68,7 @@ contract energy.debt_service on entity asset.pv {
 // The ITC on the full installed cost, taken in the first operating year.
 contract energy.itc on entity asset.pv {
   term 2026-01..2026-01
-  terms { credit = inputs.installed_cost * inputs.itc_rate }
+  terms { amount = inputs.installed_cost * inputs.itc_rate }
 }
 
 // 5-year MACRS on the REDUCED basis: taking the investment credit removes

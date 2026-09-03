@@ -731,7 +731,7 @@
       "stream": "energy.itc.credit",
       "contract": "energy.itc",
       "terms": {
-        "credit": "720000"
+        "amount": "720000"
       }
     },
     {
@@ -741,8 +741,8 @@
         "availability": "1",
         "degradation": "0.005",
         "escalation": "0.02",
-        "mwh_year": "4200",
-        "ppa_price": "85"
+        "price": "85",
+        "quantity": "4200"
       },
       "defaults_applied": [
         "availability"
@@ -753,8 +753,8 @@
       "contract": "energy.storage_arbitrage",
       "terms": {
         "degradation": "0",
-        "mwh_cycled_year": "500",
-        "spread": "30"
+        "price": "30",
+        "quantity": "500"
       },
       "defaults_applied": [
         "degradation"
@@ -764,7 +764,7 @@
       "stream": "energy.capacity.revenue",
       "contract": "energy.capacity",
       "terms": {
-        "payment_year": "60000"
+        "price": "60000"
       }
     },
     {
@@ -772,23 +772,23 @@
       "contract": "energy.om",
       "terms": {
         "escalation": "0.025",
-        "om_year": "70000"
+        "fee_year": "70000"
       }
     },
     {
       "stream": "energy.debt.interest",
       "contract": "energy.debt_service",
       "terms": {
-        "principal": "1600000",
-        "rate": "0.06"
+        "interest_rate": "0.06",
+        "principal": "1600000"
       }
     },
     {
       "stream": "energy.debt.principal",
       "contract": "energy.debt_service",
       "terms": {
-        "principal": "1600000",
-        "rate": "0.06"
+        "interest_rate": "0.06",
+        "principal": "1600000"
       }
     },
     {

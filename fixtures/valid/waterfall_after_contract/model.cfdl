@@ -27,8 +27,8 @@ entity party holders : Credit.Party.Investor { name = "Noteholders" }
 contract credit.pool_level_pay.pool on entity asset.pool {
   term 2018-10..2019-03
   terms {
-    balance = 1200000.0
-    rate = 0.06
+    principal = 1200000.0
+    interest_rate = 0.06
     term_months = 6
     cpr = 0
     cdr = 0

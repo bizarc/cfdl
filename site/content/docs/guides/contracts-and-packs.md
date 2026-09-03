@@ -36,7 +36,7 @@ use pack "cre" version "0.1.0"
 contract cre.lease on entity asset.tower {
   term 2026-07..2031-12
   terms {
-    base_rent = 25000
+    rent = 25000
   }
 }
 ```

@@ -15,9 +15,9 @@ contract energy.capex on entity asset.windfarm {
 contract energy.merchant on entity asset.windfarm {
   term 2027-01..2046-12
   terms {
-    mwh_year = 105000
+    quantity = 105000
     price = 42
-    price_escalation = 0.015
+    escalation = 0.015
     degradation = 0.007
     availability = 0.95
   }
@@ -26,8 +26,8 @@ contract energy.merchant on entity asset.windfarm {
 contract energy.ptc on entity asset.windfarm {
   term 2027-01..2036-12
   terms {
-    mwh_year = 105000
-    credit_per_mwh = 27.5
+    quantity = 105000
+    amount = 27.5
     escalation = 0.02
     degradation = 0.007
     availability = 0.95
@@ -46,7 +46,7 @@ contract energy.macrs_shield on entity asset.windfarm {
 contract energy.om on entity asset.windfarm {
   term 2027-01..2046-12
   terms {
-    om_year = 1300000
+    fee_year = 1300000
     escalation = 0.02
   }
 }
@@ -54,7 +54,7 @@ contract energy.om on entity asset.windfarm {
 contract energy.debt_service on entity asset.windfarm {
   term 2027-01..2041-12
   terms {
-    rate = 0.055
+    interest_rate = 0.055
     term_months = 180
     principal = 25000000
   }

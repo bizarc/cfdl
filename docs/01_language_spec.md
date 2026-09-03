@@ -468,7 +468,7 @@ Syntax (normative):
 contract cre.lease on entity asset.sunset {
   term 2026-02..2028-01
   terms {
-    base_rent = 42000
+    rent = 42000
     escalation = 0.03
   }
 }
@@ -519,7 +519,7 @@ curve cpi step {
 contract cre.lease on entity asset.sunset {
   term 2026-02..2036-01
   terms {
-    base_rent  = 42000                                  // literal fact
+    rent  = 42000                                  // literal fact
     escalation = curve_value("cpi", time.date) + 0.005  // the agreed formula
   }
 }
@@ -542,8 +542,8 @@ assume annual_yield ~ Normal(mean=5000, stdev=350, clip=[4000, 6000])
 contract energy.ppa.plant_a on entity asset.plant {
   term 2026-01..2050-12
   terms {
-    ppa_price = 3000              // contractual fact
-    mwh_year  = inputs.annual_yield  // driver, supplied per run
+    price = 3000              // contractual fact
+    quantity  = inputs.annual_yield  // driver, supplied per run
   }
 }
 ```
@@ -1678,7 +1678,7 @@ curve sofr linear {
 contract cre.lease on entity asset.sunset {
   term 2027-01..2031-12
   terms {
-    base_rent = inputs.base_rent
+    rent = inputs.base_rent
   }
 }
 
