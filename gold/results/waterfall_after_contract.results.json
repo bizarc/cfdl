@@ -1,7 +1,7 @@
 {
   "results_version": "0.13",
-  "model_hash": "d0265179193adf4fa2a35a586713597d69e0d8d751b7e33bc6a5b6420e1b0725",
-  "ledger_hash": "9b5667553dcae52da68226a13fbf23f5853e3670b7127650a2751d07c67d3a98",
+  "model_hash": "fa25cd53d479b96635ce90cb698f5572babc05120d12fcbb82d8609fa4fdb966",
+  "ledger_hash": "46cc55b83312bd401188b45b49069a3798708d828f3debef3e77fe17d2adaf6d",
   "engine": {
     "name": "cfdl-engine",
     "version": "0.9.0"
@@ -15,22 +15,16 @@
       {
         "contract": "credit.pool_level_pay.pool",
         "defaults_applied": [
-          "abs_speed",
           "age_months",
           "payment_frequency",
-          "psa_speed",
           "sda_speed"
         ],
         "stream": "credit.pool.interest.pool",
         "terms": {
-          "abs_speed": "0",
           "age_months": "0",
           "cdr": "0",
-          "cpr": "0",
           "interest_rate": "0.06",
           "payment_frequency": "",
-          "principal": "1200000.0",
-          "psa_speed": "0",
           "sda_speed": "0"
         }
       },
@@ -41,21 +35,17 @@
           "age_months",
           "payment_frequency",
           "prepay_penalty_rate",
-          "psa_speed",
-          "sda_speed"
+          "psa_speed"
         ],
         "stream": "credit.pool.penalty.pool",
         "terms": {
           "abs_speed": "0",
           "age_months": "0",
-          "cdr": "0",
           "cpr": "0",
           "interest_rate": "0.06",
           "payment_frequency": "",
           "prepay_penalty_rate": "0",
-          "principal": "1200000.0",
-          "psa_speed": "0",
-          "sda_speed": "0"
+          "psa_speed": "0"
         }
       },
       {
@@ -64,42 +54,32 @@
           "abs_speed",
           "age_months",
           "payment_frequency",
-          "psa_speed",
-          "sda_speed"
+          "psa_speed"
         ],
         "stream": "credit.pool.prepay.pool",
         "terms": {
           "abs_speed": "0",
           "age_months": "0",
-          "cdr": "0",
           "cpr": "0",
           "interest_rate": "0.06",
           "payment_frequency": "",
-          "principal": "1200000.0",
-          "psa_speed": "0",
-          "sda_speed": "0"
+          "psa_speed": "0"
         }
       },
       {
         "contract": "credit.pool_level_pay.pool",
         "defaults_applied": [
-          "abs_speed",
           "age_months",
           "payment_frequency",
-          "psa_speed",
           "sda_speed",
           "severity"
         ],
         "stream": "credit.pool.recoveries.pool",
         "terms": {
-          "abs_speed": "0",
           "age_months": "0",
           "cdr": "0",
-          "cpr": "0",
           "interest_rate": "0.06",
           "payment_frequency": "",
-          "principal": "1200000.0",
-          "psa_speed": "0",
           "sda_speed": "0",
           "severity": "0"
         }
@@ -107,45 +87,32 @@
       {
         "contract": "credit.pool_level_pay.pool",
         "defaults_applied": [
-          "abs_speed",
           "age_months",
           "payment_frequency",
-          "psa_speed",
           "sda_speed"
         ],
         "stream": "credit.pool.sched_principal.pool",
         "terms": {
-          "abs_speed": "0",
           "age_months": "0",
           "cdr": "0",
-          "cpr": "0",
           "interest_rate": "0.06",
           "payment_frequency": "",
-          "principal": "1200000.0",
-          "psa_speed": "0",
           "sda_speed": "0"
         }
       },
       {
         "contract": "credit.pool_level_pay.pool",
         "defaults_applied": [
-          "abs_speed",
           "age_months",
           "payment_frequency",
-          "psa_speed",
           "sda_speed",
           "servicing_fee"
         ],
         "stream": "credit.pool.servicing.pool",
         "terms": {
-          "abs_speed": "0",
           "age_months": "0",
           "cdr": "0",
-          "cpr": "0",
-          "interest_rate": "0.06",
           "payment_frequency": "",
-          "principal": "1200000.0",
-          "psa_speed": "0",
           "sda_speed": "0",
           "servicing_fee": "0"
         }
@@ -204,34 +171,34 @@
       }
     },
     "series": {
-      "asset.pool.credit_level_pay_survival_lag_pool": {
+      "asset.pool.credit_level_pay_balance_lag_pool": {
         "index": {
           "calendar": "monthly",
           "start": "2018-10-01",
           "periods": 6
         },
         "values": [
-          1.0,
-          1.0,
-          1.0,
-          1.0,
-          1.0,
-          1.0
+          1200000.0,
+          1002485.4532270713,
+          803983.3337202778,
+          604488.7036159508,
+          403996.6003611021,
+          202502.03658997884
         ]
       },
-      "asset.pool.credit_level_pay_survival_pool": {
+      "asset.pool.credit_level_pay_balance_pool": {
         "index": {
           "calendar": "monthly",
           "start": "2018-10-01",
           "periods": 6
         },
         "values": [
-          1.0,
-          1.0,
-          1.0,
-          1.0,
-          1.0,
-          1.0
+          1200000.0,
+          1002485.4532270713,
+          803983.3337202778,
+          604488.7036159508,
+          403996.6003611021,
+          202502.03658997884
         ]
       },
       "domain.credit.balance_outstanding": {

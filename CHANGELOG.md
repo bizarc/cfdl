@@ -8,6 +8,20 @@ This project follows Semantic Versioning: https://semver.org/
 
 ## [Unreleased]
 
+**The level-pay pool's balance is its state (`docs/40` §3, stage 6
+remainder).** `credit.pool_level_pay` carries one field-only rule for its
+opening balance — `credit_level_pay_balance_<instance>`, filling the
+master's `balance` role — rolled forward each payment period as an
+amortization schedule's row (closing = opening less the level-pay principal
+fraction, less defaults and prepayments drawn additively from the opening
+balance), and a lagged twin for recoveries. Every stream reads the balance;
+the closed form `principal * AF(n-p)/AF(n) * survival` is gone from the
+six stream rules, and the survival fields with it. Every stream is
+unchanged to the last digit (46/46 benchmarks; the ten level-pay goldens
+move only on the two field series' names). A lowering rule may now read
+`field.<name>` for ANY field its contract lowers, not only its own. The
+two interest-only families still carry a survival fraction; they follow.
+
 **Master contract types, stages 3–4 (`docs/40`).** A contract's type is
 resolved once from its declaration and carried: the two-token
 `contract cre.lease_unit tenant_a` states it, the fused spelling still

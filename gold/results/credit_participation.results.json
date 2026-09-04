@@ -1,7 +1,7 @@
 {
   "results_version": "0.13",
-  "model_hash": "3490a84f8a601ee570b4f2ea9b59b83172d89e1279dda15c50dcf2f328032a23",
-  "ledger_hash": "4edc51f353ce901dcc6cac78ca79e2fff7e97927cd49f7943a2d36c102dc7c69",
+  "model_hash": "70451cd9dddb51a478cd9703c7cceabdea04bfa26c24a6d752d59dc264284cc4",
+  "ledger_hash": "57e8873f90536e8f87f6153a8c63d7ff626db5d860c49c421714882d5768d8e2",
   "engine": {
     "name": "cfdl-engine",
     "version": "0.9.0"
@@ -12,22 +12,16 @@
       {
         "contract": "credit.pool_level_pay.smoke",
         "defaults_applied": [
-          "abs_speed",
           "age_months",
           "payment_frequency",
-          "psa_speed",
           "sda_speed"
         ],
         "stream": "credit.pool.interest.smoke",
         "terms": {
-          "abs_speed": "0",
           "age_months": "0",
           "cdr": "0.03",
-          "cpr": "0.10",
           "interest_rate": "0.06",
           "payment_frequency": "",
-          "principal": "1200000",
-          "psa_speed": "0",
           "sda_speed": "0"
         }
       },
@@ -38,21 +32,17 @@
           "age_months",
           "payment_frequency",
           "prepay_penalty_rate",
-          "psa_speed",
-          "sda_speed"
+          "psa_speed"
         ],
         "stream": "credit.pool.penalty.smoke",
         "terms": {
           "abs_speed": "0",
           "age_months": "0",
-          "cdr": "0.03",
           "cpr": "0.10",
           "interest_rate": "0.06",
           "payment_frequency": "",
           "prepay_penalty_rate": "0",
-          "principal": "1200000",
-          "psa_speed": "0",
-          "sda_speed": "0"
+          "psa_speed": "0"
         }
       },
       {
@@ -61,41 +51,31 @@
           "abs_speed",
           "age_months",
           "payment_frequency",
-          "psa_speed",
-          "sda_speed"
+          "psa_speed"
         ],
         "stream": "credit.pool.prepay.smoke",
         "terms": {
           "abs_speed": "0",
           "age_months": "0",
-          "cdr": "0.03",
           "cpr": "0.10",
           "interest_rate": "0.06",
           "payment_frequency": "",
-          "principal": "1200000",
-          "psa_speed": "0",
-          "sda_speed": "0"
+          "psa_speed": "0"
         }
       },
       {
         "contract": "credit.pool_level_pay.smoke",
         "defaults_applied": [
-          "abs_speed",
           "age_months",
           "payment_frequency",
-          "psa_speed",
           "sda_speed"
         ],
         "stream": "credit.pool.recoveries.smoke",
         "terms": {
-          "abs_speed": "0",
           "age_months": "0",
           "cdr": "0.03",
-          "cpr": "0.10",
           "interest_rate": "0.06",
           "payment_frequency": "",
-          "principal": "1200000",
-          "psa_speed": "0",
           "sda_speed": "0",
           "severity": "0.50"
         }
@@ -103,44 +83,31 @@
       {
         "contract": "credit.pool_level_pay.smoke",
         "defaults_applied": [
-          "abs_speed",
           "age_months",
           "payment_frequency",
-          "psa_speed",
           "sda_speed"
         ],
         "stream": "credit.pool.sched_principal.smoke",
         "terms": {
-          "abs_speed": "0",
           "age_months": "0",
           "cdr": "0.03",
-          "cpr": "0.10",
           "interest_rate": "0.06",
           "payment_frequency": "",
-          "principal": "1200000",
-          "psa_speed": "0",
           "sda_speed": "0"
         }
       },
       {
         "contract": "credit.pool_level_pay.smoke",
         "defaults_applied": [
-          "abs_speed",
           "age_months",
           "payment_frequency",
-          "psa_speed",
           "sda_speed"
         ],
         "stream": "credit.pool.servicing.smoke",
         "terms": {
-          "abs_speed": "0",
           "age_months": "0",
           "cdr": "0.03",
-          "cpr": "0.10",
-          "interest_rate": "0.06",
           "payment_frequency": "",
-          "principal": "1200000",
-          "psa_speed": "0",
           "sda_speed": "0",
           "servicing_fee": "0.005"
         }
@@ -165,7 +132,7 @@
     "status": "ok",
     "metrics": {
       "entity.asset.pool.total": {
-        "amount": 0.0,
+        "amount": -0.0,
         "currency": "USD"
       },
       "entity.party.investors.total": {
@@ -176,16 +143,16 @@
         "amount": 0.0,
         "currency": "USD"
       },
-      "model.moic": 1.8,
+      "model.moic": 0.818182,
       "model.npv": {
-        "amount": -0.0,
-        "currency": "USD"
-      },
-      "model.total": {
         "amount": 0.0,
         "currency": "USD"
       },
-      "model.wal_years": 0.513889,
+      "model.total": {
+        "amount": -0.0,
+        "currency": "USD"
+      },
+      "model.wal_years": 0.472222,
       "run.annual_discount_rate": 0.1,
       "run.periods_per_year": 12.0,
       "stream.credit.participation.interest.smoke.total": {
@@ -222,52 +189,52 @@
       }
     },
     "series": {
-      "asset.pool.credit_level_pay_survival_lag_smoke": {
+      "asset.pool.credit_level_pay_balance_lag_smoke": {
         "index": {
           "calendar": "monthly",
           "start": "2026-01-01",
           "periods": 15
         },
         "values": [
-          1.0,
-          1.0,
-          1.0,
-          1.0,
-          0.9887233404314666,
-          0.9775738439139582,
-          0.9665500764730377,
-          0.9556506203047117,
-          0.9448740735930781,
-          0.9342190503300356,
-          0.9236841801370256,
-          0.9132681080887809,
-          0.9029694945390653,
-          0.8927870149483773,
-          0.882719359713597
+          1200000.0,
+          1200000.0,
+          1200000.0,
+          1200000.0,
+          1090285.283105555,
+          982416.911046227,
+          876370.2055777503,
+          772120.7911746312,
+          669644.5914617721,
+          568917.8256873131,
+          469917.0052362231,
+          372618.9301841733,
+          277000.6858912325,
+          183039.63963492934,
+          90713.43728223206
         ]
       },
-      "asset.pool.credit_level_pay_survival_smoke": {
+      "asset.pool.credit_level_pay_balance_smoke": {
         "index": {
           "calendar": "monthly",
           "start": "2026-01-01",
           "periods": 15
         },
         "values": [
-          1.0,
-          0.9887233404314666,
-          0.9775738439139582,
-          0.9665500764730377,
-          0.9556506203047117,
-          0.9448740735930781,
-          0.9342190503300356,
-          0.9236841801370256,
-          0.9132681080887809,
-          0.9029694945390653,
-          0.8927870149483773,
-          0.882719359713597,
-          0.8727652339995531,
-          0.8629233575724887,
-          0.8531924646354082
+          1200000.0,
+          1090285.283105555,
+          982416.911046227,
+          876370.2055777503,
+          772120.7911746312,
+          669644.5914617721,
+          568917.8256873131,
+          469917.0052362231,
+          372618.9301841733,
+          277000.6858912325,
+          183039.63963492934,
+          90713.43728223206,
+          0.0,
+          0.0,
+          0.0
         ]
       },
       "domain.credit.balance_outstanding": {
@@ -927,7 +894,7 @@
             "currency": "USD"
           },
           {
-            "amount": 0.0,
+            "amount": -0.0,
             "currency": "USD"
           },
           {
@@ -939,10 +906,6 @@
             "currency": "USD"
           },
           {
-            "amount": -0.0,
-            "currency": "USD"
-          },
-          {
             "amount": 0.0,
             "currency": "USD"
           },
@@ -951,7 +914,15 @@
             "currency": "USD"
           },
           {
-            "amount": 0.0,
+            "amount": -0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": -0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": -0.0,
             "currency": "USD"
           },
           {
@@ -960,10 +931,6 @@
           },
           {
             "amount": 0.0,
-            "currency": "USD"
-          },
-          {
-            "amount": -0.0,
             "currency": "USD"
           },
           {
@@ -1134,7 +1101,7 @@
             "currency": "USD"
           },
           {
-            "amount": 0.0,
+            "amount": -0.0,
             "currency": "USD"
           },
           {
@@ -1146,10 +1113,6 @@
             "currency": "USD"
           },
           {
-            "amount": -0.0,
-            "currency": "USD"
-          },
-          {
             "amount": 0.0,
             "currency": "USD"
           },
@@ -1158,7 +1121,7 @@
             "currency": "USD"
           },
           {
-            "amount": 0.0,
+            "amount": -0.0,
             "currency": "USD"
           },
           {
@@ -1170,7 +1133,11 @@
             "currency": "USD"
           },
           {
-            "amount": -0.0,
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
             "currency": "USD"
           },
           {
@@ -1958,7 +1925,7 @@
           },
           "values": [
             {
-              "amount": 0.0,
+              "amount": -0.0,
               "currency": "USD"
             },
             {
@@ -2365,7 +2332,7 @@
         ],
         "reconciliation": {
           "bottom_line": -1e-6,
-          "model_total": 0.0,
+          "model_total": -0.0,
           "residual": -1e-6
         }
       }

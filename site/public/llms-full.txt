@@ -6431,8 +6431,8 @@ actions = [{ set = "in_place_rent", value = "prev.in_place_rent * (1 + inputs.bu
   `set balance = 0` on the `credit.pool` machine. A master names the role
   (`Contract.Debt` names `balance`), a rule that lowers the field fills it
   (`field_role = "balance"` beside `field_name`), and the compiler resolves
-  the role per entity to every field that plays it — a pool's survival
-  factor and its lagged twin — which the engine writes one by one. A role
+  the role per entity to every field that plays it — a pool's balance and
+  its lagged twin — which the engine writes one by one. A role
   nothing on the transitioning entity fills is refused (`E1359`): a
   closed-form debt has no balance field to extinguish.
 - **The field itself comes from the pack's lowering rules**, like every other
@@ -14010,7 +14010,7 @@ contract credit.pool_level_pay.smoke on entity asset.pool {
 
 // STATE OWNED BY THE AGREEMENT (docs/40 §3, stage 6). The pool's machine
 // carries `on enter retired { set balance = 0 }`, where `balance` is the
-// field ROLE the pack's rules fill — the survival factor every stream reads
+// field ROLE the pack's rules fill — the pool's balance every stream reads
 // and its lagged twin — so the model retires the pool with one status
 // write and names no instance's field. Retirement is an occurrence: a
 // clean-up call, here at the sixth distribution. From the next period every

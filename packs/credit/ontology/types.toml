@@ -171,8 +171,9 @@ clean-up call is NOT a state: it is an occurrence, and it drives \
 `amortizing -> retired` as an event with a no-return topology."""
 
 # A RETIRED POOL PRODUCES NOTHING (docs/40 §3, stage 6). `balance` names the
-# field ROLE the pool's rules fill — the survival factor every stream reads,
-# and its lagged twin that feeds recoveries — so one entry action ends the
+# field ROLE the pool's rules fill — the level-pay pool's balance, the
+# interest-only pools' survival factor, and the lagged twin that feeds
+# recoveries — so one entry action ends the
 # cash of every pool shape without naming an instance's field. A model
 # retires a pool with one status write: the clean-up call is an event.
 [[lifecycles.entry_actions]]

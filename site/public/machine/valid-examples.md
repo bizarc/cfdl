@@ -4570,7 +4570,7 @@ contract credit.pool_level_pay.smoke on entity asset.pool {
 
 // STATE OWNED BY THE AGREEMENT (docs/40 §3, stage 6). The pool's machine
 // carries `on enter retired { set balance = 0 }`, where `balance` is the
-// field ROLE the pack's rules fill — the survival factor every stream reads
+// field ROLE the pack's rules fill — the pool's balance every stream reads
 // and its lagged twin — so the model retires the pool with one status
 // write and names no instance's field. Retirement is an occurrence: a
 // clean-up call, here at the sixth distribution. From the next period every

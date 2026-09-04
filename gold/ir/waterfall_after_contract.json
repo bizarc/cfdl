@@ -19,14 +19,14 @@
         "collateral_type": "auto"
       },
       "rules": {
-        "credit_level_pay_survival_lag_pool": {
+        "credit_level_pay_balance_lag_pool": {
           "init": {
             "lang": "cfdl",
-            "src": "1"
+            "src": "1200000.0"
           },
           "next": {
             "lang": "cfdl",
-            "src": "if(months_between(parse_date(\"2018-10-01\"), time.date) > 0 and months_between(parse_date(\"2018-10-01\"), time.date) - 0 < 6, prev * ((1 - cpr_to_periodic(if(0 == 0, 0, 0 * (min(0.0002 * min(max(1, (0 + (months_between(parse_date(\"2018-10-01\"), time.date) - 0 - 1)) + 1), 30), 0.006) - 0.000095 * max(0, min(max(1, (0 + (months_between(parse_date(\"2018-10-01\"), time.date) - 0 - 1)) + 1), 120) - 60))), 12)) - if(0 == 0, cpr_to_periodic(if(0 == 0, 0, min(0 * 0.002 * max(1, min((0 + (months_between(parse_date(\"2018-10-01\"), time.date) - 0 - 1)) + 1, 30)), 1)), 12), min(0 / max(1 - 0 * (0 + (months_between(parse_date(\"2018-10-01\"), time.date) - 0 - 1)), 0.000001), 1))), prev)"
+            "src": "if(months_between(parse_date(\"2018-10-01\"), time.date) > 0 and months_between(parse_date(\"2018-10-01\"), time.date) - 0 < 6, prev * (1 - ((-pmt(0.06 / 12, 6 - (months_between(parse_date(\"2018-10-01\"), time.date) - 0 - 1), 1)) - (0.06 / 12))) * ((1 - cpr_to_periodic(if(0 == 0, 0, 0 * (min(0.0002 * min(max(1, (0 + (months_between(parse_date(\"2018-10-01\"), time.date) - 0 - 1)) + 1), 30), 0.006) - 0.000095 * max(0, min(max(1, (0 + (months_between(parse_date(\"2018-10-01\"), time.date) - 0 - 1)) + 1), 120) - 60))), 12)) - if(0 == 0, cpr_to_periodic(if(0 == 0, 0, min(0 * 0.002 * max(1, min((0 + (months_between(parse_date(\"2018-10-01\"), time.date) - 0 - 1)) + 1, 30)), 1)), 12), min(0 / max(1 - 0 * (0 + (months_between(parse_date(\"2018-10-01\"), time.date) - 0 - 1)), 0.000001), 1))), prev)"
           },
           "schedule": {
             "kind": "Every",
@@ -35,14 +35,14 @@
             "to": "2019-03-01"
           }
         },
-        "credit_level_pay_survival_pool": {
+        "credit_level_pay_balance_pool": {
           "init": {
             "lang": "cfdl",
-            "src": "1"
+            "src": "1200000.0"
           },
           "next": {
             "lang": "cfdl",
-            "src": "prev * ((1 - cpr_to_periodic(if(0 == 0, 0, 0 * (min(0.0002 * min(max(1, (0 + (months_between(parse_date(\"2018-10-01\"), time.date) - 1)) + 1), 30), 0.006) - 0.000095 * max(0, min(max(1, (0 + (months_between(parse_date(\"2018-10-01\"), time.date) - 1)) + 1), 120) - 60))), 12)) - if(0 == 0, cpr_to_periodic(if(0 == 0, 0, min(0 * 0.002 * max(1, min((0 + (months_between(parse_date(\"2018-10-01\"), time.date) - 1)) + 1, 30)), 1)), 12), min(0 / max(1 - 0 * (0 + (months_between(parse_date(\"2018-10-01\"), time.date) - 1)), 0.000001), 1)))"
+            "src": "if(months_between(parse_date(\"2018-10-01\"), time.date) <= 6, prev * (1 - ((-pmt(0.06 / 12, 6 - (months_between(parse_date(\"2018-10-01\"), time.date) - 1), 1)) - (0.06 / 12))) * ((1 - cpr_to_periodic(if(0 == 0, 0, 0 * (min(0.0002 * min(max(1, (0 + (months_between(parse_date(\"2018-10-01\"), time.date) - 1)) + 1), 30), 0.006) - 0.000095 * max(0, min(max(1, (0 + (months_between(parse_date(\"2018-10-01\"), time.date) - 1)) + 1), 120) - 60))), 12)) - if(0 == 0, cpr_to_periodic(if(0 == 0, 0, min(0 * 0.002 * max(1, min((0 + (months_between(parse_date(\"2018-10-01\"), time.date) - 1)) + 1, 30)), 1)), 12), min(0 / max(1 - 0 * (0 + (months_between(parse_date(\"2018-10-01\"), time.date) - 1)), 0.000001), 1))), 0)"
           },
           "schedule": {
             "kind": "Every",
@@ -54,8 +54,8 @@
       },
       "field_roles": {
         "balance": [
-          "credit_level_pay_survival_pool",
-          "credit_level_pay_survival_lag_pool"
+          "credit_level_pay_balance_pool",
+          "credit_level_pay_balance_lag_pool"
         ]
       },
       "state": {},
@@ -329,7 +329,7 @@
       },
       "amount": {
         "lang": "cfdl",
-        "src": "if(months_between(parse_date(\"2018-10-01\"), time.date) < 6.0, (1200000.0 * (pv(0.06 / 12.0, 6.0 - months_between(parse_date(\"2018-10-01\"), time.date), -1.0) / pv(0.06 / 12.0, 6.0, -1.0)) * entity.asset.pool.credit_level_pay_survival_pool) * (1.0 - cpr_to_periodic(if(0.0 == 0.0, 0.0, 0.0 * (min(0.0002 * min(max(1.0, (0.0 + (months_between(parse_date(\"2018-10-01\"), time.date))) + 1.0), 30.0), 0.006) - 0.000095 * max(0.0, min(max(1.0, (0.0 + (months_between(parse_date(\"2018-10-01\"), time.date))) + 1.0), 120.0) - 60.0))), 12.0)) * (0.06 / 12.0), 0.0)"
+        "src": "if(months_between(parse_date(\"2018-10-01\"), time.date) < 6.0, entity.asset.pool.credit_level_pay_balance_pool * (1.0 - cpr_to_periodic(if(0.0 == 0.0, 0.0, 0.0 * (min(0.0002 * min(max(1.0, (0.0 + (months_between(parse_date(\"2018-10-01\"), time.date))) + 1.0), 30.0), 0.006) - 0.000095 * max(0.0, min(max(1.0, (0.0 + (months_between(parse_date(\"2018-10-01\"), time.date))) + 1.0), 120.0) - 60.0))), 12.0)) * (0.06 / 12.0), 0.0)"
       },
       "active_when": {
         "lang": "cfdl",
@@ -371,7 +371,7 @@
       },
       "amount": {
         "lang": "cfdl",
-        "src": "if(months_between(parse_date(\"2018-10-01\"), time.date) < 6.0, (1200000.0 * (pv(0.06 / 12.0, 6.0 - months_between(parse_date(\"2018-10-01\"), time.date), -1.0) / pv(0.06 / 12.0, 6.0, -1.0)) * entity.asset.pool.credit_level_pay_survival_pool) * (1.0 - ((-pmt(0.06 / 12.0, 6.0 - months_between(parse_date(\"2018-10-01\"), time.date), 1.0)) - (0.06 / 12.0))) * if(0.0 == 0.0, cpr_to_periodic(if(0.0 == 0.0, 0.0, min(0.0 * 0.002 * max(1.0, min((0.0 + (months_between(parse_date(\"2018-10-01\"), time.date))) + 1.0, 30.0)), 1.0)), 12.0), min(0.0 / max(1.0 - 0.0 * (0.0 + (months_between(parse_date(\"2018-10-01\"), time.date))), 0.000001), 1.0)) * 0.0, 0.0)"
+        "src": "if(months_between(parse_date(\"2018-10-01\"), time.date) < 6.0, entity.asset.pool.credit_level_pay_balance_pool * (1.0 - ((-pmt(0.06 / 12.0, 6.0 - months_between(parse_date(\"2018-10-01\"), time.date), 1.0)) - (0.06 / 12.0))) * if(0.0 == 0.0, cpr_to_periodic(if(0.0 == 0.0, 0.0, min(0.0 * 0.002 * max(1.0, min((0.0 + (months_between(parse_date(\"2018-10-01\"), time.date))) + 1.0, 30.0)), 1.0)), 12.0), min(0.0 / max(1.0 - 0.0 * (0.0 + (months_between(parse_date(\"2018-10-01\"), time.date))), 0.000001), 1.0)) * 0.0, 0.0)"
       },
       "active_when": {
         "lang": "cfdl",
@@ -413,7 +413,7 @@
       },
       "amount": {
         "lang": "cfdl",
-        "src": "if(months_between(parse_date(\"2018-10-01\"), time.date) < 6.0, (1200000.0 * (pv(0.06 / 12.0, 6.0 - months_between(parse_date(\"2018-10-01\"), time.date), -1.0) / pv(0.06 / 12.0, 6.0, -1.0)) * entity.asset.pool.credit_level_pay_survival_pool) * (1.0 - ((-pmt(0.06 / 12.0, 6.0 - months_between(parse_date(\"2018-10-01\"), time.date), 1.0)) - (0.06 / 12.0))) * if(0.0 == 0.0, cpr_to_periodic(if(0.0 == 0.0, 0.0, min(0.0 * 0.002 * max(1.0, min((0.0 + (months_between(parse_date(\"2018-10-01\"), time.date))) + 1.0, 30.0)), 1.0)), 12.0), min(0.0 / max(1.0 - 0.0 * (0.0 + (months_between(parse_date(\"2018-10-01\"), time.date))), 0.000001), 1.0)), 0.0)"
+        "src": "if(months_between(parse_date(\"2018-10-01\"), time.date) < 6.0, entity.asset.pool.credit_level_pay_balance_pool * (1.0 - ((-pmt(0.06 / 12.0, 6.0 - months_between(parse_date(\"2018-10-01\"), time.date), 1.0)) - (0.06 / 12.0))) * if(0.0 == 0.0, cpr_to_periodic(if(0.0 == 0.0, 0.0, min(0.0 * 0.002 * max(1.0, min((0.0 + (months_between(parse_date(\"2018-10-01\"), time.date))) + 1.0, 30.0)), 1.0)), 12.0), min(0.0 / max(1.0 - 0.0 * (0.0 + (months_between(parse_date(\"2018-10-01\"), time.date))), 0.000001), 1.0)), 0.0)"
       },
       "active_when": {
         "lang": "cfdl",
@@ -455,7 +455,7 @@
       },
       "amount": {
         "lang": "cfdl",
-        "src": "if(months_between(parse_date(\"2018-10-01\"), time.date) >= 0.0 and months_between(parse_date(\"2018-10-01\"), time.date) < 6.0 + 0.0, (1200000.0 * (pv(0.06 / 12.0, 6.0 - (months_between(parse_date(\"2018-10-01\"), time.date) - 0.0), -1.0) / pv(0.06 / 12.0, 6.0, -1.0)) * entity.asset.pool.credit_level_pay_survival_lag_pool) * cpr_to_periodic(if(0.0 == 0.0, 0.0, 0.0 * (min(0.0002 * min(max(1.0, (0.0 + (months_between(parse_date(\"2018-10-01\"), time.date) - 0.0)) + 1.0), 30.0), 0.006) - 0.000095 * max(0.0, min(max(1.0, (0.0 + (months_between(parse_date(\"2018-10-01\"), time.date) - 0.0)) + 1.0), 120.0) - 60.0))), 12.0) * max(0.0, (pv(0.06 / 12.0, 6.0 - months_between(parse_date(\"2018-10-01\"), time.date), -1.0) / pv(0.06 / 12.0, 6.0 - (months_between(parse_date(\"2018-10-01\"), time.date) - 0.0), -1.0)) - 0.0), 0.0)"
+        "src": "if(months_between(parse_date(\"2018-10-01\"), time.date) >= 0.0 and months_between(parse_date(\"2018-10-01\"), time.date) < 6.0 + 0.0, entity.asset.pool.credit_level_pay_balance_lag_pool * cpr_to_periodic(if(0.0 == 0.0, 0.0, 0.0 * (min(0.0002 * min(max(1.0, (0.0 + (months_between(parse_date(\"2018-10-01\"), time.date) - 0.0)) + 1.0), 30.0), 0.006) - 0.000095 * max(0.0, min(max(1.0, (0.0 + (months_between(parse_date(\"2018-10-01\"), time.date) - 0.0)) + 1.0), 120.0) - 60.0))), 12.0) * max(0.0, (pv(0.06 / 12.0, 6.0 - months_between(parse_date(\"2018-10-01\"), time.date), -1.0) / pv(0.06 / 12.0, 6.0 - (months_between(parse_date(\"2018-10-01\"), time.date) - 0.0), -1.0)) - 0.0), 0.0)"
       },
       "active_when": {
         "lang": "cfdl",
@@ -497,7 +497,7 @@
       },
       "amount": {
         "lang": "cfdl",
-        "src": "if(months_between(parse_date(\"2018-10-01\"), time.date) < 6.0, (1200000.0 * (pv(0.06 / 12.0, 6.0 - months_between(parse_date(\"2018-10-01\"), time.date), -1.0) / pv(0.06 / 12.0, 6.0, -1.0)) * entity.asset.pool.credit_level_pay_survival_pool) * (1.0 - cpr_to_periodic(if(0.0 == 0.0, 0.0, 0.0 * (min(0.0002 * min(max(1.0, (0.0 + (months_between(parse_date(\"2018-10-01\"), time.date))) + 1.0), 30.0), 0.006) - 0.000095 * max(0.0, min(max(1.0, (0.0 + (months_between(parse_date(\"2018-10-01\"), time.date))) + 1.0), 120.0) - 60.0))), 12.0)) * ((-pmt(0.06 / 12.0, 6.0 - months_between(parse_date(\"2018-10-01\"), time.date), 1.0)) - (0.06 / 12.0)), 0.0)"
+        "src": "if(months_between(parse_date(\"2018-10-01\"), time.date) < 6.0, entity.asset.pool.credit_level_pay_balance_pool * (1.0 - cpr_to_periodic(if(0.0 == 0.0, 0.0, 0.0 * (min(0.0002 * min(max(1.0, (0.0 + (months_between(parse_date(\"2018-10-01\"), time.date))) + 1.0), 30.0), 0.006) - 0.000095 * max(0.0, min(max(1.0, (0.0 + (months_between(parse_date(\"2018-10-01\"), time.date))) + 1.0), 120.0) - 60.0))), 12.0)) * ((-pmt(0.06 / 12.0, 6.0 - months_between(parse_date(\"2018-10-01\"), time.date), 1.0)) - (0.06 / 12.0)), 0.0)"
       },
       "active_when": {
         "lang": "cfdl",
@@ -539,7 +539,7 @@
       },
       "amount": {
         "lang": "cfdl",
-        "src": "if(months_between(parse_date(\"2018-10-01\"), time.date) < 6.0, (1200000.0 * (pv(0.06 / 12.0, 6.0 - months_between(parse_date(\"2018-10-01\"), time.date), -1.0) / pv(0.06 / 12.0, 6.0, -1.0)) * entity.asset.pool.credit_level_pay_survival_pool) * (1.0 - cpr_to_periodic(if(0.0 == 0.0, 0.0, 0.0 * (min(0.0002 * min(max(1.0, (0.0 + (months_between(parse_date(\"2018-10-01\"), time.date))) + 1.0), 30.0), 0.006) - 0.000095 * max(0.0, min(max(1.0, (0.0 + (months_between(parse_date(\"2018-10-01\"), time.date))) + 1.0), 120.0) - 60.0))), 12.0)) * (0.0 / 12.0), 0.0)"
+        "src": "if(months_between(parse_date(\"2018-10-01\"), time.date) < 6.0, entity.asset.pool.credit_level_pay_balance_pool * (1.0 - cpr_to_periodic(if(0.0 == 0.0, 0.0, 0.0 * (min(0.0002 * min(max(1.0, (0.0 + (months_between(parse_date(\"2018-10-01\"), time.date))) + 1.0), 30.0), 0.006) - 0.000095 * max(0.0, min(max(1.0, (0.0 + (months_between(parse_date(\"2018-10-01\"), time.date))) + 1.0), 120.0) - 60.0))), 12.0)) * (0.0 / 12.0), 0.0)"
       },
       "active_when": {
         "lang": "cfdl",
@@ -570,21 +570,15 @@
       "stream": "credit.pool.interest.pool",
       "contract": "credit.pool_level_pay.pool",
       "terms": {
-        "abs_speed": "0",
         "age_months": "0",
         "cdr": "0",
-        "cpr": "0",
         "interest_rate": "0.06",
         "payment_frequency": "",
-        "principal": "1200000.0",
-        "psa_speed": "0",
         "sda_speed": "0"
       },
       "defaults_applied": [
-        "abs_speed",
         "age_months",
         "payment_frequency",
-        "psa_speed",
         "sda_speed"
       ]
     },
@@ -594,22 +588,18 @@
       "terms": {
         "abs_speed": "0",
         "age_months": "0",
-        "cdr": "0",
         "cpr": "0",
         "interest_rate": "0.06",
         "payment_frequency": "",
         "prepay_penalty_rate": "0",
-        "principal": "1200000.0",
-        "psa_speed": "0",
-        "sda_speed": "0"
+        "psa_speed": "0"
       },
       "defaults_applied": [
         "abs_speed",
         "age_months",
         "payment_frequency",
         "prepay_penalty_rate",
-        "psa_speed",
-        "sda_speed"
+        "psa_speed"
       ]
     },
     {
@@ -618,42 +608,32 @@
       "terms": {
         "abs_speed": "0",
         "age_months": "0",
-        "cdr": "0",
         "cpr": "0",
         "interest_rate": "0.06",
         "payment_frequency": "",
-        "principal": "1200000.0",
-        "psa_speed": "0",
-        "sda_speed": "0"
+        "psa_speed": "0"
       },
       "defaults_applied": [
         "abs_speed",
         "age_months",
         "payment_frequency",
-        "psa_speed",
-        "sda_speed"
+        "psa_speed"
       ]
     },
     {
       "stream": "credit.pool.recoveries.pool",
       "contract": "credit.pool_level_pay.pool",
       "terms": {
-        "abs_speed": "0",
         "age_months": "0",
         "cdr": "0",
-        "cpr": "0",
         "interest_rate": "0.06",
         "payment_frequency": "",
-        "principal": "1200000.0",
-        "psa_speed": "0",
         "sda_speed": "0",
         "severity": "0"
       },
       "defaults_applied": [
-        "abs_speed",
         "age_months",
         "payment_frequency",
-        "psa_speed",
         "sda_speed",
         "severity"
       ]
@@ -662,21 +642,15 @@
       "stream": "credit.pool.sched_principal.pool",
       "contract": "credit.pool_level_pay.pool",
       "terms": {
-        "abs_speed": "0",
         "age_months": "0",
         "cdr": "0",
-        "cpr": "0",
         "interest_rate": "0.06",
         "payment_frequency": "",
-        "principal": "1200000.0",
-        "psa_speed": "0",
         "sda_speed": "0"
       },
       "defaults_applied": [
-        "abs_speed",
         "age_months",
         "payment_frequency",
-        "psa_speed",
         "sda_speed"
       ]
     },
@@ -684,22 +658,15 @@
       "stream": "credit.pool.servicing.pool",
       "contract": "credit.pool_level_pay.pool",
       "terms": {
-        "abs_speed": "0",
         "age_months": "0",
         "cdr": "0",
-        "cpr": "0",
-        "interest_rate": "0.06",
         "payment_frequency": "",
-        "principal": "1200000.0",
-        "psa_speed": "0",
         "sda_speed": "0",
         "servicing_fee": "0"
       },
       "defaults_applied": [
-        "abs_speed",
         "age_months",
         "payment_frequency",
-        "psa_speed",
         "sda_speed",
         "servicing_fee"
       ]

@@ -908,9 +908,9 @@ contract credit.pool_level_pay.book on entity fund.buyer {{
   terms {{ {terms}  payment_frequency = "{freq}" }}
 }}
 """
-    monthly = _pack_field(pool("monthly", 36, "month"), "credit_level_pay_survival_book")
-    daily = _pack_field(pool("daily", 1096, "month"), "credit_level_pay_survival_book")
-    # The same 36 payments, so the final survival factor must be identical.
+    monthly = _pack_field(pool("monthly", 36, "month"), "credit_level_pay_balance_book")
+    daily = _pack_field(pool("daily", 1096, "month"), "credit_level_pay_balance_book")
+    # The same 36 payments, so the final balance must be identical.
     return abs(daily[-1] - monthly[-1]), 0.0
 
 

@@ -1,7 +1,7 @@
 {
   "results_version": "0.13",
-  "model_hash": "b3aa244ed24b3b1683c2855cbb2e729932e62cf09aaea659a8c1eac03cfe650d",
-  "ledger_hash": "4d6c05df372f91a8f1133b448bb791b1389a6bec4f1c7cd5a87077c4d01e5152",
+  "model_hash": "b5ed2b86affed957e6ce538da4caa43cb311d8ebc2b6213231c00e8fdebe7e94",
+  "ledger_hash": "7c30834cd3c749d2a0a206fa972893283be4b355a303b68cc4f9bb45393b2fd6",
   "engine": {
     "name": "cfdl-engine",
     "version": "0.9.0"
@@ -12,22 +12,16 @@
       {
         "contract": "credit.pool_level_pay.smoke",
         "defaults_applied": [
-          "abs_speed",
           "age_months",
           "payment_frequency",
-          "psa_speed",
           "sda_speed"
         ],
         "stream": "credit.pool.interest.smoke",
         "terms": {
-          "abs_speed": "0",
           "age_months": "0",
           "cdr": "0.03",
-          "cpr": "0.10",
           "interest_rate": "0.06",
           "payment_frequency": "",
-          "principal": "1200000",
-          "psa_speed": "0",
           "sda_speed": "0"
         }
       },
@@ -38,21 +32,17 @@
           "age_months",
           "payment_frequency",
           "prepay_penalty_rate",
-          "psa_speed",
-          "sda_speed"
+          "psa_speed"
         ],
         "stream": "credit.pool.penalty.smoke",
         "terms": {
           "abs_speed": "0",
           "age_months": "0",
-          "cdr": "0.03",
           "cpr": "0.10",
           "interest_rate": "0.06",
           "payment_frequency": "",
           "prepay_penalty_rate": "0",
-          "principal": "1200000",
-          "psa_speed": "0",
-          "sda_speed": "0"
+          "psa_speed": "0"
         }
       },
       {
@@ -61,41 +51,31 @@
           "abs_speed",
           "age_months",
           "payment_frequency",
-          "psa_speed",
-          "sda_speed"
+          "psa_speed"
         ],
         "stream": "credit.pool.prepay.smoke",
         "terms": {
           "abs_speed": "0",
           "age_months": "0",
-          "cdr": "0.03",
           "cpr": "0.10",
           "interest_rate": "0.06",
           "payment_frequency": "",
-          "principal": "1200000",
-          "psa_speed": "0",
-          "sda_speed": "0"
+          "psa_speed": "0"
         }
       },
       {
         "contract": "credit.pool_level_pay.smoke",
         "defaults_applied": [
-          "abs_speed",
           "age_months",
           "payment_frequency",
-          "psa_speed",
           "sda_speed"
         ],
         "stream": "credit.pool.recoveries.smoke",
         "terms": {
-          "abs_speed": "0",
           "age_months": "0",
           "cdr": "0.03",
-          "cpr": "0.10",
           "interest_rate": "0.06",
           "payment_frequency": "",
-          "principal": "1200000",
-          "psa_speed": "0",
           "sda_speed": "0",
           "severity": "0.50"
         }
@@ -103,45 +83,32 @@
       {
         "contract": "credit.pool_level_pay.smoke",
         "defaults_applied": [
-          "abs_speed",
           "age_months",
           "payment_frequency",
-          "psa_speed",
           "sda_speed"
         ],
         "stream": "credit.pool.sched_principal.smoke",
         "terms": {
-          "abs_speed": "0",
           "age_months": "0",
           "cdr": "0.03",
-          "cpr": "0.10",
           "interest_rate": "0.06",
           "payment_frequency": "",
-          "principal": "1200000",
-          "psa_speed": "0",
           "sda_speed": "0"
         }
       },
       {
         "contract": "credit.pool_level_pay.smoke",
         "defaults_applied": [
-          "abs_speed",
           "age_months",
           "payment_frequency",
-          "psa_speed",
           "sda_speed",
           "servicing_fee"
         ],
         "stream": "credit.pool.servicing.smoke",
         "terms": {
-          "abs_speed": "0",
           "age_months": "0",
           "cdr": "0.03",
-          "cpr": "0.10",
-          "interest_rate": "0.06",
           "payment_frequency": "",
-          "principal": "1200000",
-          "psa_speed": "0",
           "sda_speed": "0",
           "servicing_fee": "0"
         }
@@ -192,19 +159,19 @@
       }
     },
     "series": {
-      "asset.pool.credit_level_pay_survival_lag_smoke": {
+      "asset.pool.credit_level_pay_balance_lag_smoke": {
         "index": {
           "calendar": "monthly",
           "start": "2026-01-01",
           "periods": 15
         },
         "values": [
-          1.0,
-          1.0,
-          1.0,
-          1.0,
-          0.9887233404314666,
-          0.9775738439139582,
+          1200000.0,
+          1200000.0,
+          1200000.0,
+          1200000.0,
+          1090285.283105555,
+          982416.911046227,
           0.0,
           0.0,
           0.0,
@@ -216,19 +183,19 @@
           0.0
         ]
       },
-      "asset.pool.credit_level_pay_survival_smoke": {
+      "asset.pool.credit_level_pay_balance_smoke": {
         "index": {
           "calendar": "monthly",
           "start": "2026-01-01",
           "periods": 15
         },
         "values": [
-          1.0,
-          0.9887233404314666,
-          0.9775738439139582,
-          0.9665500764730377,
-          0.9556506203047117,
-          0.9448740735930781,
+          1200000.0,
+          1090285.283105555,
+          982416.911046227,
+          876370.2055777503,
+          772120.7911746312,
+          669644.5914617721,
           0.0,
           0.0,
           0.0,
@@ -1495,7 +1462,7 @@
             "date": "2026-07-01",
             "actor": "lifecycle:credit.pool",
             "action": "set",
-            "target": "asset.pool.credit_level_pay_survival_smoke",
+            "target": "asset.pool.credit_level_pay_balance_smoke",
             "outcome": "applied",
             "note": "on enter into retired: 0.0 = 0"
           },
@@ -1504,7 +1471,7 @@
             "date": "2026-07-01",
             "actor": "lifecycle:credit.pool",
             "action": "set",
-            "target": "asset.pool.credit_level_pay_survival_lag_smoke",
+            "target": "asset.pool.credit_level_pay_balance_lag_smoke",
             "outcome": "applied",
             "note": "on enter into retired: 0.0 = 0"
           }
