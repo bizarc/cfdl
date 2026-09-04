@@ -3211,7 +3211,18 @@ curve tbl { 2026-01: 10.0, 2027-01: 20.0, 2028-01: 30.0 }
 
 Flat both directions, with no diagnostic at compile time or run time.
 
-**Why that is right, and why it is also wrong.** A curve is the construct market
+**The deal outruns the curve; the curve never outruns the deal.** Nothing is
+evaluated outside the model timeline — `E2103_SCHEDULE_OUT_OF_BOUNDS` refuses a
+stream whose schedule extends past it — and a curve with more points than the
+horizon simply leaves them unread (a six-point table on a three-period deal
+returns `[10, 20, 30]`). So every read above is *inside* the deal timeline, and
+the only way to reach the flat tail is to declare a curve shorter than the
+horizon that reads it. That is the whole of the exposure, and it is worth
+stating because it names the check that is missing: the engine already
+bounds-checks a schedule against the timeline, and does not bounds-check a
+curve read against the curve.
+
+**Why the behavior is right, and why it is also wrong.** A curve is the construct market
 data arrives in, and flat-forward extrapolation is the standard convention for a
 price curve — nobody wants a forward rate to fall off a cliff at the last quoted
 tenor. But a curve is also the natural home for a *schedule*: a depreciation
