@@ -356,7 +356,7 @@ impl PackOntology {
                         field("day_count", "string", false, None, None, "Accrual convention; the model's when absent."),
                         field("amortization_day_count", "string", false, None, None, "The convention a level payment is struck on — `30/360` or `30e/360`; a payment is struck once and held, so an Actual basis is refused (E5027)."),
                         field("payment_frequency", "string", false, None, None, "The instrument's own payment rhythm; the calendar's when absent."),
-                        field("amortization", "string", false, None, None, "level_pay | interest_only | bullet | custom — a refinement fixes it."),
+                        field("amortization", "string", false, None, None, "The repayment pattern — level_pay, interest_only, bullet, custom; a refinement fixes it, and a pattern the master does not name is the refinement's word."),
                         field("amortization_months", "integer", false, Some("months"), None, "The horizon the payment is struck on; may exceed the term."),
                         field("interest_only_months", "integer", false, Some("months"), None, "Interest-only period before amortization begins."),
                         field("funded_at_close", "integer", false, None, None, "1 — proceeds are drawn at term start; 0 — the reconciliation starts post-financing."),
@@ -397,7 +397,7 @@ impl PackOntology {
                     vec![line("proceeds", "Gross proceeds of the disposal.")],
                     Some("receives"),
                     "Disposing of the asset itself — an exit, a disposition, a takeout."),
-                master("Contract.Offtake", &["seller", "offtaker"],
+                master("Contract.Supply", &["supplier", "buyer"],
                     vec![
                         field("quantity", "decimal", false, None, None, "Output sold per year, in the pack's unit; absent where the payment is for availability rather than volume."),
                         field("price", "decimal", true, None, None, "Price per unit of output."),
@@ -405,9 +405,9 @@ impl PackOntology {
                         field("degradation", "decimal", false, Some("ratio"), None, "Annual decline in output."),
                         field("availability", "decimal", false, Some("ratio"), None, "Fraction of the year the asset delivers."),
                     ],
-                    vec![line("revenue", "Payment for delivered output.")],
+                    vec![line("revenue", "Payment for what is delivered.")],
                     None,
-                    "Sale of an asset's output — a PPA, a merchant sale, a capacity payment."),
+                    "Goods or output delivered over a term for a price, seen from either side — a PPA, a merchant sale, a capacity payment, a fuel or feedstock supply agreement."),
                 master("Contract.Service", &["provider", "recipient"],
                     vec![
                         field("fee", "decimal", false, None, Some("fee"), "Fee per period."),
@@ -441,20 +441,15 @@ impl PackOntology {
                 election("Option.Put", "Contract.Option", "The holder's right to sell at a stated price."),
                 election("Option.Renewal", "Contract.Option", "The holder's right to extend an agreement on stated terms."),
                 election("Option.Refinance", "Contract.Option", "The borrower's right to replace one financing with another."),
-                // The three below have no refinement in the alpha packs yet.
+                // The two below have no refinement in the alpha packs yet.
                 // The packs are indicators, not a sample of their domains:
-                // construction contracts, hedges and insurance are standard
-                // deal furniture, and a master that exists before its first
-                // refinement costs nothing — it is abstract.
-                master("Contract.Construction", &["owner", "contractor"],
-                    vec![
-                        field("budget", "decimal", true, None, None, "The contract sum."),
-                        field("draw_curve", "string", true, None, None, "The declared curve the draws follow — data, not a term."),
-                        field("retainage", "decimal", false, Some("ratio"), None, "Fraction of each draw held back."),
-                    ],
-                    vec![line("draw", "Payment against work done.")],
-                    Some("pays"),
-                    "Building or improving the asset — an EPC or construction contract."),
+                // hedges and insurance are standard deal furniture whose
+                // cash is contingent on something outside the model, and a
+                // master that exists before its first refinement costs
+                // nothing — it is abstract. (Construction was here until
+                // 4 September 2026: a build is capital expenditure on a
+                // draw curve inside a phase, and retainage is a term of the
+                // spend — docs/40 §4.9.)
                 master("Contract.Derivative", &["party", "counterparty"],
                     vec![
                         field("notional", "decimal", true, None, None, "The amount the exposure is struck on."),
@@ -820,7 +815,7 @@ pub struct OntologyField {
 /// inheriting the name or by SPECIALIZING it: `landlord` refines `lessor`. A
 /// domain word never appears on a master. A refinement may also leave a
 /// master role UNBOUND where the agreement has no such party in this form —
-/// a merchant sale's offtaker is the market.
+/// a merchant sale's buyer is the market.
 #[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct OntologyRole {

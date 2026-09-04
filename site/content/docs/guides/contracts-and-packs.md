@@ -53,11 +53,10 @@ what a kind of agreement *is*:
 | `Contract.Lease` | lessor, lessee | Use of an asset in exchange for rent, and the rent's own mechanics. |
 | `Contract.Purchase` | buyer, seller | Acquiring the asset itself. |
 | `Contract.Sale` | seller, buyer | Disposing of the asset itself — an exit, a disposition, a takeout. |
-| `Contract.Offtake` | seller, offtaker | Sale of an asset's output — a PPA, a merchant sale, a capacity payment. |
+| `Contract.Supply` | supplier, buyer | Goods or output delivered over a term for a price, seen from either side — a PPA, a merchant sale, a capacity payment. |
 | `Contract.Service` | provider, recipient | Work done on or for the asset — management, operations and maintenance, servicing. |
 | `Contract.Tax` | taxpayer, authority | A tax obligation or attribute — cash taxes, a credit, a depreciation shield. |
 | `Contract.Option` | grantor, holder | An election — cash the holder chooses to take. Every pack's elections refine this. |
-| `Contract.Construction` | owner, contractor | Building or improving the asset — an EPC or construction contract. |
 | `Contract.Derivative` | party, counterparty | A hedge or exchange of exposures — a swap, a rate cap, a collar. |
 | `Contract.Insurance` | insurer, insured | Premiums against losses — property, title, business interruption. |
 

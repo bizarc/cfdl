@@ -214,7 +214,7 @@
       "name": "energy.ppa.plant_a",
       "type": "Energy.Contract.PPA",
       "contract_name": "energy.ppa",
-      "master": "Contract.Offtake",
+      "master": "Contract.Supply",
       "instance": "plant_a",
       "subject": {
         "symbol": "asset.plant"

@@ -11,7 +11,7 @@
       "end_col": 35
     },
     "path": null,
-    "hint": "Known contract types: Contract.CapitalExpenditure, Contract.Construction, Contract.Debt, Contract.Deduction, Contract.Derivative, Contract.Expense, Contract.Insurance, Contract.Lease, Contract.Line, Contract.Offtake, Contract.Option, Contract.Purchase, Contract.Revenue, Contract.Sale, Contract.Service, Contract.Tax, Contract.WorkingCapital, Option.Call, Option.Put, Option.Refinance, Option.Renewal.",
+    "hint": "Known contract types: Contract.CapitalExpenditure, Contract.Debt, Contract.Deduction, Contract.Derivative, Contract.Expense, Contract.Insurance, Contract.Lease, Contract.Line, Contract.Option, Contract.Purchase, Contract.Revenue, Contract.Sale, Contract.Service, Contract.Supply, Contract.Tax, Contract.WorkingCapital, Option.Call, Option.Put, Option.Refinance, Option.Renewal.",
     "notes": []
   }
 ]

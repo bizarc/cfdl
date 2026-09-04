@@ -279,7 +279,7 @@
       "name": "energy.merchant",
       "type": "Energy.Contract.MerchantSale",
       "contract_name": "energy.merchant",
-      "master": "Contract.Offtake",
+      "master": "Contract.Supply",
       "subject": {
         "symbol": "asset.windfarm"
       },

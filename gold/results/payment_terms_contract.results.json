@@ -1,6 +1,6 @@
 {
   "results_version": "0.13",
-  "model_hash": "16acfd26004ef919d01290835b528a7c6fb4a9e2276da28671972bf3bf2ddef3",
+  "model_hash": "e0095ce6cfb84e636fbdbb8431e179c2bcb601279ea616da689afc38e1ef7f8d",
   "ledger_hash": "9a38b94db59785f259ae8f278692f950a892b50fda3e7bd8bb469e25849da194",
   "engine": {
     "name": "cfdl-engine",
@@ -1237,7 +1237,7 @@
       {
         "name": "energy.ppa.plant_a",
         "type": "Energy.Contract.PPA",
-        "master": "Contract.Offtake",
+        "master": "Contract.Supply",
         "contract_name": "energy.ppa",
         "instance": "plant_a",
         "subject": "asset.plant",

@@ -220,6 +220,34 @@ question.*
 
 ---
 
+## Item 4 — expressible in CFDL today, not shipped by the CRE pack
+
+*Added 4 September 2026 from a review of the 1bedrock CRE schema pack
+(`1bedrock-2026-archive`, `schemas/cfdo/cre/v1.0`) and its development
+pro forma. Each row is something the LANGUAGE can state now — with
+expressions, fields, events, options, rule checks or metrics — and the CRE
+pack does not give a modeller a term for. They are pack vocabulary items,
+ranked by how often a lease or a loan actually carries the clause; none is
+a language gap. The 1bedrock artefacts declare and validate every one of
+these and compute none of them, so the comparison is of vocabulary, not of
+capability.*
+
+| clause the industry states | how CFDL expresses it today | what the pack would add |
+|---|---|---|
+| Recoveries per expense category — CAM, tax, insurance each full, capped or none, a CAM cap per sf, separate base years | three recovery streams as expressions over the opex lines, a `min` for the cap, a base-year figure as a field | per-category terms on `cre.lease_unit` beside the single stop and share it has |
+| Termination option with a fee and a notice period; expansion by area; contraction; right of first refusal | an `option` whose payoff is the fee, an event that deactivates the lease's streams on exercise, a second lease declared up front and activated for the expansion | pack option types beside renewal and purchase; the stage 7 option grammar (`docs/40` §10) is where `on exercise` actions land |
+| Escalation as a typed clause — CPI with a cap and a floor, a market review, a reset every N months | the term as an expression: a `clamp` on `curve_value("cpi", …)`, a step from elapsed periods | an `escalation_cap`, `escalation_floor` and `escalation_every_months` on the lease, so the common collar is stated not written |
+| Debt covenants — minimum DSCR, maximum LTV — per tranche | a rule check over the DSCR and LTV series | covenant terms on `cre.permanent_debt` and a breach series the statement can show |
+| Asset value through the hold, and the metrics on it — LTV, debt yield, equity multiple | a value field (NOI over a cap-rate reference), metrics declared beside `moic`; the cap-rate reference joins the reference-observable roadmap | `domain.cre.ltv`, `domain.cre.debt_yield` in `metrics.toml` over a pack-lowered value series |
+| Rent per square foot, and the area check that leased area does not exceed rentable | the term as an expression on the unit's `rentable_area`; a rule check over the units' areas | `rent_psf` as an alternative to `rent_year` on the unit lease, in the `rent` group |
+| Public incentives — abatement, TIF as a stream or a lump, fee waivers, rate buydowns — with eligibility on affordability, income band and unit count | entity fields for the eligibility facts, expressions and events for the tests, `Contract.Tax` and `Contract.Grant` (`docs/40` §4.16) as the masters | CRE refinements of Tax and Grant, which is the demonstration the survey owes them (`docs/41` §5) |
+| A lease's expense structure named as gross, net, NNN or modified gross | emergent from the stop, share and recovery terms | a label the template offers, not a term the rules read |
+
+The market-leasing-assumption bundle (Item 3) is the same shape and is
+already recorded. A scenario that multiplies a term rather than setting it
+is not on this list: a scenario overrides any `inputs.<name>` already, and a
+relative shock is an input of its own.
+
 ## Non-items, recorded so they are not rediscovered
 
 | candidate gap | resolution |
