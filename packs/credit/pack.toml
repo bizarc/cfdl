@@ -33,6 +33,8 @@ categories = [
   "operating.expense.servicing",
   "operating.collection.penalty",
   "investing.acquisition.purchase",
+  "financing.security.interest",
+  "financing.security.principal",
 ]
 
 

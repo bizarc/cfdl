@@ -297,15 +297,23 @@ default articles; the payment and priority articles are where the cash is.
 
 Roles `issuer`, `holder`. Fields: `face` (the initial principal amount);
 the coupon, stated one way (`coupon` fixed, or `index_curve` with `margin`
-floating — one required; the same words a debt's rate uses, because a
-holder reads them the same way); `payment_frequency` (opt; the calendar's
+floating — the same words a debt's rate uses, because a holder reads them
+the same way; optional on the master, because a pass-through's interest
+follows the collateral and states no coupon of its own, and a structured
+note's refinement requires it); `payment_frequency` (opt; the calendar's
 when absent); `day_count` (opt; the model's when absent). The final
 maturity is the contract's `term` end, as on every master. Lines:
-`interest`, LOWERED — the coupon on the outstanding claim each payment
-date; `principal`, ALLOCATED — what the priority of payments pays the
-holder, a waterfall step into the holder's account, never a rule. The
-claim is `face` less what the account has received (D7), and the load
-check asks no rule for an allocated line. Named optional lines a
+`interest` and `principal`. Whether each is LOWERED by a rule or
+ALLOCATED by a priority of payments is the REFINEMENT's statement, not
+the master's (corrected 4 September 2026): a pass-through — a Fannie Mae
+or Ginnie Mae certificate, a participation — pays its holder its share of
+what the collateral produced each period, scheduled and unscheduled
+principal alike, and nothing is ranked or chosen, so both lines are
+lowered from the collateral; a structured note — a REMIC tranche, an ABS
+class — is paid what the priority allocates it, so the refinement marks
+both allocated, the steps pay the holder's account, and the claim is
+`face` less what the account has received (D7). The load check asks no
+rule for an allocated line. Named optional lines a
 refinement may add, so two packs never spell the same cash differently:
 `proceeds` at issuance, `premium` for a make-whole, `redemption` for a
 call at a stated price. Interest shortfall carried forward is a field.
@@ -323,11 +331,17 @@ coupon, a PIK toggle, original issue discount. Events of default, which
 are events. A residual certificate is not a security: it has no face and
 no coupon, and refines `Contract.Equity`.
 
-**Balance.** Derived, never lowered: the claim over the holder's account.
-Stage 6's balance role belongs to `Contract.Debt`; a security retires
-when the account reaches its face. **First refinement:** the credit pack's
-note class, with the auto ABS pilot's seven classes declared as notes
-whose steps read `face` and `coupon` from the contract.
+**Balance.** For a structured note, derived, never lowered: the claim
+over the holder's account, and the note retires when the account reaches
+its face. For a participation there is no claim to keep: the holder's
+position is its share of the pool's. Stage 6's balance role belongs to
+`Contract.Debt`. **First refinement:** the credit pack's
+`credit.participation` — a `share` of a pool's cash, both lines lowered,
+carrying the pool's suffix; `fixtures/valid/credit_participation` shows
+a share of one reconciling to the pool's net collections. **Second:** the
+structured note, with the auto ABS pilot's seven classes declared as notes
+whose steps read `face` and `coupon` from the contract — the change that
+also lands the step naming the contract and line it pays.
 
 ### 4.14 `Contract.Equity`
 *Reworked from the governing document, 4 September 2026.* The source is a
@@ -348,11 +362,12 @@ the holder's word. Fields: `commitment` (the capital the holder agreed to
 contribute); `share` (the holder's percentage interest — its share of
 distributions before any promote); `preferred_return` (opt; the annual
 rate the holder's contributed capital accrues ahead of the promote —
-absent on common equity). Lines: `contribution`, LOWERED — the commitment
+absent on common equity). Lines: `contribution`, lowered — the commitment
 funded on its call schedule, the one cash an equity agreement produces by
-its own terms; `distribution`, ALLOCATED — what the priority of
-distributions pays the holder, a step into the holder's account, exactly
-as a security's principal is. The holder's position is the account,
+its own terms; `distribution` — a pro rata share lowered by rule, or,
+where a priority of distributions decides it, marked ALLOCATED by the
+refinement and paid as steps into the holder's account, as a structured
+note's principal is (§4.13). The holder's position is the account,
 contributed less distributed, and the accrued preference is a field on
 that account (D13). Side: open — a fund model and an investor's model sit
 on opposite sides.
@@ -550,12 +565,18 @@ category = "financing.debt.interest_paid"
 ```
 
 Pack load checks that, for every concrete type, the set of `line` values
-across its rules covers its effective LOWERED lines. An ALLOCATED line —
-a security's `principal`, an equity interest's `distribution`, a
-guarantee's `claim` — is what the structure pays through a priority of
-payments: no rule may emit it, and a waterfall step pays it into the
-holder's account (the step naming the contract and line it pays is the
-demonstration change that follows this stage). An OPTIONAL line is a name
+across its rules covers its effective LOWERED lines. An ALLOCATED line is
+what a structure pays through a priority of payments: no rule may emit
+it, and a waterfall step pays it into the holder's account (the step
+naming the contract and line it pays is the change that follows). WHO
+MARKS IT: a master marks a line allocated only where every form of the
+agreement is paid by a structure — a guarantee's `claim`, sized by the
+covered agreement's shortfall; a security's `principal` and an equity
+interest's `distribution` are lowered on the master, and a REFINEMENT
+marks them allocated where its form is a structured one (a REMIC tranche,
+a fund's tiers) and leaves them lowered where it is not (a pass-through,
+a pro rata share). A refinement may mark a line allocated, never the
+reverse. An OPTIONAL line is a name
 the master reserves — `proceeds`, `premium`, `redemption`, `recovery` — so
 a refinement that adds it spells it as every other pack would. The CATEGORY stays the
 pack's, per `docs/35`: the master says a debt produces interest, the pack

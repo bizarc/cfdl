@@ -232,3 +232,16 @@ number = "integer"
 when = "present"
 on_invalid = "report"
 min = 0.0
+
+# A share is a fraction of the pool's cash: above 1 pays out more than the pool
+# produced, and 0 is a participation in nothing.
+[[validations]]
+contract = "credit.participation"
+code = "E9021_CREDIT_INVALID_SHARE"
+message = "Participation 'share' must be greater than 0 and at most 1."
+check = "term_number"
+term = "share"
+when = "present"
+on_invalid = "report"
+exclusive_min = 0.0
+max = 1.0

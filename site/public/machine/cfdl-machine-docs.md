@@ -6466,8 +6466,9 @@ unbound = true
 A field's type is `decimal`, `integer`, `string`, `date`, or `contract` —
 a reference to a declared contract by name, as a guarantee's `covered`.
 A line may be marked `allocated = true` (a waterfall step pays it; no rule
-may emit it) or `optional = true` (a name the master reserves; no rule
-must emit it). A field may carry `one_of = "<group>"`: fields sharing a group are
+may emit it — a refinement may mark an inherited line allocated where its
+form of the agreement is paid by a structure, never the reverse) or
+`optional = true` (a name the master reserves; no rule must emit it). A field may carry `one_of = "<group>"`: fields sharing a group are
 alternatives and a contract must state at least one of them (a debt's
 amount is `principal`, `commitment` or `draw_curve`; its rate is
 `interest_rate` or `index_curve` with `margin`). A refinement may put a
@@ -8022,6 +8023,7 @@ Credit pack codes:
   the default 0 on a seasoned pool understates prepayment. Non-negative
   integer.
 - `E9020_CREDIT_RATE_FLOOR_ABOVE_CAP`
+- `E9021_CREDIT_INVALID_SHARE` — a participation's `share` is not in (0, 1]. A share above one pays out more than the pool produced; zero is a participation in nothing.
 
 ---
 
@@ -9323,6 +9325,7 @@ Contract types (a `contract <name>` declaration lowers to streams through the pa
 | `Credit.Contract.InterestOnlyPool` | `credit.pool_io_bullet` | holder |  |
 | `Credit.Contract.FloatingInterestOnlyPool` | `credit.pool_float_io_bullet` | holder | Coupon resets off a declared reference rather than being fixed at origination. |
 | `Credit.Contract.Purchase` | `credit.purchase` | buyer, seller |  |
+| `Credit.Contract.Participation` | `credit.participation` | issuer, holder | A pro rata interest in a pool's cash, passed through to the holder each period — a pass-through certificate or a loan participation. Instanced with the suffix of the pool it participates in. |
 | `Credit.Contract.CleanUpCall` | (election) | holder | The issuer's right to retire the pool once it falls below a stated size. |
 
 Metrics: `domain.credit.interest`, `domain.credit.principal`, `domain.credit.recoveries`, `domain.credit.penalties`, `domain.credit.servicing`, `domain.credit.wal_years`, `domain.credit.collections`, `domain.credit.purchase`, `domain.credit.collections_multiple`
@@ -9333,6 +9336,7 @@ Templates (starting points; the `skeleton` MCP tool assembles them into a compil
 - `credit.pool_io_bullet` — Interest-only pool, bullet at maturity
 - `credit.pool_float_io_bullet` — Floating-rate IO pool, bullet at maturity
 - `credit.purchase` — Pool purchase price
+- `credit.participation` — Participation (pass-through of a pool's cash)
 
 ### Pack `energy` 0.1.0
 

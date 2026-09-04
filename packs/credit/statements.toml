@@ -190,6 +190,20 @@ depth = 1
 categories = ["investing.acquisition.purchase"]
 display = "positive"
 
+[[statements.rows]]
+kind = "line"
+label = "Passed through to holders: interest"
+depth = 1
+categories = ["financing.security.interest"]
+display = "positive"
+
+[[statements.rows]]
+kind = "line"
+label = "Passed through to holders: principal"
+depth = 1
+categories = ["financing.security.principal"]
+display = "positive"
+
 # The same collections, annually. A pool is modeled monthly because that is
 # how it amortizes; an investor report is read by year.
 [[statements]]
@@ -261,6 +275,20 @@ kind = "line"
 label = "Pool purchase"
 depth = 1
 categories = ["investing.acquisition.purchase"]
+display = "positive"
+
+[[statements.rows]]
+kind = "line"
+label = "Passed through to holders: interest"
+depth = 1
+categories = ["financing.security.interest"]
+display = "positive"
+
+[[statements.rows]]
+kind = "line"
+label = "Passed through to holders: principal"
+depth = 1
+categories = ["financing.security.principal"]
 display = "positive"
 
 # ---------------------------------------------------------------------------
@@ -359,6 +387,20 @@ depth = 1
 categories = ["investing.acquisition.purchase"]
 display = "positive"
 
+[[statements.rows]]
+kind = "line"
+label = "Passed through to holders: interest"
+depth = 1
+categories = ["financing.security.interest"]
+display = "positive"
+
+[[statements.rows]]
+kind = "line"
+label = "Passed through to holders: principal"
+depth = 1
+categories = ["financing.security.principal"]
+display = "positive"
+
 # Direct lending / private credit. Yield first: cash interest and fees are one
 # income line, and principal is a return OF capital rather than a return on it.
 [[statements]]
@@ -435,4 +477,18 @@ kind = "line"
 label = "Investments funded"
 depth = 1
 categories = ["investing.acquisition.purchase"]
+display = "positive"
+
+[[statements.rows]]
+kind = "line"
+label = "Passed through to holders: interest"
+depth = 1
+categories = ["financing.security.interest"]
+display = "positive"
+
+[[statements.rows]]
+kind = "line"
+label = "Passed through to holders: principal"
+depth = 1
+categories = ["financing.security.principal"]
 display = "positive"

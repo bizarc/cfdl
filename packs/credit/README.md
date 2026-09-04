@@ -184,6 +184,30 @@ Acquisition price paid at `term_start` (`price` term), stream
 different from face (e.g. 99.0 = `0.99 * balance`); the level_pay_pool
 benchmark purchases at a 1-point discount.
 
+### `credit.participation`
+
+A pro rata interest in a pool's cash, passed through to the holder each
+period — a Fannie Mae or Ginnie Mae pass-through, a Freddie Mac
+participation certificate, a loan participation. The first refinement of
+`Contract.Security` (`docs/40` §4.13): nothing is ranked and nothing is
+chosen, so both lines are lowered from the collateral rather than allocated
+by a priority of payments. Written from the issuer's seat: the two streams
+are outflows from the pool entity, and the model's net is what the issuer
+retains.
+
+| term | meaning | default |
+|---|---|---|
+| `face` | the certificate's original principal | required |
+| `share` | the holder's undivided share of the pool's cash, 0 to 1 | required |
+
+Streams `credit.participation.interest` (the pool's interest net of
+servicing, times the share; category `financing.security.interest`) and
+`credit.participation.principal` (scheduled principal, the bullet,
+prepayments and recoveries, times the share; `financing.security.principal`).
+Prepayment penalties stay with the issuer. A participation carries the
+SUFFIX of the pool it participates in: `credit.participation.smoke` reads
+`credit.pool.*.smoke`.
+
 ## Conventions
 
 - Defaults leave the pool at the start of the period and earn no interest

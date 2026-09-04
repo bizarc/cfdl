@@ -501,6 +501,32 @@ contract_name = "credit.purchase"
 subject_family = "asset"
 parties = ["buyer", "seller"]
 
+# A PARTICIPATION: an undivided pro rata interest in a pool's cash — a
+# Fannie Mae or Ginnie Mae pass-through, a Freddie Mac participation
+# certificate, a loan participation. The holder receives its share of what
+# the pool produced each period, scheduled and unscheduled principal alike,
+# and interest net of servicing; nothing is ranked and nothing is chosen, so
+# both lines are LOWERED from the collateral (docs/40 §4.13). Written from
+# the issuer's seat, as the pack is: the pass-through is an outflow from the
+# pool entity, and the model's net is what the issuer retains.
+#
+# The participation carries the SUFFIX of the pool it participates in:
+# `credit.participation.smoke` reads `credit.pool.*.smoke`.
+[[contracts]]
+type_id = "Credit.Contract.Participation"
+refines = "Contract.Security"
+contract_name = "credit.participation"
+subject_family = "asset"
+parties = ["issuer", "holder"]
+description = "A pro rata interest in a pool's cash, passed through to the holder each period — a pass-through certificate or a loan participation. Instanced with the suffix of the pool it participates in."
+
+[[contracts.fields]]
+name = "share"
+field_type = "decimal"
+required = true
+unit = "ratio"
+description = "The holder's undivided share of the pool's cash, 0 to 1."
+
 # --- Options: contracts with an election ---------------------------------
 
 [[contracts]]

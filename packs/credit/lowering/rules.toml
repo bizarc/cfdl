@@ -747,3 +747,41 @@ amount_expr = "{{contract.price}}"
 schedule_kind = "on_date"
 schedule_from = "{{contract.term_start}}"
 schedule_to = ""
+
+# ---------------------------------------------------------------------------
+# credit.participation — a pro rata interest in a pool's cash, passed through.
+#
+# The holder's share of what the pool produced this period. Interest is the
+# pool's interest net of servicing (the servicing stream is already negative,
+# so the two are added); principal is everything the pool returned — scheduled,
+# the bullet on an interest-only pool, prepayments and recoveries — because a
+# pass-through's holder receives unscheduled principal as it arrives.
+# Prepayment penalties stay with the issuer. Same-period reads of the pool's
+# own streams, as the opco pack's working-capital rule reads revenue.
+# ---------------------------------------------------------------------------
+
+[[rules]]
+id = "credit_participation_interest"
+contract_name = "credit.participation"
+line = "interest"
+stream_name = "credit.participation.interest{{contract.dot_suffix}}"
+owner_entity = "${subject}"
+direction = "outflow"
+category = "financing.security.interest"
+amount_expr = "{{contract.share}} * (series_sum(\"credit.pool.interest{{contract.dot_suffix}}\", time.t, time.t) + series_sum(\"credit.pool.servicing{{contract.dot_suffix}}\", time.t, time.t))"
+schedule_kind = "every"
+schedule_from = "{{contract.term_start}}"
+schedule_to = "{{contract.term_end}}"
+
+[[rules]]
+id = "credit_participation_principal"
+contract_name = "credit.participation"
+line = "principal"
+stream_name = "credit.participation.principal{{contract.dot_suffix}}"
+owner_entity = "${subject}"
+direction = "outflow"
+category = "financing.security.principal"
+amount_expr = "{{contract.share}} * (series_sum(\"credit.pool.sched_principal{{contract.dot_suffix}}\", time.t, time.t) + series_sum(\"credit.pool.bullet{{contract.dot_suffix}}\", time.t, time.t) + series_sum(\"credit.pool.prepay{{contract.dot_suffix}}\", time.t, time.t) + series_sum(\"credit.pool.recoveries{{contract.dot_suffix}}\", time.t, time.t))"
+schedule_kind = "every"
+schedule_from = "{{contract.term_start}}"
+schedule_to = "{{contract.term_end}}"

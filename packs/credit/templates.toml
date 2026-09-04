@@ -95,3 +95,21 @@ contract credit.purchase.pool_a {
 term_start = "2026-01"
 price = "0"
 
+[[templates]]
+id = "credit.participation"
+label = "Participation (pass-through of a pool's cash)"
+kind = "contract"
+body = """
+contract credit.participation.pool_a {
+  term ${term_start}..${term_end}
+  terms {
+    face = ${face}
+    share = ${share}
+  }
+}
+"""
+[templates.defaults]
+term_start = "2026-01"
+term_end = "2031-12"
+face = "10000000"
+share = "1.0"

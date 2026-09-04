@@ -494,15 +494,15 @@ impl PackOntology {
                 master("Contract.Security", &["issuer", "holder"],
                     vec![
                         field("face", "decimal", true, None, None, "The initial principal amount — what the holder is owed at issuance."),
-                        field("coupon", "decimal", false, Some("ratio"), Some("coupon"), "Annual coupon, where fixed."),
-                        field("index_curve", "string", false, None, Some("coupon"), "The declared curve a floating coupon resets off, with `margin`."),
+                        field("coupon", "decimal", false, Some("ratio"), None, "Annual coupon, where the security's interest is struck on its own terms and the coupon is fixed; a pass-through's interest follows the collateral and states none."),
+                        field("index_curve", "string", false, None, None, "The declared curve a floating coupon resets off, with `margin`."),
                         field("margin", "decimal", false, Some("ratio"), None, "Spread over `index_curve`."),
                         field("payment_frequency", "string", false, None, None, "The payment dates' rhythm; the calendar's when absent."),
                         field("day_count", "string", false, None, None, "Accrual convention; the model's when absent."),
                     ],
                     vec![
-                        line("interest", "The coupon on the outstanding claim, each payment date."),
-                        allocated("principal", "What the priority of payments pays the holder — a step into the holder's account; the claim is face less what the account has received."),
+                        line("interest", "The coupon on the outstanding claim, each payment date. Lowered by a pass-through's share of the collateral, or allocated by a structure's priority of payments — the refinement says which."),
+                        line("principal", "Return of the face. A pass-through lowers it as its share of what the collateral returned, scheduled and unscheduled; a structured note marks it allocated, and the claim is face less what the holder's account has received."),
                         optional("proceeds", "Issuance proceeds, where the model starts at issuance."),
                         optional("premium", "A make-whole or prepayment premium on early redemption."),
                         optional("redemption", "A call at a stated price, retiring the class early."),
@@ -517,7 +517,7 @@ impl PackOntology {
                     ],
                     vec![
                         line("contribution", "The commitment funded on its call schedule — the one cash an equity agreement produces by its own terms."),
-                        allocated("distribution", "What the priority of distributions pays the holder — return of capital, preference, promote — as steps into the holder's account."),
+                        line("distribution", "What the holder is paid: a pro rata share lowered by rule, or — where a priority of distributions decides it (return of capital, preference, promote) — allocated as steps into the holder's account, which the refinement marks."),
                     ],
                     None,
                     "An ownership interest — a partnership, LLC, JV or fund interest, a preferred share, a residual certificate. An LPA's contribution, capital-account and distribution articles."),
@@ -766,7 +766,12 @@ impl PackOntology {
         let mut lines: Vec<OntologyLine> = Vec::new();
         for contract in self.contract_chain(type_id).iter().rev() {
             for line in &contract.lines {
-                if !lines.iter().any(|l| l.name == line.name) {
+                // A refinement's redeclaration wins: that is how a structured
+                // note marks the master's `principal` ALLOCATED where a
+                // pass-through leaves it lowered (docs/40 §6).
+                if let Some(existing) = lines.iter_mut().find(|l| l.name == line.name) {
+                    *existing = line.clone();
+                } else {
                     lines.push(line.clone());
                 }
             }
@@ -2639,6 +2644,23 @@ fn parse_ontology(raw: &str, source: &str, pack_name: &str) -> Result<PackOntolo
                             contract.type_id, own.name
                         ),
                     });
+                }
+            }
+            // A LINE MAY BE MARKED ALLOCATED BY A REFINEMENT, never un-marked:
+            // the pack saying the structure pays it is a fact about the form
+            // of the agreement, and a master that says the structure pays a
+            // line (a guarantee's claim) is not overruled by a refinement.
+            let inherited_lines = merged_view.effective_lines(parent_id);
+            for own in &contract.lines {
+                if let Some(master_line) = inherited_lines.iter().find(|l| l.name == own.name) {
+                    if master_line.allocated && !own.allocated {
+                        return Err(PackLoadError {
+                            message: format!(
+                                "Ontology '{source}': contract '{}' redeclares line '{}' as lowered, but '{parent_id}' declares it allocated. A refinement may mark a line allocated, never the reverse.",
+                                contract.type_id, own.name
+                            ),
+                        });
+                    }
                 }
             }
             // ROLES SPECIALIZE, AND EVERY MASTER ROLE IS COVERED (docs/40 §5).
@@ -5074,11 +5096,15 @@ type_id = "T.Contract.Note"
 contract_name = "t.note"
 parties = ["issuer", "holder"]
 refines = "Contract.Security"
+
+[[contracts.lines]]
+name = "principal"
+allocated = true
 "#,
             "test",
             "t",
         )
-        .expect("ontology parses");
+        .expect("a refinement marks the master's line allocated");
         let rule = |line: &str| LoweringRule {
             id: format!("t_note_{line}"),
             contract_name: "t.note".to_string(),
@@ -5129,6 +5155,28 @@ refines = "Contract.Security"
             .collect();
         assert!(lines.contains(&("principal".to_string(), true, false)));
         assert!(lines.contains(&("proceeds".to_string(), false, true)));
+        // The master leaves principal lowered — a pass-through's shape.
+        assert!(PackOntology::language_base()
+            .effective_lines("Contract.Security")
+            .iter()
+            .any(|l| l.name == "principal" && !l.allocated));
+        // A master's allocated line cannot be un-marked by a refinement.
+        let err = parse_ontology(
+            r#"
+[[contracts]]
+type_id = "T.Contract.Backstop"
+contract_name = "t.backstop"
+parties = ["guarantor", "beneficiary", "obligor"]
+refines = "Contract.Guarantee"
+
+[[contracts.lines]]
+name = "claim"
+"#,
+            "test",
+            "t",
+        )
+        .expect_err("un-marking is refused");
+        assert!(err.message.contains("never the reverse"), "{}", err.message);
     }
 
     #[test]
