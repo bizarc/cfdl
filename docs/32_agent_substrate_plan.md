@@ -62,7 +62,7 @@ MCP cannot drift.
 | `run` | IR (or source) + run-config → results per `docs/06` | `cfdl-engine` |
 | `diff` | results × expected (csv/metrics) → first divergence, per-period deltas | the benchmark runner's comparison |
 | `explain` | a series + period → the journal slice that produced the number | journal reader |
-| `lookup` | a term → glossary/terminology entry; a pack → its contract roster and each rule's §7.3 status | `terminology.toml`, pack ontology |
+| `lookup` | a term → glossary/terminology entry; a pack → its contract roster read against the master chain (effective fields, roles, lines), the masters it refines, and each rule's §7.3 status | `terminology.toml`, pack ontology, language base |
 | `skeleton` | a domain + shape → a minimal valid model to grow (the CASE.md "what it exercises" grid in reverse) | templates from existing cases |
 
 **Contract:** every tool's output is already a published schema or becomes a

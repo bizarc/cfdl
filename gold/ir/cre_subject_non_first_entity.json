@@ -217,7 +217,8 @@
             "name": "cre",
             "version": "0.1.0"
           },
-          "rule_id": "cre_revenue_line"
+          "rule_id": "cre_revenue_line",
+          "contract": "cre.revenue_line"
         }
       }
     }

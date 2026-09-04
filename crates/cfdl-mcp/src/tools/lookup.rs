@@ -45,16 +45,67 @@ pub struct TermEntry {
     pub note: Option<String>,
 }
 
+/// A role of a contract type, resolved through its master chain (docs/40 §5).
+#[derive(Debug, Serialize, JsonSchema)]
+pub struct RoleInfo {
+    /// The word a model binds — the pack's (`landlord`).
+    pub name: String,
+    /// The master's word for it (`lessor`); the same as `name` where the
+    /// pack inherits the master's word.
+    pub master: String,
+    /// The agreement has no such party in this form; a model may not bind it.
+    #[serde(skip_serializing_if = "std::ops::Not::not")]
+    pub unbound: bool,
+}
+
+/// A term of a contract type — its effective roster, the masters' fields
+/// included (docs/40 §3). What `terms { }` may state.
+#[derive(Debug, Serialize, JsonSchema)]
+pub struct FieldInfo {
+    pub name: String,
+    pub field_type: String,
+    #[serde(skip_serializing_if = "std::ops::Not::not")]
+    pub required: bool,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub unit: Option<String>,
+    /// Fields sharing a group are alternatives; a contract states at least one.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub one_of: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub description: Option<String>,
+}
+
 #[derive(Debug, Serialize, JsonSchema)]
 pub struct ContractInfo {
     pub type_id: String,
     /// The lowering rule this type binds to. Absent means an election — an
-    /// option the engine resolves rather than a rule a pack lowers.
+    /// option the engine resolves rather than a rule a pack lowers — or a
+    /// master, which is never declared.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub contract_name: Option<String>,
     pub election: bool,
+    /// A master: exists to be refined, never declared (docs/40 §2).
+    #[serde(rename = "abstract", skip_serializing_if = "std::ops::Not::not")]
+    pub is_abstract: bool,
+    /// The type this one refines; absent on a master.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub refines: Option<String>,
+    /// The master at the root of the chain — itself for a master.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub master: Option<String>,
+    /// The type's effective roles, the master's word beside the pack's.
     #[serde(skip_serializing_if = "Vec::is_empty")]
-    pub parties: Vec<String>,
+    pub roles: Vec<RoleInfo>,
+    /// The type's effective terms — what `terms { }` may state, and must.
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub fields: Vec<FieldInfo>,
+    /// The lines of cash the type produces, by role (`interest`, `rent`).
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub lines: Vec<String>,
+    /// Which way cash runs for the subject — `pays` or `receives` — where the
+    /// type fixes it.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub side: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub description: Option<String>,
     /// Benchmark cases declaring `contract <pack>.<type>` — the §7.3
@@ -79,7 +130,13 @@ pub struct PackInfo {
     pub description: Option<String>,
     /// Model calendars this pack's rules lower correctly on (empty = all).
     pub cadences: Vec<String>,
+    /// The pack's own contract types, each resolved against its master chain.
     pub contracts: Vec<ContractInfo>,
+    /// The language-base masters this pack's types refine (docs/40 §4), with
+    /// the fields, roles and lines every refinement inherits. What "a debt"
+    /// means before any pack's word for one.
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub masters: Vec<ContractInfo>,
     pub templates: Vec<TemplateInfo>,
     /// Domain metric output keys (e.g. `domain.cre.noi`).
     pub metrics: Vec<String>,
@@ -243,16 +300,66 @@ fn pack_info(
         .map(|dir| scan_contract_coverage(&dir, pack_name))
         .transpose()?;
 
+    // The pack's types are read against the merged view: a refinement's
+    // roster is its master's plus its own, and the master lives in the base.
+    let merged = pack.ontology.merged_with_base();
+    let describe = |contract: &cfdl_pack::OntologyContract| ContractInfo {
+        type_id: contract.type_id.clone(),
+        contract_name: contract.contract_name.clone(),
+        election: !contract.is_abstract && contract.contract_name.is_none(),
+        is_abstract: contract.is_abstract,
+        refines: contract.refines.clone(),
+        master: merged.master_of(&contract.type_id),
+        roles: merged
+            .effective_roles(&contract.type_id)
+            .into_iter()
+            .map(|r| RoleInfo {
+                name: r.name,
+                master: r.master,
+                unbound: r.unbound,
+            })
+            .collect(),
+        fields: merged
+            .effective_fields(&contract.type_id)
+            .into_iter()
+            .map(|f| FieldInfo {
+                name: f.name,
+                field_type: f.field_type,
+                required: f.required,
+                unit: f.unit,
+                one_of: f.one_of,
+                description: f.description,
+            })
+            .collect(),
+        lines: merged
+            .effective_lines(&contract.type_id)
+            .into_iter()
+            .map(|l| l.name)
+            .collect(),
+        side: merged.effective_side(&contract.type_id),
+        description: contract.description.clone(),
+        exercised_by: None,
+    };
+    let mut master_ids: Vec<String> = pack
+        .ontology
+        .contracts
+        .iter()
+        .filter_map(|c| merged.master_of(&c.type_id))
+        .filter(|m| pack.ontology.contract(m).is_none())
+        .collect();
+    master_ids.sort_unstable();
+    master_ids.dedup();
+    let masters: Vec<ContractInfo> = master_ids
+        .iter()
+        .filter_map(|id| merged.contract(id))
+        .map(describe)
+        .collect();
+
     let contracts = pack
         .ontology
         .contracts
         .iter()
         .map(|contract| ContractInfo {
-            type_id: contract.type_id.clone(),
-            contract_name: contract.contract_name.clone(),
-            election: contract.contract_name.is_none(),
-            parties: contract.parties.clone(),
-            description: contract.description.clone(),
             // A declaration `contract cre.lease_unit.tenant_a` exercises the
             // type whose contract_name is `cre.lease_unit`: instance names
             // extend the contract name with further segments.
@@ -275,6 +382,7 @@ fn pack_info(
                         acc
                     })
             }),
+            ..describe(contract)
         })
         .collect();
 
@@ -284,6 +392,7 @@ fn pack_info(
         description: pack.manifest.description.clone(),
         cadences: pack.manifest.cadences.clone(),
         contracts,
+        masters,
         templates: pack
             .templates
             .iter()

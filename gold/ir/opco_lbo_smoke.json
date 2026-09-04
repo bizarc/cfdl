@@ -450,7 +450,8 @@
             "name": "opco",
             "version": "0.1.0"
           },
-          "rule_id": "opco_acquisition_price"
+          "rule_id": "opco_acquisition_price",
+          "contract": "opco.acquisition"
         }
       }
     },
@@ -490,7 +491,8 @@
             "name": "opco",
             "version": "0.1.0"
           },
-          "rule_id": "opco_capex_line"
+          "rule_id": "opco_capex_line",
+          "contract": "opco.capex_line"
         }
       }
     },
@@ -530,7 +532,8 @@
             "name": "opco",
             "version": "0.1.0"
           },
-          "rule_id": "opco_term_debt_interest"
+          "rule_id": "opco_term_debt_interest",
+          "contract": "opco.term_debt"
         }
       }
     },
@@ -570,7 +573,8 @@
             "name": "opco",
             "version": "0.1.0"
           },
-          "rule_id": "opco_term_debt_principal"
+          "rule_id": "opco_term_debt_principal",
+          "contract": "opco.term_debt"
         }
       }
     },
@@ -608,7 +612,8 @@
             "name": "opco",
             "version": "0.1.0"
           },
-          "rule_id": "opco_term_debt_proceeds"
+          "rule_id": "opco_term_debt_proceeds",
+          "contract": "opco.term_debt"
         }
       }
     },
@@ -647,7 +652,8 @@
             "name": "opco",
             "version": "0.1.0"
           },
-          "rule_id": "opco_exit_ebitda_selling_costs"
+          "rule_id": "opco_exit_ebitda_selling_costs",
+          "contract": "opco.exit_ebitda"
         }
       }
     },
@@ -686,7 +692,8 @@
             "name": "opco",
             "version": "0.1.0"
           },
-          "rule_id": "opco_exit_ebitda"
+          "rule_id": "opco_exit_ebitda",
+          "contract": "opco.exit_ebitda"
         }
       }
     },
@@ -726,7 +733,8 @@
             "name": "opco",
             "version": "0.1.0"
           },
-          "rule_id": "opco_opex_line"
+          "rule_id": "opco_opex_line",
+          "contract": "opco.opex_line"
         }
       }
     },
@@ -766,7 +774,8 @@
             "name": "opco",
             "version": "0.1.0"
           },
-          "rule_id": "opco_revenue_line"
+          "rule_id": "opco_revenue_line",
+          "contract": "opco.revenue_line"
         }
       }
     },
@@ -806,7 +815,8 @@
             "name": "opco",
             "version": "0.1.0"
           },
-          "rule_id": "opco_cash_taxes"
+          "rule_id": "opco_cash_taxes",
+          "contract": "opco.cash_taxes"
         }
       }
     },
@@ -846,7 +856,8 @@
             "name": "opco",
             "version": "0.1.0"
           },
-          "rule_id": "opco_working_capital_policy"
+          "rule_id": "opco_working_capital_policy",
+          "contract": "opco.working_capital_policy"
         }
       }
     }

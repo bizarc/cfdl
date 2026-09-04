@@ -435,7 +435,8 @@
             "name": "energy",
             "version": "0.1.0"
           },
-          "rule_id": "energy_capacity_payment"
+          "rule_id": "energy_capacity_payment",
+          "contract": "energy.capacity"
         }
       }
     },
@@ -473,7 +474,8 @@
             "name": "energy",
             "version": "0.1.0"
           },
-          "rule_id": "energy_capex"
+          "rule_id": "energy_capex",
+          "contract": "energy.capex"
         }
       }
     },
@@ -513,7 +515,8 @@
             "name": "energy",
             "version": "0.1.0"
           },
-          "rule_id": "energy_debt_interest"
+          "rule_id": "energy_debt_interest",
+          "contract": "energy.debt_service"
         }
       }
     },
@@ -553,7 +556,8 @@
             "name": "energy",
             "version": "0.1.0"
           },
-          "rule_id": "energy_debt_principal"
+          "rule_id": "energy_debt_principal",
+          "contract": "energy.debt_service"
         }
       }
     },
@@ -591,7 +595,8 @@
             "name": "energy",
             "version": "0.1.0"
           },
-          "rule_id": "energy_debt_proceeds"
+          "rule_id": "energy_debt_proceeds",
+          "contract": "energy.debt_service"
         }
       }
     },
@@ -629,7 +634,8 @@
             "name": "energy",
             "version": "0.1.0"
           },
-          "rule_id": "energy_itc_credit"
+          "rule_id": "energy_itc_credit",
+          "contract": "energy.itc"
         }
       }
     },
@@ -669,7 +675,8 @@
             "name": "energy",
             "version": "0.1.0"
           },
-          "rule_id": "energy_om_expense"
+          "rule_id": "energy_om_expense",
+          "contract": "energy.om"
         }
       }
     },
@@ -709,7 +716,8 @@
             "name": "energy",
             "version": "0.1.0"
           },
-          "rule_id": "energy_ppa_revenue"
+          "rule_id": "energy_ppa_revenue",
+          "contract": "energy.ppa"
         }
       }
     },
@@ -749,7 +757,8 @@
             "name": "energy",
             "version": "0.1.0"
           },
-          "rule_id": "energy_storage_arbitrage"
+          "rule_id": "energy_storage_arbitrage",
+          "contract": "energy.storage_arbitrage"
         }
       }
     }

@@ -1,7 +1,7 @@
 {
-  "results_version": "0.12",
-  "model_hash": "4f6e8f9e22a1812f272b5781096fa70c9f0bf917cc6558c5b44c1e5e7fdf3f68",
-  "ledger_hash": "d199f86fb1bfc4a3d91914786376e3f0ae6dd4f0fa7792857f9c0711e0feda96",
+  "results_version": "0.13",
+  "model_hash": "e0b12f4ec69422d4d8799d8ea45d1855c1b0e40269f1745fef374c55dd50511c",
+  "ledger_hash": "125f7fc20f107a7eaae04e419f531c565d6393a8989f2e306ba1677322b9fde1",
   "engine": {
     "name": "cfdl-engine",
     "version": "0.9.0"
@@ -221,6 +221,7 @@
         "offset": 1.0,
         "entity": "asset.plant",
         "category": "operating.income_tax.benefit",
+        "contract": "energy.ptc",
         "values": [
           {
             "amount": 7000000.0,
@@ -304,6 +305,18 @@
         "symbol": "asset.plant",
         "family": "asset",
         "type": "Energy.Asset.GenerationFacility"
+      }
+    ],
+    "contracts": [
+      {
+        "name": "energy.ptc",
+        "type": "Energy.Contract.ProductionTaxCredit",
+        "master": "Contract.Tax",
+        "contract_name": "energy.ptc",
+        "subject": "asset.plant",
+        "streams": [
+          "energy.ptc.credit"
+        ]
       }
     ]
   }

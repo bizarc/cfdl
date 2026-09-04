@@ -1,7 +1,7 @@
 {
-  "results_version": "0.12",
-  "model_hash": "aca600c51c9d7099f37d8e5b715a810fb5f061595fd4d8a752ea6b0448c84418",
-  "ledger_hash": "6da4f475c13addb5f339b9b6870895948b58fbc56c7b1c98af2cbcad4794a662",
+  "results_version": "0.13",
+  "model_hash": "833cd9fbf071001fa496e553548b67d432cb38835b375825a2d8e8a94f3f7813",
+  "ledger_hash": "3bbfd72a13d3b84fc000e261e3fca48a722129b8c38a0cd69ccabf3a7cb82df7",
   "engine": {
     "name": "cfdl-engine",
     "version": "0.9.0"
@@ -1039,6 +1039,7 @@
         "offset": 1.0,
         "entity": "asset.annex",
         "category": "operating.revenue.other",
+        "contract": "cre.revenue_line",
         "values": [
           {
             "amount": 30000.0,
@@ -1572,6 +1573,18 @@
         "symbol": "asset.primary",
         "family": "asset",
         "type": "CRE.Asset.RealProperty"
+      }
+    ],
+    "contracts": [
+      {
+        "name": "cre.revenue_line",
+        "type": "CRE.Contract.OperatingRevenue",
+        "master": "Contract.Line",
+        "contract_name": "cre.revenue_line",
+        "subject": "asset.annex",
+        "streams": [
+          "cre.revenue.line"
+        ]
       }
     ]
   }

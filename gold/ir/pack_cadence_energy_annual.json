@@ -312,7 +312,8 @@
             "name": "energy",
             "version": "0.1.0"
           },
-          "rule_id": "energy_capacity_payment"
+          "rule_id": "energy_capacity_payment",
+          "contract": "energy.capacity"
         }
       }
     },
@@ -352,7 +353,8 @@
             "name": "energy",
             "version": "0.1.0"
           },
-          "rule_id": "energy_om_expense"
+          "rule_id": "energy_om_expense",
+          "contract": "energy.om"
         }
       }
     },
@@ -392,7 +394,8 @@
             "name": "energy",
             "version": "0.1.0"
           },
-          "rule_id": "energy_ppa_revenue"
+          "rule_id": "energy_ppa_revenue",
+          "contract": "energy.ppa"
         }
       }
     }

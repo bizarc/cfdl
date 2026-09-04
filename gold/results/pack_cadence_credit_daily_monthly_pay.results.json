@@ -1,7 +1,7 @@
 {
-  "results_version": "0.12",
-  "model_hash": "19af2ddabc428f260f38513f808a48091d07c3b09bc8175c6487a057ea18e01d",
-  "ledger_hash": "b76daabdd6afc6e922bafd72df6d2b9dd235d709f58954bcd4706cf67b524d5c",
+  "results_version": "0.13",
+  "model_hash": "12760d0d8f15801d8dae75e961846cd14d05b6e1ce98982188ac85441881e513",
+  "ledger_hash": "86f57077cd627c29dcb28346a269fe4f960214cd0d3a20e90693067d2fc2e481",
   "engine": {
     "name": "cfdl-engine",
     "version": "0.9.0"
@@ -56063,6 +56063,7 @@
         "offset": 1.0,
         "entity": "asset.buyer",
         "category": "operating.collection.interest",
+        "contract": "credit.pool_level_pay.book",
         "values": [
           {
             "amount": 0.0,
@@ -60819,6 +60820,7 @@
         "offset": 1.0,
         "entity": "asset.buyer",
         "category": "operating.collection.penalty",
+        "contract": "credit.pool_level_pay.book",
         "values": [
           {
             "amount": 0.0,
@@ -65575,6 +65577,7 @@
         "offset": 1.0,
         "entity": "asset.buyer",
         "category": "operating.collection.prepayment",
+        "contract": "credit.pool_level_pay.book",
         "values": [
           {
             "amount": 0.0,
@@ -70331,6 +70334,7 @@
         "offset": 1.0,
         "entity": "asset.buyer",
         "category": "operating.collection.recovery",
+        "contract": "credit.pool_level_pay.book",
         "values": [
           {
             "amount": 0.0,
@@ -75087,6 +75091,7 @@
         "offset": 1.0,
         "entity": "asset.buyer",
         "category": "operating.collection.principal",
+        "contract": "credit.pool_level_pay.book",
         "values": [
           {
             "amount": 0.0,
@@ -79843,6 +79848,7 @@
         "offset": 1.0,
         "entity": "asset.buyer",
         "category": "operating.expense.servicing",
+        "contract": "credit.pool_level_pay.book",
         "values": [
           {
             "amount": 0.0,
@@ -90995,6 +91001,24 @@
         "symbol": "asset.buyer",
         "family": "asset",
         "type": "Credit.Asset.LoanPool"
+      }
+    ],
+    "contracts": [
+      {
+        "name": "credit.pool_level_pay.book",
+        "type": "Credit.Contract.LevelPayPool",
+        "master": "Contract.Debt",
+        "contract_name": "credit.pool_level_pay",
+        "instance": "book",
+        "subject": "asset.buyer",
+        "streams": [
+          "credit.pool.interest.book",
+          "credit.pool.penalty.book",
+          "credit.pool.prepay.book",
+          "credit.pool.recoveries.book",
+          "credit.pool.sched_principal.book",
+          "credit.pool.servicing.book"
+        ]
       }
     ]
   }

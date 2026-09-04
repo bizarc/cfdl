@@ -1,7 +1,7 @@
 {
-  "results_version": "0.12",
-  "model_hash": "fbe9893ddc35cf1d54152c4e9bfa33eee8cecfbc3773e0e713a01b9012fe58a5",
-  "ledger_hash": "f8c08371fa2f1cc0e83e79c12cbf88185fc57ce7d6f1bcd3052444781916ea96",
+  "results_version": "0.13",
+  "model_hash": "2f14027b1706874c71e761c8919855381a371b7b2186083335794e9bbc9e8f42",
+  "ledger_hash": "7bf665689546e4393877848495954978ed703dd9116ee65c597306cabdbfbf8f",
   "engine": {
     "name": "cfdl-engine",
     "version": "0.9.0"
@@ -2407,6 +2407,7 @@
         "offset": 1.0,
         "entity": "asset.property",
         "category": "investing.disposal.reversion",
+        "contract": "cre.exit_cap",
         "values": [
           {
             "amount": 0.0,
@@ -2659,6 +2660,7 @@
         "offset": 1.0,
         "entity": "asset.property",
         "category": "operating.expense.opex",
+        "contract": "cre.opex_line",
         "values": [
           {
             "amount": -63600.0,
@@ -2911,6 +2913,7 @@
         "offset": 1.0,
         "entity": "asset.property",
         "category": "operating.revenue.other",
+        "contract": "cre.revenue_line",
         "values": [
           {
             "amount": 175750.0,
@@ -3920,6 +3923,38 @@
         "symbol": "asset.property",
         "family": "asset",
         "type": "CRE.Asset.RealProperty"
+      }
+    ],
+    "contracts": [
+      {
+        "name": "cre.exit_cap",
+        "type": "CRE.Contract.DispositionAtCap",
+        "master": "Contract.Sale",
+        "contract_name": "cre.exit_cap",
+        "subject": "asset.property",
+        "streams": [
+          "cre.exit.sale"
+        ]
+      },
+      {
+        "name": "cre.opex_line",
+        "type": "CRE.Contract.OperatingExpense",
+        "master": "Contract.Line",
+        "contract_name": "cre.opex_line",
+        "subject": "asset.property",
+        "streams": [
+          "cre.opex.line"
+        ]
+      },
+      {
+        "name": "cre.revenue_line",
+        "type": "CRE.Contract.OperatingRevenue",
+        "master": "Contract.Line",
+        "contract_name": "cre.revenue_line",
+        "subject": "asset.property",
+        "streams": [
+          "cre.revenue.line"
+        ]
       }
     ]
   }

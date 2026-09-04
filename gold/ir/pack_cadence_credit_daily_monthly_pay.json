@@ -272,7 +272,8 @@
             "name": "credit",
             "version": "0.1.0"
           },
-          "rule_id": "credit_pool_level_pay_interest"
+          "rule_id": "credit_pool_level_pay_interest",
+          "contract": "credit.pool_level_pay.book"
         }
       }
     },
@@ -312,7 +313,8 @@
             "name": "credit",
             "version": "0.1.0"
           },
-          "rule_id": "credit_pool_level_pay_penalty"
+          "rule_id": "credit_pool_level_pay_penalty",
+          "contract": "credit.pool_level_pay.book"
         }
       }
     },
@@ -352,7 +354,8 @@
             "name": "credit",
             "version": "0.1.0"
           },
-          "rule_id": "credit_pool_level_pay_prepay"
+          "rule_id": "credit_pool_level_pay_prepay",
+          "contract": "credit.pool_level_pay.book"
         }
       }
     },
@@ -392,7 +395,8 @@
             "name": "credit",
             "version": "0.1.0"
           },
-          "rule_id": "credit_pool_level_pay_recoveries"
+          "rule_id": "credit_pool_level_pay_recoveries",
+          "contract": "credit.pool_level_pay.book"
         }
       }
     },
@@ -432,7 +436,8 @@
             "name": "credit",
             "version": "0.1.0"
           },
-          "rule_id": "credit_pool_level_pay_sched_principal"
+          "rule_id": "credit_pool_level_pay_sched_principal",
+          "contract": "credit.pool_level_pay.book"
         }
       }
     },
@@ -472,7 +477,8 @@
             "name": "credit",
             "version": "0.1.0"
           },
-          "rule_id": "credit_pool_level_pay_servicing"
+          "rule_id": "credit_pool_level_pay_servicing",
+          "contract": "credit.pool_level_pay.book"
         }
       }
     }

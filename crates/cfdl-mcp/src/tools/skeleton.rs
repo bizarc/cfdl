@@ -96,16 +96,47 @@ pub fn skeleton(params: &SkeletonParams, defaults: &Defaults) -> Result<Skeleton
             vec![first]
         }
     };
+    let merged = pack.ontology.merged_with_base();
     let mut chosen = Vec::new();
     for want in &wanted {
+        // An ontology type id (`CRE.Contract.PermanentDebt`) names the same
+        // template as the pack's name for it (`cre.permanent_debt`).
+        let want: &str = match merged.contract(want) {
+            Some(typed) if !typed.is_abstract => typed.contract_name.as_deref().unwrap_or(want),
+            _ => want,
+        };
         let found = pack.templates.iter().find(|t| {
             let after_pack =
                 t.id.strip_prefix(&format!("{}.", params.pack))
                     .unwrap_or(&t.id);
-            t.id == *want || after_pack == want || after_pack.starts_with(&format!("{want}."))
+            t.id == want || after_pack == want || after_pack.starts_with(&format!("{want}."))
         });
         match found {
             Some(template) => chosen.push(template.clone()),
+            // A MASTER IS REFINED, NEVER DECLARED (docs/40 §2): asked for "a
+            // debt", the answer is the pack's debts, so the caller picks one.
+            None if merged.contract(want).is_some_and(|t| t.is_abstract) => {
+                let mut refinements: Vec<String> = pack
+                    .ontology
+                    .contracts
+                    .iter()
+                    .filter(|c| !c.is_abstract && merged.is_a(&c.type_id, want))
+                    .filter_map(|c| c.contract_name.clone())
+                    .collect();
+                refinements.sort_unstable();
+                return Err(if refinements.is_empty() {
+                    format!(
+                        "'{want}' is a master and pack '{}' refines it with no type; a master is never declared",
+                        params.pack
+                    )
+                } else {
+                    format!(
+                        "'{want}' is a master; pack '{}' refines it as {} — name one of those",
+                        params.pack,
+                        refinements.join(", ")
+                    )
+                });
+            }
             None => {
                 let available: Vec<&str> = pack.templates.iter().map(|t| t.id.as_str()).collect();
                 return Err(format!(

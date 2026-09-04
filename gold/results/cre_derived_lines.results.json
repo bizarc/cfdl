@@ -1,7 +1,7 @@
 {
-  "results_version": "0.12",
-  "model_hash": "11bcf419e816162f9765b30249a5501a336031df4bd3312c5e4e99dd8d6c90ca",
-  "ledger_hash": "3034ec0e06c367c9e198d2fecb271ddc43acfb68277d8f2f5f0706a83a4db890",
+  "results_version": "0.13",
+  "model_hash": "99af869d28844c4e08d7cbe57d2778715d5fa68df09f9bcf68aa54be23fb2495",
+  "ledger_hash": "d75abe25c415680a963d50b81e721941f888adac92904c01107fb5d7918768f2",
   "engine": {
     "name": "cfdl-engine",
     "version": "0.9.0"
@@ -3024,6 +3024,7 @@
         "offset": 1.0,
         "entity": "asset.strip_center",
         "category": "investing.disposal.reversion",
+        "contract": "cre.exit",
         "values": [
           {
             "amount": 0.0,
@@ -3372,6 +3373,7 @@
         "offset": 1.0,
         "entity": "asset.strip_center",
         "category": "investing.disposal.selling_costs",
+        "contract": "cre.exit",
         "values": [
           {
             "amount": 0.0,
@@ -3720,6 +3722,7 @@
         "offset": 1.0,
         "entity": "asset.strip_center",
         "category": "operating.expense.opex",
+        "contract": "cre.opex_line",
         "values": [
           {
             "amount": -20000.0,
@@ -4068,6 +4071,7 @@
         "offset": 1.0,
         "entity": "asset.strip_center",
         "category": "operating.expense.opex",
+        "contract": "cre.opex_line.management",
         "values": [
           {
             "amount": -1746.0,
@@ -4416,6 +4420,7 @@
         "offset": 1.0,
         "entity": "asset.strip_center",
         "category": "operating.deduction.abatement",
+        "contract": "cre.lease_unit.anchor",
         "values": [
           {
             "amount": 0.0,
@@ -4764,6 +4769,7 @@
         "offset": 1.0,
         "entity": "asset.strip_center",
         "category": "operating.revenue.base_rent",
+        "contract": "cre.lease_unit.anchor",
         "values": [
           {
             "amount": 45000.0,
@@ -5112,6 +5118,7 @@
         "offset": 1.0,
         "entity": "asset.strip_center",
         "category": "operating.revenue.recovery",
+        "contract": "cre.lease_unit.anchor",
         "values": [
           {
             "amount": 0.0,
@@ -5460,6 +5467,7 @@
         "offset": 0.0,
         "entity": "asset.strip_center",
         "category": "investing.capital.leasing",
+        "contract": "cre.lease_unit.anchor",
         "values": [
           {
             "amount": -210000.0,
@@ -5808,6 +5816,7 @@
         "offset": 1.0,
         "entity": "asset.strip_center",
         "category": "operating.deduction.vacancy",
+        "contract": "cre.vacancy_loss",
         "values": [
           {
             "amount": -1350.0,
@@ -7240,6 +7249,64 @@
         "symbol": "asset.strip_center",
         "family": "asset",
         "type": "CRE.Asset.RealProperty"
+      }
+    ],
+    "contracts": [
+      {
+        "name": "cre.exit",
+        "type": "CRE.Contract.Disposition",
+        "master": "Contract.Sale",
+        "contract_name": "cre.exit",
+        "subject": "asset.strip_center",
+        "streams": [
+          "cre.exit.proceeds",
+          "cre.exit.selling_costs"
+        ]
+      },
+      {
+        "name": "cre.lease_unit.anchor",
+        "type": "CRE.Contract.UnitLease",
+        "master": "Contract.Lease",
+        "contract_name": "cre.lease_unit",
+        "instance": "anchor",
+        "subject": "asset.strip_center",
+        "streams": [
+          "cre.unit.abatement.anchor",
+          "cre.unit.base_rent.anchor",
+          "cre.unit.recoveries.anchor",
+          "cre.unit.ti_lc.anchor"
+        ]
+      },
+      {
+        "name": "cre.opex_line",
+        "type": "CRE.Contract.OperatingExpense",
+        "master": "Contract.Line",
+        "contract_name": "cre.opex_line",
+        "subject": "asset.strip_center",
+        "streams": [
+          "cre.opex.line"
+        ]
+      },
+      {
+        "name": "cre.opex_line.management",
+        "type": "CRE.Contract.OperatingExpense",
+        "master": "Contract.Line",
+        "contract_name": "cre.opex_line",
+        "instance": "management",
+        "subject": "asset.strip_center",
+        "streams": [
+          "cre.opex.line.management"
+        ]
+      },
+      {
+        "name": "cre.vacancy_loss",
+        "type": "CRE.Contract.VacancyAllowance",
+        "master": "Contract.Line",
+        "contract_name": "cre.vacancy_loss",
+        "subject": "asset.strip_center",
+        "streams": [
+          "cre.vacancy.loss"
+        ]
       }
     ]
   }

@@ -1,7 +1,7 @@
 {
-  "results_version": "0.12",
-  "model_hash": "ceaf1c22c9c8bd5dff7fc0131878a9deb1c661b865725e28c1b963412c0473bb",
-  "ledger_hash": "025c5ff1d55e5eca5b360cf7730f13f41ad4a949390e38eaf762df88fee1f19f",
+  "results_version": "0.13",
+  "model_hash": "4bec26a170eb894990b875d26f75dab54c11c964f55f1848421db2288fe83d1f",
+  "ledger_hash": "bc9afd9903311464b5d7cdcb9bf9eef87388e4aab79588e424300d2591324d2e",
   "engine": {
     "name": "cfdl-engine",
     "version": "0.9.0"
@@ -622,6 +622,7 @@
         "offset": 1.0,
         "entity": "asset.tower",
         "category": "investing.disposal.reversion",
+        "contract": "cre.exit_forward",
         "values": [
           {
             "amount": 0.0,
@@ -682,6 +683,7 @@
         "offset": 1.0,
         "entity": "asset.tower",
         "category": "investing.disposal.selling_costs",
+        "contract": "cre.exit_forward",
         "values": [
           {
             "amount": 0.0,
@@ -742,6 +744,7 @@
         "offset": 1.0,
         "entity": "asset.tower",
         "category": "operating.expense.opex",
+        "contract": "cre.opex_line",
         "values": [
           {
             "amount": -75000.0,
@@ -802,6 +805,7 @@
         "offset": 1.0,
         "entity": "asset.tower",
         "category": "operating.deduction.abatement",
+        "contract": "cre.lease_unit.tenant_a",
         "values": [
           {
             "amount": -120000.0,
@@ -862,6 +866,7 @@
         "offset": 1.0,
         "entity": "asset.tower",
         "category": "operating.revenue.base_rent",
+        "contract": "cre.lease_unit.tenant_a",
         "values": [
           {
             "amount": 120000.0,
@@ -922,6 +927,7 @@
         "offset": 1.0,
         "entity": "asset.tower",
         "category": "operating.revenue.recovery",
+        "contract": "cre.lease_unit.tenant_a",
         "values": [
           {
             "amount": 0.0,
@@ -982,6 +988,7 @@
         "offset": 0.0,
         "entity": "asset.tower",
         "category": "investing.capital.leasing",
+        "contract": "cre.lease_unit.tenant_a",
         "values": [
           {
             "amount": 0.0,
@@ -1462,6 +1469,43 @@
         "symbol": "asset.tower",
         "family": "asset",
         "type": "CRE.Asset.RealProperty"
+      }
+    ],
+    "contracts": [
+      {
+        "name": "cre.exit_forward",
+        "type": "CRE.Contract.DispositionAtForwardCap",
+        "master": "Contract.Sale",
+        "contract_name": "cre.exit_forward",
+        "subject": "asset.tower",
+        "streams": [
+          "cre.exit.proceeds",
+          "cre.exit.selling_costs"
+        ]
+      },
+      {
+        "name": "cre.lease_unit.tenant_a",
+        "type": "CRE.Contract.UnitLease",
+        "master": "Contract.Lease",
+        "contract_name": "cre.lease_unit",
+        "instance": "tenant_a",
+        "subject": "asset.tower",
+        "streams": [
+          "cre.unit.abatement.tenant_a",
+          "cre.unit.base_rent.tenant_a",
+          "cre.unit.recoveries.tenant_a",
+          "cre.unit.ti_lc.tenant_a"
+        ]
+      },
+      {
+        "name": "cre.opex_line",
+        "type": "CRE.Contract.OperatingExpense",
+        "master": "Contract.Line",
+        "contract_name": "cre.opex_line",
+        "subject": "asset.tower",
+        "streams": [
+          "cre.opex.line"
+        ]
       }
     ]
   }

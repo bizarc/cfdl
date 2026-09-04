@@ -4145,6 +4145,10 @@ against it by `make ir-schema`.
         "rule_id": {
           "type": "string",
           "minLength": 1
+        },
+        "contract": {
+          "$ref": "#/$defs/Qname",
+          "description": "The contract this stream was lowered from, by its qualified name (`cre.lease_unit.tenant_a`). A rule serves every instance of its type; this says which one."
         }
       }
     },
@@ -4726,8 +4730,8 @@ against it by `make results-schema`.
   "properties": {
     "results_version": {
       "type": "string",
-      "const": "0.12",
-      "description": "Schema version of this document. 0.12 separates the model from its views: `model_hash` covers the IR without `views` (slices and statements), and `ledger_hash` now covers the journal and transitions beside the series. 0.11 adds model-declared statements: `pack` on the statements section is optional, and a statement may carry `metrics`. 0.10 adds `window` to a slice's selection — a reporting bound whose periods are the only ones the slice folds. 0.9 carries every metric a Monte Carlo trial computed into its trial summary, summarises each of them across the trials with the full set of percentiles, and adds `trials` to a metric summary — the count of trials that published that name. 0.8 adds `slices` — declared partial selections with their matched streams, net series and figures, and no reconciliation block by design. 0.7 publishes the model's entity graph (`graph`) and attributes each stream series to its owning entity and category. 0.6 nests an act's own acts under it as `children`. 0.5 added the machine's `transition` journal action. 0.4 added the account journal actions. 0.3 added `ledger_hash`, the optional `inputs` section, and `category` on IR streams."
+      "const": "0.13",
+      "description": "Schema version of this document. 0.13 publishes the model's contracts in `graph.contracts` — each with its type, master, instance, subject, parties and the streams lowered from it — and attributes each lowered stream series to its contract (`contract` on the series). 0.12 separates the model from its views: `model_hash` covers the IR without `views` (slices and statements), and `ledger_hash` now covers the journal and transitions beside the series. 0.11 adds model-declared statements: `pack` on the statements section is optional, and a statement may carry `metrics`. 0.10 adds `window` to a slice's selection — a reporting bound whose periods are the only ones the slice folds. 0.9 carries every metric a Monte Carlo trial computed into its trial summary, summarises each of them across the trials with the full set of percentiles, and adds `trials` to a metric summary — the count of trials that published that name. 0.8 adds `slices` — declared partial selections with their matched streams, net series and figures, and no reconciliation block by design. 0.7 publishes the model's entity graph (`graph`) and attributes each stream series to its owning entity and category. 0.6 nests an act's own acts under it as `children`. 0.5 added the machine's `transition` journal action. 0.4 added the account journal actions. 0.3 added `ledger_hash`, the optional `inputs` section, and `category` on IR streams."
     },
     "model_hash": {
       "type": "string",
@@ -4909,6 +4913,10 @@ against it by `make results-schema`.
         "category": {
           "type": "string",
           "description": "The stream's declared category (`operating.revenue.base_rent`). Present on categorized stream series only. Ownership says whose cash; category says what kind — the two axes a selection needs."
+        },
+        "contract": {
+          "type": "string",
+          "description": "The contract this stream was lowered from (`cre.lease_unit.tenant_a`). Present on pack-lowered stream series only. With `graph.contracts`, the third axis beside `entity` and `category`: whose cash, what kind, and under which agreement."
         }
       }
     },
@@ -5763,13 +5771,20 @@ against it by `make results-schema`.
       "required": [
         "entities"
       ],
-      "description": "The model's entity graph, published so a consumer holding results alone can build the hierarchy view — who is part of what, what each thing is, and the stable identity a governance layer assigned. Values, not vocabulary: the pack's type roster lives in the pack; this is the graph THIS model declared.",
+      "description": "The model's graph, published so a consumer holding results alone can build the hierarchy view — who is part of what, what each thing is, the stable identity a governance layer assigned, and which agreements sit on which things. Values, not vocabulary: the pack's type roster lives in the pack; this is the graph THIS model declared.",
       "properties": {
         "entities": {
           "type": "array",
           "items": {
             "$ref": "#/$defs/GraphEntity"
           }
+        },
+        "contracts": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/GraphContract"
+          },
+          "description": "The contracts the model declared, each resolved to its type and master (docs/40 §8). Absent when the model declares none."
         }
       }
     },
@@ -5874,6 +5889,78 @@ against it by `make results-schema`.
         },
         "to": {
           "type": "string"
+        }
+      }
+    },
+    "GraphParty": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "role",
+        "entity"
+      ],
+      "properties": {
+        "role": {
+          "type": "string",
+          "description": "The role as the model bound it — the pack's word (`landlord`)."
+        },
+        "master_role": {
+          "type": "string",
+          "description": "The master's word for the role (`lessor`), so a consumer finds every lender without knowing each pack's name for one."
+        },
+        "entity": {
+          "type": "string",
+          "description": "The party entity's symbol (`party.acme`)."
+        }
+      }
+    },
+    "GraphContract": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "type",
+        "subject",
+        "streams"
+      ],
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "The contract's qualified name — `cre.lease_unit.tenant_a`."
+        },
+        "type": {
+          "type": "string",
+          "description": "The ontology type the contract IS — `CRE.Contract.UnitLease`; `core.Contract` where no type resolved."
+        },
+        "master": {
+          "type": "string",
+          "description": "The master at the root of the type's refinement chain — `Contract.Lease`."
+        },
+        "contract_name": {
+          "type": "string",
+          "description": "The pack's name for the type — the lowering rule name, `cre.lease_unit`."
+        },
+        "instance": {
+          "type": "string",
+          "description": "The instance token, where the name carries one — `tenant_a`."
+        },
+        "subject": {
+          "type": "string",
+          "description": "The entity the contract is written on (`asset.tower`)."
+        },
+        "parties": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/GraphParty"
+          },
+          "description": "Who the contract is between, by role."
+        },
+        "streams": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "The streams the pack lowered from this contract, by name — the series published under `stream.<name>`."
         }
       }
     }

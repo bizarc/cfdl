@@ -1,7 +1,7 @@
 {
-  "results_version": "0.12",
-  "model_hash": "b05695da04c1d1b07210b945da9e78b66a35a9d85283f5a8166599b56b4e7efb",
-  "ledger_hash": "10a21565206185f7debea652a7083435a5aee6acd6f371589e8d5120b4f6e8a1",
+  "results_version": "0.13",
+  "model_hash": "e4c79ac741bfd440c89826cfc3ab63d46a26fc45d6c3cb01eca8bec8bef1b081",
+  "ledger_hash": "af6c007c65d5d5f51ad1f0700a3160041e9e5df403fdba94252ded02e4a9cb07",
   "engine": {
     "name": "cfdl-engine",
     "version": "0.9.0"
@@ -1432,6 +1432,7 @@
         "offset": 1.0,
         "entity": "asset.business",
         "category": "operating.expense.opex",
+        "contract": "opco.opex_line",
         "values": [
           {
             "amount": -60000.0,
@@ -1540,6 +1541,7 @@
         "offset": 1.0,
         "entity": "asset.business",
         "category": "operating.revenue.recurring",
+        "contract": "opco.revenue_line",
         "values": [
           {
             "amount": 100000.0,
@@ -2049,6 +2051,28 @@
         "symbol": "asset.business",
         "family": "asset",
         "type": "OpCo.Asset.Enterprise"
+      }
+    ],
+    "contracts": [
+      {
+        "name": "opco.opex_line",
+        "type": "OpCo.Contract.OperatingExpenseLine",
+        "master": "Contract.Line",
+        "contract_name": "opco.opex_line",
+        "subject": "asset.business",
+        "streams": [
+          "opco.opex.recurring"
+        ]
+      },
+      {
+        "name": "opco.revenue_line",
+        "type": "OpCo.Contract.RevenueLine",
+        "master": "Contract.Line",
+        "contract_name": "opco.revenue_line",
+        "subject": "asset.business",
+        "streams": [
+          "opco.revenue.recurring"
+        ]
       }
     ]
   }

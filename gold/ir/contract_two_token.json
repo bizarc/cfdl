@@ -272,7 +272,8 @@
             "name": "cre",
             "version": "0.1.0"
           },
-          "rule_id": "cre_lease_unit_abatement"
+          "rule_id": "cre_lease_unit_abatement",
+          "contract": "cre.lease_unit.tenant_a"
         }
       }
     },
@@ -312,7 +313,8 @@
             "name": "cre",
             "version": "0.1.0"
           },
-          "rule_id": "cre_lease_unit_abatement"
+          "rule_id": "cre_lease_unit_abatement",
+          "contract": "cre.lease_unit.tenant_b"
         }
       }
     },
@@ -352,7 +354,8 @@
             "name": "cre",
             "version": "0.1.0"
           },
-          "rule_id": "cre_lease_unit_base_rent"
+          "rule_id": "cre_lease_unit_base_rent",
+          "contract": "cre.lease_unit.tenant_a"
         }
       }
     },
@@ -392,7 +395,8 @@
             "name": "cre",
             "version": "0.1.0"
           },
-          "rule_id": "cre_lease_unit_base_rent"
+          "rule_id": "cre_lease_unit_base_rent",
+          "contract": "cre.lease_unit.tenant_b"
         }
       }
     },
@@ -432,7 +436,8 @@
             "name": "cre",
             "version": "0.1.0"
           },
-          "rule_id": "cre_lease_unit_recoveries"
+          "rule_id": "cre_lease_unit_recoveries",
+          "contract": "cre.lease_unit.tenant_a"
         }
       }
     },
@@ -472,7 +477,8 @@
             "name": "cre",
             "version": "0.1.0"
           },
-          "rule_id": "cre_lease_unit_recoveries"
+          "rule_id": "cre_lease_unit_recoveries",
+          "contract": "cre.lease_unit.tenant_b"
         }
       }
     },
@@ -510,7 +516,8 @@
             "name": "cre",
             "version": "0.1.0"
           },
-          "rule_id": "cre_lease_unit_ti_lc"
+          "rule_id": "cre_lease_unit_ti_lc",
+          "contract": "cre.lease_unit.tenant_a"
         }
       }
     },
@@ -548,7 +555,8 @@
             "name": "cre",
             "version": "0.1.0"
           },
-          "rule_id": "cre_lease_unit_ti_lc"
+          "rule_id": "cre_lease_unit_ti_lc",
+          "contract": "cre.lease_unit.tenant_b"
         }
       }
     }

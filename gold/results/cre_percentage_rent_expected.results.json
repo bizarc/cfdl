@@ -1,7 +1,7 @@
 {
-  "results_version": "0.12",
-  "model_hash": "cdc3b2100ca371a428c1c5acf87f0d82f94e6bf4ca042d19a7e0ebb7b5bf1de8",
-  "ledger_hash": "7d3f113bc62a855d3cdbdf4c5bccc5654438185a8a3d4dfd22c73d948d8ea1ba",
+  "results_version": "0.13",
+  "model_hash": "f5e3d95be849aa989e89659e0502be97beea84be3e858408f760690de943b638",
+  "ledger_hash": "9733b53317b65b925e49a907bca0c50279bd935986b2263321c8b38763c4c06c",
   "engine": {
     "name": "cfdl-engine",
     "version": "0.9.0"
@@ -260,6 +260,7 @@
         "offset": 1.0,
         "entity": "asset.store",
         "category": "operating.revenue.percentage_rent",
+        "contract": "cre.percentage_rent_expected.dist",
         "values": [
           {
             "amount": 4937.5,
@@ -284,6 +285,7 @@
         "offset": 1.0,
         "entity": "asset.store",
         "category": "operating.revenue.percentage_rent",
+        "contract": "cre.percentage_rent.point",
         "values": [
           {
             "amount": 0.0,
@@ -368,6 +370,30 @@
         "symbol": "asset.store",
         "family": "asset",
         "type": "CRE.Asset.RealProperty"
+      }
+    ],
+    "contracts": [
+      {
+        "name": "cre.percentage_rent.point",
+        "type": "CRE.Contract.PercentageRent",
+        "master": "Contract.Lease",
+        "contract_name": "cre.percentage_rent",
+        "instance": "point",
+        "subject": "asset.store",
+        "streams": [
+          "cre.pct_rent.overage.point"
+        ]
+      },
+      {
+        "name": "cre.percentage_rent_expected.dist",
+        "type": "CRE.Contract.PercentageRentExpected",
+        "master": "Contract.Lease",
+        "contract_name": "cre.percentage_rent_expected",
+        "instance": "dist",
+        "subject": "asset.store",
+        "streams": [
+          "cre.pct_rent.overage.dist"
+        ]
       }
     ]
   }

@@ -1,7 +1,7 @@
 {
-  "results_version": "0.12",
-  "model_hash": "80179bf6dd0ed6ff09bd17310c79bd67958ba46c38edcc2129b0f79e0f48372d",
-  "ledger_hash": "e3d02926cfde89c5cde8e3c64ee43275725bee41abee2e4f12a58aac6f0e56f8",
+  "results_version": "0.13",
+  "model_hash": "76c70b767a2360e351881381c5b39a2cab5a5649d1a5a66fc86cba15750ec650",
+  "ledger_hash": "5b024f934beea1e5767014b48f55554eda132da77c72e856f3c893d075b20a5f",
   "engine": {
     "name": "cfdl-engine",
     "version": "0.9.0"
@@ -468,6 +468,7 @@
         "offset": 1.0,
         "entity": "asset.firm",
         "category": "investing.disposal.selling_costs",
+        "contract": "opco.exit_perpetuity",
         "values": [
           {
             "amount": 0.0,
@@ -500,6 +501,7 @@
         "offset": 1.0,
         "entity": "asset.firm",
         "category": "investing.disposal.proceeds",
+        "contract": "opco.exit_perpetuity",
         "values": [
           {
             "amount": 0.0,
@@ -603,6 +605,19 @@
         "symbol": "asset.firm",
         "family": "asset",
         "type": "OpCo.Asset.Enterprise"
+      }
+    ],
+    "contracts": [
+      {
+        "name": "opco.exit_perpetuity",
+        "type": "OpCo.Contract.ExitAtPerpetuity",
+        "master": "Contract.Sale",
+        "contract_name": "opco.exit_perpetuity",
+        "subject": "asset.firm",
+        "streams": [
+          "opco.exit.selling_costs",
+          "opco.exit.value"
+        ]
       }
     ]
   }

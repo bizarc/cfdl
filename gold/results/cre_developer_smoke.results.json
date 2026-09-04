@@ -1,7 +1,7 @@
 {
-  "results_version": "0.12",
-  "model_hash": "93eccc0f86137972e4e640f1d0cfd58c6c83f64bdb40fe3ca8958e49555dda68",
-  "ledger_hash": "103c55fbdcfa70ec273fb4fe4c7ce69c49f68265447f4d0e96f034b3a7d2e24e",
+  "results_version": "0.13",
+  "model_hash": "6d5c8c3a71339f769e765a02001cc0ef71ba29a06b142d16126ffebdfb7af970",
+  "ledger_hash": "5081c475a1981ff79bd468a97378ddcbde587af957de04955814cf4c37e640d1",
   "engine": {
     "name": "cfdl-engine",
     "version": "0.9.0"
@@ -2577,6 +2577,7 @@
         "offset": 1.0,
         "entity": "asset.property",
         "category": "investing.capital.construction",
+        "contract": "cre.construction_stub",
         "values": [
           {
             "amount": -45000.0,
@@ -2877,6 +2878,7 @@
         "offset": 1.0,
         "entity": "asset.property",
         "category": "investing.disposal.reversion",
+        "contract": "cre.exit_cap",
         "values": [
           {
             "amount": 0.0,
@@ -3177,6 +3179,7 @@
         "offset": 1.0,
         "entity": "asset.property",
         "category": "operating.revenue.base_rent",
+        "contract": "cre.lease",
         "values": [
           {
             "amount": 0.0,
@@ -3477,6 +3480,7 @@
         "offset": 1.0,
         "entity": "asset.property",
         "category": "operating.expense.opex",
+        "contract": "cre.opex_line",
         "values": [
           {
             "amount": 0.0,
@@ -3777,6 +3781,7 @@
         "offset": 1.0,
         "entity": "asset.property",
         "category": "operating.revenue.other",
+        "contract": "cre.revenue_line",
         "values": [
           {
             "amount": 0.0,
@@ -4900,6 +4905,58 @@
         "symbol": "asset.property",
         "family": "asset",
         "type": "CRE.Asset.RealProperty"
+      }
+    ],
+    "contracts": [
+      {
+        "name": "cre.construction_stub",
+        "type": "CRE.Contract.ConstructionFunding",
+        "master": "Contract.Line",
+        "contract_name": "cre.construction_stub",
+        "subject": "asset.property",
+        "streams": [
+          "cre.construction.draws"
+        ]
+      },
+      {
+        "name": "cre.exit_cap",
+        "type": "CRE.Contract.DispositionAtCap",
+        "master": "Contract.Sale",
+        "contract_name": "cre.exit_cap",
+        "subject": "asset.property",
+        "streams": [
+          "cre.exit.sale"
+        ]
+      },
+      {
+        "name": "cre.lease",
+        "type": "CRE.Contract.Lease",
+        "master": "Contract.Lease",
+        "contract_name": "cre.lease",
+        "subject": "asset.property",
+        "streams": [
+          "cre.lease.base_rent"
+        ]
+      },
+      {
+        "name": "cre.opex_line",
+        "type": "CRE.Contract.OperatingExpense",
+        "master": "Contract.Line",
+        "contract_name": "cre.opex_line",
+        "subject": "asset.property",
+        "streams": [
+          "cre.opex.line"
+        ]
+      },
+      {
+        "name": "cre.revenue_line",
+        "type": "CRE.Contract.OperatingRevenue",
+        "master": "Contract.Line",
+        "contract_name": "cre.revenue_line",
+        "subject": "asset.property",
+        "streams": [
+          "cre.revenue.line"
+        ]
       }
     ]
   }

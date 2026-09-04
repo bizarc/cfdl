@@ -1,7 +1,7 @@
 {
-  "results_version": "0.12",
-  "model_hash": "814a783c49147147e6d0e2313cdbf56e4ae5c7b41d800991fc6036383fc2e7dc",
-  "ledger_hash": "b3aed8f7549fec1b6550364530e4dcdbe450247436266c2e03f429ec5142ffe9",
+  "results_version": "0.13",
+  "model_hash": "7b5dbf52e1239e8c3d9c25fc2effd2578094c1424e885830cab7ce07fcb7459f",
+  "ledger_hash": "856658ef324c31906ac0cfc8da9f000515a1a458321cf07170f7701373c97b77",
   "engine": {
     "name": "cfdl-engine",
     "version": "0.9.0"
@@ -1374,6 +1374,7 @@
         "offset": 1.0,
         "entity": "asset.target",
         "category": "financing.debt.interest_paid",
+        "contract": "opco.term_debt",
         "values": [
           {
             "amount": -34444.444444,
@@ -1482,6 +1483,7 @@
         "offset": 1.0,
         "entity": "asset.target",
         "category": "financing.debt.principal",
+        "contract": "opco.term_debt",
         "values": [
           {
             "amount": -44152.569014,
@@ -1590,6 +1592,7 @@
         "offset": 0.0,
         "entity": "asset.target",
         "category": "financing.debt.proceeds",
+        "contract": "opco.term_debt",
         "values": [
           {
             "amount": 5000000.0,
@@ -2117,6 +2120,20 @@
         "symbol": "asset.target",
         "family": "asset",
         "type": "OpCo.Asset.Enterprise"
+      }
+    ],
+    "contracts": [
+      {
+        "name": "opco.term_debt",
+        "type": "OpCo.Contract.TermDebt",
+        "master": "Contract.Debt",
+        "contract_name": "opco.term_debt",
+        "subject": "asset.target",
+        "streams": [
+          "opco.debt.interest",
+          "opco.debt.principal",
+          "opco.debt.proceeds"
+        ]
       }
     ]
   }

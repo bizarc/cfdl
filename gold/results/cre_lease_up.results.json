@@ -1,7 +1,7 @@
 {
-  "results_version": "0.12",
-  "model_hash": "dc23c5b8a219cabdf61c125c11239b48b662329b80b06c2d80bf588fcddd4c96",
-  "ledger_hash": "814d4ba8e43d77cc2375b16da90ccbc797a51b442ec87345fb2c14b48275af2a",
+  "results_version": "0.13",
+  "model_hash": "9411ea32cefc59851a89a5e4facb555fbbafc8005b532985c736550779cbd730",
+  "ledger_hash": "b930969952e1f373f5942a21faf233af3748c519dcfe7f51cc1337667f536650",
   "engine": {
     "name": "cfdl-engine",
     "version": "0.9.0"
@@ -928,6 +928,7 @@
         "offset": 1.0,
         "entity": "asset.property",
         "category": "operating.revenue.base_rent",
+        "contract": "cre.lease",
         "values": [
           {
             "amount": 0.0,
@@ -1351,6 +1352,18 @@
         "symbol": "asset.property",
         "family": "asset",
         "type": "CRE.Asset.RealProperty"
+      }
+    ],
+    "contracts": [
+      {
+        "name": "cre.lease",
+        "type": "CRE.Contract.Lease",
+        "master": "Contract.Lease",
+        "contract_name": "cre.lease",
+        "subject": "asset.property",
+        "streams": [
+          "cre.lease.base_rent"
+        ]
       }
     ]
   }

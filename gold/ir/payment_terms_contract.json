@@ -254,7 +254,8 @@
             "name": "energy",
             "version": "0.1.0"
           },
-          "rule_id": "energy_ppa_revenue"
+          "rule_id": "energy_ppa_revenue",
+          "contract": "energy.ppa.plant_a"
         }
       }
     }

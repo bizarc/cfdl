@@ -1,7 +1,7 @@
 {
-  "results_version": "0.12",
-  "model_hash": "dadbdbf6d3df2756fd2a27ecaa180810bcf5e70832919fc909b46fbc767e97a9",
-  "ledger_hash": "21c450240a94e256f48d30fd402c5bc7bac940bb8d3257904d12141f58ad2d1a",
+  "results_version": "0.13",
+  "model_hash": "dc53fe4e46326a0f6da707e62b28600574f386c00ffbd7fb4c2e5c876bb0d3b6",
+  "ledger_hash": "850db47efdbab6d6c3f0cd8c6a7e19dce718aec402ea21270d2b34c86de1dc15",
   "engine": {
     "name": "cfdl-engine",
     "version": "0.9.0"
@@ -4279,6 +4279,7 @@
         "offset": 1.0,
         "entity": "asset.tower",
         "category": "investing.disposal.reversion",
+        "contract": "cre.exit_forward",
         "values": [
           {
             "amount": 0.0,
@@ -4771,6 +4772,7 @@
         "offset": 1.0,
         "entity": "asset.tower",
         "category": "investing.disposal.selling_costs",
+        "contract": "cre.exit_forward",
         "values": [
           {
             "amount": 0.0,
@@ -5263,6 +5265,7 @@
         "offset": 1.0,
         "entity": "asset.tower",
         "category": "operating.expense.opex",
+        "contract": "cre.opex_line",
         "values": [
           {
             "amount": -25000.0,
@@ -5755,6 +5758,7 @@
         "offset": 1.0,
         "entity": "asset.tower",
         "category": "operating.revenue.base_rent",
+        "contract": "cre.rollover.tenant_a",
         "values": [
           {
             "amount": 0.0,
@@ -6247,6 +6251,7 @@
         "offset": 1.0,
         "entity": "asset.tower",
         "category": "investing.capital.leasing",
+        "contract": "cre.rollover.tenant_a",
         "values": [
           {
             "amount": 0.0,
@@ -6739,6 +6744,7 @@
         "offset": 1.0,
         "entity": "asset.tower",
         "category": "operating.deduction.abatement",
+        "contract": "cre.lease_unit.tenant_a",
         "values": [
           {
             "amount": -40000.0,
@@ -7231,6 +7237,7 @@
         "offset": 1.0,
         "entity": "asset.tower",
         "category": "operating.deduction.abatement",
+        "contract": "cre.lease_unit.tenant_b",
         "values": [
           {
             "amount": 0.0,
@@ -7723,6 +7730,7 @@
         "offset": 1.0,
         "entity": "asset.tower",
         "category": "operating.revenue.base_rent",
+        "contract": "cre.lease_unit.tenant_a",
         "values": [
           {
             "amount": 40000.0,
@@ -8215,6 +8223,7 @@
         "offset": 1.0,
         "entity": "asset.tower",
         "category": "operating.revenue.base_rent",
+        "contract": "cre.lease_unit.tenant_b",
         "values": [
           {
             "amount": 0.0,
@@ -8707,6 +8716,7 @@
         "offset": 1.0,
         "entity": "asset.tower",
         "category": "operating.revenue.recovery",
+        "contract": "cre.lease_unit.tenant_a",
         "values": [
           {
             "amount": 0.0,
@@ -9199,6 +9209,7 @@
         "offset": 1.0,
         "entity": "asset.tower",
         "category": "operating.revenue.recovery",
+        "contract": "cre.lease_unit.tenant_b",
         "values": [
           {
             "amount": 0.0,
@@ -9691,6 +9702,7 @@
         "offset": 0.0,
         "entity": "asset.tower",
         "category": "investing.capital.leasing",
+        "contract": "cre.lease_unit.tenant_a",
         "values": [
           {
             "amount": -200000.0,
@@ -10183,6 +10195,7 @@
         "offset": 0.0,
         "entity": "asset.tower",
         "category": "investing.capital.leasing",
+        "contract": "cre.lease_unit.tenant_b",
         "values": [
           {
             "amount": 0.0,
@@ -10675,6 +10688,7 @@
         "offset": 1.0,
         "entity": "asset.tower",
         "category": "operating.deduction.vacancy",
+        "contract": "cre.vacancy_loss",
         "values": [
           {
             "amount": -1500.0,
@@ -29363,6 +29377,79 @@
         "symbol": "asset.tower",
         "family": "asset",
         "type": "CRE.Asset.RealProperty"
+      }
+    ],
+    "contracts": [
+      {
+        "name": "cre.exit_forward",
+        "type": "CRE.Contract.DispositionAtForwardCap",
+        "master": "Contract.Sale",
+        "contract_name": "cre.exit_forward",
+        "subject": "asset.tower",
+        "streams": [
+          "cre.exit.proceeds",
+          "cre.exit.selling_costs"
+        ]
+      },
+      {
+        "name": "cre.lease_unit.tenant_a",
+        "type": "CRE.Contract.UnitLease",
+        "master": "Contract.Lease",
+        "contract_name": "cre.lease_unit",
+        "instance": "tenant_a",
+        "subject": "asset.tower",
+        "streams": [
+          "cre.unit.abatement.tenant_a",
+          "cre.unit.base_rent.tenant_a",
+          "cre.unit.recoveries.tenant_a",
+          "cre.unit.ti_lc.tenant_a"
+        ]
+      },
+      {
+        "name": "cre.lease_unit.tenant_b",
+        "type": "CRE.Contract.UnitLease",
+        "master": "Contract.Lease",
+        "contract_name": "cre.lease_unit",
+        "instance": "tenant_b",
+        "subject": "asset.tower",
+        "streams": [
+          "cre.unit.abatement.tenant_b",
+          "cre.unit.base_rent.tenant_b",
+          "cre.unit.recoveries.tenant_b",
+          "cre.unit.ti_lc.tenant_b"
+        ]
+      },
+      {
+        "name": "cre.opex_line",
+        "type": "CRE.Contract.OperatingExpense",
+        "master": "Contract.Line",
+        "contract_name": "cre.opex_line",
+        "subject": "asset.tower",
+        "streams": [
+          "cre.opex.line"
+        ]
+      },
+      {
+        "name": "cre.rollover.tenant_a",
+        "type": "CRE.Contract.Rollover",
+        "master": "Contract.Lease",
+        "contract_name": "cre.rollover",
+        "instance": "tenant_a",
+        "subject": "asset.tower",
+        "streams": [
+          "cre.rollover.rent.tenant_a",
+          "cre.rollover.ti_lc.tenant_a"
+        ]
+      },
+      {
+        "name": "cre.vacancy_loss",
+        "type": "CRE.Contract.VacancyAllowance",
+        "master": "Contract.Line",
+        "contract_name": "cre.vacancy_loss",
+        "subject": "asset.tower",
+        "streams": [
+          "cre.vacancy.loss"
+        ]
       }
     ]
   }

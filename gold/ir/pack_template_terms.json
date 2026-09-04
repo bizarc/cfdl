@@ -90,7 +90,8 @@
             "name": "testpack",
             "version": "0.1.0"
           },
-          "rule_id": "emit_parameterized_fee"
+          "rule_id": "emit_parameterized_fee",
+          "contract": "test.fee_contract"
         }
       }
     }

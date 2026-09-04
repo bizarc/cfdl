@@ -1,7 +1,7 @@
 {
-  "results_version": "0.12",
-  "model_hash": "3488831bdc187fb2b144e8b3bfbdcc79a2f64b2ad4dcc5d7f1208acef5551359",
-  "ledger_hash": "447f36915a3389d97869384e5de25d8270a58ea012584e38d6d4e1e636f95b80",
+  "results_version": "0.13",
+  "model_hash": "9d723ee3f1ea0eee7aca12d98d4bf9eecd59b3a9d500a5327be2c84a77324ad3",
+  "ledger_hash": "65390be3837700d66a0a0758f6f4307520f0a7bbb67f5b8543e370ee6ccbe657",
   "engine": {
     "name": "cfdl-engine",
     "version": "0.9.0"
@@ -933,6 +933,7 @@
         "offset": 1.0,
         "entity": "asset.buyer",
         "category": "operating.collection.principal",
+        "contract": "credit.pool_io_bullet.p",
         "values": [
           {
             "amount": 0.0,
@@ -997,6 +998,7 @@
         "offset": 1.0,
         "entity": "asset.buyer",
         "category": "operating.collection.interest",
+        "contract": "credit.pool_io_bullet.p",
         "values": [
           {
             "amount": 6200.0,
@@ -1061,6 +1063,7 @@
         "offset": 1.0,
         "entity": "asset.buyer",
         "category": "operating.collection.penalty",
+        "contract": "credit.pool_io_bullet.p",
         "values": [
           {
             "amount": 0.0,
@@ -1125,6 +1128,7 @@
         "offset": 1.0,
         "entity": "asset.buyer",
         "category": "operating.collection.prepayment",
+        "contract": "credit.pool_io_bullet.p",
         "values": [
           {
             "amount": 0.0,
@@ -1189,6 +1193,7 @@
         "offset": 1.0,
         "entity": "asset.buyer",
         "category": "operating.collection.recovery",
+        "contract": "credit.pool_io_bullet.p",
         "values": [
           {
             "amount": 0.0,
@@ -1253,6 +1258,7 @@
         "offset": 1.0,
         "entity": "asset.buyer",
         "category": "operating.expense.servicing",
+        "contract": "credit.pool_io_bullet.p",
         "values": [
           {
             "amount": 0.0,
@@ -1718,6 +1724,24 @@
         "symbol": "asset.buyer",
         "family": "asset",
         "type": "Credit.Asset.LoanPool"
+      }
+    ],
+    "contracts": [
+      {
+        "name": "credit.pool_io_bullet.p",
+        "type": "Credit.Contract.InterestOnlyPool",
+        "master": "Contract.Debt",
+        "contract_name": "credit.pool_io_bullet",
+        "instance": "p",
+        "subject": "asset.buyer",
+        "streams": [
+          "credit.pool.bullet.p",
+          "credit.pool.interest.p",
+          "credit.pool.penalty.p",
+          "credit.pool.prepay.p",
+          "credit.pool.recoveries.p",
+          "credit.pool.servicing.p"
+        ]
       }
     ]
   }

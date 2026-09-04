@@ -1,7 +1,7 @@
 {
-  "results_version": "0.12",
-  "model_hash": "f72268d69b74f8aecdefcb89a4636b90637c91b3fa4fb6c23c2d788a9f63a71a",
-  "ledger_hash": "b826d3b4ce27afd2fbd7a668afe15fb461fb6a3d5dfc002ebfefdda7b90b4ab1",
+  "results_version": "0.13",
+  "model_hash": "8ad36bb8f24ff05d89ba7ded54db3beeac9bcd81494bbe8de1023845b23791e3",
+  "ledger_hash": "af6edf4f823c0cc167f418b72b1d423057601e8d9291ec9e18999efb151c3fea",
   "engine": {
     "name": "cfdl-engine",
     "version": "0.9.0"
@@ -584,6 +584,7 @@
         "offset": 1.0,
         "entity": "asset.pool",
         "category": "operating.collection.interest",
+        "contract": "credit.pool_level_pay.one",
         "values": [
           {
             "amount": 10000.0,
@@ -612,6 +613,7 @@
         "offset": 1.0,
         "entity": "asset.pool",
         "category": "operating.collection.penalty",
+        "contract": "credit.pool_level_pay.one",
         "values": [
           {
             "amount": 0.0,
@@ -640,6 +642,7 @@
         "offset": 1.0,
         "entity": "asset.pool",
         "category": "operating.collection.prepayment",
+        "contract": "credit.pool_level_pay.one",
         "values": [
           {
             "amount": 0.0,
@@ -668,6 +671,7 @@
         "offset": 1.0,
         "entity": "asset.pool",
         "category": "operating.collection.recovery",
+        "contract": "credit.pool_level_pay.one",
         "values": [
           {
             "amount": 0.0,
@@ -696,6 +700,7 @@
         "offset": 1.0,
         "entity": "asset.pool",
         "category": "operating.collection.principal",
+        "contract": "credit.pool_level_pay.one",
         "values": [
           {
             "amount": 246281.093912,
@@ -724,6 +729,7 @@
         "offset": 1.0,
         "entity": "asset.pool",
         "category": "operating.expense.servicing",
+        "contract": "credit.pool_level_pay.one",
         "values": [
           {
             "amount": 0.0,
@@ -1306,6 +1312,24 @@
         "symbol": "party.investor",
         "family": "party",
         "type": "Credit.Party.Investor"
+      }
+    ],
+    "contracts": [
+      {
+        "name": "credit.pool_level_pay.one",
+        "type": "Credit.Contract.LevelPayPool",
+        "master": "Contract.Debt",
+        "contract_name": "credit.pool_level_pay",
+        "instance": "one",
+        "subject": "asset.pool",
+        "streams": [
+          "credit.pool.interest.one",
+          "credit.pool.penalty.one",
+          "credit.pool.prepay.one",
+          "credit.pool.recoveries.one",
+          "credit.pool.sched_principal.one",
+          "credit.pool.servicing.one"
+        ]
       }
     ]
   }

@@ -202,7 +202,8 @@
             "name": "opco",
             "version": "0.1.0"
           },
-          "rule_id": "opco_term_debt_interest"
+          "rule_id": "opco_term_debt_interest",
+          "contract": "opco.term_debt"
         }
       }
     },
@@ -242,7 +243,8 @@
             "name": "opco",
             "version": "0.1.0"
           },
-          "rule_id": "opco_term_debt_principal"
+          "rule_id": "opco_term_debt_principal",
+          "contract": "opco.term_debt"
         }
       }
     },
@@ -280,7 +282,8 @@
             "name": "opco",
             "version": "0.1.0"
           },
-          "rule_id": "opco_term_debt_proceeds"
+          "rule_id": "opco_term_debt_proceeds",
+          "contract": "opco.term_debt"
         }
       }
     }

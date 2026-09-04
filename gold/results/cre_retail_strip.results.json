@@ -1,7 +1,7 @@
 {
-  "results_version": "0.12",
-  "model_hash": "ef4c15e9827127fc9682b828f8cfe9495e23d8dd3089b205bfcf71738e980698",
-  "ledger_hash": "03b4d84516dd746e7c3cb98931901a30d8e73466640e9feb9782e406bda5636f",
+  "results_version": "0.13",
+  "model_hash": "1ee418ec8ba85fe8910c8e86bc562b00adaa25bcde46af77f4f691a695e4c694",
+  "ledger_hash": "631819e89ae9fa5ba8297712383846bc0f155abff5ee2edf99f07dda33ce6335",
   "engine": {
     "name": "cfdl-engine",
     "version": "0.9.0"
@@ -3073,6 +3073,7 @@
         "offset": 1.0,
         "entity": "asset.strip_center",
         "category": "investing.disposal.reversion",
+        "contract": "cre.exit",
         "values": [
           {
             "amount": 0.0,
@@ -3421,6 +3422,7 @@
         "offset": 1.0,
         "entity": "asset.strip_center",
         "category": "investing.disposal.selling_costs",
+        "contract": "cre.exit",
         "values": [
           {
             "amount": 0.0,
@@ -3769,6 +3771,7 @@
         "offset": 1.0,
         "entity": "asset.strip_center",
         "category": "operating.expense.opex",
+        "contract": "cre.opex_line",
         "values": [
           {
             "amount": -20000.0,
@@ -4117,6 +4120,7 @@
         "offset": 1.0,
         "entity": "asset.strip_center",
         "category": "operating.revenue.percentage_rent",
+        "contract": "cre.percentage_rent.anchor",
         "values": [
           {
             "amount": 0.0,
@@ -4465,6 +4469,7 @@
         "offset": 1.0,
         "entity": "asset.strip_center",
         "category": "operating.deduction.abatement",
+        "contract": "cre.lease_unit.anchor",
         "values": [
           {
             "amount": 0.0,
@@ -4813,6 +4818,7 @@
         "offset": 1.0,
         "entity": "asset.strip_center",
         "category": "operating.deduction.abatement",
+        "contract": "cre.lease_unit.shops",
         "values": [
           {
             "amount": 0.0,
@@ -5161,6 +5167,7 @@
         "offset": 1.0,
         "entity": "asset.strip_center",
         "category": "operating.revenue.base_rent",
+        "contract": "cre.lease_unit.anchor",
         "values": [
           {
             "amount": 45000.0,
@@ -5509,6 +5516,7 @@
         "offset": 1.0,
         "entity": "asset.strip_center",
         "category": "operating.revenue.base_rent",
+        "contract": "cre.lease_unit.shops",
         "values": [
           {
             "amount": 0.0,
@@ -5857,6 +5865,7 @@
         "offset": 1.0,
         "entity": "asset.strip_center",
         "category": "operating.revenue.recovery",
+        "contract": "cre.lease_unit.anchor",
         "values": [
           {
             "amount": 0.0,
@@ -6205,6 +6214,7 @@
         "offset": 1.0,
         "entity": "asset.strip_center",
         "category": "operating.revenue.recovery",
+        "contract": "cre.lease_unit.shops",
         "values": [
           {
             "amount": 0.0,
@@ -6553,6 +6563,7 @@
         "offset": 0.0,
         "entity": "asset.strip_center",
         "category": "investing.capital.leasing",
+        "contract": "cre.lease_unit.anchor",
         "values": [
           {
             "amount": -210000.0,
@@ -6901,6 +6912,7 @@
         "offset": 0.0,
         "entity": "asset.strip_center",
         "category": "investing.capital.leasing",
+        "contract": "cre.lease_unit.shops",
         "values": [
           {
             "amount": 0.0,
@@ -7249,6 +7261,7 @@
         "offset": 1.0,
         "entity": "asset.strip_center",
         "category": "operating.deduction.vacancy",
+        "contract": "cre.vacancy_loss",
         "values": [
           {
             "amount": -2125.0,
@@ -20177,6 +20190,78 @@
         "symbol": "asset.strip_center",
         "family": "asset",
         "type": "CRE.Asset.RealProperty"
+      }
+    ],
+    "contracts": [
+      {
+        "name": "cre.exit",
+        "type": "CRE.Contract.Disposition",
+        "master": "Contract.Sale",
+        "contract_name": "cre.exit",
+        "subject": "asset.strip_center",
+        "streams": [
+          "cre.exit.proceeds",
+          "cre.exit.selling_costs"
+        ]
+      },
+      {
+        "name": "cre.lease_unit.anchor",
+        "type": "CRE.Contract.UnitLease",
+        "master": "Contract.Lease",
+        "contract_name": "cre.lease_unit",
+        "instance": "anchor",
+        "subject": "asset.strip_center",
+        "streams": [
+          "cre.unit.abatement.anchor",
+          "cre.unit.base_rent.anchor",
+          "cre.unit.recoveries.anchor",
+          "cre.unit.ti_lc.anchor"
+        ]
+      },
+      {
+        "name": "cre.lease_unit.shops",
+        "type": "CRE.Contract.UnitLease",
+        "master": "Contract.Lease",
+        "contract_name": "cre.lease_unit",
+        "instance": "shops",
+        "subject": "asset.strip_center",
+        "streams": [
+          "cre.unit.abatement.shops",
+          "cre.unit.base_rent.shops",
+          "cre.unit.recoveries.shops",
+          "cre.unit.ti_lc.shops"
+        ]
+      },
+      {
+        "name": "cre.opex_line",
+        "type": "CRE.Contract.OperatingExpense",
+        "master": "Contract.Line",
+        "contract_name": "cre.opex_line",
+        "subject": "asset.strip_center",
+        "streams": [
+          "cre.opex.line"
+        ]
+      },
+      {
+        "name": "cre.percentage_rent.anchor",
+        "type": "CRE.Contract.PercentageRent",
+        "master": "Contract.Lease",
+        "contract_name": "cre.percentage_rent",
+        "instance": "anchor",
+        "subject": "asset.strip_center",
+        "streams": [
+          "cre.pct_rent.overage.anchor"
+        ]
+      },
+      {
+        "name": "cre.vacancy_loss",
+        "type": "CRE.Contract.VacancyAllowance",
+        "master": "Contract.Line",
+        "contract_name": "cre.vacancy_loss",
+        "subject": "asset.strip_center",
+        "streams": [
+          "cre.vacancy.loss"
+        ]
       }
     ]
   }

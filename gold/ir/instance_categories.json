@@ -272,7 +272,8 @@
             "name": "cre",
             "version": "0.1.0"
           },
-          "rule_id": "cre_opex_line"
+          "rule_id": "cre_opex_line",
+          "contract": "cre.opex_line.food_beverage"
         }
       }
     },
@@ -312,7 +313,8 @@
             "name": "cre",
             "version": "0.1.0"
           },
-          "rule_id": "cre_opex_line"
+          "rule_id": "cre_opex_line",
+          "contract": "cre.opex_line.property_tax"
         }
       }
     },
@@ -352,7 +354,8 @@
             "name": "cre",
             "version": "0.1.0"
           },
-          "rule_id": "cre_opex_line"
+          "rule_id": "cre_opex_line",
+          "contract": "cre.opex_line.rooms"
         }
       }
     }

@@ -565,7 +565,10 @@ fn compute_results(ir: &Ir, model_hash: String, config: RunConfig) -> Result<Res
     // (docs/13 §7.43, §7.91): symbol, family, type, the stable id a layer
     // above assigned, and the part_of parent. What a consumer needed the IR
     // for — attributing a stream to a thing — it now has beside the values.
-    let graph = (!ir.entities.is_empty()).then(|| ResultsGraph {
+    // THE CONTRACTS BESIDE THE ENTITIES (docs/40 stage 4): each resolved to
+    // its type and master by the compiler, with the streams its pack rules
+    // lowered — read off each stream's provenance, which names the contract.
+    let graph = (!ir.entities.is_empty() || !ir.contracts.is_empty()).then(|| ResultsGraph {
         entities: ir
             .entities
             .iter()
@@ -577,10 +580,37 @@ fn compute_results(ir: &Ir, model_hash: String, config: RunConfig) -> Result<Res
                 parent: e.parent.clone(),
             })
             .collect(),
+        contracts: ir
+            .contracts
+            .iter()
+            .map(|c| GraphContract {
+                name: c.name.clone(),
+                type_id: c.type_id.clone(),
+                master: c.master.clone(),
+                contract_name: c.contract_name.clone(),
+                instance: c.instance.clone(),
+                subject: c.subject.symbol.clone(),
+                parties: c
+                    .parties
+                    .iter()
+                    .map(|p| GraphParty {
+                        role: p.role.clone(),
+                        master_role: p.master_role.clone(),
+                        entity: p.entity.symbol.clone(),
+                    })
+                    .collect(),
+                streams: ir
+                    .streams
+                    .iter()
+                    .filter(|s| lowering_contract(s) == Some(c.name.as_str()))
+                    .map(|s| s.name.clone())
+                    .collect(),
+            })
+            .collect(),
     });
 
     Ok(Results {
-        results_version: "0.12".to_string(),
+        results_version: "0.13".to_string(),
         model_hash,
         ledger_hash,
         engine: EngineInfo {
@@ -1895,13 +1925,17 @@ fn run_deterministic(
     // Ownership and category, published beside the values (docs/13 §7.43):
     // a consumer holding results alone can attribute a stream to the thing
     // that owns it and the kind of cash it is.
-    let stream_attribution: BTreeMap<&str, (&str, Option<&str>)> = ir
+    let stream_attribution: BTreeMap<&str, (&str, Option<&str>, Option<&str>)> = ir
         .streams
         .iter()
         .map(|s| {
             (
                 s.name.as_str(),
-                (s.owner.symbol.as_str(), s.category.as_deref()),
+                (
+                    s.owner.symbol.as_str(),
+                    s.category.as_deref(),
+                    lowering_contract(s),
+                ),
             )
         })
         .collect();
@@ -1914,9 +1948,10 @@ fn run_deterministic(
             stream_offsets.get(name).copied(),
             values,
         );
-        if let Some((owner, category)) = stream_attribution.get(name.as_str()) {
+        if let Some((owner, category, contract)) = stream_attribution.get(name.as_str()) {
             series.entity = Some((*owner).to_string());
             series.category = category.map(str::to_string);
+            series.contract = contract.map(str::to_string);
         }
         series_map.insert(format!("stream.{name}"), series);
     }
@@ -2843,6 +2878,18 @@ mod unresolved_name_tests {
         let w = "Stream 'x' amount evaluation failed [EXPR_EVAL]: division by zero; using 0.";
         assert!(unresolved_names(&[w.to_string()], &BTreeSet::new()).is_empty());
     }
+}
+
+/// The contract a pack-lowered stream came from, read off its provenance
+/// (`generated_by.contract`). `None` for a hand-written stream.
+fn lowering_contract(stream: &ir::IrStream) -> Option<&str> {
+    stream
+        .provenance
+        .as_ref()?
+        .generated_by
+        .as_ref()?
+        .get("contract")?
+        .as_str()
 }
 
 #[cfg(test)]

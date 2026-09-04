@@ -287,7 +287,8 @@
             "name": "cre",
             "version": "0.1.0"
           },
-          "rule_id": "cre_percentage_rent_expected"
+          "rule_id": "cre_percentage_rent_expected",
+          "contract": "cre.percentage_rent_expected.dist"
         }
       }
     },
@@ -327,7 +328,8 @@
             "name": "cre",
             "version": "0.1.0"
           },
-          "rule_id": "cre_percentage_rent"
+          "rule_id": "cre_percentage_rent",
+          "contract": "cre.percentage_rent.point"
         }
       }
     }

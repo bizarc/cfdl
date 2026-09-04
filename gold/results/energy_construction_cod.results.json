@@ -1,7 +1,7 @@
 {
-  "results_version": "0.12",
-  "model_hash": "6ecd4cbabf392567ce41968bbe2f6312a688240e6d95cedaebc27087a15c1701",
-  "ledger_hash": "6ea5c0810d07dc330ea5e4a1515a0303d71de17d3e95827729d522229a4835a4",
+  "results_version": "0.13",
+  "model_hash": "55330babcd1e78ee885639f52128f592b8466f66fad3b0d43b5d72b33e7c8a25",
+  "ledger_hash": "3c87e1bedbb4edb8a551aa35d8e977ef0e917dd89153fc1302a08378da4f8a06",
   "engine": {
     "name": "cfdl-engine",
     "version": "0.9.0"
@@ -1558,6 +1558,7 @@
         "offset": 0.0,
         "entity": "asset.microgrid",
         "category": "investing.capital.capex",
+        "contract": "energy.capex",
         "values": [
           {
             "amount": -500000.0,
@@ -1762,6 +1763,7 @@
         "offset": 0.0,
         "entity": "asset.microgrid",
         "category": "investing.capital.capex",
+        "contract": "energy.capex.final_draw",
         "values": [
           {
             "amount": 0.0,
@@ -1966,6 +1968,7 @@
         "offset": 1.0,
         "entity": "asset.microgrid",
         "category": "operating.expense.om",
+        "contract": "energy.om",
         "values": [
           {
             "amount": 0.0,
@@ -2170,6 +2173,7 @@
         "offset": 1.0,
         "entity": "asset.microgrid",
         "category": "operating.revenue.energy",
+        "contract": "energy.ppa",
         "values": [
           {
             "amount": 0.0,
@@ -2928,6 +2932,49 @@
         "symbol": "asset.microgrid",
         "family": "asset",
         "type": "Energy.Asset.GenerationFacility"
+      }
+    ],
+    "contracts": [
+      {
+        "name": "energy.capex",
+        "type": "Energy.Contract.Capex",
+        "master": "Contract.Line",
+        "contract_name": "energy.capex",
+        "subject": "asset.microgrid",
+        "streams": [
+          "energy.capex.outlay"
+        ]
+      },
+      {
+        "name": "energy.capex.final_draw",
+        "type": "Energy.Contract.Capex",
+        "master": "Contract.Line",
+        "contract_name": "energy.capex",
+        "instance": "final_draw",
+        "subject": "asset.microgrid",
+        "streams": [
+          "energy.capex.outlay.final_draw"
+        ]
+      },
+      {
+        "name": "energy.om",
+        "type": "Energy.Contract.OperationsAndMaintenance",
+        "master": "Contract.Service",
+        "contract_name": "energy.om",
+        "subject": "asset.microgrid",
+        "streams": [
+          "energy.om.expense"
+        ]
+      },
+      {
+        "name": "energy.ppa",
+        "type": "Energy.Contract.PPA",
+        "master": "Contract.Offtake",
+        "contract_name": "energy.ppa",
+        "subject": "asset.microgrid",
+        "streams": [
+          "energy.ppa.revenue"
+        ]
       }
     ]
   }

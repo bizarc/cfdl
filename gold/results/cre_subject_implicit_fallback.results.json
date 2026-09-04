@@ -1,7 +1,7 @@
 {
-  "results_version": "0.12",
-  "model_hash": "811fc6e7a2df70267fc14763c4c9bd461fe78509f63fa32ef44f25e3292d3e16",
-  "ledger_hash": "30ae6e9d06a733a4db2664d5a4122bfc1c842f23e3e70457ace332099c0404aa",
+  "results_version": "0.13",
+  "model_hash": "bc052dfa490b3e219a57dd256a726aca38fdbd29e05efd89dc849f1527e1d25f",
+  "ledger_hash": "6c0eb202e9dcc741a3df837daecdad126f29514a2418c4456696dc287c6ef010",
   "engine": {
     "name": "cfdl-engine",
     "version": "0.9.0"
@@ -1042,6 +1042,7 @@
         "offset": 1.0,
         "entity": "asset.first_entity",
         "category": "operating.expense.opex",
+        "contract": "cre.opex_line",
         "values": [
           {
             "amount": -12000.0,
@@ -1575,6 +1576,18 @@
         "symbol": "asset.second_entity",
         "family": "asset",
         "type": "CRE.Asset.RealProperty"
+      }
+    ],
+    "contracts": [
+      {
+        "name": "cre.opex_line",
+        "type": "CRE.Contract.OperatingExpense",
+        "master": "Contract.Line",
+        "contract_name": "cre.opex_line",
+        "subject": "asset.first_entity",
+        "streams": [
+          "cre.opex.line"
+        ]
       }
     ]
   }

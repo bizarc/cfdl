@@ -1,7 +1,7 @@
 {
-  "results_version": "0.12",
-  "model_hash": "d3efd36931493f979337835579d49b6d35c9f7ac9b4c9a5c110fbb1d8923486a",
-  "ledger_hash": "dd3ec11e79bb1987fb0ed96094bf82d394ac97ccab96e2a3a256430b61f4e91a",
+  "results_version": "0.13",
+  "model_hash": "cb7bdd0343d70f0f7e0dc28c72b4bd82cd2d442938b3dd6f17438ce3a5cd1a71",
+  "ledger_hash": "59dea0109893915f0d37c3fbcf4023aeb9224ea992ece97e40f47b28aa328195",
   "engine": {
     "name": "cfdl-engine",
     "version": "0.9.0"
@@ -240,6 +240,7 @@
         "offset": 1.0,
         "entity": "asset.microgrid",
         "category": "operating.revenue.energy",
+        "contract": "energy.capacity",
         "values": [
           {
             "amount": 60000.0,
@@ -264,6 +265,7 @@
         "offset": 1.0,
         "entity": "asset.microgrid",
         "category": "operating.expense.om",
+        "contract": "energy.om",
         "values": [
           {
             "amount": -48000.0,
@@ -288,6 +290,7 @@
         "offset": 1.0,
         "entity": "asset.microgrid",
         "category": "operating.revenue.energy",
+        "contract": "energy.ppa",
         "values": [
           {
             "amount": 357000.0,
@@ -373,6 +376,38 @@
         "symbol": "asset.microgrid",
         "family": "asset",
         "type": "Energy.Asset.GenerationFacility"
+      }
+    ],
+    "contracts": [
+      {
+        "name": "energy.capacity",
+        "type": "Energy.Contract.CapacityPayment",
+        "master": "Contract.Offtake",
+        "contract_name": "energy.capacity",
+        "subject": "asset.microgrid",
+        "streams": [
+          "energy.capacity.revenue"
+        ]
+      },
+      {
+        "name": "energy.om",
+        "type": "Energy.Contract.OperationsAndMaintenance",
+        "master": "Contract.Service",
+        "contract_name": "energy.om",
+        "subject": "asset.microgrid",
+        "streams": [
+          "energy.om.expense"
+        ]
+      },
+      {
+        "name": "energy.ppa",
+        "type": "Energy.Contract.PPA",
+        "master": "Contract.Offtake",
+        "contract_name": "energy.ppa",
+        "subject": "asset.microgrid",
+        "streams": [
+          "energy.ppa.revenue"
+        ]
       }
     ]
   }

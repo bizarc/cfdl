@@ -992,6 +992,50 @@ pub struct SliceWindow {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ResultsGraph {
     pub entities: Vec<GraphEntity>,
+    /// The contracts the model declared, each resolved to its type and master
+    /// (docs/40 §8), with the streams lowered from it. Absent when the model
+    /// declares none.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub contracts: Vec<GraphContract>,
+}
+
+/// A contract as the results publish it: what it is, what it sits on, who it
+/// is between, and which streams are its cash. With `contract` on each
+/// stream series this is the third axis of attribution beside owner and
+/// category — whose cash, what kind, under which agreement.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct GraphContract {
+    /// The qualified name — `cre.lease_unit.tenant_a`.
+    pub name: String,
+    /// The ontology type — `CRE.Contract.UnitLease`.
+    #[serde(rename = "type")]
+    pub type_id: String,
+    /// The master at the root of the type's chain — `Contract.Lease`.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub master: Option<String>,
+    /// The pack's name for the type — `cre.lease_unit`.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub contract_name: Option<String>,
+    /// The instance token, where the name carries one — `tenant_a`.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub instance: Option<String>,
+    /// The entity the contract is written on.
+    pub subject: String,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub parties: Vec<GraphParty>,
+    /// The streams lowered from this contract, by name.
+    pub streams: Vec<String>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct GraphParty {
+    /// The role as the model bound it — the pack's word.
+    pub role: String,
+    /// The master's word for it.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub master_role: Option<String>,
+    /// The party entity's symbol.
+    pub entity: String,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -1036,6 +1080,11 @@ pub struct Series {
     /// kind.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub category: Option<String>,
+    /// The contract this stream was lowered from (`cre.lease_unit.tenant_a`).
+    /// Present on pack-lowered stream series only. With `graph.contracts`,
+    /// the third axis beside `entity` and `category`.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub contract: Option<String>,
     pub values: Vec<SeriesValue>,
 }
 
@@ -1057,6 +1106,7 @@ impl Series {
             offset,
             entity: None,
             category: None,
+            contract: None,
             values: values
                 .iter()
                 .map(|amount| {
@@ -1102,6 +1152,7 @@ impl Series {
             offset: None,
             entity: None,
             category: None,
+            contract: None,
             values: values
                 .iter()
                 .map(|v| match v {
@@ -1122,6 +1173,7 @@ impl Series {
             offset: None,
             entity: None,
             category: None,
+            contract: None,
             values: values.iter().map(|v| SeriesValue::Number(*v)).collect(),
         }
     }

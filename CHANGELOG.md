@@ -8,6 +8,19 @@ This project follows Semantic Versioning: https://semver.org/
 
 ## [Unreleased]
 
+**Master contract types, stages 3–4 (`docs/40`).** A contract's type is
+resolved once from its declaration and carried: the two-token
+`contract cre.lease_unit tenant_a` states it, the fused spelling still
+works, and the IR records type, master, instance, parties (with the
+master's role) and terms as typed values. Four diagnostics check a model
+against the type's effective roster — `E1371` unknown term, `E1372`
+missing required term or empty group, `E1373` unknown type, `E1374` master
+declared — and every pack type now declares its terms as fields.
+`results_version` moves from 0.12 to 0.13: the results graph publishes the
+model's contracts (`graph.contracts`) and each lowered stream series names
+its contract. MCP `lookup` reads each type against its master chain and
+lists the masters a pack refines.
+
 ## [0.9.0] - 2026-09-01
 
 The reporting plane: metrics, slices, and statements. 17 commits since 0.8.0.

@@ -652,6 +652,12 @@ struct IrStatementRow {
 struct IrGeneratedBy {
     pack: IrPackRef,
     rule_id: String,
+    /// The contract the rule lowered this stream FROM — its qualified name.
+    /// A rule serves every instance of its type, so the rule alone does not
+    /// say which lease a rent stream belongs to; this does, and the results
+    /// graph attributes the stream to its contract with it.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    contract: Option<String>,
 }
 
 #[derive(Debug, Serialize)]
@@ -6553,6 +6559,7 @@ fn lower_contract_streams(
                                 version: pack.version.clone(),
                             },
                             rule_id: rule.id.clone(),
+                            contract: Some(contract.name.clone()),
                         }),
                     },
                 },

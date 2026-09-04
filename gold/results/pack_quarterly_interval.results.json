@@ -1,7 +1,7 @@
 {
-  "results_version": "0.12",
-  "model_hash": "540a000d06cd48c08921e3001557640e3daaf3f68dd075a274a840408e702008",
-  "ledger_hash": "58f494cde08b963a482f6fe6c30c0a14d35f1b3ca9e3fd980431ef26f14dbedb",
+  "results_version": "0.13",
+  "model_hash": "82fdaca49202f90c8721b8a0334d9b8f59e098970f02cd7df108a64cc3958186",
+  "ledger_hash": "1eb80d7dfa38e3cf1fb9ff0e027deb7517d129749c2c1f0dca4d3e296c7ceae1",
   "engine": {
     "name": "cfdl-engine",
     "version": "0.9.0"
@@ -359,6 +359,7 @@
         "offset": 1.0,
         "entity": "legal.borrower",
         "category": "operating.revenue.coupon",
+        "contract": "test.coupon_contract",
         "values": [
           {
             "amount": 0.0,
@@ -780,6 +781,16 @@
         "symbol": "asset.borrower",
         "family": "asset",
         "type": "Asset.Financial"
+      }
+    ],
+    "contracts": [
+      {
+        "name": "test.coupon_contract",
+        "type": "core.Contract",
+        "subject": "asset.borrower",
+        "streams": [
+          "testpack.coupon"
+        ]
       }
     ]
   }

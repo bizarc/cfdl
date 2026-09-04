@@ -1,7 +1,7 @@
 {
-  "results_version": "0.12",
-  "model_hash": "3ddf9daf9c18a4f7532f88c46a49c407c139738df786df159efa3a5236b53d7c",
-  "ledger_hash": "3ce00ff209ff01fd66472a7b8e4ae747cd4e54077d0cc70a639248816eb97910",
+  "results_version": "0.13",
+  "model_hash": "0117e01fa1da841c205a5f396d7de887b8c1a41b91f25687e1179acdef538528",
+  "ledger_hash": "ede9182c88e07956ad162759e87cca56e06e73206bf29ec575dfb97b45d66af8",
   "engine": {
     "name": "cfdl-engine",
     "version": "0.9.0"
@@ -1591,6 +1591,7 @@
         "offset": 0.0,
         "entity": "asset.target",
         "category": "investing.acquisition.purchase",
+        "contract": "opco.acquisition",
         "values": [
           {
             "amount": -5000000.0,
@@ -1699,6 +1700,7 @@
         "offset": 1.0,
         "entity": "asset.target",
         "category": "investing.capital.capex",
+        "contract": "opco.capex_line",
         "values": [
           {
             "amount": -9000.0,
@@ -1807,6 +1809,7 @@
         "offset": 1.0,
         "entity": "asset.target",
         "category": "financing.debt.interest_paid",
+        "contract": "opco.term_debt",
         "values": [
           {
             "amount": -22500.0,
@@ -1915,6 +1918,7 @@
         "offset": 1.0,
         "entity": "asset.target",
         "category": "financing.debt.principal",
+        "contract": "opco.term_debt",
         "values": [
           {
             "amount": 0.0,
@@ -2023,6 +2027,7 @@
         "offset": 0.0,
         "entity": "asset.target",
         "category": "financing.debt.proceeds",
+        "contract": "opco.term_debt",
         "values": [
           {
             "amount": 3000000.0,
@@ -2131,6 +2136,7 @@
         "offset": 1.0,
         "entity": "asset.target",
         "category": "investing.disposal.selling_costs",
+        "contract": "opco.exit_ebitda",
         "values": [
           {
             "amount": 0.0,
@@ -2239,6 +2245,7 @@
         "offset": 1.0,
         "entity": "asset.target",
         "category": "investing.disposal.proceeds",
+        "contract": "opco.exit_ebitda",
         "values": [
           {
             "amount": 0.0,
@@ -2347,6 +2354,7 @@
         "offset": 1.0,
         "entity": "asset.target",
         "category": "operating.expense.opex",
+        "contract": "opco.opex_line",
         "values": [
           {
             "amount": -120000.0,
@@ -2455,6 +2463,7 @@
         "offset": 1.0,
         "entity": "asset.target",
         "category": "operating.revenue.recurring",
+        "contract": "opco.revenue_line",
         "values": [
           {
             "amount": 200000.0,
@@ -2563,6 +2572,7 @@
         "offset": 1.0,
         "entity": "asset.target",
         "category": "operating.income_tax.paid",
+        "contract": "opco.cash_taxes",
         "values": [
           {
             "amount": -9375.0,
@@ -2671,6 +2681,7 @@
         "offset": 1.0,
         "entity": "asset.target",
         "category": "operating.working_capital",
+        "contract": "opco.working_capital_policy",
         "values": [
           {
             "amount": -223561.643836,
@@ -8024,6 +8035,91 @@
         "symbol": "asset.target",
         "family": "asset",
         "type": "OpCo.Asset.Enterprise"
+      }
+    ],
+    "contracts": [
+      {
+        "name": "opco.acquisition",
+        "type": "OpCo.Contract.Acquisition",
+        "master": "Contract.Purchase",
+        "contract_name": "opco.acquisition",
+        "subject": "asset.target",
+        "streams": [
+          "opco.acquisition.price"
+        ]
+      },
+      {
+        "name": "opco.capex_line",
+        "type": "OpCo.Contract.CapexLine",
+        "master": "Contract.Line",
+        "contract_name": "opco.capex_line",
+        "subject": "asset.target",
+        "streams": [
+          "opco.capex.line"
+        ]
+      },
+      {
+        "name": "opco.cash_taxes",
+        "type": "OpCo.Contract.CashTaxes",
+        "master": "Contract.Tax",
+        "contract_name": "opco.cash_taxes",
+        "subject": "asset.target",
+        "streams": [
+          "opco.taxes.cash"
+        ]
+      },
+      {
+        "name": "opco.exit_ebitda",
+        "type": "OpCo.Contract.ExitAtEbitdaMultiple",
+        "master": "Contract.Sale",
+        "contract_name": "opco.exit_ebitda",
+        "subject": "asset.target",
+        "streams": [
+          "opco.exit.selling_costs",
+          "opco.exit.value"
+        ]
+      },
+      {
+        "name": "opco.opex_line",
+        "type": "OpCo.Contract.OperatingExpenseLine",
+        "master": "Contract.Line",
+        "contract_name": "opco.opex_line",
+        "subject": "asset.target",
+        "streams": [
+          "opco.opex.recurring"
+        ]
+      },
+      {
+        "name": "opco.revenue_line",
+        "type": "OpCo.Contract.RevenueLine",
+        "master": "Contract.Line",
+        "contract_name": "opco.revenue_line",
+        "subject": "asset.target",
+        "streams": [
+          "opco.revenue.recurring"
+        ]
+      },
+      {
+        "name": "opco.term_debt",
+        "type": "OpCo.Contract.TermDebt",
+        "master": "Contract.Debt",
+        "contract_name": "opco.term_debt",
+        "subject": "asset.target",
+        "streams": [
+          "opco.debt.interest",
+          "opco.debt.principal",
+          "opco.debt.proceeds"
+        ]
+      },
+      {
+        "name": "opco.working_capital_policy",
+        "type": "OpCo.Contract.WorkingCapitalPolicy",
+        "master": "Contract.Line",
+        "contract_name": "opco.working_capital_policy",
+        "subject": "asset.target",
+        "streams": [
+          "opco.working_capital.adjustment"
+        ]
       }
     ]
   }
