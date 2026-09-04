@@ -3188,3 +3188,104 @@ Provenance: found writing `merchant_storage_arbitrage`, whose market input is
 730 literal points that no results document can attribute. The desired shape was
 then read from `evs-platform/docs/03_registries_specification.md` rather than
 inferred. Related: §7.1, `docs/27` §4.4 (what `ref` buys), and EVS question 26.
+
+### 7.100 A curve extrapolates flat past both ends, in silence
+
+*To investigate. The behavior is defensible for the construct's original use and
+wrong for another it has acquired; what follows is the evidence, not a proposed
+fix.*
+
+Belongs with §5, language and engine.
+
+`curve_value` outside a curve's declared range returns the nearest endpoint.
+Probed directly against a three-point table:
+
+```
+curve tbl { 2026-01: 10.0, 2027-01: 20.0, 2028-01: 30.0 }
+```
+
+| read over | values returned |
+|---|---|
+| 2026–2031 | 10, 20, 30, **30, 30, 30** |
+| 2024–2029 | **10, 10,** 10, 20, 30, **30** |
+
+Flat both directions, with no diagnostic at compile time or run time.
+
+**Why that is right, and why it is also wrong.** A curve is the construct market
+data arrives in, and flat-forward extrapolation is the standard convention for a
+price curve — nobody wants a forward rate to fall off a cliff at the last quoted
+tenor. But a curve is also the natural home for a *schedule*: a depreciation
+table, a step-down fee, any finite series of stated allowances. A schedule that
+silently repeats its final entry forever is not a convention, it is a wrong
+answer, and the two uses want opposite behavior from the same call.
+
+**How it was found, which is the part worth keeping.** Writing a closed-form
+after-tax solve, the MACRS five-year table was declared as a curve and read by a
+tax stream running the full 25-year horizon. The allowance continued at 5.76%
+for nineteen years past the schedule's end, and the run reported a confident
+`model.npv` of 260,805.84. Nothing flagged it. It was caught only because the
+closed form independently predicted what net present value should be, and the
+discrepancy was exactly the extra depreciation — without that second computation
+the number would have looked entirely reasonable.
+
+The fix used in that model was to let the stream's `schedule` end the deduction,
+which works and is arguably the better spelling anyway. That is a workaround
+available to a modeler who already knows the behavior.
+
+**What this is not.** Not a request to make extrapolation an error — that would
+break every price curve in the suite. The narrow questions are whether a curve
+should be able to *declare* that it ends (so a read past it is a diagnostic
+rather than a repeat), and whether the two uses are actually one construct.
+
+Provenance: found 2026-09-03 building a closed-form tariff solve against
+`benchmarks/energy/crest_solar_cost_based`. Related: §7.99 (a curve cannot cite
+its source), §7.95 (undefined is not zero) — the same shape of silence.
+
+### 7.101 A stream that folds a field reads zero, in silence
+
+*To investigate, and the block may well be correct. The silence is the part that
+is not.*
+
+Belongs with §5, language and engine.
+
+A field is CFDL's non-cash computed series: its values publish as a series and
+stay out of `model.net_cash_flow`. Confirmed on a two-field probe, where
+`asset.p.disc_cost` published `[12000.0, 11111.1, 10288.1, 9526.0, 8820.4]`
+while net cash flow carried only the model's actual outflow.
+
+The same fold, from two readers:
+
+| reader | `series_sum("asset.p.disc_cost", 0, 4)` |
+|---|---|
+| a metric | **51745.52** |
+| a stream | **0.0** |
+
+`series_sum` from a stream selects streams. A field pattern matches nothing, and
+nothing is reported — the stream evaluated, produced zero, and the model ran to
+completion.
+
+**Why the block is probably right.** A stream folding other streams over a whole
+horizon is already supported and correct: dependency-ordered waves (#144) settle
+an acyclic fold target first, and a stream is not state. A *field* is state, and
+`docs/28` §4 makes state reads strictly backward. Folding a field forward from
+period 0 would read state that has not settled. So this is not the causal plane
+failing to reach something it should — it is very likely the backward-only rule
+holding exactly as designed, and any entry framed as "let a stream see a field's
+future" would be wrong at the premise in the way §7.100 (closed) was.
+
+**What is left after conceding that.** The diagnosis costs nothing and the
+silence costs a wrong number. A selector that matches no series is the same
+defect as §7.38: a pattern that resolves to nothing should say so, particularly
+when the identical text in a neighboring construct resolves to a real value.
+A modeler who writes this has made a plane error and gets a plausible zero.
+
+**What this is not.** Not a request for a new construct, and not urgent. Where
+the target is linear in the unknown, the whole need disappears — a rate solve
+can be written in closed form with no helper series at all, which is how the
+CREST tariff solve was ultimately expressed. See the note on that below.
+
+Provenance: found 2026-09-03 probing whether a model can carry a computed series
+that is not cash, chasing a discounted helper for a tariff solve. The
+investigation also refuted an earlier claim of mine that horizon-wide folds are
+unreachable from streams; they are reachable over streams, and the probe pair
+above is what distinguishes the two cases. Related: §7.38, §7.94, §7.95.
