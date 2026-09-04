@@ -59,6 +59,11 @@ what a kind of agreement *is*:
 | `Contract.Option` | grantor, holder | An election — cash the holder chooses to take. Every pack's elections refine this. |
 | `Contract.Derivative` | party, counterparty | A hedge or exchange of exposures — a swap, a rate cap, a collar. |
 | `Contract.Insurance` | insurer, insured | Premiums against losses — property, title, business interruption. |
+| `Contract.Security` | issuer, holder | A note or bond: a face, a coupon, and principal paid by allocation from collateral through a priority of payments. |
+| `Contract.Equity` | issuer, holder | An ownership interest — a partnership, LLC, JV or fund interest, a preferred share, a residual certificate. |
+| `Contract.Royalty` | licensor, licensee | A claim on another agreement's revenue — a license, a mineral or land royalty, a catalog. |
+| `Contract.Grant` | grantor, recipient | Support a public party agreed to pay — a grant, a subsidy, a TIF increment, a coverage top-up. |
+| `Contract.Guarantee` | guarantor, beneficiary, obligor | A third party standing behind another agreement — a parent or completion guarantee, a letter of credit. |
 
 A master is **abstract**. It binds no lowering rule — a pack that gives one a
 rule is refused at load — and because a model reaches a contract type only

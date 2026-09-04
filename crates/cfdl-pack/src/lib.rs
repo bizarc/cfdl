@@ -204,6 +204,24 @@ impl PackOntology {
         fn line(name: &str, d: &str) -> OntologyLine {
             OntologyLine {
                 name: name.to_string(),
+                allocated: false,
+                optional: false,
+                description: Some(d.to_string()),
+            }
+        }
+        fn allocated(name: &str, d: &str) -> OntologyLine {
+            OntologyLine {
+                name: name.to_string(),
+                allocated: true,
+                optional: false,
+                description: Some(d.to_string()),
+            }
+        }
+        fn optional(name: &str, d: &str) -> OntologyLine {
+            OntologyLine {
+                name: name.to_string(),
+                allocated: false,
+                optional: true,
                 description: Some(d.to_string()),
             }
         }
@@ -469,6 +487,77 @@ impl PackOntology {
                     vec![line("premium", "Premium paid.")],
                     Some("pays"),
                     "Premiums against losses — property, title, business interruption."),
+                // THE FINANCING SIDE OF A STRUCTURED DEAL, and three agreements
+                // the bespoke and energy cases restated as streams (docs/40
+                // §4.13–4.17, reworked from their governing documents on
+                // 4 September 2026; docs/41 is the survey they answer).
+                master("Contract.Security", &["issuer", "holder"],
+                    vec![
+                        field("face", "decimal", true, None, None, "The initial principal amount — what the holder is owed at issuance."),
+                        field("coupon", "decimal", false, Some("ratio"), Some("coupon"), "Annual coupon, where fixed."),
+                        field("index_curve", "string", false, None, Some("coupon"), "The declared curve a floating coupon resets off, with `margin`."),
+                        field("margin", "decimal", false, Some("ratio"), None, "Spread over `index_curve`."),
+                        field("payment_frequency", "string", false, None, None, "The payment dates' rhythm; the calendar's when absent."),
+                        field("day_count", "string", false, None, None, "Accrual convention; the model's when absent."),
+                    ],
+                    vec![
+                        line("interest", "The coupon on the outstanding claim, each payment date."),
+                        allocated("principal", "What the priority of payments pays the holder — a step into the holder's account; the claim is face less what the account has received."),
+                        optional("proceeds", "Issuance proceeds, where the model starts at issuance."),
+                        optional("premium", "A make-whole or prepayment premium on early redemption."),
+                        optional("redemption", "A call at a stated price, retiring the class early."),
+                    ],
+                    None,
+                    "A note or bond: a face, a coupon, and principal paid by allocation from collateral through a priority of payments. An indenture's payment and priority articles."),
+                master("Contract.Equity", &["issuer", "holder"],
+                    vec![
+                        field("commitment", "decimal", true, None, None, "The capital the holder agreed to contribute."),
+                        field("share", "decimal", true, Some("ratio"), None, "The holder's percentage interest — its share of distributions before any promote."),
+                        field("preferred_return", "decimal", false, Some("ratio"), None, "The annual rate the holder's contributed capital accrues ahead of the promote; absent on common equity."),
+                    ],
+                    vec![
+                        line("contribution", "The commitment funded on its call schedule — the one cash an equity agreement produces by its own terms."),
+                        allocated("distribution", "What the priority of distributions pays the holder — return of capital, preference, promote — as steps into the holder's account."),
+                    ],
+                    None,
+                    "An ownership interest — a partnership, LLC, JV or fund interest, a preferred share, a residual certificate. An LPA's contribution, capital-account and distribution articles."),
+                master("Contract.Royalty", &["licensor", "licensee"],
+                    vec![
+                        field("rate", "decimal", true, Some("ratio"), None, "The share of the basis paid."),
+                        field("basis", "string", true, None, None, "What the rate applies to — a selector over the series the licensee's own agreements produce."),
+                        field("minimum", "decimal", false, None, None, "A floor per period, paid whether or not the basis reaches it."),
+                        field("advance", "decimal", false, None, None, "A payment at term start, recouped against royalties as they accrue."),
+                    ],
+                    vec![
+                        line("royalty", "The greater of rate on basis and the minimum, less any unrecouped advance."),
+                        optional("advance", "The advance paid at term start, where one is stated."),
+                    ],
+                    Some("pays"),
+                    "A claim on another agreement's revenue — a licence, a mineral or land royalty, a catalogue. A licence agreement's royalty, minimum and advance articles."),
+                master("Contract.Grant", &["grantor", "recipient"],
+                    vec![
+                        field("amount", "decimal", false, None, Some("support"), "A fixed sum per period."),
+                        field("amount_year", "decimal", false, None, Some("support"), "A fixed sum per year, spread by the calendar."),
+                        field("target", "decimal", false, None, Some("support"), "The level the grantor tops the basis up to."),
+                        field("basis", "string", false, None, None, "The measured series a top-up is tested against — a selector."),
+                        field("cap", "decimal", false, None, None, "The most the grantor pays over the term."),
+                    ],
+                    vec![line("support", "The fixed amount, or the shortfall of the basis below the target, bounded by the cap.")],
+                    Some("receives"),
+                    "Support a public party agreed to pay — a grant, a subsidy, a TIF increment, a coverage top-up. A grant agreement's amount, conditions and clawback articles."),
+                master("Contract.Guarantee", &["guarantor", "beneficiary", "obligor"],
+                    vec![
+                        field("covered", "contract", true, None, None, "The agreement whose performance is guaranteed — a declared contract, by name."),
+                        field("limit", "decimal", true, None, None, "The most the guarantor pays."),
+                        field("fee", "decimal", false, Some("ratio"), None, "What the guarantor is paid per period, on the limit or the covered balance."),
+                    ],
+                    vec![
+                        line("fee", "The fee on the limit or the covered balance, each period."),
+                        allocated("claim", "What the guarantor pays the beneficiary on a shortfall of the covered agreement — a step drawn from the guarantor, bounded by the limit less claims paid."),
+                        optional("recovery", "The guarantor's recovery from the obligor by subrogation."),
+                    ],
+                    None,
+                    "A third party standing behind another agreement — a parent or completion guarantee, a letter of credit, a bond guarantee. Three roles, because the instrument covers the obligor's performance to the beneficiary."),
                 master("Contract.Line", &["owner"],
                     vec![
                         field("amount", "decimal", false, None, None, "Amount per period."),
@@ -837,6 +926,18 @@ pub struct OntologyRole {
 #[serde(deny_unknown_fields)]
 pub struct OntologyLine {
     pub name: String,
+    /// The structure ALLOCATES this line rather than a rule emitting it
+    /// (docs/40 §6): a security's principal, an equity interest's
+    /// distribution, a guarantee's claim are waterfall steps paying the
+    /// holder's account. Load asks no rule for it, and refuses a rule that
+    /// claims to emit it.
+    #[serde(default)]
+    pub allocated: bool,
+    /// A line the master NAMES so every refinement spells it the same way,
+    /// without requiring it: issuance proceeds, a make-whole premium. A
+    /// refinement's rule may emit it; none must.
+    #[serde(default)]
+    pub optional: bool,
     #[serde(default)]
     pub description: Option<String>,
 }
@@ -2256,6 +2357,35 @@ fn parse_ontology(raw: &str, source: &str, pack_name: &str) -> Result<PackOntolo
         relations: parsed.relations,
     };
 
+    // A FIELD'S TYPE IS ONE OF A KNOWN FEW. `contract` is a reference to a
+    // declared contract by name (docs/40 §3) — a guarantee's `covered` — and
+    // the compiler resolves it; the rest are values.
+    const FIELD_TYPES: [&str; 6] = ["decimal", "integer", "number", "string", "date", "contract"];
+    let fields_of = ontology
+        .entities
+        .iter()
+        .map(|e| (e.type_id.as_str(), &e.fields))
+        .chain(
+            ontology
+                .contracts
+                .iter()
+                .map(|c| (c.type_id.as_str(), &c.fields)),
+        );
+    for (type_id, fields) in fields_of {
+        for field in fields.iter() {
+            if !FIELD_TYPES.contains(&field.field_type.as_str()) {
+                return Err(PackLoadError {
+                    message: format!(
+                        "Ontology '{source}': type '{type_id}' field '{}' has field_type '{}'; a field is one of {}.",
+                        field.name,
+                        field.field_type,
+                        FIELD_TYPES.join(", ")
+                    ),
+                });
+            }
+        }
+    }
+
     let mut seen_types: BTreeSet<&str> = BTreeSet::new();
     for entity in &ontology.entities {
         if !seen_types.insert(entity.type_id.as_str()) {
@@ -2824,7 +2954,7 @@ fn validate_ontology_against_rules(
                     ),
                 });
             };
-            if !declared.iter().any(|l| l.name == line) {
+            let Some(found) = declared.iter().find(|l| l.name == line) else {
                 return Err(PackLoadError {
                     message: format!(
                         "Ontology '{source}': rule '{}' emits line '{line}', which contract type '{}' does not declare. Its lines are: {}.",
@@ -2833,9 +2963,20 @@ fn validate_ontology_against_rules(
                         declared.iter().map(|l| l.name.as_str()).collect::<Vec<_>>().join(", ")
                     ),
                 });
+            };
+            // THE STRUCTURE ALLOCATES IT (docs/40 §6): a rule claiming to
+            // emit a security's principal would put a schedule where a
+            // priority of payments belongs.
+            if found.allocated {
+                return Err(PackLoadError {
+                    message: format!(
+                        "Ontology '{source}': rule '{}' emits line '{line}', which contract type '{}' declares as ALLOCATED — a waterfall step pays it, not a rule.",
+                        rule.id, contract.type_id
+                    ),
+                });
             }
         }
-        for line in &declared {
+        for line in declared.iter().filter(|l| !l.allocated && !l.optional) {
             if !own_rules
                 .iter()
                 .any(|r| r.line.as_deref() == Some(line.name.as_str()))
@@ -4922,6 +5063,142 @@ unit = "months"
             merged.master_of("T.Contract.Mortgage").as_deref(),
             Some("Contract.Debt")
         );
+    }
+
+    #[test]
+    fn an_allocated_line_needs_no_rule_and_refuses_one() {
+        let ontology = parse_ontology(
+            r#"
+[[contracts]]
+type_id = "T.Contract.Note"
+contract_name = "t.note"
+parties = ["issuer", "holder"]
+refines = "Contract.Security"
+"#,
+            "test",
+            "t",
+        )
+        .expect("ontology parses");
+        let rule = |line: &str| LoweringRule {
+            id: format!("t_note_{line}"),
+            contract_name: "t.note".to_string(),
+            line: Some(line.to_string()),
+            stream_name: format!("t.note.{line}"),
+            owner_entity: "${subject}".to_string(),
+            direction: "outflow".to_string(),
+            currency: String::new(),
+            category: String::new(),
+            amount_expr: "{{contract.face}} * {{contract.coupon}} / 12".to_string(),
+            schedule_kind: "every".to_string(),
+            schedule_every: String::new(),
+            cadences: Vec::new(),
+            schedule_net_days: String::new(),
+            schedule_net_months: String::new(),
+            schedule_placement: None,
+            schedule_from: "{{contract.term_start}}".to_string(),
+            schedule_to: "{{contract.term_end}}".to_string(),
+            field_name: String::new(),
+            field_init: String::new(),
+            field_next: String::new(),
+            field_every: String::new(),
+            field_from: String::new(),
+            field_to: String::new(),
+            defaults: BTreeMap::new(),
+            units: BTreeMap::new(),
+        };
+        // Interest lowered, principal allocated, proceeds optional: one
+        // rule covers the type.
+        validate_ontology_against_rules(&ontology, &[rule("interest")], "test")
+            .expect("interest alone covers a security's lowered lines");
+        // A rule for the allocated line is refused — the structure pays it.
+        let err = validate_ontology_against_rules(
+            &ontology,
+            &[rule("interest"), rule("principal")],
+            "test",
+        )
+        .expect_err("a rule may not emit an allocated line");
+        assert!(err.message.contains("ALLOCATED"), "{}", err.message);
+        // An optional line may be emitted and need not be.
+        validate_ontology_against_rules(&ontology, &[rule("interest"), rule("proceeds")], "test")
+            .expect("an optional line may be emitted");
+        let lines: Vec<(String, bool, bool)> = ontology
+            .merged_with_base()
+            .effective_lines("T.Contract.Note")
+            .into_iter()
+            .map(|l| (l.name, l.allocated, l.optional))
+            .collect();
+        assert!(lines.contains(&("principal".to_string(), true, false)));
+        assert!(lines.contains(&("proceeds".to_string(), false, true)));
+    }
+
+    #[test]
+    fn a_field_is_one_of_the_known_types_and_may_reference_a_contract() {
+        let covered = parse_ontology(
+            r#"
+[[contracts]]
+type_id = "T.Contract.CompletionGuarantee"
+contract_name = "t.completion_guarantee"
+parties = ["guarantor", "beneficiary", "obligor"]
+refines = "Contract.Guarantee"
+"#,
+            "test",
+            "t",
+        )
+        .expect("ontology parses");
+        let fields = covered
+            .merged_with_base()
+            .effective_fields("T.Contract.CompletionGuarantee");
+        let field = fields
+            .iter()
+            .find(|f| f.name == "covered")
+            .expect("covered inherited");
+        assert_eq!(field.field_type, "contract");
+        assert!(field.required);
+
+        let err = parse_ontology(
+            r#"
+[[contracts]]
+type_id = "T.Contract.Odd"
+contract_name = "t.odd"
+parties = ["lender", "borrower"]
+refines = "Contract.Debt"
+
+[[contracts.fields]]
+name = "flavour"
+field_type = "colour"
+"#,
+            "test",
+            "t",
+        )
+        .expect_err("an unknown field type is refused");
+        assert!(
+            err.message.contains("field_type 'colour'"),
+            "{}",
+            err.message
+        );
+    }
+
+    #[test]
+    fn the_base_carries_twenty_one_masters() {
+        let base = PackOntology::language_base();
+        let masters = base.contracts.iter().filter(|c| c.is_abstract).count();
+        assert_eq!(
+            masters, 21,
+            "fifteen counterparty masters, Line and its five kinds"
+        );
+        for id in [
+            "Contract.Security",
+            "Contract.Equity",
+            "Contract.Royalty",
+            "Contract.Grant",
+            "Contract.Guarantee",
+        ] {
+            assert!(
+                base.contract(id).is_some_and(|c| c.is_abstract),
+                "{id} is a master"
+            );
+        }
+        assert_eq!(base.effective_roles("Contract.Guarantee").len(), 3);
     }
 
     #[test]
