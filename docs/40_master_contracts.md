@@ -103,11 +103,14 @@ promise is checkable.
 
 ## 4. The roster
 
-Seventeen masters: the eleven counterparty masters, `Contract.Line`, and
-its five specializations for the general lines (§4.12, decision R1). For each: the roles, the fields
-(required unless marked opt, with the default where one is a fact of the
-instrument rather than of a deal), the lines, and the side. The argument
-is given where the choice was not obvious.
+Seventeen masters in the language base: the eleven counterparty masters,
+`Contract.Line`, and its five specializations for the general lines
+(§4.12, decision R1); and four more drafted on 4 September 2026 for review
+(§4.13–4.16), which complete the roster against what the benchmarks model
+by hand. For each: the roles, the fields (required unless marked opt,
+with the default where one is a fact of the instrument rather than of a
+deal), the lines, and the side. The argument is given where the choice
+was not obvious.
 
 ### 4.1 `Contract.Debt`
 Roles `lender`, `borrower`. Fields: the amount borrowed, stated one way
@@ -249,6 +252,126 @@ those:
 `Contract.WorkingCapital`). Deduction and WorkingCapital are the two
 kinds the packs already distinguish that the first three did not cover;
 a further kind is added when a pack needs one, never speculatively.
+
+### 4.13 `Contract.Security` — drafted for review
+Roles `issuer`, `holder`. Fields: `face` (the original principal — what
+the holder is owed at issuance); the coupon, stated one way (`coupon`
+fixed, or `index_curve` with `margin` floating — one required);
+`day_count` (opt; the model's convention when absent);
+`payment_frequency` (opt; the calendar's when absent). Line: `interest`.
+Side: open — an ABS model is written from the issuer's seat, a bond
+portfolio from the holder's; each refinement fixes it.
+
+**Why it is not a debt.** A debt's cash follows from its own terms: a
+rate, a balance and a schedule produce interest and principal. A
+security's interest follows from its coupon on its outstanding claim,
+but its PRINCIPAL follows from collateral through a priority of
+payments: it is what the structure allocates to the holder, and the
+holder's claim is `face` less what the holder's account has received —
+the D7 shape the auto ABS pilot already uses. So the master's only line
+is `interest`, which is the only cash a security produces by its own
+terms. Its principal is a waterfall step paying the holder's account, and
+the load check asks no rule to emit it. The same split as `Contract.Equity`
+below, and the same the language already draws between a contract's
+terms and a waterfall's priority.
+
+**Why seniority is not a term.** An indenture agrees the priority, and a
+model states it once, as the ORDER of the waterfall's steps. A `seniority`
+number on the contract would say the same thing a second time, and could
+not say what a waterfall can — sequential here, pro rata there, a
+step-down after a trigger. What was agreed lives on the contract (face,
+coupon); how it is paid lives on the waterfall (order, claims). A slice
+by `type Contract.Security` reaches every class; a step's claim reads the
+class's `face` and the holder's account.
+
+**Balance.** Derived, never lowered: the claim over the holder's account.
+Stage 6's balance role belongs to `Contract.Debt`, whose balance IS a
+lowered field; a security needs no role, and retires when the account
+reaches its face.
+
+**First refinement.** The credit pack's note class, and the auto ABS
+pilot declares its seven classes as securities whose steps read the
+contract's `face` and `coupon` instead of `assume` values. A residual
+certificate is not a security in this sense — it has no face and no
+coupon, and takes what remains — and refines `Contract.Equity`.
+
+### 4.14 `Contract.Equity` — drafted for review
+Roles `issuer`, `holder`. Fields: `commitment` (the capital the holder
+agreed to contribute); `share` (the holder's share of what is
+distributed, as a ratio); `preferred_return` (opt; the annual rate the
+holder's contributed capital accrues before any promote). Line:
+`contribution`. Side: holder pays the contribution; distributions run the
+other way by allocation.
+
+**What the contract states and what the waterfall states — decided
+4 September 2026.** The contract states what was agreed: the commitment,
+the share, the preference rate. The waterfall states the priority:
+return of capital, the preferred return, the promote, the split — steps
+that read the contract's terms and the holder's ACCOUNT (D13:
+contributions are streams into the deal's cash, each partner's account
+holds what has been allocated to them, the accrued preference is a field
+compounding on `prev.<account>`). Nothing on the master is a payment
+rule, for the same reason nothing on `Contract.Security` is: an equity
+interest's cash follows from what remains after a priority, and a
+priority is a waterfall.
+
+**Why `contribution` is the master's line.** It is the one cash an
+equity agreement produces by its own terms — a commitment funded on a
+schedule — and every interest has one. What the holder gets back is
+allocated, so `distribution` is a step paying the holder's account, not
+a line a rule emits.
+
+**Balance.** The holder's account: contributed less distributed, the
+position D13 already keeps. No lowered field, so no stage 6 role.
+
+**Refinements expected.** A JV or LP interest (the Penzance cases, One
+Lincoln's placeholder tiers) adds nothing to the core — the promote and
+the tiers are waterfall steps. A tax-equity interest adds what a flip
+needs: a pre-flip and a post-flip `share`, and the target yield the flip
+tests, which the refinement's machine reads. An ABS residual certificate
+adds nothing and has no `preferred_return`. A management or option pool
+stays an `Option`: an election, not an interest.
+
+### 4.15 `Contract.Royalty` — drafted for review
+Roles `licensor`, `licensee`. Fields: `rate` (the share of the basis
+paid, as a ratio); `basis` (the revenue the rate applies to — a series
+the model publishes, named as a selector); `minimum` (opt, 0; a floor per
+period). Line: `royalty`. Side: licensee pays.
+
+**Why it is its own master.** A royalty is a claim on ANOTHER agreement's
+revenue: nothing is sold (not an offtake), nothing is done (not a
+service), and the amount is a rate on a basis the licensee's own
+contracts produce. That is why its basis is a reference rather than a
+quantity, and why the CREST solar case (`crest_solar_cost_based`) restates
+its royalty as a hand stream reading the PPA's revenue: the pack had no
+place to put a payment computed on a selector. Music and IP catalogues
+are the same shape with a different basis.
+
+### 4.16 `Contract.Grant` — drafted for review
+Roles `grantor`, `recipient`. Fields: the support, stated one way
+(`amount` per period, or `target` with `basis` — the level the grantor
+tops the basis up to — one required). Line: `support`. Side: recipient
+receives.
+
+**Why it is neither a tax nor an offtake.** A tax attribute (`Contract.Tax`)
+is a position against the recipient's own liability — a credit, a
+shield — and lands there. An availability or capacity payment
+(`Contract.Offtake`) buys something: the asset's availability. A grant
+buys nothing and offsets no liability; it is support paid because a
+public party agreed to pay it, either as a fixed amount or as a top-up to
+a target. The PPIAF toll road's coverage subsidy — the authority pays the
+shortfall to a target ADSCR — is the standing case, hand-rolled today
+with the formula stated three times (backlog P4, P9).
+
+**The four together.** Security and Equity are the financing side of
+every structured deal in the corpus, and until now both were invisible
+to the language — note classes as `assume` values and party accounts,
+partnership interests as hand-rolled preference fields. Royalty and Grant
+are the two agreements the bespoke and energy cases restate as streams
+because no master gave a pack a place for them. All four are added
+before their first refinement on the argument §4.9–4.11 already made: a
+master that exists before its refinement costs nothing, and its absence
+is what forces the hand-rolled stream.
 
 ## 5. Roles
 
@@ -470,9 +593,19 @@ contract names, and their accounts hold what they received (`docs/13`
    pack's own metric reads its own streams, and the cross-pack reading is
    the model's and the consumer's — which the results now support without
    the pack.
+5b. **Roster completion** — **drafted, for review** (§4.13–4.16):
+   `Contract.Security`, `Contract.Equity`, `Contract.Royalty` and
+   `Contract.Grant` in the language base; the credit pack refines
+   Security for its note classes and the auto ABS pilot declares its
+   classes as securities whose steps read the contract's terms; a pack
+   refines Equity where a case carries a partnership interest. Built
+   before stage 6, whose balance role is defined against the finished
+   roster.
 6. **State owned by the agreement**: `balance_field` on `Contract.Debt`
    so a pack machine's `on enter retired` extinguishes it for every
-   refinement.
+   refinement. A security's and an equity interest's balance is the
+   holder's account (§4.13, §4.14), derived rather than lowered, so
+   neither needs the role.
 7. **Elections**: `Contract.Option`'s core in the `option` grammar; base
    option names retired.
 
