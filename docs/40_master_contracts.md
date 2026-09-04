@@ -123,7 +123,9 @@ Roles `lender`, `borrower`. Fields: the amount borrowed, stated one way
 (`principal`, or a facility's `commitment`, or a `draw_curve` the facility
 funds against — one required); the rate, stated one way (`interest_rate`
 fixed, or `index_curve` with `margin` floating — one required); `day_count` (opt; the model's convention when absent);
-`payment_frequency` (opt; the calendar's when absent); `amortization_months` (opt; the
+`payment_frequency` (opt; the calendar's when absent); `amortization` (opt;
+the repayment pattern — `level_pay`, `interest_only`, `bullet`, `custom`;
+a refinement fixes it); `amortization_months` (opt; the
 horizon the payment is struck on, which may exceed the term);
 `interest_only_months` (opt, 0); `funded_at_close` (opt, 1);
 `balloon_at_maturity` (opt, 0). Line: `interest` — what EVERY debt produces;
@@ -138,14 +140,15 @@ subject is the borrower for a mortgage and the lender for a held pool —
 and each refinement fixes it. The credit pack's `balance` is this
 master's `principal` (§7); the distinction the pack draws between a
 pool's outstanding and a loan's original is `amort_months` versus
-`term`, not a second notional. THE REPAYMENT PATTERN IS THE REFINEMENT,
-not a term (decided 4 September 2026): a level-payment pool, an
-interest-only bullet, a linear or a negative amortizer are different
-pack contracts — different rules, different cash — and a master field
-naming the pattern would restate the choice the refinement already is.
-The master says a debt has a pattern; ACTUS supplies the shared names
-(`ANN`, `PAM`, `LAM`, `NAM`) the refinements should use consistently
-across packs (`docs/41` §1).
+`term`, not a second notional. A debt has a repayment pattern unless it
+does not amortize, and `amortization` states it; the master does NOT
+enumerate every pattern the industry knows (decided 4 September 2026). A
+level-payment pool, an interest-only bullet, a linear or a negative
+amortizer are different pack contracts — different rules, different cash
+— so the pattern IS the refinement, and a pattern the master's four words
+do not name (linear, negative) is the refinement's word. ACTUS supplies
+the shared names (`ANN`, `PAM`, `LAM`, `NAM`, `CLM`) the refinements use
+consistently across packs (`docs/41` §1).
 
 ### 4.2 `Contract.Lease`
 Roles `lessor`, `lessee`. Fields: a rent stated one way — `rent` (per
@@ -173,16 +176,22 @@ the income a cap rate is applied to, and the master is not CRE's.) Line: `procee
 One-shot. Side: seller receives. The "required as a group" form (`any_of`) is new to the field
 model and is needed here and on the rent of §4.2.
 
-### 4.5 `Contract.Offtake`
-Roles `seller`, `offtaker`. Fields: `price` (per unit, or per year where
+### 4.5 `Contract.Supply`
+Roles `supplier`, `buyer`. Fields: `price` (per unit, or per year where
 the payment is for availability); `quantity` (opt — per year, in the pack's
 unit; absent for a capacity payment, which pays for availability rather
 than volume); `escalation` (opt, 0); `degradation` (opt, 0); `availability`
-(opt, 1). Line: `revenue`. Side: open. A
-merchant sale names only the seller — its offtaker is the market — and
-the master allows a role to be unbound where the refinement says so.
-Energy's `ppa_price`, `price` and `payment_year` are one field; its
-`mwh_year` is `quantity`.
+(opt, 1). Line: `revenue`. Side: open. Named `Supply` rather than
+`Offtake` (decided 4 September 2026): offtake is the project-finance word
+for the long-term purchase of a plant's output, and the general
+commercial family is the supply agreement — goods or output delivered
+over a term for a price — seen from either side. The open side is what
+lets one master serve a PPA from the seller's seat and a fuel supply
+agreement from the buyer's. Energy specializes the roles: `seller`
+refines `supplier`, `offtaker` refines `buyer`. A merchant sale names
+only the seller — its buyer is the market — and the master allows a
+role to be unbound where the refinement says so. Energy's `ppa_price`,
+`price` and `payment_year` are one field; its `mwh_year` is `quantity`.
 
 ### 4.6 `Contract.Service`
 Roles `provider`, `recipient`. Fields: `fee` or `fee_year` (one required);
@@ -377,7 +386,7 @@ receives.
 **Why it is neither a tax nor an offtake.** A tax attribute (`Contract.Tax`)
 is a position against the recipient's own liability — a credit, a
 shield — and lands there. An availability or capacity payment
-(`Contract.Offtake`) buys something: the asset's availability. A grant
+(`Contract.Supply`) buys something: the asset's availability. A grant
 buys nothing and offsets no liability; it is support paid because a
 public party agreed to pay it, either as a fixed amount or as a top-up to
 a target. The PPIAF toll road's coverage subsidy — the authority pays the
@@ -419,8 +428,8 @@ refines = "lessee"
 specialization is stated — for a master, or for a refinement whose roles
 are the master's own. A role a master declares and a refinement neither
 inherits nor specializes is a load error. A refinement may leave a master
-role UNBOUND in a model (the merchant sale's offtaker) by saying so:
-`[[contracts.roles]] name = "offtaker" unbound = true`.
+role UNBOUND in a model (the merchant sale's buyer) by saying so:
+`[[contracts.roles]] name = "offtaker" refines = "buyer" unbound = true`.
 
 A model's `parties { landlord = party.acme }` is validated against the
 effective roles, and the binding is recorded under the master role as

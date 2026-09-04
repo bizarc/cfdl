@@ -356,6 +356,7 @@ impl PackOntology {
                         field("day_count", "string", false, None, None, "Accrual convention; the model's when absent."),
                         field("amortization_day_count", "string", false, None, None, "The convention a level payment is struck on — `30/360` or `30e/360`; a payment is struck once and held, so an Actual basis is refused (E5027)."),
                         field("payment_frequency", "string", false, None, None, "The instrument's own payment rhythm; the calendar's when absent."),
+                        field("amortization", "string", false, None, None, "The repayment pattern — level_pay, interest_only, bullet, custom; a refinement fixes it, and a pattern the master does not name is the refinement's word."),
                         field("amortization_months", "integer", false, Some("months"), None, "The horizon the payment is struck on; may exceed the term."),
                         field("interest_only_months", "integer", false, Some("months"), None, "Interest-only period before amortization begins."),
                         field("funded_at_close", "integer", false, None, None, "1 — proceeds are drawn at term start; 0 — the reconciliation starts post-financing."),
@@ -396,7 +397,7 @@ impl PackOntology {
                     vec![line("proceeds", "Gross proceeds of the disposal.")],
                     Some("receives"),
                     "Disposing of the asset itself — an exit, a disposition, a takeout."),
-                master("Contract.Offtake", &["seller", "offtaker"],
+                master("Contract.Supply", &["supplier", "buyer"],
                     vec![
                         field("quantity", "decimal", false, None, None, "Output sold per year, in the pack's unit; absent where the payment is for availability rather than volume."),
                         field("price", "decimal", true, None, None, "Price per unit of output."),
@@ -404,9 +405,9 @@ impl PackOntology {
                         field("degradation", "decimal", false, Some("ratio"), None, "Annual decline in output."),
                         field("availability", "decimal", false, Some("ratio"), None, "Fraction of the year the asset delivers."),
                     ],
-                    vec![line("revenue", "Payment for delivered output.")],
+                    vec![line("revenue", "Payment for what is delivered.")],
                     None,
-                    "Sale of an asset's output — a PPA, a merchant sale, a capacity payment."),
+                    "Goods or output delivered over a term for a price, seen from either side — a PPA, a merchant sale, a capacity payment, a fuel or feedstock supply agreement."),
                 master("Contract.Service", &["provider", "recipient"],
                     vec![
                         field("fee", "decimal", false, None, Some("fee"), "Fee per period."),
@@ -814,7 +815,7 @@ pub struct OntologyField {
 /// inheriting the name or by SPECIALIZING it: `landlord` refines `lessor`. A
 /// domain word never appears on a master. A refinement may also leave a
 /// master role UNBOUND where the agreement has no such party in this form —
-/// a merchant sale's offtaker is the market.
+/// a merchant sale's buyer is the market.
 #[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct OntologyRole {

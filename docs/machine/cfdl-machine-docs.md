@@ -6317,7 +6317,7 @@ published, no engine semantics.
 
 Contract types take the same field, and the language base ships the abstract
 masters they refine (`docs/40`): `Contract.Debt`, `Contract.Lease`,
-`Contract.Purchase`, `Contract.Sale`, `Contract.Offtake`, `Contract.Service`,
+`Contract.Purchase`, `Contract.Sale`, `Contract.Supply`, `Contract.Service`,
 `Contract.Tax`, `Contract.Option`, `Contract.Derivative`,
 `Contract.Insurance`, and for the statement-line
 generators `Contract.Revenue`, `Contract.Expense` and
@@ -9334,10 +9334,10 @@ Contract types (a `contract <name>` declaration lowers to streams through the pa
 
 | type | contract name | parties | description |
 |---|---|---|---|
-| `Energy.Contract.PPA` | `energy.ppa` | seller, offtaker | Power purchase agreement: contracted price for delivered energy. |
-| `Energy.Contract.MerchantSale` | `energy.merchant` | seller | Uncontracted sale into the market. The counterparty is the market, so only the seller is named. |
-| `Energy.Contract.StorageArbitrage` | `energy.storage_arbitrage` | seller |  |
-| `Energy.Contract.CapacityPayment` | `energy.capacity` | seller, offtaker |  |
+| `Energy.Contract.PPA` | `energy.ppa` |  |  |
+| `Energy.Contract.MerchantSale` | `energy.merchant` |  |  |
+| `Energy.Contract.StorageArbitrage` | `energy.storage_arbitrage` |  |  |
+| `Energy.Contract.CapacityPayment` | `energy.capacity` |  |  |
 | `Energy.Contract.OperationsAndMaintenance` | `energy.om` |  |  |
 | `Energy.Contract.ProjectDebt` | `energy.debt_service` | borrower, lender |  |
 | `Energy.Contract.Capex` | `energy.capex` | owner |  |

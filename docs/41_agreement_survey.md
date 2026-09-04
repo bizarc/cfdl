@@ -108,8 +108,8 @@ securitisation trust and a wind farm each sign several of these.
 ### D. Sale of output and services
 | family | governing document | core | ACTUS | FIBO |
 |---|---|---|---|---|
-| Offtake (PPA, tolling, capacity, availability, merchant) | PPA, tolling agreement, capacity contract | quantity; price; term; escalation; availability | — | Commodity contract |
-| Supply / procurement | supply agreement | the same agreement seen from the buyer | — | — |
+| Supply / offtake (PPA, tolling, capacity, availability, merchant) | PPA, tolling agreement, capacity contract, supply agreement | quantity; price; term; escalation; availability | — | Commodity contract |
+| Procurement | supply agreement | the same family seen from the buyer | — | — |
 | Service (O&M, management, servicing, administration) | services agreement | fee; term; escalation | — | Service agreement |
 | Construction (EPC, GC) | construction contract | contract sum; draw schedule; retainage; liquidated damages | — | — |
 
@@ -155,8 +155,7 @@ compensation is an expense line. None needs a master.
 | Licence / royalty | `Contract.Royalty` | drafted (§4.15) |
 | Concession | `Contract.Lease` on the concessionaire's side, with `Contract.Grant` for any availability support | a right to use and collect for a fee; no master of its own |
 | Easement | `Contract.Lease` | a one-shot or fixed-fee lease |
-| Offtake | `Contract.Offtake` | in the base |
-| Supply | `Contract.Offtake`, buyer's side | the side is open on the master for exactly this |
+| Supply / offtake | `Contract.Supply` | in the base; renamed from Offtake 4 September 2026 — the general family is the supply agreement, seen from either side, and energy specializes `buyer` to `offtaker` |
 | Service | `Contract.Service` | in the base |
 | Construction | `Contract.CapitalExpenditure` on a draw curve inside a phase | not a master (decided 4 September 2026, `docs/40` §4.9): the build is a spend; retainage is an optional term of the capex refinement; the contractor, where a model needs it, is the party the draws are paid to |
 | Purchase | `Contract.Purchase` | in the base |
@@ -228,7 +227,7 @@ reason to hold a master back.
 | Lease | office, retail, multifamily cases | a ground lease; a finance lease |
 | Royalty | — (CREST restates it) | CREST's royalty as a contract |
 | Concession | — (the toll road models it as streams and phases) | the toll road on a lease refinement |
-| Offtake | PPA, merchant, capacity, storage | a supply agreement on the buyer's side |
+| Supply | PPA, merchant, capacity, storage | a supply agreement on the buyer's side |
 | Service | O&M, servicing | a management agreement on a CRE case |
 | Purchase, Sale | acquisitions and exits in every domain | — |
 | Option | management options, calls, renewals | a purchase option on a finance lease |

@@ -160,8 +160,8 @@ contract energy.macrs_shield on entity asset.wind {
 }
 
 // Views by master type: everything sold as output, and every tax attribute.
-slice offtake {
-  type Contract.Offtake
+slice supply {
+  type Contract.Supply
 }
 
 slice tax {

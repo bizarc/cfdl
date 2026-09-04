@@ -279,10 +279,16 @@ description = "The tax investor's after-tax internal rate of return reaches its 
 
 [[contracts]]
 type_id = "Energy.Contract.PPA"
-refines = "Contract.Offtake"
+refines = "Contract.Supply"
 contract_name = "energy.ppa"
 subject_family = "asset"
-parties = ["seller", "offtaker"]
+[[contracts.roles]]
+name = "seller"
+refines = "supplier"
+
+[[contracts.roles]]
+name = "offtaker"
+refines = "buyer"
 description = "Power purchase agreement: contracted price for delivered energy."
 
 
@@ -302,10 +308,12 @@ description = "Contract price per MWh."
 
 [[contracts]]
 type_id = "Energy.Contract.MerchantSale"
-refines = "Contract.Offtake"
+refines = "Contract.Supply"
 contract_name = "energy.merchant"
 subject_family = "asset"
-parties = ["seller"]
+[[contracts.roles]]
+name = "seller"
+refines = "supplier"
 description = "Uncontracted sale into the market. The counterparty is the market, so only the seller is named."
 
 
@@ -325,14 +333,17 @@ description = "Market price per MWh in the first year."
 
 [[contracts.roles]]
 name = "offtaker"
+refines = "buyer"
 unbound = true
 
 [[contracts]]
 type_id = "Energy.Contract.StorageArbitrage"
-refines = "Contract.Offtake"
+refines = "Contract.Supply"
 contract_name = "energy.storage_arbitrage"
 subject_family = "asset"
-parties = ["seller"]
+[[contracts.roles]]
+name = "seller"
+refines = "supplier"
 
 
 [[contracts.fields]]
@@ -351,14 +362,21 @@ description = "Captured spread per MWh cycled."
 
 [[contracts.roles]]
 name = "offtaker"
+refines = "buyer"
 unbound = true
 
 [[contracts]]
 type_id = "Energy.Contract.CapacityPayment"
-refines = "Contract.Offtake"
+refines = "Contract.Supply"
 contract_name = "energy.capacity"
 subject_family = "asset"
-parties = ["seller", "offtaker"]
+[[contracts.roles]]
+name = "seller"
+refines = "supplier"
+
+[[contracts.roles]]
+name = "offtaker"
+refines = "buyer"
 
 
 [[contracts.fields]]

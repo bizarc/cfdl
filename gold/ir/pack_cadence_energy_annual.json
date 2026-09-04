@@ -185,7 +185,7 @@
       "name": "energy.capacity",
       "type": "Energy.Contract.CapacityPayment",
       "contract_name": "energy.capacity",
-      "master": "Contract.Offtake",
+      "master": "Contract.Supply",
       "subject": {
         "symbol": "asset.microgrid"
       },
@@ -246,7 +246,7 @@
       "name": "energy.ppa",
       "type": "Energy.Contract.PPA",
       "contract_name": "energy.ppa",
-      "master": "Contract.Offtake",
+      "master": "Contract.Supply",
       "subject": {
         "symbol": "asset.microgrid"
       },

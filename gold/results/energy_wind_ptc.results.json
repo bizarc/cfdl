@@ -1,6 +1,6 @@
 {
   "results_version": "0.13",
-  "model_hash": "70d4137fa259e43a01a9a26b3bf5191b6845b8ea5da110264520afce0774f2ae",
+  "model_hash": "8c491e483828d7e6dffe09d82caae45c437665199bb1043809b69f1712acad67",
   "ledger_hash": "92f90e61d4a7b175d06cb3cd7ca72064acc174901dd210cd0c13e197413a9246",
   "engine": {
     "name": "cfdl-engine",
@@ -27598,7 +27598,7 @@
       {
         "name": "energy.merchant",
         "type": "Energy.Contract.MerchantSale",
-        "master": "Contract.Offtake",
+        "master": "Contract.Supply",
         "contract_name": "energy.merchant",
         "subject": "asset.windfarm",
         "streams": [

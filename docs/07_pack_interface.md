@@ -273,7 +273,7 @@ published, no engine semantics.
 
 Contract types take the same field, and the language base ships the abstract
 masters they refine (`docs/40`): `Contract.Debt`, `Contract.Lease`,
-`Contract.Purchase`, `Contract.Sale`, `Contract.Offtake`, `Contract.Service`,
+`Contract.Purchase`, `Contract.Sale`, `Contract.Supply`, `Contract.Service`,
 `Contract.Tax`, `Contract.Option`, `Contract.Derivative`,
 `Contract.Insurance`, and for the statement-line
 generators `Contract.Revenue`, `Contract.Expense` and

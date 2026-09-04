@@ -1,6 +1,6 @@
 {
   "results_version": "0.13",
-  "model_hash": "3689b5bf6e0f55c4764469d786d15318dcb7191c0efe17fa8a4948d387fa957f",
+  "model_hash": "f82037d89c3d717a176f80b74afe62d30b656badb3b9fe7991477937b58e513b",
   "ledger_hash": "a518dc1ff1b99e71b3f3b897381d02719b8ecfb1bded1b22b907c94fd5ebbb43",
   "engine": {
     "name": "cfdl-engine",
@@ -50822,7 +50822,7 @@
       {
         "name": "energy.capacity",
         "type": "Energy.Contract.CapacityPayment",
-        "master": "Contract.Offtake",
+        "master": "Contract.Supply",
         "contract_name": "energy.capacity",
         "subject": "asset.microgrid",
         "streams": [
@@ -50842,7 +50842,7 @@
       {
         "name": "energy.ppa",
         "type": "Energy.Contract.PPA",
-        "master": "Contract.Offtake",
+        "master": "Contract.Supply",
         "contract_name": "energy.ppa",
         "subject": "asset.microgrid",
         "streams": [
