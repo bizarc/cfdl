@@ -1,7 +1,7 @@
 {
-  "results_version": "0.12",
-  "model_hash": "eb163e614d10d68f7e52a41e696ff9b1f3ed217d5cd23f09e6f955543c1177f0",
-  "ledger_hash": "68c3704cfb3138e4da3177867bc30d6d907f93dce02b43f70a2e495639669535",
+  "results_version": "0.13",
+  "model_hash": "6d8298c5827349222a460ff540722f76acec45852c3585b453223210a8c85717",
+  "ledger_hash": "7ea6df45eaf150a085849d7626c34e7c34a1928be0cd71cc89d38b677856163c",
   "engine": {
     "name": "cfdl-engine",
     "version": "0.9.0"
@@ -1261,6 +1261,7 @@
         "offset": 1.0,
         "entity": "asset.tower",
         "category": "operating.deduction.abatement",
+        "contract": "cre.lease_unit.tenant_a",
         "values": [
           {
             "amount": 0.0,
@@ -1369,6 +1370,7 @@
         "offset": 1.0,
         "entity": "asset.tower",
         "category": "operating.deduction.abatement",
+        "contract": "cre.lease_unit.tenant_b",
         "values": [
           {
             "amount": 0.0,
@@ -1477,6 +1479,7 @@
         "offset": 1.0,
         "entity": "asset.tower",
         "category": "operating.revenue.base_rent",
+        "contract": "cre.lease_unit.tenant_a",
         "values": [
           {
             "amount": 40000.0,
@@ -1585,6 +1588,7 @@
         "offset": 1.0,
         "entity": "asset.tower",
         "category": "operating.revenue.base_rent",
+        "contract": "cre.lease_unit.tenant_b",
         "values": [
           {
             "amount": 0.0,
@@ -1693,6 +1697,7 @@
         "offset": 1.0,
         "entity": "asset.tower",
         "category": "operating.revenue.recovery",
+        "contract": "cre.lease_unit.tenant_a",
         "values": [
           {
             "amount": 0.0,
@@ -1801,6 +1806,7 @@
         "offset": 1.0,
         "entity": "asset.tower",
         "category": "operating.revenue.recovery",
+        "contract": "cre.lease_unit.tenant_b",
         "values": [
           {
             "amount": 0.0,
@@ -1909,6 +1915,7 @@
         "offset": 0.0,
         "entity": "asset.tower",
         "category": "investing.capital.leasing",
+        "contract": "cre.lease_unit.tenant_a",
         "values": [
           {
             "amount": 0.0,
@@ -2017,6 +2024,7 @@
         "offset": 0.0,
         "entity": "asset.tower",
         "category": "investing.capital.leasing",
+        "contract": "cre.lease_unit.tenant_b",
         "values": [
           {
             "amount": 0.0,
@@ -2786,6 +2794,48 @@
         "symbol": "party.landlord_co",
         "family": "party",
         "type": "Party"
+      }
+    ],
+    "contracts": [
+      {
+        "name": "cre.lease_unit.tenant_a",
+        "type": "CRE.Contract.UnitLease",
+        "master": "Contract.Lease",
+        "contract_name": "cre.lease_unit",
+        "instance": "tenant_a",
+        "subject": "asset.tower",
+        "parties": [
+          {
+            "role": "landlord",
+            "master_role": "lessor",
+            "entity": "party.landlord_co"
+          },
+          {
+            "role": "tenant",
+            "master_role": "lessee",
+            "entity": "party.acme"
+          }
+        ],
+        "streams": [
+          "cre.unit.abatement.tenant_a",
+          "cre.unit.base_rent.tenant_a",
+          "cre.unit.recoveries.tenant_a",
+          "cre.unit.ti_lc.tenant_a"
+        ]
+      },
+      {
+        "name": "cre.lease_unit.tenant_b",
+        "type": "CRE.Contract.UnitLease",
+        "master": "Contract.Lease",
+        "contract_name": "cre.lease_unit",
+        "instance": "tenant_b",
+        "subject": "asset.tower",
+        "streams": [
+          "cre.unit.abatement.tenant_b",
+          "cre.unit.base_rent.tenant_b",
+          "cre.unit.recoveries.tenant_b",
+          "cre.unit.ti_lc.tenant_b"
+        ]
       }
     ]
   }

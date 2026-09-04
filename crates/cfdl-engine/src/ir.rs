@@ -62,6 +62,35 @@ pub(crate) struct Ir {
     /// the model asked for trials and got a single deterministic pass.
     #[serde(default)]
     pub(crate) runs: Vec<IrRun>,
+    /// Declared contracts, resolved by the compiler to their type and master
+    /// (docs/40 §8). Read only to be republished in the results graph: the
+    /// engine lowers nothing from them — their cash arrived as streams.
+    #[serde(default)]
+    pub(crate) contracts: Vec<IrContractDecl>,
+}
+
+#[derive(Debug, Deserialize)]
+pub(crate) struct IrContractDecl {
+    pub(crate) name: String,
+    #[serde(rename = "type")]
+    pub(crate) type_id: String,
+    #[serde(default)]
+    pub(crate) master: Option<String>,
+    #[serde(default)]
+    pub(crate) contract_name: Option<String>,
+    #[serde(default)]
+    pub(crate) instance: Option<String>,
+    pub(crate) subject: IrEntityRef,
+    #[serde(default)]
+    pub(crate) parties: Vec<IrContractParty>,
+}
+
+#[derive(Debug, Deserialize)]
+pub(crate) struct IrContractParty {
+    pub(crate) role: String,
+    #[serde(default)]
+    pub(crate) master_role: Option<String>,
+    pub(crate) entity: IrEntityRef,
 }
 
 #[derive(Debug, Deserialize)]

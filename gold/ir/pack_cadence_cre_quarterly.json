@@ -278,7 +278,8 @@
             "name": "cre",
             "version": "0.1.0"
           },
-          "rule_id": "cre_exit_forward_noi_derived"
+          "rule_id": "cre_exit_forward_noi_derived",
+          "contract": "cre.exit_forward"
         }
       }
     },
@@ -317,7 +318,8 @@
             "name": "cre",
             "version": "0.1.0"
           },
-          "rule_id": "cre_exit_forward_selling_costs"
+          "rule_id": "cre_exit_forward_selling_costs",
+          "contract": "cre.exit_forward"
         }
       }
     },
@@ -357,7 +359,8 @@
             "name": "cre",
             "version": "0.1.0"
           },
-          "rule_id": "cre_opex_line"
+          "rule_id": "cre_opex_line",
+          "contract": "cre.opex_line"
         }
       }
     },
@@ -397,7 +400,8 @@
             "name": "cre",
             "version": "0.1.0"
           },
-          "rule_id": "cre_lease_unit_abatement"
+          "rule_id": "cre_lease_unit_abatement",
+          "contract": "cre.lease_unit.tenant_a"
         }
       }
     },
@@ -437,7 +441,8 @@
             "name": "cre",
             "version": "0.1.0"
           },
-          "rule_id": "cre_lease_unit_base_rent"
+          "rule_id": "cre_lease_unit_base_rent",
+          "contract": "cre.lease_unit.tenant_a"
         }
       }
     },
@@ -477,7 +482,8 @@
             "name": "cre",
             "version": "0.1.0"
           },
-          "rule_id": "cre_lease_unit_recoveries"
+          "rule_id": "cre_lease_unit_recoveries",
+          "contract": "cre.lease_unit.tenant_a"
         }
       }
     },
@@ -515,7 +521,8 @@
             "name": "cre",
             "version": "0.1.0"
           },
-          "rule_id": "cre_lease_unit_ti_lc"
+          "rule_id": "cre_lease_unit_ti_lc",
+          "contract": "cre.lease_unit.tenant_a"
         }
       }
     }

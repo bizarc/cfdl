@@ -1,7 +1,7 @@
 {
-  "results_version": "0.12",
-  "model_hash": "53fb7d1cd4d1e7ec1b2ade0fd50c331b094642aa207960ee9f238156a1986733",
-  "ledger_hash": "169483eb75367edb00f6c189ae7801fb831eb4832e58536499d6bbe01020cf55",
+  "results_version": "0.13",
+  "model_hash": "dc96fe736fde2281ceb0f90f1f9e4ab48ace60a31e46b69d039575e349b63888",
+  "ledger_hash": "19e170a9a97b9bd10f7be6613fcaff2ecbcff14fef4fb1ab9a58f988133f4391",
   "engine": {
     "name": "cfdl-engine",
     "version": "0.9.0"
@@ -119,6 +119,7 @@
         "offset": 1.0,
         "entity": "legal.borrower",
         "category": "operating.revenue.cadence_probe",
+        "contract": "test.cadence_probe",
         "values": [
           {
             "amount": 69999.999996,
@@ -229,6 +230,16 @@
         "symbol": "asset.borrower",
         "family": "asset",
         "type": "Asset.Financial"
+      }
+    ],
+    "contracts": [
+      {
+        "name": "test.cadence_probe",
+        "type": "core.Contract",
+        "subject": "asset.borrower",
+        "streams": [
+          "testpack.cadence_probe"
+        ]
       }
     ]
   }

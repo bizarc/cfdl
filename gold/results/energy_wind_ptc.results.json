@@ -1,7 +1,7 @@
 {
-  "results_version": "0.12",
-  "model_hash": "99a0fd58f352efefdf4f4dddb6513fba69d7e3a9539dc4bc161a877ee9c75831",
-  "ledger_hash": "7a19c17b71b237d62790b6ce691b805b09278e32d999dd19483ceee92a8dca5c",
+  "results_version": "0.13",
+  "model_hash": "8f79224ccab2a230e96dbde33ba52733180af2680e060c61910c6964d45fe589",
+  "ledger_hash": "9711070a8b5326a3460009995c1f07f7714deb0463d5e71c27da90a671f399dd",
   "engine": {
     "name": "cfdl-engine",
     "version": "0.9.0"
@@ -7185,6 +7185,7 @@
         "offset": 0.0,
         "entity": "asset.windfarm",
         "category": "investing.capital.capex",
+        "contract": "energy.capex",
         "values": [
           {
             "amount": -42000000.0,
@@ -8157,6 +8158,7 @@
         "offset": 1.0,
         "entity": "asset.windfarm",
         "category": "financing.debt.interest_paid",
+        "contract": "energy.debt_service",
         "values": [
           {
             "amount": -114583.333333,
@@ -9129,6 +9131,7 @@
         "offset": 1.0,
         "entity": "asset.windfarm",
         "category": "financing.debt.principal",
+        "contract": "energy.debt_service",
         "values": [
           {
             "amount": -89687.530322,
@@ -10101,6 +10104,7 @@
         "offset": 0.0,
         "entity": "asset.windfarm",
         "category": "financing.debt.proceeds",
+        "contract": "energy.debt_service",
         "values": [
           {
             "amount": 25000000.0,
@@ -11073,6 +11077,7 @@
         "offset": 1.0,
         "entity": "asset.windfarm",
         "category": "operating.income_tax.benefit",
+        "contract": "energy.macrs_shield",
         "values": [
           {
             "amount": 147000.0,
@@ -12045,6 +12050,7 @@
         "offset": 1.0,
         "entity": "asset.windfarm",
         "category": "operating.revenue.energy",
+        "contract": "energy.merchant",
         "values": [
           {
             "amount": 349125.0,
@@ -13017,6 +13023,7 @@
         "offset": 1.0,
         "entity": "asset.windfarm",
         "category": "operating.expense.om",
+        "contract": "energy.om",
         "values": [
           {
             "amount": -108333.333333,
@@ -13989,6 +13996,7 @@
         "offset": 1.0,
         "entity": "asset.windfarm",
         "category": "operating.income_tax.benefit",
+        "contract": "energy.ptc",
         "values": [
           {
             "amount": 232750.0,
@@ -27544,6 +27552,70 @@
         "symbol": "asset.windfarm",
         "family": "asset",
         "type": "Energy.Asset.GenerationFacility"
+      }
+    ],
+    "contracts": [
+      {
+        "name": "energy.capex",
+        "type": "Energy.Contract.Capex",
+        "master": "Contract.Line",
+        "contract_name": "energy.capex",
+        "subject": "asset.windfarm",
+        "streams": [
+          "energy.capex.outlay"
+        ]
+      },
+      {
+        "name": "energy.debt_service",
+        "type": "Energy.Contract.ProjectDebt",
+        "master": "Contract.Debt",
+        "contract_name": "energy.debt_service",
+        "subject": "asset.windfarm",
+        "streams": [
+          "energy.debt.interest",
+          "energy.debt.principal",
+          "energy.debt.proceeds"
+        ]
+      },
+      {
+        "name": "energy.macrs_shield",
+        "type": "Energy.Contract.DepreciationShield",
+        "master": "Contract.Tax",
+        "contract_name": "energy.macrs_shield",
+        "subject": "asset.windfarm",
+        "streams": [
+          "energy.macrs.shield"
+        ]
+      },
+      {
+        "name": "energy.merchant",
+        "type": "Energy.Contract.MerchantSale",
+        "master": "Contract.Offtake",
+        "contract_name": "energy.merchant",
+        "subject": "asset.windfarm",
+        "streams": [
+          "energy.merchant.revenue"
+        ]
+      },
+      {
+        "name": "energy.om",
+        "type": "Energy.Contract.OperationsAndMaintenance",
+        "master": "Contract.Service",
+        "contract_name": "energy.om",
+        "subject": "asset.windfarm",
+        "streams": [
+          "energy.om.expense"
+        ]
+      },
+      {
+        "name": "energy.ptc",
+        "type": "Energy.Contract.ProductionTaxCredit",
+        "master": "Contract.Tax",
+        "contract_name": "energy.ptc",
+        "subject": "asset.windfarm",
+        "streams": [
+          "energy.ptc.credit"
+        ]
       }
     ]
   }

@@ -1,7 +1,7 @@
 {
-  "results_version": "0.12",
-  "model_hash": "e1ed9edf090fefb3ed6b05f140681fc9a64d2d53d606419e84262c40e64a0018",
-  "ledger_hash": "94d4813f07dddcfddcbbf64e704a2c53107760f3bfaca4522da2397cb3f5c80b",
+  "results_version": "0.13",
+  "model_hash": "a31a3ee142a8b2c7637c01c34dd1b10a59f524029490badb4877ec1e5a184e92",
+  "ledger_hash": "4aef88b9bab69ea4347562bad31df28ef22c72b3809833704651b06967aa000f",
   "engine": {
     "name": "cfdl-engine",
     "version": "0.9.0"
@@ -158,6 +158,7 @@
         "offset": 1.0,
         "entity": "legal.borrower",
         "category": "operating.revenue.fee",
+        "contract": "test.fee_contract",
         "values": [
           {
             "amount": 250.0,
@@ -337,6 +338,16 @@
         "symbol": "asset.borrower",
         "family": "asset",
         "type": "Asset.Financial"
+      }
+    ],
+    "contracts": [
+      {
+        "name": "test.fee_contract",
+        "type": "core.Contract",
+        "subject": "asset.borrower",
+        "streams": [
+          "testpack.fee"
+        ]
       }
     ]
   }

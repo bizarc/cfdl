@@ -447,8 +447,17 @@ contract names, and their accounts hold what they received (`docs/13`
    of §8, effective-roster term and role checks, parties in the IR, the
    two-token declaration; every pack type declares its terms as fields and
    the loader checks rules, validations and templates against the roster.
-4. **Results and tools**: contracts as graph nodes with master and
-   roles; MCP `lookup`/`skeleton` see masters.
+4. **Results and tools** — **built.** `results_version` 0.13 publishes the
+   model's contracts in `graph.contracts` — name, type, master, the pack's
+   name, instance, subject, parties with the master's role, and the
+   streams lowered from each — and attributes each lowered stream series
+   to its contract (`contract` beside `entity` and `category`), the IR
+   naming the contract on every lowered stream's provenance. MCP `lookup`
+   describes each pack type against its master chain (refines, master,
+   effective fields, roles with the master's word, lines, side) and lists
+   the masters the pack refines with the roster every refinement inherits;
+   `skeleton` resolves an ontology type id to the pack's template and,
+   asked for a master, names the pack's refinements of it.
 5. **Cross-pack reading**: `type <Master>` on metrics and statement rows;
    line-by-role selectors; pack metrics migrate where equivalent.
 6. **State owned by the agreement**: `balance_field` on `Contract.Debt`

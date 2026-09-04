@@ -1455,6 +1455,10 @@ against it by `make ir-schema`.
         "rule_id": {
           "type": "string",
           "minLength": 1
+        },
+        "contract": {
+          "$ref": "#/$defs/Qname",
+          "description": "The contract this stream was lowered from, by its qualified name (`cre.lease_unit.tenant_a`). A rule serves every instance of its type; this says which one."
         }
       }
     },

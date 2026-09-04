@@ -409,7 +409,8 @@
             "name": "energy",
             "version": "0.1.0"
           },
-          "rule_id": "energy_capex"
+          "rule_id": "energy_capex",
+          "contract": "energy.capex"
         }
       }
     },
@@ -449,7 +450,8 @@
             "name": "energy",
             "version": "0.1.0"
           },
-          "rule_id": "energy_debt_interest"
+          "rule_id": "energy_debt_interest",
+          "contract": "energy.debt_service"
         }
       }
     },
@@ -489,7 +491,8 @@
             "name": "energy",
             "version": "0.1.0"
           },
-          "rule_id": "energy_debt_principal"
+          "rule_id": "energy_debt_principal",
+          "contract": "energy.debt_service"
         }
       }
     },
@@ -527,7 +530,8 @@
             "name": "energy",
             "version": "0.1.0"
           },
-          "rule_id": "energy_debt_proceeds"
+          "rule_id": "energy_debt_proceeds",
+          "contract": "energy.debt_service"
         }
       }
     },
@@ -567,7 +571,8 @@
             "name": "energy",
             "version": "0.1.0"
           },
-          "rule_id": "energy_macrs_shield"
+          "rule_id": "energy_macrs_shield",
+          "contract": "energy.macrs_shield"
         }
       }
     },
@@ -607,7 +612,8 @@
             "name": "energy",
             "version": "0.1.0"
           },
-          "rule_id": "energy_merchant_revenue"
+          "rule_id": "energy_merchant_revenue",
+          "contract": "energy.merchant"
         }
       }
     },
@@ -647,7 +653,8 @@
             "name": "energy",
             "version": "0.1.0"
           },
-          "rule_id": "energy_om_expense"
+          "rule_id": "energy_om_expense",
+          "contract": "energy.om"
         }
       }
     },
@@ -687,7 +694,8 @@
             "name": "energy",
             "version": "0.1.0"
           },
-          "rule_id": "energy_ptc_credit"
+          "rule_id": "energy_ptc_credit",
+          "contract": "energy.ptc"
         }
       }
     }

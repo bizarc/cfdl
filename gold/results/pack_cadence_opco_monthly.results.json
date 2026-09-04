@@ -1,7 +1,7 @@
 {
-  "results_version": "0.12",
-  "model_hash": "c12d0b36f146f398accf4347e5a457c8b0d5a842f4a13fed2da384393bcec303",
-  "ledger_hash": "1d8f8941869f0b5aa93e683b5668d3623030203c9b386581da99a42882bc2d96",
+  "results_version": "0.13",
+  "model_hash": "9fac8000ee81366299c15b1b9c0bf673848bb28812e32e4178410ae8aa614748",
+  "ledger_hash": "c5d197bb859f7df1f76a5227fad0af6d153f9465d1f9760134ff5b12b3b2d20f",
   "engine": {
     "name": "cfdl-engine",
     "version": "0.9.0"
@@ -2124,6 +2124,7 @@
         "offset": 1.0,
         "entity": "asset.business",
         "category": "investing.capital.capex",
+        "contract": "opco.capex_line",
         "values": [
           {
             "amount": -7400.0,
@@ -2280,6 +2281,7 @@
         "offset": 1.0,
         "entity": "asset.business",
         "category": "operating.expense.opex",
+        "contract": "opco.opex_line",
         "values": [
           {
             "amount": -70000.0,
@@ -2436,6 +2438,7 @@
         "offset": 1.0,
         "entity": "asset.business",
         "category": "operating.revenue.recurring",
+        "contract": "opco.revenue_line",
         "values": [
           {
             "amount": 120000.0,
@@ -2592,6 +2595,7 @@
         "offset": 1.0,
         "entity": "asset.business",
         "category": "operating.income_tax.paid",
+        "contract": "opco.cash_taxes",
         "values": [
           {
             "amount": -10000.0,
@@ -3306,6 +3310,48 @@
         "symbol": "asset.business",
         "family": "asset",
         "type": "OpCo.Asset.Enterprise"
+      }
+    ],
+    "contracts": [
+      {
+        "name": "opco.capex_line",
+        "type": "OpCo.Contract.CapexLine",
+        "master": "Contract.Line",
+        "contract_name": "opco.capex_line",
+        "subject": "asset.business",
+        "streams": [
+          "opco.capex.line"
+        ]
+      },
+      {
+        "name": "opco.cash_taxes",
+        "type": "OpCo.Contract.CashTaxes",
+        "master": "Contract.Tax",
+        "contract_name": "opco.cash_taxes",
+        "subject": "asset.business",
+        "streams": [
+          "opco.taxes.cash"
+        ]
+      },
+      {
+        "name": "opco.opex_line",
+        "type": "OpCo.Contract.OperatingExpenseLine",
+        "master": "Contract.Line",
+        "contract_name": "opco.opex_line",
+        "subject": "asset.business",
+        "streams": [
+          "opco.opex.recurring"
+        ]
+      },
+      {
+        "name": "opco.revenue_line",
+        "type": "OpCo.Contract.RevenueLine",
+        "master": "Contract.Line",
+        "contract_name": "opco.revenue_line",
+        "subject": "asset.business",
+        "streams": [
+          "opco.revenue.recurring"
+        ]
       }
     ]
   }

@@ -1,7 +1,7 @@
 {
-  "results_version": "0.12",
-  "model_hash": "0ade18f4a5fd36fa4c3894c08f2f204b246bfee7c73c70d760e18e0ac595ca35",
-  "ledger_hash": "a82368efd909680f42ef2d6632d3e0e643911e8c6936f844283ba1bfdf2de791",
+  "results_version": "0.13",
+  "model_hash": "2134861467f707e6bc0970b63db519b9be8cd8d33c0f45d8589761e7c8d467e4",
+  "ledger_hash": "0ae714373d395719668a95320e31c418374a7f1012c235fe2e81aea762df4e45",
   "engine": {
     "name": "cfdl-engine",
     "version": "0.9.0"
@@ -2151,6 +2151,7 @@
         "offset": 1.0,
         "entity": "asset.tower",
         "category": "financing.debt.interest_paid",
+        "contract": "cre.permanent_debt",
         "values": [
           {
             "amount": -27500.0,
@@ -2403,6 +2404,7 @@
         "offset": 1.0,
         "entity": "asset.tower",
         "category": "financing.debt.principal",
+        "contract": "cre.permanent_debt",
         "values": [
           {
             "amount": 0.0,
@@ -2655,6 +2657,7 @@
         "offset": 0.0,
         "entity": "asset.tower",
         "category": "financing.debt.proceeds",
+        "contract": "cre.permanent_debt",
         "values": [
           {
             "amount": 6000000.0,
@@ -3579,6 +3582,20 @@
         "symbol": "asset.tower",
         "family": "asset",
         "type": "CRE.Asset.RealProperty"
+      }
+    ],
+    "contracts": [
+      {
+        "name": "cre.permanent_debt",
+        "type": "CRE.Contract.PermanentDebt",
+        "master": "Contract.Debt",
+        "contract_name": "cre.permanent_debt",
+        "subject": "asset.tower",
+        "streams": [
+          "cre.debt.interest",
+          "cre.debt.principal",
+          "cre.debt.proceeds"
+        ]
       }
     ]
   }

@@ -233,7 +233,8 @@
             "name": "opco",
             "version": "0.1.0"
           },
-          "rule_id": "opco_exit_perpetuity_selling_costs"
+          "rule_id": "opco_exit_perpetuity_selling_costs",
+          "contract": "opco.exit_perpetuity"
         }
       }
     },
@@ -272,7 +273,8 @@
             "name": "opco",
             "version": "0.1.0"
           },
-          "rule_id": "opco_exit_perpetuity"
+          "rule_id": "opco_exit_perpetuity",
+          "contract": "opco.exit_perpetuity"
         }
       }
     }

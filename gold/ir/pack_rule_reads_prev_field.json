@@ -103,7 +103,8 @@
             "name": "testpack",
             "version": "0.1.0"
           },
-          "rule_id": "emit_average_balance_interest"
+          "rule_id": "emit_average_balance_interest",
+          "contract": "test.avg_balance_contract"
         }
       }
     }

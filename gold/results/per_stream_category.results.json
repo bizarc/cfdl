@@ -1,7 +1,7 @@
 {
-  "results_version": "0.12",
-  "model_hash": "5877c094b57c3a8384bf73b0a1b8dc8125fd9df1197010881b3e7b7a62e90711",
-  "ledger_hash": "7d11f0a53e33ba96bca65982fa296408fb57d9ea5c986bdae989323fe5966345",
+  "results_version": "0.13",
+  "model_hash": "2639e67e5160deb24afd0e1f86c0db6b55e65c83dba5390ab52eb7fb661d641f",
+  "ledger_hash": "a7ae4c084ecc00a6630e3ddafe09bfb355f44d916070b8f8a96de8395c0705d8",
   "engine": {
     "name": "cfdl-engine",
     "version": "0.9.0"
@@ -589,6 +589,7 @@
         "offset": 1.0,
         "entity": "asset.tower",
         "category": "operating.expense.interest",
+        "contract": "cre.permanent_debt",
         "values": [
           {
             "amount": -4166.666667,
@@ -649,6 +650,7 @@
         "offset": 1.0,
         "entity": "asset.tower",
         "category": "financing.debt.principal",
+        "contract": "cre.permanent_debt",
         "values": [
           {
             "amount": -1679.233748,
@@ -709,6 +711,7 @@
         "offset": 0.0,
         "entity": "asset.tower",
         "category": "financing.debt.proceeds",
+        "contract": "cre.permanent_debt",
         "values": [
           {
             "amount": 1000000.0,
@@ -769,6 +772,7 @@
         "offset": 1.0,
         "entity": "asset.tower",
         "category": "operating.expense.rooms",
+        "contract": "cre.opex_line.rooms",
         "values": [
           {
             "amount": -1000.0,
@@ -3348,6 +3352,31 @@
         "symbol": "asset.tower",
         "family": "asset",
         "type": "CRE.Asset.RealProperty"
+      }
+    ],
+    "contracts": [
+      {
+        "name": "cre.opex_line.rooms",
+        "type": "CRE.Contract.OperatingExpense",
+        "master": "Contract.Line",
+        "contract_name": "cre.opex_line",
+        "instance": "rooms",
+        "subject": "asset.tower",
+        "streams": [
+          "cre.opex.line.rooms"
+        ]
+      },
+      {
+        "name": "cre.permanent_debt",
+        "type": "CRE.Contract.PermanentDebt",
+        "master": "Contract.Debt",
+        "contract_name": "cre.permanent_debt",
+        "subject": "asset.tower",
+        "streams": [
+          "cre.debt.interest",
+          "cre.debt.principal",
+          "cre.debt.proceeds"
+        ]
       }
     ]
   }

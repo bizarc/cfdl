@@ -1,7 +1,7 @@
 {
-  "results_version": "0.12",
-  "model_hash": "b0de8c5bcfe076d3940baffcc68c99607adbe9a62f4c975c7c0948a63a0f51d2",
-  "ledger_hash": "648610da91f7b887a9a08ab0deed0582a2b959707da97db55485eb3121fa10c2",
+  "results_version": "0.13",
+  "model_hash": "e61c0afa503a4f6604c69bdd48ef1fa9b36087f78dc9038aed1cd423349a6272",
+  "ledger_hash": "4755a935262d2fca8780c4cb209752a80c352fbc2985ee02ab400f41d9a75a5b",
   "engine": {
     "name": "cfdl-engine",
     "version": "0.9.0"
@@ -114,6 +114,7 @@
         "offset": 1.0,
         "entity": "asset.borrower",
         "category": "operating.expense.interest",
+        "contract": "test.avg_balance_contract",
         "values": [
           {
             "amount": 0.0,
@@ -236,6 +237,16 @@
         "symbol": "asset.borrower",
         "family": "asset",
         "type": "Asset.Financial"
+      }
+    ],
+    "contracts": [
+      {
+        "name": "test.avg_balance_contract",
+        "type": "core.Contract",
+        "subject": "asset.borrower",
+        "streams": [
+          "testpack.avg_balance_interest"
+        ]
       }
     ]
   }

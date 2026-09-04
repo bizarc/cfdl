@@ -272,7 +272,8 @@
             "name": "credit",
             "version": "0.1.0"
           },
-          "rule_id": "credit_pool_io_bullet_bullet"
+          "rule_id": "credit_pool_io_bullet_bullet",
+          "contract": "credit.pool_io_bullet.p"
         }
       }
     },
@@ -312,7 +313,8 @@
             "name": "credit",
             "version": "0.1.0"
           },
-          "rule_id": "credit_pool_io_bullet_interest"
+          "rule_id": "credit_pool_io_bullet_interest",
+          "contract": "credit.pool_io_bullet.p"
         }
       }
     },
@@ -352,7 +354,8 @@
             "name": "credit",
             "version": "0.1.0"
           },
-          "rule_id": "credit_pool_io_bullet_penalty"
+          "rule_id": "credit_pool_io_bullet_penalty",
+          "contract": "credit.pool_io_bullet.p"
         }
       }
     },
@@ -392,7 +395,8 @@
             "name": "credit",
             "version": "0.1.0"
           },
-          "rule_id": "credit_pool_io_bullet_prepay"
+          "rule_id": "credit_pool_io_bullet_prepay",
+          "contract": "credit.pool_io_bullet.p"
         }
       }
     },
@@ -432,7 +436,8 @@
             "name": "credit",
             "version": "0.1.0"
           },
-          "rule_id": "credit_pool_io_bullet_recoveries"
+          "rule_id": "credit_pool_io_bullet_recoveries",
+          "contract": "credit.pool_io_bullet.p"
         }
       }
     },
@@ -472,7 +477,8 @@
             "name": "credit",
             "version": "0.1.0"
           },
-          "rule_id": "credit_pool_io_bullet_servicing"
+          "rule_id": "credit_pool_io_bullet_servicing",
+          "contract": "credit.pool_io_bullet.p"
         }
       }
     }

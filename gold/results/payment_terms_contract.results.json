@@ -1,7 +1,7 @@
 {
-  "results_version": "0.12",
-  "model_hash": "8894e414942dda287f740f8bc4c39376b0af8b07ab16b0dbf648ca2b5dd013ef",
-  "ledger_hash": "73031464cf3ce98db966ed670888f8d6705ce1a77befcdae7fb32bef1710ed0a",
+  "results_version": "0.13",
+  "model_hash": "63d89041e06b8715498f0cc8903e4df6fd9a918bbcfa96c28e52376bec04f610",
+  "ledger_hash": "ef67d1e2fcd1d357a50f1f8ee098c5b37540fb4ae5a5294ec09249b649b3d64c",
   "engine": {
     "name": "cfdl-engine",
     "version": "0.9.0"
@@ -823,6 +823,7 @@
         "offset": 1.0,
         "entity": "asset.plant",
         "category": "operating.revenue.energy",
+        "contract": "energy.ppa.plant_a",
         "values": [
           {
             "amount": 0.0,
@@ -1229,6 +1230,19 @@
         "symbol": "asset.plant",
         "family": "asset",
         "type": "Energy.Asset.GenerationFacility"
+      }
+    ],
+    "contracts": [
+      {
+        "name": "energy.ppa.plant_a",
+        "type": "Energy.Contract.PPA",
+        "master": "Contract.Offtake",
+        "contract_name": "energy.ppa",
+        "instance": "plant_a",
+        "subject": "asset.plant",
+        "streams": [
+          "energy.ppa.revenue.plant_a"
+        ]
       }
     ]
   }

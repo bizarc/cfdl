@@ -1,7 +1,7 @@
 {
-  "results_version": "0.12",
-  "model_hash": "de526d71357a8d8411c003cf67d90b76543132c5e6cc6aa5ceb1f7ab4f07a4d5",
-  "ledger_hash": "70148f622391bde380e4df9e4fe9f262a2a672a2155c90321bf87421465779af",
+  "results_version": "0.13",
+  "model_hash": "b9122461f411292893f56815978b1ebb27ae6c0d24a97bb08cd7a6715070672c",
+  "ledger_hash": "178a0b61f69a4b2538e27edaabc911181c175f8656bb0170bf6dc4c1cc591c39",
   "engine": {
     "name": "cfdl-engine",
     "version": "0.9.0"
@@ -4140,6 +4140,7 @@
         "offset": 1.0,
         "entity": "asset.property",
         "category": "investing.disposal.reversion",
+        "contract": "cre.exit_cap",
         "values": [
           {
             "amount": 0.0,
@@ -4536,6 +4537,7 @@
         "offset": 1.0,
         "entity": "asset.property",
         "category": "operating.expense.opex",
+        "contract": "cre.opex_line",
         "values": [
           {
             "amount": 0.0,
@@ -8837,6 +8839,28 @@
         "symbol": "asset.property",
         "family": "asset",
         "type": "CRE.Asset.RealProperty"
+      }
+    ],
+    "contracts": [
+      {
+        "name": "cre.exit_cap",
+        "type": "CRE.Contract.DispositionAtCap",
+        "master": "Contract.Sale",
+        "contract_name": "cre.exit_cap",
+        "subject": "asset.property",
+        "streams": [
+          "cre.exit.sale"
+        ]
+      },
+      {
+        "name": "cre.opex_line",
+        "type": "CRE.Contract.OperatingExpense",
+        "master": "Contract.Line",
+        "contract_name": "cre.opex_line",
+        "subject": "asset.property",
+        "streams": [
+          "cre.opex.line"
+        ]
       }
     ]
   }

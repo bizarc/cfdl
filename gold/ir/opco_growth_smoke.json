@@ -252,7 +252,8 @@
             "name": "opco",
             "version": "0.1.0"
           },
-          "rule_id": "opco_opex_line"
+          "rule_id": "opco_opex_line",
+          "contract": "opco.opex_line"
         }
       }
     },
@@ -292,7 +293,8 @@
             "name": "opco",
             "version": "0.1.0"
           },
-          "rule_id": "opco_revenue_line"
+          "rule_id": "opco_revenue_line",
+          "contract": "opco.revenue_line"
         }
       }
     }

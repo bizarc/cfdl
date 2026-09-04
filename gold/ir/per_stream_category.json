@@ -242,7 +242,8 @@
             "name": "cre",
             "version": "0.1.0"
           },
-          "rule_id": "cre_permanent_debt_interest"
+          "rule_id": "cre_permanent_debt_interest",
+          "contract": "cre.permanent_debt"
         }
       }
     },
@@ -282,7 +283,8 @@
             "name": "cre",
             "version": "0.1.0"
           },
-          "rule_id": "cre_permanent_debt_principal"
+          "rule_id": "cre_permanent_debt_principal",
+          "contract": "cre.permanent_debt"
         }
       }
     },
@@ -320,7 +322,8 @@
             "name": "cre",
             "version": "0.1.0"
           },
-          "rule_id": "cre_permanent_debt_proceeds"
+          "rule_id": "cre_permanent_debt_proceeds",
+          "contract": "cre.permanent_debt"
         }
       }
     },
@@ -360,7 +363,8 @@
             "name": "cre",
             "version": "0.1.0"
           },
-          "rule_id": "cre_opex_line"
+          "rule_id": "cre_opex_line",
+          "contract": "cre.opex_line.rooms"
         }
       }
     }

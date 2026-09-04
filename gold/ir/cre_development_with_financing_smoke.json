@@ -344,7 +344,8 @@
             "name": "cre",
             "version": "0.1.0"
           },
-          "rule_id": "cre_construction_stub_draws"
+          "rule_id": "cre_construction_stub_draws",
+          "contract": "cre.construction_stub"
         }
       }
     },
@@ -383,7 +384,8 @@
             "name": "cre",
             "version": "0.1.0"
           },
-          "rule_id": "cre_exit_cap_sale"
+          "rule_id": "cre_exit_cap_sale",
+          "contract": "cre.exit_cap"
         }
       }
     },
@@ -423,7 +425,8 @@
             "name": "cre",
             "version": "0.1.0"
           },
-          "rule_id": "cre_lease_base_rent"
+          "rule_id": "cre_lease_base_rent",
+          "contract": "cre.lease"
         }
       }
     },
@@ -463,7 +466,8 @@
             "name": "cre",
             "version": "0.1.0"
           },
-          "rule_id": "cre_opex_line"
+          "rule_id": "cre_opex_line",
+          "contract": "cre.opex_line"
         }
       }
     },
@@ -503,7 +507,8 @@
             "name": "cre",
             "version": "0.1.0"
           },
-          "rule_id": "cre_revenue_line"
+          "rule_id": "cre_revenue_line",
+          "contract": "cre.revenue_line"
         }
       }
     },

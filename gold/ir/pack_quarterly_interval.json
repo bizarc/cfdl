@@ -90,7 +90,8 @@
             "name": "testpack",
             "version": "0.1.0"
           },
-          "rule_id": "emit_quarterly_coupon"
+          "rule_id": "emit_quarterly_coupon",
+          "contract": "test.coupon_contract"
         }
       }
     }

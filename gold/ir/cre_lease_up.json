@@ -210,7 +210,8 @@
             "name": "cre",
             "version": "0.1.0"
           },
-          "rule_id": "cre_lease_base_rent"
+          "rule_id": "cre_lease_base_rent",
+          "contract": "cre.lease"
         }
       }
     }

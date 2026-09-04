@@ -1,7 +1,7 @@
 {
-  "results_version": "0.12",
-  "model_hash": "a5f05adc6b2c23d8b0bf5b0f26722ea6fc30a19635052763741bfd5cf67963fe",
-  "ledger_hash": "fd48aa1616b54f426730760bea388be9a6783d0424fe69e228662de16a5026f8",
+  "results_version": "0.13",
+  "model_hash": "c6815dc8899e049ca5df9e3b01b265d9f5e562dfeaac293915d67b34a03f3b51",
+  "ledger_hash": "4abb16877ff8399b2d31d76e95041bd74d80ba30eef6b29532df297adc560bd3",
   "engine": {
     "name": "cfdl-engine",
     "version": "0.9.0"
@@ -1045,6 +1045,7 @@
         "offset": 1.0,
         "entity": "asset.buyer",
         "category": "operating.collection.principal",
+        "contract": "credit.pool_float_io_bullet.smoke",
         "values": [
           {
             "amount": 0.0,
@@ -1117,6 +1118,7 @@
         "offset": 1.0,
         "entity": "asset.buyer",
         "category": "operating.collection.interest",
+        "contract": "credit.pool_float_io_bullet.smoke",
         "values": [
           {
             "amount": 7979.719611,
@@ -1189,6 +1191,7 @@
         "offset": 1.0,
         "entity": "asset.buyer",
         "category": "operating.collection.penalty",
+        "contract": "credit.pool_float_io_bullet.smoke",
         "values": [
           {
             "amount": 0.0,
@@ -1261,6 +1264,7 @@
         "offset": 1.0,
         "entity": "asset.buyer",
         "category": "operating.collection.prepayment",
+        "contract": "credit.pool_float_io_bullet.smoke",
         "values": [
           {
             "amount": 10489.933146,
@@ -1333,6 +1337,7 @@
         "offset": 1.0,
         "entity": "asset.buyer",
         "category": "operating.collection.recovery",
+        "contract": "credit.pool_float_io_bullet.smoke",
         "values": [
           {
             "amount": 0.0,
@@ -1405,6 +1410,7 @@
         "offset": 1.0,
         "entity": "asset.buyer",
         "category": "operating.expense.servicing",
+        "contract": "credit.pool_float_io_bullet.smoke",
         "values": [
           {
             "amount": 0.0,
@@ -1477,6 +1483,7 @@
         "offset": 0.0,
         "entity": "asset.buyer",
         "category": "investing.acquisition.purchase",
+        "contract": "credit.purchase.smoke",
         "values": [
           {
             "amount": -1200000.0,
@@ -4570,6 +4577,35 @@
         "symbol": "asset.buyer",
         "family": "asset",
         "type": "Credit.Asset.LoanPool"
+      }
+    ],
+    "contracts": [
+      {
+        "name": "credit.pool_float_io_bullet.smoke",
+        "type": "Credit.Contract.FloatingInterestOnlyPool",
+        "master": "Contract.Debt",
+        "contract_name": "credit.pool_float_io_bullet",
+        "instance": "smoke",
+        "subject": "asset.buyer",
+        "streams": [
+          "credit.pool.bullet.smoke",
+          "credit.pool.interest.smoke",
+          "credit.pool.penalty.smoke",
+          "credit.pool.prepay.smoke",
+          "credit.pool.recoveries.smoke",
+          "credit.pool.servicing.smoke"
+        ]
+      },
+      {
+        "name": "credit.purchase.smoke",
+        "type": "Credit.Contract.Purchase",
+        "master": "Contract.Purchase",
+        "contract_name": "credit.purchase",
+        "instance": "smoke",
+        "subject": "asset.buyer",
+        "streams": [
+          "credit.purchase.price.smoke"
+        ]
       }
     ]
   }

@@ -160,6 +160,78 @@ fn lookup_terms_and_pack_roster() {
         exercised.iter().any(|case| case == "cre/office_two_tenant"),
         "exercised_by: {exercised:?}"
     );
+    // The type is read against its master chain (docs/40): the master, the
+    // effective roster with the master's fields inherited, and each role
+    // beside the master's word for it.
+    assert_eq!(lease.master.as_deref(), Some("Contract.Lease"));
+    assert_eq!(lease.refines.as_deref(), Some("CRE.Contract.Lease"));
+    let rent = lease
+        .fields
+        .iter()
+        .find(|f| f.name == "rent_year")
+        .expect("rent_year in the roster");
+    assert!(rent.required);
+    assert!(
+        lease.fields.iter().any(|f| f.name == "free_rent_months"),
+        "the master's field is inherited"
+    );
+    let landlord = lease
+        .roles
+        .iter()
+        .find(|r| r.name == "landlord")
+        .expect("landlord role");
+    assert_eq!(landlord.master, "lessor");
+    assert!(lease.lines.iter().any(|l| l == "rent"));
+    let debt = pack
+        .masters
+        .iter()
+        .find(|m| m.type_id == "Contract.Debt")
+        .expect("the pack refines Contract.Debt");
+    assert!(debt.is_abstract);
+    assert!(debt.fields.iter().any(|f| f.name == "interest_rate"));
+}
+
+#[test]
+fn skeleton_names_the_refinements_of_a_master() {
+    let err = skeleton::skeleton(
+        &skeleton::SkeletonParams {
+            pack: "cre".to_string(),
+            contract_types: Some(vec!["Contract.Debt".to_string()]),
+            calendar: None,
+            periods: None,
+            start: None,
+            template_params: None,
+            packs_dir: None,
+        },
+        &defaults(),
+    )
+    .expect_err("a master is never declared");
+    assert!(
+        err.contains("cre.permanent_debt") && err.contains("master"),
+        "{err}"
+    );
+    // An ontology type id resolves to the pack's template for it.
+    let built = skeleton::skeleton(
+        &skeleton::SkeletonParams {
+            pack: "cre".to_string(),
+            contract_types: Some(vec!["CRE.Contract.PermanentDebt".to_string()]),
+            calendar: None,
+            periods: None,
+            start: None,
+            template_params: None,
+            packs_dir: None,
+        },
+        &defaults(),
+    )
+    .expect("type id resolves");
+    assert!(
+        built
+            .templates_used
+            .iter()
+            .any(|t| t == "cre.permanent_debt"),
+        "{:?}",
+        built.templates_used
+    );
 }
 
 #[test]

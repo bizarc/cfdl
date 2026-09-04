@@ -93,7 +93,8 @@
             "name": "testpack",
             "version": "0.1.0"
           },
-          "rule_id": "emit_cadence_probe"
+          "rule_id": "emit_cadence_probe",
+          "contract": "test.cadence_probe"
         }
       }
     }

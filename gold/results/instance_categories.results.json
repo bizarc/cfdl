@@ -1,7 +1,7 @@
 {
-  "results_version": "0.12",
-  "model_hash": "913af79eb3c7004ab29009810de6927d103d380d2d7d299b561cc8a30314b263",
-  "ledger_hash": "3edea2d15f605f8b3c1457b1833d28b63beb69f3ca7ac677e87053f756ae3f03",
+  "results_version": "0.13",
+  "model_hash": "3b8a6699237756e5a51fa974686805170d1bd39d853ea3b1fb90d5785cfc8aa9",
+  "ledger_hash": "ae0b6a631062f21f0e9389672622d6c2e7333a502ff91ca1075fcd0f58dc1c5b",
   "engine": {
     "name": "cfdl-engine",
     "version": "0.9.0"
@@ -249,6 +249,7 @@
         "offset": 1.0,
         "entity": "asset.hotel",
         "category": "operating.expense.food_beverage",
+        "contract": "cre.opex_line.food_beverage",
         "values": [
           {
             "amount": -400.0,
@@ -269,6 +270,7 @@
         "offset": 1.0,
         "entity": "asset.hotel",
         "category": "operating.expense.opex",
+        "contract": "cre.opex_line.property_tax",
         "values": [
           {
             "amount": -200.0,
@@ -289,6 +291,7 @@
         "offset": 1.0,
         "entity": "asset.hotel",
         "category": "operating.expense.rooms",
+        "contract": "cre.opex_line.rooms",
         "values": [
           {
             "amount": -1000.0,
@@ -1510,6 +1513,41 @@
         "symbol": "asset.hotel",
         "family": "asset",
         "type": "CRE.Asset.RealProperty"
+      }
+    ],
+    "contracts": [
+      {
+        "name": "cre.opex_line.food_beverage",
+        "type": "CRE.Contract.OperatingExpense",
+        "master": "Contract.Line",
+        "contract_name": "cre.opex_line",
+        "instance": "food_beverage",
+        "subject": "asset.hotel",
+        "streams": [
+          "cre.opex.line.food_beverage"
+        ]
+      },
+      {
+        "name": "cre.opex_line.property_tax",
+        "type": "CRE.Contract.OperatingExpense",
+        "master": "Contract.Line",
+        "contract_name": "cre.opex_line",
+        "instance": "property_tax",
+        "subject": "asset.hotel",
+        "streams": [
+          "cre.opex.line.property_tax"
+        ]
+      },
+      {
+        "name": "cre.opex_line.rooms",
+        "type": "CRE.Contract.OperatingExpense",
+        "master": "Contract.Line",
+        "contract_name": "cre.opex_line",
+        "instance": "rooms",
+        "subject": "asset.hotel",
+        "streams": [
+          "cre.opex.line.rooms"
+        ]
       }
     ]
   }
