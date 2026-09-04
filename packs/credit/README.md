@@ -201,12 +201,45 @@ retains.
 | `share` | the holder's undivided share of the pool's cash, 0 to 1 | required |
 
 Streams `credit.participation.interest` (the pool's interest net of
-servicing, times the share; category `financing.security.interest`) and
+servicing, times the share; category `financing.debt.interest_paid`) and
 `credit.participation.principal` (scheduled principal, the bullet,
-prepayments and recoveries, times the share; `financing.security.principal`).
+prepayments and recoveries, times the share; `financing.debt.principal`) —
+the same categories a borrower's debt service carries in every pack, because
+IAS 7 classifies the activity, and the instrument is on the series' contract.
 Prepayment penalties stay with the issuer. A participation carries the
 SUFFIX of the pool it participates in: `credit.participation.smoke` reads
 `credit.pool.*.smoke`.
+
+### `credit.note`
+
+A structured note: a class of a securitization — an ABS class, a REMIC
+tranche — paid what the trust's priority of payments allocates it. The
+second refinement of `Contract.Security`, and the opposite shape from the
+participation: both lines are ALLOCATED, so the rules lower no cash. They
+lower the two claims the waterfall's steps read, as fields on the trust.
+
+| term | meaning | default |
+|---|---|---|
+| `face` | the class's initial principal | required |
+| `coupon` | annual coupon (or `index_curve` with `margin`) | required, one way |
+| `principal_account` | the declared account the holder's principal is paid into | required |
+| `payment_frequency` | the class's payment rhythm | the calendar's |
+
+Fields `credit_note_claim_<id>` (face less the account's prior balance) and
+`credit_note_interest_due_<id>` (the claim times the coupon over the period)
+on the trust. A step pays each line and says so:
+
+```cfdl
+pay a2_interest to account a2_interest for contract credit.note.a2 line interest
+      = min(remaining, container.trust.credit_note_interest_due_a2)
+pay a2_principal to party.a2_holders for contract credit.note.a2 line principal
+      = min(remaining, container.trust.credit_note_claim_a2)
+```
+
+The step's series then carries the contract and the line, the results graph
+lists the step under the note, and `type Contract.Security line principal`
+reaches it. The Ally auto ABS benchmark case declares its seven classes this
+way.
 
 ## Conventions
 

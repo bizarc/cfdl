@@ -192,16 +192,16 @@ display = "positive"
 
 [[statements.rows]]
 kind = "line"
-label = "Passed through to holders: interest"
+label = "Paid to holders: interest"
 depth = 1
-categories = ["financing.security.interest"]
+categories = ["financing.debt.interest_paid"]
 display = "positive"
 
 [[statements.rows]]
 kind = "line"
-label = "Passed through to holders: principal"
+label = "Paid to holders: principal"
 depth = 1
-categories = ["financing.security.principal"]
+categories = ["financing.debt.principal"]
 display = "positive"
 
 # The same collections, annually. A pool is modeled monthly because that is
@@ -279,16 +279,16 @@ display = "positive"
 
 [[statements.rows]]
 kind = "line"
-label = "Passed through to holders: interest"
+label = "Paid to holders: interest"
 depth = 1
-categories = ["financing.security.interest"]
+categories = ["financing.debt.interest_paid"]
 display = "positive"
 
 [[statements.rows]]
 kind = "line"
-label = "Passed through to holders: principal"
+label = "Paid to holders: principal"
 depth = 1
-categories = ["financing.security.principal"]
+categories = ["financing.debt.principal"]
 display = "positive"
 
 # ---------------------------------------------------------------------------
@@ -389,16 +389,16 @@ display = "positive"
 
 [[statements.rows]]
 kind = "line"
-label = "Passed through to holders: interest"
+label = "Paid to holders: interest"
 depth = 1
-categories = ["financing.security.interest"]
+categories = ["financing.debt.interest_paid"]
 display = "positive"
 
 [[statements.rows]]
 kind = "line"
-label = "Passed through to holders: principal"
+label = "Paid to holders: principal"
 depth = 1
-categories = ["financing.security.principal"]
+categories = ["financing.debt.principal"]
 display = "positive"
 
 # Direct lending / private credit. Yield first: cash interest and fees are one
@@ -481,14 +481,14 @@ display = "positive"
 
 [[statements.rows]]
 kind = "line"
-label = "Passed through to holders: interest"
+label = "Paid to holders: interest"
 depth = 1
-categories = ["financing.security.interest"]
+categories = ["financing.debt.interest_paid"]
 display = "positive"
 
 [[statements.rows]]
 kind = "line"
-label = "Passed through to holders: principal"
+label = "Paid to holders: principal"
 depth = 1
-categories = ["financing.security.principal"]
+categories = ["financing.debt.principal"]
 display = "positive"

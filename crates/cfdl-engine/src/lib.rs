@@ -604,6 +604,12 @@ fn compute_results(ir: &Ir, model_hash: String, config: RunConfig) -> Result<Res
                     .iter()
                     .filter(|s| lowering_contract(s) == Some(c.name.as_str()))
                     .map(|s| s.name.clone())
+                    .chain(ir.waterfalls.iter().flat_map(|w| {
+                        w.steps
+                            .iter()
+                            .filter(|step| step.contract.as_deref() == Some(c.name.as_str()))
+                            .map(move |step| format!("{}.{}", w.name, step.name))
+                    }))
                     .collect(),
             })
             .collect(),
@@ -1975,6 +1981,20 @@ fn run_deterministic(
         .iter()
         .map(|w| (w.name.as_str(), w.entity.as_str()))
         .collect();
+    // A step that pays for a contract: its series carries the contract and
+    // the line, as a lowered stream's does (docs/40 §6).
+    let step_attribution: BTreeMap<String, (&str, &str)> = ir
+        .waterfalls
+        .iter()
+        .flat_map(|w| {
+            w.steps.iter().filter_map(move |step| {
+                Some((
+                    format!("{}.{}", w.name, step.name),
+                    (step.contract.as_deref()?, step.line.as_deref()?),
+                ))
+            })
+        })
+        .collect();
     for (name, values) in &waterfall_series {
         let mut series = Series::from_values(
             &ir.time.calendar,
@@ -1987,6 +2007,10 @@ fn run_deterministic(
         // A step's series belongs to the waterfall's attached entity.
         if let Some(owner) = name.split('.').next().and_then(|w| waterfall_entity.get(w)) {
             series.entity = Some((*owner).to_string());
+        }
+        if let Some((contract, line)) = step_attribution.get(name.as_str()) {
+            series.contract = Some((*contract).to_string());
+            series.line = Some((*line).to_string());
         }
         series_map.insert(format!("stream.{name}"), series);
     }
@@ -2476,7 +2500,21 @@ fn run_deterministic(
             }
             false
         };
-        let stream_meta: BTreeMap<&str, (&str, Option<&str>)> = ir
+        // Streams, and the waterfall steps that pay for a contract: an
+        // allocated line is paid by a step, so a selection by type and line
+        // has to be able to reach one (docs/40 §6). A step carries no
+        // category and belongs to the waterfall's entity.
+        let step_names: Vec<(String, &str)> = ir
+            .waterfalls
+            .iter()
+            .flat_map(|w| {
+                w.steps
+                    .iter()
+                    .filter(|step| step.contract.is_some())
+                    .map(move |step| (format!("{}.{}", w.name, step.name), w.entity.as_str()))
+            })
+            .collect();
+        let mut stream_meta: BTreeMap<&str, (&str, Option<&str>)> = ir
             .streams
             .iter()
             .map(|st| {
@@ -2486,6 +2524,9 @@ fn run_deterministic(
                 )
             })
             .collect();
+        for (name, owner) in &step_names {
+            stream_meta.insert(name.as_str(), (owner, None));
+        }
         ir.views
             .slices
             .iter()
@@ -2540,7 +2581,10 @@ fn run_deterministic(
                 let mut net = vec![0.0_f64; cash_periods];
                 let mut valued: Vec<(Vec<f64>, f64)> = Vec::new();
                 for name in &matched {
-                    if let Some(values) = stream_series.get(*name) {
+                    if let Some(values) = stream_series
+                        .get(*name)
+                        .or_else(|| waterfall_series.get(*name))
+                    {
                         let cash: Vec<f64> = values[..cash_periods.min(values.len())]
                             .iter()
                             .enumerate()

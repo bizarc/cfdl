@@ -527,6 +527,47 @@ required = true
 unit = "ratio"
 description = "The holder's undivided share of the pool's cash, 0 to 1."
 
+# A STRUCTURED NOTE: a class of a securitisation — an ABS class, a REMIC
+# tranche — paid what the priority of payments allocates it. Both lines are
+# marked ALLOCATED here, where the master leaves them lowered (docs/40 §4.13):
+# the structure pays them, and the rules lower only the claims the steps
+# read. The coupon is required on a note, where the master leaves it optional
+# for a pass-through.
+[[contracts]]
+type_id = "Credit.Contract.Note"
+refines = "Contract.Security"
+contract_name = "credit.note"
+subject_family = "container"
+parties = ["issuer", "holder"]
+description = "A class of notes in a securitisation: a face and a coupon, paid interest and principal by the trust's priority of payments. The steps that pay it name it; its claim is face less what the holder's principal account has received."
+
+[[contracts.fields]]
+name = "coupon"
+field_type = "decimal"
+unit = "ratio"
+one_of = "coupon"
+description = "Annual coupon, where fixed."
+
+[[contracts.fields]]
+name = "index_curve"
+field_type = "string"
+one_of = "coupon"
+description = "The declared curve a floating coupon resets off, with `margin`."
+
+[[contracts.fields]]
+name = "principal_account"
+field_type = "account"
+required = true
+description = "The declared account the holder's principal is paid into — the note's wiring to the ledger, as `on entity` is its wiring to the trust. The claim is `face` less this account's prior balance."
+
+[[contracts.lines]]
+name = "interest"
+allocated = true
+
+[[contracts.lines]]
+name = "principal"
+allocated = true
+
 # --- Options: contracts with an election ---------------------------------
 
 [[contracts]]

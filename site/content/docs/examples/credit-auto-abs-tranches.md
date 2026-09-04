@@ -47,16 +47,18 @@ The trust as a container, the notes as claims on its cash, and the priority of
 payments as two ordered allocations from the two amounts the indenture defines.
 
 Interest collected, net of the servicer's fee and the trust's own expense, is
-one account; principal collected is another. Each distribution date allocates
-the first to the classes' coupons and the second to their principal, by
-seniority. Every holder owns an account that receives its principal, and that
-account IS the class's position: what a class is still owed is its face less
-what its holder has been paid, so a step reads the account the previous
-distributions filled and states its claim in one line:
+one account; principal collected is another. Each class is a `credit.note`
+the trust issued — a face, a coupon, and the account its holder's principal
+is paid into — and each distribution date allocates the first account to the
+classes' interest and the second to their principal, by seniority. Every
+holder owns an account that receives its principal, and that account IS the
+class's position: what a class is still owed is its face less what its
+holder has been paid, which the note lowers as its claim, so a step pays the
+claim and says which note and line it pays:
 
 ```cfdl
-pay a3_principal to party.a3_holders =
-      min(remaining, inputs.a3_face - if(time.t == 0.0, 0.0, prev.a3_principal))
+pay a3_principal to party.a3_holders for contract credit.note.a3 line principal =
+      min(remaining, container.trust.credit_note_claim_a3)
 ```
 
 Declaration order is seniority. A retired class contributes zero because its
@@ -827,27 +829,93 @@ contract credit.pool_level_pay.p50 on entity asset.p50 {
 }
 
 // ---------------------------------------------------------------------------
-// The notes. Faces are each class's balance at the exhibit's cut-off, which is
-// the base its percent-outstanding grid is stated on: A-1 was paid in full in
-// January 2018 and is carried at zero; A-2 had amortized to 112,026,644 (the
-// trust's Form 10-D); the rest stood at their original principal. Coupons and
-// the 30/360 day count are the exhibit's.
+// The notes: seven classes, each a structured note the trust issued — a face,
+// a coupon, and the account its holder's principal is paid into. Faces are
+// each class's balance at the exhibit's cut-off, which is the base its
+// percent-outstanding grid is stated on: A-1 was paid in full in January 2018
+// and is carried at zero; A-2 had amortized to 112,026,644 (the trust's Form
+// 10-D); the rest stood at their original principal. Coupons and the 30/360
+// day count are the exhibit's. A note lowers no cash of its own: it lowers
+// its claim — face less what its holder's account has received — and the
+// interest due on it, and the priority of payments below pays both.
 // ---------------------------------------------------------------------------
-assume a1_face   = 0.00
-assume a2_face   = 112026644.00
-assume a3_face   = 271370000.00
-assume a4_face   = 86010000.00
-assume b_face   = 22220000.00
-assume c_face   = 18510000.00
-assume d_face   = 13750000.00
-
-assume a1_coupon = 0.0110
-assume a2_coupon = 0.0153
-assume a3_coupon = 0.0174
-assume a4_coupon = 0.0201
-assume b_coupon = 0.0224
-assume c_coupon = 0.0237
-assume d_coupon = 0.0291
+contract credit.note a1 on entity container.trust {
+  term 2018-10..2024-01
+  terms {
+    face = 0.00
+    coupon = 0.0110
+    principal_account = a1_principal
+  }
+  parties {
+    holder = party.a1_holders
+  }
+}
+contract credit.note a2 on entity container.trust {
+  term 2018-10..2024-01
+  terms {
+    face = 112026644.00
+    coupon = 0.0153
+    principal_account = a2_principal
+  }
+  parties {
+    holder = party.a2_holders
+  }
+}
+contract credit.note a3 on entity container.trust {
+  term 2018-10..2024-01
+  terms {
+    face = 271370000.00
+    coupon = 0.0174
+    principal_account = a3_principal
+  }
+  parties {
+    holder = party.a3_holders
+  }
+}
+contract credit.note a4 on entity container.trust {
+  term 2018-10..2024-01
+  terms {
+    face = 86010000.00
+    coupon = 0.0201
+    principal_account = a4_principal
+  }
+  parties {
+    holder = party.a4_holders
+  }
+}
+contract credit.note b on entity container.trust {
+  term 2018-10..2024-01
+  terms {
+    face = 22220000.00
+    coupon = 0.0224
+    principal_account = b_principal
+  }
+  parties {
+    holder = party.b_holders
+  }
+}
+contract credit.note c on entity container.trust {
+  term 2018-10..2024-01
+  terms {
+    face = 18510000.00
+    coupon = 0.0237
+    principal_account = c_principal
+  }
+  parties {
+    holder = party.c_holders
+  }
+}
+contract credit.note d on entity container.trust {
+  term 2018-10..2024-01
+  terms {
+    face = 13750000.00
+    coupon = 0.0291
+    principal_account = d_principal
+  }
+  parties {
+    holder = party.d_holders
+  }
+}
 
 // ---------------------------------------------------------------------------
 // The trust's expenses, one item each. The servicing fee is 1.00% per annum
@@ -911,56 +979,56 @@ account c_interest { from 0.0 }
 account d_interest { from 0.0 }
 
 // ---------------------------------------------------------------------------
-// Interest, on each distribution date: every class at its coupon on the
-// balance it carried in — its face less the principal its holder's account
-// already holds. Interest collected beyond the coupons stays in the trust's
-// interest account.
+// Interest, on each distribution date: every class its interest due — its
+// coupon on the claim it carried in, which the note lowers as a field.
+// Each step names the note and the line it pays. Interest collected beyond
+// the coupons stays in the trust's interest account.
 // ---------------------------------------------------------------------------
 waterfall notes.interest on entity container.trust {
   schedule every month from 2018-10 to 2024-01
   from interest_collections
 
-  pay a1_interest to account a1_interest =
-        min(remaining, (inputs.a1_face - if(time.t == 0.0, 0.0, prev.a1_principal)) * inputs.a1_coupon / 12.0)
-  pay a2_interest to account a2_interest =
-        min(remaining, (inputs.a2_face - if(time.t == 0.0, 0.0, prev.a2_principal)) * inputs.a2_coupon / 12.0)
-  pay a3_interest to account a3_interest =
-        min(remaining, (inputs.a3_face - if(time.t == 0.0, 0.0, prev.a3_principal)) * inputs.a3_coupon / 12.0)
-  pay a4_interest to account a4_interest =
-        min(remaining, (inputs.a4_face - if(time.t == 0.0, 0.0, prev.a4_principal)) * inputs.a4_coupon / 12.0)
-  pay b_interest to account b_interest =
-        min(remaining, (inputs.b_face - if(time.t == 0.0, 0.0, prev.b_principal)) * inputs.b_coupon / 12.0)
-  pay c_interest to account c_interest =
-        min(remaining, (inputs.c_face - if(time.t == 0.0, 0.0, prev.c_principal)) * inputs.c_coupon / 12.0)
-  pay d_interest to account d_interest =
-        min(remaining, (inputs.d_face - if(time.t == 0.0, 0.0, prev.d_principal)) * inputs.d_coupon / 12.0)
+  pay a1_interest to account a1_interest for contract credit.note.a1 line interest =
+        min(remaining, container.trust.credit_note_interest_due_a1)
+  pay a2_interest to account a2_interest for contract credit.note.a2 line interest =
+        min(remaining, container.trust.credit_note_interest_due_a2)
+  pay a3_interest to account a3_interest for contract credit.note.a3 line interest =
+        min(remaining, container.trust.credit_note_interest_due_a3)
+  pay a4_interest to account a4_interest for contract credit.note.a4 line interest =
+        min(remaining, container.trust.credit_note_interest_due_a4)
+  pay b_interest to account b_interest for contract credit.note.b line interest =
+        min(remaining, container.trust.credit_note_interest_due_b)
+  pay c_interest to account c_interest for contract credit.note.c line interest =
+        min(remaining, container.trust.credit_note_interest_due_c)
+  pay d_interest to account d_interest for contract credit.note.d line interest =
+        min(remaining, container.trust.credit_note_interest_due_d)
 }
 
 // ---------------------------------------------------------------------------
-// Principal, strictly by seniority. A step states what its class is still
-// owed and the engine pays it out of what remains, so nothing reaches a class
-// until every class above it is gone. At the first distribution no account
-// has a prior balance, so the claim is the face. The $13.75m by which the pool
-// exceeds the notes stays in the principal account as the trust's own cash.
+// Principal, strictly by seniority. A step pays its note's claim — face less
+// what the holder's account has received, lowered by the note — out of what
+// remains, so nothing reaches a class until every class above it is gone.
+// The $13.75m by which the pool exceeds the notes stays in the principal
+// account as the trust's own cash.
 // ---------------------------------------------------------------------------
 waterfall notes.principal on entity container.trust {
   schedule every month from 2018-10 to 2024-01
   from principal_collections
 
-  pay a1_principal to party.a1_holders =
-        min(remaining, inputs.a1_face - if(time.t == 0.0, 0.0, prev.a1_principal))
-  pay a2_principal to party.a2_holders =
-        min(remaining, inputs.a2_face - if(time.t == 0.0, 0.0, prev.a2_principal))
-  pay a3_principal to party.a3_holders =
-        min(remaining, inputs.a3_face - if(time.t == 0.0, 0.0, prev.a3_principal))
-  pay a4_principal to party.a4_holders =
-        min(remaining, inputs.a4_face - if(time.t == 0.0, 0.0, prev.a4_principal))
-  pay b_principal to party.b_holders =
-        min(remaining, inputs.b_face - if(time.t == 0.0, 0.0, prev.b_principal))
-  pay c_principal to party.c_holders =
-        min(remaining, inputs.c_face - if(time.t == 0.0, 0.0, prev.c_principal))
-  pay d_principal to party.d_holders =
-        min(remaining, inputs.d_face - if(time.t == 0.0, 0.0, prev.d_principal))
+  pay a1_principal to party.a1_holders for contract credit.note.a1 line principal =
+        min(remaining, container.trust.credit_note_claim_a1)
+  pay a2_principal to party.a2_holders for contract credit.note.a2 line principal =
+        min(remaining, container.trust.credit_note_claim_a2)
+  pay a3_principal to party.a3_holders for contract credit.note.a3 line principal =
+        min(remaining, container.trust.credit_note_claim_a3)
+  pay a4_principal to party.a4_holders for contract credit.note.a4 line principal =
+        min(remaining, container.trust.credit_note_claim_a4)
+  pay b_principal to party.b_holders for contract credit.note.b line principal =
+        min(remaining, container.trust.credit_note_claim_b)
+  pay c_principal to party.c_holders for contract credit.note.c line principal =
+        min(remaining, container.trust.credit_note_claim_c)
+  pay d_principal to party.d_holders for contract credit.note.d line principal =
+        min(remaining, container.trust.credit_note_claim_d)
 }
 ```
 

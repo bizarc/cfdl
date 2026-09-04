@@ -1,0 +1,17 @@
+[
+  {
+    "code": "E1377_STEP_LINE_NOT_ALLOCATED",
+    "severity": "error",
+    "message": "Waterfall 'distribution' step 'interest' pays line 'interest' of contract 'cre.permanent_debt', which type 'CRE.Contract.PermanentDebt' does not declare as allocated. A step pays what the structure allocates; a line a rule lowers is paid by the rule.",
+    "file": "model.cfdl",
+    "span": {
+      "start_line": 27,
+      "start_col": 3,
+      "end_line": 28,
+      "end_col": 9
+    },
+    "path": null,
+    "hint": "Allocated lines of 'CRE.Contract.PermanentDebt': none.",
+    "notes": []
+  }
+]

@@ -767,7 +767,7 @@ line = "interest"
 stream_name = "credit.participation.interest{{contract.dot_suffix}}"
 owner_entity = "${subject}"
 direction = "outflow"
-category = "financing.security.interest"
+category = "financing.debt.interest_paid"
 amount_expr = "{{contract.share}} * (series_sum(\"credit.pool.interest{{contract.dot_suffix}}\", time.t, time.t) + series_sum(\"credit.pool.servicing{{contract.dot_suffix}}\", time.t, time.t))"
 schedule_kind = "every"
 schedule_from = "{{contract.term_start}}"
@@ -780,8 +780,70 @@ line = "principal"
 stream_name = "credit.participation.principal{{contract.dot_suffix}}"
 owner_entity = "${subject}"
 direction = "outflow"
-category = "financing.security.principal"
+category = "financing.debt.principal"
 amount_expr = "{{contract.share}} * (series_sum(\"credit.pool.sched_principal{{contract.dot_suffix}}\", time.t, time.t) + series_sum(\"credit.pool.bullet{{contract.dot_suffix}}\", time.t, time.t) + series_sum(\"credit.pool.prepay{{contract.dot_suffix}}\", time.t, time.t) + series_sum(\"credit.pool.recoveries{{contract.dot_suffix}}\", time.t, time.t))"
 schedule_kind = "every"
 schedule_from = "{{contract.term_start}}"
 schedule_to = "{{contract.term_end}}"
+
+# ---------------------------------------------------------------------------
+# credit.note — a structured note: a class of a securitisation, paid what the
+# priority of payments allocates it (docs/40 §4.13).
+#
+# Both of its lines are ALLOCATED, so these rules lower no cash. They lower
+# the two CLAIMS the waterfall's steps read, as fields on the trust: the
+# outstanding claim — face less what the holder's principal account had
+# received as of the prior period (the D7 shape) — and the interest due on
+# it at the coupon over the period. A step then pays `min(remaining, claim)`
+# and says which contract and line it pays:
+#
+#   pay a2_interest to account a2_interest for contract credit.note.a2 line interest
+#         = min(remaining, container.trust.credit_note_interest_due_a2)
+#
+# `principal_account` is a reference to the declared account the holder's
+# principal lands in — the wiring of the agreement to the ledger, the way
+# `on entity` wires it to the asset. A field may read `prev.<account>`; a
+# stream may not, which is why the claim is a field.
+# ---------------------------------------------------------------------------
+
+[[rules]]
+id = "credit_note_claim"
+contract_name = "credit.note"
+stream_name = ""
+owner_entity = "${subject}"
+direction = "outflow"
+category = ""
+amount_expr = ""
+schedule_kind = "every"
+schedule_from = "{{contract.term_start}}"
+schedule_to = "{{contract.term_end}}"
+field_name = "credit_note_claim{{contract.suffix_ident}}"
+field_init = "{{contract.face}}"
+field_next = "{{contract.face}} - prev.{{contract.principal_account}}"
+field_every = "{{contract.payment_frequency}}"
+field_from = "{{contract.term_start}}"
+field_to = "{{contract.term_end}}"
+
+[rules.defaults]
+payment_frequency = ""
+
+[[rules]]
+id = "credit_note_interest_due"
+contract_name = "credit.note"
+stream_name = ""
+owner_entity = "${subject}"
+direction = "outflow"
+category = ""
+amount_expr = ""
+schedule_kind = "every"
+schedule_from = "{{contract.term_start}}"
+schedule_to = "{{contract.term_end}}"
+field_name = "credit_note_interest_due{{contract.suffix_ident}}"
+field_init = "{{contract.face}} * {{contract.coupon}} / {{model.periods_per_year}}"
+field_next = "({{contract.face}} - prev.{{contract.principal_account}}) * {{contract.coupon}} / {{model.periods_per_year}}"
+field_every = "{{contract.payment_frequency}}"
+field_from = "{{contract.term_start}}"
+field_to = "{{contract.term_end}}"
+
+[rules.defaults]
+payment_frequency = ""

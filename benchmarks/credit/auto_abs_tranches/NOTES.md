@@ -23,15 +23,20 @@ needs and a reader of the site does not.
   principal step, and A-2 is paid $1.1m of interest as principal at the
   first distribution. The published grid shows the issuer repays principal
   from principal collected only, which is what the two accounts say.
-- Each holder OWNS an account that receives its principal, so
-  `prev.<class>_principal` is the class's cumulative repayment and
-  `face − prev.<class>_principal` its claim. Each class also has a
+- Each class is a `credit.note` on the trust: a face, a coupon, and
+  `principal_account` naming the holder's account. The note lowers its
+  claim (`face − prev.<class>_principal`) and the interest due on it as
+  fields on the trust, and each step pays one of them and names the note
+  and line it pays, so the results attribute every allocation to its class.
+  Each holder OWNS the account that receives its principal, so
+  `prev.<class>_principal` is the class's cumulative repayment. Each class also has a
   structure-owned `<class>_interest` account, because a party may own at
   most one account (`docs/01` §10.6). That limitation is wrong for a
   noteholder, who has a principal position and an interest position, and
   is recorded as a language item rather than worked around silently.
-- `prev.<account>` is absent at period 0, not zero, so every claim guards
-  the first distribution: `if(time.t == 0.0, 0.0, prev.<account>)`.
+- `prev.<account>` is absent at period 0, not zero; the note's claim field
+  starts at the face (`init`) and reads the account from the second
+  distribution on (`next`), so no step needs a first-period guard.
 - Every step is `min(remaining, claim)`. On the principal waterfall that
   is what makes the pay-down sequential; on the interest waterfall it is
   also what satisfies `E1344` (a waterfall must say where the remainder

@@ -1,7 +1,7 @@
 {
   "results_version": "0.13",
-  "model_hash": "466fcd53d42733c6a1f208ef6a0cc00b0c9812b7f61d9ee3b5c551cef07eb6d3",
-  "ledger_hash": "4edc51f353ce901dcc6cac78ca79e2fff7e97927cd49f7943a2d36c102dc7c69",
+  "model_hash": "a9d8d7d687182908442f1aa652c8c2bb9e784cf17d0a926fdda20700bf7e6af9",
+  "ledger_hash": "3b697a30bc1cb8d599985313d441b23ba39be92baab6996ab68c81cf150260c0",
   "engine": {
     "name": "cfdl-engine",
     "version": "0.9.0"
@@ -129,7 +129,8 @@
           "age_months",
           "payment_frequency",
           "psa_speed",
-          "sda_speed"
+          "sda_speed",
+          "servicing_fee"
         ],
         "stream": "credit.pool.servicing.smoke",
         "terms": {
@@ -142,21 +143,7 @@
           "principal": "1200000",
           "psa_speed": "0",
           "sda_speed": "0",
-          "servicing_fee": "0.005"
-        }
-      },
-      {
-        "contract": "credit.participation.smoke",
-        "stream": "credit.participation.interest.smoke",
-        "terms": {
-          "share": "1.0"
-        }
-      },
-      {
-        "contract": "credit.participation.smoke",
-        "stream": "credit.participation.principal.smoke",
-        "terms": {
-          "share": "1.0"
+          "servicing_fee": "0"
         }
       }
     ]
@@ -164,38 +151,33 @@
   "deterministic": {
     "status": "ok",
     "metrics": {
+      "entity.a_interest.total": {
+        "amount": 22383.62981,
+        "currency": "USD"
+      },
       "entity.asset.pool.total": {
-        "amount": 0.0,
+        "amount": 1221222.918743,
         "currency": "USD"
       },
-      "entity.party.investors.total": {
-        "amount": 0.0,
+      "entity.container.trust.total": {
+        "amount": 1221222.918743,
         "currency": "USD"
       },
-      "entity.party.issuer.total": {
-        "amount": 0.0,
+      "entity.party.holders.total": {
+        "amount": 1000000.0,
         "currency": "USD"
       },
-      "model.moic": 1.8,
       "model.npv": {
-        "amount": -0.0,
+        "amount": 1162358.110916,
         "currency": "USD"
       },
       "model.total": {
-        "amount": 0.0,
+        "amount": 1221222.918743,
         "currency": "USD"
       },
-      "model.wal_years": 0.513889,
+      "model.wal_years": 0.522249,
       "run.annual_discount_rate": 0.1,
       "run.periods_per_year": 12.0,
-      "stream.credit.participation.interest.smoke.total": {
-        "amount": -34530.365692,
-        "currency": "USD"
-      },
-      "stream.credit.participation.principal.smoke.total": {
-        "amount": -1183553.428897,
-        "currency": "USD"
-      },
       "stream.credit.pool.interest.smoke.total": {
         "amount": 37669.489846,
         "currency": "USD"
@@ -217,11 +199,107 @@
         "currency": "USD"
       },
       "stream.credit.pool.servicing.smoke.total": {
-        "amount": -3139.124154,
+        "amount": 0.0,
         "currency": "USD"
       }
     },
     "series": {
+      "account.a_interest": {
+        "index": {
+          "calendar": "monthly",
+          "start": "2026-01-01",
+          "periods": 15
+        },
+        "values": [
+          4166.666667,
+          7888.863923,
+          11173.125988,
+          14025.903758,
+          16450.326233,
+          18453.240474,
+          20041.403558,
+          21221.483675,
+          22000.061209,
+          22383.62981,
+          22383.62981,
+          22383.62981,
+          22383.62981,
+          22383.62981,
+          22383.62981
+        ]
+      },
+      "account.a_principal": {
+        "index": {
+          "calendar": "monthly",
+          "start": "2026-01-01",
+          "periods": 15
+        },
+        "values": [
+          106672.658558,
+          211777.104422,
+          315333.335262,
+          418138.606036,
+          519300.582201,
+          618840.85979,
+          716780.771891,
+          813141.391739,
+          907943.535766,
+          1000000.0,
+          1000000.0,
+          1000000.0,
+          1000000.0,
+          1000000.0,
+          1000000.0
+        ]
+      },
+      "account.interest_collections": {
+        "index": {
+          "calendar": "monthly",
+          "start": "2026-01-01",
+          "periods": 15
+        },
+        "values": [
+          1818.123041,
+          3533.53257,
+          5148.902687,
+          6666.86774,
+          8093.262402,
+          9430.08321,
+          10679.298083,
+          11842.84668,
+          12922.640761,
+          13920.564538,
+          14833.442664250982,
+          15285.86003579495,
+          15285.86003579495,
+          15285.86003579495,
+          15285.86003579495
+        ]
+      },
+      "account.principal_collections": {
+        "index": {
+          "calendar": "monthly",
+          "start": "2026-01-01",
+          "periods": 15
+        },
+        "values": [
+          -0.0,
+          -0.0,
+          -0.0,
+          0.0,
+          0.0,
+          -0.0,
+          0.0,
+          0.0,
+          0.0,
+          1207.76662,
+          93069.95458796382,
+          183553.42889675742,
+          183553.42889675742,
+          183553.42889675742,
+          183553.42889675742
+        ]
+      },
       "asset.pool.credit_level_pay_survival_lag_smoke": {
         "index": {
           "calendar": "monthly",
@@ -268,6 +346,54 @@
           0.8727652339995531,
           0.8629233575724887,
           0.8531924646354082
+        ]
+      },
+      "container.trust.credit_note_claim_a": {
+        "index": {
+          "calendar": "monthly",
+          "start": "2026-01-01",
+          "periods": 15
+        },
+        "values": [
+          1000000.0,
+          893327.341442,
+          788222.895578,
+          684666.664738,
+          581861.393964,
+          480699.417799,
+          381159.14021,
+          283219.228109,
+          186858.608261,
+          92056.464234,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ]
+      },
+      "container.trust.credit_note_interest_due_a": {
+        "index": {
+          "calendar": "monthly",
+          "start": "2026-01-01",
+          "periods": 15
+        },
+        "values": [
+          4166.666666666667,
+          3722.197256008333,
+          3284.2620649083333,
+          2852.777769741667,
+          2424.42247485,
+          2002.9142408291666,
+          1588.1630842083334,
+          1180.0801171208334,
+          778.5775344208333,
+          383.568600975,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0
         ]
       },
       "domain.credit.balance_outstanding": {
@@ -416,51 +542,51 @@
         },
         "values": [
           {
-            "amount": 112158.71579,
+            "amount": 112657.448266,
             "currency": "USD"
           },
           {
-            "amount": 110088.91875,
+            "amount": 110542.052648,
             "currency": "USD"
           },
           {
-            "amount": 108047.56034,
+            "amount": 108455.863022,
             "currency": "USD"
           },
           {
-            "amount": 106811.785028,
+            "amount": 107176.013597,
             "currency": "USD"
           },
           {
-            "amount": 104691.891874,
+            "amount": 105012.793302,
             "currency": "USD"
           },
           {
-            "amount": 102601.701384,
+            "amount": 102880.012638,
             "currency": "USD"
           },
           {
-            "amount": 100540.841895,
+            "amount": 100777.290058,
             "currency": "USD"
           },
           {
-            "amount": 98508.946169,
+            "amount": 98704.248562,
             "currency": "USD"
           },
           {
-            "amount": 96505.651341,
+            "amount": 96660.515643,
             "currency": "USD"
           },
           {
-            "amount": 94530.598867,
+            "amount": 94645.723232,
             "currency": "USD"
           },
           {
-            "amount": 92698.992917,
+            "amount": 92775.066094,
             "currency": "USD"
           },
           {
-            "amount": 90898.190233,
+            "amount": 90935.89168,
             "currency": "USD"
           },
           {
@@ -785,51 +911,51 @@
         },
         "values": [
           {
-            "amount": 498.732476,
+            "amount": 0.0,
             "currency": "USD"
           },
           {
-            "amount": 453.133899,
+            "amount": 0.0,
             "currency": "USD"
           },
           {
-            "amount": 408.302682,
+            "amount": 0.0,
             "currency": "USD"
           },
           {
-            "amount": 364.228569,
+            "amount": 0.0,
             "currency": "USD"
           },
           {
-            "amount": 320.901428,
+            "amount": 0.0,
             "currency": "USD"
           },
           {
-            "amount": 278.311254,
+            "amount": 0.0,
             "currency": "USD"
           },
           {
-            "amount": 236.448163,
+            "amount": 0.0,
             "currency": "USD"
           },
           {
-            "amount": 195.302393,
+            "amount": 0.0,
             "currency": "USD"
           },
           {
-            "amount": 154.864301,
+            "amount": 0.0,
             "currency": "USD"
           },
           {
-            "amount": 115.124365,
+            "amount": 0.0,
             "currency": "USD"
           },
           {
-            "amount": 76.073177,
+            "amount": 0.0,
             "currency": "USD"
           },
           {
-            "amount": 37.701448,
+            "amount": 0.0,
             "currency": "USD"
           },
           {
@@ -915,6 +1041,75 @@
           }
         ]
       },
+      "entity.a_interest.net_cash_flow": {
+        "index": {
+          "calendar": "monthly",
+          "start": "2026-01-01",
+          "periods": 15
+        },
+        "values": [
+          {
+            "amount": 4166.666667,
+            "currency": "USD"
+          },
+          {
+            "amount": 3722.197256,
+            "currency": "USD"
+          },
+          {
+            "amount": 3284.262065,
+            "currency": "USD"
+          },
+          {
+            "amount": 2852.77777,
+            "currency": "USD"
+          },
+          {
+            "amount": 2424.422475,
+            "currency": "USD"
+          },
+          {
+            "amount": 2002.914241,
+            "currency": "USD"
+          },
+          {
+            "amount": 1588.163084,
+            "currency": "USD"
+          },
+          {
+            "amount": 1180.080117,
+            "currency": "USD"
+          },
+          {
+            "amount": 778.577534,
+            "currency": "USD"
+          },
+          {
+            "amount": 383.568601,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          }
+        ]
+      },
       "entity.asset.pool.net_cash_flow": {
         "index": {
           "calendar": "monthly",
@@ -923,120 +1118,51 @@
         },
         "values": [
           {
-            "amount": 0.0,
+            "amount": 112657.448266,
             "currency": "USD"
           },
           {
-            "amount": 0.0,
+            "amount": 110542.052648,
             "currency": "USD"
           },
           {
-            "amount": -0.0,
+            "amount": 108455.863022,
             "currency": "USD"
           },
           {
-            "amount": 0.0,
+            "amount": 107176.013597,
             "currency": "USD"
           },
           {
-            "amount": -0.0,
+            "amount": 105012.793302,
             "currency": "USD"
           },
           {
-            "amount": 0.0,
+            "amount": 102880.012638,
             "currency": "USD"
           },
           {
-            "amount": -0.0,
+            "amount": 100777.290058,
             "currency": "USD"
           },
           {
-            "amount": 0.0,
+            "amount": 98704.248562,
             "currency": "USD"
           },
           {
-            "amount": -0.0,
+            "amount": 96660.515643,
             "currency": "USD"
           },
           {
-            "amount": 0.0,
+            "amount": 94645.723232,
             "currency": "USD"
           },
           {
-            "amount": -0.0,
+            "amount": 92775.066094,
             "currency": "USD"
           },
           {
-            "amount": 0.0,
-            "currency": "USD"
-          },
-          {
-            "amount": 0.0,
-            "currency": "USD"
-          },
-          {
-            "amount": 0.0,
-            "currency": "USD"
-          },
-          {
-            "amount": 0.0,
-            "currency": "USD"
-          }
-        ]
-      },
-      "entity.party.investors.net_cash_flow": {
-        "index": {
-          "calendar": "monthly",
-          "start": "2026-01-01",
-          "periods": 15
-        },
-        "values": [
-          {
-            "amount": 0.0,
-            "currency": "USD"
-          },
-          {
-            "amount": 0.0,
-            "currency": "USD"
-          },
-          {
-            "amount": 0.0,
-            "currency": "USD"
-          },
-          {
-            "amount": 0.0,
-            "currency": "USD"
-          },
-          {
-            "amount": 0.0,
-            "currency": "USD"
-          },
-          {
-            "amount": 0.0,
-            "currency": "USD"
-          },
-          {
-            "amount": 0.0,
-            "currency": "USD"
-          },
-          {
-            "amount": 0.0,
-            "currency": "USD"
-          },
-          {
-            "amount": 0.0,
-            "currency": "USD"
-          },
-          {
-            "amount": 0.0,
-            "currency": "USD"
-          },
-          {
-            "amount": 0.0,
-            "currency": "USD"
-          },
-          {
-            "amount": 0.0,
+            "amount": 90935.89168,
             "currency": "USD"
           },
           {
@@ -1053,7 +1179,7 @@
           }
         ]
       },
-      "entity.party.issuer.net_cash_flow": {
+      "entity.container.trust.net_cash_flow": {
         "index": {
           "calendar": "monthly",
           "start": "2026-01-01",
@@ -1061,7 +1187,51 @@
         },
         "values": [
           {
-            "amount": 0.0,
+            "amount": 112657.448266,
+            "currency": "USD"
+          },
+          {
+            "amount": 110542.052648,
+            "currency": "USD"
+          },
+          {
+            "amount": 108455.863022,
+            "currency": "USD"
+          },
+          {
+            "amount": 107176.013597,
+            "currency": "USD"
+          },
+          {
+            "amount": 105012.793302,
+            "currency": "USD"
+          },
+          {
+            "amount": 102880.012638,
+            "currency": "USD"
+          },
+          {
+            "amount": 100777.290058,
+            "currency": "USD"
+          },
+          {
+            "amount": 98704.248562,
+            "currency": "USD"
+          },
+          {
+            "amount": 96660.515643,
+            "currency": "USD"
+          },
+          {
+            "amount": 94645.723232,
+            "currency": "USD"
+          },
+          {
+            "amount": 92775.066094,
+            "currency": "USD"
+          },
+          {
+            "amount": 90935.89168,
             "currency": "USD"
           },
           {
@@ -1075,29 +1245,54 @@
           {
             "amount": 0.0,
             "currency": "USD"
-          },
+          }
+        ]
+      },
+      "entity.party.holders.net_cash_flow": {
+        "index": {
+          "calendar": "monthly",
+          "start": "2026-01-01",
+          "periods": 15
+        },
+        "values": [
           {
-            "amount": 0.0,
+            "amount": 106672.658558,
             "currency": "USD"
           },
           {
-            "amount": 0.0,
+            "amount": 105104.445864,
             "currency": "USD"
           },
           {
-            "amount": 0.0,
+            "amount": 103556.23084,
             "currency": "USD"
           },
           {
-            "amount": 0.0,
+            "amount": 102805.270774,
             "currency": "USD"
           },
           {
-            "amount": 0.0,
+            "amount": 101161.976165,
             "currency": "USD"
           },
           {
-            "amount": 0.0,
+            "amount": 99540.277589,
+            "currency": "USD"
+          },
+          {
+            "amount": 97939.912101,
+            "currency": "USD"
+          },
+          {
+            "amount": 96360.619848,
+            "currency": "USD"
+          },
+          {
+            "amount": 94802.144027,
+            "currency": "USD"
+          },
+          {
+            "amount": 92056.464234,
             "currency": "USD"
           },
           {
@@ -1130,199 +1325,51 @@
         },
         "values": [
           {
-            "amount": 0.0,
+            "amount": 112657.448266,
             "currency": "USD"
           },
           {
-            "amount": 0.0,
+            "amount": 110542.052648,
             "currency": "USD"
           },
           {
-            "amount": -0.0,
+            "amount": 108455.863022,
             "currency": "USD"
           },
           {
-            "amount": 0.0,
+            "amount": 107176.013597,
             "currency": "USD"
           },
           {
-            "amount": -0.0,
+            "amount": 105012.793302,
             "currency": "USD"
           },
           {
-            "amount": 0.0,
+            "amount": 102880.012638,
             "currency": "USD"
           },
           {
-            "amount": -0.0,
+            "amount": 100777.290058,
             "currency": "USD"
           },
           {
-            "amount": 0.0,
+            "amount": 98704.248562,
             "currency": "USD"
           },
           {
-            "amount": -0.0,
+            "amount": 96660.515643,
             "currency": "USD"
           },
           {
-            "amount": 0.0,
+            "amount": 94645.723232,
             "currency": "USD"
           },
           {
-            "amount": -0.0,
+            "amount": 92775.066094,
             "currency": "USD"
           },
           {
-            "amount": 0.0,
-            "currency": "USD"
-          },
-          {
-            "amount": 0.0,
-            "currency": "USD"
-          },
-          {
-            "amount": 0.0,
-            "currency": "USD"
-          },
-          {
-            "amount": 0.0,
-            "currency": "USD"
-          }
-        ]
-      },
-      "stream.credit.participation.interest.smoke": {
-        "index": {
-          "calendar": "monthly",
-          "start": "2026-01-01",
-          "periods": 15
-        },
-        "offset": 1.0,
-        "entity": "asset.pool",
-        "category": "financing.debt.interest_paid",
-        "contract": "credit.participation.smoke",
-        "line": "interest",
-        "values": [
-          {
-            "amount": -5486.057233,
-            "currency": "USD"
-          },
-          {
-            "amount": -4984.472886,
-            "currency": "USD"
-          },
-          {
-            "amount": -4491.3295,
-            "currency": "USD"
-          },
-          {
-            "amount": -4006.514254,
-            "currency": "USD"
-          },
-          {
-            "amount": -3529.915709,
-            "currency": "USD"
-          },
-          {
-            "amount": -3061.423795,
-            "currency": "USD"
-          },
-          {
-            "amount": -2600.929794,
-            "currency": "USD"
-          },
-          {
-            "amount": -2148.326321,
-            "currency": "USD"
-          },
-          {
-            "amount": -1703.507314,
-            "currency": "USD"
-          },
-          {
-            "amount": -1266.368014,
-            "currency": "USD"
-          },
-          {
-            "amount": -836.804949,
-            "currency": "USD"
-          },
-          {
-            "amount": -414.715924,
-            "currency": "USD"
-          },
-          {
-            "amount": 0.0,
-            "currency": "USD"
-          },
-          {
-            "amount": 0.0,
-            "currency": "USD"
-          },
-          {
-            "amount": 0.0,
-            "currency": "USD"
-          }
-        ]
-      },
-      "stream.credit.participation.principal.smoke": {
-        "index": {
-          "calendar": "monthly",
-          "start": "2026-01-01",
-          "periods": 15
-        },
-        "offset": 1.0,
-        "entity": "asset.pool",
-        "category": "financing.debt.principal",
-        "contract": "credit.participation.smoke",
-        "line": "principal",
-        "values": [
-          {
-            "amount": -106672.658558,
-            "currency": "USD"
-          },
-          {
-            "amount": -105104.445864,
-            "currency": "USD"
-          },
-          {
-            "amount": -103556.23084,
-            "currency": "USD"
-          },
-          {
-            "amount": -102805.270774,
-            "currency": "USD"
-          },
-          {
-            "amount": -101161.976165,
-            "currency": "USD"
-          },
-          {
-            "amount": -99540.277589,
-            "currency": "USD"
-          },
-          {
-            "amount": -97939.912101,
-            "currency": "USD"
-          },
-          {
-            "amount": -96360.619848,
-            "currency": "USD"
-          },
-          {
-            "amount": -94802.144027,
-            "currency": "USD"
-          },
-          {
-            "amount": -93264.230854,
-            "currency": "USD"
-          },
-          {
-            "amount": -91862.187968,
-            "currency": "USD"
-          },
-          {
-            "amount": -90483.474309,
+            "amount": 90935.89168,
             "currency": "USD"
           },
           {
@@ -1722,51 +1769,193 @@
         "line": "servicing",
         "values": [
           {
-            "amount": -498.732476,
+            "amount": 0.0,
             "currency": "USD"
           },
           {
-            "amount": -453.133899,
+            "amount": 0.0,
             "currency": "USD"
           },
           {
-            "amount": -408.302682,
+            "amount": 0.0,
             "currency": "USD"
           },
           {
-            "amount": -364.228569,
+            "amount": 0.0,
             "currency": "USD"
           },
           {
-            "amount": -320.901428,
+            "amount": 0.0,
             "currency": "USD"
           },
           {
-            "amount": -278.311254,
+            "amount": 0.0,
             "currency": "USD"
           },
           {
-            "amount": -236.448163,
+            "amount": 0.0,
             "currency": "USD"
           },
           {
-            "amount": -195.302393,
+            "amount": 0.0,
             "currency": "USD"
           },
           {
-            "amount": -154.864301,
+            "amount": 0.0,
             "currency": "USD"
           },
           {
-            "amount": -115.124365,
+            "amount": 0.0,
             "currency": "USD"
           },
           {
-            "amount": -76.073177,
+            "amount": 0.0,
             "currency": "USD"
           },
           {
-            "amount": -37.701448,
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          }
+        ]
+      },
+      "stream.notes.interest.a_interest": {
+        "index": {
+          "calendar": "monthly",
+          "start": "2026-01-01",
+          "periods": 15
+        },
+        "contract": "credit.note.a",
+        "line": "interest",
+        "values": [
+          {
+            "amount": 4166.666667,
+            "currency": "USD"
+          },
+          {
+            "amount": 3722.197256,
+            "currency": "USD"
+          },
+          {
+            "amount": 3284.262065,
+            "currency": "USD"
+          },
+          {
+            "amount": 2852.77777,
+            "currency": "USD"
+          },
+          {
+            "amount": 2424.422475,
+            "currency": "USD"
+          },
+          {
+            "amount": 2002.914241,
+            "currency": "USD"
+          },
+          {
+            "amount": 1588.163084,
+            "currency": "USD"
+          },
+          {
+            "amount": 1180.080117,
+            "currency": "USD"
+          },
+          {
+            "amount": 778.577534,
+            "currency": "USD"
+          },
+          {
+            "amount": 383.568601,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          }
+        ]
+      },
+      "stream.notes.principal.a_principal": {
+        "index": {
+          "calendar": "monthly",
+          "start": "2026-01-01",
+          "periods": 15
+        },
+        "contract": "credit.note.a",
+        "line": "principal",
+        "values": [
+          {
+            "amount": 106672.658558,
+            "currency": "USD"
+          },
+          {
+            "amount": 105104.445864,
+            "currency": "USD"
+          },
+          {
+            "amount": 103556.23084,
+            "currency": "USD"
+          },
+          {
+            "amount": 102805.270774,
+            "currency": "USD"
+          },
+          {
+            "amount": 101161.976165,
+            "currency": "USD"
+          },
+          {
+            "amount": 99540.277589,
+            "currency": "USD"
+          },
+          {
+            "amount": 97939.912101,
+            "currency": "USD"
+          },
+          {
+            "amount": 96360.619848,
+            "currency": "USD"
+          },
+          {
+            "amount": 94802.144027,
+            "currency": "USD"
+          },
+          {
+            "amount": 92056.464234,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
             "currency": "USD"
           },
           {
@@ -1784,6 +1973,1048 @@
         ]
       }
     },
+    "journal": [
+      {
+        "period": 0,
+        "date": "2026-01-01",
+        "actor": "account:interest_collections",
+        "action": "inflow",
+        "target": "interest_collections",
+        "outcome": "applied",
+        "amount": 5984.789708,
+        "pot_before": 0.0,
+        "pot_after": 5984.789708
+      },
+      {
+        "period": 0,
+        "date": "2026-01-01",
+        "actor": "account:principal_collections",
+        "action": "inflow",
+        "target": "principal_collections",
+        "outcome": "applied",
+        "amount": 106672.658558,
+        "pot_before": 0.0,
+        "pot_after": 106672.658558
+      },
+      {
+        "period": 0,
+        "date": "2026-01-01",
+        "actor": "waterfall:notes.interest",
+        "action": "pay",
+        "target": "a_interest -> a_interest",
+        "outcome": "applied",
+        "amount": 4166.666667,
+        "pot_before": 5984.789708,
+        "pot_after": 1818.123042
+      },
+      {
+        "period": 0,
+        "date": "2026-01-01",
+        "actor": "waterfall:notes.interest",
+        "action": "allocate_in",
+        "target": "a_interest -> account:a_interest",
+        "outcome": "applied",
+        "amount": 4166.666667,
+        "pot_before": 0.0,
+        "pot_after": 4166.666667
+      },
+      {
+        "period": 0,
+        "date": "2026-01-01",
+        "actor": "waterfall:notes.interest",
+        "action": "allocate_out",
+        "target": "account:interest_collections",
+        "outcome": "applied",
+        "amount": 4166.666667,
+        "pot_before": 5984.789708,
+        "pot_after": 1818.123041
+      },
+      {
+        "period": 0,
+        "date": "2026-01-01",
+        "actor": "waterfall:notes.principal",
+        "action": "pay",
+        "target": "a_principal -> party.holders",
+        "outcome": "overridden",
+        "amount": 106672.658558,
+        "pot_before": 106672.658558,
+        "pot_after": 0.0,
+        "note": "the pot was short: the step was owed 106672.658558 and took 106672.658558"
+      },
+      {
+        "period": 0,
+        "date": "2026-01-01",
+        "actor": "waterfall:notes.principal",
+        "action": "allocate_in",
+        "target": "a_principal -> account:a_principal",
+        "outcome": "applied",
+        "amount": 106672.658558,
+        "pot_before": 0.0,
+        "pot_after": 106672.658558
+      },
+      {
+        "period": 0,
+        "date": "2026-01-01",
+        "actor": "waterfall:notes.principal",
+        "action": "allocate_out",
+        "target": "account:principal_collections",
+        "outcome": "applied",
+        "amount": 106672.658558,
+        "pot_before": 106672.658558,
+        "pot_after": -0.0
+      },
+      {
+        "period": 1,
+        "date": "2026-02-01",
+        "actor": "account:interest_collections",
+        "action": "inflow",
+        "target": "interest_collections",
+        "outcome": "applied",
+        "amount": 5437.606785,
+        "pot_before": 1818.123041,
+        "pot_after": 7255.729826
+      },
+      {
+        "period": 1,
+        "date": "2026-02-01",
+        "actor": "account:principal_collections",
+        "action": "inflow",
+        "target": "principal_collections",
+        "outcome": "applied",
+        "amount": 105104.445864,
+        "pot_before": -0.0,
+        "pot_after": 105104.445864
+      },
+      {
+        "period": 1,
+        "date": "2026-02-01",
+        "actor": "waterfall:notes.interest",
+        "action": "pay",
+        "target": "a_interest -> a_interest",
+        "outcome": "applied",
+        "amount": 3722.197256,
+        "pot_before": 7255.729826,
+        "pot_after": 3533.53257
+      },
+      {
+        "period": 1,
+        "date": "2026-02-01",
+        "actor": "waterfall:notes.interest",
+        "action": "allocate_in",
+        "target": "a_interest -> account:a_interest",
+        "outcome": "applied",
+        "amount": 3722.197256,
+        "pot_before": 4166.666667,
+        "pot_after": 7888.863923
+      },
+      {
+        "period": 1,
+        "date": "2026-02-01",
+        "actor": "waterfall:notes.interest",
+        "action": "allocate_out",
+        "target": "account:interest_collections",
+        "outcome": "applied",
+        "amount": 3722.197256,
+        "pot_before": 7255.729826,
+        "pot_after": 3533.53257
+      },
+      {
+        "period": 1,
+        "date": "2026-02-01",
+        "actor": "waterfall:notes.principal",
+        "action": "pay",
+        "target": "a_principal -> party.holders",
+        "outcome": "applied",
+        "amount": 105104.445864,
+        "pot_before": 105104.445864,
+        "pot_after": 0.0
+      },
+      {
+        "period": 1,
+        "date": "2026-02-01",
+        "actor": "waterfall:notes.principal",
+        "action": "allocate_in",
+        "target": "a_principal -> account:a_principal",
+        "outcome": "applied",
+        "amount": 105104.445864,
+        "pot_before": 106672.658558,
+        "pot_after": 211777.104422
+      },
+      {
+        "period": 1,
+        "date": "2026-02-01",
+        "actor": "waterfall:notes.principal",
+        "action": "allocate_out",
+        "target": "account:principal_collections",
+        "outcome": "applied",
+        "amount": 105104.445864,
+        "pot_before": 105104.445864,
+        "pot_after": -0.0
+      },
+      {
+        "period": 2,
+        "date": "2026-03-01",
+        "actor": "account:interest_collections",
+        "action": "inflow",
+        "target": "interest_collections",
+        "outcome": "applied",
+        "amount": 4899.632182,
+        "pot_before": 3533.53257,
+        "pot_after": 8433.164752
+      },
+      {
+        "period": 2,
+        "date": "2026-03-01",
+        "actor": "account:principal_collections",
+        "action": "inflow",
+        "target": "principal_collections",
+        "outcome": "applied",
+        "amount": 103556.23084,
+        "pot_before": -0.0,
+        "pot_after": 103556.23084
+      },
+      {
+        "period": 2,
+        "date": "2026-03-01",
+        "actor": "waterfall:notes.interest",
+        "action": "pay",
+        "target": "a_interest -> a_interest",
+        "outcome": "applied",
+        "amount": 3284.262065,
+        "pot_before": 8433.164752,
+        "pot_after": 5148.902687
+      },
+      {
+        "period": 2,
+        "date": "2026-03-01",
+        "actor": "waterfall:notes.interest",
+        "action": "allocate_in",
+        "target": "a_interest -> account:a_interest",
+        "outcome": "applied",
+        "amount": 3284.262065,
+        "pot_before": 7888.863923,
+        "pot_after": 11173.125988
+      },
+      {
+        "period": 2,
+        "date": "2026-03-01",
+        "actor": "waterfall:notes.interest",
+        "action": "allocate_out",
+        "target": "account:interest_collections",
+        "outcome": "applied",
+        "amount": 3284.262065,
+        "pot_before": 8433.164752,
+        "pot_after": 5148.902687
+      },
+      {
+        "period": 2,
+        "date": "2026-03-01",
+        "actor": "waterfall:notes.principal",
+        "action": "pay",
+        "target": "a_principal -> party.holders",
+        "outcome": "overridden",
+        "amount": 103556.23084,
+        "pot_before": 103556.23084,
+        "pot_after": 0.0,
+        "note": "the pot was short: the step was owed 103556.23084 and took 103556.23084"
+      },
+      {
+        "period": 2,
+        "date": "2026-03-01",
+        "actor": "waterfall:notes.principal",
+        "action": "allocate_in",
+        "target": "a_principal -> account:a_principal",
+        "outcome": "applied",
+        "amount": 103556.23084,
+        "pot_before": 211777.104422,
+        "pot_after": 315333.335262
+      },
+      {
+        "period": 2,
+        "date": "2026-03-01",
+        "actor": "waterfall:notes.principal",
+        "action": "allocate_out",
+        "target": "account:principal_collections",
+        "outcome": "applied",
+        "amount": 103556.23084,
+        "pot_before": 103556.23084,
+        "pot_after": -0.0
+      },
+      {
+        "period": 3,
+        "date": "2026-04-01",
+        "actor": "account:interest_collections",
+        "action": "inflow",
+        "target": "interest_collections",
+        "outcome": "applied",
+        "amount": 4370.742823,
+        "pot_before": 5148.902687,
+        "pot_after": 9519.64551
+      },
+      {
+        "period": 3,
+        "date": "2026-04-01",
+        "actor": "account:principal_collections",
+        "action": "inflow",
+        "target": "principal_collections",
+        "outcome": "applied",
+        "amount": 102805.270774,
+        "pot_before": -0.0,
+        "pot_after": 102805.270774
+      },
+      {
+        "period": 3,
+        "date": "2026-04-01",
+        "actor": "waterfall:notes.interest",
+        "action": "pay",
+        "target": "a_interest -> a_interest",
+        "outcome": "applied",
+        "amount": 2852.77777,
+        "pot_before": 9519.64551,
+        "pot_after": 6666.86774
+      },
+      {
+        "period": 3,
+        "date": "2026-04-01",
+        "actor": "waterfall:notes.interest",
+        "action": "allocate_in",
+        "target": "a_interest -> account:a_interest",
+        "outcome": "applied",
+        "amount": 2852.77777,
+        "pot_before": 11173.125988,
+        "pot_after": 14025.903758
+      },
+      {
+        "period": 3,
+        "date": "2026-04-01",
+        "actor": "waterfall:notes.interest",
+        "action": "allocate_out",
+        "target": "account:interest_collections",
+        "outcome": "applied",
+        "amount": 2852.77777,
+        "pot_before": 9519.64551,
+        "pot_after": 6666.86774
+      },
+      {
+        "period": 3,
+        "date": "2026-04-01",
+        "actor": "waterfall:notes.principal",
+        "action": "pay",
+        "target": "a_principal -> party.holders",
+        "outcome": "overridden",
+        "amount": 102805.270774,
+        "pot_before": 102805.270774,
+        "pot_after": 0.0,
+        "note": "the pot was short: the step was owed 102805.270774 and took 102805.270774"
+      },
+      {
+        "period": 3,
+        "date": "2026-04-01",
+        "actor": "waterfall:notes.principal",
+        "action": "allocate_in",
+        "target": "a_principal -> account:a_principal",
+        "outcome": "applied",
+        "amount": 102805.270774,
+        "pot_before": 315333.335262,
+        "pot_after": 418138.606036
+      },
+      {
+        "period": 3,
+        "date": "2026-04-01",
+        "actor": "waterfall:notes.principal",
+        "action": "allocate_out",
+        "target": "account:principal_collections",
+        "outcome": "applied",
+        "amount": 102805.270774,
+        "pot_before": 102805.270774,
+        "pot_after": 0.0
+      },
+      {
+        "period": 4,
+        "date": "2026-05-01",
+        "actor": "account:interest_collections",
+        "action": "inflow",
+        "target": "interest_collections",
+        "outcome": "applied",
+        "amount": 3850.817137,
+        "pot_before": 6666.86774,
+        "pot_after": 10517.684877
+      },
+      {
+        "period": 4,
+        "date": "2026-05-01",
+        "actor": "account:principal_collections",
+        "action": "inflow",
+        "target": "principal_collections",
+        "outcome": "applied",
+        "amount": 101161.976165,
+        "pot_before": 0.0,
+        "pot_after": 101161.976165
+      },
+      {
+        "period": 4,
+        "date": "2026-05-01",
+        "actor": "waterfall:notes.interest",
+        "action": "pay",
+        "target": "a_interest -> a_interest",
+        "outcome": "applied",
+        "amount": 2424.422475,
+        "pot_before": 10517.684877,
+        "pot_after": 8093.262402
+      },
+      {
+        "period": 4,
+        "date": "2026-05-01",
+        "actor": "waterfall:notes.interest",
+        "action": "allocate_in",
+        "target": "a_interest -> account:a_interest",
+        "outcome": "applied",
+        "amount": 2424.422475,
+        "pot_before": 14025.903758,
+        "pot_after": 16450.326233
+      },
+      {
+        "period": 4,
+        "date": "2026-05-01",
+        "actor": "waterfall:notes.interest",
+        "action": "allocate_out",
+        "target": "account:interest_collections",
+        "outcome": "applied",
+        "amount": 2424.422475,
+        "pot_before": 10517.684877,
+        "pot_after": 8093.262402
+      },
+      {
+        "period": 4,
+        "date": "2026-05-01",
+        "actor": "waterfall:notes.principal",
+        "action": "pay",
+        "target": "a_principal -> party.holders",
+        "outcome": "applied",
+        "amount": 101161.976165,
+        "pot_before": 101161.976165,
+        "pot_after": 0.0
+      },
+      {
+        "period": 4,
+        "date": "2026-05-01",
+        "actor": "waterfall:notes.principal",
+        "action": "allocate_in",
+        "target": "a_principal -> account:a_principal",
+        "outcome": "applied",
+        "amount": 101161.976165,
+        "pot_before": 418138.606036,
+        "pot_after": 519300.582201
+      },
+      {
+        "period": 4,
+        "date": "2026-05-01",
+        "actor": "waterfall:notes.principal",
+        "action": "allocate_out",
+        "target": "account:principal_collections",
+        "outcome": "applied",
+        "amount": 101161.976165,
+        "pot_before": 101161.976165,
+        "pot_after": 0.0
+      },
+      {
+        "period": 5,
+        "date": "2026-06-01",
+        "actor": "account:interest_collections",
+        "action": "inflow",
+        "target": "interest_collections",
+        "outcome": "applied",
+        "amount": 3339.735049,
+        "pot_before": 8093.262402,
+        "pot_after": 11432.997451
+      },
+      {
+        "period": 5,
+        "date": "2026-06-01",
+        "actor": "account:principal_collections",
+        "action": "inflow",
+        "target": "principal_collections",
+        "outcome": "applied",
+        "amount": 99540.277589,
+        "pot_before": 0.0,
+        "pot_after": 99540.277589
+      },
+      {
+        "period": 5,
+        "date": "2026-06-01",
+        "actor": "waterfall:notes.interest",
+        "action": "pay",
+        "target": "a_interest -> a_interest",
+        "outcome": "applied",
+        "amount": 2002.914241,
+        "pot_before": 11432.997451,
+        "pot_after": 9430.083211
+      },
+      {
+        "period": 5,
+        "date": "2026-06-01",
+        "actor": "waterfall:notes.interest",
+        "action": "allocate_in",
+        "target": "a_interest -> account:a_interest",
+        "outcome": "applied",
+        "amount": 2002.914241,
+        "pot_before": 16450.326233,
+        "pot_after": 18453.240474
+      },
+      {
+        "period": 5,
+        "date": "2026-06-01",
+        "actor": "waterfall:notes.interest",
+        "action": "allocate_out",
+        "target": "account:interest_collections",
+        "outcome": "applied",
+        "amount": 2002.914241,
+        "pot_before": 11432.997451,
+        "pot_after": 9430.08321
+      },
+      {
+        "period": 5,
+        "date": "2026-06-01",
+        "actor": "waterfall:notes.principal",
+        "action": "pay",
+        "target": "a_principal -> party.holders",
+        "outcome": "applied",
+        "amount": 99540.277589,
+        "pot_before": 99540.277589,
+        "pot_after": 0.0
+      },
+      {
+        "period": 5,
+        "date": "2026-06-01",
+        "actor": "waterfall:notes.principal",
+        "action": "allocate_in",
+        "target": "a_principal -> account:a_principal",
+        "outcome": "applied",
+        "amount": 99540.277589,
+        "pot_before": 519300.582201,
+        "pot_after": 618840.85979
+      },
+      {
+        "period": 5,
+        "date": "2026-06-01",
+        "actor": "waterfall:notes.principal",
+        "action": "allocate_out",
+        "target": "account:principal_collections",
+        "outcome": "applied",
+        "amount": 99540.277589,
+        "pot_before": 99540.277589,
+        "pot_after": -0.0
+      },
+      {
+        "period": 6,
+        "date": "2026-07-01",
+        "actor": "account:interest_collections",
+        "action": "inflow",
+        "target": "interest_collections",
+        "outcome": "applied",
+        "amount": 2837.377957,
+        "pot_before": 9430.08321,
+        "pot_after": 12267.461167
+      },
+      {
+        "period": 6,
+        "date": "2026-07-01",
+        "actor": "account:principal_collections",
+        "action": "inflow",
+        "target": "principal_collections",
+        "outcome": "applied",
+        "amount": 97939.912101,
+        "pot_before": -0.0,
+        "pot_after": 97939.912101
+      },
+      {
+        "period": 6,
+        "date": "2026-07-01",
+        "actor": "waterfall:notes.interest",
+        "action": "pay",
+        "target": "a_interest -> a_interest",
+        "outcome": "applied",
+        "amount": 1588.163084,
+        "pot_before": 12267.461167,
+        "pot_after": 10679.298083
+      },
+      {
+        "period": 6,
+        "date": "2026-07-01",
+        "actor": "waterfall:notes.interest",
+        "action": "allocate_in",
+        "target": "a_interest -> account:a_interest",
+        "outcome": "applied",
+        "amount": 1588.163084,
+        "pot_before": 18453.240474,
+        "pot_after": 20041.403558
+      },
+      {
+        "period": 6,
+        "date": "2026-07-01",
+        "actor": "waterfall:notes.interest",
+        "action": "allocate_out",
+        "target": "account:interest_collections",
+        "outcome": "applied",
+        "amount": 1588.163084,
+        "pot_before": 12267.461167,
+        "pot_after": 10679.298083
+      },
+      {
+        "period": 6,
+        "date": "2026-07-01",
+        "actor": "waterfall:notes.principal",
+        "action": "pay",
+        "target": "a_principal -> party.holders",
+        "outcome": "overridden",
+        "amount": 97939.912101,
+        "pot_before": 97939.912101,
+        "pot_after": 0.0,
+        "note": "the pot was short: the step was owed 97939.912101 and took 97939.912101"
+      },
+      {
+        "period": 6,
+        "date": "2026-07-01",
+        "actor": "waterfall:notes.principal",
+        "action": "allocate_in",
+        "target": "a_principal -> account:a_principal",
+        "outcome": "applied",
+        "amount": 97939.912101,
+        "pot_before": 618840.85979,
+        "pot_after": 716780.771891
+      },
+      {
+        "period": 6,
+        "date": "2026-07-01",
+        "actor": "waterfall:notes.principal",
+        "action": "allocate_out",
+        "target": "account:principal_collections",
+        "outcome": "applied",
+        "amount": 97939.912101,
+        "pot_before": 97939.912101,
+        "pot_after": 0.0
+      },
+      {
+        "period": 7,
+        "date": "2026-08-01",
+        "actor": "account:interest_collections",
+        "action": "inflow",
+        "target": "interest_collections",
+        "outcome": "applied",
+        "amount": 2343.628714,
+        "pot_before": 10679.298083,
+        "pot_after": 13022.926797
+      },
+      {
+        "period": 7,
+        "date": "2026-08-01",
+        "actor": "account:principal_collections",
+        "action": "inflow",
+        "target": "principal_collections",
+        "outcome": "applied",
+        "amount": 96360.619848,
+        "pot_before": 0.0,
+        "pot_after": 96360.619848
+      },
+      {
+        "period": 7,
+        "date": "2026-08-01",
+        "actor": "waterfall:notes.interest",
+        "action": "pay",
+        "target": "a_interest -> a_interest",
+        "outcome": "applied",
+        "amount": 1180.080117,
+        "pot_before": 13022.926797,
+        "pot_after": 11842.84668
+      },
+      {
+        "period": 7,
+        "date": "2026-08-01",
+        "actor": "waterfall:notes.interest",
+        "action": "allocate_in",
+        "target": "a_interest -> account:a_interest",
+        "outcome": "applied",
+        "amount": 1180.080117,
+        "pot_before": 20041.403558,
+        "pot_after": 21221.483675
+      },
+      {
+        "period": 7,
+        "date": "2026-08-01",
+        "actor": "waterfall:notes.interest",
+        "action": "allocate_out",
+        "target": "account:interest_collections",
+        "outcome": "applied",
+        "amount": 1180.080117,
+        "pot_before": 13022.926797,
+        "pot_after": 11842.84668
+      },
+      {
+        "period": 7,
+        "date": "2026-08-01",
+        "actor": "waterfall:notes.principal",
+        "action": "pay",
+        "target": "a_principal -> party.holders",
+        "outcome": "overridden",
+        "amount": 96360.619848,
+        "pot_before": 96360.619848,
+        "pot_after": 0.0,
+        "note": "the pot was short: the step was owed 96360.619848 and took 96360.619848"
+      },
+      {
+        "period": 7,
+        "date": "2026-08-01",
+        "actor": "waterfall:notes.principal",
+        "action": "allocate_in",
+        "target": "a_principal -> account:a_principal",
+        "outcome": "applied",
+        "amount": 96360.619848,
+        "pot_before": 716780.771891,
+        "pot_after": 813141.391739
+      },
+      {
+        "period": 7,
+        "date": "2026-08-01",
+        "actor": "waterfall:notes.principal",
+        "action": "allocate_out",
+        "target": "account:principal_collections",
+        "outcome": "applied",
+        "amount": 96360.619848,
+        "pot_before": 96360.619848,
+        "pot_after": 0.0
+      },
+      {
+        "period": 8,
+        "date": "2026-09-01",
+        "actor": "account:interest_collections",
+        "action": "inflow",
+        "target": "interest_collections",
+        "outcome": "applied",
+        "amount": 1858.371615,
+        "pot_before": 11842.84668,
+        "pot_after": 13701.218295
+      },
+      {
+        "period": 8,
+        "date": "2026-09-01",
+        "actor": "account:principal_collections",
+        "action": "inflow",
+        "target": "principal_collections",
+        "outcome": "applied",
+        "amount": 94802.144027,
+        "pot_before": 0.0,
+        "pot_after": 94802.144027
+      },
+      {
+        "period": 8,
+        "date": "2026-09-01",
+        "actor": "waterfall:notes.interest",
+        "action": "pay",
+        "target": "a_interest -> a_interest",
+        "outcome": "applied",
+        "amount": 778.577534,
+        "pot_before": 13701.218295,
+        "pot_after": 12922.640761
+      },
+      {
+        "period": 8,
+        "date": "2026-09-01",
+        "actor": "waterfall:notes.interest",
+        "action": "allocate_in",
+        "target": "a_interest -> account:a_interest",
+        "outcome": "applied",
+        "amount": 778.577534,
+        "pot_before": 21221.483675,
+        "pot_after": 22000.061209
+      },
+      {
+        "period": 8,
+        "date": "2026-09-01",
+        "actor": "waterfall:notes.interest",
+        "action": "allocate_out",
+        "target": "account:interest_collections",
+        "outcome": "applied",
+        "amount": 778.577534,
+        "pot_before": 13701.218295,
+        "pot_after": 12922.640761
+      },
+      {
+        "period": 8,
+        "date": "2026-09-01",
+        "actor": "waterfall:notes.principal",
+        "action": "pay",
+        "target": "a_principal -> party.holders",
+        "outcome": "overridden",
+        "amount": 94802.144027,
+        "pot_before": 94802.144027,
+        "pot_after": 0.0,
+        "note": "the pot was short: the step was owed 94802.144027 and took 94802.144027"
+      },
+      {
+        "period": 8,
+        "date": "2026-09-01",
+        "actor": "waterfall:notes.principal",
+        "action": "allocate_in",
+        "target": "a_principal -> account:a_principal",
+        "outcome": "applied",
+        "amount": 94802.144027,
+        "pot_before": 813141.391739,
+        "pot_after": 907943.535766
+      },
+      {
+        "period": 8,
+        "date": "2026-09-01",
+        "actor": "waterfall:notes.principal",
+        "action": "allocate_out",
+        "target": "account:principal_collections",
+        "outcome": "applied",
+        "amount": 94802.144027,
+        "pot_before": 94802.144027,
+        "pot_after": 0.0
+      },
+      {
+        "period": 9,
+        "date": "2026-10-01",
+        "actor": "account:interest_collections",
+        "action": "inflow",
+        "target": "interest_collections",
+        "outcome": "applied",
+        "amount": 1381.492378,
+        "pot_before": 12922.640761,
+        "pot_after": 14304.133139
+      },
+      {
+        "period": 9,
+        "date": "2026-10-01",
+        "actor": "account:principal_collections",
+        "action": "inflow",
+        "target": "principal_collections",
+        "outcome": "applied",
+        "amount": 93264.230854,
+        "pot_before": 0.0,
+        "pot_after": 93264.230854
+      },
+      {
+        "period": 9,
+        "date": "2026-10-01",
+        "actor": "waterfall:notes.interest",
+        "action": "pay",
+        "target": "a_interest -> a_interest",
+        "outcome": "applied",
+        "amount": 383.568601,
+        "pot_before": 14304.133139,
+        "pot_after": 13920.564538
+      },
+      {
+        "period": 9,
+        "date": "2026-10-01",
+        "actor": "waterfall:notes.interest",
+        "action": "allocate_in",
+        "target": "a_interest -> account:a_interest",
+        "outcome": "applied",
+        "amount": 383.568601,
+        "pot_before": 22000.061209,
+        "pot_after": 22383.62981
+      },
+      {
+        "period": 9,
+        "date": "2026-10-01",
+        "actor": "waterfall:notes.interest",
+        "action": "allocate_out",
+        "target": "account:interest_collections",
+        "outcome": "applied",
+        "amount": 383.568601,
+        "pot_before": 14304.133139,
+        "pot_after": 13920.564538
+      },
+      {
+        "period": 9,
+        "date": "2026-10-01",
+        "actor": "waterfall:notes.principal",
+        "action": "pay",
+        "target": "a_principal -> party.holders",
+        "outcome": "applied",
+        "amount": 92056.464234,
+        "pot_before": 93264.230854,
+        "pot_after": 1207.76662
+      },
+      {
+        "period": 9,
+        "date": "2026-10-01",
+        "actor": "waterfall:notes.principal",
+        "action": "allocate_in",
+        "target": "a_principal -> account:a_principal",
+        "outcome": "applied",
+        "amount": 92056.464234,
+        "pot_before": 907943.535766,
+        "pot_after": 1000000.0
+      },
+      {
+        "period": 9,
+        "date": "2026-10-01",
+        "actor": "waterfall:notes.principal",
+        "action": "allocate_out",
+        "target": "account:principal_collections",
+        "outcome": "applied",
+        "amount": 92056.464234,
+        "pot_before": 93264.230854,
+        "pot_after": 1207.76662
+      },
+      {
+        "period": 10,
+        "date": "2026-11-01",
+        "actor": "account:interest_collections",
+        "action": "inflow",
+        "target": "interest_collections",
+        "outcome": "applied",
+        "amount": 912.878126,
+        "pot_before": 13920.564538,
+        "pot_after": 14833.442664
+      },
+      {
+        "period": 10,
+        "date": "2026-11-01",
+        "actor": "account:principal_collections",
+        "action": "inflow",
+        "target": "principal_collections",
+        "outcome": "applied",
+        "amount": 91862.187968,
+        "pot_before": 1207.76662,
+        "pot_after": 93069.954588
+      },
+      {
+        "period": 10,
+        "date": "2026-11-01",
+        "actor": "waterfall:notes.interest",
+        "action": "pay",
+        "target": "a_interest -> a_interest",
+        "outcome": "applied",
+        "amount": 0.0,
+        "pot_before": 14833.442664,
+        "pot_after": 14833.442664
+      },
+      {
+        "period": 10,
+        "date": "2026-11-01",
+        "actor": "waterfall:notes.principal",
+        "action": "pay",
+        "target": "a_principal -> party.holders",
+        "outcome": "applied",
+        "amount": 0.0,
+        "pot_before": 93069.954588,
+        "pot_after": 93069.954588
+      },
+      {
+        "period": 11,
+        "date": "2026-12-01",
+        "actor": "account:interest_collections",
+        "action": "inflow",
+        "target": "interest_collections",
+        "outcome": "applied",
+        "amount": 452.417372,
+        "pot_before": 14833.442664,
+        "pot_after": 15285.860036
+      },
+      {
+        "period": 11,
+        "date": "2026-12-01",
+        "actor": "account:principal_collections",
+        "action": "inflow",
+        "target": "principal_collections",
+        "outcome": "applied",
+        "amount": 90483.474309,
+        "pot_before": 93069.954588,
+        "pot_after": 183553.428897
+      },
+      {
+        "period": 11,
+        "date": "2026-12-01",
+        "actor": "waterfall:notes.interest",
+        "action": "pay",
+        "target": "a_interest -> a_interest",
+        "outcome": "applied",
+        "amount": 0.0,
+        "pot_before": 15285.860036,
+        "pot_after": 15285.860036
+      },
+      {
+        "period": 11,
+        "date": "2026-12-01",
+        "actor": "waterfall:notes.principal",
+        "action": "pay",
+        "target": "a_principal -> party.holders",
+        "outcome": "applied",
+        "amount": 0.0,
+        "pot_before": 183553.428897,
+        "pot_after": 183553.428897
+      },
+      {
+        "period": 12,
+        "date": "2027-01-01",
+        "actor": "waterfall:notes.interest",
+        "action": "pay",
+        "target": "a_interest -> a_interest",
+        "outcome": "applied",
+        "amount": 0.0,
+        "pot_before": 15285.860036,
+        "pot_after": 15285.860036
+      },
+      {
+        "period": 12,
+        "date": "2027-01-01",
+        "actor": "waterfall:notes.principal",
+        "action": "pay",
+        "target": "a_principal -> party.holders",
+        "outcome": "applied",
+        "amount": 0.0,
+        "pot_before": 183553.428897,
+        "pot_after": 183553.428897
+      },
+      {
+        "period": 13,
+        "date": "2027-02-01",
+        "actor": "waterfall:notes.interest",
+        "action": "pay",
+        "target": "a_interest -> a_interest",
+        "outcome": "applied",
+        "amount": 0.0,
+        "pot_before": 15285.860036,
+        "pot_after": 15285.860036
+      },
+      {
+        "period": 13,
+        "date": "2027-02-01",
+        "actor": "waterfall:notes.principal",
+        "action": "pay",
+        "target": "a_principal -> party.holders",
+        "outcome": "applied",
+        "amount": 0.0,
+        "pot_before": 183553.428897,
+        "pot_after": 183553.428897
+      },
+      {
+        "period": 14,
+        "date": "2027-03-01",
+        "actor": "waterfall:notes.interest",
+        "action": "pay",
+        "target": "a_interest -> a_interest",
+        "outcome": "applied",
+        "amount": 0.0,
+        "pot_before": 15285.860036,
+        "pot_after": 15285.860036
+      },
+      {
+        "period": 14,
+        "date": "2027-03-01",
+        "actor": "waterfall:notes.principal",
+        "action": "pay",
+        "target": "a_principal -> party.holders",
+        "outcome": "applied",
+        "amount": 0.0,
+        "pot_before": 183553.428897,
+        "pot_after": 183553.428897
+      }
+    ],
     "annual_rollup": {
       "series": {
         "domain.credit.balance_outstanding": {
@@ -1828,7 +3059,7 @@
           },
           "values": [
             {
-              "amount": 1218083.794588,
+              "amount": 1221222.918742,
               "currency": "USD"
             },
             {
@@ -1924,7 +3155,7 @@
           },
           "values": [
             {
-              "amount": 3139.124155,
+              "amount": 0.0,
               "currency": "USD"
             },
             {
@@ -1958,41 +3189,7 @@
           },
           "values": [
             {
-              "amount": 0.0,
-              "currency": "USD"
-            },
-            {
-              "amount": 0.0,
-              "currency": "USD"
-            }
-          ]
-        },
-        "stream.credit.participation.interest.smoke": {
-          "index": {
-            "calendar": "annual",
-            "start": "2026-01-01",
-            "periods": 2
-          },
-          "values": [
-            {
-              "amount": -34530.365692,
-              "currency": "USD"
-            },
-            {
-              "amount": 0.0,
-              "currency": "USD"
-            }
-          ]
-        },
-        "stream.credit.participation.principal.smoke": {
-          "index": {
-            "calendar": "annual",
-            "start": "2026-01-01",
-            "periods": 2
-          },
-          "values": [
-            {
-              "amount": -1183553.428897,
+              "amount": 1221222.918743,
               "currency": "USD"
             },
             {
@@ -2094,7 +3291,7 @@
           },
           "values": [
             {
-              "amount": -3139.124154,
+              "amount": 0.0,
               "currency": "USD"
             },
             {
@@ -2146,57 +3343,57 @@
         },
         "rows": [
           {
-            "kind": "line",
-            "label": "Pool",
+            "kind": "subtotal",
+            "label": "Trust",
             "depth": 0,
             "display_sign": 1.0,
             "values": [
               {
-                "amount": -1e-6,
+                "amount": 112657.448266,
                 "currency": "USD"
               },
               {
-                "amount": 0.0,
+                "amount": 110542.052649,
                 "currency": "USD"
               },
               {
-                "amount": 0.0,
+                "amount": 108455.863022,
                 "currency": "USD"
               },
               {
-                "amount": 1e-6,
+                "amount": 107176.013598,
                 "currency": "USD"
               },
               {
-                "amount": 1e-6,
+                "amount": 105012.793303,
                 "currency": "USD"
               },
               {
-                "amount": -1e-6,
+                "amount": 102880.012637,
                 "currency": "USD"
               },
               {
-                "amount": 0.0,
+                "amount": 100777.290058,
                 "currency": "USD"
               },
               {
-                "amount": 0.0,
+                "amount": 98704.248562,
                 "currency": "USD"
               },
               {
-                "amount": 1e-6,
+                "amount": 96660.515643,
                 "currency": "USD"
               },
               {
-                "amount": -2e-6,
+                "amount": 94645.723231,
                 "currency": "USD"
               },
               {
-                "amount": -0.0,
+                "amount": 92775.066094,
                 "currency": "USD"
               },
               {
-                "amount": -0.0,
+                "amount": 90935.891681,
                 "currency": "USD"
               },
               {
@@ -2212,10 +3409,77 @@
                 "currency": "USD"
               }
             ],
-            "total": -1e-6,
+            "total": 1221222.918744
+          },
+          {
+            "kind": "line",
+            "label": "Pool",
+            "depth": 1,
+            "display_sign": 1.0,
+            "values": [
+              {
+                "amount": 112657.448266,
+                "currency": "USD"
+              },
+              {
+                "amount": 110542.052649,
+                "currency": "USD"
+              },
+              {
+                "amount": 108455.863022,
+                "currency": "USD"
+              },
+              {
+                "amount": 107176.013598,
+                "currency": "USD"
+              },
+              {
+                "amount": 105012.793303,
+                "currency": "USD"
+              },
+              {
+                "amount": 102880.012637,
+                "currency": "USD"
+              },
+              {
+                "amount": 100777.290058,
+                "currency": "USD"
+              },
+              {
+                "amount": 98704.248562,
+                "currency": "USD"
+              },
+              {
+                "amount": 96660.515643,
+                "currency": "USD"
+              },
+              {
+                "amount": 94645.723231,
+                "currency": "USD"
+              },
+              {
+                "amount": 92775.066094,
+                "currency": "USD"
+              },
+              {
+                "amount": 90935.891681,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              }
+            ],
+            "total": 1221222.918744,
             "streams": [
-              "credit.participation.interest.smoke",
-              "credit.participation.principal.smoke",
               "credit.pool.interest.smoke",
               "credit.pool.penalty.smoke",
               "credit.pool.prepay.smoke",
@@ -2226,76 +3490,7 @@
           },
           {
             "kind": "line",
-            "label": "Investors",
-            "depth": 0,
-            "display_sign": 1.0,
-            "values": [
-              {
-                "amount": 0.0,
-                "currency": "USD"
-              },
-              {
-                "amount": 0.0,
-                "currency": "USD"
-              },
-              {
-                "amount": 0.0,
-                "currency": "USD"
-              },
-              {
-                "amount": 0.0,
-                "currency": "USD"
-              },
-              {
-                "amount": 0.0,
-                "currency": "USD"
-              },
-              {
-                "amount": 0.0,
-                "currency": "USD"
-              },
-              {
-                "amount": 0.0,
-                "currency": "USD"
-              },
-              {
-                "amount": 0.0,
-                "currency": "USD"
-              },
-              {
-                "amount": 0.0,
-                "currency": "USD"
-              },
-              {
-                "amount": 0.0,
-                "currency": "USD"
-              },
-              {
-                "amount": 0.0,
-                "currency": "USD"
-              },
-              {
-                "amount": 0.0,
-                "currency": "USD"
-              },
-              {
-                "amount": 0.0,
-                "currency": "USD"
-              },
-              {
-                "amount": 0.0,
-                "currency": "USD"
-              },
-              {
-                "amount": 0.0,
-                "currency": "USD"
-              }
-            ],
-            "total": 0.0
-          },
-          {
-            "kind": "line",
-            "label": "Issuer",
+            "label": "Holders",
             "depth": 0,
             "display_sign": 1.0,
             "values": [
@@ -2364,9 +3559,9 @@
           }
         ],
         "reconciliation": {
-          "bottom_line": -1e-6,
-          "model_total": 0.0,
-          "residual": -1e-6
+          "bottom_line": 1221222.918744,
+          "model_total": 1221222.918743,
+          "residual": 1e-6
         }
       }
     ]
@@ -2376,42 +3571,38 @@
       {
         "symbol": "asset.pool",
         "family": "asset",
-        "type": "Credit.Asset.LoanPool"
+        "type": "Credit.Asset.LoanPool",
+        "parent": "container.trust"
       },
       {
-        "symbol": "party.investors",
+        "symbol": "container.trust",
+        "family": "container",
+        "type": "Container.SPV"
+      },
+      {
+        "symbol": "party.holders",
         "family": "party",
         "type": "Credit.Party.Investor"
-      },
-      {
-        "symbol": "party.issuer",
-        "family": "party",
-        "type": "Credit.Party.Servicer"
       }
     ],
     "contracts": [
       {
-        "name": "credit.participation.smoke",
-        "type": "Credit.Contract.Participation",
+        "name": "credit.note.a",
+        "type": "Credit.Contract.Note",
         "master": "Contract.Security",
-        "contract_name": "credit.participation",
-        "instance": "smoke",
-        "subject": "asset.pool",
+        "contract_name": "credit.note",
+        "instance": "a",
+        "subject": "container.trust",
         "parties": [
-          {
-            "role": "issuer",
-            "master_role": "issuer",
-            "entity": "party.issuer"
-          },
           {
             "role": "holder",
             "master_role": "holder",
-            "entity": "party.investors"
+            "entity": "party.holders"
           }
         ],
         "streams": [
-          "credit.participation.interest.smoke",
-          "credit.participation.principal.smoke"
+          "notes.interest.a_interest",
+          "notes.principal.a_principal"
         ]
       },
       {
@@ -2434,110 +3625,17 @@
   },
   "slices": [
     {
-      "id": "passed_through",
+      "id": "note_principal",
       "selection": {
         "types": [
           "Contract.Security"
-        ]
-      },
-      "streams": [
-        "credit.participation.interest.smoke",
-        "credit.participation.principal.smoke"
-      ],
-      "net": {
-        "index": {
-          "calendar": "monthly",
-          "start": "2026-01-01",
-          "periods": 15
-        },
-        "values": [
-          {
-            "amount": -112158.71579,
-            "currency": "USD"
-          },
-          {
-            "amount": -110088.91875,
-            "currency": "USD"
-          },
-          {
-            "amount": -108047.56034,
-            "currency": "USD"
-          },
-          {
-            "amount": -106811.785028,
-            "currency": "USD"
-          },
-          {
-            "amount": -104691.891874,
-            "currency": "USD"
-          },
-          {
-            "amount": -102601.701384,
-            "currency": "USD"
-          },
-          {
-            "amount": -100540.841895,
-            "currency": "USD"
-          },
-          {
-            "amount": -98508.946169,
-            "currency": "USD"
-          },
-          {
-            "amount": -96505.651341,
-            "currency": "USD"
-          },
-          {
-            "amount": -94530.598867,
-            "currency": "USD"
-          },
-          {
-            "amount": -92698.992917,
-            "currency": "USD"
-          },
-          {
-            "amount": -90898.190233,
-            "currency": "USD"
-          },
-          {
-            "amount": 0.0,
-            "currency": "USD"
-          },
-          {
-            "amount": 0.0,
-            "currency": "USD"
-          },
-          {
-            "amount": 0.0,
-            "currency": "USD"
-          }
-        ]
-      },
-      "metrics": {
-        "npv": {
-          "amount": -1159330.59911,
-          "currency": "USD"
-        },
-        "total": {
-          "amount": -1218083.794589,
-          "currency": "USD"
-        }
-      }
-    },
-    {
-      "id": "pool_interest_net",
-      "selection": {
-        "types": [
-          "Contract.Debt"
         ],
         "lines": [
-          "interest",
-          "servicing"
+          "principal"
         ]
       },
       "streams": [
-        "credit.pool.interest.smoke",
-        "credit.pool.servicing.smoke"
+        "notes.principal.a_principal"
       ],
       "net": {
         "index": {
@@ -2547,51 +3645,51 @@
         },
         "values": [
           {
-            "amount": 5486.057233,
+            "amount": 106672.658558,
             "currency": "USD"
           },
           {
-            "amount": 4984.472886,
+            "amount": 105104.445864,
             "currency": "USD"
           },
           {
-            "amount": 4491.3295,
+            "amount": 103556.23084,
             "currency": "USD"
           },
           {
-            "amount": 4006.514254,
+            "amount": 102805.270774,
             "currency": "USD"
           },
           {
-            "amount": 3529.915709,
+            "amount": 101161.976165,
             "currency": "USD"
           },
           {
-            "amount": 3061.423795,
+            "amount": 99540.277589,
             "currency": "USD"
           },
           {
-            "amount": 2600.929794,
+            "amount": 97939.912101,
             "currency": "USD"
           },
           {
-            "amount": 2148.326321,
+            "amount": 96360.619848,
             "currency": "USD"
           },
           {
-            "amount": 1703.507314,
+            "amount": 94802.144027,
             "currency": "USD"
           },
           {
-            "amount": 1266.368014,
+            "amount": 92056.464234,
             "currency": "USD"
           },
           {
-            "amount": 836.804949,
+            "amount": 0.0,
             "currency": "USD"
           },
           {
-            "amount": 414.715924,
+            "amount": 0.0,
             "currency": "USD"
           },
           {
@@ -2610,11 +3708,11 @@
       },
       "metrics": {
         "npv": {
-          "amount": 33302.629863,
+          "amount": 958477.706081,
           "currency": "USD"
         },
         "total": {
-          "amount": 34530.365692,
+          "amount": 1000000.0,
           "currency": "USD"
         }
       }

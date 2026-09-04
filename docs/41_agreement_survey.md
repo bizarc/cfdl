@@ -222,7 +222,7 @@ reason to hold a master back.
 | master | demonstrated by | owed |
 |---|---|---|
 | Debt | every CRE, credit, energy and opco debt case | a linear-amortizing and a negative-amortizing refinement |
-| Security | `credit.participation`, a pass-through of a pool's cash at a share (`fixtures/valid/credit_participation`) | a published Fannie Mae or Ginnie Mae pass-through as a benchmark; the auto ABS pilot's classes as declared structured notes |
+| Security | `credit.participation`, a pass-through at a share (`fixtures/valid/credit_participation`); `credit.note`, a structured note — the auto ABS pilot's seven classes (`benchmarks/credit/auto_abs_tranches`) | a published Fannie Mae or Ginnie Mae pass-through as a benchmark; the REMIC cases' tranches as notes |
 | Equity | — (Penzance, One Lincoln, the flip cases hand-roll the interest) | a JV under D13; the flip partnership |
 | Lease | office, retail, multifamily cases | a ground lease; a finance lease |
 | Royalty | — (CREST restates it) | CREST's royalty as a contract |
