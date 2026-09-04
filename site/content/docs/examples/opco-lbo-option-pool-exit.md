@@ -197,27 +197,27 @@ assume rollover_shares  = 3.6
 // The payoff is the tranche's intrinsic value at exit: shares * (value - strike).
 // ---------------------------------------------------------------------------
 
-option mgmt_options_12_50 type Option.Equity {
+option mgmt_options_12_50 type OpCo.Contract.EquityOption {
   exercise when asset.target.value_per_share > 12.50
   payoff 0.50 * (asset.target.value_per_share - 12.50)
 }
 
-option mgmt_options_14_00 type Option.Equity {
+option mgmt_options_14_00 type OpCo.Contract.EquityOption {
   exercise when asset.target.value_per_share > 14.00
   payoff 0.50 * (asset.target.value_per_share - 14.00)
 }
 
-option mgmt_options_15_00 type Option.Equity {
+option mgmt_options_15_00 type OpCo.Contract.EquityOption {
   exercise when asset.target.value_per_share > 15.00
   payoff 0.50 * (asset.target.value_per_share - 15.00)
 }
 
-option mgmt_options_17_50 type Option.Equity {
+option mgmt_options_17_50 type OpCo.Contract.EquityOption {
   exercise when asset.target.value_per_share > 17.50
   payoff 0.50 * (asset.target.value_per_share - 17.50)
 }
 
-option mgmt_options_20_00 type Option.Equity {
+option mgmt_options_20_00 type OpCo.Contract.EquityOption {
   exercise when asset.target.value_per_share > 20.00
   payoff 0.75 * (asset.target.value_per_share - 20.00)
 }
@@ -225,12 +225,12 @@ option mgmt_options_20_00 type Option.Equity {
 // Out of the money at 8.0x: the value per share resolves to $20.88, below both
 // remaining strikes. Included precisely so the case asserts a NON-exercise as
 // well as an exercise — an option model that only ever fires is not tested.
-option mgmt_options_22_50 type Option.Equity {
+option mgmt_options_22_50 type OpCo.Contract.EquityOption {
   exercise when asset.target.value_per_share > 22.50
   payoff 1.25 * (asset.target.value_per_share - 22.50)
 }
 
-option mgmt_options_25_00 type Option.Equity {
+option mgmt_options_25_00 type OpCo.Contract.EquityOption {
   exercise when asset.target.value_per_share > 25.00
   payoff 1.25 * (asset.target.value_per_share - 25.00)
 }

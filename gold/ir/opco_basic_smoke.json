@@ -156,7 +156,9 @@
     {
       "id": "f44eb7c6a4b0c44d086dfe445e26e415",
       "name": "opco.exit_multiple",
-      "type": "core.Contract",
+      "type": "OpCo.Contract.ExitAtMultiple",
+      "contract_name": "opco.exit_multiple",
+      "master": "Contract.Sale",
       "subject": {
         "symbol": "asset.business"
       },
@@ -165,7 +167,10 @@
         "end": "2031-12-01"
       },
       "currency": "USD",
-      "terms": {},
+      "terms": {
+        "base": 800000,
+        "multiple": 6.5
+      },
       "effects": {
         "streams": []
       },
@@ -174,7 +179,7 @@
         "source_span": {
           "start_line": 30,
           "start_col": 1,
-          "end_line": 37,
+          "end_line": 36,
           "end_col": 1
         }
       }
@@ -182,7 +187,9 @@
     {
       "id": "593979d7679e224d6876971abd27b740",
       "name": "opco.opex_line",
-      "type": "core.Contract",
+      "type": "OpCo.Contract.OperatingExpenseLine",
+      "contract_name": "opco.opex_line",
+      "master": "Contract.Line",
       "subject": {
         "symbol": "asset.business"
       },
@@ -191,7 +198,9 @@
         "end": "2031-12-01"
       },
       "currency": "USD",
-      "terms": {},
+      "terms": {
+        "amount": 70000
+      },
       "effects": {
         "streams": []
       },
@@ -208,7 +217,9 @@
     {
       "id": "8be92e7fdf9ebfcb0607ffe280885e76",
       "name": "opco.revenue_line",
-      "type": "core.Contract",
+      "type": "OpCo.Contract.RevenueLine",
+      "contract_name": "opco.revenue_line",
+      "master": "Contract.Line",
       "subject": {
         "symbol": "asset.business"
       },
@@ -217,7 +228,10 @@
         "end": "2031-12-01"
       },
       "currency": "USD",
-      "terms": {},
+      "terms": {
+        "amount": 120000,
+        "growth_rate": 0.0
+      },
       "effects": {
         "streams": []
       },
@@ -234,7 +248,9 @@
     {
       "id": "14d3bb239de55e4b54143ad5dbb2d1d0",
       "name": "opco.working_capital",
-      "type": "core.Contract",
+      "type": "OpCo.Contract.WorkingCapital",
+      "contract_name": "opco.working_capital",
+      "master": "Contract.Line",
       "subject": {
         "symbol": "asset.business"
       },
@@ -243,7 +259,9 @@
         "end": "2031-12-01"
       },
       "currency": "USD",
-      "terms": {},
+      "terms": {
+        "amount": 3000
+      },
       "effects": {
         "streams": []
       },
@@ -286,7 +304,7 @@
         "source_span": {
           "start_line": 30,
           "start_col": 1,
-          "end_line": 37,
+          "end_line": 36,
           "end_col": 1
         },
         "generated_by": {

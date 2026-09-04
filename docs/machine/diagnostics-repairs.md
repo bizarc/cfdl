@@ -11,7 +11,7 @@ Diagnostics are the repair signal: read the `code`, `message`, `span`, and
 `hint`, change the model, recompile. The catalog is how an agent learns what
 each code looks like in the flesh before it meets one.
 
-**Coverage:** 213 codes in the docs/08 §7 register; 99 exemplified here; 70 of 104 examples carry a recorded fix.
+**Coverage:** 217 codes in the docs/08 §7 register; 104 exemplified here; 70 of 111 examples carry a recorded fix.
 
 ## active_in_unknown_state — E1332_UNKNOWN_ACTIVE_STATE
 
@@ -367,6 +367,74 @@ contract cre.opex_line.rooms on entity asset.tower {
 
 Fix: not yet recorded.
 
+## contract_master_type — E1374_ABSTRACT_TYPE_INSTANTIATED
+
+Failing example:
+
+```cfdl
+version 0.1
+model "contract-master-type"
+use pack "cre" version "0.1.0"
+time calendar monthly from 2026-01 for 24
+
+entity asset tower : CRE.Asset.RealProperty
+
+// A MASTER IS REFINED, NEVER DECLARED (docs/40 §2). `Contract.Debt` binds no
+// lowering rule; a model reaches it through a pack's concrete refinement,
+// which the hint names.
+contract Contract.Debt loan on entity asset.tower {
+  term 2026-01..2027-12
+  terms {
+    principal = 1000000
+    interest_rate = 0.05
+  }
+}
+```
+
+- `E1374_ABSTRACT_TYPE_INSTANTIATED` (error): Contract 'Contract.Debt.loan' declares type 'Contract.Debt', which is a master. A master is refined, never declared: a model reaches it through a pack's concrete refinement. Concrete refinements of 'Contract.Debt': cre.construction_loan, cre.permanent_debt.
+
+Fix: not yet recorded.
+
+## contract_missing_term — E1372_MISSING_CONTRACT_TERM, E6001_CRE_LEASE_MISSING_BASE_RENT
+
+Failing example:
+
+```cfdl
+version 0.1
+model "contract-missing-term"
+use pack "cre" version "0.1.0"
+time calendar monthly from 2026-01 for 24
+
+entity asset tower : CRE.Asset.RealProperty
+
+// A REQUIRED TERM THE CONTRACT OMITS IS REFUSED against the type's effective
+// roster (docs/40 §8), before any rule is expanded: `rent_year` is required
+// on a unit lease.
+contract cre.lease_unit.tenant_a on entity asset.tower {
+  term 2026-01..2027-12
+  terms {
+    escalation = 0.03
+  }
+}
+
+// A GROUP OF ALTERNATIVES the contract states none of is the same refusal:
+// `Contract.Lease` requires rent per period or per year, and a lease that
+// states neither has no rent. The pack's own validation says the same in
+// its own words (E6001); the roster check is the language's.
+contract cre.lease on entity asset.tower {
+  term 2026-01..2027-12
+  terms {
+    lease_up_months = 3
+  }
+}
+```
+
+- `E1372_MISSING_CONTRACT_TERM` (error): Contract 'cre.lease_unit.tenant_a' omits term 'rent_year', which type 'CRE.Contract.UnitLease' requires.
+- `E1372_MISSING_CONTRACT_TERM` (error): Contract 'cre.lease' states none of rent, rent_year; type 'CRE.Contract.Lease' requires one of them.
+- `E6001_CRE_LEASE_MISSING_BASE_RENT` (error): CRE lease must state a rent: 'rent' (per period) or 'rent_year' (annual).
+
+Fix: not yet recorded.
+
 ## contract_unknown_clause — E0004_EXPECTED_TOKEN
 
 Failing example:
@@ -391,6 +459,72 @@ contract cre.opex_line.rooms on entity asset.tower {
 ```
 
 - `E0004_EXPECTED_TOKEN` (error): Unexpected 'categry' in a contract body. Expected 'term', 'payment net', 'terms', 'category', 'parties', 'on entity', 'effects', or '}'.
+
+Fix: not yet recorded.
+
+## contract_unknown_term — E1371_UNKNOWN_CONTRACT_TERM
+
+Failing example:
+
+```cfdl
+version 0.1
+model "contract-unknown-term"
+use pack "cre" version "0.1.0"
+time calendar monthly from 2026-01 for 24
+
+entity asset tower : CRE.Asset.RealProperty
+
+// A TERM THE TYPE DOES NOT DECLARE IS REFUSED (docs/40 §8). Before this it
+// was quietly ignored: `esclation` matched no rule placeholder, the lease
+// never escalated, and nothing said so. The effective roster is the pack
+// type's own terms plus its master's, so the hint names the near miss.
+contract cre.lease_unit.tenant_a on entity asset.tower {
+  term 2026-01..2027-12
+  terms {
+    rent_year = 480000
+    esclation = 0.03
+  }
+}
+```
+
+- `E1371_UNKNOWN_CONTRACT_TERM` (error): Contract 'cre.lease_unit.tenant_a' states term 'esclation', which type 'CRE.Contract.UnitLease' does not declare. The term would never be read.
+  - hint: Did you mean escalation?
+
+Fix: not yet recorded.
+
+## contract_unknown_type — E1373_UNKNOWN_CONTRACT_TYPE
+
+Failing example:
+
+```cfdl
+version 0.1
+model "contract-unknown-type"
+use pack "cre" version "0.1.0"
+time calendar monthly from 2026-01 for 24
+
+entity asset tower : CRE.Asset.RealProperty
+
+// The two-token form STATES the type, so a type the pack does not declare is
+// refused where it is written, with the near miss (docs/40 §8; docs/13 §7.63).
+contract cre.leas_unit tenant_a on entity asset.tower {
+  term 2026-01..2027-12
+  terms {
+    rent_year = 480000
+  }
+}
+
+// The fused form gets the same answer: a contract no rule lowers is a type
+// the pack does not declare, not a contract missing its effects.
+contract cre.leas_unit.tenant_b on entity asset.tower {
+  term 2026-01..2027-12
+  terms {
+    rent_year = 360000
+  }
+}
+```
+
+- `E1373_UNKNOWN_CONTRACT_TYPE` (error): Contract 'cre.leas_unit.tenant_a' declares type 'cre.leas_unit', which the active ontology does not define, so no rule lowers it. Did you mean cre.lease_unit?
+- `E1373_UNKNOWN_CONTRACT_TYPE` (error): Contract 'cre.leas_unit.tenant_b' declares type 'cre.leas_unit', which the active ontology does not define, so no rule lowers it. Did you mean cre.lease_unit?
 
 Fix: not yet recorded.
 
@@ -437,7 +571,7 @@ contract cre.exit_cap {
 }
 ```
 
-## cre_lease_missing_base_rent — E6001_CRE_LEASE_MISSING_BASE_RENT
+## cre_lease_missing_base_rent — E1371_UNKNOWN_CONTRACT_TERM, E1372_MISSING_CONTRACT_TERM, E6001_CRE_LEASE_MISSING_BASE_RENT
 
 Failing example:
 
@@ -457,7 +591,10 @@ contract cre.lease {
 }
 ```
 
+- `E1372_MISSING_CONTRACT_TERM` (error): Contract 'cre.lease' states none of rent, rent_year; type 'CRE.Contract.Lease' requires one of them.
 - `E6001_CRE_LEASE_MISSING_BASE_RENT` (error): CRE lease must state a rent: 'rent' (per period) or 'rent_year' (annual).
+- `E1371_UNKNOWN_CONTRACT_TERM` (error): Contract 'cre.lease' states term 'growth', which type 'CRE.Contract.Lease' does not declare. The term would never be read.
+  - hint: Terms of 'CRE.Contract.Lease': rent, rent_year, escalation, free_rent_months, lease_up_months.
 
 Minimal fix (compiles):
 
@@ -469,17 +606,16 @@ time calendar monthly from 2026-01 for 24
 
 entity asset property : CRE.Asset.RealProperty
 
-// Fix: a CRE lease must state a rent; `base_rent_year` is added.
+// Fix: a CRE lease must state a rent; `rent_year` is added.
 contract cre.lease {
   term 2026-07..2027-12
   terms {
     rent_year = 120000
-    growth = 0.02
   }
 }
 ```
 
-## cre_pct_rent_expected_no_quantile — E6066_CRE_PCT_RENT_MISSING_SALES_QUANTILE
+## cre_pct_rent_expected_no_quantile — E1371_UNKNOWN_CONTRACT_TERM, E1372_MISSING_CONTRACT_TERM, E6066_CRE_PCT_RENT_MISSING_SALES_QUANTILE
 
 Failing example:
 
@@ -510,7 +646,10 @@ contract cre.percentage_rent_expected.no_dist on entity asset.store {
 }
 ```
 
+- `E1372_MISSING_CONTRACT_TERM` (error): Contract 'cre.percentage_rent_expected.no_dist' omits term 'sales_quantile', which type 'CRE.Contract.PercentageRentExpected' requires.
 - `E6066_CRE_PCT_RENT_MISSING_SALES_QUANTILE` (error): CRE expected percentage rent must name a sales distribution in 'sales_quantile'. Without one there is no distribution to take an expectation over — use 'cre.percentage_rent' for a lease underwritten on a single sales figure.
+- `E1371_UNKNOWN_CONTRACT_TERM` (error): Contract 'cre.percentage_rent_expected.no_dist' states term 'sales_year', which type 'CRE.Contract.PercentageRentExpected' does not declare. The term would never be read.
+  - hint: Terms of 'CRE.Contract.PercentageRentExpected': rent, rent_year, escalation, free_rent_months, lease_up_months, sales_quantile, sales_growth, breakpoint_year, overage_pct.
 
 Minimal fix (compiles):
 
@@ -2129,7 +2268,6 @@ entity asset business : OpCo.Asset.Enterprise
 contract opco.exit_multiple {
   term 2030-12..2030-12
   terms {
-    exit_period = 60
     multiple = 0
     base = 500000
   }
@@ -2152,7 +2290,6 @@ entity asset business : OpCo.Asset.Enterprise
 contract opco.exit_multiple {
   term 2030-12..2030-12
   terms {
-    exit_period = 60
     multiple = 7.0
     base = 500000
   }
@@ -2201,7 +2338,7 @@ contract opco.opex_line {
 }
 ```
 
-## opco_missing_amount — E7001_OPCO_LINE_MISSING_AMOUNT
+## opco_missing_amount — E1372_MISSING_CONTRACT_TERM, E7001_OPCO_LINE_MISSING_AMOUNT
 
 Failing example:
 
@@ -2221,6 +2358,7 @@ contract opco.revenue_line {
 }
 ```
 
+- `E1372_MISSING_CONTRACT_TERM` (error): Contract 'opco.revenue_line' states none of amount, amount_year; type 'OpCo.Contract.RevenueLine' requires one of them.
 - `E7001_OPCO_LINE_MISSING_AMOUNT` (error): OpCo line must state a size: 'amount' (per period) or 'amount_year' (annual).
 
 Minimal fix (compiles):
@@ -2242,6 +2380,51 @@ contract opco.revenue_line {
   }
 }
 ```
+
+## option_master_type — E1374_ABSTRACT_TYPE_INSTANTIATED
+
+Failing example:
+
+```cfdl
+version 0.1
+model "option-master-type"
+time calendar annual from 2026-01 for 3
+
+// A MASTER IS REFINED, NEVER DECLARED (docs/40 §2). `Contract.Option` is the
+// master every election refines; an option names one of its concrete
+// refinements, which the hint lists.
+entity asset co : Asset.Financial
+
+option renewal type Contract.Option { exercise when false payoff 1 }
+```
+
+- `E1374_ABSTRACT_TYPE_INSTANTIATED` (error): Option 'renewal' declares type 'Contract.Option', which is a master. A master is refined, never declared.
+  - hint: Concrete elections: Option.Call, Option.Put, Option.Refinance, Option.Renewal.
+
+Fix: not yet recorded.
+
+## option_unknown_type — E1373_UNKNOWN_CONTRACT_TYPE
+
+Failing example:
+
+```cfdl
+version 0.1
+model "option-unknown-type"
+time calendar annual from 2026-01 for 3
+
+// AN OPTION'S TYPE RESOLVES OR IS REFUSED (docs/13 §7.67; docs/40 §8). The
+// language base carries four generic elections — Option.Call, Option.Put,
+// Option.Renewal, Option.Refinance — and a pack adds its own; a name that is
+// none of them was accepted silently before, so a typo was a type.
+entity asset co : Asset.Financial
+
+option renewal type Option.Cal { exercise when false payoff 1 }
+```
+
+- `E1373_UNKNOWN_CONTRACT_TYPE` (error): Option 'renewal' declares type 'Option.Cal', which the active ontology does not define.
+  - hint: Did you mean Option.Call?
+
+Fix: not yet recorded.
 
 ## pack_actual_amortization_basis — E5027_ACTUAL_AMORTIZATION_BASIS
 
@@ -2848,6 +3031,42 @@ stream deal.fee on entity asset.deal inflow currency USD {
 
 Fix: not yet recorded.
 
+## party_role_unbound — E1322_UNKNOWN_PARTY_ROLE
+
+Failing example:
+
+```cfdl
+version 0.1
+model "party-role-unbound"
+use pack "credit" version "0.1.0"
+time calendar monthly from 2026-01 for 15
+
+entity asset pool : Credit.Asset.LoanPool
+entity party obligors : Party { name = "Obligors" }
+
+// ROLES ARE THE TYPE'S, RESOLVED THROUGH ITS MASTER (docs/40 §5). A credit
+// pool refines `Contract.Debt`: its `holder` is the master's `lender`, and
+// the master's `borrower` is UNBOUND — the obligors behind a purchased pool
+// are many and unnamed, so the agreement has no such party in this form.
+// Binding it is refused with the roles a model may bind.
+contract credit.pool_level_pay.smoke on entity asset.pool {
+  term 2026-01..2027-03
+  terms {
+    principal = 1200000
+    interest_rate = 0.06
+    term_months = 12
+  }
+  parties {
+    borrower = party.obligors
+  }
+}
+```
+
+- `E1322_UNKNOWN_PARTY_ROLE` (error): Contract 'credit.pool_level_pay.smoke' binds role 'borrower', which type 'Credit.Contract.LevelPayPool' leaves unbound: the agreement has no such party in this form.
+  - hint: Roles a model binds: holder (the master's lender).
+
+Fix: not yet recorded.
+
 ## payment_terms_on_date — E0004_EXPECTED_TOKEN
 
 Failing example:
@@ -3392,7 +3611,7 @@ slice s { type Contract.Imaginary }
 ```
 
 - `E1363_SLICE_UNKNOWN_TYPE` (error): Slice 's' selects type 'Contract.Imaginary', which the active ontology does not define.
-  - hint: Known contract types: Contract.CapitalExpenditure, Contract.Construction, Contract.Debt, Contract.Deduction, Contract.Derivative, Contract.Expense, Contract.Insurance, Contract.Lease, Contract.Line, Contract.Offtake, Contract.Option, Contract.Purchase, Contract.Revenue, Contract.Sale, Contract.Service, Contract.Tax, Contract.WorkingCapital.
+  - hint: Known contract types: Contract.CapitalExpenditure, Contract.Construction, Contract.Debt, Contract.Deduction, Contract.Derivative, Contract.Expense, Contract.Insurance, Contract.Lease, Contract.Line, Contract.Offtake, Contract.Option, Contract.Purchase, Contract.Revenue, Contract.Sale, Contract.Service, Contract.Tax, Contract.WorkingCapital, Option.Call, Option.Put, Option.Refinance, Option.Renewal.
 
 Fix: not yet recorded.
 
@@ -4369,7 +4588,6 @@ Documented in docs/08 §7, awaiting a minimal failing fixture:
 - `E1317_TYPE_HAS_NO_LIFECYCLE` — an entity declares a starting state but its type has no lifecycle.
 - `E1320_UNKNOWN_PARTY_ENTITY` — a contract or option binds a role to an entity that is not declared.
 - `E1321_NOT_A_PARTY` — a role is bound to an asset. A contract is between parties.
-- `E1322_UNKNOWN_PARTY_ROLE` — a role is bound that the contract type does not declare. The declared roles are listed; a role belongs to the agreement, not to the entity.
 - `E1330_CONFLICTING_ACTIVE_CLAUSES` — a stream declares both `active when` and `active in state`. Use one: `active in state` for a lifecycle state, `active when` for anything else.
 - `E1331_OWNER_HAS_NO_LIFECYCLE` — a stream is active in a lifecycle state but its owner's type declares no lifecycle.
 - `E1340_WATERFALL_NO_SOURCE` — a waterfall declares no `from`, so there is no
@@ -4380,7 +4598,7 @@ Documented in docs/08 §7, awaiting a minimal failing fixture:
 - `E1347_UNRESOLVED_ACCOUNT_REF` — a step allocates `to account <name>` and no
 - `E1366_DUPLICATE_STATEMENT` — two statements share a name. Same rule as a metric and a slice: one name, one presentation.
 - `E1368_STATEMENT_UNKNOWN_REFERENCE` — a statement filters by a slice, or shows a metric, that the model does not declare. A presentation that silently shows nothing is the failure §7.55 exists to end.
-- `E2002_CONTRACT_MISSING_EFFECTS` — a contract produces no streams, so it has no effect on the model.
+- `E2002_CONTRACT_MISSING_EFFECTS` — a contract produces no streams, so it has no effect on the model. Under a pack that declares contract types, a contract no rule lowers is a type the pack does not declare and is reported as `E1373` instead.
 - `E2101_STREAM_MISSING_SCHEDULE` — a stream has no `schedule`, so there is no period for its cash to land in.
 - `E2102_STREAM_MISSING_AMOUNT` — a stream has no `amount`.
 - `E2104_SCHEDULE_INVALID_RANGE` — a schedule's `to` is before its `from`.

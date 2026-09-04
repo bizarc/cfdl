@@ -145,7 +145,9 @@
     {
       "id": "cf7fd71c59a1ffdd7f89ea61b7c1568e",
       "name": "cre.exit_forward",
-      "type": "core.Contract",
+      "type": "CRE.Contract.DispositionAtForwardCap",
+      "contract_name": "cre.exit_forward",
+      "master": "Contract.Sale",
       "subject": {
         "symbol": "asset.tower"
       },
@@ -154,7 +156,10 @@
         "end": "2027-01-01"
       },
       "currency": "USD",
-      "terms": {},
+      "terms": {
+        "cap_rate": 0.065,
+        "selling_costs": 0.02
+      },
       "effects": {
         "streams": []
       },
@@ -171,7 +176,10 @@
     {
       "id": "d376361f5388212cfef9652ad92f693a",
       "name": "cre.lease_unit.tenant_a",
-      "type": "core.Contract",
+      "type": "CRE.Contract.UnitLease",
+      "contract_name": "cre.lease_unit",
+      "master": "Contract.Lease",
+      "instance": "tenant_a",
       "subject": {
         "symbol": "asset.tower"
       },
@@ -180,7 +188,15 @@
         "end": "2027-01-01"
       },
       "currency": "USD",
-      "terms": {},
+      "terms": {
+        "escalation": 0.03,
+        "expense_stop_year": 300000,
+        "free_rent_months": 5,
+        "opex_escalation": 0.025,
+        "opex_year": 300000,
+        "pro_rata_share": 0.4,
+        "rent_year": 480000
+      },
       "effects": {
         "streams": []
       },
@@ -197,7 +213,9 @@
     {
       "id": "9a6463ca7ed884d3801014c9283d3f44",
       "name": "cre.opex_line",
-      "type": "core.Contract",
+      "type": "CRE.Contract.OperatingExpense",
+      "contract_name": "cre.opex_line",
+      "master": "Contract.Line",
       "subject": {
         "symbol": "asset.tower"
       },
@@ -206,7 +224,10 @@
         "end": "2027-01-01"
       },
       "currency": "USD",
-      "terms": {},
+      "terms": {
+        "amount_year": 300000,
+        "growth_rate": 0.025
+      },
       "effects": {
         "streams": []
       },

@@ -1,0 +1,11 @@
+version 0.1
+model "option-unknown-type"
+time calendar annual from 2026-01 for 3
+
+// AN OPTION'S TYPE RESOLVES OR IS REFUSED (docs/13 §7.67; docs/40 §8). The
+// language base carries four generic elections — Option.Call, Option.Put,
+// Option.Renewal, Option.Refinance — and a pack adds its own; a name that is
+// none of them was accepted silently before, so a typo was a type.
+entity asset co : Asset.Financial
+
+option renewal type Option.Cal { exercise when false payoff 1 }

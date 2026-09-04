@@ -1,5 +1,20 @@
 [
   {
+    "code": "E1372_MISSING_CONTRACT_TERM",
+    "severity": "error",
+    "message": "Contract 'opco.revenue_line' states none of amount, amount_year; type 'OpCo.Contract.RevenueLine' requires one of them.",
+    "file": "model.cfdl",
+    "span": {
+      "start_line": 8,
+      "start_col": 1,
+      "end_line": 13,
+      "end_col": 1
+    },
+    "path": null,
+    "hint": null,
+    "notes": []
+  },
+  {
     "code": "E7001_OPCO_LINE_MISSING_AMOUNT",
     "severity": "error",
     "message": "OpCo line must state a size: 'amount' (per period) or 'amount_year' (annual).",

@@ -48,7 +48,10 @@
         "end": "2026-04-01"
       },
       "currency": "USD",
-      "terms": {},
+      "terms": {
+        "draw": 100,
+        "rate": 0.01
+      },
       "effects": {
         "streams": []
       },

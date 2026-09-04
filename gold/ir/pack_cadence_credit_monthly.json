@@ -199,7 +199,10 @@
     {
       "id": "a4835fbae4b45ef98841555fae108bcd",
       "name": "credit.pool_level_pay.book",
-      "type": "core.Contract",
+      "type": "Credit.Contract.LevelPayPool",
+      "contract_name": "credit.pool_level_pay",
+      "master": "Contract.Debt",
+      "instance": "book",
       "subject": {
         "symbol": "asset.buyer"
       },
@@ -208,7 +211,15 @@
         "end": "2028-03-01"
       },
       "currency": "USD",
-      "terms": {},
+      "terms": {
+        "cdr": 0.03,
+        "cpr": 0.1,
+        "interest_rate": 0.06,
+        "principal": 1200000,
+        "recovery_lag_months": 3,
+        "severity": 0.5,
+        "term_months": 36
+      },
       "effects": {
         "streams": []
       },

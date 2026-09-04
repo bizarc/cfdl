@@ -1,0 +1,339 @@
+{
+  "ir_version": "0.1",
+  "model": {
+    "name": "contract-inherits-master-field",
+    "currency": "USD"
+  },
+  "time": {
+    "calendar": "monthly",
+    "start": "2026-01-01",
+    "periods": 24
+  },
+  "phases": [],
+  "entities": [
+    {
+      "id": "8d4daf0aed594d76e3f13af8e7a2587d",
+      "symbol": "asset.target",
+      "type": "OpCo.Asset.Enterprise",
+      "fields": {},
+      "state": {}
+    }
+  ],
+  "assumptions": {
+    "constants": {},
+    "random": {}
+  },
+  "subtotals": [
+    {
+      "id": "domain.opco.revenue_periodic",
+      "kind": "money",
+      "op": "sum",
+      "categories": [
+        "operating.revenue.*"
+      ],
+      "formula": "sum(operating.revenue.*)"
+    },
+    {
+      "id": "domain.opco.opex_periodic",
+      "kind": "money",
+      "op": "negated_sum",
+      "categories": [
+        "operating.expense.*"
+      ],
+      "formula": "-sum(operating.expense.*)"
+    },
+    {
+      "id": "domain.opco.ebitda_periodic",
+      "kind": "money",
+      "op": "sum",
+      "categories": [
+        "operating.revenue.*",
+        "operating.expense.*"
+      ],
+      "formula": "sum(operating.revenue.*, operating.expense.*)"
+    },
+    {
+      "id": "domain.opco.ufcf_periodic",
+      "kind": "money",
+      "op": "sum",
+      "categories": [
+        "operating.*",
+        "investing.capital.capex"
+      ],
+      "formula": "sum(operating.*, investing.capital.capex)"
+    },
+    {
+      "id": "domain.opco.debt_service_periodic",
+      "kind": "money",
+      "op": "negated_sum",
+      "categories": [
+        "financing.debt.interest_paid",
+        "financing.debt.principal"
+      ],
+      "formula": "-sum(financing.debt.interest_paid, financing.debt.principal)"
+    },
+    {
+      "id": "domain.opco.lfcf_periodic",
+      "kind": "money",
+      "op": "sum",
+      "categories": [
+        "financing.*"
+      ],
+      "subtotals": [
+        "domain.opco.ufcf_periodic"
+      ],
+      "formula": "domain.opco.ufcf_periodic + sum(financing.*)"
+    },
+    {
+      "id": "domain.opco.debt_service_coverage",
+      "kind": "number",
+      "op": "ratio",
+      "numerator": "domain.opco.ufcf_periodic",
+      "denominator": "domain.opco.debt_service_periodic",
+      "formula": "domain.opco.ufcf_periodic / domain.opco.debt_service_periodic"
+    },
+    {
+      "id": "domain.opco.cfads",
+      "kind": "money",
+      "op": "sum",
+      "categories": [
+        "operating.*",
+        "investing.capital.capex"
+      ],
+      "formula": "cash flow available for debt service"
+    },
+    {
+      "id": "domain.opco.net_cash_from_operations",
+      "kind": "money",
+      "op": "sum",
+      "categories": [
+        "operating.*"
+      ],
+      "formula": "net cash provided by (used in) operating activities"
+    },
+    {
+      "id": "domain.opco.net_cash_from_investing",
+      "kind": "money",
+      "op": "sum",
+      "categories": [
+        "investing.*"
+      ],
+      "formula": "net cash provided by (used in) investing activities"
+    },
+    {
+      "id": "domain.opco.net_cash_from_financing",
+      "kind": "money",
+      "op": "sum",
+      "categories": [
+        "financing.*"
+      ],
+      "formula": "net cash provided by (used in) financing activities"
+    }
+  ],
+  "contracts": [
+    {
+      "id": "b035b4027c31a1624efeb0375a40224f",
+      "name": "opco.term_debt",
+      "type": "OpCo.Contract.TermDebt",
+      "contract_name": "opco.term_debt",
+      "master": "Contract.Debt",
+      "subject": {
+        "symbol": "asset.target"
+      },
+      "term": {
+        "start": "2026-01-01",
+        "end": "2027-12-01"
+      },
+      "currency": "USD",
+      "terms": {
+        "amortization_months": 84,
+        "day_count": "act/360",
+        "interest_rate": 0.08,
+        "principal": 5000000
+      },
+      "effects": {
+        "streams": []
+      },
+      "provenance": {
+        "source_file": "model.cfdl",
+        "source_span": {
+          "start_line": 13,
+          "start_col": 1,
+          "end_line": 21,
+          "end_col": 1
+        }
+      }
+    }
+  ],
+  "streams": [
+    {
+      "id": "27e56e84dc447ba139898ee752adaa43",
+      "name": "opco.debt.interest",
+      "owner": {
+        "symbol": "asset.target"
+      },
+      "direction": "outflow",
+      "currency": "USD",
+      "category": "financing.debt.interest_paid",
+      "schedule": {
+        "kind": "Every",
+        "every": "monthly",
+        "from": "2026-01-01",
+        "to": "2027-12-01"
+      },
+      "amount": {
+        "lang": "cfdl",
+        "src": "if(months_between(parse_date(\"2026-01-01\"), time.date) < 0.0, 5000000.0 * (0.08 / (360.0 / time.days_in_period)), -ipmt(0.08 / (360.0 / time.days_in_period), months_between(parse_date(\"2026-01-01\"), time.date) - 0.0 + 1.0, 84.0, 5000000.0))"
+      },
+      "active_when": {
+        "lang": "cfdl",
+        "src": "true"
+      },
+      "provenance": {
+        "source_file": "model.cfdl",
+        "source_span": {
+          "start_line": 13,
+          "start_col": 1,
+          "end_line": 21,
+          "end_col": 1
+        },
+        "generated_by": {
+          "pack": {
+            "name": "opco",
+            "version": "0.1.0"
+          },
+          "rule_id": "opco_term_debt_interest"
+        }
+      }
+    },
+    {
+      "id": "2ba4b5f9ac07f4cf114473d779918fa3",
+      "name": "opco.debt.principal",
+      "owner": {
+        "symbol": "asset.target"
+      },
+      "direction": "outflow",
+      "currency": "USD",
+      "category": "financing.debt.principal",
+      "schedule": {
+        "kind": "Every",
+        "every": "monthly",
+        "from": "2026-01-01",
+        "to": "2027-12-01"
+      },
+      "amount": {
+        "lang": "cfdl",
+        "src": "if(months_between(parse_date(\"2026-01-01\"), time.date) < 0.0, 0.0, -ppmt(0.08 / (360.0 / time.days_in_period), months_between(parse_date(\"2026-01-01\"), time.date) - 0.0 + 1.0, 84.0, 5000000.0)) + if(months_between(time.date, parse_date(\"2027-12-01\")) == 0.0, -fv(0.08 / (360.0 / time.days_in_period), months_between(parse_date(\"2026-01-01\"), time.date) - 0.0 + 1.0, pmt(0.08 / (360.0 / time.days_in_period), 84.0, 5000000.0), 5000000.0), 0.0)"
+      },
+      "active_when": {
+        "lang": "cfdl",
+        "src": "true"
+      },
+      "provenance": {
+        "source_file": "model.cfdl",
+        "source_span": {
+          "start_line": 13,
+          "start_col": 1,
+          "end_line": 21,
+          "end_col": 1
+        },
+        "generated_by": {
+          "pack": {
+            "name": "opco",
+            "version": "0.1.0"
+          },
+          "rule_id": "opco_term_debt_principal"
+        }
+      }
+    },
+    {
+      "id": "07524a3ec5c88f9296d0606b75367a46",
+      "name": "opco.debt.proceeds",
+      "owner": {
+        "symbol": "asset.target"
+      },
+      "direction": "inflow",
+      "currency": "USD",
+      "category": "financing.debt.proceeds",
+      "schedule": {
+        "kind": "OnDate",
+        "on": "2026-01-01"
+      },
+      "amount": {
+        "lang": "cfdl",
+        "src": "5000000.0 * 1.0"
+      },
+      "active_when": {
+        "lang": "cfdl",
+        "src": "true"
+      },
+      "provenance": {
+        "source_file": "model.cfdl",
+        "source_span": {
+          "start_line": 13,
+          "start_col": 1,
+          "end_line": 21,
+          "end_col": 1
+        },
+        "generated_by": {
+          "pack": {
+            "name": "opco",
+            "version": "0.1.0"
+          },
+          "rule_id": "opco_term_debt_proceeds"
+        }
+      }
+    }
+  ],
+  "stream_inputs": [
+    {
+      "stream": "opco.debt.interest",
+      "contract": "opco.term_debt",
+      "terms": {
+        "interest_rate": "0.08",
+        "principal": "5000000"
+      }
+    },
+    {
+      "stream": "opco.debt.principal",
+      "contract": "opco.term_debt",
+      "terms": {
+        "interest_rate": "0.08",
+        "principal": "5000000"
+      }
+    },
+    {
+      "stream": "opco.debt.proceeds",
+      "contract": "opco.term_debt",
+      "terms": {
+        "funded_at_close": "1",
+        "principal": "5000000"
+      },
+      "defaults_applied": [
+        "funded_at_close"
+      ]
+    }
+  ],
+  "events": [],
+  "options": [],
+  "runs": [
+    {
+      "kind": "deterministic"
+    }
+  ],
+  "required_observables": [],
+  "required_refs": [],
+  "provenance": {
+    "sources": [
+      "model.cfdl"
+    ],
+    "compiler": {
+      "name": "cfdl",
+      "version": "0.9.0",
+      "hash": "41487af2a1c4a075cb171c4bd43f8015",
+      "notes": [
+        "active_pack=opco@0.1.0"
+      ]
+    }
+  }
+}

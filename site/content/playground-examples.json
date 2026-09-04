@@ -204,7 +204,7 @@
       }
     },
     "files": {
-      "model.cfdl": "version 0.1\nmodel \"opco-basic-example\"\nuse pack \"opco\" version \"0.1.0\"\ntime calendar monthly from 2026-01 for 72\n\nentity asset business : OpCo.Asset.Enterprise\n\n// Revenue and opex as pack contracts, so the pack classifies them and the\n// statements can claim them. Hand-written streams carry no category, and a\n// statement folds categories rather than stream names.\ncontract opco.revenue_line {\n  term 2026-01..2031-12\n  terms {\n    amount = 120000\n  }\n}\n\ncontract opco.opex_line {\n  term 2026-01..2031-12\n  terms {\n    amount = 70000\n  }\n}\n\ncontract opco.working_capital {\n  term 2026-01..2031-12\n  terms {\n    amount = 3000\n  }\n}\n\ncontract opco.exit_multiple {\n  term 2031-12..2031-12\n  terms {\n    exit_period = 72\n    multiple = 6.5\n    base = 800000\n  }\n}\n"
+      "model.cfdl": "version 0.1\nmodel \"opco-basic-example\"\nuse pack \"opco\" version \"0.1.0\"\ntime calendar monthly from 2026-01 for 72\n\nentity asset business : OpCo.Asset.Enterprise\n\n// Revenue and opex as pack contracts, so the pack classifies them and the\n// statements can claim them. Hand-written streams carry no category, and a\n// statement folds categories rather than stream names.\ncontract opco.revenue_line {\n  term 2026-01..2031-12\n  terms {\n    amount = 120000\n  }\n}\n\ncontract opco.opex_line {\n  term 2026-01..2031-12\n  terms {\n    amount = 70000\n  }\n}\n\ncontract opco.working_capital {\n  term 2026-01..2031-12\n  terms {\n    amount = 3000\n  }\n}\n\ncontract opco.exit_multiple {\n  term 2031-12..2031-12\n  terms {\n    multiple = 6.5\n    base = 800000\n  }\n}\n"
     }
   },
   {

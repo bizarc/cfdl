@@ -795,12 +795,39 @@ struct IrEffects {
     streams: Vec<IrStream>,
 }
 
+/// Who a contract is between, by role. The role is the PACK's word as the
+/// model bound it; `master_role` is what the master calls it (docs/40 §5), so
+/// a consumer reading across packs can find every lender without knowing
+/// that a credit pool calls it the holder.
+#[derive(Debug, Serialize)]
+struct IrPartyBinding {
+    role: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    master_role: Option<String>,
+    entity: IrEntityRef,
+}
+
 #[derive(Debug, Serialize)]
 struct IrContract {
     id: String,
     name: String,
+    /// The ontology type the contract IS — `CRE.Contract.UnitLease` —
+    /// resolved once at declaration (docs/40 §8). `core.Contract` only where
+    /// no type could be resolved: a contract with no pack active.
     r#type: String,
+    /// The pack contract type as the model names it — the rule name,
+    /// `cre.lease_unit`.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    contract_name: Option<String>,
+    /// The master at the root of the type's chain — `Contract.Lease`.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    master: Option<String>,
+    /// The instance token where the name carries one — `tenant_a`.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    instance: Option<String>,
     subject: IrEntityRef,
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    parties: Vec<IrPartyBinding>,
     term: IrDateRange,
     currency: String,
     terms: BTreeMap<String, serde_json::Value>,
@@ -3020,6 +3047,302 @@ fn check_exercise_targets(
     }
 }
 
+/// A contract's type, resolved ONCE from its declaration and carried to every
+/// consumer — party checks, term checks, lowering, the IR (docs/40 §8; docs/13
+/// §7.58). Before this the type was recovered at each consumer by stripping a
+/// rule name off the front of the contract's name.
+#[derive(Debug, Clone)]
+struct ContractBinding {
+    /// The pack contract type as a model names it — the rule name, `cre.lease_unit`.
+    contract_name: String,
+    /// The ontology type it is: `CRE.Contract.UnitLease`.
+    type_id: String,
+    /// The master at the root of its chain: `Contract.Lease`.
+    master: String,
+    /// The instance token, where the name carries one: `tenant_a`.
+    instance: Option<String>,
+}
+
+/// Resolve a contract's type against the active ontology, or `None` where no
+/// pack type claims it. The two-token form STATES the type (`contract
+/// cre.lease_unit tenant_a`); the fused form is matched by rule-name prefix
+/// on the same boundary lowering uses, so the two can never disagree. A stated
+/// type that resolves to nothing is reported by `check_contract_types`, which
+/// runs first; here it is simply unbound.
+fn resolve_contract_binding(
+    contract: &cfdl_parser::ContractStmt,
+    ontology: &cfdl_pack::PackOntology,
+) -> Option<ContractBinding> {
+    let typed = match contract.declared_type.as_deref() {
+        Some(stated) => ontology.contract_for_rule(stated)?,
+        None => ontology
+            .contracts
+            .iter()
+            .filter(|c| {
+                c.contract_name
+                    .as_deref()
+                    .is_some_and(|rule| cfdl_pack::matches_contract_name(rule, &contract.name))
+            })
+            // `a.b` and `a.b_c` cannot both match one name (the boundary is
+            // a dot), so this picks between a rule and a longer rule that
+            // happens to share a prefix segment.
+            .max_by_key(|c| c.contract_name.as_ref().map_or(0, |r| r.len()))?,
+    };
+    let rule_name = typed.contract_name.clone()?;
+    let instance = contract.instance.clone().or_else(|| {
+        contract
+            .name
+            .strip_prefix(rule_name.as_str())
+            .map(|rest| rest.trim_start_matches('.').to_string())
+            .filter(|rest| !rest.is_empty())
+    });
+    Some(ContractBinding {
+        master: ontology
+            .master_of(&typed.type_id)
+            .unwrap_or_else(|| typed.type_id.clone()),
+        type_id: typed.type_id.clone(),
+        contract_name: rule_name,
+        instance,
+    })
+}
+
+/// The election types a model may write after `option ... type`: concrete
+/// refinements of `Contract.Option`, the base's own included.
+fn election_types(ontology: &cfdl_pack::PackOntology) -> Vec<&str> {
+    let mut names: Vec<&str> = ontology
+        .contracts
+        .iter()
+        .filter(|c| !c.is_abstract && ontology.is_a(&c.type_id, "Contract.Option"))
+        .map(|c| c.type_id.as_str())
+        .collect();
+    names.sort_unstable();
+    names
+}
+
+/// The pack contract types a model may declare with `contract`: the rule
+/// names of every concrete, lowered type.
+fn declarable_contract_names(ontology: &cfdl_pack::PackOntology) -> Vec<&str> {
+    let mut names: Vec<&str> = ontology
+        .contracts
+        .iter()
+        .filter(|c| !c.is_abstract)
+        .filter_map(|c| c.contract_name.as_deref())
+        .collect();
+    names.sort_unstable();
+    names
+}
+
+/// The concrete refinements of a master, as a model would name them.
+fn concrete_refinements_of(ontology: &cfdl_pack::PackOntology, master: &str) -> Vec<String> {
+    let mut names: Vec<String> = ontology
+        .contracts
+        .iter()
+        .filter(|c| !c.is_abstract && c.type_id != master && ontology.is_a(&c.type_id, master))
+        .map(|c| c.contract_name.clone().unwrap_or_else(|| c.type_id.clone()))
+        .collect();
+    names.sort_unstable();
+    names
+}
+
+/// Why a contract's stated type does not resolve, in one place, so the
+/// validation-phase restatement of `E2002` (the contract no rule lowers) and
+/// the compile-phase check of a two-token declaration say the same thing.
+/// `stated` is the type as the model wrote it: the two-token form's first
+/// token, or the fused name's first two segments.
+fn contract_type_refusal(
+    contract_name: &str,
+    stated: &str,
+    instance: Option<&str>,
+    ontology: &cfdl_pack::PackOntology,
+    pack_name: Option<&str>,
+) -> (&'static str, String, Option<String>) {
+    let subject = format!("Contract '{contract_name}'");
+    match ontology.contract(stated) {
+        Some(typed) if typed.is_abstract => (
+            "E1374_ABSTRACT_TYPE_INSTANTIATED",
+            format!(
+                "{subject} declares type '{stated}', which is a master. A master is refined, never declared: a model reaches it through a pack's concrete refinement."
+            ),
+            Some(format!(
+                "Concrete refinements of '{stated}': {}.",
+                join_or_none(&concrete_refinements_of(ontology, stated))
+            )),
+        ),
+        Some(typed) if typed.contract_name.is_none() => (
+            "E1373_UNKNOWN_CONTRACT_TYPE",
+            format!(
+                "{subject} declares type '{stated}', which is an election. An election is declared with `option <name> type {stated}`, not `contract`."
+            ),
+            None,
+        ),
+        Some(typed) => (
+            "E1373_UNKNOWN_CONTRACT_TYPE",
+            format!(
+                "{subject} declares type '{stated}' by its ontology name. A contract is declared by the pack's name for the type."
+            ),
+            Some(format!(
+                "Write `contract {} {}`.",
+                typed.contract_name.as_deref().unwrap_or_default(),
+                instance.unwrap_or("<instance>")
+            )),
+        ),
+        None => {
+            let known = declarable_contract_names(ontology);
+            let near: Vec<String> = known
+                .iter()
+                .filter(|k| is_near_miss(k, stated))
+                .map(|k| k.to_string())
+                .collect();
+            let hint = if !near.is_empty() {
+                format!("Did you mean {}?", near.join(" or "))
+            } else {
+                match pack_name {
+                    Some(pack) => format!(
+                        "Contract types of pack '{pack}': {}.",
+                        join_or_none(&known.iter().map(|k| k.to_string()).collect::<Vec<_>>())
+                    ),
+                    None => "No pack is active, so no contract type can be declared; `use pack \"<name>\"` first.".to_string(),
+                }
+            };
+            (
+                "E1373_UNKNOWN_CONTRACT_TYPE",
+                format!(
+                    "{subject} declares type '{stated}', which the active ontology does not define, so no rule lowers it."
+                ),
+                Some(hint),
+            )
+        }
+    }
+}
+
+/// A TYPE NAMED ON A DECLARATION RESOLVES OR IS REFUSED (docs/40 §8).
+///
+/// `option <name> type <T>` always states its type, and the two-token contract
+/// form states one too. Neither was checked before: an option's type resolved
+/// against nothing (docs/13 §7.67), so a typo was silent, and a master named
+/// where a concrete type belongs would have been accepted with no rule to
+/// lower it. An unknown type is `E1373`; a master is `E1374`, with the
+/// concrete refinements a model may declare named in the hint.
+fn check_contract_types(
+    resolve_output: &cfdl_resolver::ResolveOutput,
+    ontology: &cfdl_pack::PackOntology,
+    pack_name: Option<&str>,
+) -> Result<(), Vec<Diagnostic>> {
+    let mut diagnostics: Vec<Diagnostic> = Vec::new();
+    let near_misses = |wanted: &str, known: &[&str]| -> Vec<String> {
+        known
+            .iter()
+            .filter(|k| is_near_miss(k, wanted))
+            .map(|k| k.to_string())
+            .collect()
+    };
+    let diag =
+        |code: &str, message: String, hint: Option<String>, file: &str, span: cfdl_parser::Span| {
+            Diagnostic {
+                code: code.to_string(),
+                severity: "error".to_string(),
+                message,
+                file: Some(file.to_string()),
+                span: Some(map_span(span)),
+                path: None,
+                hint,
+                notes: vec![],
+            }
+        };
+    for source_stmt in &resolve_output.source_statements {
+        match &source_stmt.statement {
+            Stmt::Contract(contract) => {
+                let Some(stated) = contract.declared_type.as_deref() else {
+                    continue;
+                };
+                if ontology.contract_for_rule(stated).is_some() {
+                    continue;
+                }
+                let (code, message, hint) = contract_type_refusal(
+                    &contract.name,
+                    stated,
+                    contract.instance.as_deref(),
+                    ontology,
+                    pack_name,
+                );
+                diagnostics.push(diag(
+                    code,
+                    message,
+                    hint,
+                    &source_stmt.file,
+                    contract.declared_type_span.unwrap_or(contract.span),
+                ));
+            }
+            Stmt::Option(option) => {
+                let subject = format!("Option '{}'", option.name);
+                let stated = option.type_name.as_str();
+                match ontology.contract(stated) {
+                    Some(typed) if typed.is_abstract => diagnostics.push(diag(
+                        "E1374_ABSTRACT_TYPE_INSTANTIATED",
+                        format!(
+                            "{subject} declares type '{stated}', which is a master. A master is refined, never declared."
+                        ),
+                        Some(format!(
+                            "Concrete elections: {}.",
+                            join_or_none(&election_types(ontology).iter().map(|k| k.to_string()).collect::<Vec<_>>())
+                        )),
+                        &source_stmt.file,
+                        option.span,
+                    )),
+                    Some(_) if !ontology.is_a(stated, "Contract.Option") => diagnostics.push(diag(
+                        "E1373_UNKNOWN_CONTRACT_TYPE",
+                        format!(
+                            "{subject} declares type '{stated}', which is not an election — it lowers through a pack rule. Declare it with `contract`."
+                        ),
+                        Some(format!(
+                            "Elections: {}.",
+                            join_or_none(&election_types(ontology).iter().map(|k| k.to_string()).collect::<Vec<_>>())
+                        )),
+                        &source_stmt.file,
+                        option.span,
+                    )),
+                    Some(_) => {}
+                    None => {
+                        let known = election_types(ontology);
+                        let near = near_misses(stated, &known);
+                        let hint = if near.is_empty() {
+                            format!(
+                                "Elections: {}.",
+                                join_or_none(&known.iter().map(|k| k.to_string()).collect::<Vec<_>>())
+                            )
+                        } else {
+                            format!("Did you mean {}?", near.join(" or "))
+                        };
+                        diagnostics.push(diag(
+                            "E1373_UNKNOWN_CONTRACT_TYPE",
+                            format!(
+                                "{subject} declares type '{stated}', which the active ontology does not define."
+                            ),
+                            Some(hint),
+                            &source_stmt.file,
+                            option.span,
+                        ));
+                    }
+                }
+            }
+            _ => {}
+        }
+    }
+    if diagnostics.is_empty() {
+        Ok(())
+    } else {
+        Err(diagnostics)
+    }
+}
+
+fn join_or_none(names: &[String]) -> String {
+    if names.is_empty() {
+        "none".to_string()
+    } else {
+        names.join(", ")
+    }
+}
+
 fn check_party_bindings(
     resolve_output: &cfdl_resolver::ResolveOutput,
     ontology: &cfdl_pack::PackOntology,
@@ -3050,11 +3373,10 @@ fn check_party_bindings(
                  subject: &str,
                  file: &str,
                  diagnostics: &mut Vec<Diagnostic>| {
-        let declared_roles: Option<&Vec<String>> = ontology
-            .contracts
-            .iter()
-            .find(|c| c.type_id == type_name)
-            .map(|c| &c.parties);
+        // The roles the TYPE carries, its masters' included and the pack's
+        // specializations applied (docs/40 §5): a CRE lease binds `landlord`,
+        // and that is the master's `lessor`.
+        let roles: Vec<cfdl_pack::EffectiveRole> = ontology.effective_roles(type_name);
         for binding in parties {
             match entity_is_party.get(&binding.entity) {
                 None => diagnostics.push(Diagnostic {
@@ -3085,22 +3407,45 @@ fn check_party_bindings(
                 }),
                 _ => {}
             }
-            if let Some(roles) = declared_roles {
-                if !roles.is_empty() && !roles.contains(&binding.role) {
-                    diagnostics.push(Diagnostic {
-                        code: "E1322_UNKNOWN_PARTY_ROLE".to_string(),
-                        severity: "error".to_string(),
-                        message: format!(
-                            "{subject} binds role '{}', which type '{type_name}' does not declare.",
-                            binding.role
-                        ),
-                        file: Some(file.to_string()),
-                        span: Some(map_span(binding.span)),
-                        path: None,
-                        hint: Some(format!("Declared roles: {}.", roles.join(", "))),
-                        notes: vec![],
-                    });
+            if roles.is_empty() {
+                continue;
+            }
+            let describe = |r: &cfdl_pack::EffectiveRole| {
+                if r.name == r.master {
+                    r.name.clone()
+                } else {
+                    format!("{} (the master's {})", r.name, r.master)
                 }
+            };
+            let bindable: Vec<String> = roles.iter().filter(|r| !r.unbound).map(describe).collect();
+            match roles.iter().find(|r| r.name == binding.role) {
+                Some(role) if role.unbound => diagnostics.push(Diagnostic {
+                    code: "E1322_UNKNOWN_PARTY_ROLE".to_string(),
+                    severity: "error".to_string(),
+                    message: format!(
+                        "{subject} binds role '{}', which type '{type_name}' leaves unbound: the agreement has no such party in this form.",
+                        binding.role
+                    ),
+                    file: Some(file.to_string()),
+                    span: Some(map_span(binding.span)),
+                    path: None,
+                    hint: Some(format!("Roles a model binds: {}.", join_or_none(&bindable))),
+                    notes: vec![],
+                }),
+                Some(_) => {}
+                None => diagnostics.push(Diagnostic {
+                    code: "E1322_UNKNOWN_PARTY_ROLE".to_string(),
+                    severity: "error".to_string(),
+                    message: format!(
+                        "{subject} binds role '{}', which type '{type_name}' does not declare.",
+                        binding.role
+                    ),
+                    file: Some(file.to_string()),
+                    span: Some(map_span(binding.span)),
+                    path: None,
+                    hint: Some(format!("Roles a model binds: {}.", join_or_none(&bindable))),
+                    notes: vec![],
+                }),
             }
         }
     };
@@ -3119,16 +3464,8 @@ fn check_party_bindings(
             }
             Stmt::Contract(contract) if !contract.parties.is_empty() => {
                 let subject = format!("Contract '{}'", contract.name);
-                // A contract's ontology type is found through its lowering rule.
-                let type_name = ontology
-                    .contracts
-                    .iter()
-                    .find(|c| {
-                        c.contract_name
-                            .as_deref()
-                            .is_some_and(|rule| contract.name.starts_with(rule))
-                    })
-                    .map(|c| c.type_id.clone())
+                let type_name = resolve_contract_binding(contract, ontology)
+                    .map(|b| b.type_id)
                     .unwrap_or_default();
                 check(
                     &type_name,
@@ -3513,6 +3850,11 @@ fn build_ir(
         .map(|pack| pack.ontology.clone())
         .unwrap_or_else(cfdl_pack::PackOntology::language_base);
     check_entity_types(resolve_output, &ontology)?;
+    check_contract_types(
+        resolve_output,
+        &ontology,
+        active_pack.map(|p| p.name.as_str()),
+    )?;
     check_party_bindings(resolve_output, &ontology)?;
     check_exercise_targets(resolve_output)?;
     check_waterfalls(resolve_output)?;
@@ -3610,22 +3952,52 @@ fn build_ir(
             };
             let name = contract.name.clone();
             let stable_key = stable_key(&source_stmt.file, &name);
+            let binding = resolve_contract_binding(contract, &ontology);
+            let roles = binding
+                .as_ref()
+                .map(|b| ontology.effective_roles(&b.type_id))
+                .unwrap_or_default();
+            let parties = contract
+                .parties
+                .iter()
+                .map(|p| IrPartyBinding {
+                    role: p.role.clone(),
+                    master_role: roles
+                        .iter()
+                        .find(|r| r.name == p.role)
+                        .map(|r| r.master.clone()),
+                    entity: IrEntityRef {
+                        symbol: p.entity.clone(),
+                    },
+                })
+                .collect();
             let ir_contract = IrContract {
                 id: deterministic_id("Contract", &stable_key, &id_seed),
                 name: name.clone(),
-                r#type: "core.Contract".to_string(),
+                r#type: binding
+                    .as_ref()
+                    .map(|b| b.type_id.clone())
+                    .unwrap_or_else(|| "core.Contract".to_string()),
+                contract_name: binding.as_ref().map(|b| b.contract_name.clone()),
+                master: binding.as_ref().map(|b| b.master.clone()),
+                instance: binding.as_ref().and_then(|b| b.instance.clone()),
                 subject: IrEntityRef {
                     symbol: contract
                         .subject_entity
                         .clone()
                         .unwrap_or_else(|| first_entity_symbol.clone()),
                 },
+                parties,
                 term: IrDateRange {
                     start: time_start.clone(),
                     end: timeline_end.clone(),
                 },
                 currency: model_currency.clone(),
-                terms: BTreeMap::new(),
+                terms: contract
+                    .terms
+                    .iter()
+                    .map(|(key, term)| (key.clone(), term_value_json(term)))
+                    .collect(),
                 effects: IrEffects { streams: vec![] },
                 provenance: IrNodeProvenance {
                     source_file: source_stmt.file.clone(),
@@ -5056,6 +5428,33 @@ fn filter_pack_aware_validation(
         })
     };
 
+    // A CONTRACT NO RULE LOWERS IS A TYPE THE PACK DOES NOT DECLARE. Validation
+    // sees it as a contract with no `effects` (`E2002`), which is true and
+    // useless: the modeller wrote `cre.leas_unit` and the answer is the type
+    // they meant, not a block the pack would have supplied. Where the pack
+    // declares contract types at all, the diagnostic is restated as `E1373`
+    // with the near miss — the same code the two-token form gets from
+    // `check_contract_types`, so both spellings of the mistake read alike.
+    let pack_declares_types = pack
+        .ontology
+        .contracts
+        .iter()
+        .any(|c| c.contract_name.is_some());
+    let unresolved_contract = |diag: &cfdl_validate::ValidationDiagnostic| {
+        resolve_output
+            .source_statements
+            .iter()
+            .find_map(|source_stmt| {
+                let Stmt::Contract(contract) = &source_stmt.statement else {
+                    return None;
+                };
+                (source_stmt.file == diag.file
+                    && contract.span.start_line == diag.span.start_line
+                    && contract.span.start_col == diag.span.start_col)
+                    .then_some(contract)
+            })
+    };
+
     diagnostics
         .into_iter()
         .filter(|diag| {
@@ -5074,6 +5473,37 @@ fn filter_pack_aware_validation(
                 }
                 _ => true,
             }
+        })
+        .map(|mut diag| {
+            if diag.code != "E2002_CONTRACT_MISSING_EFFECTS" || !pack_declares_types {
+                return diag;
+            }
+            let Some(contract) = unresolved_contract(&diag) else {
+                return diag;
+            };
+            // The two-token form states its type; a fused name states it as
+            // its first two segments.
+            let stated: String = contract.declared_type.clone().unwrap_or_else(|| {
+                contract
+                    .name
+                    .split('.')
+                    .take(2)
+                    .collect::<Vec<_>>()
+                    .join(".")
+            });
+            let (code, message, hint) = contract_type_refusal(
+                &contract.name,
+                &stated,
+                contract.instance.as_deref(),
+                &pack.ontology,
+                Some(pack.name.as_str()),
+            );
+            diag.code = code;
+            diag.message = match hint {
+                Some(hint) => format!("{message} {hint}"),
+                None => message,
+            };
+            diag
         })
         .collect()
 }
@@ -5166,6 +5596,90 @@ fn lower_contract_streams(
         // class of failure this work has been closing. The model restates the
         // value in the unit the rule expects, and stays literal.
         let before = diagnostics.len();
+        // TERMS AGAINST THE EFFECTIVE ROSTER (docs/40 §8). A term the type
+        // does not declare is refused (`E1371`) — before this it was quietly
+        // ignored, and a misspelled `escalation` was a lease that never
+        // escalated. A required term the contract omits, or a group of
+        // alternatives it states none of, is `E1372`.
+        if let Some(binding) = resolve_contract_binding(contract, &pack.ontology) {
+            let fields = pack.ontology.effective_fields(&binding.type_id);
+            let roster = || {
+                fields
+                    .iter()
+                    .map(|f| f.name.as_str())
+                    .collect::<Vec<_>>()
+                    .join(", ")
+            };
+            for (key, term) in &contract.terms {
+                if fields.iter().any(|f| f.name == *key) {
+                    continue;
+                }
+                let near: Vec<&str> = fields
+                    .iter()
+                    .filter(|f| is_near_miss(&f.name, key))
+                    .map(|f| f.name.as_str())
+                    .collect();
+                let mut diag = lowering_rule_diag(
+                    "E1371_UNKNOWN_CONTRACT_TERM",
+                    &format!(
+                        "Contract '{}' states term '{key}', which type '{}' does not declare. The term would never be read.",
+                        contract.name, binding.type_id
+                    ),
+                    source_stmt,
+                    term.span,
+                );
+                diag.hint = Some(if near.is_empty() {
+                    format!("Terms of '{}': {}.", binding.type_id, roster())
+                } else {
+                    format!("Did you mean {}?", near.join(" or "))
+                });
+                diagnostics.push(diag);
+            }
+            for field in fields.iter().filter(|f| f.required) {
+                if !contract.terms.contains_key(&field.name) {
+                    diagnostics.push(lowering_rule_diag(
+                        "E1372_MISSING_CONTRACT_TERM",
+                        &format!(
+                            "Contract '{}' omits term '{}', which type '{}' requires.",
+                            contract.name, field.name, binding.type_id
+                        ),
+                        source_stmt,
+                        contract.span,
+                    ));
+                }
+            }
+            let mut groups: Vec<&str> = fields.iter().filter_map(|f| f.one_of.as_deref()).collect();
+            groups.sort_unstable();
+            groups.dedup();
+            for group in groups {
+                let members: Vec<&cfdl_pack::OntologyField> = fields
+                    .iter()
+                    .filter(|f| f.one_of.as_deref() == Some(group))
+                    .collect();
+                // A required member already carries the obligation and was
+                // reported above if missing.
+                if members.iter().any(|m| m.required) {
+                    continue;
+                }
+                if !members.iter().any(|m| contract.terms.contains_key(&m.name)) {
+                    diagnostics.push(lowering_rule_diag(
+                        "E1372_MISSING_CONTRACT_TERM",
+                        &format!(
+                            "Contract '{}' states none of {}; type '{}' requires one of them.",
+                            contract.name,
+                            members
+                                .iter()
+                                .map(|m| m.name.as_str())
+                                .collect::<Vec<_>>()
+                                .join(", "),
+                            binding.type_id
+                        ),
+                        source_stmt,
+                        contract.span,
+                    ));
+                }
+            }
+        }
         for (key, term) in &contract.terms {
             // An expression term is compiled HERE, at the term's own span,
             // rather than left for E5009 to reject after substitution — by
@@ -7512,6 +8026,38 @@ fn cadence_to_frequency(cadence: Cadence) -> &'static str {
     }
 }
 
+/// A contract term as the IR records it — a typed value, not a spliced
+/// string. A literal keeps its kind (a number is a number, a quoted string is
+/// a string, a date or a bare name is a string); an input reference or an
+/// expression is carried as CFDL source, the way every other expression in
+/// the IR is.
+fn term_value_json(term: &cfdl_parser::ContractTerm) -> serde_json::Value {
+    match term.kind {
+        cfdl_parser::TermValueKind::Literal => {
+            let raw = term.value.trim();
+            if let Ok(int) = raw.parse::<i64>() {
+                return serde_json::Value::from(int);
+            }
+            if let Ok(float) = raw.parse::<f64>() {
+                if let Some(number) = serde_json::Number::from_f64(float) {
+                    return serde_json::Value::Number(number);
+                }
+            }
+            match raw {
+                "true" => serde_json::Value::Bool(true),
+                "false" => serde_json::Value::Bool(false),
+                quoted if quoted.len() >= 2 && quoted.starts_with('"') && quoted.ends_with('"') => {
+                    serde_json::Value::String(quoted[1..quoted.len() - 1].to_string())
+                }
+                other => serde_json::Value::String(other.to_string()),
+            }
+        }
+        cfdl_parser::TermValueKind::InputRef | cfdl_parser::TermValueKind::Expr => {
+            serde_json::json!({ "lang": "cfdl", "src": term.value })
+        }
+    }
+}
+
 fn normalize_date(raw: &str) -> String {
     let parts: Vec<&str> = raw.split('-').collect();
     match parts.as_slice() {
@@ -7776,6 +8322,9 @@ mod pack_validation_parity_tests {
         cfdl_parser::ContractStmt {
             payment_net: None,
             name: name.to_string(),
+            declared_type: None,
+            declared_type_span: None,
+            instance: None,
             subject_entity: None,
             has_term: term_range,
             has_effects: false,
@@ -7871,22 +8420,19 @@ mod pack_validation_parity_tests {
     fn cre_exit_cap_pair_never_double_reports() {
         // absent / unparseable / zero / negative / valid
         for value in [None, Some("abc"), Some("0"), Some("-0.5"), Some("0.06")] {
-            let mut terms = vec![("noi_value", "180000")];
+            let mut terms = vec![("income", "180000")];
             if let Some(v) = value {
-                terms.push(("exit_cap", v));
+                terms.push(("cap_rate", v));
             }
             assert_parity("cre", "cre.exit_cap", &terms, true);
         }
-        // noi alternatives
-        for noi in ["noi_ref", "noi_value", "noi"] {
-            assert_parity(
-                "cre",
-                "cre.exit_cap",
-                &[("exit_cap", "0.06"), (noi, "1")],
-                true,
-            );
-        }
-        assert_parity("cre", "cre.exit_cap", &[("exit_cap", "0.06")], true);
+        assert_parity(
+            "cre",
+            "cre.exit_cap",
+            &[("cap_rate", "0.06"), ("income", "1")],
+            true,
+        );
+        assert_parity("cre", "cre.exit_cap", &[("cap_rate", "0.06")], true);
     }
 
     #[test]

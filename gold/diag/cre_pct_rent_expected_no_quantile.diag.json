@@ -1,5 +1,20 @@
 [
   {
+    "code": "E1372_MISSING_CONTRACT_TERM",
+    "severity": "error",
+    "message": "Contract 'cre.percentage_rent_expected.no_dist' omits term 'sales_quantile', which type 'CRE.Contract.PercentageRentExpected' requires.",
+    "file": "model.cfdl",
+    "span": {
+      "start_line": 17,
+      "start_col": 1,
+      "end_line": 24,
+      "end_col": 1
+    },
+    "path": null,
+    "hint": null,
+    "notes": []
+  },
+  {
     "code": "E6066_CRE_PCT_RENT_MISSING_SALES_QUANTILE",
     "severity": "error",
     "message": "CRE expected percentage rent must name a sales distribution in 'sales_quantile'. Without one there is no distribution to take an expectation over — use 'cre.percentage_rent' for a lease underwritten on a single sales figure.",
@@ -12,6 +27,21 @@
     },
     "path": null,
     "hint": null,
+    "notes": []
+  },
+  {
+    "code": "E1371_UNKNOWN_CONTRACT_TERM",
+    "severity": "error",
+    "message": "Contract 'cre.percentage_rent_expected.no_dist' states term 'sales_year', which type 'CRE.Contract.PercentageRentExpected' does not declare. The term would never be read.",
+    "file": "model.cfdl",
+    "span": {
+      "start_line": 20,
+      "start_col": 5,
+      "end_line": 20,
+      "end_col": 29
+    },
+    "path": null,
+    "hint": "Terms of 'CRE.Contract.PercentageRentExpected': rent, rent_year, escalation, free_rent_months, lease_up_months, sales_quantile, sales_growth, breakpoint_year, overage_pct.",
     "notes": []
   }
 ]

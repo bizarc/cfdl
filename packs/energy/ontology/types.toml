@@ -285,6 +285,21 @@ subject_family = "asset"
 parties = ["seller", "offtaker"]
 description = "Power purchase agreement: contracted price for delivered energy."
 
+
+[[contracts.fields]]
+name = "quantity"
+field_type = "decimal"
+required = true
+unit = "MWh/yr"
+description = "Contracted output per year."
+
+[[contracts.fields]]
+name = "price"
+field_type = "decimal"
+required = true
+unit = "USD/MWh"
+description = "Contract price per MWh."
+
 [[contracts]]
 type_id = "Energy.Contract.MerchantSale"
 refines = "Contract.Offtake"
@@ -292,6 +307,21 @@ contract_name = "energy.merchant"
 subject_family = "asset"
 parties = ["seller"]
 description = "Uncontracted sale into the market. The counterparty is the market, so only the seller is named."
+
+
+[[contracts.fields]]
+name = "quantity"
+field_type = "decimal"
+required = true
+unit = "MWh/yr"
+description = "Output sold per year."
+
+[[contracts.fields]]
+name = "price"
+field_type = "decimal"
+required = true
+unit = "USD/MWh"
+description = "Market price per MWh in the first year."
 
 [[contracts.roles]]
 name = "offtaker"
@@ -304,6 +334,21 @@ contract_name = "energy.storage_arbitrage"
 subject_family = "asset"
 parties = ["seller"]
 
+
+[[contracts.fields]]
+name = "quantity"
+field_type = "decimal"
+required = true
+unit = "MWh/yr"
+description = "Energy cycled per year."
+
+[[contracts.fields]]
+name = "price"
+field_type = "decimal"
+required = true
+unit = "USD/MWh"
+description = "Captured spread per MWh cycled."
+
 [[contracts.roles]]
 name = "offtaker"
 unbound = true
@@ -315,11 +360,28 @@ contract_name = "energy.capacity"
 subject_family = "asset"
 parties = ["seller", "offtaker"]
 
+
+[[contracts.fields]]
+name = "price"
+field_type = "decimal"
+required = true
+unit = "USD/yr"
+description = "Capacity payment per year."
+
 [[contracts]]
 type_id = "Energy.Contract.OperationsAndMaintenance"
 refines = "Contract.Service"
 contract_name = "energy.om"
 subject_family = "asset"
+
+
+[[contracts.fields]]
+name = "fee_year"
+field_type = "decimal"
+required = true
+unit = "USD/yr"
+one_of = "fee"
+description = "Operations and maintenance fee per year."
 
 [[contracts.roles]]
 name = "owner"
@@ -336,6 +398,30 @@ contract_name = "energy.debt_service"
 subject_family = "asset"
 parties = ["borrower", "lender"]
 
+
+[[contracts.fields]]
+name = "principal"
+field_type = "decimal"
+required = true
+unit = "USD"
+one_of = "amount"
+description = "The loan amount."
+
+[[contracts.fields]]
+name = "interest_rate"
+field_type = "decimal"
+required = true
+unit = "ratio"
+one_of = "interest"
+description = "Nominal annual rate."
+
+[[contracts.fields]]
+name = "term_months"
+field_type = "integer"
+required = true
+unit = "months"
+description = "Loan term in months; the level payment is struck on it."
+
 [[contracts.lines]]
 name = "proceeds"
 
@@ -351,11 +437,29 @@ parties = ["owner"]
 
 # Tax attributes are agreements with a revenue authority rather than a
 # commercial counterparty, so they name only the claimant.
+
+
+[[contracts.fields]]
+name = "amount"
+field_type = "decimal"
+required = true
+unit = "USD"
+one_of = "amount"
+description = "Capital spend, paid at term start."
 [[contracts]]
 type_id = "Energy.Contract.InvestmentTaxCredit"
 refines = "Contract.Tax"
 contract_name = "energy.itc"
 subject_family = "asset"
+
+
+[[contracts.fields]]
+name = "amount"
+field_type = "decimal"
+required = true
+unit = "USD"
+one_of = "charge"
+description = "The investment tax credit, taken at term start."
 
 [[contracts.roles]]
 name = "claimant"
@@ -374,6 +478,46 @@ refines = "Contract.Tax"
 contract_name = "energy.ptc"
 subject_family = "asset"
 
+
+[[contracts.fields]]
+name = "quantity"
+field_type = "decimal"
+required = true
+unit = "MWh/yr"
+description = "Output per year the credit is earned on."
+
+[[contracts.fields]]
+name = "amount"
+field_type = "decimal"
+required = true
+unit = "USD/MWh"
+one_of = "charge"
+description = "Credit per MWh produced, before rounding."
+
+[[contracts.fields]]
+name = "escalation"
+field_type = "decimal"
+unit = "ratio"
+description = "Annual inflation adjustment of the credit rate."
+
+[[contracts.fields]]
+name = "degradation"
+field_type = "decimal"
+unit = "ratio"
+description = "Annual decline in output."
+
+[[contracts.fields]]
+name = "availability"
+field_type = "decimal"
+unit = "ratio"
+description = "Fraction of the year the asset delivers."
+
+[[contracts.fields]]
+name = "round_step"
+field_type = "decimal"
+unit = "USD/MWh"
+description = "Step the credit rate is rounded to — the statute rounds to the nearest 0.1 cent per kWh, which is 1.00 USD/MWh; 0 disables rounding."
+
 [[contracts.roles]]
 name = "claimant"
 refines = "taxpayer"
@@ -390,6 +534,29 @@ type_id = "Energy.Contract.DepreciationShield"
 refines = "Contract.Tax"
 contract_name = "energy.macrs_shield"
 subject_family = "asset"
+
+
+[[contracts.fields]]
+name = "basis"
+field_type = "decimal"
+required = true
+unit = "USD"
+description = "Depreciable basis."
+
+[[contracts.fields]]
+name = "life"
+field_type = "integer"
+required = true
+unit = "years"
+description = "MACRS recovery period: 5, 7, 15 or 20 years."
+
+[[contracts.fields]]
+name = "tax_rate"
+field_type = "decimal"
+required = true
+unit = "ratio"
+one_of = "charge"
+description = "Rate the depreciation deduction shields at."
 
 [[contracts.roles]]
 name = "claimant"

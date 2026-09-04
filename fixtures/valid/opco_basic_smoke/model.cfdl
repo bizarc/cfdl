@@ -30,7 +30,6 @@ contract opco.working_capital {
 contract opco.exit_multiple {
   term 2031-12..2031-12
   terms {
-    exit_period = 72
     multiple = 6.5
     base = 800000
   }

@@ -1418,17 +1418,36 @@ fn find_contract_decl_name_span(
     stmt_span: &cfdl_lexer::Span,
     name: &str,
 ) -> Option<cfdl_lexer::Span> {
+    // Two spellings of one declaration (docs/01 §8.1): the fused
+    // `contract cre.lease_unit.tenant_a` names the contract in one token, and
+    // the two-token `contract cre.lease_unit tenant_a` spells the same name as
+    // `<type>.<instance>` — its declaration spans both tokens.
     for window in tokens.windows(3) {
-        if !window
+        if !window[..2]
             .iter()
             .all(|token| token_within_span(token, stmt_span))
         {
             continue;
         }
-        if window[0].kind == TokenKind::Keyword(Keyword::Contract)
-            && token_text(&window[2]) == Some(name)
-        {
-            return Some(window[2].span);
+        if window[0].kind != TokenKind::Keyword(Keyword::Contract) {
+            continue;
+        }
+        if token_text(&window[1]) == Some(name) {
+            return Some(window[1].span);
+        }
+        if token_within_span(&window[2], stmt_span) {
+            if let (Some(type_name), Some(instance)) =
+                (token_text(&window[1]), token_text(&window[2]))
+            {
+                if format!("{type_name}.{instance}") == name {
+                    return Some(cfdl_lexer::Span {
+                        start_line: window[1].span.start_line,
+                        start_col: window[1].span.start_col,
+                        end_line: window[2].span.end_line,
+                        end_col: window[2].span.end_col,
+                    });
+                }
+            }
         }
     }
     None
@@ -2160,7 +2179,9 @@ mod tests {
         assert_eq!(stream_def.uri, model_uri);
         assert_eq!(stream_def.range.start, stream_pos);
 
-        let contract_pos = position_of_first(&source, "cre.lease_main");
+        // The two-token declaration's location is both tokens; it starts at
+        // the type.
+        let contract_pos = position_of_first(&source, "core.lease");
         let contract_def = index
             .lookup(&model_uri, contract_pos)
             .expect("contract definition");
@@ -2219,7 +2240,7 @@ entity legal borrower
 stream cre.rent on entity legal.borrower {
   schedule on phase_enter("base")
 }
-contract core.lease cre.lease_main term 2026-01..2026-12
+contract core.lease main term 2026-01..2026-12
 "#
         .to_string()
     }

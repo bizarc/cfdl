@@ -183,7 +183,9 @@
     {
       "id": "8e13dfbacf180f443183fad14d3964f5",
       "name": "energy.ptc",
-      "type": "core.Contract",
+      "type": "Energy.Contract.ProductionTaxCredit",
+      "contract_name": "energy.ptc",
+      "master": "Contract.Tax",
       "subject": {
         "symbol": "asset.plant"
       },
@@ -192,7 +194,10 @@
         "end": "2028-01-01"
       },
       "currency": "USD",
-      "terms": {},
+      "terms": {
+        "amount": 27.5,
+        "quantity": 250000
+      },
       "effects": {
         "streams": []
       },

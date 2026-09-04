@@ -1,0 +1,17 @@
+[
+  {
+    "code": "E1373_UNKNOWN_CONTRACT_TYPE",
+    "severity": "error",
+    "message": "Option 'renewal' declares type 'Option.Cal', which the active ontology does not define.",
+    "file": "model.cfdl",
+    "span": {
+      "start_line": 11,
+      "start_col": 1,
+      "end_line": 11,
+      "end_col": 63
+    },
+    "path": null,
+    "hint": "Did you mean Option.Call?",
+    "notes": []
+  }
+]

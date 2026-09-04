@@ -64,9 +64,9 @@ exclusive_min = 0.0
 [[validations]]
 contract = "cre.exit_cap"
 code = "E6012_CRE_EXIT_MISSING_NOI_VALUE"
-message = "CRE exit requires either 'noi_ref' or 'income'."
+message = "CRE exit requires 'income' — the NOI the cap rate is applied to."
 check = "any_term_present"
-terms = ["noi_ref", "income", "noi"]
+terms = ["income"]
 
 # --- cre.revenue_line -------------------------------------------------------
 #

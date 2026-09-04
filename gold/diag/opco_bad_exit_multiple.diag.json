@@ -5,9 +5,9 @@
     "message": "OpCo exit 'multiple' must be greater than 0.",
     "file": "model.cfdl",
     "span": {
-      "start_line": 12,
+      "start_line": 11,
       "start_col": 5,
-      "end_line": 12,
+      "end_line": 11,
       "end_col": 16
     },
     "path": null,

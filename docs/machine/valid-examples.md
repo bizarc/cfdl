@@ -4,7 +4,7 @@
 
 CFDL 0.9.0. Every model below compiles, and its IR and
 results are byte-asserted against goldens in CI (`fixtures/valid/`,
-147 models.
+149 models.
 
 `gold/ir/`, `gold/results/`). Each is single-purpose: the directory name
 says what it exercises. This is what right looks like — positive few-shot
@@ -599,6 +599,73 @@ stream fund.fee on entity container.fund outflow currency USD {
   schedule every year from 2026-01 to 2028-01
   category operating.expense.management_fee
   amount = 100 * container.fund.fee_rate
+}
+```
+
+## contract_inherits_master_field
+
+```cfdl
+version 0.1
+model "contract-inherits-master-field"
+use pack "opco" version "0.1.0"
+time calendar monthly from 2026-01 for 24
+
+entity asset target : OpCo.Asset.Enterprise
+
+// TERMS INHERIT DOWN THE CHAIN (docs/40 §3). The OpCo pack declares no
+// `day_count` of its own; `opco.term_debt` refines `Contract.Debt`, which
+// does, so the term is accepted against the effective roster and read by the
+// accrual divisor as on every debt. The IR records the resolved type and its
+// master.
+contract opco.term_debt on entity asset.target {
+  term 2026-01..2027-12
+  terms {
+    principal = 5000000
+    interest_rate = 0.08
+    amortization_months = 84
+    day_count = "act/360"
+  }
+}
+```
+
+## contract_two_token
+
+```cfdl
+version 0.1
+model "contract-two-token"
+use pack "cre" version "0.1.0"
+time calendar monthly from 2026-01 for 24
+
+entity asset tower : CRE.Asset.RealProperty
+entity party landlord_co : Party
+entity party acme : Party
+
+// THE INSTANCE IS ITS OWN TOKEN (docs/13 §7.63; docs/40 §8): the type is
+// `cre.lease_unit` and the instance is `tenant_a`, and the compiler checks
+// the type instead of recovering it from a prefix. The fully qualified name
+// is the same `cre.lease_unit.tenant_a` the fused spelling produces, so the
+// lowered streams, the IR and every reference are unchanged.
+//
+// The parties bind the PACK's roles: `landlord` is the CRE specialization of
+// the master's `lessor`, and the IR records both words.
+contract cre.lease_unit tenant_a on entity asset.tower {
+  term 2026-01..2027-12
+  terms {
+    rent_year = 480000
+    escalation = 0.03
+  }
+  parties {
+    landlord = party.landlord_co
+    tenant = party.acme
+  }
+}
+
+// The fused spelling keeps working, and resolves to the same type.
+contract cre.lease_unit.tenant_b on entity asset.tower {
+  term 2026-07..2027-12
+  terms {
+    rent_year = 360000
+  }
 }
 ```
 
@@ -3013,7 +3080,6 @@ contract opco.working_capital {
 contract opco.exit_multiple {
   term 2031-12..2031-12
   terms {
-    exit_period = 72
     multiple = 6.5
     base = 800000
   }

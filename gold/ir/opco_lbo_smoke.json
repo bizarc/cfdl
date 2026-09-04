@@ -166,7 +166,9 @@
     {
       "id": "a6abb9d6ed7cea2e42a3bf457e99caba",
       "name": "opco.acquisition",
-      "type": "core.Contract",
+      "type": "OpCo.Contract.Acquisition",
+      "contract_name": "opco.acquisition",
+      "master": "Contract.Purchase",
       "subject": {
         "symbol": "asset.target"
       },
@@ -175,7 +177,9 @@
         "end": "2027-12-01"
       },
       "currency": "USD",
-      "terms": {},
+      "terms": {
+        "price": 5000000
+      },
       "effects": {
         "streams": []
       },
@@ -192,7 +196,9 @@
     {
       "id": "4ba2aa2a2fa6f1b566fdf3641bfa2f2c",
       "name": "opco.capex_line",
-      "type": "core.Contract",
+      "type": "OpCo.Contract.CapexLine",
+      "contract_name": "opco.capex_line",
+      "master": "Contract.Line",
       "subject": {
         "symbol": "asset.target"
       },
@@ -201,7 +207,10 @@
         "end": "2027-12-01"
       },
       "currency": "USD",
-      "terms": {},
+      "terms": {
+        "amount": 5000,
+        "pct_of_revenue": 0.02
+      },
       "effects": {
         "streams": []
       },
@@ -218,7 +227,9 @@
     {
       "id": "002348d044c7ac83ec0f5313684d5d41",
       "name": "opco.cash_taxes",
-      "type": "core.Contract",
+      "type": "OpCo.Contract.CashTaxes",
+      "contract_name": "opco.cash_taxes",
+      "master": "Contract.Tax",
       "subject": {
         "symbol": "asset.target"
       },
@@ -227,7 +238,10 @@
         "end": "2027-12-01"
       },
       "currency": "USD",
-      "terms": {},
+      "terms": {
+        "da_monthly": 20000,
+        "tax_rate": 0.25
+      },
       "effects": {
         "streams": []
       },
@@ -244,7 +258,9 @@
     {
       "id": "52a3a5480590400b0510af3125005c79",
       "name": "opco.exit_ebitda",
-      "type": "core.Contract",
+      "type": "OpCo.Contract.ExitAtEbitdaMultiple",
+      "contract_name": "opco.exit_ebitda",
+      "master": "Contract.Sale",
       "subject": {
         "symbol": "asset.target"
       },
@@ -253,7 +269,10 @@
         "end": "2027-12-01"
       },
       "currency": "USD",
-      "terms": {},
+      "terms": {
+        "multiple": 7.0,
+        "selling_costs": 0.02
+      },
       "effects": {
         "streams": []
       },
@@ -270,7 +289,9 @@
     {
       "id": "593979d7679e224d6876971abd27b740",
       "name": "opco.opex_line",
-      "type": "core.Contract",
+      "type": "OpCo.Contract.OperatingExpenseLine",
+      "contract_name": "opco.opex_line",
+      "master": "Contract.Line",
       "subject": {
         "symbol": "asset.target"
       },
@@ -279,7 +300,10 @@
         "end": "2027-12-01"
       },
       "currency": "USD",
-      "terms": {},
+      "terms": {
+        "amount": 120000,
+        "growth_rate": 0.03
+      },
       "effects": {
         "streams": []
       },
@@ -296,7 +320,9 @@
     {
       "id": "8be92e7fdf9ebfcb0607ffe280885e76",
       "name": "opco.revenue_line",
-      "type": "core.Contract",
+      "type": "OpCo.Contract.RevenueLine",
+      "contract_name": "opco.revenue_line",
+      "master": "Contract.Line",
       "subject": {
         "symbol": "asset.target"
       },
@@ -305,7 +331,10 @@
         "end": "2027-12-01"
       },
       "currency": "USD",
-      "terms": {},
+      "terms": {
+        "amount": 200000,
+        "growth_rate": 0.05
+      },
       "effects": {
         "streams": []
       },
@@ -322,7 +351,9 @@
     {
       "id": "b035b4027c31a1624efeb0375a40224f",
       "name": "opco.term_debt",
-      "type": "core.Contract",
+      "type": "OpCo.Contract.TermDebt",
+      "contract_name": "opco.term_debt",
+      "master": "Contract.Debt",
       "subject": {
         "symbol": "asset.target"
       },
@@ -331,7 +362,12 @@
         "end": "2027-12-01"
       },
       "currency": "USD",
-      "terms": {},
+      "terms": {
+        "amortization_months": 36,
+        "interest_only_months": 6,
+        "interest_rate": 0.09,
+        "principal": 3000000
+      },
       "effects": {
         "streams": []
       },
@@ -348,7 +384,9 @@
     {
       "id": "728b35010ac84f866cc79ba0f689ca7d",
       "name": "opco.working_capital_policy",
-      "type": "core.Contract",
+      "type": "OpCo.Contract.WorkingCapitalPolicy",
+      "contract_name": "opco.working_capital_policy",
+      "master": "Contract.Line",
       "subject": {
         "symbol": "asset.target"
       },
@@ -357,7 +395,12 @@
         "end": "2027-12-01"
       },
       "currency": "USD",
-      "terms": {},
+      "terms": {
+        "ap_days": 25,
+        "ar_days": 40,
+        "inv_days": 15,
+        "release_at_end": 1
+      },
       "effects": {
         "streams": []
       },

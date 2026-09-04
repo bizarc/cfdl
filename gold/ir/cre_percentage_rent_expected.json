@@ -184,7 +184,10 @@
     {
       "id": "4d6826e748c4742ea09be96f61a26548",
       "name": "cre.percentage_rent.point",
-      "type": "core.Contract",
+      "type": "CRE.Contract.PercentageRent",
+      "contract_name": "cre.percentage_rent",
+      "master": "Contract.Lease",
+      "instance": "point",
       "subject": {
         "symbol": "asset.store"
       },
@@ -193,7 +196,12 @@
         "end": "2028-01-01"
       },
       "currency": "USD",
-      "terms": {},
+      "terms": {
+        "breakpoint_year": 1200000,
+        "overage_pct": 0.06,
+        "sales_growth": 0.0,
+        "sales_year": 1000000
+      },
       "effects": {
         "streams": []
       },
@@ -210,7 +218,10 @@
     {
       "id": "29e220a78dd74b89f6da604052a47301",
       "name": "cre.percentage_rent_expected.dist",
-      "type": "core.Contract",
+      "type": "CRE.Contract.PercentageRentExpected",
+      "contract_name": "cre.percentage_rent_expected",
+      "master": "Contract.Lease",
+      "instance": "dist",
       "subject": {
         "symbol": "asset.store"
       },
@@ -219,7 +230,12 @@
         "end": "2028-01-01"
       },
       "currency": "USD",
-      "terms": {},
+      "terms": {
+        "breakpoint_year": 1200000,
+        "overage_pct": 0.06,
+        "sales_growth": 0.0,
+        "sales_quantile": "store_sales"
+      },
       "effects": {
         "streams": []
       },

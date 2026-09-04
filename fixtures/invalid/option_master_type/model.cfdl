@@ -1,0 +1,10 @@
+version 0.1
+model "option-master-type"
+time calendar annual from 2026-01 for 3
+
+// A MASTER IS REFINED, NEVER DECLARED (docs/40 §2). `Contract.Option` is the
+// master every election refines; an option names one of its concrete
+// refinements, which the hint lists.
+entity asset co : Asset.Financial
+
+option renewal type Contract.Option { exercise when false payoff 1 }

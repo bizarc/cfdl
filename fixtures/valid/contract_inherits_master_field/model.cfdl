@@ -1,0 +1,21 @@
+version 0.1
+model "contract-inherits-master-field"
+use pack "opco" version "0.1.0"
+time calendar monthly from 2026-01 for 24
+
+entity asset target : OpCo.Asset.Enterprise
+
+// TERMS INHERIT DOWN THE CHAIN (docs/40 §3). The OpCo pack declares no
+// `day_count` of its own; `opco.term_debt` refines `Contract.Debt`, which
+// does, so the term is accepted against the effective roster and read by the
+// accrual divisor as on every debt. The IR records the resolved type and its
+// master.
+contract opco.term_debt on entity asset.target {
+  term 2026-01..2027-12
+  terms {
+    principal = 5000000
+    interest_rate = 0.08
+    amortization_months = 84
+    day_count = "act/360"
+  }
+}

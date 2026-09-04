@@ -1,0 +1,17 @@
+[
+  {
+    "code": "E1374_ABSTRACT_TYPE_INSTANTIATED",
+    "severity": "error",
+    "message": "Contract 'Contract.Debt.loan' declares type 'Contract.Debt', which is a master. A master is refined, never declared: a model reaches it through a pack's concrete refinement. Concrete refinements of 'Contract.Debt': cre.construction_loan, cre.permanent_debt.",
+    "file": "model.cfdl",
+    "span": {
+      "start_line": 11,
+      "start_col": 1,
+      "end_line": 17,
+      "end_col": 1
+    },
+    "path": null,
+    "hint": null,
+    "notes": []
+  }
+]

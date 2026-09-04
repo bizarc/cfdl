@@ -286,12 +286,16 @@ to = "repurchased"
 # Contracts
 # ---------------------------------------------------------------------------
 
+# The pool the three lowered shapes share: a purchased pool of loans, so the
+# lender's role is the note HOLDER and the borrowers are the obligors behind
+# the pool — many, unnamed, so the role is unbound. Abstract: a model declares
+# one of the shapes below, never the pool itself.
 [[contracts]]
-type_id = "Credit.Contract.LevelPayPool"
+type_id = "Credit.Contract.Pool"
 refines = "Contract.Debt"
-contract_name = "credit.pool_level_pay"
 subject_family = "asset"
-description = "Amortizing pool with prepayment, default, severity and recovery lag."
+abstract = true
+description = "A pool of amortizing loans held as collateral: balance, rate, term, and the prepayment, default, severity and servicing assumptions every shape shares."
 
 [[contracts.roles]]
 name = "holder"
@@ -300,6 +304,99 @@ refines = "lender"
 [[contracts.roles]]
 name = "borrower"
 unbound = true
+
+[[contracts.fields]]
+name = "principal"
+field_type = "decimal"
+required = true
+one_of = "amount"
+description = "The pool's balance at the cut-off — what the notes are backed by."
+
+[[contracts.fields]]
+name = "term_months"
+field_type = "integer"
+required = true
+unit = "months"
+description = "Remaining amortization term of the loans, in months."
+
+[[contracts.fields]]
+name = "cpr"
+field_type = "decimal"
+unit = "ratio"
+description = "Annual conditional prepayment rate."
+
+[[contracts.fields]]
+name = "cdr"
+field_type = "decimal"
+unit = "ratio"
+description = "Annual conditional default rate."
+
+[[contracts.fields]]
+name = "psa_speed"
+field_type = "decimal"
+description = "Multiple of the standard PSA prepayment curve — 1.5 is 150% PSA."
+
+[[contracts.fields]]
+name = "sda_speed"
+field_type = "decimal"
+description = "Multiple of the standard default assumption — 1.0 is 100% SDA."
+
+[[contracts.fields]]
+name = "abs_speed"
+field_type = "decimal"
+unit = "ratio"
+description = "Absolute prepayment speed: a constant fraction of the original balance each month."
+
+[[contracts.fields]]
+name = "age_months"
+field_type = "integer"
+unit = "months"
+description = "Weighted average age of the pool at closing; seasons the PSA and SDA curves."
+
+[[contracts.fields]]
+name = "severity"
+field_type = "decimal"
+unit = "ratio"
+description = "Loss severity on defaulted balance."
+
+[[contracts.fields]]
+name = "recovery_lag_months"
+field_type = "integer"
+unit = "months"
+description = "Months from default to recovery cash."
+
+[[contracts.fields]]
+name = "servicing_fee"
+field_type = "decimal"
+unit = "ratio"
+description = "Annual servicing strip on performing balance."
+
+[[contracts.fields]]
+name = "prepay_penalty_rate"
+field_type = "decimal"
+unit = "ratio"
+description = "Flat penalty rate on voluntary prepayments."
+
+[[contracts]]
+type_id = "Credit.Contract.LevelPayPool"
+refines = "Credit.Contract.Pool"
+contract_name = "credit.pool_level_pay"
+subject_family = "asset"
+parties = ["holder"]
+description = "Amortizing pool with prepayment, default, severity and recovery lag."
+
+
+[[contracts.roles]]
+name = "borrower"
+unbound = true
+
+[[contracts.fields]]
+name = "interest_rate"
+field_type = "decimal"
+required = true
+unit = "ratio"
+one_of = "interest"
+description = "Annual note rate of the loans."
 
 [[contracts.lines]]
 name = "principal"
@@ -318,17 +415,22 @@ name = "penalty"
 
 [[contracts]]
 type_id = "Credit.Contract.InterestOnlyPool"
-refines = "Contract.Debt"
+refines = "Credit.Contract.Pool"
 contract_name = "credit.pool_io_bullet"
 subject_family = "asset"
-
-[[contracts.roles]]
-name = "holder"
-refines = "lender"
+parties = ["holder"]
 
 [[contracts.roles]]
 name = "borrower"
 unbound = true
+
+[[contracts.fields]]
+name = "interest_rate"
+field_type = "decimal"
+required = true
+unit = "ratio"
+one_of = "interest"
+description = "Annual note rate of the loans."
 
 [[contracts.lines]]
 name = "prepayment"
@@ -347,18 +449,35 @@ name = "penalty"
 
 [[contracts]]
 type_id = "Credit.Contract.FloatingInterestOnlyPool"
-refines = "Contract.Debt"
+refines = "Credit.Contract.Pool"
 contract_name = "credit.pool_float_io_bullet"
 subject_family = "asset"
+parties = ["holder"]
 description = "Coupon resets off a declared reference rather than being fixed at origination."
 
-[[contracts.roles]]
-name = "holder"
-refines = "lender"
 
 [[contracts.roles]]
 name = "borrower"
 unbound = true
+
+[[contracts.fields]]
+name = "index_curve"
+field_type = "string"
+required = true
+one_of = "interest"
+description = "The declared curve the coupon resets off."
+
+[[contracts.fields]]
+name = "rate_floor"
+field_type = "decimal"
+unit = "ratio"
+description = "Coupon floor."
+
+[[contracts.fields]]
+name = "rate_cap"
+field_type = "decimal"
+unit = "ratio"
+description = "Coupon cap."
 
 [[contracts.lines]]
 name = "prepayment"

@@ -134,7 +134,9 @@
     {
       "id": "7587f66002959e0d8a8231a007aa7f36",
       "name": "opco.exit_perpetuity",
-      "type": "core.Contract",
+      "type": "OpCo.Contract.ExitAtPerpetuity",
+      "contract_name": "opco.exit_perpetuity",
+      "master": "Contract.Sale",
       "subject": {
         "symbol": "asset.firm"
       },
@@ -143,7 +145,11 @@
         "end": "2030-01-01"
       },
       "currency": "USD",
-      "terms": {},
+      "terms": {
+        "base": 1169.85856,
+        "discount_rate": 0.085,
+        "growth_rate": 0.025
+      },
       "effects": {
         "streams": []
       },

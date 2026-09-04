@@ -194,12 +194,27 @@ contract_name = "opco.capex_line"
 subject_family = "asset"
 parties = ["owner"]
 
+
+[[contracts.fields]]
+name = "pct_of_revenue"
+field_type = "decimal"
+unit = "ratio"
+one_of = "amount"
+description = "Capex as a share of modeled revenue — an amount stated as a rate on revenue, on its own or added to a stated amount."
+
 [[contracts]]
 type_id = "OpCo.Contract.WorkingCapital"
 refines = "Contract.WorkingCapital"
 contract_name = "opco.working_capital"
 subject_family = "asset"
 parties = ["owner"]
+
+
+[[contracts.fields]]
+name = "amount"
+field_type = "decimal"
+required = true
+description = "Working-capital investment per period; negative releases it."
 
 [[contracts]]
 type_id = "OpCo.Contract.WorkingCapitalPolicy"
@@ -209,12 +224,59 @@ subject_family = "asset"
 parties = ["owner"]
 description = "Days-based policy — receivables, payables, inventory — rather than a stated movement."
 
+
+[[contracts.fields]]
+name = "ar_days"
+field_type = "integer"
+unit = "days"
+description = "Days of revenue held as receivables."
+
+[[contracts.fields]]
+name = "inv_days"
+field_type = "integer"
+unit = "days"
+description = "Days of cost held as inventory."
+
+[[contracts.fields]]
+name = "ap_days"
+field_type = "integer"
+unit = "days"
+description = "Days of cost owed as payables."
+
+[[contracts.fields]]
+name = "release_at_end"
+field_type = "integer"
+description = "1 — the working-capital balance is released in the final period."
+
 [[contracts]]
 type_id = "OpCo.Contract.TermDebt"
 refines = "Contract.Debt"
 contract_name = "opco.term_debt"
 subject_family = "asset"
 parties = ["borrower", "lender"]
+
+
+[[contracts.fields]]
+name = "principal"
+field_type = "decimal"
+required = true
+one_of = "amount"
+description = "The loan amount."
+
+[[contracts.fields]]
+name = "interest_rate"
+field_type = "decimal"
+required = true
+unit = "ratio"
+one_of = "interest"
+description = "Nominal annual rate."
+
+[[contracts.fields]]
+name = "amortization_months"
+field_type = "integer"
+required = true
+unit = "months"
+description = "Amortization term the level payment is struck on."
 
 [[contracts.lines]]
 name = "proceeds"
@@ -228,6 +290,30 @@ refines = "Contract.Tax"
 contract_name = "opco.cash_taxes"
 subject_family = "asset"
 parties = ["taxpayer"]
+
+
+[[contracts.fields]]
+name = "tax_rate_curve"
+field_type = "string"
+one_of = "charge"
+description = "A declared curve of tax rates by date, instead of a fixed rate."
+
+[[contracts.fields]]
+name = "da_monthly"
+field_type = "decimal"
+description = "Depreciation and amortization deduction per period."
+
+[[contracts.fields]]
+name = "da_year"
+field_type = "decimal"
+unit = "USD/yr"
+description = "Depreciation and amortization deduction per year, spread by the calendar."
+
+[[contracts.fields]]
+name = "da_growth"
+field_type = "decimal"
+unit = "ratio"
+description = "Annual growth of the depreciation and amortization deduction."
 
 [[contracts.roles]]
 name = "authority"
@@ -250,6 +336,20 @@ contract_name = "opco.exit_multiple"
 subject_family = "asset"
 parties = ["seller"]
 
+
+[[contracts.fields]]
+name = "base"
+field_type = "decimal"
+required = true
+description = "The figure the multiple is struck on."
+
+[[contracts.fields]]
+name = "multiple"
+field_type = "decimal"
+required = true
+one_of = "basis"
+description = "Multiple applied to the base."
+
 [[contracts.roles]]
 name = "buyer"
 unbound = true
@@ -260,6 +360,14 @@ refines = "Contract.Sale"
 contract_name = "opco.exit_ebitda"
 subject_family = "asset"
 parties = ["seller"]
+
+
+[[contracts.fields]]
+name = "multiple"
+field_type = "decimal"
+required = true
+one_of = "basis"
+description = "Multiple applied to the trailing twelve months of EBITDA before the sale date."
 
 [[contracts.roles]]
 name = "buyer"
@@ -274,6 +382,28 @@ refines = "Contract.Sale"
 contract_name = "opco.exit_perpetuity"
 subject_family = "asset"
 parties = ["seller"]
+
+
+[[contracts.fields]]
+name = "base"
+field_type = "decimal"
+required = true
+description = "The terminal-period flow, before the growth step."
+
+[[contracts.fields]]
+name = "growth_rate"
+field_type = "decimal"
+required = true
+unit = "ratio"
+description = "Perpetual growth; 0 for a flat perpetuity."
+
+[[contracts.fields]]
+name = "discount_rate"
+field_type = "decimal"
+required = true
+unit = "ratio"
+one_of = "basis"
+description = "Terminal capitalization rate."
 
 [[contracts.roles]]
 name = "buyer"

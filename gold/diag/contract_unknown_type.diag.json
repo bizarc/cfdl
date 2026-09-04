@@ -1,0 +1,32 @@
+[
+  {
+    "code": "E1373_UNKNOWN_CONTRACT_TYPE",
+    "severity": "error",
+    "message": "Contract 'cre.leas_unit.tenant_a' declares type 'cre.leas_unit', which the active ontology does not define, so no rule lowers it. Did you mean cre.lease_unit?",
+    "file": "model.cfdl",
+    "span": {
+      "start_line": 10,
+      "start_col": 1,
+      "end_line": 15,
+      "end_col": 1
+    },
+    "path": null,
+    "hint": null,
+    "notes": []
+  },
+  {
+    "code": "E1373_UNKNOWN_CONTRACT_TYPE",
+    "severity": "error",
+    "message": "Contract 'cre.leas_unit.tenant_b' declares type 'cre.leas_unit', which the active ontology does not define, so no rule lowers it. Did you mean cre.lease_unit?",
+    "file": "model.cfdl",
+    "span": {
+      "start_line": 19,
+      "start_col": 1,
+      "end_line": 24,
+      "end_col": 1
+    },
+    "path": null,
+    "hint": null,
+    "notes": []
+  }
+]

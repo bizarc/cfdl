@@ -183,7 +183,9 @@
     {
       "id": "d50dd9dcae6f126434a6d518d887a2f9",
       "name": "energy.capacity",
-      "type": "core.Contract",
+      "type": "Energy.Contract.CapacityPayment",
+      "contract_name": "energy.capacity",
+      "master": "Contract.Offtake",
       "subject": {
         "symbol": "asset.microgrid"
       },
@@ -192,7 +194,9 @@
         "end": "2027-10-01"
       },
       "currency": "USD",
-      "terms": {},
+      "terms": {
+        "price": 60000
+      },
       "effects": {
         "streams": []
       },
@@ -209,7 +213,9 @@
     {
       "id": "542c4c97aa5f79ff07f6e83b85603256",
       "name": "energy.om",
-      "type": "core.Contract",
+      "type": "Energy.Contract.OperationsAndMaintenance",
+      "contract_name": "energy.om",
+      "master": "Contract.Service",
       "subject": {
         "symbol": "asset.microgrid"
       },
@@ -218,7 +224,10 @@
         "end": "2027-10-01"
       },
       "currency": "USD",
-      "terms": {},
+      "terms": {
+        "escalation": 0.025,
+        "fee_year": 48000
+      },
       "effects": {
         "streams": []
       },
@@ -235,7 +244,9 @@
     {
       "id": "189e82d798d9ff30af5c8133680b88c9",
       "name": "energy.ppa",
-      "type": "core.Contract",
+      "type": "Energy.Contract.PPA",
+      "contract_name": "energy.ppa",
+      "master": "Contract.Offtake",
       "subject": {
         "symbol": "asset.microgrid"
       },
@@ -244,7 +255,12 @@
         "end": "2027-10-01"
       },
       "currency": "USD",
-      "terms": {},
+      "terms": {
+        "degradation": 0.005,
+        "escalation": 0.02,
+        "price": 85,
+        "quantity": 4200
+      },
       "effects": {
         "streams": []
       },

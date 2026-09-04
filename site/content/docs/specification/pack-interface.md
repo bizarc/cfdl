@@ -426,9 +426,20 @@ unbound = true
 A field may carry `one_of = "<group>"`: fields sharing a group are
 alternatives and a contract must state at least one of them (a debt's
 amount is `principal`, `commitment` or `draw_curve`; its rate is
-`interest_rate` or `index_curve` with `margin`). A refinement's roles are
-its master's roles, specialized — it may not add a party the agreement does
-not have.
+`interest_rate` or `index_curve` with `margin`). A refinement may put a
+field of its own into a master's group — a rollover's `renewal_rent_year`
+and `market_rent_year` join the lease's `rent` group, a percentage-rent
+clause's `overage_pct` does too, a capex line's `pct_of_revenue` joins
+`amount`. The master's obligation stands (a lease states its rent); the
+refinement states how this form of the agreement spells it. A refinement's
+roles are its master's roles, specialized — it may not add a party the
+agreement does not have.
+
+Every term a pack's rules read (`{{contract.<key>}}`, and `{{periods.<key>}}`
+through the months-to-periods conversion), every term its validations bound
+and every term its templates render is a field of the type — declared on
+the type or inherited from its master — and the loader refuses a pack where
+one is not. The shipped packs declare every term they use.
 
 `parties = ["lender", "borrower"]` stays the shorthand for roles inherited
 by the master's own word. A master also declares `lines` (`[[contracts.lines]]
@@ -444,8 +455,9 @@ The master's fields are the schema; the lowering rule consumes them by
 name (`{{contract.principal}}`); the template renders the required ones;
 `validations.toml` bounds their values. The compiler checks a model's
 `terms` against the EFFECTIVE roster: an unknown term is refused with a
-near-miss hint, a missing required field is refused, and a unit stated on
-a term is checked against the field's (`E5024`). A rule that consumes a
+near-miss hint (`E1371`), a missing required field or an empty group is
+refused (`E1372`), and a unit stated on a term is checked against the
+rule's (`E5024`). A rule that consumes a
 term the type does not declare is a pack-load error, so the three sources
 that once had to agree by care — rules, templates, validations — are
 checked against one declaration. See `docs/40` §3 and §8.

@@ -251,6 +251,24 @@ impl PackOntology {
                 description: Some(d.to_string()),
             }
         }
+        // A concrete election in the language base: an option a model may
+        // write with no pack active. Binds no rule (an election is resolved by
+        // the engine) and is not abstract (it is what a model names).
+        fn election(type_id: &str, refines: &str, d: &str) -> OntologyContract {
+            OntologyContract {
+                type_id: type_id.to_string(),
+                contract_name: None,
+                subject_family: None,
+                refines: Some(refines.to_string()),
+                is_abstract: false,
+                parties: Vec::new(),
+                roles: Vec::new(),
+                fields: Vec::new(),
+                lines: Vec::new(),
+                side: None,
+                description: Some(d.to_string()),
+            }
+        }
         fn relation(
             id: &str,
             from: &str,
@@ -336,6 +354,7 @@ impl PackOntology {
                         field("index_curve", "string", false, None, Some("interest"), "The declared curve a floating rate resets off, with `margin`."),
                         field("margin", "decimal", false, Some("ratio"), None, "Spread over `index_curve`."),
                         field("day_count", "string", false, None, None, "Accrual convention; the model's when absent."),
+                        field("amortization_day_count", "string", false, None, None, "The convention a level payment is struck on — `30/360` or `30e/360`; a payment is struck once and held, so an Actual basis is refused (E5027)."),
                         field("payment_frequency", "string", false, None, None, "The instrument's own payment rhythm; the calendar's when absent."),
                         field("amortization", "string", false, None, None, "level_pay | interest_only | bullet | custom — a refinement fixes it."),
                         field("amortization_months", "integer", false, Some("months"), None, "The horizon the payment is struck on; may exceed the term."),
@@ -414,6 +433,14 @@ impl PackOntology {
                     vec![line("payoff", "Cash the holder takes on exercise.")],
                     None,
                     "An election — cash the holder chooses to take. Every pack's elections refine this."),
+                // The generic elections a model may write with no pack active
+                // (docs/40 §4.8). Concrete, so `option ... type Option.Call`
+                // resolves; a pack's own elections refine `Contract.Option`
+                // directly and carry their domain's roles.
+                election("Option.Call", "Contract.Option", "The holder's right to buy, or to call an instrument, at a stated price."),
+                election("Option.Put", "Contract.Option", "The holder's right to sell at a stated price."),
+                election("Option.Renewal", "Contract.Option", "The holder's right to extend an agreement on stated terms."),
+                election("Option.Refinance", "Contract.Option", "The borrower's right to replace one financing with another."),
                 // The three below have no refinement in the alpha packs yet.
                 // The packs are indicators, not a sample of their domains:
                 // construction contracts, hedges and insurance are standard
@@ -1789,6 +1816,13 @@ impl PackRegistry {
             };
             validate_ontology_against_rules(&ontology, &lowering_rules, &source)?;
             validate_templates_against_ontology(&ontology, &templates, &source)?;
+            validate_terms_against_ontology(
+                &ontology,
+                &lowering_rules,
+                &validations,
+                &templates,
+                &source,
+            )?;
             packs.insert(
                 manifest.name.clone(),
                 LoadedPack {
@@ -2903,6 +2937,166 @@ fn validate_templates_against_ontology(
                         members.join(", ")
                     ),
                 });
+            }
+        }
+    }
+    Ok(())
+}
+
+/// Placeholder prefixes that reach a contract's TERMS: `contract.<key>`
+/// directly; `periods.<key>` and `whole_periods.<key>` through the
+/// months-to-periods conversion. `model.` and `time.` are the cadence's own.
+const TERM_PLACEHOLDER_PREFIXES: [&str; 3] = ["contract.", "periods.", "whole_periods."];
+
+/// Keys the resolver supplies from the DECLARATION rather than from `terms`:
+/// the contract's name and its instance suffix, and the two ends of `term`.
+pub const DECLARATION_KEYS: [&str; 6] = [
+    "name",
+    "suffix",
+    "dot_suffix",
+    "suffix_ident",
+    "term_start",
+    "term_end",
+];
+
+/// Every term key a template slot reads.
+fn term_placeholders(text: &str) -> Vec<String> {
+    let mut out = Vec::new();
+    let mut rest = text;
+    while let Some(start) = rest.find("{{") {
+        let after = &rest[start + 2..];
+        let Some(end) = after.find("}}") else {
+            break;
+        };
+        let inner = after[..end].trim();
+        for prefix in TERM_PLACEHOLDER_PREFIXES {
+            if let Some(key) = inner.strip_prefix(prefix) {
+                if !DECLARATION_KEYS.contains(&key) {
+                    out.push(key.to_string());
+                }
+            }
+        }
+        rest = &after[end + 2..];
+    }
+    out
+}
+
+/// The term names a contract template's `terms { ... }` block renders.
+fn template_term_names(body: &str) -> Vec<String> {
+    let mut out = Vec::new();
+    let mut inside = false;
+    for line in body.lines() {
+        let trimmed = line.trim();
+        if !inside {
+            if trimmed.starts_with("terms") && trimmed.ends_with('{') {
+                inside = true;
+            }
+            continue;
+        }
+        if trimmed == "}" {
+            break;
+        }
+        if let Some((key, _)) = trimmed.split_once('=') {
+            out.push(key.trim().to_string());
+        }
+    }
+    out
+}
+
+/// TERMS ARE FIELDS (docs/40 §3, docs/07 §6.3): every term a pack reads,
+/// bounds or renders for a typed contract is a field of that type's effective
+/// roster. The compiler refuses a model's unknown term against that roster
+/// (`E1371`), so a rule consuming an undeclared key would make every model
+/// that supplies it uncompilable — the check belongs at pack load, where the
+/// author who can fix it sees it.
+fn validate_terms_against_ontology(
+    ontology: &PackOntology,
+    rules: &[LoweringRule],
+    validations: &[PackValidation],
+    templates: &[PackTemplate],
+    source: &str,
+) -> Result<(), PackLoadError> {
+    if ontology.contracts.is_empty() {
+        return Ok(());
+    }
+    let merged = ontology.merged_with_base();
+    for contract in &ontology.contracts {
+        let Some(rule_name) = contract.contract_name.as_deref() else {
+            continue;
+        };
+        let fields = merged.effective_fields(&contract.type_id);
+        let declared = |key: &str| fields.iter().any(|f| f.name == key);
+        let refuse = |what: String| {
+            PackLoadError {
+            message: format!(
+                "Ontology '{source}': {what}, which contract type '{}' does not declare as a field. Its terms are: {}. A term a pack reads is a field of the type (docs/40 §3).",
+                contract.type_id,
+                fields.iter().map(|f| f.name.as_str()).collect::<Vec<_>>().join(", ")
+            ),
+        }
+        };
+        for rule in rules.iter().filter(|r| r.contract_name == rule_name) {
+            let slots = [
+                &rule.stream_name,
+                &rule.owner_entity,
+                &rule.currency,
+                &rule.amount_expr,
+                &rule.schedule_every,
+                &rule.schedule_net_days,
+                &rule.schedule_net_months,
+                &rule.schedule_from,
+                &rule.schedule_to,
+                &rule.field_name,
+                &rule.field_init,
+                &rule.field_next,
+                &rule.field_every,
+                &rule.field_from,
+                &rule.field_to,
+            ];
+            for slot in slots {
+                for key in term_placeholders(slot) {
+                    if !declared(&key) {
+                        return Err(refuse(format!("rule '{}' reads term '{key}'", rule.id)));
+                    }
+                }
+            }
+            for key in rule.defaults.keys().chain(rule.units.keys()) {
+                if !declared(key) && !DECLARATION_KEYS.contains(&key.as_str()) {
+                    return Err(refuse(format!(
+                        "rule '{}' declares a default or unit for term '{key}'",
+                        rule.id
+                    )));
+                }
+            }
+        }
+        for validation in validations {
+            let scoped = validation.contract.as_deref() == Some(rule_name)
+                || validation.contracts.iter().any(|c| c == rule_name);
+            if !scoped {
+                continue;
+            }
+            for key in validation.term.iter().chain(validation.terms.iter()) {
+                if !declared(key) {
+                    return Err(refuse(format!(
+                        "validation '{}' checks term '{key}'",
+                        validation.code
+                    )));
+                }
+            }
+        }
+        for template in templates {
+            if template.kind.as_deref() != Some("contract")
+                || template_contract_name(&template.body) != Some(rule_name)
+            {
+                continue;
+            }
+            for key in template_term_names(&template.body) {
+                if !declared(&key) {
+                    return Err(refuse(format!(
+                        "template '{}' renders term '{key}'",
+                        template.id
+                    )));
+                }
             }
         }
     }
@@ -4736,6 +4930,121 @@ unit = "months"
     }
 
     #[test]
+    fn a_term_a_pack_reads_bounds_or_renders_is_a_field_of_the_type() {
+        let ontology = parse_ontology(
+            r#"
+[[contracts]]
+type_id = "T.Contract.Mortgage"
+contract_name = "t.mortgage"
+parties = ["lender", "borrower"]
+refines = "Contract.Debt"
+"#,
+            "test",
+            "t",
+        )
+        .expect("ontology parses");
+        let rule = |amount_expr: &str, defaults: &[(&str, &str)]| LoweringRule {
+            id: "t_mortgage_interest".to_string(),
+            contract_name: "t.mortgage".to_string(),
+            line: None,
+            stream_name: "t.mortgage.interest".to_string(),
+            owner_entity: "${subject}".to_string(),
+            direction: "outflow".to_string(),
+            currency: String::new(),
+            category: String::new(),
+            amount_expr: amount_expr.to_string(),
+            schedule_kind: "every".to_string(),
+            schedule_every: String::new(),
+            cadences: Vec::new(),
+            schedule_net_days: String::new(),
+            schedule_net_months: String::new(),
+            schedule_placement: None,
+            schedule_from: "{{contract.term_start}}".to_string(),
+            schedule_to: "{{contract.term_end}}".to_string(),
+            field_name: String::new(),
+            field_init: String::new(),
+            field_next: String::new(),
+            field_every: String::new(),
+            field_from: String::new(),
+            field_to: String::new(),
+            defaults: defaults
+                .iter()
+                .map(|(k, v)| (k.to_string(), v.to_string()))
+                .collect(),
+            units: BTreeMap::new(),
+        };
+
+        // A master's field, reached by inheritance, and the declaration keys.
+        let fine = rule(
+            "{{contract.principal}} * {{contract.interest_rate}} / 12",
+            &[],
+        );
+        validate_terms_against_ontology(&ontology, &[fine], &[], &[], "test")
+            .expect("inherited terms are fields");
+
+        // A key no type in the chain declares.
+        let reads = rule("{{contract.principal}} * {{contract.coupon}}", &[]);
+        let err = validate_terms_against_ontology(&ontology, &[reads], &[], &[], "test")
+            .expect_err("an undeclared term is refused");
+        assert!(
+            err.message.contains("reads term 'coupon'"),
+            "{}",
+            err.message
+        );
+
+        // ...or defaults.
+        let defaults = rule("{{contract.principal}}", &[("fee_bps", "0")]);
+        let err = validate_terms_against_ontology(&ontology, &[defaults], &[], &[], "test")
+            .expect_err("a default for an undeclared term is refused");
+        assert!(err.message.contains("'fee_bps'"), "{}", err.message);
+
+        // A `periods.` conversion reaches a term too.
+        let periods = rule("{{periods.grace_months}}", &[]);
+        let err = validate_terms_against_ontology(&ontology, &[periods], &[], &[], "test")
+            .expect_err("a converted term is still a term");
+        assert!(err.message.contains("'grace_months'"), "{}", err.message);
+
+        // A validation that bounds an undeclared term.
+        let validation = parse_validations(
+            r#"
+[[validations]]
+contract = "t.mortgage"
+code = "E6099_X"
+message = "x"
+check = "term_number"
+term = "coupon"
+when = "present"
+min = 0.0
+"#,
+            "test",
+        )
+        .expect("validation parses");
+        let err = validate_terms_against_ontology(&ontology, &[], &validation, &[], "test")
+            .expect_err("a validation on an undeclared term is refused");
+        assert!(
+            err.message.contains("checks term 'coupon'"),
+            "{}",
+            err.message
+        );
+
+        // A template that renders an undeclared term.
+        let template = PackTemplate {
+            id: "t.mortgage".to_string(),
+            label: None,
+            kind: Some("contract".to_string()),
+            body: "contract t.mortgage.a {\n  term ${term_start}..${term_end}\n  terms {\n    principal = ${principal}\n    coupon = ${coupon}\n  }\n}\n".to_string(),
+            defaults: BTreeMap::new(),
+        };
+        let err = validate_terms_against_ontology(&ontology, &[], &[], &[template], "test")
+            .expect_err("a template rendering an undeclared term is refused");
+        assert!(
+            err.message.contains("renders term 'coupon'"),
+            "{}",
+            err.message
+        );
+    }
+
+    #[test]
     fn a_contract_refinement_may_not_retype_or_weaken_an_inherited_field() {
         let retype = r#"
 [[contracts]]
@@ -5011,9 +5320,25 @@ name = "principal"
                 "{kind} produces one line"
             );
         }
-        assert!(
-            base.contracts.iter().all(|c| c.is_abstract),
-            "every base contract type is a master"
+        // Every base contract type is a master, except the four generic
+        // elections a model may write with no pack active — concrete, so
+        // `option ... type Option.Call` resolves, and each an option.
+        for contract in &base.contracts {
+            if contract.is_abstract {
+                continue;
+            }
+            assert!(
+                contract.type_id.starts_with("Option.")
+                    && base.is_a(&contract.type_id, "Contract.Option")
+                    && contract.contract_name.is_none(),
+                "{} is concrete in the base and is not a base election",
+                contract.type_id
+            );
+        }
+        assert_eq!(
+            base.contracts.iter().filter(|c| !c.is_abstract).count(),
+            4,
+            "the base ships four generic elections"
         );
     }
 

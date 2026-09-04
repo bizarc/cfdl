@@ -1,0 +1,24 @@
+version 0.1
+model "contract-unknown-type"
+use pack "cre" version "0.1.0"
+time calendar monthly from 2026-01 for 24
+
+entity asset tower : CRE.Asset.RealProperty
+
+// The two-token form STATES the type, so a type the pack does not declare is
+// refused where it is written, with the near miss (docs/40 §8; docs/13 §7.63).
+contract cre.leas_unit tenant_a on entity asset.tower {
+  term 2026-01..2027-12
+  terms {
+    rent_year = 480000
+  }
+}
+
+// The fused form gets the same answer: a contract no rule lowers is a type
+// the pack does not declare, not a contract missing its effects.
+contract cre.leas_unit.tenant_b on entity asset.tower {
+  term 2026-01..2027-12
+  terms {
+    rent_year = 360000
+  }
+}

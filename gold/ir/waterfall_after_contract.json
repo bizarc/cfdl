@@ -256,7 +256,10 @@
     {
       "id": "b71b79e9ad205857a07f7214c1723f4f",
       "name": "credit.pool_level_pay.pool",
-      "type": "core.Contract",
+      "type": "Credit.Contract.LevelPayPool",
+      "contract_name": "credit.pool_level_pay",
+      "master": "Contract.Debt",
+      "instance": "pool",
       "subject": {
         "symbol": "asset.pool"
       },
@@ -265,7 +268,13 @@
         "end": "2019-03-01"
       },
       "currency": "USD",
-      "terms": {},
+      "terms": {
+        "cdr": 0,
+        "cpr": 0,
+        "interest_rate": 0.06,
+        "principal": 1200000.0,
+        "term_months": 6
+      },
       "effects": {
         "streams": []
       },

@@ -183,7 +183,9 @@
     {
       "id": "40cbdac3523d803f5ac5f587468efa5a",
       "name": "energy.capex",
-      "type": "core.Contract",
+      "type": "Energy.Contract.Capex",
+      "contract_name": "energy.capex",
+      "master": "Contract.Line",
       "subject": {
         "symbol": "asset.windfarm"
       },
@@ -192,7 +194,9 @@
         "end": "2046-12-01"
       },
       "currency": "USD",
-      "terms": {},
+      "terms": {
+        "amount": 42000000
+      },
       "effects": {
         "streams": []
       },
@@ -209,7 +213,9 @@
     {
       "id": "6082e68af840d127ff15de124edb42b9",
       "name": "energy.debt_service",
-      "type": "core.Contract",
+      "type": "Energy.Contract.ProjectDebt",
+      "contract_name": "energy.debt_service",
+      "master": "Contract.Debt",
       "subject": {
         "symbol": "asset.windfarm"
       },
@@ -218,7 +224,11 @@
         "end": "2046-12-01"
       },
       "currency": "USD",
-      "terms": {},
+      "terms": {
+        "interest_rate": 0.055,
+        "principal": 25000000,
+        "term_months": 180
+      },
       "effects": {
         "streams": []
       },
@@ -235,7 +245,9 @@
     {
       "id": "7179ed06e5eb06bfddaf624ba2208d2e",
       "name": "energy.macrs_shield",
-      "type": "core.Contract",
+      "type": "Energy.Contract.DepreciationShield",
+      "contract_name": "energy.macrs_shield",
+      "master": "Contract.Tax",
       "subject": {
         "symbol": "asset.windfarm"
       },
@@ -244,7 +256,11 @@
         "end": "2046-12-01"
       },
       "currency": "USD",
-      "terms": {},
+      "terms": {
+        "basis": 42000000,
+        "life": 5,
+        "tax_rate": 0.21
+      },
       "effects": {
         "streams": []
       },
@@ -261,7 +277,9 @@
     {
       "id": "8e5e480a6683394ba48979cc903606ef",
       "name": "energy.merchant",
-      "type": "core.Contract",
+      "type": "Energy.Contract.MerchantSale",
+      "contract_name": "energy.merchant",
+      "master": "Contract.Offtake",
       "subject": {
         "symbol": "asset.windfarm"
       },
@@ -270,7 +288,13 @@
         "end": "2046-12-01"
       },
       "currency": "USD",
-      "terms": {},
+      "terms": {
+        "availability": 0.95,
+        "degradation": 0.007,
+        "escalation": 0.015,
+        "price": 42,
+        "quantity": 105000
+      },
       "effects": {
         "streams": []
       },
@@ -287,7 +311,9 @@
     {
       "id": "542c4c97aa5f79ff07f6e83b85603256",
       "name": "energy.om",
-      "type": "core.Contract",
+      "type": "Energy.Contract.OperationsAndMaintenance",
+      "contract_name": "energy.om",
+      "master": "Contract.Service",
       "subject": {
         "symbol": "asset.windfarm"
       },
@@ -296,7 +322,10 @@
         "end": "2046-12-01"
       },
       "currency": "USD",
-      "terms": {},
+      "terms": {
+        "escalation": 0.02,
+        "fee_year": 1300000
+      },
       "effects": {
         "streams": []
       },
@@ -313,7 +342,9 @@
     {
       "id": "8e13dfbacf180f443183fad14d3964f5",
       "name": "energy.ptc",
-      "type": "core.Contract",
+      "type": "Energy.Contract.ProductionTaxCredit",
+      "contract_name": "energy.ptc",
+      "master": "Contract.Tax",
       "subject": {
         "symbol": "asset.windfarm"
       },
@@ -322,7 +353,13 @@
         "end": "2046-12-01"
       },
       "currency": "USD",
-      "terms": {},
+      "terms": {
+        "amount": 27.5,
+        "availability": 0.95,
+        "degradation": 0.007,
+        "escalation": 0.02,
+        "quantity": 105000
+      },
       "effects": {
         "streams": []
       },

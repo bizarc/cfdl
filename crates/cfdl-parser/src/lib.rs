@@ -467,7 +467,20 @@ pub struct AssumeDist {
 
 #[derive(Debug, Clone, PartialEq, Eq, serde::Serialize)]
 pub struct ContractStmt {
+    /// The fully qualified name, `<type>.<instance>` — the same spelling
+    /// whichever signature form wrote it, so rule matching and lowered stream
+    /// names never depend on how the contract was declared.
     pub name: String,
+    /// The pack contract type the two-token form STATES (`contract
+    /// cre.lease_unit tenant_a`); `None` for the fused form, whose type the
+    /// compiler recovers by matching a rule name against the prefix of `name`.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub declared_type: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub declared_type_span: Option<Span>,
+    /// The instance token of the two-token form; `None` for the fused form.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub instance: Option<String>,
     pub subject_entity: Option<String>,
     pub has_term: bool,
     pub has_effects: bool,
@@ -1541,15 +1554,27 @@ impl<'a> Parser<'a> {
         let mut end_span = start.span;
         let mut depth = 0usize;
 
-        // Parse leading contract signature:
-        // - Legacy form: contract <name> { ... }
-        // - Typed form:  contract <type_id> <name> ...
+        // The signature (docs/13 §7.63; grammar `contract_stmt`):
+        // - Fused form:     contract <type>.<instance> { ... } — one qname; the
+        //                   type is recovered downstream by matching a pack rule
+        //                   name against its prefix.
+        // - Two-token form: contract <type> <instance> ... — the type and the
+        //                   instance are separate tokens, so the type is STATED
+        //                   and the compiler checks it instead of recovering it.
+        // Both spell the same fully qualified `name` (`<type>.<instance>`), so
+        // every consumer of the name — rule matching, lowered stream names,
+        // references from other statements — sees one spelling.
+        let mut declared_type: Option<String> = None;
+        let mut declared_type_span: Option<Span> = None;
+        let mut instance: Option<String> = None;
         if let Some(first_head) = self.parse_name_like_token() {
             if let Some(second_head) = self.parse_name_like_token() {
-                name = Some(second_head.0);
-                name_span = Some(second_head.1);
+                name = Some(format!("{}.{}", first_head.0, second_head.0));
+                name_span = Some(merge_spans(first_head.1, second_head.1));
                 end_span = second_head.1;
-                let _ = first_head;
+                declared_type = Some(first_head.0);
+                declared_type_span = Some(first_head.1);
+                instance = Some(second_head.0);
             } else {
                 name = Some(first_head.0);
                 name_span = Some(first_head.1);
@@ -1623,7 +1648,12 @@ impl<'a> Parser<'a> {
                 TokenKind::Keyword(Keyword::Effects) => has_effects = true,
                 // `parties` has been reserved since v0.1 and never parsed, so
                 // a contract could not say who it was with.
-                TokenKind::Keyword(Keyword::Parties) if depth == 0 => {
+                // `parties { role = party.x }` sits in the body beside `terms`
+                // (depth 1), or in the signature (depth 0). It was accepted
+                // only in the signature, and a block written in the body — the
+                // spelling the body's own error message names — was skipped
+                // in silence: the contract compiled with no parties.
+                TokenKind::Keyword(Keyword::Parties) if depth <= 1 => {
                     if let Some(bindings) = self.parse_parties_block() {
                         parties = bindings;
                     }
@@ -1727,6 +1757,9 @@ impl<'a> Parser<'a> {
         Some(ContractStmt {
             payment_net,
             name: final_name,
+            declared_type,
+            declared_type_span,
+            instance,
             subject_entity,
             has_term,
             has_effects,

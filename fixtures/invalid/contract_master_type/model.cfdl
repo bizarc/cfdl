@@ -1,0 +1,17 @@
+version 0.1
+model "contract-master-type"
+use pack "cre" version "0.1.0"
+time calendar monthly from 2026-01 for 24
+
+entity asset tower : CRE.Asset.RealProperty
+
+// A MASTER IS REFINED, NEVER DECLARED (docs/40 §2). `Contract.Debt` binds no
+// lowering rule; a model reaches it through a pack's concrete refinement,
+// which the hint names.
+contract Contract.Debt loan on entity asset.tower {
+  term 2026-01..2027-12
+  terms {
+    principal = 1000000
+    interest_rate = 0.05
+  }
+}

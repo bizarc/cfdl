@@ -9,7 +9,6 @@ entity asset business : OpCo.Asset.Enterprise
 contract opco.exit_multiple {
   term 2030-12..2030-12
   terms {
-    exit_period = 60
     multiple = 7.0
     base = 500000
   }

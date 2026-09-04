@@ -475,10 +475,14 @@ contract cre.lease on entity asset.sunset {
 ```
 
 Rules:
-- `contract <TypeId>[.<instance>] on entity <EntityRef> { term <Date>..<Date>  terms { ... } }`
-- `<TypeId>` is the pack contract type (e.g. `cre.lease`); an optional dotted
-  instance suffix creates independent instances
-  (`cre.lease_unit.tenant_a`, `cre.lease_unit.tenant_b`).
+- `contract <TypeId> [<instance>] on entity <EntityRef> { term <Date>..<Date>  terms { ... } }`
+- `<TypeId>` is the pack contract type (e.g. `cre.lease`). An instance name
+  makes an independent instance, and it is its own token:
+  `contract cre.lease_unit tenant_a`. The fused spelling
+  `cre.lease_unit.tenant_a` is the same declaration; both produce the
+  qualified name `cre.lease_unit.tenant_a`, which is what lowered streams
+  and references use. The type is checked where it is written: a type the
+  pack does not declare is `E1373`, a master is `E1374`.
 - `term` is REQUIRED.
 - `terms` is OPTIONAL; entries use `<name> = <literal-or-expression>`.
 - Monetary amounts default to the model currency; streams declare currency
@@ -491,8 +495,11 @@ Rules:
   represented in IR** in v0.1 (reserved; see `10_implementation_status.md`).
 - A contract's type is the master chain its pack type refines
   (`docs/40`): its terms are checked against that chain's effective
-  fields, and a master itself cannot be declared — a model reaches a type
-  through a pack's concrete refinement.
+  fields — an unknown term is `E1371`, a missing required term or an empty
+  group of alternatives is `E1372` — and a master itself cannot be
+  declared: a model reaches a type through a pack's concrete refinement.
+  The IR records the resolved type, its master, the instance and the
+  parties with their master roles.
 
 ### 8.2 Terms block
 - `terms { ... }` is a set of named values.

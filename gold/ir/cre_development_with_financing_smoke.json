@@ -158,7 +158,9 @@
     {
       "id": "7a965032108ccaedd50cd8540e9a6796",
       "name": "cre.construction_stub",
-      "type": "core.Contract",
+      "type": "CRE.Contract.ConstructionFunding",
+      "contract_name": "cre.construction_stub",
+      "master": "Contract.Line",
       "subject": {
         "symbol": "asset.property"
       },
@@ -167,7 +169,9 @@
         "end": "2031-12-01"
       },
       "currency": "USD",
-      "terms": {},
+      "terms": {
+        "amount": 45000
+      },
       "effects": {
         "streams": []
       },
@@ -184,7 +188,9 @@
     {
       "id": "ca1e4145c3e32a5be406c23538c6d7d2",
       "name": "cre.exit_cap",
-      "type": "core.Contract",
+      "type": "CRE.Contract.DispositionAtCap",
+      "contract_name": "cre.exit_cap",
+      "master": "Contract.Sale",
       "subject": {
         "symbol": "asset.property"
       },
@@ -193,7 +199,10 @@
         "end": "2031-12-01"
       },
       "currency": "USD",
-      "terms": {},
+      "terms": {
+        "cap_rate": 0.06,
+        "income": 180000
+      },
       "effects": {
         "streams": []
       },
@@ -210,7 +219,9 @@
     {
       "id": "40f5c681af3ef9dd1782bbaf38936af9",
       "name": "cre.lease",
-      "type": "core.Contract",
+      "type": "CRE.Contract.Lease",
+      "contract_name": "cre.lease",
+      "master": "Contract.Lease",
       "subject": {
         "symbol": "asset.property"
       },
@@ -219,7 +230,9 @@
         "end": "2031-12-01"
       },
       "currency": "USD",
-      "terms": {},
+      "terms": {
+        "rent": 25000
+      },
       "effects": {
         "streams": []
       },
@@ -236,7 +249,9 @@
     {
       "id": "9a6463ca7ed884d3801014c9283d3f44",
       "name": "cre.opex_line",
-      "type": "core.Contract",
+      "type": "CRE.Contract.OperatingExpense",
+      "contract_name": "cre.opex_line",
+      "master": "Contract.Line",
       "subject": {
         "symbol": "asset.property"
       },
@@ -245,7 +260,9 @@
         "end": "2031-12-01"
       },
       "currency": "USD",
-      "terms": {},
+      "terms": {
+        "amount": 12000
+      },
       "effects": {
         "streams": []
       },
@@ -262,7 +279,9 @@
     {
       "id": "ef2e1431fe7a6bc3eab2d59b8a6f200e",
       "name": "cre.revenue_line",
-      "type": "core.Contract",
+      "type": "CRE.Contract.OperatingRevenue",
+      "contract_name": "cre.revenue_line",
+      "master": "Contract.Line",
       "subject": {
         "symbol": "asset.property"
       },
@@ -271,7 +290,9 @@
         "end": "2031-12-01"
       },
       "currency": "USD",
-      "terms": {},
+      "terms": {
+        "amount": 30000
+      },
       "effects": {
         "streams": []
       },

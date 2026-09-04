@@ -5,11 +5,10 @@ time calendar monthly from 2026-01 for 24
 
 entity asset property : CRE.Asset.RealProperty
 
-// Fix: a CRE lease must state a rent; `base_rent_year` is added.
+// Fix: a CRE lease must state a rent; `rent_year` is added.
 contract cre.lease {
   term 2026-07..2027-12
   terms {
     rent_year = 120000
-    growth = 0.02
   }
 }

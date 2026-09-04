@@ -144,7 +144,9 @@
     {
       "id": "ca1e4145c3e32a5be406c23538c6d7d2",
       "name": "cre.exit_cap",
-      "type": "core.Contract",
+      "type": "CRE.Contract.DispositionAtCap",
+      "contract_name": "cre.exit_cap",
+      "master": "Contract.Sale",
       "subject": {
         "symbol": "asset.property"
       },
@@ -153,7 +155,10 @@
         "end": "2026-12-01"
       },
       "currency": "USD",
-      "terms": {},
+      "terms": {
+        "cap_rate": 0.05,
+        "income": 100000
+      },
       "effects": {
         "streams": []
       },
