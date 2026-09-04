@@ -45,7 +45,7 @@ four names onto the numpy module before importing the port. `numpy-financial`
 behavior rather than substituting for it. The port's own files stay
 byte-identical to upstream.
 
-- port commit `9c915ed57bea7cbedd70fa15a044d467f0042ddb` (2 August 2019)
+- port commit `9c915ed57bea7cbedd70fa15a044d467f0042ddb` (August 2, 2019)
 - run under numpy 2.2.4 / pandas 2.3.2 / numpy-financial 1.0.0, Python 3.13
 - inputs are the port's own defaults: 2,000 kW-dc, California capacity factor,
   25-year life, 0.5% degradation, $7.0m hard cost, 45% debt at 7% over 18
@@ -101,24 +101,35 @@ flat and be caught here rather than in production.
 
 **The solve.** The reference model's actual purpose is to find the tariff that
 clears a 12% after-tax equity return — it sweeps the rate until net present
-value crosses zero, and reports the crossing. Reproducing that sweep here gave
+value crosses zero, and reports the crossing. Reproducing that sweep gave
 **23.15 c/kWh**, and that rate is carried into the model as a constant.
 
-So the tariff is an *input* to this case and an *output* of the reference.
-CFDL has no solve-to-target construct, and this is the cleanest available
-statement of what that costs: everything downstream of the tariff is validated
-period by period, and the one step that makes the reference a policy tool
-rather than a cash flow model cannot be expressed at all. That gap is already
-on the roadmap; this case is a concrete measurement of it rather than another
-argument for it.
+So the tariff is an *input* to this case and an *output* of the reference, and
+that is a scoping choice rather than a constraint. What this case asserts is the
+reference's published cash flow at its published rate, line by line; solving the
+rate here would replace the very number the assertions check against.
+
+The solve is expressible on its own. Every quantity in this project is geometric
+in time — production decays, three expenses escalate, the payment in lieu
+abates, debt service is level — and a geometric series has a closed form, so the
+discounted sums a rate solve needs are arithmetic on the inputs rather than a
+series to fold. A probe outside this case clears net present value to zero in a
+single pass, both before and after tax: the depreciation table rides a `curve`,
+and level-pay interest resolves to two geometric terms. The condition is that
+the target be linear in the unknown, which it is for a rate clearing a net
+present value.
 
 **The tax layer.** Not asserted, for two reasons that are themselves findings —
 see gaps 2 and 3 below.
 
 **EBITDA.** The reference's EBITDA includes interest earned on funded reserve
-accounts (~$4,606 in year one), which CFDL does not model. Revenue and opex are
-asserted separately instead; asserting an EBITDA that differs by a line neither
-model disputes would weaken the case rather than strengthen it.
+accounts (~$4,606 in year one). The reserve is out of scope here for a sourcing
+reason: its funding schedule never came across, because the port was run once
+outside this repo and only its output numbers were carried in, and one rounded
+aggregate for one period will not recover a balance, a funding rule and a rate
+together. Revenue and opex are asserted separately instead; asserting an EBITDA
+that differs by a line neither model disputes would weaken the case rather than
+strengthen it.
 
 ## Three pack gaps this found
 
