@@ -109,7 +109,7 @@ promise is checkable.
 
 ## 4. The roster
 
-Seventeen masters in the language base: the eleven counterparty masters,
+Sixteen masters in the language base: the ten counterparty masters,
 `Contract.Line`, and its five specializations for the general lines
 (§4.12, decision R1); and four more drafted on 4 September 2026 for review
 (§4.13–4.16), which complete the roster against what the benchmarks model
@@ -123,9 +123,7 @@ Roles `lender`, `borrower`. Fields: the amount borrowed, stated one way
 (`principal`, or a facility's `commitment`, or a `draw_curve` the facility
 funds against — one required); the rate, stated one way (`interest_rate`
 fixed, or `index_curve` with `margin` floating — one required); `day_count` (opt; the model's convention when absent);
-`payment_frequency` (opt; the calendar's when absent); `amortization` (opt:
-`level_pay`, `interest_only`, `bullet`, `custom`; a refinement fixes it — a
-pool type is `level_pay` by definition); `amortization_months` (opt; the
+`payment_frequency` (opt; the calendar's when absent); `amortization_months` (opt; the
 horizon the payment is struck on, which may exceed the term);
 `interest_only_months` (opt, 0); `funded_at_close` (opt, 1);
 `balloon_at_maturity` (opt, 0). Line: `interest` — what EVERY debt produces;
@@ -140,7 +138,14 @@ subject is the borrower for a mortgage and the lender for a held pool —
 and each refinement fixes it. The credit pack's `balance` is this
 master's `principal` (§7); the distinction the pack draws between a
 pool's outstanding and a loan's original is `amort_months` versus
-`term`, not a second notional.
+`term`, not a second notional. THE REPAYMENT PATTERN IS THE REFINEMENT,
+not a term (decided 4 September 2026): a level-payment pool, an
+interest-only bullet, a linear or a negative amortizer are different
+pack contracts — different rules, different cash — and a master field
+naming the pattern would restate the choice the refinement already is.
+The master says a debt has a pattern; ACTUS supplies the shared names
+(`ANN`, `PAM`, `LAM`, `NAM`) the refinements should use consistently
+across packs (`docs/41` §1).
 
 ### 4.2 `Contract.Lease`
 Roles `lessor`, `lessee`. Fields: a rent stated one way — `rent` (per
@@ -208,16 +213,26 @@ option's type is checked against them and the pack's own (`E1373`,
 `E1374`; stage 3). Stage 7 aligns the grammar with the master and decides
 whether the generic names stay.
 
-### 4.9 `Contract.Construction`
-Roles `owner`, `contractor`. Fields: `budget`; `draw_curve` (a declared
-curve, per `cre.construction_loan`'s argument that a draw schedule is data
-and not a term); `retainage` (opt, 0). Line: `draw`. Side: owner pays. No refinement yet:
-`cre.construction_stub` was expected to be the first, and the load check
-settled what it is — a flat draw of an `amount` over a term, emitting no
-interest and repaying nothing, which is a capital-expenditure line. It
-refines `Contract.CapitalExpenditure`, and its `lender` role, which nothing
-read, is gone: a refinement's roles are its master's roles, specialized,
-and a party the agreement never pays or reads is not a role.
+### 4.9 Construction — removed from the roster, 4 September 2026
+There is no `Contract.Construction`. A build is capital expenditure on a
+draw curve inside a construction phase, which is what the language
+already does well, and the construction loan that funds it is a
+`Contract.Debt` reading the same curve from the other side. What a
+construction contract adds over the spend is a counterparty — the
+contractor — and a holdback: retainage withheld from each draw and
+released at completion, plus in some forms liquidated damages and change
+orders. A cash-flow model rarely needs the contractor as a party: it is
+not paid through a waterfall, holds no account the model reads, and
+takes a share of nothing. Retainage is a fact about the spend's timing
+and belongs as an optional term on a pack's capital-expenditure
+refinement; a model that needs the contractor names it as the party the
+draws are paid to. The survey's test (`docs/41` §4) asks what every
+instrument of the kind states that no other master can express, and for
+a construction contract the answer is only the counterparty. Insurance
+and Derivative pass the same test because their cash is contingent on
+something outside the model; a construction contract's cash is a
+schedule. `cre.construction_stub` refines `Contract.CapitalExpenditure`,
+as it did.
 
 ### 4.10 `Contract.Derivative`
 Roles `party`, `counterparty`. Fields: `notional`; `reference` (a
@@ -375,7 +390,7 @@ to the language — note classes as `assume` values and party accounts,
 partnership interests as hand-rolled preference fields. Royalty and Grant
 are the two agreements the bespoke and energy cases restate as streams
 because no master gave a pack a place for them. All four are added
-before their first refinement on the argument §4.9–4.11 already made: a
+before their first refinement on the argument §4.10–4.11 already made: a
 master that exists before its refinement costs nothing, and its absence
 is what forces the hand-rolled stream.
 

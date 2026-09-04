@@ -356,7 +356,6 @@ impl PackOntology {
                         field("day_count", "string", false, None, None, "Accrual convention; the model's when absent."),
                         field("amortization_day_count", "string", false, None, None, "The convention a level payment is struck on — `30/360` or `30e/360`; a payment is struck once and held, so an Actual basis is refused (E5027)."),
                         field("payment_frequency", "string", false, None, None, "The instrument's own payment rhythm; the calendar's when absent."),
-                        field("amortization", "string", false, None, None, "level_pay | interest_only | bullet | custom — a refinement fixes it."),
                         field("amortization_months", "integer", false, Some("months"), None, "The horizon the payment is struck on; may exceed the term."),
                         field("interest_only_months", "integer", false, Some("months"), None, "Interest-only period before amortization begins."),
                         field("funded_at_close", "integer", false, None, None, "1 — proceeds are drawn at term start; 0 — the reconciliation starts post-financing."),
@@ -441,20 +440,15 @@ impl PackOntology {
                 election("Option.Put", "Contract.Option", "The holder's right to sell at a stated price."),
                 election("Option.Renewal", "Contract.Option", "The holder's right to extend an agreement on stated terms."),
                 election("Option.Refinance", "Contract.Option", "The borrower's right to replace one financing with another."),
-                // The three below have no refinement in the alpha packs yet.
+                // The two below have no refinement in the alpha packs yet.
                 // The packs are indicators, not a sample of their domains:
-                // construction contracts, hedges and insurance are standard
-                // deal furniture, and a master that exists before its first
-                // refinement costs nothing — it is abstract.
-                master("Contract.Construction", &["owner", "contractor"],
-                    vec![
-                        field("budget", "decimal", true, None, None, "The contract sum."),
-                        field("draw_curve", "string", true, None, None, "The declared curve the draws follow — data, not a term."),
-                        field("retainage", "decimal", false, Some("ratio"), None, "Fraction of each draw held back."),
-                    ],
-                    vec![line("draw", "Payment against work done.")],
-                    Some("pays"),
-                    "Building or improving the asset — an EPC or construction contract."),
+                // hedges and insurance are standard deal furniture whose
+                // cash is contingent on something outside the model, and a
+                // master that exists before its first refinement costs
+                // nothing — it is abstract. (Construction was here until
+                // 4 September 2026: a build is capital expenditure on a
+                // draw curve inside a phase, and retainage is a term of the
+                // spend — docs/40 §4.9.)
                 master("Contract.Derivative", &["party", "counterparty"],
                     vec![
                         field("notional", "decimal", true, None, None, "The amount the exposure is struck on."),

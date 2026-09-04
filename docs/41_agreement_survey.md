@@ -60,10 +60,18 @@ calibration for NAMES and for the boundary between kinds — that a
 security and a loan are both debt but not the same thing, that an equity
 interest is ownership rather than a claim.
 
-Neither is adopted. ACTUS has no lease, no offtake, no tax and no
-construction contract, because it models the balance sheet of a bank;
-FIBO has hundreds of classes a modeller would never write. The roster
-takes their boundaries and their words and stops there.
+Neither is adopted. ACTUS has no lease, no offtake and no tax, because
+it models the balance sheet of a bank; FIBO has hundreds of classes a
+modeller would never write. The roster takes their boundaries and their
+words and stops there. Each has a second use beyond the roster. FIBO is
+the source a PACK draws its business vocabulary from — the words a
+refinement gives its terms, roles and lines where the master's word is
+too general for the domain. ACTUS is the shared vocabulary of CASH-FLOW
+PATTERNS — bullet, annuity, linear, negative amortization, the swap legs
+— that the packs' lowering rules should name consistently, so that the
+same pattern is the same fragment in every pack (`tools/check-rule-
+fragments.py` already holds fourteen such fragments identical across the
+packs).
 
 ## 2. The families
 
@@ -138,7 +146,7 @@ compensation is an expense line. None needs a master.
 
 | family | master | status |
 |---|---|---|
-| Loan / credit facility | `Contract.Debt` | in the base; `amortization` covers bullet (PAM), level_pay (ANN), interest_only, custom — LINEAR (LAM) and NEGATIVE (NAM) are recognised patterns it does not yet name |
+| Loan / credit facility | `Contract.Debt` | in the base; the repayment pattern (PAM, ANN, LAM, NAM, CLM) is the REFINEMENT, not a master term — each is a different pack contract, named consistently with ACTUS |
 | Debt security | `Contract.Security` | drafted (`docs/40` §4.13) |
 | Hybrid | `Contract.Security` + `Contract.Option` | a security carrying an election; no master of its own |
 | Finance lease | `Contract.Lease` + `Contract.Option` | a lease with a purchase option; the refinement decides whether its payments amortize |
@@ -150,7 +158,7 @@ compensation is an expense line. None needs a master.
 | Offtake | `Contract.Offtake` | in the base |
 | Supply | `Contract.Offtake`, buyer's side | the side is open on the master for exactly this |
 | Service | `Contract.Service` | in the base |
-| Construction | `Contract.Construction` | in the base; liquidated damages are a refinement's |
+| Construction | `Contract.CapitalExpenditure` on a draw curve inside a phase | not a master (decided 4 September 2026, `docs/40` §4.9): the build is a spend; retainage is an optional term of the capex refinement; the contractor, where a model needs it, is the party the draws are paid to |
 | Purchase | `Contract.Purchase` | in the base |
 | Sale | `Contract.Sale` | in the base |
 | Option | `Contract.Option` | in the base |
@@ -175,11 +183,14 @@ cash is a fee paid and a claim drawn on the guarantor's shortfall. It is
 the one recognised family the roster cannot express, and `Contract.
 Guarantee` is proposed for the rework of the drafted cores.
 
-**Two patterns are missing from a master's vocabulary.** `Contract.Debt`'s
-`amortization` names bullet, level payment, interest-only and custom;
-the industry also names LINEAR (equal principal, ACTUS `LAM`) and
-NEGATIVE (payment held, term shifts, `NAM`). Both are one word on the
-existing term and belong there.
+**Cash-flow patterns are pack specializations, not master terms.** A
+level-payment pool, an interest-only bullet, a linear amortizer and a
+negative amortizer are different contracts — different rules, different
+cash — and the pack ships each as its own refinement. The master says a
+debt has a repayment pattern and no more; ACTUS gives the patterns their
+shared names (`ANN`, `PAM`, `LAM`, `NAM`, `CLM`) so that every pack calls
+the same pattern the same thing and lowers it with the same fragment.
+The linear and negative amortizers are refinements no pack ships yet.
 
 **Several families are refinements, not masters, and the survey says
 why.** A hybrid is a security with an election; a finance lease is a
@@ -190,8 +201,18 @@ equity interests with different terms. Naming a master for any of them
 would put the mechanism where the agreement belongs. The masters are the
 families in §2; the refinements are the industry's forms of them.
 
+**A construction contract is a spend, not a master.** Phases and a
+draw curve express the build; retainage is a timing term on the capex
+line; the contractor is a party the draws are paid to. The roster loses
+`Contract.Construction` on that argument (`docs/40` §4.9).
+
 **Three things are not contracts** and keep their homes: collateral is a
-relation, a reserve is an account, a provision is a line.
+relation, a reserve is an account, a provision is a line. Collateral
+matters most where it is easiest to confuse: in a mortgage or auto
+securitisation the SECURITY is a contract, the individual LOANS are
+contracts, and the POOL between them is an organising construct — a
+container of loans, or an aggregate that states the loans' terms at the
+population level — that a manager finds useful and no party signs.
 
 ## 5. Demonstration map
 
@@ -201,7 +222,7 @@ reason to hold a master back.
 
 | master | demonstrated by | owed |
 |---|---|---|
-| Debt | every CRE, credit, energy and opco debt case | a linear amortizer; a negative amortizer |
+| Debt | every CRE, credit, energy and opco debt case | a linear-amortizing and a negative-amortizing refinement |
 | Security | — (note classes are hand-carried in the auto ABS and REMIC cases) | the auto ABS pilot's classes as declared securities |
 | Equity | — (Penzance, One Lincoln, the flip cases hand-roll the interest) | a JV under D13; the flip partnership |
 | Lease | office, retail, multifamily cases | a ground lease; a finance lease |
@@ -209,7 +230,6 @@ reason to hold a master back.
 | Concession | — (the toll road models it as streams and phases) | the toll road on a lease refinement |
 | Offtake | PPA, merchant, capacity, storage | a supply agreement on the buyer's side |
 | Service | O&M, servicing | a management agreement on a CRE case |
-| Construction | — | a construction contract with retainage |
 | Purchase, Sale | acquisitions and exits in every domain | — |
 | Option | management options, calls, renewals | a purchase option on a finance lease |
 | Derivative | — | a rate swap on a floating construction loan |

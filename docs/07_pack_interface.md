@@ -274,8 +274,8 @@ published, no engine semantics.
 Contract types take the same field, and the language base ships the abstract
 masters they refine (`docs/40`): `Contract.Debt`, `Contract.Lease`,
 `Contract.Purchase`, `Contract.Sale`, `Contract.Offtake`, `Contract.Service`,
-`Contract.Tax`, `Contract.Option`, `Contract.Construction`,
-`Contract.Derivative`, `Contract.Insurance`, and for the statement-line
+`Contract.Tax`, `Contract.Option`, `Contract.Derivative`,
+`Contract.Insurance`, and for the statement-line
 generators `Contract.Revenue`, `Contract.Expense` and
 `Contract.CapitalExpenditure`. A master is `abstract = true`: it exists to
 be refined, binds no lowering rule (refused at load if it does), and cannot
