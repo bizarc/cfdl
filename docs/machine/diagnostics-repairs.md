@@ -3646,7 +3646,7 @@ slice s { type Contract.Imaginary }
 ```
 
 - `E1363_SLICE_UNKNOWN_TYPE` (error): Slice 's' selects type 'Contract.Imaginary', which the active ontology does not define.
-  - hint: Known contract types: Contract.CapitalExpenditure, Contract.Debt, Contract.Deduction, Contract.Derivative, Contract.Expense, Contract.Insurance, Contract.Lease, Contract.Line, Contract.Option, Contract.Purchase, Contract.Revenue, Contract.Sale, Contract.Service, Contract.Supply, Contract.Tax, Contract.WorkingCapital, Option.Call, Option.Put, Option.Refinance, Option.Renewal.
+  - hint: Known contract types: Contract.CapitalExpenditure, Contract.Debt, Contract.Deduction, Contract.Derivative, Contract.Equity, Contract.Expense, Contract.Grant, Contract.Guarantee, Contract.Insurance, Contract.Lease, Contract.Line, Contract.Option, Contract.Purchase, Contract.Revenue, Contract.Royalty, Contract.Sale, Contract.Security, Contract.Service, Contract.Supply, Contract.Tax, Contract.WorkingCapital, Option.Call, Option.Put, Option.Refinance, Option.Renewal.
 
 Fix: not yet recorded.
 
@@ -3718,7 +3718,7 @@ statement lender {
 ```
 
 - `E1363_SLICE_UNKNOWN_TYPE` (error): Statement 'lender' row "Debt service" selects type 'Contract.Imaginary', which the active ontology does not define.
-  - hint: Known contract types: CRE.Contract.ConstructionFunding, CRE.Contract.ConstructionLoan, CRE.Contract.Disposition, CRE.Contract.DispositionAtCap, CRE.Contract.DispositionAtForwardCap, CRE.Contract.Lease, CRE.Contract.OperatingExpense, CRE.Contract.OperatingRevenue, CRE.Contract.PercentageRent, CRE.Contract.PercentageRentExpected, CRE.Contract.PermanentDebt, CRE.Contract.PurchaseOption, CRE.Contract.RenewalOption, CRE.Contract.Rollover, CRE.Contract.UnitLease, CRE.Contract.VacancyAllowance, Contract.CapitalExpenditure, Contract.Debt, Contract.Deduction, Contract.Derivative, Contract.Expense, Contract.Insurance, Contract.Lease, Contract.Line, Contract.Option, Contract.Purchase, Contract.Revenue, Contract.Sale, Contract.Service, Contract.Supply, Contract.Tax, Contract.WorkingCapital, Option.Call, Option.Put, Option.Refinance, Option.Renewal.
+  - hint: Known contract types: CRE.Contract.ConstructionFunding, CRE.Contract.ConstructionLoan, CRE.Contract.Disposition, CRE.Contract.DispositionAtCap, CRE.Contract.DispositionAtForwardCap, CRE.Contract.Lease, CRE.Contract.OperatingExpense, CRE.Contract.OperatingRevenue, CRE.Contract.PercentageRent, CRE.Contract.PercentageRentExpected, CRE.Contract.PermanentDebt, CRE.Contract.PurchaseOption, CRE.Contract.RenewalOption, CRE.Contract.Rollover, CRE.Contract.UnitLease, CRE.Contract.VacancyAllowance, Contract.CapitalExpenditure, Contract.Debt, Contract.Deduction, Contract.Derivative, Contract.Equity, Contract.Expense, Contract.Grant, Contract.Guarantee, Contract.Insurance, Contract.Lease, Contract.Line, Contract.Option, Contract.Purchase, Contract.Revenue, Contract.Royalty, Contract.Sale, Contract.Security, Contract.Service, Contract.Supply, Contract.Tax, Contract.WorkingCapital, Option.Call, Option.Put, Option.Refinance, Option.Renewal.
 
 Fix: not yet recorded.
 

@@ -275,7 +275,8 @@ Contract types take the same field, and the language base ships the abstract
 masters they refine (`docs/40`): `Contract.Debt`, `Contract.Lease`,
 `Contract.Purchase`, `Contract.Sale`, `Contract.Supply`, `Contract.Service`,
 `Contract.Tax`, `Contract.Option`, `Contract.Derivative`,
-`Contract.Insurance`, and for the statement-line
+`Contract.Insurance`, `Contract.Security`, `Contract.Equity`,
+`Contract.Royalty`, `Contract.Grant`, `Contract.Guarantee`, and for the statement-line
 generators `Contract.Revenue`, `Contract.Expense` and
 `Contract.CapitalExpenditure`. A master is `abstract = true`: it exists to
 be refined, binds no lowering rule (refused at load if it does), and cannot
@@ -415,7 +416,11 @@ name = "buyer"
 unbound = true
 ```
 
-A field may carry `one_of = "<group>"`: fields sharing a group are
+A field's type is `decimal`, `integer`, `string`, `date`, or `contract` —
+a reference to a declared contract by name, as a guarantee's `covered`.
+A line may be marked `allocated = true` (a waterfall step pays it; no rule
+may emit it) or `optional = true` (a name the master reserves; no rule
+must emit it). A field may carry `one_of = "<group>"`: fields sharing a group are
 alternatives and a contract must state at least one of them (a debt's
 amount is `principal`, `commitment` or `draw_curve`; its rate is
 `interest_rate` or `index_curve` with `margin`). A refinement may put a

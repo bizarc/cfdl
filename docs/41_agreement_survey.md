@@ -147,12 +147,12 @@ compensation is an expense line. None needs a master.
 | family | master | status |
 |---|---|---|
 | Loan / credit facility | `Contract.Debt` | in the base; the repayment pattern (PAM, ANN, LAM, NAM, CLM) is the REFINEMENT, not a master term — each is a different pack contract, named consistently with ACTUS |
-| Debt security | `Contract.Security` | drafted (`docs/40` §4.13) |
+| Debt security | `Contract.Security` | in the base (`docs/40` §4.13) |
 | Hybrid | `Contract.Security` + `Contract.Option` | a security carrying an election; no master of its own |
 | Finance lease | `Contract.Lease` + `Contract.Option` | a lease with a purchase option; the refinement decides whether its payments amortize |
-| Shares, partnership, fund, tax-equity, preferred, residual | `Contract.Equity` | drafted (§4.14); each is a refinement, the flip and the preference being refinement terms |
+| Shares, partnership, fund, tax-equity, preferred, residual | `Contract.Equity` | in the base (§4.14); each is a refinement, the flip and the preference being refinement terms |
 | Lease | `Contract.Lease` | in the base |
-| Licence / royalty | `Contract.Royalty` | drafted (§4.15) |
+| Licence / royalty | `Contract.Royalty` | in the base (§4.15) |
 | Concession | `Contract.Lease` on the concessionaire's side, with `Contract.Grant` for any availability support | a right to use and collect for a fee; no master of its own |
 | Easement | `Contract.Lease` | a one-shot or fixed-fee lease |
 | Supply / offtake | `Contract.Supply` | in the base; renamed from Offtake 4 September 2026 — the general family is the supply agreement, seen from either side, and energy specializes `buyer` to `offtaker` |
@@ -163,24 +163,24 @@ compensation is an expense line. None needs a master.
 | Option | `Contract.Option` | in the base |
 | Derivative | `Contract.Derivative` | in the base |
 | Insurance | `Contract.Insurance` | in the base |
-| Guarantee / credit enhancement | — | **missing**; see §4 |
+| Guarantee / credit enhancement | `Contract.Guarantee` | in the base (§4.17); the survey found it missing, see §4 |
 | Collateral | — | not a contract: a RELATION between an obligation and an asset (`docs/13` §7.89) |
 | CDS, repo, margining | — | out of scope: trading-book instruments outside a cash-flow model of a deal |
 | Tax | `Contract.Tax` | in the base |
-| Grant | `Contract.Grant` | drafted (§4.16) |
+| Grant | `Contract.Grant` | in the base (§4.16) |
 | General lines | `Contract.Line` kinds | in the base |
 
 ## 4. Findings
 
-**One family is missing: the guarantee.** Every project financing carries
+**One family was missing: the guarantee** (added as `Contract.Guarantee`, `docs/40` §4.17). Every project financing carries
 one (a completion guarantee, a parent guarantee, a debt service reserve
 letter of credit), every ABS has a form of credit enhancement, and ACTUS
 gives it a class of its own because it creates a three-party
 relationship: guarantor, beneficiary, and the obligation covered. Its
 core is small — the obligation it stands behind, a cap, a fee — and its
 cash is a fee paid and a claim drawn on the guarantor's shortfall. It is
-the one recognised family the roster cannot express, and `Contract.
-Guarantee` is proposed for the rework of the drafted cores.
+the one recognised family the roster could not express, and
+`Contract.Guarantee` joined the base with the reworked cores.
 
 **Cash-flow patterns are pack specializations, not master terms.** A
 level-payment pool, an interest-only bullet, a linear amortizer and a

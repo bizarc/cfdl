@@ -192,6 +192,27 @@ fn lookup_terms_and_pack_roster() {
 }
 
 #[test]
+fn lookup_reads_a_master_by_name() {
+    let found = lookup::lookup(
+        &lookup::LookupParams {
+            master: Some("Contract.Security".to_string()),
+            ..Default::default()
+        },
+        &defaults(),
+    )
+    .expect("master lookup");
+    let master = found.master.expect("master info");
+    assert!(master.is_abstract);
+    assert!(master.fields.iter().any(|f| f.name == "face" && f.required));
+    assert!(
+        master.lines.iter().any(|l| l == "principal (allocated)"),
+        "{:?}",
+        master.lines
+    );
+    assert!(found.pack.is_none() && found.packs.is_empty());
+}
+
+#[test]
 fn skeleton_names_the_refinements_of_a_master() {
     let err = skeleton::skeleton(
         &skeleton::SkeletonParams {

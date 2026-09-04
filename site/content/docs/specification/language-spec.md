@@ -518,7 +518,10 @@ Rules:
 A term's value is one of:
 
 - a **literal** — a number, string, date, or `true`/`false`;
-- a **reference to one declared input**, written `inputs.<name>`; or
+- a **reference to one declared input**, written `inputs.<name>`;
+- a **reference to a declared contract**, by its qualified name, where the
+  type's field is of type `contract` (a guarantee's `covered`; `docs/40`
+  §4.17); or
 - an **expression**.
 
 A contract records what was agreed — and what was agreed is often itself an

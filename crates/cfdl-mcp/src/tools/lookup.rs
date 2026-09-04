@@ -20,6 +20,12 @@ pub struct LookupParams {
     /// A pack name (e.g. `cre`, `credit`, `energy`, `opco`) for its roster.
     #[serde(default)]
     pub pack: Option<String>,
+    /// A master contract type (e.g. `Contract.Debt`, `Contract.Security`)
+    /// for its roster — roles, fields, lines, side — read from the language
+    /// base, or from the named pack's view when `pack` is given too. A
+    /// master a pack does not refine is still readable this way.
+    #[serde(default)]
+    pub master: Option<String>,
     /// Pack directory override (as in `compile`).
     #[serde(default)]
     pub packs_dir: Option<String>,
@@ -149,6 +155,9 @@ pub struct LookupResult {
     pub terms: Vec<TermEntry>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub pack: Option<PackInfo>,
+    /// The master asked for, against its chain.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub master: Option<ContractInfo>,
     /// When neither `term` nor `pack` was given: the packs available.
     #[serde(skip_serializing_if = "Vec::is_empty")]
     pub packs: Vec<String>,
@@ -158,12 +167,43 @@ pub fn lookup(params: &LookupParams, defaults: &super::Defaults) -> Result<Looku
     let mut result = LookupResult {
         terms: Vec::new(),
         pack: None,
+        master: None,
         packs: Vec::new(),
     };
     if let Some(term) = &params.term {
         result.terms = find_terms(term)?;
     }
-    if params.pack.is_some() || params.term.is_none() {
+    if let Some(master) = &params.master {
+        // The base's view, or the named pack's — which adds nothing to a
+        // master but lets a pack type id be asked for by the same door.
+        let merged = match &params.pack {
+            Some(pack_name) => {
+                let registry = super::load_registry(
+                    super::resolve_packs_dir(params.packs_dir.as_deref(), defaults).as_deref(),
+                )?;
+                registry
+                    .pack(pack_name)
+                    .map(|p| p.ontology.merged_with_base())
+                    .ok_or_else(|| format!("no pack '{pack_name}'"))?
+            }
+            None => cfdl_pack::PackOntology::language_base(),
+        };
+        let Some(contract) = merged.contract(master) else {
+            let mut known: Vec<&str> = merged
+                .contracts
+                .iter()
+                .filter(|c| c.is_abstract)
+                .map(|c| c.type_id.as_str())
+                .collect();
+            known.sort_unstable();
+            return Err(format!(
+                "no contract type '{master}'; masters: {}",
+                known.join(", ")
+            ));
+        };
+        result.master = Some(describe_contract(&merged, contract));
+    }
+    if params.pack.is_some() || (params.term.is_none() && params.master.is_none()) {
         let registry = super::load_registry(
             super::resolve_packs_dir(params.packs_dir.as_deref(), defaults).as_deref(),
         )?;
@@ -171,7 +211,7 @@ pub fn lookup(params: &LookupParams, defaults: &super::Defaults) -> Result<Looku
             Some(pack_name) => {
                 result.pack = Some(pack_info(&registry, pack_name, params, defaults)?);
             }
-            None if params.term.is_none() => {
+            None if params.term.is_none() && params.master.is_none() => {
                 result.packs = registry
                     .list()
                     .iter()
@@ -303,43 +343,7 @@ fn pack_info(
     // The pack's types are read against the merged view: a refinement's
     // roster is its master's plus its own, and the master lives in the base.
     let merged = pack.ontology.merged_with_base();
-    let describe = |contract: &cfdl_pack::OntologyContract| ContractInfo {
-        type_id: contract.type_id.clone(),
-        contract_name: contract.contract_name.clone(),
-        election: !contract.is_abstract && contract.contract_name.is_none(),
-        is_abstract: contract.is_abstract,
-        refines: contract.refines.clone(),
-        master: merged.master_of(&contract.type_id),
-        roles: merged
-            .effective_roles(&contract.type_id)
-            .into_iter()
-            .map(|r| RoleInfo {
-                name: r.name,
-                master: r.master,
-                unbound: r.unbound,
-            })
-            .collect(),
-        fields: merged
-            .effective_fields(&contract.type_id)
-            .into_iter()
-            .map(|f| FieldInfo {
-                name: f.name,
-                field_type: f.field_type,
-                required: f.required,
-                unit: f.unit,
-                one_of: f.one_of,
-                description: f.description,
-            })
-            .collect(),
-        lines: merged
-            .effective_lines(&contract.type_id)
-            .into_iter()
-            .map(|l| l.name)
-            .collect(),
-        side: merged.effective_side(&contract.type_id),
-        description: contract.description.clone(),
-        exercised_by: None,
-    };
+    let describe = |contract: &cfdl_pack::OntologyContract| describe_contract(&merged, contract);
     let mut master_ids: Vec<String> = pack
         .ontology
         .contracts
@@ -446,4 +450,58 @@ fn scan_contract_coverage(
         }
     }
     Ok(declarations)
+}
+
+/// A contract type read against its master chain (docs/40): the master,
+/// the effective roster with the masters' fields inherited, each role
+/// beside the master's word, the lines and the side.
+fn describe_contract(
+    merged: &cfdl_pack::PackOntology,
+    contract: &cfdl_pack::OntologyContract,
+) -> ContractInfo {
+    ContractInfo {
+        type_id: contract.type_id.clone(),
+        contract_name: contract.contract_name.clone(),
+        election: !contract.is_abstract && contract.contract_name.is_none(),
+        is_abstract: contract.is_abstract,
+        refines: contract.refines.clone(),
+        master: merged.master_of(&contract.type_id),
+        roles: merged
+            .effective_roles(&contract.type_id)
+            .into_iter()
+            .map(|r| RoleInfo {
+                name: r.name,
+                master: r.master,
+                unbound: r.unbound,
+            })
+            .collect(),
+        fields: merged
+            .effective_fields(&contract.type_id)
+            .into_iter()
+            .map(|f| FieldInfo {
+                name: f.name,
+                field_type: f.field_type,
+                required: f.required,
+                unit: f.unit,
+                one_of: f.one_of,
+                description: f.description,
+            })
+            .collect(),
+        lines: merged
+            .effective_lines(&contract.type_id)
+            .into_iter()
+            .map(|l| {
+                if l.allocated {
+                    format!("{} (allocated)", l.name)
+                } else if l.optional {
+                    format!("{} (optional)", l.name)
+                } else {
+                    l.name
+                }
+            })
+            .collect(),
+        side: merged.effective_side(&contract.type_id),
+        description: contract.description.clone(),
+        exercised_by: None,
+    }
 }
