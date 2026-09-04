@@ -1035,6 +1035,25 @@ contract cre.permanent_debt on entity asset.tower {
     funded_at_close = 0
   }
 }
+
+// Views by master type: the leases, the debt and the disposal, whichever
+// pack contract each was lowered from. A slice is a view and moves no number.
+slice leases {
+  type Contract.Lease
+}
+
+slice debt_service {
+  type Contract.Debt
+}
+
+slice debt_interest {
+  type Contract.Debt
+  line interest
+}
+
+slice disposal {
+  type Contract.Sale
+}
 ```
 
 ## cre/retail_strip
@@ -3669,6 +3688,15 @@ contract energy.macrs_shield on entity asset.wind {
     life = 5
   }
 }
+
+// Views by master type: everything sold as output, and every tax attribute.
+slice offtake {
+  type Contract.Offtake
+}
+
+slice tax {
+  type Contract.Tax
+}
 ```
 
 ## energy/tax_equity_flip
@@ -3981,6 +4009,25 @@ contract opco.exit_ebitda on entity asset.target {
     multiple = 8.5
     selling_costs = 0.015
   }
+}
+
+// Views by master type: the purchase, the debt and the exit as the deal's
+// three agreements rather than as pack stream names.
+slice acquisition {
+  type Contract.Purchase
+}
+
+slice debt {
+  type Contract.Debt
+}
+
+slice debt_interest {
+  type Contract.Debt
+  line interest
+}
+
+slice exit {
+  type Contract.Sale
 }
 ```
 

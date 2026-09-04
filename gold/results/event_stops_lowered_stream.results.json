@@ -1,7 +1,7 @@
 {
   "results_version": "0.13",
-  "model_hash": "2134861467f707e6bc0970b63db519b9be8cd8d33c0f45d8589761e7c8d467e4",
-  "ledger_hash": "0ae714373d395719668a95320e31c418374a7f1012c235fe2e81aea762df4e45",
+  "model_hash": "21864ef052b33e857cdd0cd28d97e738ac207e6a902f0e1bf8f36f8c68810f40",
+  "ledger_hash": "3e4e32695325b537d2d50c89db21917d3d7765cf80de6fc8a99b2701c072d0fb",
   "engine": {
     "name": "cfdl-engine",
     "version": "0.9.0"
@@ -2152,6 +2152,7 @@
         "entity": "asset.tower",
         "category": "financing.debt.interest_paid",
         "contract": "cre.permanent_debt",
+        "line": "interest",
         "values": [
           {
             "amount": -27500.0,
@@ -2405,6 +2406,7 @@
         "entity": "asset.tower",
         "category": "financing.debt.principal",
         "contract": "cre.permanent_debt",
+        "line": "principal",
         "values": [
           {
             "amount": 0.0,
@@ -2658,6 +2660,7 @@
         "entity": "asset.tower",
         "category": "financing.debt.proceeds",
         "contract": "cre.permanent_debt",
+        "line": "proceeds",
         "values": [
           {
             "amount": 6000000.0,

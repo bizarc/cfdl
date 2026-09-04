@@ -19,7 +19,10 @@ declared — and every pack type now declares its terms as fields.
 `results_version` moves from 0.12 to 0.13: the results graph publishes the
 model's contracts (`graph.contracts`) and each lowered stream series names
 its contract. MCP `lookup` reads each type against its master chain and
-lists the masters a pack refines.
+lists the masters a pack refines. Stage 5: `type <Master>` and `line
+<role>` select on slices and authored statement rows, a metric folds a
+slice's net as `slice.<name>`, and each lowered series carries its `line`
+beside its `contract`.
 
 ## [0.9.0] - 2026-09-01
 

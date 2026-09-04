@@ -281,7 +281,10 @@ pub fn generate(
                         .and_then(|s| s.entity.as_deref())
                         .is_some_and(|owner| owner == symbol)
                 });
-                if !(by_category || by_name || by_slice || by_entity) {
+                // `type` and `line` arrive expanded to exact names, so a row
+                // drawing every debt's interest claims exactly those streams.
+                let by_type = row.type_streams.iter().any(|n| n == name);
+                if !(by_category || by_name || by_slice || by_entity || by_type) {
                     continue;
                 }
                 // A SUBTOTAL CLAIMS NOTHING. It folds rows stated elsewhere,
@@ -833,6 +836,9 @@ pub fn lower_pack_statement(
                     depth: row.depth,
                     categories: row.categories.clone(),
                     streams: row.streams.clone(),
+                    types: Vec::new(),
+                    lines: Vec::new(),
+                    type_streams: Vec::new(),
                     slice: None,
                     // For a ratio this is the FALLBACK: its own published
                     // series, used when the inputs it should be recomputed
@@ -949,6 +955,15 @@ pub struct ModelStatementRow {
     pub categories: Vec<String>,
     #[serde(default)]
     pub streams: Vec<String>,
+    /// Ontology types and lines by role, as declared — lineage.
+    #[serde(default)]
+    pub types: Vec<String>,
+    #[serde(default)]
+    pub lines: Vec<String>,
+    /// What the `type` and `line` clauses matched, expanded by the compiler
+    /// (which holds the ontology) into exact stream names.
+    #[serde(default)]
+    pub type_streams: Vec<String>,
     #[serde(default)]
     pub slice: Option<String>,
     /// A published series key. A fold OF the ledger rather than cash in it,

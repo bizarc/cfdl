@@ -1,7 +1,7 @@
 {
   "results_version": "0.13",
-  "model_hash": "2639e67e5160deb24afd0e1f86c0db6b55e65c83dba5390ab52eb7fb661d641f",
-  "ledger_hash": "a7ae4c084ecc00a6630e3ddafe09bfb355f44d916070b8f8a96de8395c0705d8",
+  "model_hash": "80fccad08510a7ef150db24a736bf148aa0551cff348c59f95efc6467493faa9",
+  "ledger_hash": "c069ad4ae24f9d28f5f479ea6678fff36c27bc05a2514541c01e3ab21974c6eb",
   "engine": {
     "name": "cfdl-engine",
     "version": "0.9.0"
@@ -590,6 +590,7 @@
         "entity": "asset.tower",
         "category": "operating.expense.interest",
         "contract": "cre.permanent_debt",
+        "line": "interest",
         "values": [
           {
             "amount": -4166.666667,
@@ -651,6 +652,7 @@
         "entity": "asset.tower",
         "category": "financing.debt.principal",
         "contract": "cre.permanent_debt",
+        "line": "principal",
         "values": [
           {
             "amount": -1679.233748,
@@ -712,6 +714,7 @@
         "entity": "asset.tower",
         "category": "financing.debt.proceeds",
         "contract": "cre.permanent_debt",
+        "line": "proceeds",
         "values": [
           {
             "amount": 1000000.0,
@@ -773,6 +776,7 @@
         "entity": "asset.tower",
         "category": "operating.expense.rooms",
         "contract": "cre.opex_line.rooms",
+        "line": "expense",
         "values": [
           {
             "amount": -1000.0,

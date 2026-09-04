@@ -1302,8 +1302,11 @@ Rules:
 - **The series it may fold are the ones this model PUBLISHES**, in either
   spelling: a stream by its own name (`ops.rev`) or by its published key
   (`stream.ops.rev`), a waterfall step, `entity.<symbol>.net_cash_flow`,
-  `account.<name>`, an entity field's own series, a money subtotal, and
-  `model.net_cash_flow`. The two spellings of one stream name the same cash.
+  `account.<name>`, an entity field's own series, a money subtotal, a
+  declared slice's net as `slice.<name>`, and `model.net_cash_flow`. The
+  two spellings of one stream name the same cash. A slice is how a metric
+  folds cash selected by TYPE and LINE — every debt's interest — without
+  naming a stream or a pack's category.
   A ratio subtotal is NOT foldable: its undefined periods publish as `null`
   rather than zero, and what a fold should do with `null` is not yet decided.
 - A metric that folds a name this model does not publish is REFUSED
@@ -1367,6 +1370,11 @@ slice debt {
   type Contract.Debt
 }
 
+slice debt_interest {
+  type Contract.Debt
+  line interest
+}
+
 slice west_2027 {
   entity asset.west_tower
   window from 2027-01 to 2028-12
@@ -1385,6 +1393,12 @@ Rules:
   `type Contract.Debt` selects every stream lowered from a contract whose
   type is_a `Contract.Debt`, and streams owned by entities of a conforming
   type. An unknown type is refused with the known types named (`E1363`).
+- `line` names a LINE BY ROLE — what a master says the agreement produces
+  (`docs/40` §6): `line interest` selects every stream a pack rule emits as
+  its type's interest line, whichever pack and whatever category it spells.
+  Beside `type` the two intersect: `type Contract.Debt line interest` is
+  the interest of every debt. A line nothing produces is refused with the
+  near miss (`E1375`).
 - `category` and `stream` take QUOTED selectors — the dialect `series_sum`
   reads, exact or one trailing `.*` — and a category selector must be rooted
   in a statement section (`E1364`).
@@ -1479,6 +1493,7 @@ statement operating {
   label    "Operating statement"
   line     "Base rental revenue"   { category "operating.revenue.base_rent" }
   line     "Less: operating costs" { category "operating.expense.*" display positive }
+  line     "Less: interest"        { type Contract.Debt line interest display positive }
   subtotal "Net operating income"  { category "operating.*" }
   spacer
   ratio    "DSCR"                  { of noi to debt_service display positive }
@@ -1488,9 +1503,13 @@ statement operating {
 - A statement is AUTHORED OR GENERATED, never both, and never neither
   (`E1369`). A generated statement partitions the cash by construction; an
   authored one partitions it by the author's care. Mixed, neither holds.
-- A row draws from `category`, `stream`, `slice` or `entity`. A `subtotal` row
-  folds rows stated elsewhere and CLAIMS nothing, so it never doubles the
-  bottom line.
+- A row draws from `category`, `stream`, `type`, `line`, `slice` or
+  `entity`. `type` and `line` mean what they mean on a slice — every
+  debt's interest, whichever pack lowered it — and the compiler expands
+  them to the exact streams the row claims, so the bottom line reconciles
+  as it does for a category row (`E1363`, `E1375` as on a slice). A
+  `subtotal` row folds rows stated elsewhere and CLAIMS nothing, so it never
+  doubles the bottom line.
 - A row may instead draw a published `series` (`series "domain.cre.noi"`) — a
   fold OF the ledger rather than cash in it, so the row claims no streams and
   its figure stays out of the bottom line. A claim clause beside a `series` is
@@ -4155,6 +4174,10 @@ against it by `make ir-schema`.
         "contract": {
           "$ref": "#/$defs/Qname",
           "description": "The contract this stream was lowered from, by its qualified name (`cre.lease_unit.tenant_a`). A rule serves every instance of its type; this says which one."
+        },
+        "line": {
+          "type": "string",
+          "description": "The line the rule emits, by the role its contract's master names (`interest`, `rent`, `proceeds` — docs/40 §6)."
         }
       }
     },
@@ -4498,6 +4521,13 @@ against it by `make ir-schema`.
           },
           "description": "Ontology types, matched transitively through refines."
         },
+        "lines": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Lines by role (docs/40 §6) — `interest` selects every stream a rule emits as its type's interest line, whichever pack. Intersects with `types`."
+        },
         "categories": {
           "type": "array",
           "items": {
@@ -4535,7 +4565,7 @@ against it by `make ir-schema`.
           "items": {
             "type": "string"
           },
-          "description": "The streams the type clauses matched — the compiler's expansion, read by the engine."
+          "description": "The streams the type and line clauses matched — the compiler's expansion, because only it holds the ontology and the rules."
         },
         "provenance": {
           "$ref": "#/$defs/NodeProvenance"
@@ -4669,6 +4699,27 @@ against it by `make ir-schema`.
             "type": "string"
           }
         },
+        "types": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Ontology types the row draws, matched transitively through refines, as on a slice."
+        },
+        "lines": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Lines by role the row draws, as on a slice."
+        },
+        "type_streams": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "What the type and line clauses matched, expanded by the compiler into exact stream names; the evaluator claims them beside `streams`."
+        },
         "slice": {
           "type": "string",
           "description": "A declared slice whose streams the row draws."
@@ -4738,7 +4789,7 @@ against it by `make results-schema`.
     "results_version": {
       "type": "string",
       "const": "0.13",
-      "description": "Schema version of this document. 0.13 publishes the model's contracts in `graph.contracts` — each with its type, master, instance, subject, parties and the streams lowered from it — and attributes each lowered stream series to its contract (`contract` on the series). 0.12 separates the model from its views: `model_hash` covers the IR without `views` (slices and statements), and `ledger_hash` now covers the journal and transitions beside the series. 0.11 adds model-declared statements: `pack` on the statements section is optional, and a statement may carry `metrics`. 0.10 adds `window` to a slice's selection — a reporting bound whose periods are the only ones the slice folds. 0.9 carries every metric a Monte Carlo trial computed into its trial summary, summarises each of them across the trials with the full set of percentiles, and adds `trials` to a metric summary — the count of trials that published that name. 0.8 adds `slices` — declared partial selections with their matched streams, net series and figures, and no reconciliation block by design. 0.7 publishes the model's entity graph (`graph`) and attributes each stream series to its owning entity and category. 0.6 nests an act's own acts under it as `children`. 0.5 added the machine's `transition` journal action. 0.4 added the account journal actions. 0.3 added `ledger_hash`, the optional `inputs` section, and `category` on IR streams."
+      "description": "Schema version of this document. 0.13 publishes the model's contracts in `graph.contracts` — each with its type, master, instance, subject, parties and the streams lowered from it — and attributes each lowered stream series to its contract and its line by role (`contract` and `line` on the series); a slice's selection records its `lines`. 0.12 separates the model from its views: `model_hash` covers the IR without `views` (slices and statements), and `ledger_hash` now covers the journal and transitions beside the series. 0.11 adds model-declared statements: `pack` on the statements section is optional, and a statement may carry `metrics`. 0.10 adds `window` to a slice's selection — a reporting bound whose periods are the only ones the slice folds. 0.9 carries every metric a Monte Carlo trial computed into its trial summary, summarises each of them across the trials with the full set of percentiles, and adds `trials` to a metric summary — the count of trials that published that name. 0.8 adds `slices` — declared partial selections with their matched streams, net series and figures, and no reconciliation block by design. 0.7 publishes the model's entity graph (`graph`) and attributes each stream series to its owning entity and category. 0.6 nests an act's own acts under it as `children`. 0.5 added the machine's `transition` journal action. 0.4 added the account journal actions. 0.3 added `ledger_hash`, the optional `inputs` section, and `category` on IR streams."
     },
     "model_hash": {
       "type": "string",
@@ -4924,6 +4975,10 @@ against it by `make results-schema`.
         "contract": {
           "type": "string",
           "description": "The contract this stream was lowered from (`cre.lease_unit.tenant_a`). Present on pack-lowered stream series only. With `graph.contracts`, the third axis beside `entity` and `category`: whose cash, what kind, and under which agreement."
+        },
+        "line": {
+          "type": "string",
+          "description": "The line this stream is, by the role its contract's master names (`interest`, `rent`, `proceeds` — docs/40 §6). Present on pack-lowered stream series only. With `contract`, what lets a consumer fold every debt's interest without knowing any pack's category spelling."
         }
       }
     },
@@ -5810,6 +5865,13 @@ against it by `make results-schema`.
           "items": {
             "type": "string"
           }
+        },
+        "lines": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Lines by role the slice selected (docs/40 §6)."
         },
         "categories": {
           "type": "array",
@@ -7534,7 +7596,8 @@ Fields that move:
 - `E1360_DUPLICATE_ENTITY_ID` — two entities declare the same literal field `id`. The id is a stable identity for the layer above the model — engine-opaque, published in the results graph (`docs/06`) — and a consumer joining on it would merge two things into one. Uniqueness within the model is the one thing the language can check about a value it must not interpret (`docs/13` §7.91).
 - `E1361_DUPLICATE_SLICE` — two slices share a name. Same rule as a metric: one name, one selection.
 - `E1362_SLICE_UNKNOWN_ENTITY` — a slice's `entity` (or `except entity`) names an entity the model does not declare. A slice selects by reference, and a reference is what the compiler can check — refused rather than silently matching nothing.
-- `E1363_SLICE_UNKNOWN_TYPE` — a slice's `type` names an ontology type the active ontology does not define. The hint lists the known contract types; a master type (`Contract.Debt`) matches transitively through `refines`.
+- `E1363_SLICE_UNKNOWN_TYPE` — a slice's or a statement row's `type` names an ontology type the active ontology does not define. The hint lists the known contract types; a master type (`Contract.Debt`) matches transitively through `refines`.
+- `E1375_UNKNOWN_LINE_ROLE` — a slice's or a statement row's `line` names a line no contract type in the active ontology produces. A line is a role a master names (`docs/40` §6) — `interest`, `rent`, `proceeds` — and each pack rule names the one it emits, so the hint offers the near miss or lists the lines the vocabulary can produce.
 - `E1364_SLICE_CATEGORY_ROOT` — a slice's category selector is not rooted in operating, investing or financing. A selector that could never match anything is a typo, not a choice.
 - `E1371_UNKNOWN_CONTRACT_TERM` — a contract states a term its type does not declare. The roster is the pack type's own terms plus its masters' (`docs/40` §3); a term outside it is read by no rule, so before this check a misspelled `escalation` was a lease that never escalated. The hint names the near miss, or lists the type's terms.
 - `E1372_MISSING_CONTRACT_TERM` — a contract omits a term its type requires, or states none of a group of alternatives (`one_of`: a lease's rent is `rent` or `rent_year`). Checked against the effective roster before any rule is expanded; `E5006` remains the rule-consumption backstop for a term a rule reads with no default.
@@ -7545,7 +7608,7 @@ Fields that move:
 - `E1369_STATEMENT_AUTHORED_AND_GENERATED` — a statement states both a `structure` and its own rows, or neither. A generated statement partitions the cash by construction, because a hierarchy covers its own tree; an authored one partitions it by the author's care. Mixed, neither guarantee holds — an authored row claims streams the generated rows already claimed, so the bottom line double-counts and the reconciliation that makes a statement trustworthy becomes noise. A statement stating neither would render nothing. `docs/13` §7.55.
 - `E1368_STATEMENT_UNKNOWN_REFERENCE` — a statement filters by a slice, or shows a metric, that the model does not declare. A presentation that silently shows nothing is the failure §7.55 exists to end.
 - `E1370_STATEMENT_SERIES_ROW_CLAIMS` — an authored row draws a published `series` beside a claim clause (`category`, `stream`, `slice`, `entity`, or a ratio's `of`/`to`). A series row presents a fold of the ledger, claims no streams and stays out of the bottom line; a claim clause beside it could only be resolved by a precedence the reader cannot see, which is a silently ignored clause. Refused instead. `docs/13` §7.55.
-- `E1365_METRIC_UNKNOWN_SERIES` — a metric folds a series name this model does not publish. `series_sum`/`series_avg` (and each sibling reduction, to its own identity) return 0.0 for a selector that matches nothing, which is right for a `.*` selector and wrong for a name spelled out in full; in a metric it is worse than wrong, because a fold publishes ONE number under a name the author chose, with no series beside it to show the zero (`docs/13` §7.85). A metric may fold any series the valuation plane publishes: a stream by its own name or as `stream.<name>`, a waterfall step, `entity.<symbol>.net_cash_flow`, `account.<name>`, an entity field, a money subtotal, or `model.net_cash_flow`. A RATIO subtotal is refused with its own hint — its undefined periods publish as null rather than zero, and what a fold should do with null has not been decided.
+- `E1365_METRIC_UNKNOWN_SERIES` — a metric folds a series name this model does not publish. `series_sum`/`series_avg` (and each sibling reduction, to its own identity) return 0.0 for a selector that matches nothing, which is right for a `.*` selector and wrong for a name spelled out in full; in a metric it is worse than wrong, because a fold publishes ONE number under a name the author chose, with no series beside it to show the zero (`docs/13` §7.85). A metric may fold any series the valuation plane publishes: a stream by its own name or as `stream.<name>`, a waterfall step, `entity.<symbol>.net_cash_flow`, `account.<name>`, an entity field, a money subtotal, a declared slice's net as `slice.<name>`, or `model.net_cash_flow`. A RATIO subtotal is refused with its own hint — its undefined periods publish as null rather than zero, and what a fold should do with null has not been decided.
 - `E1304_UNRESOLVED_OPTION_REF` — an event exercises an option that is not declared. Checked in the compiler rather than the resolver, because options are not in the symbol tables.
 - `E1310_ENTITY_BLOCK_WITHOUT_TYPE` — an entity uses a block but declares no type, so there is nothing to check the block against.
 - `E1311_UNKNOWN_ENTITY_TYPE` — an entity declares a type the active ontology does not define. The known types are listed.

@@ -1,7 +1,7 @@
 {
   "results_version": "0.13",
-  "model_hash": "7b5dbf52e1239e8c3d9c25fc2effd2578094c1424e885830cab7ce07fcb7459f",
-  "ledger_hash": "856658ef324c31906ac0cfc8da9f000515a1a458321cf07170f7701373c97b77",
+  "model_hash": "811d240d973ec07e68a1ecc401bee69f260eba262d4123a227e81843da739a90",
+  "ledger_hash": "a8607f315170b98847bef619f30c3517e08b4692fd3a917fd92b1adcdea15309",
   "engine": {
     "name": "cfdl-engine",
     "version": "0.9.0"
@@ -1375,6 +1375,7 @@
         "entity": "asset.target",
         "category": "financing.debt.interest_paid",
         "contract": "opco.term_debt",
+        "line": "interest",
         "values": [
           {
             "amount": -34444.444444,
@@ -1484,6 +1485,7 @@
         "entity": "asset.target",
         "category": "financing.debt.principal",
         "contract": "opco.term_debt",
+        "line": "principal",
         "values": [
           {
             "amount": -44152.569014,
@@ -1593,6 +1595,7 @@
         "entity": "asset.target",
         "category": "financing.debt.proceeds",
         "contract": "opco.term_debt",
+        "line": "proceeds",
         "values": [
           {
             "amount": 5000000.0,

@@ -1,7 +1,7 @@
 {
   "results_version": "0.13",
-  "model_hash": "76c70b767a2360e351881381c5b39a2cab5a5649d1a5a66fc86cba15750ec650",
-  "ledger_hash": "5b024f934beea1e5767014b48f55554eda132da77c72e856f3c893d075b20a5f",
+  "model_hash": "f77b401042e684dbba34e45e13a6f0e8260015f092d5878a0e1996745f261b3f",
+  "ledger_hash": "cdcef5d10f61e6d75ec394e7c70fb65d63c569edec408c815387f9c6a8e7094d",
   "engine": {
     "name": "cfdl-engine",
     "version": "0.9.0"
@@ -469,6 +469,7 @@
         "entity": "asset.firm",
         "category": "investing.disposal.selling_costs",
         "contract": "opco.exit_perpetuity",
+        "line": "selling_costs",
         "values": [
           {
             "amount": 0.0,
@@ -502,6 +503,7 @@
         "entity": "asset.firm",
         "category": "investing.disposal.proceeds",
         "contract": "opco.exit_perpetuity",
+        "line": "proceeds",
         "values": [
           {
             "amount": 0.0,

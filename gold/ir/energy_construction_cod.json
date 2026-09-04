@@ -359,6 +359,7 @@
             "version": "0.1.0"
           },
           "rule_id": "energy_capex",
+          "line": "capex",
           "contract": "energy.capex"
         }
       }
@@ -398,6 +399,7 @@
             "version": "0.1.0"
           },
           "rule_id": "energy_capex",
+          "line": "capex",
           "contract": "energy.capex.final_draw"
         }
       }
@@ -439,6 +441,7 @@
             "version": "0.1.0"
           },
           "rule_id": "energy_om_expense",
+          "line": "expense",
           "contract": "energy.om"
         }
       }
@@ -480,6 +483,7 @@
             "version": "0.1.0"
           },
           "rule_id": "energy_ppa_revenue",
+          "line": "revenue",
           "contract": "energy.ppa"
         }
       }

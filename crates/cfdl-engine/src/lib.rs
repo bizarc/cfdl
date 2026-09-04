@@ -1925,7 +1925,7 @@ fn run_deterministic(
     // Ownership and category, published beside the values (docs/13 §7.43):
     // a consumer holding results alone can attribute a stream to the thing
     // that owns it and the kind of cash it is.
-    let stream_attribution: BTreeMap<&str, (&str, Option<&str>, Option<&str>)> = ir
+    let stream_attribution: BTreeMap<&str, StreamAttribution<'_>> = ir
         .streams
         .iter()
         .map(|s| {
@@ -1935,6 +1935,7 @@ fn run_deterministic(
                     s.owner.symbol.as_str(),
                     s.category.as_deref(),
                     lowering_contract(s),
+                    lowering_line(s),
                 ),
             )
         })
@@ -1948,10 +1949,11 @@ fn run_deterministic(
             stream_offsets.get(name).copied(),
             values,
         );
-        if let Some((owner, category, contract)) = stream_attribution.get(name.as_str()) {
+        if let Some((owner, category, contract, line)) = stream_attribution.get(name.as_str()) {
             series.entity = Some((*owner).to_string());
             series.category = category.map(str::to_string);
             series.contract = contract.map(str::to_string);
+            series.line = line.map(str::to_string);
         }
         series_map.insert(format!("stream.{name}"), series);
     }
@@ -2446,6 +2448,164 @@ fn run_deterministic(
         }
     }
 
+    // SLICES (docs/13 §7.90): each declared selection, resolved against the
+    // settled ledger. Kinds intersect, values within a kind union, excepts
+    // subtract; an empty include-kind does not constrain, so a slice of
+    // nothing but excepts reads "everything minus these". Matching delegates
+    // to `cfdl_expr::selector_matches` — one dialect. A slice never carries
+    // a reconciliation block: partial by design, and seen to be partial.
+    let slice_results: Vec<SliceResult> = if ir.views.slices.is_empty() {
+        Vec::new()
+    } else {
+        // parent chains, for entity clauses selecting descendants.
+        let parent_of: BTreeMap<&str, &str> = ir
+            .entities
+            .iter()
+            .filter_map(|e| e.parent.as_deref().map(|p| (e.symbol.as_str(), p)))
+            .collect();
+        let in_scope = |owner: &str, roots: &[String]| -> bool {
+            let mut current = owner;
+            for _ in 0..=parent_of.len() {
+                if roots.iter().any(|r| r == current) {
+                    return true;
+                }
+                match parent_of.get(current) {
+                    Some(next) => current = next,
+                    None => return false,
+                }
+            }
+            false
+        };
+        let stream_meta: BTreeMap<&str, (&str, Option<&str>)> = ir
+            .streams
+            .iter()
+            .map(|st| {
+                (
+                    st.name.as_str(),
+                    (st.owner.symbol.as_str(), st.category.as_deref()),
+                )
+            })
+            .collect();
+        ir.views
+            .slices
+            .iter()
+            .map(|slice| {
+                let mut matched: Vec<&str> = Vec::new();
+                for (name, (owner, category)) in &stream_meta {
+                    let entity_ok = slice.entities.is_empty() || in_scope(owner, &slice.entities);
+                    // `type` and `line` were expanded by the compiler into
+                    // exact names; either clause present means the list binds.
+                    let type_ok = (slice.types.is_empty() && slice.lines.is_empty())
+                        || slice.type_streams.iter().any(|t| t == name);
+                    let cat_ok = slice.categories.is_empty()
+                        || category
+                            .is_some_and(|c| cfdl_expr::selector_matches_any(&slice.categories, c));
+                    let name_ok = slice.streams.is_empty()
+                        || cfdl_expr::selector_matches_any(&slice.streams, name);
+                    if !(entity_ok && type_ok && cat_ok && name_ok) {
+                        continue;
+                    }
+                    let dropped = cfdl_expr::selector_matches_any(&slice.except_streams, name)
+                        || category.is_some_and(|c| {
+                            cfdl_expr::selector_matches_any(&slice.except_categories, c)
+                        })
+                        || (!slice.except_entities.is_empty()
+                            && in_scope(owner, &slice.except_entities));
+                    if !dropped {
+                        matched.push(name);
+                    }
+                }
+                matched.sort_unstable();
+                // THE WINDOW SELECTS PERIODS, the clauses above select streams.
+                // A period outside it contributes nothing — to the net series,
+                // and so to `total`, `npv` and `irr`, which are folds of it.
+                // Dates rather than indices, compared the way `phase_at` does,
+                // so a window means the same thing on any calendar.
+                let in_window: Vec<bool> = match &slice.window {
+                    None => vec![true; cash_periods],
+                    Some(range) => {
+                        let start = Date::parse(&range.start);
+                        let end = Date::parse(&range.end);
+                        (0..cash_periods)
+                            .map(|t| match timeline.get(t) {
+                                None => false,
+                                Some(date) => {
+                                    start.as_ref().is_ok_and(|s| date >= s)
+                                        && end.as_ref().is_ok_and(|e| date <= e)
+                                }
+                            })
+                            .collect()
+                    }
+                };
+                let mut net = vec![0.0_f64; cash_periods];
+                let mut valued: Vec<(Vec<f64>, f64)> = Vec::new();
+                for name in &matched {
+                    if let Some(values) = stream_series.get(*name) {
+                        let cash: Vec<f64> = values[..cash_periods.min(values.len())]
+                            .iter()
+                            .enumerate()
+                            .map(|(t, v)| if in_window[t] { *v } else { 0.0 })
+                            .collect();
+                        for (t, v) in cash.iter().enumerate() {
+                            net[t] += *v;
+                        }
+                        valued.push((cash, stream_offsets.get(*name).copied().unwrap_or(1.0)));
+                    }
+                }
+                let mut slice_metrics: BTreeMap<String, Scalar> = BTreeMap::new();
+                slice_metrics.insert(
+                    "total".to_string(),
+                    Scalar::Money(Money {
+                        amount: round_amount(net.iter().sum()),
+                        currency: ir.model.currency.clone(),
+                    }),
+                );
+                slice_metrics.insert(
+                    "npv".to_string(),
+                    Scalar::Money(Money {
+                        amount: round_amount(npv_with_offsets(&valued, per_period_rate)),
+                        currency: ir.model.currency.clone(),
+                    }),
+                );
+                if let Some(pp_irr) = irr_with_offsets(&valued) {
+                    slice_metrics.insert(
+                        "irr".to_string(),
+                        Scalar::Number(round_amount((1.0 + pp_irr).powf(ppy) - 1.0)),
+                    );
+                }
+                let mut net_series = Series::from_values(
+                    &ir.time.calendar,
+                    &ir.time.start,
+                    cash_periods as u32,
+                    &ir.model.currency,
+                    None,
+                    &net,
+                );
+                net_series.entity = None;
+                SliceResult {
+                    id: slice.name.clone(),
+                    selection: SliceSelection {
+                        entities: slice.entities.clone(),
+                        types: slice.types.clone(),
+                        lines: slice.lines.clone(),
+                        categories: slice.categories.clone(),
+                        streams: slice.streams.clone(),
+                        except_streams: slice.except_streams.clone(),
+                        except_categories: slice.except_categories.clone(),
+                        except_entities: slice.except_entities.clone(),
+                        window: slice.window.as_ref().map(|r| SliceWindow {
+                            from: r.start.clone(),
+                            to: r.end.clone(),
+                        }),
+                    },
+                    streams: matched.iter().map(|n| n.to_string()).collect(),
+                    net: net_series,
+                    metrics: slice_metrics,
+                }
+            })
+            .collect()
+    };
+
     let mut declared_metrics: BTreeMap<String, ExprValue> = BTreeMap::new();
     if !ir.metrics.is_empty() {
         let horizon = periods.saturating_sub(1);
@@ -2509,6 +2669,23 @@ fn run_deterministic(
         // unbound is not the old behaviour: the check below refuses the name
         // outright, where before it read zero and said nothing.
         visible.insert("model.net_cash_flow".to_string(), model_series.clone());
+        // A SLICE'S NET, under the key its results publish it by (docs/13
+        // §7.90: a named selection that functions consume). A metric folding
+        // `slice.all_debt` reads cash selected by TYPE and LINE — the
+        // cross-pack reading of docs/40 stage 5 — without naming a stream.
+        for slice in &slice_results {
+            let net: Vec<f64> = slice
+                .net
+                .values
+                .iter()
+                .map(|v| match v {
+                    SeriesValue::Money(m) => m.amount,
+                    SeriesValue::Number(n) => *n,
+                    _ => 0.0,
+                })
+                .collect();
+            visible.insert(format!("slice.{}", slice.id), net);
+        }
         let shared = Arc::new(visible);
         for metric in &ir.metrics {
             let mut env = build_expr_env(ir, None, config, horizon, &date, &base_inputs);
@@ -2658,161 +2835,6 @@ fn run_deterministic(
         }
     }
 
-    // SLICES (docs/13 §7.90): each declared selection, resolved against the
-    // settled ledger. Kinds intersect, values within a kind union, excepts
-    // subtract; an empty include-kind does not constrain, so a slice of
-    // nothing but excepts reads "everything minus these". Matching delegates
-    // to `cfdl_expr::selector_matches` — one dialect. A slice never carries
-    // a reconciliation block: partial by design, and seen to be partial.
-    let slice_results: Vec<SliceResult> = if ir.views.slices.is_empty() {
-        Vec::new()
-    } else {
-        // parent chains, for entity clauses selecting descendants.
-        let parent_of: BTreeMap<&str, &str> = ir
-            .entities
-            .iter()
-            .filter_map(|e| e.parent.as_deref().map(|p| (e.symbol.as_str(), p)))
-            .collect();
-        let in_scope = |owner: &str, roots: &[String]| -> bool {
-            let mut current = owner;
-            for _ in 0..=parent_of.len() {
-                if roots.iter().any(|r| r == current) {
-                    return true;
-                }
-                match parent_of.get(current) {
-                    Some(next) => current = next,
-                    None => return false,
-                }
-            }
-            false
-        };
-        let stream_meta: BTreeMap<&str, (&str, Option<&str>)> = ir
-            .streams
-            .iter()
-            .map(|st| {
-                (
-                    st.name.as_str(),
-                    (st.owner.symbol.as_str(), st.category.as_deref()),
-                )
-            })
-            .collect();
-        ir.views
-            .slices
-            .iter()
-            .map(|slice| {
-                let mut matched: Vec<&str> = Vec::new();
-                for (name, (owner, category)) in &stream_meta {
-                    let entity_ok = slice.entities.is_empty() || in_scope(owner, &slice.entities);
-                    let type_ok =
-                        slice.types.is_empty() || slice.type_streams.iter().any(|t| t == name);
-                    let cat_ok = slice.categories.is_empty()
-                        || category
-                            .is_some_and(|c| cfdl_expr::selector_matches_any(&slice.categories, c));
-                    let name_ok = slice.streams.is_empty()
-                        || cfdl_expr::selector_matches_any(&slice.streams, name);
-                    if !(entity_ok && type_ok && cat_ok && name_ok) {
-                        continue;
-                    }
-                    let dropped = cfdl_expr::selector_matches_any(&slice.except_streams, name)
-                        || category.is_some_and(|c| {
-                            cfdl_expr::selector_matches_any(&slice.except_categories, c)
-                        })
-                        || (!slice.except_entities.is_empty()
-                            && in_scope(owner, &slice.except_entities));
-                    if !dropped {
-                        matched.push(name);
-                    }
-                }
-                matched.sort_unstable();
-                // THE WINDOW SELECTS PERIODS, the clauses above select streams.
-                // A period outside it contributes nothing — to the net series,
-                // and so to `total`, `npv` and `irr`, which are folds of it.
-                // Dates rather than indices, compared the way `phase_at` does,
-                // so a window means the same thing on any calendar.
-                let in_window: Vec<bool> = match &slice.window {
-                    None => vec![true; cash_periods],
-                    Some(range) => {
-                        let start = Date::parse(&range.start);
-                        let end = Date::parse(&range.end);
-                        (0..cash_periods)
-                            .map(|t| match timeline.get(t) {
-                                None => false,
-                                Some(date) => {
-                                    start.as_ref().is_ok_and(|s| date >= s)
-                                        && end.as_ref().is_ok_and(|e| date <= e)
-                                }
-                            })
-                            .collect()
-                    }
-                };
-                let mut net = vec![0.0_f64; cash_periods];
-                let mut valued: Vec<(Vec<f64>, f64)> = Vec::new();
-                for name in &matched {
-                    if let Some(values) = stream_series.get(*name) {
-                        let cash: Vec<f64> = values[..cash_periods.min(values.len())]
-                            .iter()
-                            .enumerate()
-                            .map(|(t, v)| if in_window[t] { *v } else { 0.0 })
-                            .collect();
-                        for (t, v) in cash.iter().enumerate() {
-                            net[t] += *v;
-                        }
-                        valued.push((cash, stream_offsets.get(*name).copied().unwrap_or(1.0)));
-                    }
-                }
-                let mut slice_metrics: BTreeMap<String, Scalar> = BTreeMap::new();
-                slice_metrics.insert(
-                    "total".to_string(),
-                    Scalar::Money(Money {
-                        amount: round_amount(net.iter().sum()),
-                        currency: ir.model.currency.clone(),
-                    }),
-                );
-                slice_metrics.insert(
-                    "npv".to_string(),
-                    Scalar::Money(Money {
-                        amount: round_amount(npv_with_offsets(&valued, per_period_rate)),
-                        currency: ir.model.currency.clone(),
-                    }),
-                );
-                if let Some(pp_irr) = irr_with_offsets(&valued) {
-                    slice_metrics.insert(
-                        "irr".to_string(),
-                        Scalar::Number(round_amount((1.0 + pp_irr).powf(ppy) - 1.0)),
-                    );
-                }
-                let mut net_series = Series::from_values(
-                    &ir.time.calendar,
-                    &ir.time.start,
-                    cash_periods as u32,
-                    &ir.model.currency,
-                    None,
-                    &net,
-                );
-                net_series.entity = None;
-                SliceResult {
-                    id: slice.name.clone(),
-                    selection: SliceSelection {
-                        entities: slice.entities.clone(),
-                        types: slice.types.clone(),
-                        categories: slice.categories.clone(),
-                        streams: slice.streams.clone(),
-                        except_streams: slice.except_streams.clone(),
-                        except_categories: slice.except_categories.clone(),
-                        except_entities: slice.except_entities.clone(),
-                        window: slice.window.as_ref().map(|r| SliceWindow {
-                            from: r.start.clone(),
-                            to: r.end.clone(),
-                        }),
-                    },
-                    streams: matched.iter().map(|n| n.to_string()).collect(),
-                    net: net_series,
-                    metrics: slice_metrics,
-                }
-            })
-            .collect()
-    };
-
     let unresolved = unresolved_names(&warnings, &declared);
     if !unresolved.is_empty() {
         return Err(EngineError::UnknownName(format!(
@@ -2882,6 +2904,22 @@ mod unresolved_name_tests {
 
 /// The contract a pack-lowered stream came from, read off its provenance
 /// (`generated_by.contract`). `None` for a hand-written stream.
+/// What a stream series is attributed to: its owner, its category, the
+/// contract it was lowered from, and its line by role.
+type StreamAttribution<'a> = (&'a str, Option<&'a str>, Option<&'a str>, Option<&'a str>);
+
+/// The line a pack-lowered stream is, by role, read off its provenance
+/// (`generated_by.line`). `None` for a hand-written stream.
+fn lowering_line(stream: &ir::IrStream) -> Option<&str> {
+    stream
+        .provenance
+        .as_ref()?
+        .generated_by
+        .as_ref()?
+        .get("line")?
+        .as_str()
+}
+
 fn lowering_contract(stream: &ir::IrStream) -> Option<&str> {
     stream
         .provenance

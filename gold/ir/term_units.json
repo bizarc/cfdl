@@ -250,6 +250,7 @@
             "version": "0.1.0"
           },
           "rule_id": "energy_ptc_credit",
+          "line": "benefit",
           "contract": "energy.ptc"
         }
       }

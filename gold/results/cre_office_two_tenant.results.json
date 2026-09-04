@@ -1,7 +1,7 @@
 {
   "results_version": "0.13",
-  "model_hash": "dc53fe4e46326a0f6da707e62b28600574f386c00ffbd7fb4c2e5c876bb0d3b6",
-  "ledger_hash": "850db47efdbab6d6c3f0cd8c6a7e19dce718aec402ea21270d2b34c86de1dc15",
+  "model_hash": "77fb63d68d8bfbfe1fbda131d0089ffbd9c92b1fecda29526fe91e60a37fdf6f",
+  "ledger_hash": "ab7c601ac9278f9b6fbfb0678e45ad1c975cbfc2c3724d6cdf4c71cbed2838e0",
   "engine": {
     "name": "cfdl-engine",
     "version": "0.9.0"
@@ -4280,6 +4280,7 @@
         "entity": "asset.tower",
         "category": "investing.disposal.reversion",
         "contract": "cre.exit_forward",
+        "line": "proceeds",
         "values": [
           {
             "amount": 0.0,
@@ -4773,6 +4774,7 @@
         "entity": "asset.tower",
         "category": "investing.disposal.selling_costs",
         "contract": "cre.exit_forward",
+        "line": "selling_costs",
         "values": [
           {
             "amount": 0.0,
@@ -5266,6 +5268,7 @@
         "entity": "asset.tower",
         "category": "operating.expense.opex",
         "contract": "cre.opex_line",
+        "line": "expense",
         "values": [
           {
             "amount": -25000.0,
@@ -5759,6 +5762,7 @@
         "entity": "asset.tower",
         "category": "operating.revenue.base_rent",
         "contract": "cre.rollover.tenant_a",
+        "line": "rent",
         "values": [
           {
             "amount": 0.0,
@@ -6252,6 +6256,7 @@
         "entity": "asset.tower",
         "category": "investing.capital.leasing",
         "contract": "cre.rollover.tenant_a",
+        "line": "leasing_cost",
         "values": [
           {
             "amount": 0.0,
@@ -6745,6 +6750,7 @@
         "entity": "asset.tower",
         "category": "operating.deduction.abatement",
         "contract": "cre.lease_unit.tenant_a",
+        "line": "abatement",
         "values": [
           {
             "amount": -40000.0,
@@ -7238,6 +7244,7 @@
         "entity": "asset.tower",
         "category": "operating.deduction.abatement",
         "contract": "cre.lease_unit.tenant_b",
+        "line": "abatement",
         "values": [
           {
             "amount": 0.0,
@@ -7731,6 +7738,7 @@
         "entity": "asset.tower",
         "category": "operating.revenue.base_rent",
         "contract": "cre.lease_unit.tenant_a",
+        "line": "rent",
         "values": [
           {
             "amount": 40000.0,
@@ -8224,6 +8232,7 @@
         "entity": "asset.tower",
         "category": "operating.revenue.base_rent",
         "contract": "cre.lease_unit.tenant_b",
+        "line": "rent",
         "values": [
           {
             "amount": 0.0,
@@ -8717,6 +8726,7 @@
         "entity": "asset.tower",
         "category": "operating.revenue.recovery",
         "contract": "cre.lease_unit.tenant_a",
+        "line": "recovery",
         "values": [
           {
             "amount": 0.0,
@@ -9210,6 +9220,7 @@
         "entity": "asset.tower",
         "category": "operating.revenue.recovery",
         "contract": "cre.lease_unit.tenant_b",
+        "line": "recovery",
         "values": [
           {
             "amount": 0.0,
@@ -9703,6 +9714,7 @@
         "entity": "asset.tower",
         "category": "investing.capital.leasing",
         "contract": "cre.lease_unit.tenant_a",
+        "line": "leasing_cost",
         "values": [
           {
             "amount": -200000.0,
@@ -10196,6 +10208,7 @@
         "entity": "asset.tower",
         "category": "investing.capital.leasing",
         "contract": "cre.lease_unit.tenant_b",
+        "line": "leasing_cost",
         "values": [
           {
             "amount": 0.0,
@@ -10689,6 +10702,7 @@
         "entity": "asset.tower",
         "category": "operating.deduction.vacancy",
         "contract": "cre.vacancy_loss",
+        "line": "deduction",
         "values": [
           {
             "amount": -1500.0,

@@ -1,7 +1,7 @@
 {
   "results_version": "0.13",
-  "model_hash": "f0db049a0879932e8904b098d6be5a26c058586bb17f15bdf1b19837d4f458d9",
-  "ledger_hash": "1d2d3f350e6b96cbacee49771baa3f8d02d4ed68c4fbfce97fd9b9aa954ca414",
+  "model_hash": "7b40256bfeb5076c1180c2450f72b51fc6c1721cd7c22a0dcbf837e278861f08",
+  "ledger_hash": "e5cbc5b75a56bc2b53cecd39ec07c0070ddceb132d087a566141e2724066fb76",
   "engine": {
     "name": "cfdl-engine",
     "version": "0.9.0"
@@ -601,6 +601,7 @@
         "entity": "asset.property",
         "category": "investing.disposal.reversion",
         "contract": "cre.exit_cap",
+        "line": "proceeds",
         "values": [
           {
             "amount": 0.0,
@@ -666,6 +667,7 @@
         "entity": "asset.property",
         "category": "operating.expense.opex",
         "contract": "cre.opex_line",
+        "line": "expense",
         "values": [
           {
             "amount": -2000.0,
@@ -731,6 +733,7 @@
         "entity": "asset.property",
         "category": "operating.revenue.other",
         "contract": "cre.revenue_line",
+        "line": "revenue",
         "values": [
           {
             "amount": 5000.0,

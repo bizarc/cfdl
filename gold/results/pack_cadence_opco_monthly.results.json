@@ -1,7 +1,7 @@
 {
   "results_version": "0.13",
-  "model_hash": "9fac8000ee81366299c15b1b9c0bf673848bb28812e32e4178410ae8aa614748",
-  "ledger_hash": "c5d197bb859f7df1f76a5227fad0af6d153f9465d1f9760134ff5b12b3b2d20f",
+  "model_hash": "4df1e67c49242f046f1ab1c5c7d2d54c3e74a79b1f12ac15250d99ff4be69037",
+  "ledger_hash": "a9dc17be75aa9e170fb608ff7627de0c5e90a5a34f9dac08c1051bba0ed28505",
   "engine": {
     "name": "cfdl-engine",
     "version": "0.9.0"
@@ -2125,6 +2125,7 @@
         "entity": "asset.business",
         "category": "investing.capital.capex",
         "contract": "opco.capex_line",
+        "line": "capex",
         "values": [
           {
             "amount": -7400.0,
@@ -2282,6 +2283,7 @@
         "entity": "asset.business",
         "category": "operating.expense.opex",
         "contract": "opco.opex_line",
+        "line": "expense",
         "values": [
           {
             "amount": -70000.0,
@@ -2439,6 +2441,7 @@
         "entity": "asset.business",
         "category": "operating.revenue.recurring",
         "contract": "opco.revenue_line",
+        "line": "revenue",
         "values": [
           {
             "amount": 120000.0,
@@ -2596,6 +2599,7 @@
         "entity": "asset.business",
         "category": "operating.income_tax.paid",
         "contract": "opco.cash_taxes",
+        "line": "paid",
         "values": [
           {
             "amount": -10000.0,

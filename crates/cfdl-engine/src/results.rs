@@ -960,6 +960,9 @@ pub struct SliceSelection {
     pub entities: Vec<String>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub types: Vec<String>,
+    /// Lines by role, as declared (docs/40 §6).
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub lines: Vec<String>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub categories: Vec<String>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
@@ -1085,6 +1088,12 @@ pub struct Series {
     /// the third axis beside `entity` and `category`.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub contract: Option<String>,
+    /// The LINE this stream is, by the role its contract's master names
+    /// (`interest`, `rent`, `proceeds` — docs/40 §6). Present on pack-lowered
+    /// stream series only. With `contract`, what lets a consumer fold every
+    /// debt's interest without knowing any pack's category spelling.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub line: Option<String>,
     pub values: Vec<SeriesValue>,
 }
 
@@ -1107,6 +1116,7 @@ impl Series {
             entity: None,
             category: None,
             contract: None,
+            line: None,
             values: values
                 .iter()
                 .map(|amount| {
@@ -1153,6 +1163,7 @@ impl Series {
             entity: None,
             category: None,
             contract: None,
+            line: None,
             values: values
                 .iter()
                 .map(|v| match v {
@@ -1174,6 +1185,7 @@ impl Series {
             entity: None,
             category: None,
             contract: None,
+            line: None,
             values: values.iter().map(|v| SeriesValue::Number(*v)).collect(),
         }
     }

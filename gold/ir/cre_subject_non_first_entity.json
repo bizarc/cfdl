@@ -218,6 +218,7 @@
             "version": "0.1.0"
           },
           "rule_id": "cre_revenue_line",
+          "line": "revenue",
           "contract": "cre.revenue_line"
         }
       }

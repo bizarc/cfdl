@@ -203,6 +203,7 @@
             "version": "0.1.0"
           },
           "rule_id": "opco_term_debt_interest",
+          "line": "interest",
           "contract": "opco.term_debt"
         }
       }
@@ -244,6 +245,7 @@
             "version": "0.1.0"
           },
           "rule_id": "opco_term_debt_principal",
+          "line": "principal",
           "contract": "opco.term_debt"
         }
       }
@@ -283,6 +285,7 @@
             "version": "0.1.0"
           },
           "rule_id": "opco_term_debt_proceeds",
+          "line": "proceeds",
           "contract": "opco.term_debt"
         }
       }

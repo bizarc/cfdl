@@ -1,0 +1,43 @@
+version 0.1
+model "slice-by-line"
+use pack "cre" version "0.1.0"
+time calendar monthly from 2026-01 for 24
+
+entity asset tower : CRE.Asset.RealProperty
+
+contract cre.lease_unit tenant_a on entity asset.tower {
+  term 2026-01..2027-12
+  terms {
+    rent_year = 480000
+    free_rent_months = 2
+  }
+}
+
+contract cre.permanent_debt on entity asset.tower {
+  term 2026-01..2027-12
+  terms {
+    principal = 3000000
+    interest_rate = 0.06
+    amortization_months = 300
+  }
+}
+
+// A LINE IS SELECTED BY ROLE (docs/40 §6). The master names what every
+// debt produces — interest — and each pack rule names the line it emits,
+// so `line interest` reaches the interest of every debt whichever pack
+// lowered it and whatever category that pack spelled. The clauses
+// intersect: with `type Contract.Debt` beside it, only debt's interest.
+slice debt_interest {
+  type Contract.Debt
+  line interest
+}
+
+// A line alone, across every type that produces one.
+slice all_rent {
+  line rent
+}
+
+// Type alone, as before: every stream lowered from anything that is_a Debt.
+slice all_debt {
+  type Contract.Debt
+}

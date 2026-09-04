@@ -436,6 +436,7 @@
             "version": "0.1.0"
           },
           "rule_id": "energy_capacity_payment",
+          "line": "revenue",
           "contract": "energy.capacity"
         }
       }
@@ -475,6 +476,7 @@
             "version": "0.1.0"
           },
           "rule_id": "energy_capex",
+          "line": "capex",
           "contract": "energy.capex"
         }
       }
@@ -516,6 +518,7 @@
             "version": "0.1.0"
           },
           "rule_id": "energy_debt_interest",
+          "line": "interest",
           "contract": "energy.debt_service"
         }
       }
@@ -557,6 +560,7 @@
             "version": "0.1.0"
           },
           "rule_id": "energy_debt_principal",
+          "line": "principal",
           "contract": "energy.debt_service"
         }
       }
@@ -596,6 +600,7 @@
             "version": "0.1.0"
           },
           "rule_id": "energy_debt_proceeds",
+          "line": "proceeds",
           "contract": "energy.debt_service"
         }
       }
@@ -635,6 +640,7 @@
             "version": "0.1.0"
           },
           "rule_id": "energy_itc_credit",
+          "line": "benefit",
           "contract": "energy.itc"
         }
       }
@@ -676,6 +682,7 @@
             "version": "0.1.0"
           },
           "rule_id": "energy_om_expense",
+          "line": "expense",
           "contract": "energy.om"
         }
       }
@@ -717,6 +724,7 @@
             "version": "0.1.0"
           },
           "rule_id": "energy_ppa_revenue",
+          "line": "revenue",
           "contract": "energy.ppa"
         }
       }
@@ -758,6 +766,7 @@
             "version": "0.1.0"
           },
           "rule_id": "energy_storage_arbitrage",
+          "line": "revenue",
           "contract": "energy.storage_arbitrage"
         }
       }

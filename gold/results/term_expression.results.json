@@ -1,7 +1,7 @@
 {
   "results_version": "0.13",
-  "model_hash": "0acfd3655fcc4b46ab56e3349baa081f74c7175ce4b95a94c6ede4f8db7f3dc2",
-  "ledger_hash": "14703f33b8bda172ba60dae143f9d3544713dab335a2f1ac8539342c8cfde156",
+  "model_hash": "ef6007fa4115aba094f0314ef64965adef3dca59f0fbe38a05c32db223676563",
+  "ledger_hash": "46c9c1c9b7d7003107e630e27582368177c8a12010adc1a1e77c8b49ad794688",
   "engine": {
     "name": "cfdl-engine",
     "version": "0.9.0"
@@ -476,6 +476,7 @@
         "entity": "asset.plant",
         "category": "operating.revenue.energy",
         "contract": "energy.ppa.plant_a",
+        "line": "revenue",
         "values": [
           {
             "amount": 375000.0,

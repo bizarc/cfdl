@@ -326,6 +326,7 @@
             "version": "0.1.0"
           },
           "rule_id": "opco_capex_line",
+          "line": "capex",
           "contract": "opco.capex_line"
         }
       }
@@ -367,6 +368,7 @@
             "version": "0.1.0"
           },
           "rule_id": "opco_opex_line",
+          "line": "expense",
           "contract": "opco.opex_line"
         }
       }
@@ -408,6 +410,7 @@
             "version": "0.1.0"
           },
           "rule_id": "opco_revenue_line",
+          "line": "revenue",
           "contract": "opco.revenue_line"
         }
       }
@@ -449,6 +452,7 @@
             "version": "0.1.0"
           },
           "rule_id": "opco_cash_taxes",
+          "line": "paid",
           "contract": "opco.cash_taxes"
         }
       }

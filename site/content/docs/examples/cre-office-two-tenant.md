@@ -168,6 +168,25 @@ contract cre.permanent_debt on entity asset.tower {
     funded_at_close = 0
   }
 }
+
+// Views by master type: the leases, the debt and the disposal, whichever
+// pack contract each was lowered from. A slice is a view and moves no number.
+slice leases {
+  type Contract.Lease
+}
+
+slice debt_service {
+  type Contract.Debt
+}
+
+slice debt_interest {
+  type Contract.Debt
+  line interest
+}
+
+slice disposal {
+  type Contract.Sale
+}
 ```
 
 ## Run configuration

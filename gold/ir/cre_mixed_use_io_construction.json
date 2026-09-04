@@ -254,6 +254,7 @@
             "version": "0.1.0"
           },
           "rule_id": "cre_exit_cap_sale",
+          "line": "proceeds",
           "contract": "cre.exit_cap"
         }
       }
@@ -295,6 +296,7 @@
             "version": "0.1.0"
           },
           "rule_id": "cre_opex_line",
+          "line": "expense",
           "contract": "cre.opex_line"
         }
       }

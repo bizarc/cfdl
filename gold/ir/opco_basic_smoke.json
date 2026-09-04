@@ -313,6 +313,7 @@
             "version": "0.1.0"
           },
           "rule_id": "opco_exit_multiple",
+          "line": "proceeds",
           "contract": "opco.exit_multiple"
         }
       }
@@ -354,6 +355,7 @@
             "version": "0.1.0"
           },
           "rule_id": "opco_opex_line",
+          "line": "expense",
           "contract": "opco.opex_line"
         }
       }
@@ -395,6 +397,7 @@
             "version": "0.1.0"
           },
           "rule_id": "opco_revenue_line",
+          "line": "revenue",
           "contract": "opco.revenue_line"
         }
       }
@@ -436,6 +439,7 @@
             "version": "0.1.0"
           },
           "rule_id": "opco_working_capital",
+          "line": "working_capital",
           "contract": "opco.working_capital"
         }
       }

@@ -322,6 +322,7 @@
             "version": "0.1.0"
           },
           "rule_id": "credit_pool_float_io_bullet_bullet",
+          "line": "principal",
           "contract": "credit.pool_float_io_bullet.smoke"
         }
       }
@@ -363,6 +364,7 @@
             "version": "0.1.0"
           },
           "rule_id": "credit_pool_float_io_bullet_interest",
+          "line": "interest",
           "contract": "credit.pool_float_io_bullet.smoke"
         }
       }
@@ -404,6 +406,7 @@
             "version": "0.1.0"
           },
           "rule_id": "credit_pool_float_io_bullet_penalty",
+          "line": "penalty",
           "contract": "credit.pool_float_io_bullet.smoke"
         }
       }
@@ -445,6 +448,7 @@
             "version": "0.1.0"
           },
           "rule_id": "credit_pool_float_io_bullet_prepay",
+          "line": "prepayment",
           "contract": "credit.pool_float_io_bullet.smoke"
         }
       }
@@ -486,6 +490,7 @@
             "version": "0.1.0"
           },
           "rule_id": "credit_pool_float_io_bullet_recoveries",
+          "line": "recovery",
           "contract": "credit.pool_float_io_bullet.smoke"
         }
       }
@@ -527,6 +532,7 @@
             "version": "0.1.0"
           },
           "rule_id": "credit_pool_float_io_bullet_servicing",
+          "line": "servicing",
           "contract": "credit.pool_float_io_bullet.smoke"
         }
       }
@@ -566,6 +572,7 @@
             "version": "0.1.0"
           },
           "rule_id": "credit_purchase_price",
+          "line": "price",
           "contract": "credit.purchase.smoke"
         }
       }

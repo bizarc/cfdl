@@ -1,7 +1,7 @@
 {
   "results_version": "0.13",
-  "model_hash": "9411ea32cefc59851a89a5e4facb555fbbafc8005b532985c736550779cbd730",
-  "ledger_hash": "b930969952e1f373f5942a21faf233af3748c519dcfe7f51cc1337667f536650",
+  "model_hash": "cc2f9d9f7c0dd522a11e508f0625c4daed7aa7325d43dc0b9246fa577f6b4c1e",
+  "ledger_hash": "26b1ddd721f94a77ffd65d00632769f3971f18150907ef94e96eb4b44f259991",
   "engine": {
     "name": "cfdl-engine",
     "version": "0.9.0"
@@ -929,6 +929,7 @@
         "entity": "asset.property",
         "category": "operating.revenue.base_rent",
         "contract": "cre.lease",
+        "line": "rent",
         "values": [
           {
             "amount": 0.0,

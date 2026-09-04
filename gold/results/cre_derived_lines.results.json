@@ -1,7 +1,7 @@
 {
   "results_version": "0.13",
-  "model_hash": "99af869d28844c4e08d7cbe57d2778715d5fa68df09f9bcf68aa54be23fb2495",
-  "ledger_hash": "d75abe25c415680a963d50b81e721941f888adac92904c01107fb5d7918768f2",
+  "model_hash": "55802dd897dbce8537246b042ff0f1942620272f23832b50b2937dc94b72a1d9",
+  "ledger_hash": "962cc7922bd4649cc378797e5ecc7649b86327b69c352bb1ddfbd9ab05a110ce",
   "engine": {
     "name": "cfdl-engine",
     "version": "0.9.0"
@@ -3025,6 +3025,7 @@
         "entity": "asset.strip_center",
         "category": "investing.disposal.reversion",
         "contract": "cre.exit",
+        "line": "proceeds",
         "values": [
           {
             "amount": 0.0,
@@ -3374,6 +3375,7 @@
         "entity": "asset.strip_center",
         "category": "investing.disposal.selling_costs",
         "contract": "cre.exit",
+        "line": "selling_costs",
         "values": [
           {
             "amount": 0.0,
@@ -3723,6 +3725,7 @@
         "entity": "asset.strip_center",
         "category": "operating.expense.opex",
         "contract": "cre.opex_line",
+        "line": "expense",
         "values": [
           {
             "amount": -20000.0,
@@ -4072,6 +4075,7 @@
         "entity": "asset.strip_center",
         "category": "operating.expense.opex",
         "contract": "cre.opex_line.management",
+        "line": "expense",
         "values": [
           {
             "amount": -1746.0,
@@ -4421,6 +4425,7 @@
         "entity": "asset.strip_center",
         "category": "operating.deduction.abatement",
         "contract": "cre.lease_unit.anchor",
+        "line": "abatement",
         "values": [
           {
             "amount": 0.0,
@@ -4770,6 +4775,7 @@
         "entity": "asset.strip_center",
         "category": "operating.revenue.base_rent",
         "contract": "cre.lease_unit.anchor",
+        "line": "rent",
         "values": [
           {
             "amount": 45000.0,
@@ -5119,6 +5125,7 @@
         "entity": "asset.strip_center",
         "category": "operating.revenue.recovery",
         "contract": "cre.lease_unit.anchor",
+        "line": "recovery",
         "values": [
           {
             "amount": 0.0,
@@ -5468,6 +5475,7 @@
         "entity": "asset.strip_center",
         "category": "investing.capital.leasing",
         "contract": "cre.lease_unit.anchor",
+        "line": "leasing_cost",
         "values": [
           {
             "amount": -210000.0,
@@ -5817,6 +5825,7 @@
         "entity": "asset.strip_center",
         "category": "operating.deduction.vacancy",
         "contract": "cre.vacancy_loss",
+        "line": "deduction",
         "values": [
           {
             "amount": -1350.0,

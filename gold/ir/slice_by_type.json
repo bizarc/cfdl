@@ -238,6 +238,7 @@
             "version": "0.1.0"
           },
           "rule_id": "cre_permanent_debt_interest",
+          "line": "interest",
           "contract": "cre.permanent_debt"
         }
       }
@@ -279,6 +280,7 @@
             "version": "0.1.0"
           },
           "rule_id": "cre_permanent_debt_principal",
+          "line": "principal",
           "contract": "cre.permanent_debt"
         }
       }
@@ -318,6 +320,7 @@
             "version": "0.1.0"
           },
           "rule_id": "cre_permanent_debt_proceeds",
+          "line": "proceeds",
           "contract": "cre.permanent_debt"
         }
       }

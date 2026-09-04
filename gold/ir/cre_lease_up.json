@@ -211,6 +211,7 @@
             "version": "0.1.0"
           },
           "rule_id": "cre_lease_base_rent",
+          "line": "rent",
           "contract": "cre.lease"
         }
       }

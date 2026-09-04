@@ -11,7 +11,7 @@
       "end_col": 52
     },
     "path": null,
-    "hint": "Check the spelling. A metric may fold any series this model publishes: a stream by its own name or as `stream.<name>`, a waterfall step, `entity.<symbol>.net_cash_flow`, `account.<name>`, an entity field, a money subtotal, or `model.net_cash_flow`. A selector ending in `.*` states that matching nothing is intended.",
+    "hint": "Check the spelling. A metric may fold any series this model publishes: a stream by its own name or as `stream.<name>`, a waterfall step, `entity.<symbol>.net_cash_flow`, `account.<name>`, an entity field, a money subtotal, a slice's net as `slice.<name>`, or `model.net_cash_flow`. A selector ending in `.*` states that matching nothing is intended.",
     "notes": []
   }
 ]

@@ -1,0 +1,35 @@
+version 0.1
+model "statement-row-by-type"
+use pack "cre" version "0.1.0"
+time calendar monthly from 2026-01 for 24
+
+entity asset tower : CRE.Asset.RealProperty
+
+contract cre.lease_unit tenant_a on entity asset.tower {
+  term 2026-01..2027-12
+  terms {
+    rent_year = 480000
+  }
+}
+
+contract cre.permanent_debt on entity asset.tower {
+  term 2026-01..2027-12
+  terms {
+    principal = 3000000
+    interest_rate = 0.06
+    amortization_months = 300
+  }
+}
+
+// AN AUTHORED ROW DRAWS BY TYPE AND LINE, as a slice does: the compiler
+// expands the clauses to exact stream names and the row claims those, so
+// the bottom line reconciles the same way a category row's does. A row
+// written this way survives a change of pack: "every debt's interest"
+// names no pack's category.
+statement lender {
+  label    "Lender view"
+  line     "Rent"           { type Contract.Lease line rent }
+  line     "Interest"       { type Contract.Debt line interest display positive }
+  line     "Principal"      { type Contract.Debt line principal display positive }
+  subtotal "Debt service"   { type Contract.Debt line interest line principal display positive }
+}

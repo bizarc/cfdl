@@ -337,6 +337,11 @@ pub struct SliceStmt {
     /// Ontology types, matched transitively through `refines` — `type
     /// Contract.Debt` selects streams lowered from anything that is_a Debt.
     pub types: Vec<String>,
+    /// Lines by ROLE (docs/40 §6) — `line interest` selects every stream a
+    /// pack rule emits as its type's `interest` line, whichever pack and
+    /// whatever category it spells. Intersects with `type`: `type
+    /// Contract.Debt line interest` is the interest of every debt.
+    pub lines: Vec<String>,
     /// Category selectors, quoted — the same dialect `series_sum` reads.
     pub categories: Vec<String>,
     /// Stream-name selectors, quoted — same dialect.
@@ -394,6 +399,11 @@ pub struct StatementRowStmt {
     pub depth: u32,
     pub categories: Vec<String>,
     pub streams: Vec<String>,
+    /// Ontology types, as on a slice: the row draws every stream lowered from
+    /// a contract whose type is_a the named master.
+    pub types: Vec<String>,
+    /// Lines by role, as on a slice.
+    pub lines: Vec<String>,
     /// A declared slice, whose net series the row draws.
     pub slice: Option<String>,
     /// A PUBLISHED SERIES key — `domain.cre.noi`, `entity.asset.x.net_cash_flow`.
@@ -3772,6 +3782,8 @@ impl<'a> Parser<'a> {
             depth: 0,
             categories: Vec::new(),
             streams: Vec::new(),
+            types: Vec::new(),
+            lines: Vec::new(),
             slice: None,
             series: None,
             entity: None,
@@ -3797,6 +3809,17 @@ impl<'a> Parser<'a> {
                 TokenKind::Keyword(Keyword::Stream) => {
                     let value = self.parse_slice_selector("stream")?;
                     row.streams.push(value);
+                }
+                TokenKind::Keyword(Keyword::Type) => {
+                    let value = self.parse_slice_type_ref()?;
+                    row.types.push(value);
+                }
+                // `line <role>` — the same clause a slice takes. Contextual:
+                // `line` is a row KIND at the statement level and a clause
+                // word inside a row's body, and the two positions never meet.
+                TokenKind::Ident(ref ident) if ident == "line" => {
+                    let value = self.parse_line_role()?;
+                    row.lines.push(value);
                 }
                 TokenKind::Keyword(Keyword::Slice) => {
                     let value_tok = self.bump();
@@ -3893,7 +3916,7 @@ impl<'a> Parser<'a> {
                     self.push_expected(
                         tok.span,
                         format!(
-                            "Unexpected '{word}' in a statement row. A row draws from 'category', 'stream', 'slice', 'entity' or a published 'series', a ratio states 'of <slice> to <slice>', and 'display' and 'depth' set presentation."
+                            "Unexpected '{word}' in a statement row. A row draws from 'category', 'stream', 'type', 'line', 'slice', 'entity' or a published 'series', a ratio states 'of <slice> to <slice>', and 'display' and 'depth' set presentation."
                         ),
                     );
                     return None;
@@ -4045,6 +4068,8 @@ impl<'a> Parser<'a> {
                         depth: 0,
                         categories: Vec::new(),
                         streams: Vec::new(),
+                        types: Vec::new(),
+                        lines: Vec::new(),
                         slice: None,
                         series: None,
                         entity: None,
@@ -4149,6 +4174,7 @@ impl<'a> Parser<'a> {
             name,
             entities: Vec::new(),
             types: Vec::new(),
+            lines: Vec::new(),
             categories: Vec::new(),
             streams: Vec::new(),
             except_streams: Vec::new(),
@@ -4178,6 +4204,10 @@ impl<'a> Parser<'a> {
                 TokenKind::Keyword(Keyword::Type) => {
                     let value = self.parse_slice_type_ref()?;
                     stmt.types.push(value);
+                }
+                TokenKind::Ident(ref ident) if ident == "line" => {
+                    let value = self.parse_line_role()?;
+                    stmt.lines.push(value);
                 }
                 TokenKind::Keyword(Keyword::Stream) => {
                     let value = self.parse_slice_selector("stream")?;
@@ -4260,6 +4290,22 @@ impl<'a> Parser<'a> {
                 self.push_expected(
                     tok.span,
                     "Expected an ontology type after 'type' (e.g. Contract.Debt).".to_string(),
+                );
+                None
+            }
+        }
+    }
+
+    /// `line <role>` — a bare identifier naming a master's line (docs/40 §6).
+    fn parse_line_role(&mut self) -> Option<String> {
+        let tok = self.bump();
+        match &tok.kind {
+            TokenKind::Ident(value) => Some(value.clone()),
+            _ => {
+                self.push_expected(
+                    tok.span,
+                    "Expected a line role after 'line' (e.g. interest, rent, proceeds)."
+                        .to_string(),
                 );
                 None
             }
