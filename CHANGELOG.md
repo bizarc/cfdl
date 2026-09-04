@@ -22,7 +22,14 @@ its contract. MCP `lookup` reads each type against its master chain and
 lists the masters a pack refines. Stage 5: `type <Master>` and `line
 <role>` select on slices and authored statement rows, a metric folds a
 slice's net as `slice.<name>`, and each lowered series carries its `line`
-beside its `contract`.
+beside its `contract`. Roster completion: `Contract.Supply` for Offtake,
+Construction removed, and `Contract.Security`, `Equity`, `Royalty`, `Grant`
+and `Guarantee` added from their governing documents, with the credit
+pack's participation and structured note as Security's refinements and a
+waterfall step that names the contract and line it pays. Stage 6:
+`Contract.Debt` names the `balance` field role, and a pack machine's
+`on enter retired { set balance = 0 }` extinguishes every field that plays
+it.
 
 ## [0.9.0] - 2026-09-01
 

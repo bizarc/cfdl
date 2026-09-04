@@ -1,13 +1,13 @@
 {
   "ir_version": "0.1",
   "model": {
-    "name": "evaluation-order",
+    "name": "pool-retires-by-role",
     "currency": "USD"
   },
   "time": {
     "calendar": "monthly",
-    "start": "2017-01-01",
-    "periods": 4
+    "start": "2026-01-01",
+    "periods": 15
   },
   "phases": [],
   "entities": [
@@ -15,92 +15,49 @@
       "id": "3047749aa99daa5bb0350275187c60f6",
       "symbol": "asset.pool",
       "type": "Credit.Asset.LoanPool",
-      "fields": {
-        "cash_trigger": "200000.0",
-        "collateral_type": "auto",
-        "trigger_level": "700000.0"
-      },
+      "fields": {},
       "rules": {
-        "cash_flag": {
-          "init": {
-            "lang": "cfdl",
-            "src": "0.0"
-          },
-          "next": {
-            "lang": "cfdl",
-            "src": "prev"
-          }
-        },
-        "credit_level_pay_survival_lag_one": {
+        "credit_level_pay_survival_lag_smoke": {
           "init": {
             "lang": "cfdl",
             "src": "1"
           },
           "next": {
             "lang": "cfdl",
-            "src": "if(months_between(parse_date(\"2017-01-01\"), time.date) > 0 and months_between(parse_date(\"2017-01-01\"), time.date) - 0 < 4, prev * ((1 - cpr_to_periodic(if(0 == 0, 0, 0 * (min(0.0002 * min(max(1, (0 + (months_between(parse_date(\"2017-01-01\"), time.date) - 0 - 1)) + 1), 30), 0.006) - 0.000095 * max(0, min(max(1, (0 + (months_between(parse_date(\"2017-01-01\"), time.date) - 0 - 1)) + 1), 120) - 60))), 12)) - if(0 == 0, cpr_to_periodic(if(0 == 0, 0, min(0 * 0.002 * max(1, min((0 + (months_between(parse_date(\"2017-01-01\"), time.date) - 0 - 1)) + 1, 30)), 1)), 12), min(0 / max(1 - 0 * (0 + (months_between(parse_date(\"2017-01-01\"), time.date) - 0 - 1)), 0.000001), 1))), prev)"
+            "src": "if(months_between(parse_date(\"2026-01-01\"), time.date) > 3 and months_between(parse_date(\"2026-01-01\"), time.date) - 3 < 12, prev * ((1 - cpr_to_periodic(if(0 == 0, 0.03, 0 * (min(0.0002 * min(max(1, (0 + (months_between(parse_date(\"2026-01-01\"), time.date) - 3 - 1)) + 1), 30), 0.006) - 0.000095 * max(0, min(max(1, (0 + (months_between(parse_date(\"2026-01-01\"), time.date) - 3 - 1)) + 1), 120) - 60))), 12)) - if(0 == 0, cpr_to_periodic(if(0 == 0, 0.10, min(0 * 0.002 * max(1, min((0 + (months_between(parse_date(\"2026-01-01\"), time.date) - 3 - 1)) + 1, 30)), 1)), 12), min(0 / max(1 - 0 * (0 + (months_between(parse_date(\"2026-01-01\"), time.date) - 3 - 1)), 0.000001), 1))), prev)"
           },
           "schedule": {
             "kind": "Every",
             "every": "monthly",
-            "from": "2017-01-01",
-            "to": "2017-04-01"
+            "from": "2026-01-01",
+            "to": "2027-03-01"
           }
         },
-        "credit_level_pay_survival_one": {
+        "credit_level_pay_survival_smoke": {
           "init": {
             "lang": "cfdl",
             "src": "1"
           },
           "next": {
             "lang": "cfdl",
-            "src": "prev * ((1 - cpr_to_periodic(if(0 == 0, 0, 0 * (min(0.0002 * min(max(1, (0 + (months_between(parse_date(\"2017-01-01\"), time.date) - 1)) + 1), 30), 0.006) - 0.000095 * max(0, min(max(1, (0 + (months_between(parse_date(\"2017-01-01\"), time.date) - 1)) + 1), 120) - 60))), 12)) - if(0 == 0, cpr_to_periodic(if(0 == 0, 0, min(0 * 0.002 * max(1, min((0 + (months_between(parse_date(\"2017-01-01\"), time.date) - 1)) + 1, 30)), 1)), 12), min(0 / max(1 - 0 * (0 + (months_between(parse_date(\"2017-01-01\"), time.date) - 1)), 0.000001), 1)))"
+            "src": "prev * ((1 - cpr_to_periodic(if(0 == 0, 0.03, 0 * (min(0.0002 * min(max(1, (0 + (months_between(parse_date(\"2026-01-01\"), time.date) - 1)) + 1), 30), 0.006) - 0.000095 * max(0, min(max(1, (0 + (months_between(parse_date(\"2026-01-01\"), time.date) - 1)) + 1), 120) - 60))), 12)) - if(0 == 0, cpr_to_periodic(if(0 == 0, 0.10, min(0 * 0.002 * max(1, min((0 + (months_between(parse_date(\"2026-01-01\"), time.date) - 1)) + 1, 30)), 1)), 12), min(0 / max(1 - 0 * (0 + (months_between(parse_date(\"2026-01-01\"), time.date) - 1)), 0.000001), 1)))"
           },
           "schedule": {
             "kind": "Every",
             "every": "monthly",
-            "from": "2017-01-01",
-            "to": "2017-04-01"
-          }
-        },
-        "fee_rate": {
-          "init": {
-            "lang": "cfdl",
-            "src": "0.02"
-          },
-          "next": {
-            "lang": "cfdl",
-            "src": "prev"
-          }
-        },
-        "running": {
-          "init": {
-            "lang": "cfdl",
-            "src": "1000000.0"
-          },
-          "next": {
-            "lang": "cfdl",
-            "src": "max(0.0, prev - 150000.0)"
+            "from": "2026-01-01",
+            "to": "2027-03-01"
           }
         }
       },
       "field_roles": {
         "balance": [
-          "credit_level_pay_survival_one",
-          "credit_level_pay_survival_lag_one"
+          "credit_level_pay_survival_smoke",
+          "credit_level_pay_survival_lag_smoke"
         ]
       },
       "state": {},
       "lifecycle": "credit.pool"
-    },
-    {
-      "id": "99860de0f1366ccd2b1d50dc1ea097e1",
-      "symbol": "party.investor",
-      "type": "Credit.Party.Investor",
-      "fields": {
-        "name": "Investor"
-      },
-      "state": {}
     }
   ],
   "assumptions": {
@@ -162,48 +119,6 @@
               }
             }
           ]
-        }
-      ]
-    }
-  ],
-  "waterfalls": [
-    {
-      "name": "dist",
-      "entity": "asset.pool",
-      "schedule": {
-        "kind": "Every",
-        "every": "monthly",
-        "from": "2017-01-01",
-        "to": "2017-04-01"
-      },
-      "source": {
-        "lang": "cfdl",
-        "src": "available"
-      },
-      "steps": [
-        {
-          "name": "reads_fee_rate",
-          "payee": "party.investor",
-          "amount": {
-            "lang": "cfdl",
-            "src": "asset.pool.fee_rate * 1000000.0"
-          }
-        },
-        {
-          "name": "reads_cash_flag",
-          "payee": "party.investor",
-          "amount": {
-            "lang": "cfdl",
-            "src": "asset.pool.cash_flag * 111.0"
-          }
-        },
-        {
-          "name": "residual",
-          "payee": "party.investor",
-          "amount": {
-            "lang": "cfdl",
-            "src": "remaining"
-          }
         }
       ]
     }
@@ -304,26 +219,28 @@
   ],
   "contracts": [
     {
-      "id": "9ed7eec36bb980bb20a557999cb02b50",
-      "name": "credit.pool_level_pay.one",
+      "id": "3e672281a626ed0c7ff9567f6236c965",
+      "name": "credit.pool_level_pay.smoke",
       "type": "Credit.Contract.LevelPayPool",
       "contract_name": "credit.pool_level_pay",
       "master": "Contract.Debt",
-      "instance": "one",
+      "instance": "smoke",
       "subject": {
         "symbol": "asset.pool"
       },
       "term": {
-        "start": "2017-01-01",
-        "end": "2017-04-01"
+        "start": "2026-01-01",
+        "end": "2027-03-01"
       },
       "currency": "USD",
       "terms": {
-        "cdr": 0,
-        "cpr": 0,
-        "interest_rate": 0.12,
-        "principal": 1000000,
-        "term_months": 4
+        "cdr": 0.03,
+        "cpr": 0.1,
+        "interest_rate": 0.06,
+        "principal": 1200000,
+        "recovery_lag_months": 3,
+        "severity": 0.5,
+        "term_months": 12
       },
       "effects": {
         "streams": []
@@ -331,9 +248,9 @@
       "provenance": {
         "source_file": "model.cfdl",
         "source_span": {
-          "start_line": 48,
+          "start_line": 8,
           "start_col": 1,
-          "end_line": 51,
+          "end_line": 19,
           "end_col": 1
         }
       }
@@ -341,8 +258,8 @@
   ],
   "streams": [
     {
-      "id": "573ed07c96b0a8b61198e67e7187e526",
-      "name": "credit.pool.interest.one",
+      "id": "0478c929a7f8f3cd37ff9221efe4b040",
+      "name": "credit.pool.interest.smoke",
       "owner": {
         "symbol": "asset.pool"
       },
@@ -352,12 +269,12 @@
       "schedule": {
         "kind": "Every",
         "every": "monthly",
-        "from": "2017-01-01",
-        "to": "2017-04-01"
+        "from": "2026-01-01",
+        "to": "2027-03-01"
       },
       "amount": {
         "lang": "cfdl",
-        "src": "if(months_between(parse_date(\"2017-01-01\"), time.date) < 4.0, (1000000.0 * (pv(0.12 / 12.0, 4.0 - months_between(parse_date(\"2017-01-01\"), time.date), -1.0) / pv(0.12 / 12.0, 4.0, -1.0)) * entity.asset.pool.credit_level_pay_survival_one) * (1.0 - cpr_to_periodic(if(0.0 == 0.0, 0.0, 0.0 * (min(0.0002 * min(max(1.0, (0.0 + (months_between(parse_date(\"2017-01-01\"), time.date))) + 1.0), 30.0), 0.006) - 0.000095 * max(0.0, min(max(1.0, (0.0 + (months_between(parse_date(\"2017-01-01\"), time.date))) + 1.0), 120.0) - 60.0))), 12.0)) * (0.12 / 12.0), 0.0)"
+        "src": "if(months_between(parse_date(\"2026-01-01\"), time.date) < 12.0, (1200000.0 * (pv(0.06 / 12.0, 12.0 - months_between(parse_date(\"2026-01-01\"), time.date), -1.0) / pv(0.06 / 12.0, 12.0, -1.0)) * entity.asset.pool.credit_level_pay_survival_smoke) * (1.0 - cpr_to_periodic(if(0.0 == 0.0, 0.03, 0.0 * (min(0.0002 * min(max(1.0, (0.0 + (months_between(parse_date(\"2026-01-01\"), time.date))) + 1.0), 30.0), 0.006) - 0.000095 * max(0.0, min(max(1.0, (0.0 + (months_between(parse_date(\"2026-01-01\"), time.date))) + 1.0), 120.0) - 60.0))), 12.0)) * (0.06 / 12.0), 0.0)"
       },
       "active_when": {
         "lang": "cfdl",
@@ -366,9 +283,9 @@
       "provenance": {
         "source_file": "model.cfdl",
         "source_span": {
-          "start_line": 48,
+          "start_line": 8,
           "start_col": 1,
-          "end_line": 51,
+          "end_line": 19,
           "end_col": 1
         },
         "generated_by": {
@@ -378,13 +295,13 @@
           },
           "rule_id": "credit_pool_level_pay_interest",
           "line": "interest",
-          "contract": "credit.pool_level_pay.one"
+          "contract": "credit.pool_level_pay.smoke"
         }
       }
     },
     {
-      "id": "5e35242657eb828ea9c892f2c2b670ae",
-      "name": "credit.pool.penalty.one",
+      "id": "0085c9e8423e9c65828f0e07a89a8e1f",
+      "name": "credit.pool.penalty.smoke",
       "owner": {
         "symbol": "asset.pool"
       },
@@ -394,12 +311,12 @@
       "schedule": {
         "kind": "Every",
         "every": "monthly",
-        "from": "2017-01-01",
-        "to": "2017-04-01"
+        "from": "2026-01-01",
+        "to": "2027-03-01"
       },
       "amount": {
         "lang": "cfdl",
-        "src": "if(months_between(parse_date(\"2017-01-01\"), time.date) < 4.0, (1000000.0 * (pv(0.12 / 12.0, 4.0 - months_between(parse_date(\"2017-01-01\"), time.date), -1.0) / pv(0.12 / 12.0, 4.0, -1.0)) * entity.asset.pool.credit_level_pay_survival_one) * (1.0 - ((-pmt(0.12 / 12.0, 4.0 - months_between(parse_date(\"2017-01-01\"), time.date), 1.0)) - (0.12 / 12.0))) * if(0.0 == 0.0, cpr_to_periodic(if(0.0 == 0.0, 0.0, min(0.0 * 0.002 * max(1.0, min((0.0 + (months_between(parse_date(\"2017-01-01\"), time.date))) + 1.0, 30.0)), 1.0)), 12.0), min(0.0 / max(1.0 - 0.0 * (0.0 + (months_between(parse_date(\"2017-01-01\"), time.date))), 0.000001), 1.0)) * 0.0, 0.0)"
+        "src": "if(months_between(parse_date(\"2026-01-01\"), time.date) < 12.0, (1200000.0 * (pv(0.06 / 12.0, 12.0 - months_between(parse_date(\"2026-01-01\"), time.date), -1.0) / pv(0.06 / 12.0, 12.0, -1.0)) * entity.asset.pool.credit_level_pay_survival_smoke) * (1.0 - ((-pmt(0.06 / 12.0, 12.0 - months_between(parse_date(\"2026-01-01\"), time.date), 1.0)) - (0.06 / 12.0))) * if(0.0 == 0.0, cpr_to_periodic(if(0.0 == 0.0, 0.10, min(0.0 * 0.002 * max(1.0, min((0.0 + (months_between(parse_date(\"2026-01-01\"), time.date))) + 1.0, 30.0)), 1.0)), 12.0), min(0.0 / max(1.0 - 0.0 * (0.0 + (months_between(parse_date(\"2026-01-01\"), time.date))), 0.000001), 1.0)) * 0.0, 0.0)"
       },
       "active_when": {
         "lang": "cfdl",
@@ -408,9 +325,9 @@
       "provenance": {
         "source_file": "model.cfdl",
         "source_span": {
-          "start_line": 48,
+          "start_line": 8,
           "start_col": 1,
-          "end_line": 51,
+          "end_line": 19,
           "end_col": 1
         },
         "generated_by": {
@@ -420,13 +337,13 @@
           },
           "rule_id": "credit_pool_level_pay_penalty",
           "line": "penalty",
-          "contract": "credit.pool_level_pay.one"
+          "contract": "credit.pool_level_pay.smoke"
         }
       }
     },
     {
-      "id": "ead8711c849e8a972500f00acf07fcfa",
-      "name": "credit.pool.prepay.one",
+      "id": "a132a05d1f301dab8fe7edf705c6ef4a",
+      "name": "credit.pool.prepay.smoke",
       "owner": {
         "symbol": "asset.pool"
       },
@@ -436,12 +353,12 @@
       "schedule": {
         "kind": "Every",
         "every": "monthly",
-        "from": "2017-01-01",
-        "to": "2017-04-01"
+        "from": "2026-01-01",
+        "to": "2027-03-01"
       },
       "amount": {
         "lang": "cfdl",
-        "src": "if(months_between(parse_date(\"2017-01-01\"), time.date) < 4.0, (1000000.0 * (pv(0.12 / 12.0, 4.0 - months_between(parse_date(\"2017-01-01\"), time.date), -1.0) / pv(0.12 / 12.0, 4.0, -1.0)) * entity.asset.pool.credit_level_pay_survival_one) * (1.0 - ((-pmt(0.12 / 12.0, 4.0 - months_between(parse_date(\"2017-01-01\"), time.date), 1.0)) - (0.12 / 12.0))) * if(0.0 == 0.0, cpr_to_periodic(if(0.0 == 0.0, 0.0, min(0.0 * 0.002 * max(1.0, min((0.0 + (months_between(parse_date(\"2017-01-01\"), time.date))) + 1.0, 30.0)), 1.0)), 12.0), min(0.0 / max(1.0 - 0.0 * (0.0 + (months_between(parse_date(\"2017-01-01\"), time.date))), 0.000001), 1.0)), 0.0)"
+        "src": "if(months_between(parse_date(\"2026-01-01\"), time.date) < 12.0, (1200000.0 * (pv(0.06 / 12.0, 12.0 - months_between(parse_date(\"2026-01-01\"), time.date), -1.0) / pv(0.06 / 12.0, 12.0, -1.0)) * entity.asset.pool.credit_level_pay_survival_smoke) * (1.0 - ((-pmt(0.06 / 12.0, 12.0 - months_between(parse_date(\"2026-01-01\"), time.date), 1.0)) - (0.06 / 12.0))) * if(0.0 == 0.0, cpr_to_periodic(if(0.0 == 0.0, 0.10, min(0.0 * 0.002 * max(1.0, min((0.0 + (months_between(parse_date(\"2026-01-01\"), time.date))) + 1.0, 30.0)), 1.0)), 12.0), min(0.0 / max(1.0 - 0.0 * (0.0 + (months_between(parse_date(\"2026-01-01\"), time.date))), 0.000001), 1.0)), 0.0)"
       },
       "active_when": {
         "lang": "cfdl",
@@ -450,9 +367,9 @@
       "provenance": {
         "source_file": "model.cfdl",
         "source_span": {
-          "start_line": 48,
+          "start_line": 8,
           "start_col": 1,
-          "end_line": 51,
+          "end_line": 19,
           "end_col": 1
         },
         "generated_by": {
@@ -462,13 +379,13 @@
           },
           "rule_id": "credit_pool_level_pay_prepay",
           "line": "prepayment",
-          "contract": "credit.pool_level_pay.one"
+          "contract": "credit.pool_level_pay.smoke"
         }
       }
     },
     {
-      "id": "c0b6723ce187558989c34e21a9684243",
-      "name": "credit.pool.recoveries.one",
+      "id": "d2df1b43a4a061f8d4e0637efda0157f",
+      "name": "credit.pool.recoveries.smoke",
       "owner": {
         "symbol": "asset.pool"
       },
@@ -478,12 +395,12 @@
       "schedule": {
         "kind": "Every",
         "every": "monthly",
-        "from": "2017-01-01",
-        "to": "2017-04-01"
+        "from": "2026-01-01",
+        "to": "2027-03-01"
       },
       "amount": {
         "lang": "cfdl",
-        "src": "if(months_between(parse_date(\"2017-01-01\"), time.date) >= 0.0 and months_between(parse_date(\"2017-01-01\"), time.date) < 4.0 + 0.0, (1000000.0 * (pv(0.12 / 12.0, 4.0 - (months_between(parse_date(\"2017-01-01\"), time.date) - 0.0), -1.0) / pv(0.12 / 12.0, 4.0, -1.0)) * entity.asset.pool.credit_level_pay_survival_lag_one) * cpr_to_periodic(if(0.0 == 0.0, 0.0, 0.0 * (min(0.0002 * min(max(1.0, (0.0 + (months_between(parse_date(\"2017-01-01\"), time.date) - 0.0)) + 1.0), 30.0), 0.006) - 0.000095 * max(0.0, min(max(1.0, (0.0 + (months_between(parse_date(\"2017-01-01\"), time.date) - 0.0)) + 1.0), 120.0) - 60.0))), 12.0) * max(0.0, (pv(0.12 / 12.0, 4.0 - months_between(parse_date(\"2017-01-01\"), time.date), -1.0) / pv(0.12 / 12.0, 4.0 - (months_between(parse_date(\"2017-01-01\"), time.date) - 0.0), -1.0)) - 0.0), 0.0)"
+        "src": "if(months_between(parse_date(\"2026-01-01\"), time.date) >= 3.0 and months_between(parse_date(\"2026-01-01\"), time.date) < 12.0 + 3.0, (1200000.0 * (pv(0.06 / 12.0, 12.0 - (months_between(parse_date(\"2026-01-01\"), time.date) - 3.0), -1.0) / pv(0.06 / 12.0, 12.0, -1.0)) * entity.asset.pool.credit_level_pay_survival_lag_smoke) * cpr_to_periodic(if(0.0 == 0.0, 0.03, 0.0 * (min(0.0002 * min(max(1.0, (0.0 + (months_between(parse_date(\"2026-01-01\"), time.date) - 3.0)) + 1.0), 30.0), 0.006) - 0.000095 * max(0.0, min(max(1.0, (0.0 + (months_between(parse_date(\"2026-01-01\"), time.date) - 3.0)) + 1.0), 120.0) - 60.0))), 12.0) * max(0.0, (pv(0.06 / 12.0, 12.0 - months_between(parse_date(\"2026-01-01\"), time.date), -1.0) / pv(0.06 / 12.0, 12.0 - (months_between(parse_date(\"2026-01-01\"), time.date) - 3.0), -1.0)) - 0.50), 0.0)"
       },
       "active_when": {
         "lang": "cfdl",
@@ -492,9 +409,9 @@
       "provenance": {
         "source_file": "model.cfdl",
         "source_span": {
-          "start_line": 48,
+          "start_line": 8,
           "start_col": 1,
-          "end_line": 51,
+          "end_line": 19,
           "end_col": 1
         },
         "generated_by": {
@@ -504,13 +421,13 @@
           },
           "rule_id": "credit_pool_level_pay_recoveries",
           "line": "recovery",
-          "contract": "credit.pool_level_pay.one"
+          "contract": "credit.pool_level_pay.smoke"
         }
       }
     },
     {
-      "id": "70ae1430e9860530f2e53192b6130990",
-      "name": "credit.pool.sched_principal.one",
+      "id": "4d62489ebd62f2dfae7f359e77ba9070",
+      "name": "credit.pool.sched_principal.smoke",
       "owner": {
         "symbol": "asset.pool"
       },
@@ -520,12 +437,12 @@
       "schedule": {
         "kind": "Every",
         "every": "monthly",
-        "from": "2017-01-01",
-        "to": "2017-04-01"
+        "from": "2026-01-01",
+        "to": "2027-03-01"
       },
       "amount": {
         "lang": "cfdl",
-        "src": "if(months_between(parse_date(\"2017-01-01\"), time.date) < 4.0, (1000000.0 * (pv(0.12 / 12.0, 4.0 - months_between(parse_date(\"2017-01-01\"), time.date), -1.0) / pv(0.12 / 12.0, 4.0, -1.0)) * entity.asset.pool.credit_level_pay_survival_one) * (1.0 - cpr_to_periodic(if(0.0 == 0.0, 0.0, 0.0 * (min(0.0002 * min(max(1.0, (0.0 + (months_between(parse_date(\"2017-01-01\"), time.date))) + 1.0), 30.0), 0.006) - 0.000095 * max(0.0, min(max(1.0, (0.0 + (months_between(parse_date(\"2017-01-01\"), time.date))) + 1.0), 120.0) - 60.0))), 12.0)) * ((-pmt(0.12 / 12.0, 4.0 - months_between(parse_date(\"2017-01-01\"), time.date), 1.0)) - (0.12 / 12.0)), 0.0)"
+        "src": "if(months_between(parse_date(\"2026-01-01\"), time.date) < 12.0, (1200000.0 * (pv(0.06 / 12.0, 12.0 - months_between(parse_date(\"2026-01-01\"), time.date), -1.0) / pv(0.06 / 12.0, 12.0, -1.0)) * entity.asset.pool.credit_level_pay_survival_smoke) * (1.0 - cpr_to_periodic(if(0.0 == 0.0, 0.03, 0.0 * (min(0.0002 * min(max(1.0, (0.0 + (months_between(parse_date(\"2026-01-01\"), time.date))) + 1.0), 30.0), 0.006) - 0.000095 * max(0.0, min(max(1.0, (0.0 + (months_between(parse_date(\"2026-01-01\"), time.date))) + 1.0), 120.0) - 60.0))), 12.0)) * ((-pmt(0.06 / 12.0, 12.0 - months_between(parse_date(\"2026-01-01\"), time.date), 1.0)) - (0.06 / 12.0)), 0.0)"
       },
       "active_when": {
         "lang": "cfdl",
@@ -534,9 +451,9 @@
       "provenance": {
         "source_file": "model.cfdl",
         "source_span": {
-          "start_line": 48,
+          "start_line": 8,
           "start_col": 1,
-          "end_line": 51,
+          "end_line": 19,
           "end_col": 1
         },
         "generated_by": {
@@ -546,13 +463,13 @@
           },
           "rule_id": "credit_pool_level_pay_sched_principal",
           "line": "principal",
-          "contract": "credit.pool_level_pay.one"
+          "contract": "credit.pool_level_pay.smoke"
         }
       }
     },
     {
-      "id": "1c3116812e7531fc3cfa41db6faa3fed",
-      "name": "credit.pool.servicing.one",
+      "id": "bd3a16724d538b8cfcee202428fb48cf",
+      "name": "credit.pool.servicing.smoke",
       "owner": {
         "symbol": "asset.pool"
       },
@@ -562,12 +479,12 @@
       "schedule": {
         "kind": "Every",
         "every": "monthly",
-        "from": "2017-01-01",
-        "to": "2017-04-01"
+        "from": "2026-01-01",
+        "to": "2027-03-01"
       },
       "amount": {
         "lang": "cfdl",
-        "src": "if(months_between(parse_date(\"2017-01-01\"), time.date) < 4.0, (1000000.0 * (pv(0.12 / 12.0, 4.0 - months_between(parse_date(\"2017-01-01\"), time.date), -1.0) / pv(0.12 / 12.0, 4.0, -1.0)) * entity.asset.pool.credit_level_pay_survival_one) * (1.0 - cpr_to_periodic(if(0.0 == 0.0, 0.0, 0.0 * (min(0.0002 * min(max(1.0, (0.0 + (months_between(parse_date(\"2017-01-01\"), time.date))) + 1.0), 30.0), 0.006) - 0.000095 * max(0.0, min(max(1.0, (0.0 + (months_between(parse_date(\"2017-01-01\"), time.date))) + 1.0), 120.0) - 60.0))), 12.0)) * (0.0 / 12.0), 0.0)"
+        "src": "if(months_between(parse_date(\"2026-01-01\"), time.date) < 12.0, (1200000.0 * (pv(0.06 / 12.0, 12.0 - months_between(parse_date(\"2026-01-01\"), time.date), -1.0) / pv(0.06 / 12.0, 12.0, -1.0)) * entity.asset.pool.credit_level_pay_survival_smoke) * (1.0 - cpr_to_periodic(if(0.0 == 0.0, 0.03, 0.0 * (min(0.0002 * min(max(1.0, (0.0 + (months_between(parse_date(\"2026-01-01\"), time.date))) + 1.0), 30.0), 0.006) - 0.000095 * max(0.0, min(max(1.0, (0.0 + (months_between(parse_date(\"2026-01-01\"), time.date))) + 1.0), 120.0) - 60.0))), 12.0)) * (0.0 / 12.0), 0.0)"
       },
       "active_when": {
         "lang": "cfdl",
@@ -576,9 +493,9 @@
       "provenance": {
         "source_file": "model.cfdl",
         "source_span": {
-          "start_line": 48,
+          "start_line": 8,
           "start_col": 1,
-          "end_line": 51,
+          "end_line": 19,
           "end_col": 1
         },
         "generated_by": {
@@ -588,23 +505,23 @@
           },
           "rule_id": "credit_pool_level_pay_servicing",
           "line": "servicing",
-          "contract": "credit.pool_level_pay.one"
+          "contract": "credit.pool_level_pay.smoke"
         }
       }
     }
   ],
   "stream_inputs": [
     {
-      "stream": "credit.pool.interest.one",
-      "contract": "credit.pool_level_pay.one",
+      "stream": "credit.pool.interest.smoke",
+      "contract": "credit.pool_level_pay.smoke",
       "terms": {
         "abs_speed": "0",
         "age_months": "0",
-        "cdr": "0",
-        "cpr": "0",
-        "interest_rate": "0.12",
+        "cdr": "0.03",
+        "cpr": "0.10",
+        "interest_rate": "0.06",
         "payment_frequency": "",
-        "principal": "1000000",
+        "principal": "1200000",
         "psa_speed": "0",
         "sda_speed": "0"
       },
@@ -617,17 +534,17 @@
       ]
     },
     {
-      "stream": "credit.pool.penalty.one",
-      "contract": "credit.pool_level_pay.one",
+      "stream": "credit.pool.penalty.smoke",
+      "contract": "credit.pool_level_pay.smoke",
       "terms": {
         "abs_speed": "0",
         "age_months": "0",
-        "cdr": "0",
-        "cpr": "0",
-        "interest_rate": "0.12",
+        "cdr": "0.03",
+        "cpr": "0.10",
+        "interest_rate": "0.06",
         "payment_frequency": "",
         "prepay_penalty_rate": "0",
-        "principal": "1000000",
+        "principal": "1200000",
         "psa_speed": "0",
         "sda_speed": "0"
       },
@@ -641,16 +558,16 @@
       ]
     },
     {
-      "stream": "credit.pool.prepay.one",
-      "contract": "credit.pool_level_pay.one",
+      "stream": "credit.pool.prepay.smoke",
+      "contract": "credit.pool_level_pay.smoke",
       "terms": {
         "abs_speed": "0",
         "age_months": "0",
-        "cdr": "0",
-        "cpr": "0",
-        "interest_rate": "0.12",
+        "cdr": "0.03",
+        "cpr": "0.10",
+        "interest_rate": "0.06",
         "payment_frequency": "",
-        "principal": "1000000",
+        "principal": "1200000",
         "psa_speed": "0",
         "sda_speed": "0"
       },
@@ -663,40 +580,39 @@
       ]
     },
     {
-      "stream": "credit.pool.recoveries.one",
-      "contract": "credit.pool_level_pay.one",
+      "stream": "credit.pool.recoveries.smoke",
+      "contract": "credit.pool_level_pay.smoke",
       "terms": {
         "abs_speed": "0",
         "age_months": "0",
-        "cdr": "0",
-        "cpr": "0",
-        "interest_rate": "0.12",
+        "cdr": "0.03",
+        "cpr": "0.10",
+        "interest_rate": "0.06",
         "payment_frequency": "",
-        "principal": "1000000",
+        "principal": "1200000",
         "psa_speed": "0",
         "sda_speed": "0",
-        "severity": "0"
+        "severity": "0.50"
       },
       "defaults_applied": [
         "abs_speed",
         "age_months",
         "payment_frequency",
         "psa_speed",
-        "sda_speed",
-        "severity"
+        "sda_speed"
       ]
     },
     {
-      "stream": "credit.pool.sched_principal.one",
-      "contract": "credit.pool_level_pay.one",
+      "stream": "credit.pool.sched_principal.smoke",
+      "contract": "credit.pool_level_pay.smoke",
       "terms": {
         "abs_speed": "0",
         "age_months": "0",
-        "cdr": "0",
-        "cpr": "0",
-        "interest_rate": "0.12",
+        "cdr": "0.03",
+        "cpr": "0.10",
+        "interest_rate": "0.06",
         "payment_frequency": "",
-        "principal": "1000000",
+        "principal": "1200000",
         "psa_speed": "0",
         "sda_speed": "0"
       },
@@ -709,16 +625,16 @@
       ]
     },
     {
-      "stream": "credit.pool.servicing.one",
-      "contract": "credit.pool_level_pay.one",
+      "stream": "credit.pool.servicing.smoke",
+      "contract": "credit.pool_level_pay.smoke",
       "terms": {
         "abs_speed": "0",
         "age_months": "0",
-        "cdr": "0",
-        "cpr": "0",
-        "interest_rate": "0.12",
+        "cdr": "0.03",
+        "cpr": "0.10",
+        "interest_rate": "0.06",
         "payment_frequency": "",
-        "principal": "1000000",
+        "principal": "1200000",
         "psa_speed": "0",
         "sda_speed": "0",
         "servicing_fee": "0"
@@ -740,28 +656,28 @@
           "entity": {
             "symbol": "asset.pool"
           },
-          "field": "fee_rate",
+          "field": "status",
           "kind": "SetEntityField",
           "value": {
             "lang": "cfdl",
-            "src": "0.05"
+            "src": "\"retired\""
           }
         }
       ],
-      "id": "043566eb6473c401f113c3e8613cc8ea",
-      "name": "field_threshold",
+      "id": "0e9eb8cde730812e3c54a2a2c21e54ed",
+      "name": "clean_up_call",
       "provenance": {
         "source_file": "model.cfdl",
         "source_span": {
           "end_col": 1,
-          "end_line": 56,
+          "end_line": 30,
           "start_col": 1,
-          "start_line": 54
+          "start_line": 28
         }
       },
       "when": {
         "lang": "cfdl",
-        "src": "asset.pool.running <= asset.pool.trigger_level"
+        "src": "time.t == 6"
       }
     }
   ],

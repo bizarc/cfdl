@@ -1,0 +1,27 @@
+version 0.1
+model "arrival-action-unfilled-role"
+use pack "cre" version "0.1.0"
+time calendar monthly from 2026-01 for 24
+
+entity asset tower : CRE.Asset.RealProperty {
+  state stabilized
+}
+
+contract cre.permanent_debt on entity asset.tower {
+  term 2026-01..2027-12
+  terms {
+    principal = 3000000
+    interest_rate = 0.055
+    amortization_months = 300
+  }
+}
+
+// A ROLE NOTHING ON THIS ENTITY FILLS. `balance` is a role Contract.Debt
+// names, and a machine may set it by role — but a permanent loan's balance
+// is closed-form: its rules lower no field, so no field on the tower plays
+// the role, and the machine cannot extinguish what it does not carry.
+lifecycle cre.property {
+  on enter disposed {
+    set balance = 0
+  }
+}

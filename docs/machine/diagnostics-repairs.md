@@ -11,7 +11,7 @@ Diagnostics are the repair signal: read the `code`, `message`, `span`, and
 `hint`, change the model, recompile. The catalog is how an agent learns what
 each code looks like in the flesh before it meets one.
 
-**Coverage:** 222 codes in the docs/08 §7 register; 107 exemplified here; 70 of 115 examples carry a recorded fix.
+**Coverage:** 222 codes in the docs/08 §7 register; 107 exemplified here; 70 of 116 examples carry a recorded fix.
 
 ## active_in_unknown_state — E1332_UNKNOWN_ACTIVE_STATE
 
@@ -148,6 +148,45 @@ stream core.rent on entity asset.suite inflow currency USD {
 ```
 
 - `E1358_ARRIVAL_ACTION_SETS_STATUS` (error): lifecycle 'unit' entry into 'delinquent' sets `status`. An arrival action writes fields, never the state.
+
+Fix: not yet recorded.
+
+## arrival_action_unfilled_role — E1359_ARRIVAL_ACTION_UNKNOWN_FIELD
+
+Failing example:
+
+```cfdl
+version 0.1
+model "arrival-action-unfilled-role"
+use pack "cre" version "0.1.0"
+time calendar monthly from 2026-01 for 24
+
+entity asset tower : CRE.Asset.RealProperty {
+  state stabilized
+}
+
+contract cre.permanent_debt on entity asset.tower {
+  term 2026-01..2027-12
+  terms {
+    principal = 3000000
+    interest_rate = 0.055
+    amortization_months = 300
+  }
+}
+
+// A ROLE NOTHING ON THIS ENTITY FILLS. `balance` is a role Contract.Debt
+// names, and a machine may set it by role — but a permanent loan's balance
+// is closed-form: its rules lower no field, so no field on the tower plays
+// the role, and the machine cannot extinguish what it does not carry.
+lifecycle cre.property {
+  on enter disposed {
+    set balance = 0
+  }
+}
+```
+
+- `E1359_ARRIVAL_ACTION_UNKNOWN_FIELD` (error): Lifecycle 'cre.property' entry into 'disposed' sets role 'balance', which no contract on entity 'asset.tower' fills.
+  - hint: A field role is filled by a pack rule that lowers a field (`field_role = "balance"`); a contract whose balance is closed-form fills none, and the machine cannot extinguish what it does not carry.
 
 Fix: not yet recorded.
 

@@ -162,6 +162,22 @@ impl PackOntology {
     ///
     /// A pack's own types are added to these; a pack cannot remove them.
     pub fn language_base() -> Self {
+        let mut base = Self::language_base_roster();
+        // STAGE 6: Contract.Debt names the balance role (docs/40 §3).
+        if let Some(debt) = base
+            .contracts
+            .iter_mut()
+            .find(|c| c.type_id == "Contract.Debt")
+        {
+            debt.field_roles.push(OntologyFieldRole {
+                name: "balance".to_string(),
+                description: Some("The lowered fields that carry the debt's outstanding position, or the factor every stream reads; set to zero, they end the cash. A refinement whose balance is closed-form fills none.".to_string()),
+            });
+        }
+        base
+    }
+
+    fn language_base_roster() -> Self {
         fn asset(type_id: &str, class: &str, description: &str) -> OntologyEntity {
             OntologyEntity {
                 type_id: type_id.to_string(),
@@ -243,6 +259,7 @@ impl PackOntology {
                 roles: Vec::new(),
                 fields,
                 lines,
+                field_roles: Vec::new(),
                 side: side.map(|s| s.to_string()),
                 description: Some(d.to_string()),
             }
@@ -265,6 +282,7 @@ impl PackOntology {
                 roles: Vec::new(),
                 fields,
                 lines,
+                field_roles: Vec::new(),
                 side: side.map(|s| s.to_string()),
                 description: Some(d.to_string()),
             }
@@ -283,6 +301,7 @@ impl PackOntology {
                 roles: Vec::new(),
                 fields: Vec::new(),
                 lines: Vec::new(),
+                field_roles: Vec::new(),
                 side: None,
                 description: Some(d.to_string()),
             }
@@ -779,6 +798,19 @@ impl PackOntology {
         lines
     }
 
+    /// The field roles `type_id` carries, its masters' included (stage 6).
+    pub fn effective_field_roles(&self, type_id: &str) -> Vec<OntologyFieldRole> {
+        let mut roles: Vec<OntologyFieldRole> = Vec::new();
+        for contract in self.contract_chain(type_id).iter().rev() {
+            for role in &contract.field_roles {
+                if !roles.iter().any(|r| r.name == role.name) {
+                    roles.push(role.clone());
+                }
+            }
+        }
+        roles
+    }
+
     /// The side `type_id` sits on, the most refined declaration winning.
     pub fn effective_side(&self, type_id: &str) -> Option<String> {
         self.contract_chain(type_id)
@@ -923,6 +955,20 @@ pub struct OntologyRole {
     pub description: Option<String>,
 }
 
+/// A FIELD ROLE a master names (docs/40 §3, stage 6): the lowered fields
+/// that carry the agreement's outstanding position, or the factor every
+/// stream of it reads — set to zero, they end the cash. A pack rule that
+/// lowers such a field says so (`field_role = "balance"`), and a machine's
+/// arrival action may name the role instead of an instance-specific field
+/// (`set balance = 0`). A refinement that lowers no such field fills none.
+#[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct OntologyFieldRole {
+    pub name: String,
+    #[serde(default)]
+    pub description: Option<String>,
+}
+
 /// An economically distinct line of cash an agreement produces (docs/40 §6):
 /// a debt produces `proceeds`, `interest` and `principal`. Lines are named
 /// on the master by ROLE; the pack's lowering rules each name the line they
@@ -1007,6 +1053,9 @@ pub struct OntologyContract {
     /// refinement's lowering rules must emit every effective line.
     #[serde(default)]
     pub lines: Vec<OntologyLine>,
+    /// Field roles the master names (stage 6). Inherited down the chain.
+    #[serde(default)]
+    pub field_roles: Vec<OntologyFieldRole>,
     /// Which way cash runs for the SUBJECT entity: `pays` or `receives`.
     /// Absent on a master that serves both sides — a Debt is owed by a
     /// property and held by a trust — and fixed by the refinement.
@@ -1519,6 +1568,12 @@ pub struct LoweringRule {
     /// to keep each contract instance's state distinct.
     #[serde(default)]
     pub field_name: String,
+    /// The FIELD ROLE this field fills (docs/40 §3, stage 6): `balance` on
+    /// the survival factor a pool's every stream reads. A machine's arrival
+    /// action may then name the role. Checked at load against the roles the
+    /// rule's contract type carries.
+    #[serde(default)]
+    pub field_role: Option<String>,
     /// The state's value at period 0. Templated.
     #[serde(default)]
     pub field_init: String,
@@ -3015,6 +3070,36 @@ fn validate_ontology_against_rules(
                     ),
                 });
             }
+        }
+    }
+
+    // A RULE THAT FILLS A FIELD ROLE lowers a field, and names a role its
+    // contract type carries (docs/40 §3, stage 6).
+    for rule in rules {
+        let Some(role) = rule.field_role.as_deref() else {
+            continue;
+        };
+        let Some(contract) = ontology.contract_for_rule(&rule.contract_name) else {
+            continue;
+        };
+        if rule.field_name.is_empty() {
+            return Err(PackLoadError {
+                message: format!(
+                    "Ontology '{source}': rule '{}' fills field role '{role}' but lowers no field.",
+                    rule.id
+                ),
+            });
+        }
+        let roles = merged_view.effective_field_roles(&contract.type_id);
+        if !roles.iter().any(|r| r.name == role) {
+            return Err(PackLoadError {
+                message: format!(
+                    "Ontology '{source}': rule '{}' fills field role '{role}', which contract type '{}' does not carry. Its roles are: {}.",
+                    rule.id,
+                    contract.type_id,
+                    if roles.is_empty() { "none".to_string() } else { roles.iter().map(|r| r.name.as_str()).collect::<Vec<_>>().join(", ") }
+                ),
+            });
         }
     }
 
@@ -5148,6 +5233,7 @@ allocated = true
             schedule_from: "{{contract.term_start}}".to_string(),
             schedule_to: "{{contract.term_end}}".to_string(),
             field_name: String::new(),
+            field_role: None,
             field_init: String::new(),
             field_next: String::new(),
             field_every: String::new(),
@@ -5274,6 +5360,92 @@ field_type = "colour"
     }
 
     #[test]
+    fn a_rule_fills_a_field_role_its_type_carries() {
+        let ontology = parse_ontology(
+            r#"
+[[contracts]]
+type_id = "T.Contract.Pool"
+contract_name = "t.pool"
+parties = ["lender", "borrower"]
+refines = "Contract.Debt"
+
+[[contracts]]
+type_id = "T.Contract.Lease"
+contract_name = "t.lease"
+parties = ["lessor", "lessee"]
+refines = "Contract.Lease"
+"#,
+            "test",
+            "t",
+        )
+        .expect("ontology parses");
+        let base = PackOntology::language_base();
+        assert!(base
+            .effective_field_roles("Contract.Debt")
+            .iter()
+            .any(|r| r.name == "balance"));
+        assert!(base.effective_field_roles("Contract.Lease").is_empty());
+        let rule = |contract: &str, field: &str, role: Option<&str>| LoweringRule {
+            id: format!("{contract}_x"),
+            contract_name: contract.to_string(),
+            line: None,
+            stream_name: String::new(),
+            owner_entity: "${subject}".to_string(),
+            direction: String::new(),
+            currency: String::new(),
+            category: String::new(),
+            amount_expr: String::new(),
+            schedule_kind: String::new(),
+            schedule_every: String::new(),
+            cadences: Vec::new(),
+            schedule_net_days: String::new(),
+            schedule_net_months: String::new(),
+            schedule_placement: None,
+            schedule_from: String::new(),
+            schedule_to: String::new(),
+            field_name: field.to_string(),
+            field_role: role.map(|r| r.to_string()),
+            field_init: "1".to_string(),
+            field_next: "prev".to_string(),
+            field_every: String::new(),
+            field_from: String::new(),
+            field_to: String::new(),
+            defaults: BTreeMap::new(),
+            units: BTreeMap::new(),
+        };
+        // Every typed contract needs its rule, so each call carries both.
+        validate_ontology_against_rules(
+            &ontology,
+            &[
+                rule("t.pool", "survival", Some("balance")),
+                rule("t.lease", "rent_index", None),
+            ],
+            "test",
+        )
+        .expect("a debt refinement fills the balance role");
+        let err = validate_ontology_against_rules(
+            &ontology,
+            &[
+                rule("t.pool", "survival", None),
+                rule("t.lease", "occupancy", Some("balance")),
+            ],
+            "test",
+        )
+        .expect_err("a lease carries no balance role");
+        assert!(err.message.contains("does not carry"), "{}", err.message);
+        let err = validate_ontology_against_rules(
+            &ontology,
+            &[
+                rule("t.pool", "", Some("balance")),
+                rule("t.lease", "rent_index", None),
+            ],
+            "test",
+        )
+        .expect_err("a role needs a field");
+        assert!(err.message.contains("lowers no field"), "{}", err.message);
+    }
+
+    #[test]
     fn a_term_a_pack_reads_bounds_or_renders_is_a_field_of_the_type() {
         let ontology = parse_ontology(
             r#"
@@ -5306,6 +5478,7 @@ refines = "Contract.Debt"
             schedule_from: "{{contract.term_start}}".to_string(),
             schedule_to: "{{contract.term_end}}".to_string(),
             field_name: String::new(),
+            field_role: None,
             field_init: String::new(),
             field_next: String::new(),
             field_every: String::new(),

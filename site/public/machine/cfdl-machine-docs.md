@@ -3158,6 +3158,16 @@ against it by `make ir-schema`.
         "lifecycle": {
           "type": "string",
           "description": "The machine this entity is governed by — an id into `lifecycles`. Absent for the many entities that have none."
+        },
+        "field_roles": {
+          "type": "object",
+          "description": "Field ROLES this entity's contracts fill, role → the lowered fields that play it (docs/40 §3): `balance` → the survival factors a pool's streams read. An arrival action naming the role sets each. Absent when no rule on the entity fills one.",
+          "additionalProperties": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
         }
       }
     },
@@ -4478,8 +4488,10 @@ against it by `make ir-schema`.
         "kind": {
           "type": "string",
           "enum": [
-            "SetField"
-          ]
+            "SetField",
+            "SetRole"
+          ],
+          "description": "`SetField` writes the named field on the entity that transitioned. `SetRole` names a FIELD ROLE a master declares (docs/40 §3, e.g. `balance`): the engine writes every field on the entity that plays it — the entity's `field_roles` — and nothing where none does."
         },
         "author": {
           "type": "string",
@@ -6423,6 +6435,14 @@ actions = [{ set = "in_place_rent", value = "prev.in_place_rent * (1 + inputs.bu
 - The field name is **entity-relative**, refused at pack load if qualified:
   one lifecycle is bound by many entities, and the behavior belongs to
   whichever one transitioned.
+- **`set` may name a FIELD ROLE instead of a field** (`docs/40` §3, stage 6):
+  `set balance = 0` on the `credit.pool` machine. A master names the role
+  (`Contract.Debt` names `balance`), a rule that lowers the field fills it
+  (`field_role = "balance"` beside `field_name`), and the compiler resolves
+  the role per entity to every field that plays it — a pool's survival
+  factor and its lagged twin — which the engine writes one by one. A role
+  nothing on the transitioning entity fills is refused (`E1359`): a
+  closed-form debt has no balance field to extinguish.
 - **The field itself comes from the pack's lowering rules**, like every other
   pack-populated field (`field_name` / `field_init` / `field_next` in
   §7). Those run per contract instance, so whether a given entity has the
@@ -7624,7 +7644,7 @@ Fields that move:
 - `E1302_UNRESOLVED_STREAM_REF` — an event activates or deactivates a stream the model does not run. Event action targets were never resolved, so a misspelling matched nothing and the action was silently inert: the stream it was meant to stop kept paying, with no diagnostic and no warning. Checked after lowering rather than in the resolver, so a name a CONTRACT produced resolves as readily as one the model declared — the symbol table is built before the pack is chosen, and a check running there reported an unlowered name and a typo alike. The hint lists every stream in the model, both kinds.
 - `E1357_LIFECYCLE_AUGMENT_TOPOLOGY` — a `lifecycle` block names a machine the PACK declared and also states `initial`, `state`, or an edge. A model may add arrival actions to a pack's machine and nothing else (`docs/34` D2a): the pack's machine is the checkable contract, and a model needing different topology declares a separate machine under its own name. The states and edges are refused rather than ignored — silently dropping them would leave the model saying one thing and the machine doing another.
 - `E1358_ARRIVAL_ACTION_SETS_STATUS` — an `on enter` or edge action writes `status`. An arrival action sets FIELDS on the entity that transitioned; a status write would fire a second transition inside the same period, breaking one-transition-per-entity-per-period. A transition that should cause another transition is topology — an edge out of the target state, taken next period — and status writes remain the named event's privilege (`docs/34` D4).
-- `E1359_ARRIVAL_ACTION_UNKNOWN_FIELD` — an `on enter` or edge action sets a field the entity bound to that machine does not have. The name is entity-relative, so it resolves against every entity bound to the machine and all of them need the field; the set is the union of what the model's entity block declares and what its ontology type contributes. Refused because a misspelled field is a write that lands nowhere — the silent-substitution shape `docs/13` §7.38 records for a misspelled series.
+- `E1359_ARRIVAL_ACTION_UNKNOWN_FIELD` — an `on enter` or edge action sets a field the entity bound to that machine does not have. The name is entity-relative, so it resolves against every entity bound to the machine and all of them need the field; the set is the union of what the model's entity block declares and what its ontology type contributes. Refused because a misspelled field is a write that lands nowhere — the silent-substitution shape `docs/13` §7.38 records for a misspelled series. The action may instead name a FIELD ROLE a master declares (`set balance = 0`, `docs/40` §3); a role that no contract on the transitioning entity fills — a closed-form debt lowers no balance field — is refused with the same code, saying so.
 - `E1360_DUPLICATE_ENTITY_ID` — two entities declare the same literal field `id`. The id is a stable identity for the layer above the model — engine-opaque, published in the results graph (`docs/06`) — and a consumer joining on it would merge two things into one. Uniqueness within the model is the one thing the language can check about a value it must not interpret (`docs/13` §7.91).
 - `E1361_DUPLICATE_SLICE` — two slices share a name. Same rule as a metric: one name, one selection.
 - `E1362_SLICE_UNKNOWN_ENTITY` — a slice's `entity` (or `except entity`) names an entity the model does not declare. A slice selects by reference, and a reference is what the compiler can check — refused rather than silently matching nothing.

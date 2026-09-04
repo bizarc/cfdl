@@ -118,6 +118,9 @@ struct PreparedEdge {
 /// One arrival action, compiled once (`docs/34` D2/D3).
 struct PreparedAction {
     field: String,
+    /// `field` names a FIELD ROLE (docs/40 §3): resolved on arrival to every
+    /// field on the entity that plays it, and to nothing where none does.
+    role: bool,
     /// `pack` or `model`, carried from the IR and named in the journal so a
     /// same-field conflict records WHOSE value was overridden.
     author: String,
@@ -137,6 +140,7 @@ fn prepare_actions(
         .iter()
         .map(|action| PreparedAction {
             field: action.field.clone(),
+            role: action.kind == "SetRole",
             author: action.author.clone(),
             expr: match cfdl_expr::compile_expr(&action.value.src) {
                 Ok(compiled) => Some(compiled),
@@ -192,6 +196,9 @@ pub(crate) fn entries_into(
 pub(crate) struct StateWalk {
     /// Each machine-bound entity's compiled machine, by entity symbol.
     machines: BTreeMap<String, PreparedMachine>,
+    /// Per entity symbol: field role → the fields that play it, so an
+    /// arrival action naming a role (`set balance = 0`) writes each.
+    field_roles: BTreeMap<String, BTreeMap<String, Vec<String>>>,
     // Read by the walk between periods; see `entity_state_so_far`.
     values: BTreeMap<String, Vec<f64>>,
     prepared: Vec<Prepared>,
@@ -293,18 +300,34 @@ impl StateWalk {
                 .map(|e| &e.actions)
                 .into_iter()
                 .flatten();
+            let roles = self.field_roles.get(symbol);
             for (action, grain) in entry.map(|a| (a, "enter")).chain(edge.map(|a| (a, "edge"))) {
                 let Some(expr) = &action.expr else {
                     continue;
                 };
+                // A ROLE IS EVERY FIELD THAT PLAYS IT (docs/40 §3): `set
+                // balance = 0` on a pool writes the survival factor and its
+                // lagged twin, one journal line each.
+                let targets: Vec<String> = if action.role {
+                    roles
+                        .and_then(|r| r.get(&action.field))
+                        .cloned()
+                        .unwrap_or_default()
+                } else {
+                    vec![action.field.clone()]
+                };
                 match cfdl_expr::eval(expr, env) {
-                    Ok(v) => planned.push((
-                        action.field.clone(),
-                        action.author.clone(),
-                        action.src.clone(),
-                        v,
-                        grain,
-                    )),
+                    Ok(v) => {
+                        for target in targets {
+                            planned.push((
+                                target,
+                                action.author.clone(),
+                                action.src.clone(),
+                                v.clone(),
+                                grain,
+                            ));
+                        }
+                    }
                     Err(err) => warnings.push(format!(
                         "Lifecycle '{lifecycle_id}' {grain} action `set {}` failed [{}]: {}; skipped.",
                         action.field, err.code, err.message
@@ -1291,8 +1314,16 @@ pub(crate) fn prepare_state_walk(
         })
         .collect();
 
+    let field_roles: BTreeMap<String, BTreeMap<String, Vec<String>>> = ir
+        .entities
+        .iter()
+        .filter(|e| !e.field_roles.is_empty())
+        .map(|e| (e.symbol.clone(), e.field_roles.clone()))
+        .collect();
+
     StateWalk {
         machines,
+        field_roles,
         values,
         prepared,
         entity_state,
