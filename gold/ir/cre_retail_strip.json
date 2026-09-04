@@ -144,7 +144,9 @@
     {
       "id": "dc5e2ef5ef14791d51f28354a2784437",
       "name": "cre.exit",
-      "type": "core.Contract",
+      "type": "CRE.Contract.Disposition",
+      "contract_name": "cre.exit",
+      "master": "Contract.Sale",
       "subject": {
         "symbol": "asset.strip_center"
       },
@@ -153,7 +155,11 @@
         "end": "2032-12-01"
       },
       "currency": "USD",
-      "terms": {},
+      "terms": {
+        "cap_rate": 0.0675,
+        "income": 640000,
+        "selling_costs": 0.015
+      },
       "effects": {
         "streams": []
       },
@@ -170,7 +176,10 @@
     {
       "id": "fa60b235326034bd82396ecca91d54b8",
       "name": "cre.lease_unit.anchor",
-      "type": "core.Contract",
+      "type": "CRE.Contract.UnitLease",
+      "contract_name": "cre.lease_unit",
+      "master": "Contract.Lease",
+      "instance": "anchor",
       "subject": {
         "symbol": "asset.strip_center"
       },
@@ -179,7 +188,17 @@
         "end": "2032-12-01"
       },
       "currency": "USD",
-      "terms": {},
+      "terms": {
+        "escalation": 0.02,
+        "expense_stop_year": 228000,
+        "gross_up_factor": 0.95,
+        "lc_total": 60000,
+        "opex_escalation": 0.03,
+        "opex_year": 240000,
+        "pro_rata_share": 0.6,
+        "rent_year": 540000,
+        "ti_total": 150000
+      },
       "effects": {
         "streams": []
       },
@@ -196,7 +215,10 @@
     {
       "id": "4321444b8cf89ab11f3632024de4805d",
       "name": "cre.lease_unit.shops",
-      "type": "core.Contract",
+      "type": "CRE.Contract.UnitLease",
+      "contract_name": "cre.lease_unit",
+      "master": "Contract.Lease",
+      "instance": "shops",
       "subject": {
         "symbol": "asset.strip_center"
       },
@@ -205,7 +227,17 @@
         "end": "2032-12-01"
       },
       "currency": "USD",
-      "terms": {},
+      "terms": {
+        "escalation": 0.025,
+        "free_rent_months": 2,
+        "gross_up_factor": 0.95,
+        "lc_total": 40000,
+        "opex_escalation": 0.03,
+        "opex_year": 240000,
+        "pro_rata_share": 0.3,
+        "rent_year": 288000,
+        "ti_total": 90000
+      },
       "effects": {
         "streams": []
       },
@@ -222,7 +254,9 @@
     {
       "id": "9a6463ca7ed884d3801014c9283d3f44",
       "name": "cre.opex_line",
-      "type": "core.Contract",
+      "type": "CRE.Contract.OperatingExpense",
+      "contract_name": "cre.opex_line",
+      "master": "Contract.Line",
       "subject": {
         "symbol": "asset.strip_center"
       },
@@ -231,7 +265,10 @@
         "end": "2032-12-01"
       },
       "currency": "USD",
-      "terms": {},
+      "terms": {
+        "amount_year": 240000,
+        "growth_rate": 0.03
+      },
       "effects": {
         "streams": []
       },
@@ -248,7 +285,10 @@
     {
       "id": "26648b378aa8f2b0d46d1061fc8a616d",
       "name": "cre.percentage_rent.anchor",
-      "type": "core.Contract",
+      "type": "CRE.Contract.PercentageRent",
+      "contract_name": "cre.percentage_rent",
+      "master": "Contract.Lease",
+      "instance": "anchor",
       "subject": {
         "symbol": "asset.strip_center"
       },
@@ -257,7 +297,12 @@
         "end": "2032-12-01"
       },
       "currency": "USD",
-      "terms": {},
+      "terms": {
+        "breakpoint_year": 12000000,
+        "overage_pct": 0.02,
+        "sales_growth": 0.03,
+        "sales_year": 11500000
+      },
       "effects": {
         "streams": []
       },
@@ -274,7 +319,9 @@
     {
       "id": "1ee9171bfcd6f440794ea7caebf7b637",
       "name": "cre.vacancy_loss",
-      "type": "core.Contract",
+      "type": "CRE.Contract.VacancyAllowance",
+      "contract_name": "cre.vacancy_loss",
+      "master": "Contract.Line",
       "subject": {
         "symbol": "asset.strip_center"
       },
@@ -283,7 +330,10 @@
         "end": "2032-12-01"
       },
       "currency": "USD",
-      "terms": {},
+      "terms": {
+        "potential_gross_year": 850000,
+        "rate": 0.03
+      },
       "effects": {
         "streams": []
       },

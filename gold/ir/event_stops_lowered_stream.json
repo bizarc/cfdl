@@ -144,7 +144,9 @@
     {
       "id": "c74b8c336ed5c49a3b9530a89460cd43",
       "name": "cre.permanent_debt",
-      "type": "core.Contract",
+      "type": "CRE.Contract.PermanentDebt",
+      "contract_name": "cre.permanent_debt",
+      "master": "Contract.Debt",
       "subject": {
         "symbol": "asset.tower"
       },
@@ -153,7 +155,13 @@
         "end": "2030-12-01"
       },
       "currency": "USD",
-      "terms": {},
+      "terms": {
+        "amortization_months": 300,
+        "balloon_at_maturity": 1,
+        "interest_only_months": 24,
+        "interest_rate": 0.055,
+        "principal": 6000000
+      },
       "effects": {
         "streams": []
       },

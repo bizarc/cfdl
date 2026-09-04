@@ -111,6 +111,10 @@ register, so it cannot fall behind the language.
 | `E1362_SLICE_UNKNOWN_ENTITY` | Symbols and references | a slice's `entity` (or `except entity`) names an entity the model does not declare. A slice selects by reference, and a reference is what the compiler can check — refused rather than silently matching nothing. |
 | `E1363_SLICE_UNKNOWN_TYPE` | Symbols and references | a slice's `type` names an ontology type the active ontology does not define. The hint lists the known contract types; a master type (`Contract.Debt`) matches transitively through `refines`. |
 | `E1364_SLICE_CATEGORY_ROOT` | Symbols and references | a slice's category selector is not rooted in operating, investing or financing. A selector that could never match anything is a typo, not a choice. |
+| `E1371_UNKNOWN_CONTRACT_TERM` | Symbols and references | a contract states a term its type does not declare. The roster is the pack type's own terms plus its masters' (`docs/40` §3); a term outside it is read by no rule, so before this check a misspelled `escalation` was a lease that never escalated. The hint names the near miss, or lists the type's terms. |
+| `E1372_MISSING_CONTRACT_TERM` | Symbols and references | a contract omits a term its type requires, or states none of a group of alternatives (`one_of`: a lease's rent is `rent` or `rent_year`). Checked against the effective roster before any rule is expanded; `E5006` remains the rule-consumption backstop for a term a rule reads with no default. |
+| `E1373_UNKNOWN_CONTRACT_TYPE` | Symbols and references | a type named on a declaration resolves to nothing the model may declare there: an `option ... type` the active ontology does not define, a two-token `contract <type> <instance>` whose type the pack does not declare, a fused contract name no rule lowers, an election written as a `contract`, or a lowered type written as an `option`. The hint names the near miss or lists what may be declared. Supersedes `E2002` for a contract under a pack that declares contract types. |
+| `E1374_ABSTRACT_TYPE_INSTANTIATED` | Symbols and references | a declaration names a master (`Contract.Debt`, `Contract.Option`). A master is refined, never declared (`docs/40` §2); the hint lists its concrete refinements. |
 | `E1366_DUPLICATE_STATEMENT` | Symbols and references | two statements share a name. Same rule as a metric and a slice: one name, one presentation. |
 | `E1367_STATEMENT_UNKNOWN_STRUCTURE` | Symbols and references | a statement presents a hierarchy the engine does not build, or asks for a category hierarchy in a model whose streams declare no category. Either would render as one residual row and nothing else — technically complete and useless — so it is refused rather than shipped empty. Known structures: `entity` (the `part of` tree the results graph publishes) and `category` (the dotted path). `docs/13` §7.55. |
 | `E1369_STATEMENT_AUTHORED_AND_GENERATED` | Symbols and references | a statement states both a `structure` and its own rows, or neither. A generated statement partitions the cash by construction, because a hierarchy covers its own tree; an authored one partitions it by the author's care. Mixed, neither guarantee holds — an authored row claims streams the generated rows already claimed, so the bottom line double-counts and the reconciliation that makes a statement trustworthy becomes noise. A statement stating neither would render nothing. `docs/13` §7.55. |
@@ -132,10 +136,10 @@ register, so it cannot fall behind the language.
 | `E1317_TYPE_HAS_NO_LIFECYCLE` | Symbols and references | an entity declares a starting state but its type has no lifecycle. |
 | `E1320_UNKNOWN_PARTY_ENTITY` | Symbols and references | a contract or option binds a role to an entity that is not declared. |
 | `E1321_NOT_A_PARTY` | Symbols and references | a role is bound to an asset. A contract is between parties. |
-| `E1322_UNKNOWN_PARTY_ROLE` | Symbols and references | a role is bound that the contract type does not declare. The declared roles are listed; a role belongs to the agreement, not to the entity. |
+| `E1322_UNKNOWN_PARTY_ROLE` | Symbols and references | a role is bound that the contract type does not declare, or one the type leaves UNBOUND (a purchased pool's borrowers are many and unnamed). Roles are the type's effective roles, resolved through its master chain (`docs/40` §5): a CRE lease binds `landlord`, which is the master's `lessor`, and the hint lists each role a model may bind with the master's word beside it. A role belongs to the agreement, not to the entity. |
 | `E1306_INVALID_ENTITY_REF_FORMAT` | Symbols and references | entity ref, stream name, or contract name is not a qualified name with at least two segments (dotted hierarchy). |
 | `E2001_CONTRACT_MISSING_TERM` | Contracts and streams | a contract omits a term its pack requires. The message names it; see the pack's contract table. |
-| `E2002_CONTRACT_MISSING_EFFECTS` | Contracts and streams | a contract produces no streams, so it has no effect on the model. |
+| `E2002_CONTRACT_MISSING_EFFECTS` | Contracts and streams | a contract produces no streams, so it has no effect on the model. Under a pack that declares contract types, a contract no rule lowers is a type the pack does not declare and is reported as `E1373` instead. |
 | `E2101_STREAM_MISSING_SCHEDULE` | Contracts and streams | a stream has no `schedule`, so there is no period for its cash to land in. |
 | `E2102_STREAM_MISSING_AMOUNT` | Contracts and streams | a stream has no `amount`. |
 | `E2103_SCHEDULE_OUT_OF_BOUNDS` | Contracts and streams | a schedule reaches outside the model timeline. The bound is the cash horizon **plus** any `project <n>` tail, since the engine evaluates streams over both; a schedule may reach into the tail deliberately to feed a `series_sum` valuation. Applied to hand-written streams during validation and mirrored onto pack-lowered ones during lowering, so a pack cannot express what a model may not. |
@@ -265,7 +269,7 @@ register, so it cannot fall behind the language.
 | `E9019_CREDIT_INVALID_AGE_MONTHS` | Pack domain validations | `age_months` is the pool's weighted average age at closing. PSA, SDA and the ABS model are all indexed from ORIGINATION, so a seasoned pool starts part-way up the ramp; leaving it at the default 0 on a seasoned pool understates prepayment. Non-negative integer. |
 | `E9020_CREDIT_RATE_FLOOR_ABOVE_CAP` | Pack domain validations |  |
 
-*213 codes.*
+*217 codes.*
 <!-- /cfdl:generated diagnostics-catalog -->
 
 ## Related

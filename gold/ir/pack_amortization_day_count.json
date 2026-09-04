@@ -199,7 +199,10 @@
     {
       "id": "81bbaa0d4281b9645b9f30396b797ed4",
       "name": "credit.pool_level_pay.p",
-      "type": "core.Contract",
+      "type": "Credit.Contract.LevelPayPool",
+      "contract_name": "credit.pool_level_pay",
+      "master": "Contract.Debt",
+      "instance": "p",
       "subject": {
         "symbol": "asset.buyer"
       },
@@ -208,7 +211,17 @@
         "end": "2026-01-01"
       },
       "currency": "USD",
-      "terms": {},
+      "terms": {
+        "amortization_day_count": "30/360",
+        "cdr": 0,
+        "cpr": 0,
+        "day_count": "act/360",
+        "interest_rate": 0.08,
+        "principal": 100000000,
+        "recovery_lag_months": 0,
+        "severity": 0,
+        "term_months": 360
+      },
       "effects": {
         "streams": []
       },

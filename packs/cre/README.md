@@ -261,7 +261,8 @@ Current codes:
 
 ## Lease-by-lease contracts (institutional DCF parity)
 
-Per-tenant contracts use suffixed names (`cre.lease_unit.tenant_a`); one rule
+Per-tenant contracts name their instance — `contract cre.lease_unit tenant_a`,
+or the fused `cre.lease_unit.tenant_a`, which is the same declaration; one rule
 lowers every instance, emitting per-instance streams
 (`cre.unit.base_rent.tenant_a`). Metrics aggregate them with `.*` wildcards.
 Escalations anchor to **lease anniversaries** (`months_between(term_start,

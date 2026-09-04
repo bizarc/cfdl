@@ -495,10 +495,14 @@ contract cre.lease on entity asset.sunset {
 ```
 
 Rules:
-- `contract <TypeId>[.<instance>] on entity <EntityRef> { term <Date>..<Date>  terms { ... } }`
-- `<TypeId>` is the pack contract type (e.g. `cre.lease`); an optional dotted
-  instance suffix creates independent instances
-  (`cre.lease_unit.tenant_a`, `cre.lease_unit.tenant_b`).
+- `contract <TypeId> [<instance>] on entity <EntityRef> { term <Date>..<Date>  terms { ... } }`
+- `<TypeId>` is the pack contract type (e.g. `cre.lease`). An instance name
+  makes an independent instance, and it is its own token:
+  `contract cre.lease_unit tenant_a`. The fused spelling
+  `cre.lease_unit.tenant_a` is the same declaration; both produce the
+  qualified name `cre.lease_unit.tenant_a`, which is what lowered streams
+  and references use. The type is checked where it is written: a type the
+  pack does not declare is `E1373`, a master is `E1374`.
 - `term` is REQUIRED.
 - `terms` is OPTIONAL; entries use `<name> = <literal-or-expression>`.
 - Monetary amounts default to the model currency; streams declare currency
@@ -511,8 +515,11 @@ Rules:
   represented in IR** in v0.1 (reserved; see `10_implementation_status.md`).
 - A contract's type is the master chain its pack type refines
   (`docs/40`): its terms are checked against that chain's effective
-  fields, and a master itself cannot be declared — a model reaches a type
-  through a pack's concrete refinement.
+  fields — an unknown term is `E1371`, a missing required term or an empty
+  group of alternatives is `E1372` — and a master itself cannot be
+  declared: a model reaches a type through a pack's concrete refinement.
+  The IR records the resolved type, its master, the instance and the
+  parties with their master roles.
 
 ### 8.2 Terms block
 - `terms { ... }` is a set of named values.
@@ -3417,7 +3424,20 @@ against it by `make ir-schema`.
           "$ref": "#/$defs/Id"
         },
         "type": {
-          "$ref": "#/$defs/Qname"
+          "$ref": "#/$defs/Qname",
+          "description": "The ontology type the contract IS — `CRE.Contract.UnitLease` — resolved once at declaration from the pack type it names (docs/40 §8). `core.Contract` only where no type could be resolved: a contract with no pack active."
+        },
+        "contract_name": {
+          "$ref": "#/$defs/Qname",
+          "description": "The pack contract type as the model names it — the lowering rule name, `cre.lease_unit`."
+        },
+        "master": {
+          "$ref": "#/$defs/Qname",
+          "description": "The master at the root of the type's refinement chain — `Contract.Lease`."
+        },
+        "instance": {
+          "$ref": "#/$defs/Id",
+          "description": "The instance token where the contract's name carries one — `tenant_a` in `cre.lease_unit.tenant_a` or `contract cre.lease_unit tenant_a`."
         },
         "subject": {
           "$ref": "#/$defs/EntityRef"
@@ -3429,9 +3449,26 @@ against it by `make ir-schema`.
           "$ref": "#/$defs/Currency"
         },
         "parties": {
-          "type": "object",
-          "additionalProperties": {
-            "$ref": "#/$defs/TypedValue"
+          "type": "array",
+          "description": "Who the contract is between, by role. `role` is the pack's word as the model bound it (`landlord`); `master_role` is what the master calls it (`lessor`, docs/40 §5), so a consumer can find every lender without knowing each pack's word for one.",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "role",
+              "entity"
+            ],
+            "properties": {
+              "role": {
+                "type": "string"
+              },
+              "master_role": {
+                "type": "string"
+              },
+              "entity": {
+                "$ref": "#/$defs/EntityRef"
+              }
+            }
           }
         },
         "tags": {
@@ -6276,9 +6313,20 @@ unbound = true
 A field may carry `one_of = "<group>"`: fields sharing a group are
 alternatives and a contract must state at least one of them (a debt's
 amount is `principal`, `commitment` or `draw_curve`; its rate is
-`interest_rate` or `index_curve` with `margin`). A refinement's roles are
-its master's roles, specialized — it may not add a party the agreement does
-not have.
+`interest_rate` or `index_curve` with `margin`). A refinement may put a
+field of its own into a master's group — a rollover's `renewal_rent_year`
+and `market_rent_year` join the lease's `rent` group, a percentage-rent
+clause's `overage_pct` does too, a capex line's `pct_of_revenue` joins
+`amount`. The master's obligation stands (a lease states its rent); the
+refinement states how this form of the agreement spells it. A refinement's
+roles are its master's roles, specialized — it may not add a party the
+agreement does not have.
+
+Every term a pack's rules read (`{{contract.<key>}}`, and `{{periods.<key>}}`
+through the months-to-periods conversion), every term its validations bound
+and every term its templates render is a field of the type — declared on
+the type or inherited from its master — and the loader refuses a pack where
+one is not. The shipped packs declare every term they use.
 
 `parties = ["lender", "borrower"]` stays the shorthand for roles inherited
 by the master's own word. A master also declares `lines` (`[[contracts.lines]]
@@ -6294,8 +6342,9 @@ The master's fields are the schema; the lowering rule consumes them by
 name (`{{contract.principal}}`); the template renders the required ones;
 `validations.toml` bounds their values. The compiler checks a model's
 `terms` against the EFFECTIVE roster: an unknown term is refused with a
-near-miss hint, a missing required field is refused, and a unit stated on
-a term is checked against the field's (`E5024`). A rule that consumes a
+near-miss hint (`E1371`), a missing required field or an empty group is
+refused (`E1372`), and a unit stated on a term is checked against the
+rule's (`E5024`). A rule that consumes a
 term the type does not declare is a pack-load error, so the three sources
 that once had to agree by care — rules, templates, validations — are
 checked against one declaration. See `docs/40` §3 and §8.
@@ -7400,6 +7449,10 @@ Fields that move:
 - `E1362_SLICE_UNKNOWN_ENTITY` — a slice's `entity` (or `except entity`) names an entity the model does not declare. A slice selects by reference, and a reference is what the compiler can check — refused rather than silently matching nothing.
 - `E1363_SLICE_UNKNOWN_TYPE` — a slice's `type` names an ontology type the active ontology does not define. The hint lists the known contract types; a master type (`Contract.Debt`) matches transitively through `refines`.
 - `E1364_SLICE_CATEGORY_ROOT` — a slice's category selector is not rooted in operating, investing or financing. A selector that could never match anything is a typo, not a choice.
+- `E1371_UNKNOWN_CONTRACT_TERM` — a contract states a term its type does not declare. The roster is the pack type's own terms plus its masters' (`docs/40` §3); a term outside it is read by no rule, so before this check a misspelled `escalation` was a lease that never escalated. The hint names the near miss, or lists the type's terms.
+- `E1372_MISSING_CONTRACT_TERM` — a contract omits a term its type requires, or states none of a group of alternatives (`one_of`: a lease's rent is `rent` or `rent_year`). Checked against the effective roster before any rule is expanded; `E5006` remains the rule-consumption backstop for a term a rule reads with no default.
+- `E1373_UNKNOWN_CONTRACT_TYPE` — a type named on a declaration resolves to nothing the model may declare there: an `option ... type` the active ontology does not define, a two-token `contract <type> <instance>` whose type the pack does not declare, a fused contract name no rule lowers, an election written as a `contract`, or a lowered type written as an `option`. The hint names the near miss or lists what may be declared. Supersedes `E2002` for a contract under a pack that declares contract types.
+- `E1374_ABSTRACT_TYPE_INSTANTIATED` — a declaration names a master (`Contract.Debt`, `Contract.Option`). A master is refined, never declared (`docs/40` §2); the hint lists its concrete refinements.
 - `E1366_DUPLICATE_STATEMENT` — two statements share a name. Same rule as a metric and a slice: one name, one presentation.
 - `E1367_STATEMENT_UNKNOWN_STRUCTURE` — a statement presents a hierarchy the engine does not build, or asks for a category hierarchy in a model whose streams declare no category. Either would render as one residual row and nothing else — technically complete and useless — so it is refused rather than shipped empty. Known structures: `entity` (the `part of` tree the results graph publishes) and `category` (the dotted path). `docs/13` §7.55.
 - `E1369_STATEMENT_AUTHORED_AND_GENERATED` — a statement states both a `structure` and its own rows, or neither. A generated statement partitions the cash by construction, because a hierarchy covers its own tree; an authored one partitions it by the author's care. Mixed, neither guarantee holds — an authored row claims streams the generated rows already claimed, so the bottom line double-counts and the reconciliation that makes a statement trustworthy becomes noise. A statement stating neither would render nothing. `docs/13` §7.55.
@@ -7421,14 +7474,14 @@ Fields that move:
 - `E1317_TYPE_HAS_NO_LIFECYCLE` — an entity declares a starting state but its type has no lifecycle.
 - `E1320_UNKNOWN_PARTY_ENTITY` — a contract or option binds a role to an entity that is not declared.
 - `E1321_NOT_A_PARTY` — a role is bound to an asset. A contract is between parties.
-- `E1322_UNKNOWN_PARTY_ROLE` — a role is bound that the contract type does not declare. The declared roles are listed; a role belongs to the agreement, not to the entity.
+- `E1322_UNKNOWN_PARTY_ROLE` — a role is bound that the contract type does not declare, or one the type leaves UNBOUND (a purchased pool's borrowers are many and unnamed). Roles are the type's effective roles, resolved through its master chain (`docs/40` §5): a CRE lease binds `landlord`, which is the master's `lessor`, and the hint lists each role a model may bind with the master's word beside it. A role belongs to the agreement, not to the entity.
 - `E1302_UNRESOLVED_STREAM_REF` — something names a stream that is not declared — often an event deactivating one.
 - `E1304_UNRESOLVED_OPTION_REF` — an event exercises an option that is not declared.
 - `E1306_INVALID_ENTITY_REF_FORMAT` — entity ref, stream name, or contract name is not a qualified name with at least two segments (dotted hierarchy).
 
 ### 7.5 Contracts and streams (E20xx/E21xx)
 - `E2001_CONTRACT_MISSING_TERM` — a contract omits a term its pack requires. The message names it; see the pack's contract table.
-- `E2002_CONTRACT_MISSING_EFFECTS` — a contract produces no streams, so it has no effect on the model.
+- `E2002_CONTRACT_MISSING_EFFECTS` — a contract produces no streams, so it has no effect on the model. Under a pack that declares contract types, a contract no rule lowers is a type the pack does not declare and is reported as `E1373` instead.
 - `E2101_STREAM_MISSING_SCHEDULE` — a stream has no `schedule`, so there is no period for its cash to land in.
 - `E2102_STREAM_MISSING_AMOUNT` — a stream has no `amount`.
 - `E2103_SCHEDULE_OUT_OF_BOUNDS` — a schedule reaches outside the model
@@ -9107,9 +9160,10 @@ Contract types (a `contract <name>` declaration lowers to streams through the pa
 
 | type | contract name | parties | description |
 |---|---|---|---|
-| `Credit.Contract.LevelPayPool` | `credit.pool_level_pay` |  | Amortizing pool with prepayment, default, severity and recovery lag. |
-| `Credit.Contract.InterestOnlyPool` | `credit.pool_io_bullet` |  |  |
-| `Credit.Contract.FloatingInterestOnlyPool` | `credit.pool_float_io_bullet` |  | Coupon resets off a declared reference rather than being fixed at origination. |
+| `Credit.Contract.Pool` | (election) |  | A pool of amortizing loans held as collateral: balance, rate, term, and the prepayment, default, severity and servicing assumptions every shape shares. |
+| `Credit.Contract.LevelPayPool` | `credit.pool_level_pay` | holder | Amortizing pool with prepayment, default, severity and recovery lag. |
+| `Credit.Contract.InterestOnlyPool` | `credit.pool_io_bullet` | holder |  |
+| `Credit.Contract.FloatingInterestOnlyPool` | `credit.pool_float_io_bullet` | holder | Coupon resets off a declared reference rather than being fixed at origination. |
 | `Credit.Contract.Purchase` | `credit.purchase` | buyer, seller |  |
 | `Credit.Contract.CleanUpCall` | (election) | holder | The issuer's right to retire the pool once it falls below a stated size. |
 

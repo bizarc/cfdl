@@ -961,6 +961,9 @@ mod tests {
                     statement: Stmt::Contract(cfdl_parser::ContractStmt {
                         payment_net: None,
                         name: "lease.core.primary".to_string(),
+                        declared_type: None,
+                        declared_type_span: None,
+                        instance: None,
                         subject_entity: Some("borrower".to_string()),
                         has_term: true,
                         has_effects: false,

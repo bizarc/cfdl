@@ -36,7 +36,12 @@
         "end": "2028-01-01"
       },
       "currency": "USD",
-      "terms": {},
+      "terms": {
+        "amount_year": 120000,
+        "escalation": 0.1,
+        "free_months": 5,
+        "term_months": 36
+      },
       "effects": {
         "streams": []
       },

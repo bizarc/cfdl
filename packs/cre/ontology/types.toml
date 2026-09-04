@@ -255,6 +255,13 @@ refines = "Contract.Lease"
 contract_name = "cre.lease"
 subject_family = "asset"
 
+
+[[contracts.fields]]
+name = "lease_up_months"
+field_type = "integer"
+unit = "months"
+description = "Months to reach full occupancy; rent ramps linearly over them. 1 is fully occupied from the first month."
+
 [[contracts.roles]]
 name = "landlord"
 refines = "lessor"
@@ -270,6 +277,52 @@ contract_name = "cre.lease_unit"
 subject_family = "asset"
 parties = ["landlord", "tenant"]
 description = "A lease modeled at unit grain, with recoveries and expense stops."
+
+
+[[contracts.fields]]
+name = "rent_year"
+field_type = "decimal"
+required = true
+unit = "USD/yr"
+one_of = "rent"
+description = "Base rent per year, spread by the calendar."
+
+[[contracts.fields]]
+name = "opex_year"
+field_type = "decimal"
+description = "Recoverable operating expenses per year — the base the expense stop is measured against."
+
+[[contracts.fields]]
+name = "opex_escalation"
+field_type = "decimal"
+unit = "ratio"
+description = "Annual growth of the recoverable opex base."
+
+[[contracts.fields]]
+name = "gross_up_factor"
+field_type = "decimal"
+description = "Factor recoverable opex is grossed up by before the stop is applied, so a part-vacant building recovers as if full."
+
+[[contracts.fields]]
+name = "expense_stop_year"
+field_type = "decimal"
+description = "Expense stop per year: the tenant reimburses recoverable opex above it, times its pro rata share."
+
+[[contracts.fields]]
+name = "pro_rata_share"
+field_type = "decimal"
+unit = "ratio"
+description = "The tenant's share of recoverable opex above the stop, 0 to 1; 0 turns recoveries off."
+
+[[contracts.fields]]
+name = "ti_total"
+field_type = "decimal"
+description = "Tenant improvement allowance, paid at term start."
+
+[[contracts.fields]]
+name = "lc_total"
+field_type = "decimal"
+description = "Leasing commissions, paid at term start."
 
 [[contracts.lines]]
 name = "abatement"
@@ -288,6 +341,52 @@ subject_family = "asset"
 parties = ["landlord"]
 description = "The probability-weighted outcome at expiry. Names only the landlord: the renewing or replacing tenant is not known when the model is written."
 
+
+[[contracts.fields]]
+name = "renewal_probability"
+field_type = "decimal"
+required = true
+unit = "ratio"
+description = "Probability the tenant renews at expiry; rents and leasing costs are weighted by it."
+
+[[contracts.fields]]
+name = "renewal_rent_year"
+field_type = "decimal"
+required = true
+unit = "USD/yr"
+one_of = "rent"
+description = "Rent per year if the tenant renews — the clause's rent on the renewal branch."
+
+[[contracts.fields]]
+name = "market_rent_year"
+field_type = "decimal"
+required = true
+unit = "USD/yr"
+one_of = "rent"
+description = "Rent per year to a replacement tenant after downtime — the clause's rent on the re-let branch."
+
+[[contracts.fields]]
+name = "downtime_months"
+field_type = "integer"
+unit = "months"
+description = "Vacant months before a replacement tenant starts paying."
+
+[[contracts.fields]]
+name = "market_escalation"
+field_type = "decimal"
+unit = "ratio"
+description = "Annual growth of market rent."
+
+[[contracts.fields]]
+name = "renewal_ti_lc"
+field_type = "decimal"
+description = "Tenant improvements and leasing commissions on renewal."
+
+[[contracts.fields]]
+name = "new_ti_lc"
+field_type = "decimal"
+description = "Tenant improvements and leasing commissions on a new lease."
+
 [[contracts.roles]]
 name = "tenant"
 unbound = true
@@ -302,6 +401,35 @@ contract_name = "cre.percentage_rent"
 subject_family = "asset"
 parties = ["landlord", "tenant"]
 
+
+[[contracts.fields]]
+name = "sales_year"
+field_type = "decimal"
+required = true
+unit = "USD/yr"
+description = "The tenant's sales per year in the first year of the clause."
+
+[[contracts.fields]]
+name = "sales_growth"
+field_type = "decimal"
+unit = "ratio"
+description = "Annual growth of sales."
+
+[[contracts.fields]]
+name = "breakpoint_year"
+field_type = "decimal"
+required = true
+unit = "USD/yr"
+description = "Sales per year above which overage rent is due."
+
+[[contracts.fields]]
+name = "overage_pct"
+field_type = "decimal"
+required = true
+unit = "ratio"
+one_of = "rent"
+description = "Share of sales above the breakpoint paid as rent — the clause's rent, stated as a rate on sales."
+
 [[contracts]]
 type_id = "CRE.Contract.PercentageRentExpected"
 refines = "CRE.Contract.Lease"
@@ -309,11 +437,54 @@ contract_name = "cre.percentage_rent_expected"
 subject_family = "asset"
 parties = ["landlord", "tenant"]
 
+
+[[contracts.fields]]
+name = "sales_quantile"
+field_type = "string"
+required = true
+description = "The declared quantile the sales expectation is read from."
+
+[[contracts.fields]]
+name = "sales_growth"
+field_type = "decimal"
+unit = "ratio"
+description = "Annual growth of sales."
+
+[[contracts.fields]]
+name = "breakpoint_year"
+field_type = "decimal"
+required = true
+unit = "USD/yr"
+description = "Sales per year above which overage rent is due."
+
+[[contracts.fields]]
+name = "overage_pct"
+field_type = "decimal"
+required = true
+unit = "ratio"
+one_of = "rent"
+description = "Share of expected sales above the breakpoint paid as rent — the clause's rent, stated as a rate on sales."
+
 [[contracts]]
 type_id = "CRE.Contract.VacancyAllowance"
 refines = "Contract.Deduction"
 contract_name = "cre.vacancy_loss"
 subject_family = "asset"
+
+
+[[contracts.fields]]
+name = "rate"
+field_type = "decimal"
+required = true
+unit = "ratio"
+description = "Vacancy and credit loss as a fraction of potential gross revenue."
+
+[[contracts.fields]]
+name = "potential_gross_year"
+field_type = "decimal"
+required = true
+unit = "USD/yr"
+description = "Potential gross revenue per year the rate is applied to."
 
 [[contracts.roles]]
 name = "landlord"
@@ -326,6 +497,19 @@ contract_name = "cre.opex_line"
 subject_family = "asset"
 parties = ["owner"]
 description = "One operating expense line. Instance it per expense for an itemised schedule, or declare one unsuffixed for a single blended figure; the entity it hangs on sets the level."
+
+
+[[contracts.fields]]
+name = "pct_fixed"
+field_type = "decimal"
+unit = "ratio"
+description = "Share of the expense that is fixed; the rest scales with occupancy."
+
+[[contracts.fields]]
+name = "occupancy"
+field_type = "decimal"
+unit = "ratio"
+description = "Occupancy the variable share scales with; may be an expression."
 
 [[contracts]]
 type_id = "CRE.Contract.OperatingRevenue"
@@ -341,6 +525,29 @@ contract_name = "cre.permanent_debt"
 subject_family = "asset"
 parties = ["borrower", "lender"]
 
+
+[[contracts.fields]]
+name = "principal"
+field_type = "decimal"
+required = true
+one_of = "amount"
+description = "The loan amount."
+
+[[contracts.fields]]
+name = "interest_rate"
+field_type = "decimal"
+required = true
+unit = "ratio"
+one_of = "interest"
+description = "Nominal annual rate."
+
+[[contracts.fields]]
+name = "amortization_months"
+field_type = "integer"
+required = true
+unit = "months"
+description = "Amortization term the level payment is struck on."
+
 [[contracts.lines]]
 name = "proceeds"
 
@@ -354,6 +561,14 @@ contract_name = "cre.construction_stub"
 subject_family = "asset"
 parties = ["owner"]
 
+
+[[contracts.fields]]
+name = "amount"
+field_type = "decimal"
+required = true
+one_of = "amount"
+description = "Construction spend per period."
+
 [[contracts]]
 type_id = "CRE.Contract.ConstructionLoan"
 refines = "Contract.Debt"
@@ -361,6 +576,39 @@ contract_name = "cre.construction_loan"
 subject_family = "asset"
 parties = ["lender"]
 description = "A construction facility funded behind an equity commitment: equity draws first, the loan takes the balance once the commitment is exhausted, and interest accrues on the drawn balance through the build."
+
+
+[[contracts.fields]]
+name = "draw_curve"
+field_type = "string"
+required = true
+one_of = "amount"
+description = "The declared curve of required funding, stated as an annualized rate; the facility funds it above the equity commitment."
+
+[[contracts.fields]]
+name = "interest_rate"
+field_type = "decimal"
+required = true
+unit = "ratio"
+one_of = "interest"
+description = "Nominal annual rate on the drawn balance."
+
+[[contracts.fields]]
+name = "equity_commitment"
+field_type = "decimal"
+required = true
+description = "Equity funds the draws up to this amount; the facility funds the rest."
+
+[[contracts.fields]]
+name = "capitalize_interest"
+field_type = "integer"
+description = "1 — accrued interest is added to the balance; 0 — it is paid each period."
+
+[[contracts.fields]]
+name = "draw_accrual_fraction"
+field_type = "decimal"
+unit = "ratio"
+description = "Where in the period a draw lands for accrual: 0.5 drawn ratably, 0 at the end, 1 at the start."
 
 [[contracts.roles]]
 name = "owner"
@@ -379,6 +627,22 @@ contract_name = "cre.exit"
 subject_family = "asset"
 parties = ["seller"]
 
+
+[[contracts.fields]]
+name = "income"
+field_type = "decimal"
+required = true
+unit = "USD/yr"
+description = "The NOI the cap rate is applied to."
+
+[[contracts.fields]]
+name = "cap_rate"
+field_type = "decimal"
+required = true
+unit = "ratio"
+one_of = "basis"
+description = "Capitalization rate applied to the income."
+
 [[contracts.roles]]
 name = "buyer"
 unbound = true
@@ -393,6 +657,22 @@ contract_name = "cre.exit_cap"
 subject_family = "asset"
 parties = ["seller"]
 
+
+[[contracts.fields]]
+name = "income"
+field_type = "decimal"
+required = true
+unit = "USD/yr"
+description = "The NOI the cap rate is applied to."
+
+[[contracts.fields]]
+name = "cap_rate"
+field_type = "decimal"
+required = true
+unit = "ratio"
+one_of = "basis"
+description = "Capitalization rate applied to the income."
+
 [[contracts.roles]]
 name = "buyer"
 unbound = true
@@ -403,6 +683,15 @@ refines = "Contract.Sale"
 contract_name = "cre.exit_forward"
 subject_family = "asset"
 parties = ["seller"]
+
+
+[[contracts.fields]]
+name = "cap_rate"
+field_type = "decimal"
+required = true
+unit = "ratio"
+one_of = "basis"
+description = "Capitalization rate applied to the forward twelve months of NOI after the sale date."
 
 [[contracts.roles]]
 name = "buyer"

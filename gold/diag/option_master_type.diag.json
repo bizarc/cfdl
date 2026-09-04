@@ -1,0 +1,17 @@
+[
+  {
+    "code": "E1374_ABSTRACT_TYPE_INSTANTIATED",
+    "severity": "error",
+    "message": "Option 'renewal' declares type 'Contract.Option', which is a master. A master is refined, never declared.",
+    "file": "model.cfdl",
+    "span": {
+      "start_line": 10,
+      "start_col": 1,
+      "end_line": 10,
+      "end_col": 68
+    },
+    "path": null,
+    "hint": "Concrete elections: Option.Call, Option.Put, Option.Refinance, Option.Renewal.",
+    "notes": []
+  }
+]

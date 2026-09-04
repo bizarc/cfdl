@@ -199,7 +199,9 @@
     {
       "id": "5cdcd8259b34b55133f9ee6f3dd78e9c",
       "name": "credit.pool_level_pay",
-      "type": "core.Contract",
+      "type": "Credit.Contract.LevelPayPool",
+      "contract_name": "credit.pool_level_pay",
+      "master": "Contract.Debt",
       "subject": {
         "symbol": "asset.lender"
       },
@@ -208,7 +210,13 @@
         "end": "2026-12-01"
       },
       "currency": "USD",
-      "terms": {},
+      "terms": {
+        "cdr": 0,
+        "cpr": 0,
+        "interest_rate": 0,
+        "principal": 1200000,
+        "term_months": 12
+      },
       "effects": {
         "streams": []
       },

@@ -215,7 +215,10 @@
     {
       "id": "b671f3b003dd017ab1f51a4b23c92d32",
       "name": "credit.pool_float_io_bullet.smoke",
-      "type": "core.Contract",
+      "type": "Credit.Contract.FloatingInterestOnlyPool",
+      "contract_name": "credit.pool_float_io_bullet",
+      "master": "Contract.Debt",
+      "instance": "smoke",
       "subject": {
         "symbol": "asset.buyer"
       },
@@ -224,7 +227,18 @@
         "end": "2027-03-01"
       },
       "currency": "USD",
-      "terms": {},
+      "terms": {
+        "cdr": 0.03,
+        "cpr": 0.1,
+        "index_curve": "sofr",
+        "margin": 0.03,
+        "principal": 1200000,
+        "rate_cap": 0.1,
+        "rate_floor": 0.0725,
+        "recovery_lag_months": 3,
+        "severity": 0.5,
+        "term_months": 12
+      },
       "effects": {
         "streams": []
       },
@@ -241,7 +255,10 @@
     {
       "id": "2eca99f87e604343389866d4867e2bed",
       "name": "credit.purchase.smoke",
-      "type": "core.Contract",
+      "type": "Credit.Contract.Purchase",
+      "contract_name": "credit.purchase",
+      "master": "Contract.Purchase",
+      "instance": "smoke",
       "subject": {
         "symbol": "asset.buyer"
       },
@@ -250,7 +267,9 @@
         "end": "2027-03-01"
       },
       "currency": "USD",
-      "terms": {},
+      "terms": {
+        "price": 1200000
+      },
       "effects": {
         "streams": []
       },

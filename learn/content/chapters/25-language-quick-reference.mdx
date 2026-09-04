@@ -114,9 +114,10 @@ logic reading what it sets is a refused cycle, with the path named.
 ## Contracts, events, options, waterfalls
 
 ```text
-contract <pack>.<type>[.<suffix>] [on entity <ref>] {
-  term <date>..<date>
+contract <pack>.<type> [<instance>] [on entity <ref>] {   -- or the fused
+  term <date>..<date>                                     --   <pack>.<type>.<instance>
   terms { <key> = <literal | inputs.name | expression>  ... }
+  parties { <role> = party.<name>  ... }                  -- the type's roles
 }
 
 event <a>.<b> when <boolean expr> {          -- fires ONCE, first true period

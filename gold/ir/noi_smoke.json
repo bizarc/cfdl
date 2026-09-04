@@ -144,7 +144,9 @@
     {
       "id": "ca1e4145c3e32a5be406c23538c6d7d2",
       "name": "cre.exit_cap",
-      "type": "core.Contract",
+      "type": "CRE.Contract.DispositionAtCap",
+      "contract_name": "cre.exit_cap",
+      "master": "Contract.Sale",
       "subject": {
         "symbol": "asset.property"
       },
@@ -153,7 +155,10 @@
         "end": "2027-01-01"
       },
       "currency": "USD",
-      "terms": {},
+      "terms": {
+        "cap_rate": 0.09,
+        "income": 36000
+      },
       "effects": {
         "streams": []
       },
@@ -170,7 +175,9 @@
     {
       "id": "9a6463ca7ed884d3801014c9283d3f44",
       "name": "cre.opex_line",
-      "type": "core.Contract",
+      "type": "CRE.Contract.OperatingExpense",
+      "contract_name": "cre.opex_line",
+      "master": "Contract.Line",
       "subject": {
         "symbol": "asset.property"
       },
@@ -179,7 +186,9 @@
         "end": "2027-01-01"
       },
       "currency": "USD",
-      "terms": {},
+      "terms": {
+        "amount": 2000
+      },
       "effects": {
         "streams": []
       },
@@ -196,7 +205,9 @@
     {
       "id": "ef2e1431fe7a6bc3eab2d59b8a6f200e",
       "name": "cre.revenue_line",
-      "type": "core.Contract",
+      "type": "CRE.Contract.OperatingRevenue",
+      "contract_name": "cre.revenue_line",
+      "master": "Contract.Line",
       "subject": {
         "symbol": "asset.property"
       },
@@ -205,7 +216,9 @@
         "end": "2027-01-01"
       },
       "currency": "USD",
-      "terms": {},
+      "terms": {
+        "amount": 5000
+      },
       "effects": {
         "streams": []
       },

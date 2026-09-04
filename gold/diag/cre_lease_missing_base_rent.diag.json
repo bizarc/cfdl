@@ -1,5 +1,20 @@
 [
   {
+    "code": "E1372_MISSING_CONTRACT_TERM",
+    "severity": "error",
+    "message": "Contract 'cre.lease' states none of rent, rent_year; type 'CRE.Contract.Lease' requires one of them.",
+    "file": "model.cfdl",
+    "span": {
+      "start_line": 8,
+      "start_col": 1,
+      "end_line": 13,
+      "end_col": 1
+    },
+    "path": null,
+    "hint": null,
+    "notes": []
+  },
+  {
     "code": "E6001_CRE_LEASE_MISSING_BASE_RENT",
     "severity": "error",
     "message": "CRE lease must state a rent: 'rent' (per period) or 'rent_year' (annual).",
@@ -12,6 +27,21 @@
     },
     "path": null,
     "hint": null,
+    "notes": []
+  },
+  {
+    "code": "E1371_UNKNOWN_CONTRACT_TERM",
+    "severity": "error",
+    "message": "Contract 'cre.lease' states term 'growth', which type 'CRE.Contract.Lease' does not declare. The term would never be read.",
+    "file": "model.cfdl",
+    "span": {
+      "start_line": 11,
+      "start_col": 5,
+      "end_line": 11,
+      "end_col": 17
+    },
+    "path": null,
+    "hint": "Terms of 'CRE.Contract.Lease': rent, rent_year, escalation, free_rent_months, lease_up_months.",
     "notes": []
   }
 ]

@@ -1,0 +1,678 @@
+{
+  "ir_version": "0.1",
+  "model": {
+    "name": "contract-two-token",
+    "currency": "USD"
+  },
+  "time": {
+    "calendar": "monthly",
+    "start": "2026-01-01",
+    "periods": 24
+  },
+  "phases": [],
+  "entities": [
+    {
+      "id": "121876c85ba64d3a28b2875e9e107d71",
+      "symbol": "asset.tower",
+      "type": "CRE.Asset.RealProperty",
+      "fields": {},
+      "state": {},
+      "lifecycle": "cre.property"
+    },
+    {
+      "id": "0fbaf93a67f73e142625ed8e48f208b2",
+      "symbol": "party.acme",
+      "type": "Party",
+      "fields": {},
+      "state": {}
+    },
+    {
+      "id": "0d73b039b400d1842cf57cfd5b559731",
+      "symbol": "party.landlord_co",
+      "type": "Party",
+      "fields": {},
+      "state": {}
+    }
+  ],
+  "assumptions": {
+    "constants": {},
+    "random": {}
+  },
+  "lifecycles": [
+    {
+      "id": "cre.property",
+      "initial": "stabilized",
+      "states": [
+        "predevelopment",
+        "construction",
+        "lease_up",
+        "stabilized",
+        "repositioning",
+        "disposed"
+      ],
+      "edges": [
+        {
+          "from": "predevelopment",
+          "to": "construction"
+        },
+        {
+          "from": "construction",
+          "to": "lease_up"
+        },
+        {
+          "from": "lease_up",
+          "to": "stabilized"
+        },
+        {
+          "from": "stabilized",
+          "to": "repositioning"
+        },
+        {
+          "from": "repositioning",
+          "to": "lease_up"
+        },
+        {
+          "from": "stabilized",
+          "to": "disposed"
+        },
+        {
+          "from": "repositioning",
+          "to": "disposed"
+        },
+        {
+          "from": "lease_up",
+          "to": "disposed"
+        }
+      ]
+    }
+  ],
+  "subtotals": [
+    {
+      "id": "domain.cre.pgr",
+      "kind": "money",
+      "op": "sum",
+      "categories": [
+        "operating.revenue.*"
+      ],
+      "formula": "sum(operating.revenue.*)"
+    },
+    {
+      "id": "domain.cre.egi",
+      "kind": "money",
+      "op": "sum",
+      "categories": [
+        "operating.revenue.*",
+        "operating.deduction.*"
+      ],
+      "formula": "potential gross revenue less vacancy and abatements"
+    },
+    {
+      "id": "domain.cre.opex_total",
+      "kind": "money",
+      "op": "sum",
+      "categories": [
+        "operating.expense.*"
+      ],
+      "formula": "sum(operating.expense.*)"
+    },
+    {
+      "id": "domain.cre.noi",
+      "kind": "money",
+      "op": "sum",
+      "categories": [
+        "operating.*"
+      ],
+      "formula": "sum(operating.*)"
+    },
+    {
+      "id": "domain.cre.debt_service",
+      "kind": "money",
+      "op": "negated_sum",
+      "categories": [
+        "financing.debt.service",
+        "financing.debt.interest_paid",
+        "financing.debt.principal",
+        "financing.debt.mortgage_insurance"
+      ],
+      "formula": "-sum(financing.debt.service, financing.debt.interest_paid, financing.debt.principal, financing.debt.mortgage_insurance)"
+    },
+    {
+      "id": "domain.cre.dscr",
+      "kind": "number",
+      "op": "ratio",
+      "numerator": "domain.cre.noi",
+      "denominator": "domain.cre.debt_service",
+      "formula": "domain.cre.noi / domain.cre.debt_service"
+    },
+    {
+      "id": "domain.cre.leasing_costs",
+      "kind": "money",
+      "op": "negated_sum",
+      "categories": [
+        "investing.capital.leasing"
+      ],
+      "formula": "-sum(investing.capital.leasing)"
+    }
+  ],
+  "contracts": [
+    {
+      "id": "d376361f5388212cfef9652ad92f693a",
+      "name": "cre.lease_unit.tenant_a",
+      "type": "CRE.Contract.UnitLease",
+      "contract_name": "cre.lease_unit",
+      "master": "Contract.Lease",
+      "instance": "tenant_a",
+      "subject": {
+        "symbol": "asset.tower"
+      },
+      "parties": [
+        {
+          "role": "landlord",
+          "master_role": "lessor",
+          "entity": {
+            "symbol": "party.landlord_co"
+          }
+        },
+        {
+          "role": "tenant",
+          "master_role": "lessee",
+          "entity": {
+            "symbol": "party.acme"
+          }
+        }
+      ],
+      "term": {
+        "start": "2026-01-01",
+        "end": "2027-12-01"
+      },
+      "currency": "USD",
+      "terms": {
+        "escalation": 0.03,
+        "rent_year": 480000
+      },
+      "effects": {
+        "streams": []
+      },
+      "provenance": {
+        "source_file": "model.cfdl",
+        "source_span": {
+          "start_line": 18,
+          "start_col": 1,
+          "end_line": 28,
+          "end_col": 1
+        }
+      }
+    },
+    {
+      "id": "61012a70087e24e2c5e9e0022fcc895d",
+      "name": "cre.lease_unit.tenant_b",
+      "type": "CRE.Contract.UnitLease",
+      "contract_name": "cre.lease_unit",
+      "master": "Contract.Lease",
+      "instance": "tenant_b",
+      "subject": {
+        "symbol": "asset.tower"
+      },
+      "term": {
+        "start": "2026-01-01",
+        "end": "2027-12-01"
+      },
+      "currency": "USD",
+      "terms": {
+        "rent_year": 360000
+      },
+      "effects": {
+        "streams": []
+      },
+      "provenance": {
+        "source_file": "model.cfdl",
+        "source_span": {
+          "start_line": 31,
+          "start_col": 1,
+          "end_line": 36,
+          "end_col": 1
+        }
+      }
+    }
+  ],
+  "streams": [
+    {
+      "id": "28b50cb559951825924e94269c976afc",
+      "name": "cre.unit.abatement.tenant_a",
+      "owner": {
+        "symbol": "asset.tower"
+      },
+      "direction": "outflow",
+      "currency": "USD",
+      "category": "operating.deduction.abatement",
+      "schedule": {
+        "kind": "Every",
+        "every": "monthly",
+        "from": "2026-01-01",
+        "to": "2027-12-01"
+      },
+      "amount": {
+        "lang": "cfdl",
+        "src": "(480000.0 / 12.0) * (1.0 - clamp(months_between(parse_date(\"2026-01-01\"), time.date) + 1.0 - 0.0, 0.0, 1.0)) * pow(1.0 + 0.03, round_down(months_between(parse_date(\"2026-01-01\"), time.date) / 12.0, 0.0))"
+      },
+      "active_when": {
+        "lang": "cfdl",
+        "src": "true"
+      },
+      "provenance": {
+        "source_file": "model.cfdl",
+        "source_span": {
+          "start_line": 18,
+          "start_col": 1,
+          "end_line": 28,
+          "end_col": 1
+        },
+        "generated_by": {
+          "pack": {
+            "name": "cre",
+            "version": "0.1.0"
+          },
+          "rule_id": "cre_lease_unit_abatement"
+        }
+      }
+    },
+    {
+      "id": "430240d043465b0997a0774b379389e1",
+      "name": "cre.unit.abatement.tenant_b",
+      "owner": {
+        "symbol": "asset.tower"
+      },
+      "direction": "outflow",
+      "currency": "USD",
+      "category": "operating.deduction.abatement",
+      "schedule": {
+        "kind": "Every",
+        "every": "monthly",
+        "from": "2026-07-01",
+        "to": "2027-12-01"
+      },
+      "amount": {
+        "lang": "cfdl",
+        "src": "(360000.0 / 12.0) * (1.0 - clamp(months_between(parse_date(\"2026-07-01\"), time.date) + 1.0 - 0.0, 0.0, 1.0)) * pow(1.0 + 0.0, round_down(months_between(parse_date(\"2026-07-01\"), time.date) / 12.0, 0.0))"
+      },
+      "active_when": {
+        "lang": "cfdl",
+        "src": "true"
+      },
+      "provenance": {
+        "source_file": "model.cfdl",
+        "source_span": {
+          "start_line": 31,
+          "start_col": 1,
+          "end_line": 36,
+          "end_col": 1
+        },
+        "generated_by": {
+          "pack": {
+            "name": "cre",
+            "version": "0.1.0"
+          },
+          "rule_id": "cre_lease_unit_abatement"
+        }
+      }
+    },
+    {
+      "id": "b75f0720ade31b99d725ed20032b2993",
+      "name": "cre.unit.base_rent.tenant_a",
+      "owner": {
+        "symbol": "asset.tower"
+      },
+      "direction": "inflow",
+      "currency": "USD",
+      "category": "operating.revenue.base_rent",
+      "schedule": {
+        "kind": "Every",
+        "every": "monthly",
+        "from": "2026-01-01",
+        "to": "2027-12-01"
+      },
+      "amount": {
+        "lang": "cfdl",
+        "src": "(480000.0 / 12.0) * pow(1.0 + 0.03, round_down(months_between(parse_date(\"2026-01-01\"), time.date) / 12.0, 0.0))"
+      },
+      "active_when": {
+        "lang": "cfdl",
+        "src": "true"
+      },
+      "provenance": {
+        "source_file": "model.cfdl",
+        "source_span": {
+          "start_line": 18,
+          "start_col": 1,
+          "end_line": 28,
+          "end_col": 1
+        },
+        "generated_by": {
+          "pack": {
+            "name": "cre",
+            "version": "0.1.0"
+          },
+          "rule_id": "cre_lease_unit_base_rent"
+        }
+      }
+    },
+    {
+      "id": "de3335cf254ee95c9aa8e3606342dc34",
+      "name": "cre.unit.base_rent.tenant_b",
+      "owner": {
+        "symbol": "asset.tower"
+      },
+      "direction": "inflow",
+      "currency": "USD",
+      "category": "operating.revenue.base_rent",
+      "schedule": {
+        "kind": "Every",
+        "every": "monthly",
+        "from": "2026-07-01",
+        "to": "2027-12-01"
+      },
+      "amount": {
+        "lang": "cfdl",
+        "src": "(360000.0 / 12.0) * pow(1.0 + 0.0, round_down(months_between(parse_date(\"2026-07-01\"), time.date) / 12.0, 0.0))"
+      },
+      "active_when": {
+        "lang": "cfdl",
+        "src": "true"
+      },
+      "provenance": {
+        "source_file": "model.cfdl",
+        "source_span": {
+          "start_line": 31,
+          "start_col": 1,
+          "end_line": 36,
+          "end_col": 1
+        },
+        "generated_by": {
+          "pack": {
+            "name": "cre",
+            "version": "0.1.0"
+          },
+          "rule_id": "cre_lease_unit_base_rent"
+        }
+      }
+    },
+    {
+      "id": "06c2ea3187aedd63fe5464aa9224dc36",
+      "name": "cre.unit.recoveries.tenant_a",
+      "owner": {
+        "symbol": "asset.tower"
+      },
+      "direction": "inflow",
+      "currency": "USD",
+      "category": "operating.revenue.recovery",
+      "schedule": {
+        "kind": "Every",
+        "every": "monthly",
+        "from": "2026-01-01",
+        "to": "2027-12-01"
+      },
+      "amount": {
+        "lang": "cfdl",
+        "src": "max(0.0, 0.0 * 1.0 * pow(1.0 + 0.0, round_down(months_between(parse_date(\"2026-01-01\"), time.date) / 12.0, 0.0)) - 0.0) * 0.0 / 12.0"
+      },
+      "active_when": {
+        "lang": "cfdl",
+        "src": "true"
+      },
+      "provenance": {
+        "source_file": "model.cfdl",
+        "source_span": {
+          "start_line": 18,
+          "start_col": 1,
+          "end_line": 28,
+          "end_col": 1
+        },
+        "generated_by": {
+          "pack": {
+            "name": "cre",
+            "version": "0.1.0"
+          },
+          "rule_id": "cre_lease_unit_recoveries"
+        }
+      }
+    },
+    {
+      "id": "3ed94ad5a7f5f9990c91c5a2687d7a1e",
+      "name": "cre.unit.recoveries.tenant_b",
+      "owner": {
+        "symbol": "asset.tower"
+      },
+      "direction": "inflow",
+      "currency": "USD",
+      "category": "operating.revenue.recovery",
+      "schedule": {
+        "kind": "Every",
+        "every": "monthly",
+        "from": "2026-07-01",
+        "to": "2027-12-01"
+      },
+      "amount": {
+        "lang": "cfdl",
+        "src": "max(0.0, 0.0 * 1.0 * pow(1.0 + 0.0, round_down(months_between(parse_date(\"2026-07-01\"), time.date) / 12.0, 0.0)) - 0.0) * 0.0 / 12.0"
+      },
+      "active_when": {
+        "lang": "cfdl",
+        "src": "true"
+      },
+      "provenance": {
+        "source_file": "model.cfdl",
+        "source_span": {
+          "start_line": 31,
+          "start_col": 1,
+          "end_line": 36,
+          "end_col": 1
+        },
+        "generated_by": {
+          "pack": {
+            "name": "cre",
+            "version": "0.1.0"
+          },
+          "rule_id": "cre_lease_unit_recoveries"
+        }
+      }
+    },
+    {
+      "id": "fb84d531bf63c1bcdfc3dbe1315a76d4",
+      "name": "cre.unit.ti_lc.tenant_a",
+      "owner": {
+        "symbol": "asset.tower"
+      },
+      "direction": "outflow",
+      "currency": "USD",
+      "category": "investing.capital.leasing",
+      "schedule": {
+        "kind": "OnDate",
+        "on": "2026-01-01"
+      },
+      "amount": {
+        "lang": "cfdl",
+        "src": "0.0 + 0.0"
+      },
+      "active_when": {
+        "lang": "cfdl",
+        "src": "true"
+      },
+      "provenance": {
+        "source_file": "model.cfdl",
+        "source_span": {
+          "start_line": 18,
+          "start_col": 1,
+          "end_line": 28,
+          "end_col": 1
+        },
+        "generated_by": {
+          "pack": {
+            "name": "cre",
+            "version": "0.1.0"
+          },
+          "rule_id": "cre_lease_unit_ti_lc"
+        }
+      }
+    },
+    {
+      "id": "4e1dcf3b654ddb4029012256cf4284eb",
+      "name": "cre.unit.ti_lc.tenant_b",
+      "owner": {
+        "symbol": "asset.tower"
+      },
+      "direction": "outflow",
+      "currency": "USD",
+      "category": "investing.capital.leasing",
+      "schedule": {
+        "kind": "OnDate",
+        "on": "2026-07-01"
+      },
+      "amount": {
+        "lang": "cfdl",
+        "src": "0.0 + 0.0"
+      },
+      "active_when": {
+        "lang": "cfdl",
+        "src": "true"
+      },
+      "provenance": {
+        "source_file": "model.cfdl",
+        "source_span": {
+          "start_line": 31,
+          "start_col": 1,
+          "end_line": 36,
+          "end_col": 1
+        },
+        "generated_by": {
+          "pack": {
+            "name": "cre",
+            "version": "0.1.0"
+          },
+          "rule_id": "cre_lease_unit_ti_lc"
+        }
+      }
+    }
+  ],
+  "stream_inputs": [
+    {
+      "stream": "cre.unit.abatement.tenant_a",
+      "contract": "cre.lease_unit.tenant_a",
+      "terms": {
+        "escalation": "0.03",
+        "rent_year": "480000"
+      }
+    },
+    {
+      "stream": "cre.unit.base_rent.tenant_a",
+      "contract": "cre.lease_unit.tenant_a",
+      "terms": {
+        "escalation": "0.03",
+        "rent_year": "480000"
+      }
+    },
+    {
+      "stream": "cre.unit.recoveries.tenant_a",
+      "contract": "cre.lease_unit.tenant_a",
+      "terms": {
+        "expense_stop_year": "0",
+        "gross_up_factor": "1",
+        "opex_escalation": "0",
+        "opex_year": "0",
+        "pro_rata_share": "0"
+      },
+      "defaults_applied": [
+        "expense_stop_year",
+        "gross_up_factor",
+        "opex_escalation",
+        "opex_year",
+        "pro_rata_share"
+      ]
+    },
+    {
+      "stream": "cre.unit.ti_lc.tenant_a",
+      "contract": "cre.lease_unit.tenant_a",
+      "terms": {
+        "lc_total": "0",
+        "ti_total": "0"
+      },
+      "defaults_applied": [
+        "lc_total",
+        "ti_total"
+      ]
+    },
+    {
+      "stream": "cre.unit.abatement.tenant_b",
+      "contract": "cre.lease_unit.tenant_b",
+      "terms": {
+        "escalation": "0",
+        "rent_year": "360000"
+      },
+      "defaults_applied": [
+        "escalation"
+      ]
+    },
+    {
+      "stream": "cre.unit.base_rent.tenant_b",
+      "contract": "cre.lease_unit.tenant_b",
+      "terms": {
+        "escalation": "0",
+        "rent_year": "360000"
+      },
+      "defaults_applied": [
+        "escalation"
+      ]
+    },
+    {
+      "stream": "cre.unit.recoveries.tenant_b",
+      "contract": "cre.lease_unit.tenant_b",
+      "terms": {
+        "expense_stop_year": "0",
+        "gross_up_factor": "1",
+        "opex_escalation": "0",
+        "opex_year": "0",
+        "pro_rata_share": "0"
+      },
+      "defaults_applied": [
+        "expense_stop_year",
+        "gross_up_factor",
+        "opex_escalation",
+        "opex_year",
+        "pro_rata_share"
+      ]
+    },
+    {
+      "stream": "cre.unit.ti_lc.tenant_b",
+      "contract": "cre.lease_unit.tenant_b",
+      "terms": {
+        "lc_total": "0",
+        "ti_total": "0"
+      },
+      "defaults_applied": [
+        "lc_total",
+        "ti_total"
+      ]
+    }
+  ],
+  "events": [],
+  "options": [],
+  "runs": [
+    {
+      "kind": "deterministic"
+    }
+  ],
+  "required_observables": [],
+  "required_refs": [],
+  "provenance": {
+    "sources": [
+      "model.cfdl"
+    ],
+    "compiler": {
+      "name": "cfdl",
+      "version": "0.9.0",
+      "hash": "eb3d276c80a61e419d2db8b0395b64c3",
+      "notes": [
+        "active_pack=cre@0.1.0"
+      ]
+    }
+  }
+}

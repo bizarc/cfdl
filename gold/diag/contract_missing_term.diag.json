@@ -1,0 +1,47 @@
+[
+  {
+    "code": "E1372_MISSING_CONTRACT_TERM",
+    "severity": "error",
+    "message": "Contract 'cre.lease_unit.tenant_a' omits term 'rent_year', which type 'CRE.Contract.UnitLease' requires.",
+    "file": "model.cfdl",
+    "span": {
+      "start_line": 11,
+      "start_col": 1,
+      "end_line": 16,
+      "end_col": 1
+    },
+    "path": null,
+    "hint": null,
+    "notes": []
+  },
+  {
+    "code": "E1372_MISSING_CONTRACT_TERM",
+    "severity": "error",
+    "message": "Contract 'cre.lease' states none of rent, rent_year; type 'CRE.Contract.Lease' requires one of them.",
+    "file": "model.cfdl",
+    "span": {
+      "start_line": 22,
+      "start_col": 1,
+      "end_line": 27,
+      "end_col": 1
+    },
+    "path": null,
+    "hint": null,
+    "notes": []
+  },
+  {
+    "code": "E6001_CRE_LEASE_MISSING_BASE_RENT",
+    "severity": "error",
+    "message": "CRE lease must state a rent: 'rent' (per period) or 'rent_year' (annual).",
+    "file": "model.cfdl",
+    "span": {
+      "start_line": 22,
+      "start_col": 1,
+      "end_line": 27,
+      "end_col": 1
+    },
+    "path": null,
+    "hint": null,
+    "notes": []
+  }
+]

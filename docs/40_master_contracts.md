@@ -192,9 +192,12 @@ the core says. Refinements carry the rest.
 Roles `grantor`, `holder`. Fields: `strike` (opt); the election and the
 payoff come from the `option` grammar (`exercise when`, `payoff`) and are
 declared there, not in `terms`. Line: `payoff`. An election binds no
-lowering rule; stage 7 aligns the grammar with the master and retires the
-base names (`Option.Call`, `Option.Refinance`) that resolve against
-nothing today (`docs/13` §7.67).
+lowering rule. The base carries four generic elections as concrete
+refinements — `Option.Call`, `Option.Put`, `Option.Renewal`,
+`Option.Refinance` — so a model with no pack active can write one, and an
+option's type is checked against them and the pack's own (`E1373`,
+`E1374`; stage 3). Stage 7 aligns the grammar with the master and decides
+whether the generic names stay.
 
 ### 4.9 `Contract.Construction`
 Roles `owner`, `contractor`. Fields: `budget`; `draw_curve` (a declared
@@ -343,41 +346,73 @@ change, and an old name is simply an unknown term. The master's names were
 reviewed for correctness first (full words, no pack abbreviations, no
 domain jargon — §4.1, §4.4, §4.7), because a hard rename is done once.
 
-Bounds that every refinement of a master shares (`interest_rate ≥ 0`,
-`amortization_months > 0`, `principal > 0`) will move to the master field
-in stage 3, when the compiler reads the effective roster; until then a
-pack's `validations.toml` carries them under the new names.
+*Bounds — decided 3 September 2026, stage 3:* bounds stay in a pack's
+`validations.toml`. A bound carries a code and a message in the pack's
+own words (`E6053_CRE_DEBT_INVALID_RATE`), and the packs' READMEs and the
+repair catalog cite them; the roster carries the SHAPE of a term (type,
+unit, required, group), which is what every refinement must agree on. A
+master stating `interest_rate ≥ 0` would say the same thing as four pack
+validations with a fifth code, so it does not.
 
-*Left for stage 3, found by the template check:* three CRE types state no
-rent of their own — `cre.rollover` (renewal and market rents) and the two
-percentage-rent types (sales and a breakpoint) — and `cre.vacancy_loss` and
-`opco.working_capital_policy` state a rate on a base or days rather than
-an amount. They are lease clauses and derived lines. The masters do not
-bend for them: whether a clause inherits its parent instance's obligation,
-or a derived line satisfies an amount group by construction, is decided
-where the compiler checks a model, not by weakening the master.
+*The clauses and derived lines, decided in stage 3:* a refinement may put
+a field of its own into a master's group. A rollover's
+`renewal_rent_year` and `market_rent_year` join the lease's `rent` group,
+because the rent of a successor lease IS its renewal or market rent; a
+percentage-rent clause's `overage_pct` joins it, because the clause's
+rent is stated as a rate on sales; an OpCo capex line's `pct_of_revenue`
+joins `amount`. The master's obligation stands — a lease states its rent —
+and the refinement states how this form of the agreement spells it.
+`cre.vacancy_loss` refines `Contract.Deduction` and
+`opco.working_capital_policy` refines `Contract.WorkingCapital`, whose
+masters carry no amount group: a deduction and a working-capital movement
+are derived by construction.
 
-## 8. What the compiler checks — decision R3
+*Terms are fields, made real in stage 3:* no pack type declared a field of
+its own before this stage — the effective roster was the masters' fields
+alone, and a pack's terms lived in three places that agreed by care. Every
+shipped type now declares every term its rules read, its validations bound
+and its templates render (`[[contracts.fields]]`), strengthening a master's
+field where it requires one (`principal`, `interest_rate`, `rent_year`),
+and the loader refuses a pack where a rule, validation or template names a
+term outside the roster. The credit pack's three pool shapes share an
+abstract `Credit.Contract.Pool` for the terms every pool states.
 
-A contract's type is resolved ONCE, where its lowering rule is matched,
-and carried: `type_id`, `instance`, and the master chain travel on the
-contract through the IR and into the results graph. The prefix match at
-every consumer (`docs/13` §7.58) goes. Against the effective roster the
-compiler refuses an unknown term with a near-miss hint
-(`E1371_UNKNOWN_CONTRACT_TERM`), a missing required field
-(`E1372_MISSING_CONTRACT_TERM`), an unknown or abstract type named on an
-`option` (`E1373_UNKNOWN_CONTRACT_TYPE`,
-`E1374_ABSTRACT_TYPE_INSTANTIATED`), and a role outside the effective
-roles (`E1322`, now naming the master role too). A model's `parties`
-block is serialized, closing the "parsed and discarded" status.
+## 8. What the compiler checks — decision R3, built in stage 3
+
+A contract's type is resolved ONCE, from its declaration, and carried. The
+two-token form states it (`contract cre.lease_unit tenant_a`); the fused
+form (`cre.lease_unit.tenant_a`) is matched by rule-name prefix on the
+same boundary lowering uses. Both spell the same qualified name, so
+lowered streams and references are unchanged whichever form wrote them.
+The binding — pack type, ontology type, master, instance — is what the
+party check, the term check, lowering and the IR read; the prefix match at
+each consumer is gone.
+
+Against the effective roster the compiler refuses an unknown term with a
+near-miss hint (`E1371_UNKNOWN_CONTRACT_TERM`) and a missing required
+term or an empty group of alternatives (`E1372_MISSING_CONTRACT_TERM`),
+before any rule is expanded. A type named on a declaration resolves or is
+refused: an unknown type on a contract or an option, a fused contract name
+no rule lowers, an election written as a `contract` or a lowered type
+written as an `option` (`E1373_UNKNOWN_CONTRACT_TYPE`, with the near miss
+or the declarable types); a master named where a concrete type belongs
+(`E1374_ABSTRACT_TYPE_INSTANTIATED`, with its concrete refinements).
+Roles are the type's effective roles resolved through the master chain:
+a pack's specialization is bound by the pack's word, an unbound role is
+refused, and `E1322` names the master's word beside each (`landlord (the
+master's lessor)`).
+
+The IR contract carries `type` (the ontology type, `core.Contract` only
+with no pack), `contract_name`, `master`, `instance`, the `parties` with
+`role` and `master_role`, and the `terms` as typed values — a number, a
+string, or CFDL source for an input reference or an expression. The
+`parties` block is no longer parsed and discarded.
 
 *Scope — decided 2 September 2026:* the two-token declaration the grammar
-already allows — `contract cre.lease_unit tenant_a` (`docs/13` §7.63) —
-lands in the same stage as the type carry rather than as a follow-on:
-leaving it open would carry the string-surgery it exists to remove into
-every consumer the stage touches. The fused `cre.lease_unit.tenant_a`
-spelling keeps working; models migrate to the two-token form as they are
-next touched.
+already allowed lands with the type carry rather than as a follow-on:
+leaving it open would have carried the string-surgery it exists to remove
+into every consumer the stage touched. Models migrate to the two-token
+form as they are next touched.
 
 ## 9. What a contract is not
 
@@ -408,8 +443,10 @@ contract names, and their accounts hold what they received (`docs/13`
    every required effective field and one member of each group, checked at
    load; credit's template no longer renders `smm`/`mdr`. Every benchmark
    `expected.csv` is byte-identical.
-3. **Compiler**: resolve-once type carry, the four diagnostics of §8,
-   effective-roster term and role checks, parties in the IR.
+3. **Compiler** — **built.** Resolve-once type carry, the four diagnostics
+   of §8, effective-roster term and role checks, parties in the IR, the
+   two-token declaration; every pack type declares its terms as fields and
+   the loader checks rules, validations and templates against the roster.
 4. **Results and tools**: contracts as graph nodes with master and
    roles; MCP `lookup`/`skeleton` see masters.
 5. **Cross-pack reading**: `type <Master>` on metrics and statement rows;
@@ -420,5 +457,5 @@ contract names, and their accounts hold what they received (`docs/13`
 7. **Elections**: `Contract.Option`'s core in the `option` grammar; base
    option names retired.
 
-`docs/13` §7.92 is closed when stage 3 lands; §7.58, §7.67 and §7.96–7.98
+`docs/13` §7.58, §7.63, §7.67 and §7.92 closed with stage 3; §7.96–7.98
 close with the stages that answer them.

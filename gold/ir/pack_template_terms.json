@@ -36,7 +36,9 @@
         "end": "2026-06-01"
       },
       "currency": "USD",
-      "terms": {},
+      "terms": {
+        "rate": 25
+      },
       "effects": {
         "streams": []
       },

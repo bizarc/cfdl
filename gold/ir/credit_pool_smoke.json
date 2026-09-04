@@ -199,7 +199,10 @@
     {
       "id": "3e672281a626ed0c7ff9567f6236c965",
       "name": "credit.pool_level_pay.smoke",
-      "type": "core.Contract",
+      "type": "Credit.Contract.LevelPayPool",
+      "contract_name": "credit.pool_level_pay",
+      "master": "Contract.Debt",
+      "instance": "smoke",
       "subject": {
         "symbol": "asset.buyer"
       },
@@ -208,7 +211,15 @@
         "end": "2027-03-01"
       },
       "currency": "USD",
-      "terms": {},
+      "terms": {
+        "cdr": 0.03,
+        "cpr": 0.1,
+        "interest_rate": 0.06,
+        "principal": 1200000,
+        "recovery_lag_months": 3,
+        "severity": 0.5,
+        "term_months": 12
+      },
       "effects": {
         "streams": []
       },
@@ -225,7 +236,10 @@
     {
       "id": "2eca99f87e604343389866d4867e2bed",
       "name": "credit.purchase.smoke",
-      "type": "core.Contract",
+      "type": "Credit.Contract.Purchase",
+      "contract_name": "credit.purchase",
+      "master": "Contract.Purchase",
+      "instance": "smoke",
       "subject": {
         "symbol": "asset.buyer"
       },
@@ -234,7 +248,9 @@
         "end": "2027-03-01"
       },
       "currency": "USD",
-      "terms": {},
+      "terms": {
+        "price": 1200000
+      },
       "effects": {
         "streams": []
       },

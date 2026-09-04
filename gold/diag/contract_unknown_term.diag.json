@@ -1,0 +1,17 @@
+[
+  {
+    "code": "E1371_UNKNOWN_CONTRACT_TERM",
+    "severity": "error",
+    "message": "Contract 'cre.lease_unit.tenant_a' states term 'esclation', which type 'CRE.Contract.UnitLease' does not declare. The term would never be read.",
+    "file": "model.cfdl",
+    "span": {
+      "start_line": 16,
+      "start_col": 5,
+      "end_line": 16,
+      "end_col": 20
+    },
+    "path": null,
+    "hint": "Did you mean escalation?",
+    "notes": []
+  }
+]

@@ -183,7 +183,10 @@
     {
       "id": "a0337ee6854e092c9c2b8f8da6b15e5f",
       "name": "energy.ppa.plant_a",
-      "type": "core.Contract",
+      "type": "Energy.Contract.PPA",
+      "contract_name": "energy.ppa",
+      "master": "Contract.Offtake",
+      "instance": "plant_a",
       "subject": {
         "symbol": "asset.plant"
       },
@@ -192,7 +195,13 @@
         "end": "2026-12-01"
       },
       "currency": "INR",
-      "terms": {},
+      "terms": {
+        "availability": 1.0,
+        "degradation": 0.005,
+        "escalation": 0.0,
+        "price": 3000,
+        "quantity": 5000
+      },
       "effects": {
         "streams": []
       },

@@ -211,7 +211,10 @@
     {
       "id": "a0337ee6854e092c9c2b8f8da6b15e5f",
       "name": "energy.ppa.plant_a",
-      "type": "core.Contract",
+      "type": "Energy.Contract.PPA",
+      "contract_name": "energy.ppa",
+      "master": "Contract.Offtake",
+      "instance": "plant_a",
       "subject": {
         "symbol": "asset.plant"
       },
@@ -220,7 +223,19 @@
         "end": "2027-12-01"
       },
       "currency": "USD",
-      "terms": {},
+      "terms": {
+        "availability": 1.0,
+        "degradation": {
+          "lang": "cfdl",
+          "src": "inputs.degradation"
+        },
+        "escalation": 0.0,
+        "price": 3000,
+        "quantity": {
+          "lang": "cfdl",
+          "src": "inputs.annual_yield"
+        }
+      },
       "effects": {
         "streams": []
       },

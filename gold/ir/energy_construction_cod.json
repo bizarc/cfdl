@@ -200,7 +200,9 @@
     {
       "id": "40cbdac3523d803f5ac5f587468efa5a",
       "name": "energy.capex",
-      "type": "core.Contract",
+      "type": "Energy.Contract.Capex",
+      "contract_name": "energy.capex",
+      "master": "Contract.Line",
       "subject": {
         "symbol": "asset.microgrid"
       },
@@ -209,7 +211,9 @@
         "end": "2029-12-01"
       },
       "currency": "USD",
-      "terms": {},
+      "terms": {
+        "amount": 500000
+      },
       "effects": {
         "streams": []
       },
@@ -226,7 +230,10 @@
     {
       "id": "16f0c6e926990b4c414f45a2bbdb48ec",
       "name": "energy.capex.final_draw",
-      "type": "core.Contract",
+      "type": "Energy.Contract.Capex",
+      "contract_name": "energy.capex",
+      "master": "Contract.Line",
+      "instance": "final_draw",
       "subject": {
         "symbol": "asset.microgrid"
       },
@@ -235,7 +242,9 @@
         "end": "2029-12-01"
       },
       "currency": "USD",
-      "terms": {},
+      "terms": {
+        "amount": 700000
+      },
       "effects": {
         "streams": []
       },
@@ -252,7 +261,9 @@
     {
       "id": "542c4c97aa5f79ff07f6e83b85603256",
       "name": "energy.om",
-      "type": "core.Contract",
+      "type": "Energy.Contract.OperationsAndMaintenance",
+      "contract_name": "energy.om",
+      "master": "Contract.Service",
       "subject": {
         "symbol": "asset.microgrid"
       },
@@ -261,7 +272,10 @@
         "end": "2029-12-01"
       },
       "currency": "USD",
-      "terms": {},
+      "terms": {
+        "escalation": 0.02,
+        "fee_year": 36000
+      },
       "effects": {
         "streams": []
       },
@@ -278,7 +292,9 @@
     {
       "id": "189e82d798d9ff30af5c8133680b88c9",
       "name": "energy.ppa",
-      "type": "core.Contract",
+      "type": "Energy.Contract.PPA",
+      "contract_name": "energy.ppa",
+      "master": "Contract.Offtake",
       "subject": {
         "symbol": "asset.microgrid"
       },
@@ -287,7 +303,12 @@
         "end": "2029-12-01"
       },
       "currency": "USD",
-      "terms": {},
+      "terms": {
+        "degradation": 0.01,
+        "escalation": 0.02,
+        "price": 90,
+        "quantity": 2400
+      },
       "effects": {
         "streams": []
       },

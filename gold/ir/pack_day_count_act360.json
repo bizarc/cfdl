@@ -199,7 +199,10 @@
     {
       "id": "b8e2c28edbc80717fa7abb67d53e46a7",
       "name": "credit.pool_io_bullet.p",
-      "type": "core.Contract",
+      "type": "Credit.Contract.InterestOnlyPool",
+      "contract_name": "credit.pool_io_bullet",
+      "master": "Contract.Debt",
+      "instance": "p",
       "subject": {
         "symbol": "asset.buyer"
       },
@@ -208,7 +211,16 @@
         "end": "2026-01-01"
       },
       "currency": "USD",
-      "terms": {},
+      "terms": {
+        "cdr": 0,
+        "cpr": 0,
+        "day_count": "act/360",
+        "interest_rate": 0.06,
+        "principal": 1200000,
+        "recovery_lag_months": 0,
+        "severity": 0,
+        "term_months": 12
+      },
       "effects": {
         "streams": []
       },

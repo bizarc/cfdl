@@ -156,7 +156,9 @@
     {
       "id": "593979d7679e224d6876971abd27b740",
       "name": "opco.opex_line",
-      "type": "core.Contract",
+      "type": "OpCo.Contract.OperatingExpenseLine",
+      "contract_name": "opco.opex_line",
+      "master": "Contract.Line",
       "subject": {
         "symbol": "asset.business"
       },
@@ -165,7 +167,9 @@
         "end": "2027-12-01"
       },
       "currency": "USD",
-      "terms": {},
+      "terms": {
+        "amount": 60000
+      },
       "effects": {
         "streams": []
       },
@@ -182,7 +186,9 @@
     {
       "id": "8be92e7fdf9ebfcb0607ffe280885e76",
       "name": "opco.revenue_line",
-      "type": "core.Contract",
+      "type": "OpCo.Contract.RevenueLine",
+      "contract_name": "opco.revenue_line",
+      "master": "Contract.Line",
       "subject": {
         "symbol": "asset.business"
       },
@@ -191,7 +197,10 @@
         "end": "2027-12-01"
       },
       "currency": "USD",
-      "terms": {},
+      "terms": {
+        "amount": 100000,
+        "growth_rate": 0.12
+      },
       "effects": {
         "streams": []
       },

@@ -36,7 +36,9 @@
         "end": "2027-12-01"
       },
       "currency": "USD",
-      "terms": {},
+      "terms": {
+        "note": "quarterly"
+      },
       "effects": {
         "streams": []
       },

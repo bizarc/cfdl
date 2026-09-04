@@ -728,7 +728,20 @@ against it by `make ir-schema`.
           "$ref": "#/$defs/Id"
         },
         "type": {
-          "$ref": "#/$defs/Qname"
+          "$ref": "#/$defs/Qname",
+          "description": "The ontology type the contract IS — `CRE.Contract.UnitLease` — resolved once at declaration from the pack type it names (docs/40 §8). `core.Contract` only where no type could be resolved: a contract with no pack active."
+        },
+        "contract_name": {
+          "$ref": "#/$defs/Qname",
+          "description": "The pack contract type as the model names it — the lowering rule name, `cre.lease_unit`."
+        },
+        "master": {
+          "$ref": "#/$defs/Qname",
+          "description": "The master at the root of the type's refinement chain — `Contract.Lease`."
+        },
+        "instance": {
+          "$ref": "#/$defs/Id",
+          "description": "The instance token where the contract's name carries one — `tenant_a` in `cre.lease_unit.tenant_a` or `contract cre.lease_unit tenant_a`."
         },
         "subject": {
           "$ref": "#/$defs/EntityRef"
@@ -740,9 +753,26 @@ against it by `make ir-schema`.
           "$ref": "#/$defs/Currency"
         },
         "parties": {
-          "type": "object",
-          "additionalProperties": {
-            "$ref": "#/$defs/TypedValue"
+          "type": "array",
+          "description": "Who the contract is between, by role. `role` is the pack's word as the model bound it (`landlord`); `master_role` is what the master calls it (`lessor`, docs/40 §5), so a consumer can find every lender without knowing each pack's word for one.",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "role",
+              "entity"
+            ],
+            "properties": {
+              "role": {
+                "type": "string"
+              },
+              "master_role": {
+                "type": "string"
+              },
+              "entity": {
+                "$ref": "#/$defs/EntityRef"
+              }
+            }
           }
         },
         "tags": {

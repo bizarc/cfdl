@@ -1,0 +1,27 @@
+version 0.1
+model "contract-missing-term"
+use pack "cre" version "0.1.0"
+time calendar monthly from 2026-01 for 24
+
+entity asset tower : CRE.Asset.RealProperty
+
+// A REQUIRED TERM THE CONTRACT OMITS IS REFUSED against the type's effective
+// roster (docs/40 §8), before any rule is expanded: `rent_year` is required
+// on a unit lease.
+contract cre.lease_unit.tenant_a on entity asset.tower {
+  term 2026-01..2027-12
+  terms {
+    escalation = 0.03
+  }
+}
+
+// A GROUP OF ALTERNATIVES the contract states none of is the same refusal:
+// `Contract.Lease` requires rent per period or per year, and a lease that
+// states neither has no rent. The pack's own validation says the same in
+// its own words (E6001); the roster check is the language's.
+contract cre.lease on entity asset.tower {
+  term 2026-01..2027-12
+  terms {
+    lease_up_months = 3
+  }
+}

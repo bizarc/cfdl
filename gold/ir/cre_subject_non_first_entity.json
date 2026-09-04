@@ -152,7 +152,9 @@
     {
       "id": "ef2e1431fe7a6bc3eab2d59b8a6f200e",
       "name": "cre.revenue_line",
-      "type": "core.Contract",
+      "type": "CRE.Contract.OperatingRevenue",
+      "contract_name": "cre.revenue_line",
+      "master": "Contract.Line",
       "subject": {
         "symbol": "asset.annex"
       },
@@ -161,7 +163,9 @@
         "end": "2027-12-01"
       },
       "currency": "USD",
-      "terms": {},
+      "terms": {
+        "amount": 30000
+      },
       "effects": {
         "streams": []
       },

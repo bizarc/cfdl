@@ -152,7 +152,9 @@
     {
       "id": "9a6463ca7ed884d3801014c9283d3f44",
       "name": "cre.opex_line",
-      "type": "core.Contract",
+      "type": "CRE.Contract.OperatingExpense",
+      "contract_name": "cre.opex_line",
+      "master": "Contract.Line",
       "subject": {
         "symbol": "asset.first_entity"
       },
@@ -161,7 +163,9 @@
         "end": "2027-12-01"
       },
       "currency": "USD",
-      "terms": {},
+      "terms": {
+        "amount": 12000
+      },
       "effects": {
         "streams": []
       },
