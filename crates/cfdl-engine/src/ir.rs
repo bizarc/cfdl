@@ -247,7 +247,7 @@ pub(crate) struct IrStateEntry {
 /// so a same-field conflict records whose value was `overridden`.
 #[derive(Debug, Deserialize)]
 pub(crate) struct IrStateAction {
-    #[allow(dead_code)]
+    /// `SetField`, or `SetRole` for an action naming a field role (docs/40 §3).
     pub(crate) kind: String,
     pub(crate) author: String,
     pub(crate) field: String,
@@ -363,6 +363,10 @@ pub(crate) struct IrEntityDecl {
     /// same pass as a declared state because it is the same construct.
     #[serde(default)]
     pub(crate) rules: BTreeMap<String, IrFieldRule>,
+    /// Field ROLES this entity's contracts fill, role → the lowered fields
+    /// that play it (docs/40 §3). An arrival action naming a role sets each.
+    #[serde(default)]
+    pub(crate) field_roles: BTreeMap<String, Vec<String>>,
     /// The machine this entity is governed by — an id into `lifecycles`.
     #[serde(default)]
     pub(crate) lifecycle: Option<String>,

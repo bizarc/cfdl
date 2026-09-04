@@ -1,0 +1,17 @@
+[
+  {
+    "code": "E1359_ARRIVAL_ACTION_UNKNOWN_FIELD",
+    "severity": "error",
+    "message": "Lifecycle 'cre.property' entry into 'disposed' sets role 'balance', which no contract on entity 'asset.tower' fills.",
+    "file": "model.cfdl",
+    "span": {
+      "start_line": 6,
+      "start_col": 1,
+      "end_line": 8,
+      "end_col": 1
+    },
+    "path": null,
+    "hint": "A field role is filled by a pack rule that lowers a field (`field_role = \"balance\"`); a contract whose balance is closed-form fills none, and the machine cannot extinguish what it does not carry.",
+    "notes": []
+  }
+]

@@ -1,0 +1,30 @@
+version 0.1
+model "pool-retires-by-role"
+use pack "credit" version "0.1.0"
+time calendar monthly from 2026-01 for 15
+
+entity asset pool : Credit.Asset.LoanPool
+
+contract credit.pool_level_pay.smoke on entity asset.pool {
+  term 2026-01..2027-03
+  terms {
+    principal = 1200000
+    interest_rate = 0.06
+    term_months = 12
+    cpr = 0.10
+    cdr = 0.03
+    severity = 0.50
+    recovery_lag_months = 3
+  }
+}
+
+// STATE OWNED BY THE AGREEMENT (docs/40 §3, stage 6). The pool's machine
+// carries `on enter retired { set balance = 0 }`, where `balance` is the
+// field ROLE the pack's rules fill — the survival factor every stream reads
+// and its lagged twin — so the model retires the pool with one status
+// write and names no instance's field. Retirement is an occurrence: a
+// clean-up call, here at the sixth distribution. From the next period every
+// stream the pool lowers reads zero, with no per-entity write in the model.
+event clean_up_call when time.t == 6 {
+  set entity asset.pool.status = "retired"
+}

@@ -52,6 +52,12 @@
           }
         }
       },
+      "field_roles": {
+        "balance": [
+          "credit_level_pay_survival_pool",
+          "credit_level_pay_survival_lag_pool"
+        ]
+      },
       "state": {},
       "parent": "asset.trust",
       "lifecycle": "credit.pool"
@@ -128,6 +134,22 @@
         {
           "from": "rapid_amortization",
           "to": "retired"
+        }
+      ],
+      "entry_actions": [
+        {
+          "state": "retired",
+          "actions": [
+            {
+              "kind": "SetRole",
+              "author": "pack",
+              "field": "balance",
+              "value": {
+                "lang": "cfdl",
+                "src": "0.0"
+              }
+            }
+          ]
         }
       ]
     }

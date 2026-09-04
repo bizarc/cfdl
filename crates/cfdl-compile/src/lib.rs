@@ -328,6 +328,10 @@ struct PackLoweringOutput {
     /// Fields a lowering rule hangs on the entity it describes, keyed by
     /// (owner symbol, field name). A pack no longer emits model-level state.
     fields: BTreeMap<(String, String), IrFieldRule>,
+    /// The field ROLES a rule's field fills, keyed (owner symbol, role) →
+    /// field names (docs/40 §3, stage 6). A machine's arrival action names
+    /// the role; the entity carries which fields it means.
+    field_roles: BTreeMap<(String, String), Vec<String>>,
     /// What each lowered stream consumed. Parallel to `streams`.
     stream_inputs: Vec<IrStreamInputs>,
     diagnostics: Vec<Diagnostic>,
@@ -732,6 +736,12 @@ struct IrEntity {
     /// rules — the same split the source has between `=` and `init`.
     #[serde(skip_serializing_if = "BTreeMap::is_empty")]
     rules: BTreeMap<String, IrFieldRule>,
+    /// The field ROLES this entity's contracts fill, role → the lowered
+    /// fields that play it (docs/40 §3, stage 6): `balance` → the survival
+    /// factors a pool's streams read. An arrival action naming the role sets
+    /// each of them.
+    #[serde(skip_serializing_if = "BTreeMap::is_empty")]
+    field_roles: BTreeMap<String, Vec<String>>,
     state: BTreeMap<String, serde_json::Value>,
     /// The parent this entity belongs to, when the model groups it. Absent for
     /// an entity that stands alone, which is most of them: hierarchy is always
@@ -795,9 +805,16 @@ struct IrStateAction {
     value: IrExpr,
 }
 
-fn ir_state_action(action: &ActionDef) -> IrStateAction {
+/// An action naming a FIELD ROLE a master declares (docs/40 §3) is emitted
+/// as `SetRole`: the engine resolves it to every field on the transitioning
+/// entity that plays the role, and to nothing where none does.
+fn ir_state_action(action: &ActionDef, declared_roles: &BTreeSet<String>) -> IrStateAction {
     IrStateAction {
-        kind: "SetField",
+        kind: if declared_roles.contains(&action.field) {
+            "SetRole"
+        } else {
+            "SetField"
+        },
         author: match action.author {
             cfdl_parser::ActionAuthor::Pack => "pack",
             cfdl_parser::ActionAuthor::Model => "model",
@@ -2199,8 +2216,18 @@ fn check_arrival_action_fields(
     machines: &BTreeMap<String, MachineDef>,
     machines_by_entity: &BTreeMap<String, String>,
     ontology: &cfdl_pack::PackOntology,
+    // Field roles the pack's rules fill per entity, (owner, role) → fields
+    // (docs/40 §3, stage 6). An action may name a role instead of a field.
+    field_roles: &BTreeMap<(String, String), Vec<String>>,
 ) -> Result<(), Vec<Diagnostic>> {
     let mut diagnostics: Vec<Diagnostic> = Vec::new();
+    // Every role any master names, so an unfilled role is told apart from a
+    // misspelled field.
+    let declared_roles: BTreeSet<&str> = ontology
+        .contracts
+        .iter()
+        .flat_map(|c| c.field_roles.iter().map(|r| r.name.as_str()))
+        .collect();
     for source_stmt in &resolve_output.source_statements {
         let Stmt::Entity(entity) = &source_stmt.statement else {
             continue;
@@ -2221,8 +2248,41 @@ fn check_arrival_action_fields(
         {
             known.extend(ty.fields.iter().map(|f| f.name.as_str()));
         }
+        let filled: BTreeSet<&str> = field_roles
+            .keys()
+            .filter(|(owner, _)| *owner == symbol)
+            .map(|(_, role)| role.as_str())
+            .collect();
         let mut report = |action: &ActionDef, where_: String| {
-            if known.contains(action.field.as_str()) {
+            if known.contains(action.field.as_str()) || filled.contains(action.field.as_str()) {
+                return;
+            }
+            // A ROLE NOTHING ON THIS ENTITY FILLS. A PACK's action is written
+            // once for every entity of the type, and an entity of that type
+            // carrying no such contract has nothing to extinguish — the action
+            // is a no-op there, not an error. A MODEL's action names the
+            // entity it means: a closed-form debt has no balance field to
+            // extinguish, and saying so is the point.
+            if declared_roles.contains(action.field.as_str()) {
+                if matches!(action.author, cfdl_parser::ActionAuthor::Pack) {
+                    return;
+                }
+                diagnostics.push(Diagnostic {
+                    code: "E1359_ARRIVAL_ACTION_UNKNOWN_FIELD".to_string(),
+                    severity: "error".to_string(),
+                    message: format!(
+                        "Lifecycle '{machine_id}' {where_} sets role '{}', which no contract on entity '{symbol}' fills.",
+                        action.field,
+                    ),
+                    file: Some(source_stmt.file.clone()),
+                    span: Some(map_span(entity.span)),
+                    path: None,
+                    hint: Some(
+                        "A field role is filled by a pack rule that lowers a field (`field_role = \"balance\"`); a contract whose balance is closed-form fills none, and the machine cannot extinguish what it does not carry."
+                            .to_string(),
+                    ),
+                    notes: vec![],
+                });
                 return;
             }
             let mut names: Vec<&str> = known.iter().copied().collect();
@@ -3908,7 +3968,6 @@ fn build_ir(
     check_participant_returns(resolve_output)?;
     let (machines, machines_by_entity) = resolve_machines(resolve_output, &ontology);
     check_lifecycle_augmentations(resolve_output, &machines)?;
-    check_arrival_action_fields(resolve_output, &machines, &machines_by_entity, &ontology)?;
     check_status_writes(resolve_output, &machines, &machines_by_entity)?;
 
     let mut entities: Vec<((String, String), IrEntity)> = resolve_output
@@ -3971,6 +4030,7 @@ fn build_ir(
                 r#type: type_name,
                 fields,
                 rules,
+                field_roles: BTreeMap::new(),
                 state: BTreeMap::new(),
                 parent: entity.parent.clone(),
                 initial_state: entity.initial_state.clone(),
@@ -4305,8 +4365,16 @@ fn build_ir(
         },
     );
     // After lowering, so a field a pack rule hangs on an entity is a name a
-    // model expression may read.
+    // model expression may read, and a role its rules fill is one an arrival
+    // action may name.
     check_field_paths(resolve_output, &lowered.fields)?;
+    check_arrival_action_fields(
+        resolve_output,
+        &machines,
+        &machines_by_entity,
+        &ontology,
+        &lowered.field_roles,
+    )?;
     if lowered
         .diagnostics
         .iter()
@@ -4352,6 +4420,11 @@ fn build_ir(
     for ((owner, field), rule) in &lowered_fields {
         if let Some((_, entity)) = entities.iter_mut().find(|(_, e)| &e.symbol == owner) {
             entity.rules.insert(field.clone(), rule.clone());
+        }
+    }
+    for ((owner, role), fields) in &lowered.field_roles {
+        if let Some((_, entity)) = entities.iter_mut().find(|(_, e)| &e.symbol == owner) {
+            entity.field_roles.insert(role.clone(), fields.clone());
         }
     }
     let stream_inputs = lowered.stream_inputs;
@@ -4423,6 +4496,13 @@ fn build_ir(
 
     // Only machines an entity actually binds are published: an unbound
     // machine governs nothing, and the IR is a record of this model.
+    // Every field role any master names, so an arrival action naming one is
+    // emitted as a role (docs/40 §3, stage 6).
+    let declared_field_roles: BTreeSet<String> = ontology
+        .contracts
+        .iter()
+        .flat_map(|c| c.field_roles.iter().map(|r| r.name.clone()))
+        .collect();
     let ir_lifecycles: Vec<IrLifecycle> = {
         let bound: std::collections::BTreeSet<&String> = machines_by_entity.values().collect();
         machines
@@ -4442,7 +4522,11 @@ fn build_ir(
                             lang: "cfdl".to_string(),
                             src: coerce_numeric_literals(src),
                         }),
-                        actions: e.actions.iter().map(ir_state_action).collect(),
+                        actions: e
+                            .actions
+                            .iter()
+                            .map(|a| ir_state_action(a, &declared_field_roles))
+                            .collect(),
                     })
                     .collect(),
                 // BTreeMap iteration is by state name, which makes the IR
@@ -4453,7 +4537,10 @@ fn build_ir(
                     .iter()
                     .map(|(state, actions)| IrStateEntry {
                         state: state.clone(),
-                        actions: actions.iter().map(ir_state_action).collect(),
+                        actions: actions
+                            .iter()
+                            .map(|a| ir_state_action(a, &declared_field_roles))
+                            .collect(),
                     })
                     .collect(),
             })
@@ -5819,6 +5906,7 @@ fn lower_contract_streams(
         return PackLoweringOutput {
             streams: vec![],
             fields: BTreeMap::new(),
+            field_roles: BTreeMap::new(),
             stream_inputs: vec![],
             diagnostics: vec![],
         };
@@ -5894,6 +5982,7 @@ fn lower_contract_streams(
     // field name without colliding, which is what made the suffix necessary
     // while these were global.
     let mut lowered_fields: BTreeMap<(String, String), IrFieldRule> = BTreeMap::new();
+    let mut lowered_field_roles: BTreeMap<(String, String), Vec<String>> = BTreeMap::new();
     let mut stream_inputs: Vec<IrStreamInputs> = Vec::new();
     let mut diagnostics = Vec::new();
     for source_stmt in &resolve_output.source_statements {
@@ -6752,6 +6841,14 @@ fn lower_contract_streams(
                     .clone()
                     .unwrap_or_else(|| owner_symbol.clone());
                 let field_key = (field_owner.clone(), rule.field_name.clone());
+                if let Some(role) = source_rule.field_role.as_deref() {
+                    let filled = lowered_field_roles
+                        .entry((field_owner.clone(), role.to_string()))
+                        .or_default();
+                    if !filled.contains(&rule.field_name) {
+                        filled.push(rule.field_name.clone());
+                    }
+                }
                 match lowered_fields.get(&field_key) {
                     Some(existing)
                         if existing.init.src != rule.field_init
@@ -6939,6 +7036,7 @@ fn lower_contract_streams(
     PackLoweringOutput {
         streams: lowered,
         fields: lowered_fields,
+        field_roles: lowered_field_roles,
         stream_inputs,
         diagnostics,
     }

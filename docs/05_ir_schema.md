@@ -429,6 +429,16 @@ against it by `make ir-schema`.
         "lifecycle": {
           "type": "string",
           "description": "The machine this entity is governed by — an id into `lifecycles`. Absent for the many entities that have none."
+        },
+        "field_roles": {
+          "type": "object",
+          "description": "Field ROLES this entity's contracts fill, role → the lowered fields that play it (docs/40 §3): `balance` → the survival factors a pool's streams read. An arrival action naming the role sets each. Absent when no rule on the entity fills one.",
+          "additionalProperties": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
         }
       }
     },
@@ -1749,8 +1759,10 @@ against it by `make ir-schema`.
         "kind": {
           "type": "string",
           "enum": [
-            "SetField"
-          ]
+            "SetField",
+            "SetRole"
+          ],
+          "description": "`SetField` writes the named field on the entity that transitioned. `SetRole` names a FIELD ROLE a master declares (docs/40 §3, e.g. `balance`): the engine writes every field on the entity that plays it — the entity's `field_roles` — and nothing where none does."
         },
         "author": {
           "type": "string",

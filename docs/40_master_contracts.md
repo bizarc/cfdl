@@ -90,7 +90,7 @@ contract has that an entity does not: roles, lines, and a side.
 | `fields` | the terms the agreement states: name, type (`decimal`, `integer`, `string`, `date`, or `contract` — a reference to a declared contract by name, as a guarantee's `covered`), required, unit | inherited; strengthen-only redeclaration; a refinement may add |
 | `lines` | the economically distinct cash the agreement produces, by role name; a line is LOWERED by a rule, ALLOCATED by a waterfall step (a security's principal), or OPTIONAL — named so every pack spells it alike, required of none | a refinement's rules MUST emit every lowered master line; may add |
 | `side` | whether the subject pays or receives on each line | inherited; a refinement may fix it where the master leaves it open |
-| `balance_field` (stage 6) | which field is the running balance a state may extinguish | inherited |
+| `field_roles` (stage 6) | roles a master names for lowered fields — `Contract.Debt` names `balance`: the fields that carry the outstanding position or the factor every stream reads, which set to zero end the cash. A pack rule fills a role (`field_role = "balance"`); a machine's arrival action may name the role (`set balance = 0`) and the compiler resolves it per entity to the fields that play it | inherited; a refinement whose balance is closed-form fills none, and an action naming a role nothing on the entity fills is refused (`E1359`) |
 
 **Terms are fields.** There is no second member kind for contracts. The
 "term schema" `docs/07` §6.3 once described as a JSON side-file, and its
@@ -769,11 +769,19 @@ contract names, and their accounts hold what they received (`docs/13`
    refines Equity where a case carries a partnership interest. Built
    before stage 6, whose balance role is defined against the finished
    roster.
-6. **State owned by the agreement**: `balance_field` on `Contract.Debt`
-   so a pack machine's `on enter retired` extinguishes it for every
-   refinement. A security's and an equity interest's balance is the
-   holder's account (§4.13, §4.14), derived rather than lowered, so
-   neither needs the role.
+6. **State owned by the agreement** — **built.** `Contract.Debt` names
+   the `balance` field role; the credit pools' survival factors and the
+   construction loan's drawn balance fill it (`field_role = "balance"` on
+   the rule); the `credit.pool` machine carries `on enter retired { set
+   balance = 0 }`, resolved per entity by the compiler (`field_roles` on
+   the IR entity) and written field by field by the engine, one journal
+   line each. A model retires a pool with one status write —
+   `fixtures/valid/pool_retires_by_role` — and the clean-up call rollout
+   across the credit cases (D6) is the case update that follows.
+   `cre.permanent_debt` fills no role: its balance is closed-form, and a
+   machine action naming the role on such an entity is refused. A
+   security's and an equity interest's balance is the holder's account
+   (§4.13, §4.14), derived rather than lowered, so neither needs the role.
 7. **Elections**: `Contract.Option`'s core in the `option` grammar; base
    option names retired.
 

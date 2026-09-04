@@ -241,6 +241,22 @@ lists the step under the note, and `type Contract.Security line principal`
 reaches it. The Ally auto ABS benchmark case declares its seven classes this
 way.
 
+### Retirement
+
+The `credit.pool` machine carries `on enter retired { set balance = 0 }`.
+`balance` is the field ROLE the pool rules fill — the survival factor every
+stream reads and its lagged twin — so a model retires a pool with one
+status write and names no instance's field:
+
+```cfdl
+event clean_up_call when time.t == 6 {
+  set entity asset.pool.status = "retired"
+}
+```
+
+From that period every stream the pool lowers reads zero, and the journal
+records the machine's writes as children of the event's.
+
 ## Conventions
 
 - Defaults leave the pool at the start of the period and earn no interest
