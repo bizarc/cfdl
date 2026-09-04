@@ -554,6 +554,9 @@ struct IrSlice {
     entities: Vec<String>,
     #[serde(skip_serializing_if = "Vec::is_empty")]
     types: Vec<String>,
+    /// Lines by role, as declared — lineage; expanded into `type_streams`.
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    lines: Vec<String>,
     #[serde(skip_serializing_if = "Vec::is_empty")]
     categories: Vec<String>,
     #[serde(skip_serializing_if = "Vec::is_empty")]
@@ -634,6 +637,17 @@ struct IrStatementRow {
     categories: Vec<String>,
     #[serde(skip_serializing_if = "Vec::is_empty")]
     streams: Vec<String>,
+    /// Ontology types, as declared — lineage. Expanded into `type_streams`.
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    types: Vec<String>,
+    /// Lines by role, as declared — lineage. Expanded into `type_streams`.
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    lines: Vec<String>,
+    /// The streams the `type` and `line` clauses matched — the compiler's
+    /// expansion, because only it holds the ontology and the rules. Exact
+    /// names; the evaluator claims them beside `streams`.
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    type_streams: Vec<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     slice: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -652,6 +666,11 @@ struct IrStatementRow {
 struct IrGeneratedBy {
     pack: IrPackRef,
     rule_id: String,
+    /// The LINE the rule emits, by the role its contract's master names
+    /// (docs/40 §6) — `interest`, `rent`, `proceeds`. What lets a consumer
+    /// fold every debt's interest without knowing any pack's category.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    line: Option<String>,
     /// The contract the rule lowered this stream FROM — its qualified name.
     /// A rule serves every instance of its type, so the rule alone does not
     /// say which lease a rent stream belongs to; this does, and the results
@@ -4542,6 +4561,33 @@ fn build_ir(
     // DECLARED PRESENTATIONS (`docs/13` §7.55). Carried to the IR as declared;
     // the rows are generated after the run, because a hierarchy's shape is a
     // fact about the results rather than about the source.
+    // The vocabulary `type` and `line` clauses resolve against, shared by
+    // statement rows and slices below; and one diagnostics list for both.
+    let onto = active_pack
+        .map(|p| p.ontology.clone())
+        .unwrap_or_else(cfdl_pack::PackOntology::language_base);
+    // rule_id -> the contract type its rule family binds to.
+    let rule_type: BTreeMap<&str, &str> = active_pack
+        .map(|p| {
+            p.lowering_rules
+                .iter()
+                .filter_map(|r| {
+                    onto.contract_for_rule(&r.contract_name)
+                        .map(|c| (r.id.as_str(), c.type_id.as_str()))
+                })
+                .collect()
+        })
+        .unwrap_or_default();
+    // rule_id -> the line the rule emits, by role (docs/40 §6).
+    let rule_line: BTreeMap<&str, &str> = active_pack
+        .map(|p| {
+            p.lowering_rules
+                .iter()
+                .filter_map(|r| r.line.as_deref().map(|l| (r.id.as_str(), l)))
+                .collect()
+        })
+        .unwrap_or_default();
+    let mut view_diagnostics: Vec<Diagnostic> = Vec::new();
     let mut statement_spans: BTreeMap<String, (String, cfdl_parser::Span)> = BTreeMap::new();
     for source_stmt in &resolve_output.source_statements {
         if let Stmt::Statement(st) = &source_stmt.statement {
@@ -4569,6 +4615,21 @@ fn build_ir(
                         depth: r.depth,
                         categories: r.categories.clone(),
                         streams: r.streams.clone(),
+                        types: r.types.clone(),
+                        lines: r.lines.clone(),
+                        type_streams: expand_type_and_line_clauses(
+                            &format!("Statement '{}' row \"{}\"", statement_stmt.name, r.label),
+                            &r.types,
+                            &r.lines,
+                            &streams,
+                            &entities,
+                            &onto,
+                            &rule_type,
+                            &rule_line,
+                            &source_stmt.file,
+                            statement_stmt.span,
+                            &mut view_diagnostics,
+                        ),
                         slice: r.slice.clone(),
                         series: r.series.clone(),
                         entity: r.entity.clone(),
@@ -4596,22 +4657,7 @@ fn build_ir(
                 _ => None,
             })
             .collect();
-        let onto = active_pack
-            .map(|p| p.ontology.clone())
-            .unwrap_or_else(cfdl_pack::PackOntology::language_base);
-        // rule_id -> the contract type its rule family binds to.
-        let rule_type: BTreeMap<&str, &str> = active_pack
-            .map(|p| {
-                p.lowering_rules
-                    .iter()
-                    .filter_map(|r| {
-                        onto.contract_for_rule(&r.contract_name)
-                            .map(|c| (r.id.as_str(), c.type_id.as_str()))
-                    })
-                    .collect()
-            })
-            .unwrap_or_default();
-        let mut slice_diagnostics: Vec<Diagnostic> = Vec::new();
+        let mut slice_diagnostics: Vec<Diagnostic> = view_diagnostics;
         let mut out: Vec<IrSlice> = Vec::new();
         for source_stmt in &resolve_output.source_statements {
             let Stmt::Slice(slice_stmt) = &source_stmt.statement else {
@@ -4661,60 +4707,30 @@ fn build_ir(
                     });
                 }
             }
-            let mut type_streams: BTreeSet<String> = BTreeSet::new();
-            for wanted in &slice_stmt.types {
-                let known = onto.entities.iter().any(|e| e.type_id == *wanted)
-                    || onto.contracts.iter().any(|c| c.type_id == *wanted);
-                if !known {
-                    let mut names: Vec<&str> =
-                        onto.contracts.iter().map(|c| c.type_id.as_str()).collect();
-                    names.sort_unstable();
-                    slice_diagnostics.push(Diagnostic {
-                        code: "E1363_SLICE_UNKNOWN_TYPE".to_string(),
-                        severity: "error".to_string(),
-                        message: format!(
-                            "Slice '{}' selects type '{wanted}', which the active ontology does not define.",
-                            slice_stmt.name
-                        ),
-                        file: Some(source_stmt.file.clone()),
-                        span: Some(map_span(slice_stmt.span)),
-                        path: None,
-                        hint: Some(format!("Known contract types: {}.", names.join(", "))),
-                        notes: vec![],
-                    });
-                    continue;
-                }
-                // A stream is matched when the contract type its lowering
-                // rule binds to is_a the wanted type — the transitive walk
-                // the recorded refinement makes answerable. Entity types
-                // match through the stream's owner.
-                for (_, stream) in &streams {
-                    let by_contract = stream
-                        .provenance
-                        .generated_by
-                        .as_ref()
-                        .and_then(|g| rule_type.get(g.rule_id.as_str()))
-                        .is_some_and(|t| onto.is_a(t, wanted));
-                    let by_owner = entities
-                        .iter()
-                        .find(|(_, e)| e.symbol == stream.owner.symbol)
-                        .map(|(_, e)| e.r#type.as_str())
-                        .is_some_and(|t| !t.is_empty() && onto.is_a(t, wanted));
-                    if by_contract || by_owner {
-                        type_streams.insert(stream.name.clone());
-                    }
-                }
-            }
+            let type_streams = expand_type_and_line_clauses(
+                &format!("Slice '{}'", slice_stmt.name),
+                &slice_stmt.types,
+                &slice_stmt.lines,
+                &streams,
+                &entities,
+                &onto,
+                &rule_type,
+                &rule_line,
+                &source_stmt.file,
+                slice_stmt.span,
+                &mut slice_diagnostics,
+            );
             out.push(IrSlice {
                 name: slice_stmt.name.clone(),
                 entities: slice_stmt.entities.clone(),
                 types: slice_stmt.types.clone(),
+                lines: slice_stmt.lines.clone(),
                 categories: slice_stmt.categories.clone(),
                 streams: slice_stmt.streams.clone(),
                 except_streams: slice_stmt.except_streams.clone(),
                 except_categories: slice_stmt.except_categories.clone(),
                 except_entities: slice_stmt.except_entities.clone(),
-                type_streams: type_streams.into_iter().collect(),
+                type_streams,
                 // Normalised the way a phase's range is, so a month-only
                 // bound means the first of that month and the engine's
                 // `Date::parse` — which takes YYYY-MM-DD only — reads it.
@@ -4915,8 +4931,139 @@ fn metric_series_vocabulary(ir: &Ir) -> BTreeSet<String> {
             known.insert(subtotal.id.clone());
         }
     }
+    // A SLICE'S NET (docs/13 §7.90; docs/40 stage 5): a named selection by
+    // type and line is what lets a metric fold every debt's interest without
+    // naming a stream or a pack's category.
+    for slice in &ir.views.slices {
+        known.insert(format!("slice.{}", slice.name));
+    }
     known.insert("model.net_cash_flow".to_string());
     known
+}
+
+/// EXPAND `type` AND `line` CLAUSES TO THE STREAMS THEY SELECT (docs/40 §6,
+/// stage 5). A stream is matched by TYPE when the contract type its lowering
+/// rule binds to is_a the wanted type — the transitive walk the recorded
+/// refinement makes answerable — or when its owner's entity type is; by LINE
+/// when its rule emits that line by role. Kinds intersect: `type
+/// Contract.Debt line interest` is the interest of every debt, whichever
+/// pack lowered it and whatever category that pack spelled. Only the
+/// compiler can do this, because only it holds the ontology and the rules;
+/// the evaluator receives exact names. Shared by slices and statement rows
+/// so the two can never disagree about what a type selects.
+#[allow(clippy::too_many_arguments)]
+fn expand_type_and_line_clauses(
+    subject: &str,
+    types: &[String],
+    lines: &[String],
+    streams: &[((String, String), IrStream)],
+    entities: &[((String, String), IrEntity)],
+    onto: &cfdl_pack::PackOntology,
+    rule_type: &BTreeMap<&str, &str>,
+    rule_line: &BTreeMap<&str, &str>,
+    file: &str,
+    span: cfdl_parser::Span,
+    diagnostics: &mut Vec<Diagnostic>,
+) -> Vec<String> {
+    if types.is_empty() && lines.is_empty() {
+        return Vec::new();
+    }
+    let diag = |code: &str, message: String, hint: String| Diagnostic {
+        code: code.to_string(),
+        severity: "error".to_string(),
+        message,
+        file: Some(file.to_string()),
+        span: Some(map_span(span)),
+        path: None,
+        hint: Some(hint),
+        notes: vec![],
+    };
+    fn rule_of(stream: &IrStream) -> Option<&str> {
+        stream
+            .provenance
+            .generated_by
+            .as_ref()
+            .map(|g| g.rule_id.as_str())
+    }
+    let mut by_type: BTreeSet<String> = BTreeSet::new();
+    for wanted in types {
+        let known = onto.entities.iter().any(|e| e.type_id == *wanted)
+            || onto.contracts.iter().any(|c| c.type_id == *wanted);
+        if !known {
+            let mut names: Vec<&str> = onto.contracts.iter().map(|c| c.type_id.as_str()).collect();
+            names.sort_unstable();
+            diagnostics.push(diag(
+                "E1363_SLICE_UNKNOWN_TYPE",
+                format!(
+                    "{subject} selects type '{wanted}', which the active ontology does not define."
+                ),
+                format!("Known contract types: {}.", names.join(", ")),
+            ));
+            continue;
+        }
+        for (_, stream) in streams {
+            let by_contract = rule_of(stream)
+                .and_then(|id| rule_type.get(id))
+                .is_some_and(|t| onto.is_a(t, wanted));
+            let by_owner = entities
+                .iter()
+                .find(|(_, e)| e.symbol == stream.owner.symbol)
+                .map(|(_, e)| e.r#type.as_str())
+                .is_some_and(|t| !t.is_empty() && onto.is_a(t, wanted));
+            if by_contract || by_owner {
+                by_type.insert(stream.name.clone());
+            }
+        }
+    }
+    let mut by_line: BTreeSet<String> = BTreeSet::new();
+    if !lines.is_empty() {
+        // The lines the active vocabulary can produce: every master's and
+        // every pack type's, plus what the rules actually emit.
+        let mut known_lines: BTreeSet<&str> = rule_line.values().copied().collect();
+        for contract in &onto.contracts {
+            for line in &contract.lines {
+                known_lines.insert(line.name.as_str());
+            }
+        }
+        for wanted in lines {
+            if !known_lines.contains(wanted.as_str()) {
+                let near: Vec<&str> = known_lines
+                    .iter()
+                    .copied()
+                    .filter(|k| is_near_miss(k, wanted))
+                    .collect();
+                let hint = if near.is_empty() {
+                    format!(
+                        "Lines by role: {}.",
+                        known_lines.iter().copied().collect::<Vec<_>>().join(", ")
+                    )
+                } else {
+                    format!("Did you mean {}?", near.join(" or "))
+                };
+                diagnostics.push(diag(
+                    "E1375_UNKNOWN_LINE_ROLE",
+                    format!("{subject} selects line '{wanted}', which no contract type in the active ontology produces."),
+                    hint,
+                ));
+                continue;
+            }
+            for (_, stream) in streams {
+                if rule_of(stream)
+                    .and_then(|id| rule_line.get(id))
+                    .is_some_and(|l| *l == wanted.as_str())
+                {
+                    by_line.insert(stream.name.clone());
+                }
+            }
+        }
+    }
+    let matched: BTreeSet<String> = match (types.is_empty(), lines.is_empty()) {
+        (false, false) => by_type.intersection(&by_line).cloned().collect(),
+        (false, true) => by_type,
+        (true, false) => by_line,
+        (true, true) => BTreeSet::new(),
+    };
+    matched.into_iter().collect()
 }
 
 /// Known structures a statement may present.
@@ -4982,6 +5129,8 @@ fn check_statements(
                 if row.series.is_some()
                     && (!row.categories.is_empty()
                         || !row.streams.is_empty()
+                        || !row.types.is_empty()
+                        || !row.lines.is_empty()
                         || row.slice.is_some()
                         || row.entity.is_some()
                         || row.numerator.is_some()
@@ -5125,8 +5274,8 @@ fn check_metric_series_names(
                 "Check the spelling. A metric may fold any series this model publishes: a \
                  stream by its own name or as `stream.<name>`, a waterfall step, \
                  `entity.<symbol>.net_cash_flow`, `account.<name>`, an entity field, a money \
-                 subtotal, or `model.net_cash_flow`. A selector ending in `.*` states that \
-                 matching nothing is intended."
+                 subtotal, a slice's net as `slice.<name>`, or `model.net_cash_flow`. A \
+                 selector ending in `.*` states that matching nothing is intended."
                     .to_string()
             };
             let (file, span) = spans
@@ -6559,6 +6708,7 @@ fn lower_contract_streams(
                                 version: pack.version.clone(),
                             },
                             rule_id: rule.id.clone(),
+                            line: source_rule.line.clone(),
                             contract: Some(contract.name.clone()),
                         }),
                     },

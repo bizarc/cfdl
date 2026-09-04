@@ -1,7 +1,7 @@
 {
   "results_version": "0.13",
-  "model_hash": "74d00f060543da2955582817f7c87af76f9735ba8173e7aae78789c3aa81e080",
-  "ledger_hash": "10ccad94101c7041796677e3ad0ee2954e79b0e6dab4338a3a44237938b638df",
+  "model_hash": "c5b65d5cc81635644c9c5e665ccd4d61659360d9cff8155cb1a56c790a0ce280",
+  "ledger_hash": "f3a1229212970d51d5e1c1416d337128ad103cd00cbeb9d945a00fde57633bdf",
   "engine": {
     "name": "cfdl-engine",
     "version": "0.9.0"
@@ -530,6 +530,7 @@
         "entity": "asset.property",
         "category": "investing.disposal.reversion",
         "contract": "cre.exit_cap",
+        "line": "proceeds",
         "values": [
           {
             "amount": 0.0,

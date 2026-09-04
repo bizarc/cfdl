@@ -1,7 +1,7 @@
 {
   "results_version": "0.13",
-  "model_hash": "c5f052e7c3cac8894170f196275d96c2af9e22aba752cab02b8ab7350cd6b825",
-  "ledger_hash": "745280cc2c67a52cde962b3629bfc94012eb2afdfc75f60ce58a8a80cea4a152",
+  "model_hash": "6dd5e4213126316d012a2c388e6f04d9524f65635468761059a61ce91acca7a8",
+  "ledger_hash": "34ee976ed0fafa69463a5efedb7cd360da38ed3f5924bf3259b7822c4768a6ca",
   "engine": {
     "name": "cfdl-engine",
     "version": "0.9.0"
@@ -325,6 +325,7 @@
         "entity": "asset.tower",
         "category": "investing.disposal.reversion",
         "contract": "cre.exit_forward",
+        "line": "proceeds",
         "values": [
           {
             "amount": 0.0,
@@ -350,6 +351,7 @@
         "entity": "asset.tower",
         "category": "investing.disposal.selling_costs",
         "contract": "cre.exit_forward",
+        "line": "selling_costs",
         "values": [
           {
             "amount": 0.0,
@@ -375,6 +377,7 @@
         "entity": "asset.tower",
         "category": "operating.expense.opex",
         "contract": "cre.opex_line",
+        "line": "expense",
         "values": [
           {
             "amount": -300000.0,
@@ -400,6 +403,7 @@
         "entity": "asset.tower",
         "category": "operating.deduction.abatement",
         "contract": "cre.lease_unit.tenant_a",
+        "line": "abatement",
         "values": [
           {
             "amount": -200000.000016,
@@ -425,6 +429,7 @@
         "entity": "asset.tower",
         "category": "operating.revenue.base_rent",
         "contract": "cre.lease_unit.tenant_a",
+        "line": "rent",
         "values": [
           {
             "amount": 480000.0,
@@ -450,6 +455,7 @@
         "entity": "asset.tower",
         "category": "operating.revenue.recovery",
         "contract": "cre.lease_unit.tenant_a",
+        "line": "recovery",
         "values": [
           {
             "amount": 0.0,
@@ -475,6 +481,7 @@
         "entity": "asset.tower",
         "category": "investing.capital.leasing",
         "contract": "cre.lease_unit.tenant_a",
+        "line": "leasing_cost",
         "values": [
           {
             "amount": 0.0,

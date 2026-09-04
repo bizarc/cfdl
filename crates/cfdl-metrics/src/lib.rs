@@ -451,6 +451,7 @@ mod tests {
             entity: None,
             category: None,
             contract: None,
+            line: None,
             values: values
                 .iter()
                 .map(|v| {
@@ -598,6 +599,7 @@ mod tests {
             entity: None,
             category: None,
             contract: None,
+            line: None,
             values: values
                 .iter()
                 .map(|v| {

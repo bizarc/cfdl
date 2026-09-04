@@ -1,7 +1,7 @@
 {
   "results_version": "0.13",
-  "model_hash": "8f79224ccab2a230e96dbde33ba52733180af2680e060c61910c6964d45fe589",
-  "ledger_hash": "9711070a8b5326a3460009995c1f07f7714deb0463d5e71c27da90a671f399dd",
+  "model_hash": "70d4137fa259e43a01a9a26b3bf5191b6845b8ea5da110264520afce0774f2ae",
+  "ledger_hash": "92f90e61d4a7b175d06cb3cd7ca72064acc174901dd210cd0c13e197413a9246",
   "engine": {
     "name": "cfdl-engine",
     "version": "0.9.0"
@@ -7186,6 +7186,7 @@
         "entity": "asset.windfarm",
         "category": "investing.capital.capex",
         "contract": "energy.capex",
+        "line": "capex",
         "values": [
           {
             "amount": -42000000.0,
@@ -8159,6 +8160,7 @@
         "entity": "asset.windfarm",
         "category": "financing.debt.interest_paid",
         "contract": "energy.debt_service",
+        "line": "interest",
         "values": [
           {
             "amount": -114583.333333,
@@ -9132,6 +9134,7 @@
         "entity": "asset.windfarm",
         "category": "financing.debt.principal",
         "contract": "energy.debt_service",
+        "line": "principal",
         "values": [
           {
             "amount": -89687.530322,
@@ -10105,6 +10108,7 @@
         "entity": "asset.windfarm",
         "category": "financing.debt.proceeds",
         "contract": "energy.debt_service",
+        "line": "proceeds",
         "values": [
           {
             "amount": 25000000.0,
@@ -11078,6 +11082,7 @@
         "entity": "asset.windfarm",
         "category": "operating.income_tax.benefit",
         "contract": "energy.macrs_shield",
+        "line": "benefit",
         "values": [
           {
             "amount": 147000.0,
@@ -12051,6 +12056,7 @@
         "entity": "asset.windfarm",
         "category": "operating.revenue.energy",
         "contract": "energy.merchant",
+        "line": "revenue",
         "values": [
           {
             "amount": 349125.0,
@@ -13024,6 +13030,7 @@
         "entity": "asset.windfarm",
         "category": "operating.expense.om",
         "contract": "energy.om",
+        "line": "expense",
         "values": [
           {
             "amount": -108333.333333,
@@ -13997,6 +14004,7 @@
         "entity": "asset.windfarm",
         "category": "operating.income_tax.benefit",
         "contract": "energy.ptc",
+        "line": "benefit",
         "values": [
           {
             "amount": 232750.0,

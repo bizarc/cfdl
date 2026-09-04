@@ -1,7 +1,7 @@
 {
   "results_version": "0.13",
-  "model_hash": "b94cceb607397188210234448c622b1db9d2f307097592194f660841fa1cd6bb",
-  "ledger_hash": "77c174fc8e0e43ba497d965790d1f59c447c08624f65640c0957d570b9ec9311",
+  "model_hash": "bbbb26ed1a15a9c966df7ad837481df22d8356f4ea7d6fabda98d0a4441b95c2",
+  "ledger_hash": "26cd3e161509bdbe9faa82850c06f85494e833b9f4f7921bfb816f22b3ece779",
   "engine": {
     "name": "cfdl-engine",
     "version": "0.9.0"
@@ -8935,6 +8935,7 @@
         "entity": "asset.microgrid",
         "category": "operating.revenue.energy",
         "contract": "energy.capacity",
+        "line": "revenue",
         "values": [
           {
             "amount": 5000.0,
@@ -10148,6 +10149,7 @@
         "entity": "asset.microgrid",
         "category": "investing.capital.capex",
         "contract": "energy.capex",
+        "line": "capex",
         "values": [
           {
             "amount": -2400000.0,
@@ -11361,6 +11363,7 @@
         "entity": "asset.microgrid",
         "category": "financing.debt.interest_paid",
         "contract": "energy.debt_service",
+        "line": "interest",
         "values": [
           {
             "amount": -8000.0,
@@ -12574,6 +12577,7 @@
         "entity": "asset.microgrid",
         "category": "financing.debt.principal",
         "contract": "energy.debt_service",
+        "line": "principal",
         "values": [
           {
             "amount": -3462.896936,
@@ -13787,6 +13791,7 @@
         "entity": "asset.microgrid",
         "category": "financing.debt.proceeds",
         "contract": "energy.debt_service",
+        "line": "proceeds",
         "values": [
           {
             "amount": 1600000.0,
@@ -15000,6 +15005,7 @@
         "entity": "asset.microgrid",
         "category": "operating.income_tax.benefit",
         "contract": "energy.itc",
+        "line": "benefit",
         "values": [
           {
             "amount": 0.0,
@@ -16213,6 +16219,7 @@
         "entity": "asset.microgrid",
         "category": "operating.expense.om",
         "contract": "energy.om",
+        "line": "expense",
         "values": [
           {
             "amount": -5833.333333,
@@ -17426,6 +17433,7 @@
         "entity": "asset.microgrid",
         "category": "operating.revenue.energy",
         "contract": "energy.ppa",
+        "line": "revenue",
         "values": [
           {
             "amount": 29750.0,
@@ -18639,6 +18647,7 @@
         "entity": "asset.microgrid",
         "category": "operating.revenue.energy",
         "contract": "energy.storage_arbitrage",
+        "line": "revenue",
         "values": [
           {
             "amount": 1250.0,

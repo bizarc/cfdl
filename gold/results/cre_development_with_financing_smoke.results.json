@@ -1,7 +1,7 @@
 {
   "results_version": "0.13",
-  "model_hash": "2e349f41dd23bf4d65c3979e2922ccc6059c866dcb20eb089f92672e84d56ec6",
-  "ledger_hash": "37bcb7a5db3f78a899b05ae5250e44c25f5f305f90b1f9923bbb6c7007bfd53e",
+  "model_hash": "d70a8894b86ddcbcf5d0ecb77cdf5805c34c8c6281fd10d7dea09ca0ce702e68",
+  "ledger_hash": "bba140536e351530cfed4bcc996157bf4dfc72a2652b0bb5027f16af337bb566",
   "engine": {
     "name": "cfdl-engine",
     "version": "0.9.0"
@@ -3188,6 +3188,7 @@
         "entity": "asset.property",
         "category": "investing.capital.construction",
         "contract": "cre.construction_stub",
+        "line": "capex",
         "values": [
           {
             "amount": -45000.0,
@@ -3489,6 +3490,7 @@
         "entity": "asset.property",
         "category": "investing.disposal.reversion",
         "contract": "cre.exit_cap",
+        "line": "proceeds",
         "values": [
           {
             "amount": 0.0,
@@ -3790,6 +3792,7 @@
         "entity": "asset.property",
         "category": "operating.revenue.base_rent",
         "contract": "cre.lease",
+        "line": "rent",
         "values": [
           {
             "amount": 0.0,
@@ -4091,6 +4094,7 @@
         "entity": "asset.property",
         "category": "operating.expense.opex",
         "contract": "cre.opex_line",
+        "line": "expense",
         "values": [
           {
             "amount": 0.0,
@@ -4392,6 +4396,7 @@
         "entity": "asset.property",
         "category": "operating.revenue.other",
         "contract": "cre.revenue_line",
+        "line": "revenue",
         "values": [
           {
             "amount": 0.0,

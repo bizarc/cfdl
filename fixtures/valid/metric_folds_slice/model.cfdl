@@ -1,0 +1,26 @@
+version 0.1
+model "metric-folds-slice"
+use pack "cre" version "0.1.0"
+time calendar monthly from 2026-01 for 24
+
+entity asset tower : CRE.Asset.RealProperty
+
+contract cre.permanent_debt on entity asset.tower {
+  term 2026-01..2027-12
+  terms {
+    principal = 3000000
+    interest_rate = 0.06
+    amortization_months = 300
+  }
+}
+
+slice debt_interest {
+  type Contract.Debt
+  line interest
+}
+
+// A METRIC FOLDS A SLICE (docs/13 §7.90: a named selection that functions
+// consume). `slice.debt_interest` is the slice's net, so the figure is
+// selected by type and line rather than by naming a stream or a pack's
+// category — the cross-pack reading of docs/40 stage 5.
+metric interest_paid = -series_sum("slice.debt_interest", 0, 23)

@@ -1290,8 +1290,11 @@ Rules:
 - **The series it may fold are the ones this model PUBLISHES**, in either
   spelling: a stream by its own name (`ops.rev`) or by its published key
   (`stream.ops.rev`), a waterfall step, `entity.<symbol>.net_cash_flow`,
-  `account.<name>`, an entity field's own series, a money subtotal, and
-  `model.net_cash_flow`. The two spellings of one stream name the same cash.
+  `account.<name>`, an entity field's own series, a money subtotal, a
+  declared slice's net as `slice.<name>`, and `model.net_cash_flow`. The
+  two spellings of one stream name the same cash. A slice is how a metric
+  folds cash selected by TYPE and LINE — every debt's interest — without
+  naming a stream or a pack's category.
   A ratio subtotal is NOT foldable: its undefined periods publish as `null`
   rather than zero, and what a fold should do with `null` is not yet decided.
 - A metric that folds a name this model does not publish is REFUSED
@@ -1355,6 +1358,11 @@ slice debt {
   type Contract.Debt
 }
 
+slice debt_interest {
+  type Contract.Debt
+  line interest
+}
+
 slice west_2027 {
   entity asset.west_tower
   window from 2027-01 to 2028-12
@@ -1373,6 +1381,12 @@ Rules:
   `type Contract.Debt` selects every stream lowered from a contract whose
   type is_a `Contract.Debt`, and streams owned by entities of a conforming
   type. An unknown type is refused with the known types named (`E1363`).
+- `line` names a LINE BY ROLE — what a master says the agreement produces
+  (`docs/40` §6): `line interest` selects every stream a pack rule emits as
+  its type's interest line, whichever pack and whatever category it spells.
+  Beside `type` the two intersect: `type Contract.Debt line interest` is
+  the interest of every debt. A line nothing produces is refused with the
+  near miss (`E1375`).
 - `category` and `stream` take QUOTED selectors — the dialect `series_sum`
   reads, exact or one trailing `.*` — and a category selector must be rooted
   in a statement section (`E1364`).
@@ -1467,6 +1481,7 @@ statement operating {
   label    "Operating statement"
   line     "Base rental revenue"   { category "operating.revenue.base_rent" }
   line     "Less: operating costs" { category "operating.expense.*" display positive }
+  line     "Less: interest"        { type Contract.Debt line interest display positive }
   subtotal "Net operating income"  { category "operating.*" }
   spacer
   ratio    "DSCR"                  { of noi to debt_service display positive }
@@ -1476,9 +1491,13 @@ statement operating {
 - A statement is AUTHORED OR GENERATED, never both, and never neither
   (`E1369`). A generated statement partitions the cash by construction; an
   authored one partitions it by the author's care. Mixed, neither holds.
-- A row draws from `category`, `stream`, `slice` or `entity`. A `subtotal` row
-  folds rows stated elsewhere and CLAIMS nothing, so it never doubles the
-  bottom line.
+- A row draws from `category`, `stream`, `type`, `line`, `slice` or
+  `entity`. `type` and `line` mean what they mean on a slice — every
+  debt's interest, whichever pack lowered it — and the compiler expands
+  them to the exact streams the row claims, so the bottom line reconciles
+  as it does for a category row (`E1363`, `E1375` as on a slice). A
+  `subtotal` row folds rows stated elsewhere and CLAIMS nothing, so it never
+  doubles the bottom line.
 - A row may instead draw a published `series` (`series "domain.cre.noi"`) — a
   fold OF the ledger rather than cash in it, so the row claims no streams and
   its figure stays out of the bottom line. A claim clause beside a `series` is

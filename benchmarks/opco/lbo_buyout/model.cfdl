@@ -80,3 +80,22 @@ contract opco.exit_ebitda on entity asset.target {
     selling_costs = 0.015
   }
 }
+
+// Views by master type: the purchase, the debt and the exit as the deal's
+// three agreements rather than as pack stream names.
+slice acquisition {
+  type Contract.Purchase
+}
+
+slice debt {
+  type Contract.Debt
+}
+
+slice debt_interest {
+  type Contract.Debt
+  line interest
+}
+
+slice exit {
+  type Contract.Sale
+}

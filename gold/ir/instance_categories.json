@@ -273,6 +273,7 @@
             "version": "0.1.0"
           },
           "rule_id": "cre_opex_line",
+          "line": "expense",
           "contract": "cre.opex_line.food_beverage"
         }
       }
@@ -314,6 +315,7 @@
             "version": "0.1.0"
           },
           "rule_id": "cre_opex_line",
+          "line": "expense",
           "contract": "cre.opex_line.property_tax"
         }
       }
@@ -355,6 +357,7 @@
             "version": "0.1.0"
           },
           "rule_id": "cre_opex_line",
+          "line": "expense",
           "contract": "cre.opex_line.rooms"
         }
       }

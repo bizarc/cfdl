@@ -1,7 +1,7 @@
 {
   "results_version": "0.13",
-  "model_hash": "0117e01fa1da841c205a5f396d7de887b8c1a41b91f25687e1179acdef538528",
-  "ledger_hash": "ede9182c88e07956ad162759e87cca56e06e73206bf29ec575dfb97b45d66af8",
+  "model_hash": "be70c546e2e5bbfa908636b0b1c21d8ff5930b35717d23b2f5d40a7eb7edf25f",
+  "ledger_hash": "23495295321eac2635b737337aab85c22f12da0e5effabe9107afbf91cbef9e8",
   "engine": {
     "name": "cfdl-engine",
     "version": "0.9.0"
@@ -1592,6 +1592,7 @@
         "entity": "asset.target",
         "category": "investing.acquisition.purchase",
         "contract": "opco.acquisition",
+        "line": "price",
         "values": [
           {
             "amount": -5000000.0,
@@ -1701,6 +1702,7 @@
         "entity": "asset.target",
         "category": "investing.capital.capex",
         "contract": "opco.capex_line",
+        "line": "capex",
         "values": [
           {
             "amount": -9000.0,
@@ -1810,6 +1812,7 @@
         "entity": "asset.target",
         "category": "financing.debt.interest_paid",
         "contract": "opco.term_debt",
+        "line": "interest",
         "values": [
           {
             "amount": -22500.0,
@@ -1919,6 +1922,7 @@
         "entity": "asset.target",
         "category": "financing.debt.principal",
         "contract": "opco.term_debt",
+        "line": "principal",
         "values": [
           {
             "amount": 0.0,
@@ -2028,6 +2032,7 @@
         "entity": "asset.target",
         "category": "financing.debt.proceeds",
         "contract": "opco.term_debt",
+        "line": "proceeds",
         "values": [
           {
             "amount": 3000000.0,
@@ -2137,6 +2142,7 @@
         "entity": "asset.target",
         "category": "investing.disposal.selling_costs",
         "contract": "opco.exit_ebitda",
+        "line": "selling_costs",
         "values": [
           {
             "amount": 0.0,
@@ -2246,6 +2252,7 @@
         "entity": "asset.target",
         "category": "investing.disposal.proceeds",
         "contract": "opco.exit_ebitda",
+        "line": "proceeds",
         "values": [
           {
             "amount": 0.0,
@@ -2355,6 +2362,7 @@
         "entity": "asset.target",
         "category": "operating.expense.opex",
         "contract": "opco.opex_line",
+        "line": "expense",
         "values": [
           {
             "amount": -120000.0,
@@ -2464,6 +2472,7 @@
         "entity": "asset.target",
         "category": "operating.revenue.recurring",
         "contract": "opco.revenue_line",
+        "line": "revenue",
         "values": [
           {
             "amount": 200000.0,
@@ -2573,6 +2582,7 @@
         "entity": "asset.target",
         "category": "operating.income_tax.paid",
         "contract": "opco.cash_taxes",
+        "line": "paid",
         "values": [
           {
             "amount": -9375.0,
@@ -2682,6 +2692,7 @@
         "entity": "asset.target",
         "category": "operating.working_capital",
         "contract": "opco.working_capital_policy",
+        "line": "working_capital",
         "values": [
           {
             "amount": -223561.643836,

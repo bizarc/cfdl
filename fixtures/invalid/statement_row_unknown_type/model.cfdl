@@ -1,0 +1,22 @@
+version 0.1
+model "statement-row-unknown-type"
+use pack "cre" version "0.1.0"
+time calendar monthly from 2026-01 for 24
+
+entity asset tower : CRE.Asset.RealProperty
+
+contract cre.permanent_debt on entity asset.tower {
+  term 2026-01..2027-12
+  terms {
+    principal = 3000000
+    interest_rate = 0.06
+    amortization_months = 300
+  }
+}
+
+// A row's `type` is checked as a slice's is: an ontology type the active
+// vocabulary does not define is refused with the known types named.
+statement lender {
+  label "Lender view"
+  line  "Debt service" { type Contract.Imaginary }
+}

@@ -11,7 +11,7 @@ Diagnostics are the repair signal: read the `code`, `message`, `span`, and
 `hint`, change the model, recompile. The catalog is how an agent learns what
 each code looks like in the flesh before it meets one.
 
-**Coverage:** 217 codes in the docs/08 §7 register; 104 exemplified here; 70 of 111 examples carry a recorded fix.
+**Coverage:** 218 codes in the docs/08 §7 register; 105 exemplified here; 70 of 113 examples carry a recorded fix.
 
 ## active_in_unknown_state — E1332_UNKNOWN_ACTIVE_STATE
 
@@ -2155,7 +2155,7 @@ metric typo = series_sum("total.nonsense.xyz", 0, 2)
 ```
 
 - `E1365_METRIC_UNKNOWN_SERIES` (error): Metric 'typo' folds series 'total.nonsense.xyz', which this model does not publish.
-  - hint: Check the spelling. A metric may fold any series this model publishes: a stream by its own name or as `stream.<name>`, a waterfall step, `entity.<symbol>.net_cash_flow`, `account.<name>`, an entity field, a money subtotal, or `model.net_cash_flow`. A selector ending in `.*` states that matching nothing is intended.
+  - hint: Check the spelling. A metric may fold any series this model publishes: a stream by its own name or as `stream.<name>`, a waterfall step, `entity.<symbol>.net_cash_flow`, `account.<name>`, an entity field, a money subtotal, a slice's net as `slice.<name>`, or `model.net_cash_flow`. A selector ending in `.*` states that matching nothing is intended.
 
 Fix: not yet recorded.
 
@@ -3591,6 +3591,41 @@ slice s { entity asset.nonesuch }
 
 Fix: not yet recorded.
 
+## slice_unknown_line — E1375_UNKNOWN_LINE_ROLE
+
+Failing example:
+
+```cfdl
+version 0.1
+model "slice-unknown-line"
+use pack "cre" version "0.1.0"
+time calendar monthly from 2026-01 for 24
+
+entity asset tower : CRE.Asset.RealProperty
+
+contract cre.permanent_debt on entity asset.tower {
+  term 2026-01..2027-12
+  terms {
+    principal = 3000000
+    interest_rate = 0.06
+    amortization_months = 300
+  }
+}
+
+// A line is a ROLE a master names (docs/40 §6). One nothing produces is
+// refused with the near miss, as a type is — a selector that could never
+// match anything is a typo, not a choice.
+slice debt_interest {
+  type Contract.Debt
+  line intrest
+}
+```
+
+- `E1375_UNKNOWN_LINE_ROLE` (error): Slice 'debt_interest' selects line 'intrest', which no contract type in the active ontology produces.
+  - hint: Did you mean interest?
+
+Fix: not yet recorded.
+
 ## slice_unknown_type — E1363_SLICE_UNKNOWN_TYPE
 
 Failing example:
@@ -3650,6 +3685,40 @@ statement both {
 
 - `E1369_STATEMENT_AUTHORED_AND_GENERATED` (error): Statement 'both' states both a structure and its own rows.
   - hint: A statement either names a `structure` and lets the rows follow from the tree, or states its rows. Remove one.
+
+Fix: not yet recorded.
+
+## statement_row_unknown_type — E1363_SLICE_UNKNOWN_TYPE
+
+Failing example:
+
+```cfdl
+version 0.1
+model "statement-row-unknown-type"
+use pack "cre" version "0.1.0"
+time calendar monthly from 2026-01 for 24
+
+entity asset tower : CRE.Asset.RealProperty
+
+contract cre.permanent_debt on entity asset.tower {
+  term 2026-01..2027-12
+  terms {
+    principal = 3000000
+    interest_rate = 0.06
+    amortization_months = 300
+  }
+}
+
+// A row's `type` is checked as a slice's is: an ontology type the active
+// vocabulary does not define is refused with the known types named.
+statement lender {
+  label "Lender view"
+  line  "Debt service" { type Contract.Imaginary }
+}
+```
+
+- `E1363_SLICE_UNKNOWN_TYPE` (error): Statement 'lender' row "Debt service" selects type 'Contract.Imaginary', which the active ontology does not define.
+  - hint: Known contract types: CRE.Contract.ConstructionFunding, CRE.Contract.ConstructionLoan, CRE.Contract.Disposition, CRE.Contract.DispositionAtCap, CRE.Contract.DispositionAtForwardCap, CRE.Contract.Lease, CRE.Contract.OperatingExpense, CRE.Contract.OperatingRevenue, CRE.Contract.PercentageRent, CRE.Contract.PercentageRentExpected, CRE.Contract.PermanentDebt, CRE.Contract.PurchaseOption, CRE.Contract.RenewalOption, CRE.Contract.Rollover, CRE.Contract.UnitLease, CRE.Contract.VacancyAllowance, Contract.CapitalExpenditure, Contract.Construction, Contract.Debt, Contract.Deduction, Contract.Derivative, Contract.Expense, Contract.Insurance, Contract.Lease, Contract.Line, Contract.Offtake, Contract.Option, Contract.Purchase, Contract.Revenue, Contract.Sale, Contract.Service, Contract.Tax, Contract.WorkingCapital, Option.Call, Option.Put, Option.Refinance, Option.Renewal.
 
 Fix: not yet recorded.
 

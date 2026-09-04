@@ -1,7 +1,7 @@
 {
   "results_version": "0.13",
-  "model_hash": "55330babcd1e78ee885639f52128f592b8466f66fad3b0d43b5d72b33e7c8a25",
-  "ledger_hash": "3c87e1bedbb4edb8a551aa35d8e977ef0e917dd89153fc1302a08378da4f8a06",
+  "model_hash": "ae5ba19d5b99a9e932f600b6d637486d8d3bc0bd03594288671a094b3e1921d1",
+  "ledger_hash": "1e54033ddb357f887eba7f7c571d6964655c2badf4be0d285d2aed31fd68ae45",
   "engine": {
     "name": "cfdl-engine",
     "version": "0.9.0"
@@ -1559,6 +1559,7 @@
         "entity": "asset.microgrid",
         "category": "investing.capital.capex",
         "contract": "energy.capex",
+        "line": "capex",
         "values": [
           {
             "amount": -500000.0,
@@ -1764,6 +1765,7 @@
         "entity": "asset.microgrid",
         "category": "investing.capital.capex",
         "contract": "energy.capex.final_draw",
+        "line": "capex",
         "values": [
           {
             "amount": 0.0,
@@ -1969,6 +1971,7 @@
         "entity": "asset.microgrid",
         "category": "operating.expense.om",
         "contract": "energy.om",
+        "line": "expense",
         "values": [
           {
             "amount": 0.0,
@@ -2174,6 +2177,7 @@
         "entity": "asset.microgrid",
         "category": "operating.revenue.energy",
         "contract": "energy.ppa",
+        "line": "revenue",
         "values": [
           {
             "amount": 0.0,

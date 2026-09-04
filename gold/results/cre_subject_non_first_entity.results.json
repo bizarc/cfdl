@@ -1,7 +1,7 @@
 {
   "results_version": "0.13",
-  "model_hash": "833cd9fbf071001fa496e553548b67d432cb38835b375825a2d8e8a94f3f7813",
-  "ledger_hash": "3bbfd72a13d3b84fc000e261e3fca48a722129b8c38a0cd69ccabf3a7cb82df7",
+  "model_hash": "9b5e18dd7ce04f11b8d91c4f45e7cf6d0331ca10edd9c91e61cb4de11cc8449d",
+  "ledger_hash": "01885ecbf7799e10d68e5064bb936b6492fff9eed8da8ee9e92e94d40fe8fa0a",
   "engine": {
     "name": "cfdl-engine",
     "version": "0.9.0"
@@ -1040,6 +1040,7 @@
         "entity": "asset.annex",
         "category": "operating.revenue.other",
         "contract": "cre.revenue_line",
+        "line": "revenue",
         "values": [
           {
             "amount": 30000.0,

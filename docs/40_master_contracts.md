@@ -303,9 +303,12 @@ Pack load checks that, for every concrete type, the set of `line` values
 across its rules covers its effective lines. The CATEGORY stays the
 pack's, per `docs/35`: the master says a debt produces interest, the pack
 says where a borrower's interest sits in the statement. A reporting
-selector can then ask for a line by role across packs — `interest` of
-`type Contract.Debt` — without knowing any pack's category spelling
-(stage 5).
+selector asks for a line by role across packs — `line interest` beside
+`type Contract.Debt` on a slice or a statement row — without knowing any
+pack's category spelling; a metric folds the slice's net as
+`slice.<name>`; and every lowered stream series carries its `line` beside
+its `contract`, so a consumer holding results alone can do the same
+(stage 5, built).
 
 `side` says which way cash runs for the subject on each line. It is
 what lets the same master serve a mortgage on a property (the subject
@@ -458,8 +461,15 @@ contract names, and their accounts hold what they received (`docs/13`
    the masters the pack refines with the roster every refinement inherits;
    `skeleton` resolves an ontology type id to the pack's template and,
    asked for a master, names the pack's refinements of it.
-5. **Cross-pack reading**: `type <Master>` on metrics and statement rows;
-   line-by-role selectors; pack metrics migrate where equivalent.
+5. **Cross-pack reading** — **built.** `type <Master>` and `line <role>`
+   on slices and authored statement rows, expanded by the compiler to the
+   exact streams they select (one expansion for both, so a row and a slice
+   can never disagree); a metric folds a slice's net as `slice.<name>`;
+   each lowered stream series carries its `line`; three benchmarks carry
+   slices by master. Pack metrics were NOT migrated, deliberately: a
+   pack's own metric reads its own streams, and the cross-pack reading is
+   the model's and the consumer's — which the results now support without
+   the pack.
 6. **State owned by the agreement**: `balance_field` on `Contract.Debt`
    so a pack machine's `on enter retired` extinguishes it for every
    refinement.

@@ -218,6 +218,7 @@
             "version": "0.1.0"
           },
           "rule_id": "cre_opex_line",
+          "line": "expense",
           "contract": "cre.opex_line"
         }
       }

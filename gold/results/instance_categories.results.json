@@ -1,7 +1,7 @@
 {
   "results_version": "0.13",
-  "model_hash": "3b8a6699237756e5a51fa974686805170d1bd39d853ea3b1fb90d5785cfc8aa9",
-  "ledger_hash": "ae0b6a631062f21f0e9389672622d6c2e7333a502ff91ca1075fcd0f58dc1c5b",
+  "model_hash": "5fd6a4a3cd817430597fc9dbd97fe1b68ea5e44ad5895bbc077c53f1c41346ad",
+  "ledger_hash": "20b8e69b44e22d0ee9f935355fc28269ef5cde9ea8d2237e34bc548cfc7af2e8",
   "engine": {
     "name": "cfdl-engine",
     "version": "0.9.0"
@@ -250,6 +250,7 @@
         "entity": "asset.hotel",
         "category": "operating.expense.food_beverage",
         "contract": "cre.opex_line.food_beverage",
+        "line": "expense",
         "values": [
           {
             "amount": -400.0,
@@ -271,6 +272,7 @@
         "entity": "asset.hotel",
         "category": "operating.expense.opex",
         "contract": "cre.opex_line.property_tax",
+        "line": "expense",
         "values": [
           {
             "amount": -200.0,
@@ -292,6 +294,7 @@
         "entity": "asset.hotel",
         "category": "operating.expense.rooms",
         "contract": "cre.opex_line.rooms",
+        "line": "expense",
         "values": [
           {
             "amount": -1000.0,

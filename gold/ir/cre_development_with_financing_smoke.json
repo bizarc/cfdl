@@ -345,6 +345,7 @@
             "version": "0.1.0"
           },
           "rule_id": "cre_construction_stub_draws",
+          "line": "capex",
           "contract": "cre.construction_stub"
         }
       }
@@ -385,6 +386,7 @@
             "version": "0.1.0"
           },
           "rule_id": "cre_exit_cap_sale",
+          "line": "proceeds",
           "contract": "cre.exit_cap"
         }
       }
@@ -426,6 +428,7 @@
             "version": "0.1.0"
           },
           "rule_id": "cre_lease_base_rent",
+          "line": "rent",
           "contract": "cre.lease"
         }
       }
@@ -467,6 +470,7 @@
             "version": "0.1.0"
           },
           "rule_id": "cre_opex_line",
+          "line": "expense",
           "contract": "cre.opex_line"
         }
       }
@@ -508,6 +512,7 @@
             "version": "0.1.0"
           },
           "rule_id": "cre_revenue_line",
+          "line": "revenue",
           "contract": "cre.revenue_line"
         }
       }

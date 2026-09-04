@@ -41,7 +41,7 @@ against it by `make results-schema`.
     "results_version": {
       "type": "string",
       "const": "0.13",
-      "description": "Schema version of this document. 0.13 publishes the model's contracts in `graph.contracts` — each with its type, master, instance, subject, parties and the streams lowered from it — and attributes each lowered stream series to its contract (`contract` on the series). 0.12 separates the model from its views: `model_hash` covers the IR without `views` (slices and statements), and `ledger_hash` now covers the journal and transitions beside the series. 0.11 adds model-declared statements: `pack` on the statements section is optional, and a statement may carry `metrics`. 0.10 adds `window` to a slice's selection — a reporting bound whose periods are the only ones the slice folds. 0.9 carries every metric a Monte Carlo trial computed into its trial summary, summarises each of them across the trials with the full set of percentiles, and adds `trials` to a metric summary — the count of trials that published that name. 0.8 adds `slices` — declared partial selections with their matched streams, net series and figures, and no reconciliation block by design. 0.7 publishes the model's entity graph (`graph`) and attributes each stream series to its owning entity and category. 0.6 nests an act's own acts under it as `children`. 0.5 added the machine's `transition` journal action. 0.4 added the account journal actions. 0.3 added `ledger_hash`, the optional `inputs` section, and `category` on IR streams."
+      "description": "Schema version of this document. 0.13 publishes the model's contracts in `graph.contracts` — each with its type, master, instance, subject, parties and the streams lowered from it — and attributes each lowered stream series to its contract and its line by role (`contract` and `line` on the series); a slice's selection records its `lines`. 0.12 separates the model from its views: `model_hash` covers the IR without `views` (slices and statements), and `ledger_hash` now covers the journal and transitions beside the series. 0.11 adds model-declared statements: `pack` on the statements section is optional, and a statement may carry `metrics`. 0.10 adds `window` to a slice's selection — a reporting bound whose periods are the only ones the slice folds. 0.9 carries every metric a Monte Carlo trial computed into its trial summary, summarises each of them across the trials with the full set of percentiles, and adds `trials` to a metric summary — the count of trials that published that name. 0.8 adds `slices` — declared partial selections with their matched streams, net series and figures, and no reconciliation block by design. 0.7 publishes the model's entity graph (`graph`) and attributes each stream series to its owning entity and category. 0.6 nests an act's own acts under it as `children`. 0.5 added the machine's `transition` journal action. 0.4 added the account journal actions. 0.3 added `ledger_hash`, the optional `inputs` section, and `category` on IR streams."
     },
     "model_hash": {
       "type": "string",
@@ -227,6 +227,10 @@ against it by `make results-schema`.
         "contract": {
           "type": "string",
           "description": "The contract this stream was lowered from (`cre.lease_unit.tenant_a`). Present on pack-lowered stream series only. With `graph.contracts`, the third axis beside `entity` and `category`: whose cash, what kind, and under which agreement."
+        },
+        "line": {
+          "type": "string",
+          "description": "The line this stream is, by the role its contract's master names (`interest`, `rent`, `proceeds` — docs/40 §6). Present on pack-lowered stream series only. With `contract`, what lets a consumer fold every debt's interest without knowing any pack's category spelling."
         }
       }
     },
@@ -1113,6 +1117,13 @@ against it by `make results-schema`.
           "items": {
             "type": "string"
           }
+        },
+        "lines": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Lines by role the slice selected (docs/40 §6)."
         },
         "categories": {
           "type": "array",

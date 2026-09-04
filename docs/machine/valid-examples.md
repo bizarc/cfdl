@@ -4,7 +4,7 @@
 
 CFDL 0.9.0. Every model below compiles, and its IR and
 results are byte-asserted against goldens in CI (`fixtures/valid/`,
-149 models.
+152 models.
 
 `gold/ir/`, `gold/results/`). Each is single-purpose: the directory name
 says what it exercises. This is what right looks like — positive few-shot
@@ -2761,6 +2761,37 @@ event delinquent when series_sum("cre.rent", time.t - 1, time.t - 1) < 50 {
 }
 ```
 
+## metric_folds_slice
+
+```cfdl
+version 0.1
+model "metric-folds-slice"
+use pack "cre" version "0.1.0"
+time calendar monthly from 2026-01 for 24
+
+entity asset tower : CRE.Asset.RealProperty
+
+contract cre.permanent_debt on entity asset.tower {
+  term 2026-01..2027-12
+  terms {
+    principal = 3000000
+    interest_rate = 0.06
+    amortization_months = 300
+  }
+}
+
+slice debt_interest {
+  type Contract.Debt
+  line interest
+}
+
+// A METRIC FOLDS A SLICE (docs/13 §7.90: a named selection that functions
+// consume). `slice.debt_interest` is the slice's net, so the figure is
+// selected by type and line rather than by naming a stream or a pack's
+// category — the cross-pack reading of docs/40 stage 5.
+metric interest_paid = -series_sum("slice.debt_interest", 0, 23)
+```
+
 ## metric_reads_published_results
 
 ```cfdl
@@ -5026,6 +5057,54 @@ metric empty_count = series_count("nothing.*", 0, 3)
 metric guarded     = if(series_count("nothing.*", 0, 3) == 0, 0, series_max("nothing.*", 0, 3))
 ```
 
+## slice_by_line
+
+```cfdl
+version 0.1
+model "slice-by-line"
+use pack "cre" version "0.1.0"
+time calendar monthly from 2026-01 for 24
+
+entity asset tower : CRE.Asset.RealProperty
+
+contract cre.lease_unit tenant_a on entity asset.tower {
+  term 2026-01..2027-12
+  terms {
+    rent_year = 480000
+    free_rent_months = 2
+  }
+}
+
+contract cre.permanent_debt on entity asset.tower {
+  term 2026-01..2027-12
+  terms {
+    principal = 3000000
+    interest_rate = 0.06
+    amortization_months = 300
+  }
+}
+
+// A LINE IS SELECTED BY ROLE (docs/40 §6). The master names what every
+// debt produces — interest — and each pack rule names the line it emits,
+// so `line interest` reaches the interest of every debt whichever pack
+// lowered it and whatever category that pack spelled. The clauses
+// intersect: with `type Contract.Debt` beside it, only debt's interest.
+slice debt_interest {
+  type Contract.Debt
+  line interest
+}
+
+// A line alone, across every type that produces one.
+slice all_rent {
+  line rent
+}
+
+// Type alone, as before: every stream lowered from anything that is_a Debt.
+slice all_debt {
+  type Contract.Debt
+}
+```
+
 ## slice_by_type
 
 ```cfdl
@@ -5548,6 +5627,46 @@ stream misc.windfall on entity asset.tower inflow currency USD {
   schedule every year from 2026-01 to 2028-01
   category operating.revenue.windfall
   amount = 250
+}
+```
+
+## statement_row_by_type
+
+```cfdl
+version 0.1
+model "statement-row-by-type"
+use pack "cre" version "0.1.0"
+time calendar monthly from 2026-01 for 24
+
+entity asset tower : CRE.Asset.RealProperty
+
+contract cre.lease_unit tenant_a on entity asset.tower {
+  term 2026-01..2027-12
+  terms {
+    rent_year = 480000
+  }
+}
+
+contract cre.permanent_debt on entity asset.tower {
+  term 2026-01..2027-12
+  terms {
+    principal = 3000000
+    interest_rate = 0.06
+    amortization_months = 300
+  }
+}
+
+// AN AUTHORED ROW DRAWS BY TYPE AND LINE, as a slice does: the compiler
+// expands the clauses to exact stream names and the row claims those, so
+// the bottom line reconciles the same way a category row's does. A row
+// written this way survives a change of pack: "every debt's interest"
+// names no pack's category.
+statement lender {
+  label    "Lender view"
+  line     "Rent"           { type Contract.Lease line rent }
+  line     "Interest"       { type Contract.Debt line interest display positive }
+  line     "Principal"      { type Contract.Debt line principal display positive }
+  subtotal "Debt service"   { type Contract.Debt line interest line principal display positive }
 }
 ```
 

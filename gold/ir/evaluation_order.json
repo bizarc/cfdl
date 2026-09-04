@@ -355,6 +355,7 @@
             "version": "0.1.0"
           },
           "rule_id": "credit_pool_level_pay_interest",
+          "line": "interest",
           "contract": "credit.pool_level_pay.one"
         }
       }
@@ -396,6 +397,7 @@
             "version": "0.1.0"
           },
           "rule_id": "credit_pool_level_pay_penalty",
+          "line": "penalty",
           "contract": "credit.pool_level_pay.one"
         }
       }
@@ -437,6 +439,7 @@
             "version": "0.1.0"
           },
           "rule_id": "credit_pool_level_pay_prepay",
+          "line": "prepayment",
           "contract": "credit.pool_level_pay.one"
         }
       }
@@ -478,6 +481,7 @@
             "version": "0.1.0"
           },
           "rule_id": "credit_pool_level_pay_recoveries",
+          "line": "recovery",
           "contract": "credit.pool_level_pay.one"
         }
       }
@@ -519,6 +523,7 @@
             "version": "0.1.0"
           },
           "rule_id": "credit_pool_level_pay_sched_principal",
+          "line": "principal",
           "contract": "credit.pool_level_pay.one"
         }
       }
@@ -560,6 +565,7 @@
             "version": "0.1.0"
           },
           "rule_id": "credit_pool_level_pay_servicing",
+          "line": "servicing",
           "contract": "credit.pool_level_pay.one"
         }
       }

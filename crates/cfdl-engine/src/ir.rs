@@ -273,6 +273,10 @@ pub(crate) struct IrSlice {
     pub(crate) entities: Vec<String>,
     #[serde(default)]
     pub(crate) types: Vec<String>,
+    /// Lines by role, as declared — lineage; the compiler expanded them
+    /// into `type_streams` beside the types.
+    #[serde(default)]
+    pub(crate) lines: Vec<String>,
     #[serde(default)]
     pub(crate) categories: Vec<String>,
     #[serde(default)]

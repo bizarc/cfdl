@@ -451,6 +451,7 @@
             "version": "0.1.0"
           },
           "rule_id": "opco_acquisition_price",
+          "line": "price",
           "contract": "opco.acquisition"
         }
       }
@@ -492,6 +493,7 @@
             "version": "0.1.0"
           },
           "rule_id": "opco_capex_line",
+          "line": "capex",
           "contract": "opco.capex_line"
         }
       }
@@ -533,6 +535,7 @@
             "version": "0.1.0"
           },
           "rule_id": "opco_term_debt_interest",
+          "line": "interest",
           "contract": "opco.term_debt"
         }
       }
@@ -574,6 +577,7 @@
             "version": "0.1.0"
           },
           "rule_id": "opco_term_debt_principal",
+          "line": "principal",
           "contract": "opco.term_debt"
         }
       }
@@ -613,6 +617,7 @@
             "version": "0.1.0"
           },
           "rule_id": "opco_term_debt_proceeds",
+          "line": "proceeds",
           "contract": "opco.term_debt"
         }
       }
@@ -653,6 +658,7 @@
             "version": "0.1.0"
           },
           "rule_id": "opco_exit_ebitda_selling_costs",
+          "line": "selling_costs",
           "contract": "opco.exit_ebitda"
         }
       }
@@ -693,6 +699,7 @@
             "version": "0.1.0"
           },
           "rule_id": "opco_exit_ebitda",
+          "line": "proceeds",
           "contract": "opco.exit_ebitda"
         }
       }
@@ -734,6 +741,7 @@
             "version": "0.1.0"
           },
           "rule_id": "opco_opex_line",
+          "line": "expense",
           "contract": "opco.opex_line"
         }
       }
@@ -775,6 +783,7 @@
             "version": "0.1.0"
           },
           "rule_id": "opco_revenue_line",
+          "line": "revenue",
           "contract": "opco.revenue_line"
         }
       }
@@ -816,6 +825,7 @@
             "version": "0.1.0"
           },
           "rule_id": "opco_cash_taxes",
+          "line": "paid",
           "contract": "opco.cash_taxes"
         }
       }
@@ -857,6 +867,7 @@
             "version": "0.1.0"
           },
           "rule_id": "opco_working_capital_policy",
+          "line": "working_capital",
           "contract": "opco.working_capital_policy"
         }
       }

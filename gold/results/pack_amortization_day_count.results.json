@@ -1,7 +1,7 @@
 {
   "results_version": "0.13",
-  "model_hash": "8e1775f31d7903021cd77ccfeedc152839f5fc61925783e6341ccff6168ea08f",
-  "ledger_hash": "23f18f1b5a6f3352691402bc3d17992082aa59ced80fe1c2b23179ac1e5651b3",
+  "model_hash": "3b8de55e076c4bcd6e22e21312260e83521e3620af980df21a967472cba55e92",
+  "ledger_hash": "20c1c3ca23d66a0052b0c89c28c70647c06720bde036c8baae87f1c523cbf47c",
   "engine": {
     "name": "cfdl-engine",
     "version": "0.9.0"
@@ -939,6 +939,7 @@
         "entity": "asset.buyer",
         "category": "operating.collection.interest",
         "contract": "credit.pool_level_pay.p",
+        "line": "interest",
         "values": [
           {
             "amount": 688888.888889,
@@ -1004,6 +1005,7 @@
         "entity": "asset.buyer",
         "category": "operating.collection.penalty",
         "contract": "credit.pool_level_pay.p",
+        "line": "penalty",
         "values": [
           {
             "amount": 0.0,
@@ -1069,6 +1071,7 @@
         "entity": "asset.buyer",
         "category": "operating.collection.prepayment",
         "contract": "credit.pool_level_pay.p",
+        "line": "prepayment",
         "values": [
           {
             "amount": 0.0,
@@ -1134,6 +1137,7 @@
         "entity": "asset.buyer",
         "category": "operating.collection.recovery",
         "contract": "credit.pool_level_pay.p",
+        "line": "recovery",
         "values": [
           {
             "amount": 0.0,
@@ -1199,6 +1203,7 @@
         "entity": "asset.buyer",
         "category": "operating.collection.principal",
         "contract": "credit.pool_level_pay.p",
+        "line": "principal",
         "values": [
           {
             "amount": 44875.68499,
@@ -1264,6 +1269,7 @@
         "entity": "asset.buyer",
         "category": "operating.expense.servicing",
         "contract": "credit.pool_level_pay.p",
+        "line": "servicing",
         "values": [
           {
             "amount": 0.0,

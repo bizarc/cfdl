@@ -1,7 +1,7 @@
 {
   "results_version": "0.13",
-  "model_hash": "bc052dfa490b3e219a57dd256a726aca38fdbd29e05efd89dc849f1527e1d25f",
-  "ledger_hash": "6c0eb202e9dcc741a3df837daecdad126f29514a2418c4456696dc287c6ef010",
+  "model_hash": "fc02b3c3fa63e2af889ec60c3b48b96aec6d04cbd1b5e602037d65936a217815",
+  "ledger_hash": "09722f5e5e2920670fdba1f49d82ed19b713c933eeb71d97cad223d89157d832",
   "engine": {
     "name": "cfdl-engine",
     "version": "0.9.0"
@@ -1043,6 +1043,7 @@
         "entity": "asset.first_entity",
         "category": "operating.expense.opex",
         "contract": "cre.opex_line",
+        "line": "expense",
         "values": [
           {
             "amount": -12000.0,

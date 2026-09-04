@@ -1,7 +1,7 @@
 {
   "results_version": "0.13",
-  "model_hash": "e0b12f4ec69422d4d8799d8ea45d1855c1b0e40269f1745fef374c55dd50511c",
-  "ledger_hash": "125f7fc20f107a7eaae04e419f531c565d6393a8989f2e306ba1677322b9fde1",
+  "model_hash": "f1271d85dad91c936b18e10e642812767d6b3ab26dd0cfdea0d0e3a478a843d4",
+  "ledger_hash": "6bd8ced78acf94fb40563a736b719965ffbbe9b11acac1e1aaf33764da732159",
   "engine": {
     "name": "cfdl-engine",
     "version": "0.9.0"
@@ -222,6 +222,7 @@
         "entity": "asset.plant",
         "category": "operating.income_tax.benefit",
         "contract": "energy.ptc",
+        "line": "benefit",
         "values": [
           {
             "amount": 7000000.0,

@@ -1,7 +1,7 @@
 {
   "results_version": "0.13",
-  "model_hash": "c6815dc8899e049ca5df9e3b01b265d9f5e562dfeaac293915d67b34a03f3b51",
-  "ledger_hash": "4abb16877ff8399b2d31d76e95041bd74d80ba30eef6b29532df297adc560bd3",
+  "model_hash": "65f2977fd9c56aea9c57fbf9674b6fd9327af1429da2b5cdc006ec7dde5036ef",
+  "ledger_hash": "1fd9b2afecc5b642430842cd9b4bc683d04ce0c77620a18365d9b9b3b5fc1485",
   "engine": {
     "name": "cfdl-engine",
     "version": "0.9.0"
@@ -1046,6 +1046,7 @@
         "entity": "asset.buyer",
         "category": "operating.collection.principal",
         "contract": "credit.pool_float_io_bullet.smoke",
+        "line": "principal",
         "values": [
           {
             "amount": 0.0,
@@ -1119,6 +1120,7 @@
         "entity": "asset.buyer",
         "category": "operating.collection.interest",
         "contract": "credit.pool_float_io_bullet.smoke",
+        "line": "interest",
         "values": [
           {
             "amount": 7979.719611,
@@ -1192,6 +1194,7 @@
         "entity": "asset.buyer",
         "category": "operating.collection.penalty",
         "contract": "credit.pool_float_io_bullet.smoke",
+        "line": "penalty",
         "values": [
           {
             "amount": 0.0,
@@ -1265,6 +1268,7 @@
         "entity": "asset.buyer",
         "category": "operating.collection.prepayment",
         "contract": "credit.pool_float_io_bullet.smoke",
+        "line": "prepayment",
         "values": [
           {
             "amount": 10489.933146,
@@ -1338,6 +1342,7 @@
         "entity": "asset.buyer",
         "category": "operating.collection.recovery",
         "contract": "credit.pool_float_io_bullet.smoke",
+        "line": "recovery",
         "values": [
           {
             "amount": 0.0,
@@ -1411,6 +1416,7 @@
         "entity": "asset.buyer",
         "category": "operating.expense.servicing",
         "contract": "credit.pool_float_io_bullet.smoke",
+        "line": "servicing",
         "values": [
           {
             "amount": 0.0,
@@ -1484,6 +1490,7 @@
         "entity": "asset.buyer",
         "category": "investing.acquisition.purchase",
         "contract": "credit.purchase.smoke",
+        "line": "price",
         "values": [
           {
             "amount": -1200000.0,

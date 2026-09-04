@@ -234,6 +234,7 @@
             "version": "0.1.0"
           },
           "rule_id": "opco_exit_perpetuity_selling_costs",
+          "line": "selling_costs",
           "contract": "opco.exit_perpetuity"
         }
       }
@@ -274,6 +275,7 @@
             "version": "0.1.0"
           },
           "rule_id": "opco_exit_perpetuity",
+          "line": "proceeds",
           "contract": "opco.exit_perpetuity"
         }
       }

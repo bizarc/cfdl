@@ -1,7 +1,7 @@
 {
   "results_version": "0.13",
-  "model_hash": "c204b23359d83a1499ac6d5de55f56bbc0f5ac27d1e3ba82ed0a82791f54a5fc",
-  "ledger_hash": "b2c2b756542c5c9c1826fa231a6cb21910ef9917197281ab23f63999812abf21",
+  "model_hash": "214d913964349c1c34aa18c0add496365d1d921e7cebd8816ed6654294bfe638",
+  "ledger_hash": "bfbb55339368156076e057c16f5a2f4fcf6b0ba35c8b8e24937d09a44d57d833",
   "engine": {
     "name": "cfdl-engine",
     "version": "0.9.0"
@@ -3904,6 +3904,7 @@
         "entity": "asset.business",
         "category": "investing.disposal.proceeds",
         "contract": "opco.exit_multiple",
+        "line": "proceeds",
         "values": [
           {
             "amount": 0.0,
@@ -4205,6 +4206,7 @@
         "entity": "asset.business",
         "category": "operating.expense.opex",
         "contract": "opco.opex_line",
+        "line": "expense",
         "values": [
           {
             "amount": -70000.0,
@@ -4506,6 +4508,7 @@
         "entity": "asset.business",
         "category": "operating.revenue.recurring",
         "contract": "opco.revenue_line",
+        "line": "revenue",
         "values": [
           {
             "amount": 120000.0,
@@ -4807,6 +4810,7 @@
         "entity": "asset.business",
         "category": "operating.working_capital",
         "contract": "opco.working_capital",
+        "line": "working_capital",
         "values": [
           {
             "amount": -3000.0,

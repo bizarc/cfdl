@@ -1,0 +1,17 @@
+[
+  {
+    "code": "E1375_UNKNOWN_LINE_ROLE",
+    "severity": "error",
+    "message": "Slice 'debt_interest' selects line 'intrest', which no contract type in the active ontology produces.",
+    "file": "model.cfdl",
+    "span": {
+      "start_line": 20,
+      "start_col": 1,
+      "end_line": 23,
+      "end_col": 1
+    },
+    "path": null,
+    "hint": "Did you mean interest?",
+    "notes": []
+  }
+]

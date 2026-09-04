@@ -1459,6 +1459,10 @@ against it by `make ir-schema`.
         "contract": {
           "$ref": "#/$defs/Qname",
           "description": "The contract this stream was lowered from, by its qualified name (`cre.lease_unit.tenant_a`). A rule serves every instance of its type; this says which one."
+        },
+        "line": {
+          "type": "string",
+          "description": "The line the rule emits, by the role its contract's master names (`interest`, `rent`, `proceeds` — docs/40 §6)."
         }
       }
     },
@@ -1802,6 +1806,13 @@ against it by `make ir-schema`.
           },
           "description": "Ontology types, matched transitively through refines."
         },
+        "lines": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Lines by role (docs/40 §6) — `interest` selects every stream a rule emits as its type's interest line, whichever pack. Intersects with `types`."
+        },
         "categories": {
           "type": "array",
           "items": {
@@ -1839,7 +1850,7 @@ against it by `make ir-schema`.
           "items": {
             "type": "string"
           },
-          "description": "The streams the type clauses matched — the compiler's expansion, read by the engine."
+          "description": "The streams the type and line clauses matched — the compiler's expansion, because only it holds the ontology and the rules."
         },
         "provenance": {
           "$ref": "#/$defs/NodeProvenance"
@@ -1972,6 +1983,27 @@ against it by `make ir-schema`.
           "items": {
             "type": "string"
           }
+        },
+        "types": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Ontology types the row draws, matched transitively through refines, as on a slice."
+        },
+        "lines": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Lines by role the row draws, as on a slice."
+        },
+        "type_streams": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "What the type and line clauses matched, expanded by the compiler into exact stream names; the evaluator claims them beside `streams`."
         },
         "slice": {
           "type": "string",
