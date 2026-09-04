@@ -38,8 +38,14 @@ results, and the tools.
    principal, a rate, a term, an amortization shape, a day count, a
    payment frequency, a lender and a borrower, because that is what debt
    is — not because four packs happen to consume those words. Nothing on
-   a master is mined from pack usage. Where a pack's word differs, the
-   pack conforms.
+   a master is mined from pack usage, and nothing on a master is gated on
+   a benchmark: the roster is read from the industry's agreements and
+   their governing documents (`docs/41`), and a benchmark is then chosen
+   or built to DEMONSTRATE a master, never to admit one. Where a pack's
+   word differs, the pack conforms. A pack contract is the other layer —
+   a bundled solution to a cash-flow scenario that refines a master and
+   carries its terms, parties, rules, template, validations, metrics and
+   lifecycle together (`docs/41` §0).
 2. **Packs inherit and specialize; they never redefine.** A refinement
    carries every master field, role and line without restating it. It
    may strengthen a field (optional to required, a tighter bound), add
@@ -593,7 +599,9 @@ contract names, and their accounts hold what they received (`docs/13`
    pack's own metric reads its own streams, and the cross-pack reading is
    the model's and the consumer's — which the results now support without
    the pack.
-5b. **Roster completion** — **drafted, for review** (§4.13–4.16):
+5b. **Roster completion** — the survey (`docs/41`) first, then the four
+   cores reworked from their governing documents, then a fifth the survey
+   found missing (`Contract.Guarantee`). **Drafted, for review** (§4.13–4.16):
    `Contract.Security`, `Contract.Equity`, `Contract.Royalty` and
    `Contract.Grant` in the language base; the credit pack refines
    Security for its note classes and the auto ABS pilot declares its
