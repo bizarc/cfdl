@@ -1,0 +1,862 @@
+{
+  "ir_version": "0.1",
+  "model": {
+    "name": "credit-participation",
+    "currency": "USD"
+  },
+  "time": {
+    "calendar": "monthly",
+    "start": "2026-01-01",
+    "periods": 15
+  },
+  "phases": [],
+  "entities": [
+    {
+      "id": "3047749aa99daa5bb0350275187c60f6",
+      "symbol": "asset.pool",
+      "type": "Credit.Asset.LoanPool",
+      "fields": {},
+      "rules": {
+        "credit_level_pay_survival_lag_smoke": {
+          "init": {
+            "lang": "cfdl",
+            "src": "1"
+          },
+          "next": {
+            "lang": "cfdl",
+            "src": "if(months_between(parse_date(\"2026-01-01\"), time.date) > 3 and months_between(parse_date(\"2026-01-01\"), time.date) - 3 < 12, prev * ((1 - cpr_to_periodic(if(0 == 0, 0.03, 0 * (min(0.0002 * min(max(1, (0 + (months_between(parse_date(\"2026-01-01\"), time.date) - 3 - 1)) + 1), 30), 0.006) - 0.000095 * max(0, min(max(1, (0 + (months_between(parse_date(\"2026-01-01\"), time.date) - 3 - 1)) + 1), 120) - 60))), 12)) - if(0 == 0, cpr_to_periodic(if(0 == 0, 0.10, min(0 * 0.002 * max(1, min((0 + (months_between(parse_date(\"2026-01-01\"), time.date) - 3 - 1)) + 1, 30)), 1)), 12), min(0 / max(1 - 0 * (0 + (months_between(parse_date(\"2026-01-01\"), time.date) - 3 - 1)), 0.000001), 1))), prev)"
+          },
+          "schedule": {
+            "kind": "Every",
+            "every": "monthly",
+            "from": "2026-01-01",
+            "to": "2027-03-01"
+          }
+        },
+        "credit_level_pay_survival_smoke": {
+          "init": {
+            "lang": "cfdl",
+            "src": "1"
+          },
+          "next": {
+            "lang": "cfdl",
+            "src": "prev * ((1 - cpr_to_periodic(if(0 == 0, 0.03, 0 * (min(0.0002 * min(max(1, (0 + (months_between(parse_date(\"2026-01-01\"), time.date) - 1)) + 1), 30), 0.006) - 0.000095 * max(0, min(max(1, (0 + (months_between(parse_date(\"2026-01-01\"), time.date) - 1)) + 1), 120) - 60))), 12)) - if(0 == 0, cpr_to_periodic(if(0 == 0, 0.10, min(0 * 0.002 * max(1, min((0 + (months_between(parse_date(\"2026-01-01\"), time.date) - 1)) + 1, 30)), 1)), 12), min(0 / max(1 - 0 * (0 + (months_between(parse_date(\"2026-01-01\"), time.date) - 1)), 0.000001), 1)))"
+          },
+          "schedule": {
+            "kind": "Every",
+            "every": "monthly",
+            "from": "2026-01-01",
+            "to": "2027-03-01"
+          }
+        }
+      },
+      "state": {},
+      "lifecycle": "credit.pool"
+    },
+    {
+      "id": "23501eb04216f3259cf5eebb409de746",
+      "symbol": "party.investors",
+      "type": "Credit.Party.Investor",
+      "fields": {
+        "name": "Certificate holders"
+      },
+      "state": {}
+    },
+    {
+      "id": "962bcdc3e9b8efc262c90e2de41d556a",
+      "symbol": "party.issuer",
+      "type": "Credit.Party.Servicer",
+      "fields": {
+        "name": "Issuer"
+      },
+      "state": {}
+    }
+  ],
+  "assumptions": {
+    "constants": {},
+    "random": {}
+  },
+  "lifecycles": [
+    {
+      "id": "credit.pool",
+      "initial": "amortizing",
+      "states": [
+        "warehouse",
+        "revolving",
+        "amortizing",
+        "rapid_amortization",
+        "retired"
+      ],
+      "edges": [
+        {
+          "from": "warehouse",
+          "to": "revolving"
+        },
+        {
+          "from": "warehouse",
+          "to": "amortizing"
+        },
+        {
+          "from": "revolving",
+          "to": "amortizing"
+        },
+        {
+          "from": "revolving",
+          "to": "rapid_amortization"
+        },
+        {
+          "from": "amortizing",
+          "to": "rapid_amortization"
+        },
+        {
+          "from": "amortizing",
+          "to": "retired"
+        },
+        {
+          "from": "rapid_amortization",
+          "to": "retired"
+        }
+      ]
+    }
+  ],
+  "subtotals": [
+    {
+      "id": "domain.credit.gross_collections",
+      "kind": "money",
+      "op": "sum",
+      "categories": [
+        "operating.collection.*"
+      ],
+      "formula": "sum(operating.collection.*)"
+    },
+    {
+      "id": "domain.credit.principal_collections",
+      "kind": "money",
+      "op": "sum",
+      "categories": [
+        "operating.collection.principal",
+        "operating.collection.prepayment"
+      ],
+      "formula": "sum(scheduled principal, prepayments)"
+    },
+    {
+      "id": "domain.credit.servicing_fee",
+      "kind": "money",
+      "op": "negated_sum",
+      "categories": [
+        "operating.expense.servicing"
+      ],
+      "formula": "-sum(operating.expense.servicing)"
+    },
+    {
+      "id": "domain.credit.net_collections",
+      "kind": "money",
+      "op": "sum",
+      "categories": [
+        "operating.*"
+      ],
+      "formula": "sum(operating.*)"
+    },
+    {
+      "id": "domain.credit.principal_paid_to_date",
+      "kind": "money",
+      "op": "cumulative",
+      "subtotals": [
+        "domain.credit.principal_collections"
+      ],
+      "formula": "running total of principal collections"
+    },
+    {
+      "id": "domain.credit.original_balance",
+      "kind": "money",
+      "op": "negated_cumulative",
+      "categories": [
+        "investing.acquisition.purchase"
+      ],
+      "formula": "-cumulative(investing.acquisition.purchase)"
+    },
+    {
+      "id": "domain.credit.principal_paid_negated",
+      "kind": "money",
+      "op": "negated_cumulative",
+      "subtotals": [
+        "domain.credit.principal_collections"
+      ],
+      "formula": "-cumulative(principal collections)"
+    },
+    {
+      "id": "domain.credit.balance_outstanding",
+      "kind": "money",
+      "op": "sum",
+      "subtotals": [
+        "domain.credit.original_balance",
+        "domain.credit.principal_paid_negated"
+      ],
+      "formula": "original balance less principal paid to date"
+    },
+    {
+      "id": "domain.credit.pool_factor",
+      "kind": "number",
+      "op": "ratio",
+      "numerator": "domain.credit.balance_outstanding",
+      "denominator": "domain.credit.original_balance",
+      "formula": "domain.credit.balance_outstanding / domain.credit.original_balance"
+    },
+    {
+      "id": "domain.credit.total_investment_income",
+      "kind": "money",
+      "op": "sum",
+      "categories": [
+        "operating.collection.interest",
+        "operating.collection.penalty"
+      ],
+      "formula": "sum(interest income, fee income)"
+    }
+  ],
+  "views": {
+    "slices": [
+      {
+        "name": "passed_through",
+        "types": [
+          "Contract.Security"
+        ],
+        "type_streams": [
+          "credit.participation.interest.smoke",
+          "credit.participation.principal.smoke"
+        ],
+        "provenance": {
+          "source_file": "model.cfdl",
+          "source_span": {
+            "start_line": 43,
+            "start_col": 1,
+            "end_line": 45,
+            "end_col": 1
+          }
+        }
+      },
+      {
+        "name": "pool_interest_net",
+        "types": [
+          "Contract.Debt"
+        ],
+        "lines": [
+          "interest",
+          "servicing"
+        ],
+        "type_streams": [
+          "credit.pool.interest.smoke",
+          "credit.pool.servicing.smoke"
+        ],
+        "provenance": {
+          "source_file": "model.cfdl",
+          "source_span": {
+            "start_line": 47,
+            "start_col": 1,
+            "end_line": 51,
+            "end_col": 1
+          }
+        }
+      }
+    ]
+  },
+  "contracts": [
+    {
+      "id": "92c5a5744cd5133e7544356a62b0c8c6",
+      "name": "credit.participation.smoke",
+      "type": "Credit.Contract.Participation",
+      "contract_name": "credit.participation",
+      "master": "Contract.Security",
+      "instance": "smoke",
+      "subject": {
+        "symbol": "asset.pool"
+      },
+      "parties": [
+        {
+          "role": "issuer",
+          "master_role": "issuer",
+          "entity": {
+            "symbol": "party.issuer"
+          }
+        },
+        {
+          "role": "holder",
+          "master_role": "holder",
+          "entity": {
+            "symbol": "party.investors"
+          }
+        }
+      ],
+      "term": {
+        "start": "2026-01-01",
+        "end": "2027-03-01"
+      },
+      "currency": "USD",
+      "terms": {
+        "face": 1200000,
+        "share": 1.0
+      },
+      "effects": {
+        "streams": []
+      },
+      "provenance": {
+        "source_file": "model.cfdl",
+        "source_span": {
+          "start_line": 31,
+          "start_col": 1,
+          "end_line": 41,
+          "end_col": 1
+        }
+      }
+    },
+    {
+      "id": "3e672281a626ed0c7ff9567f6236c965",
+      "name": "credit.pool_level_pay.smoke",
+      "type": "Credit.Contract.LevelPayPool",
+      "contract_name": "credit.pool_level_pay",
+      "master": "Contract.Debt",
+      "instance": "smoke",
+      "subject": {
+        "symbol": "asset.pool"
+      },
+      "term": {
+        "start": "2026-01-01",
+        "end": "2027-03-01"
+      },
+      "currency": "USD",
+      "terms": {
+        "cdr": 0.03,
+        "cpr": 0.1,
+        "interest_rate": 0.06,
+        "principal": 1200000,
+        "recovery_lag_months": 3,
+        "servicing_fee": 0.005,
+        "severity": 0.5,
+        "term_months": 12
+      },
+      "effects": {
+        "streams": []
+      },
+      "provenance": {
+        "source_file": "model.cfdl",
+        "source_span": {
+          "start_line": 10,
+          "start_col": 1,
+          "end_line": 22,
+          "end_col": 1
+        }
+      }
+    }
+  ],
+  "streams": [
+    {
+      "id": "3142033221738d1cf2eb977ee79bdafa",
+      "name": "credit.participation.interest.smoke",
+      "owner": {
+        "symbol": "asset.pool"
+      },
+      "direction": "outflow",
+      "currency": "USD",
+      "category": "financing.security.interest",
+      "schedule": {
+        "kind": "Every",
+        "every": "monthly",
+        "from": "2026-01-01",
+        "to": "2027-03-01"
+      },
+      "amount": {
+        "lang": "cfdl",
+        "src": "1.0 * (series_sum(\"credit.pool.interest.smoke\", time.t, time.t) + series_sum(\"credit.pool.servicing.smoke\", time.t, time.t))"
+      },
+      "active_when": {
+        "lang": "cfdl",
+        "src": "true"
+      },
+      "provenance": {
+        "source_file": "model.cfdl",
+        "source_span": {
+          "start_line": 31,
+          "start_col": 1,
+          "end_line": 41,
+          "end_col": 1
+        },
+        "generated_by": {
+          "pack": {
+            "name": "credit",
+            "version": "0.1.0"
+          },
+          "rule_id": "credit_participation_interest",
+          "line": "interest",
+          "contract": "credit.participation.smoke"
+        }
+      }
+    },
+    {
+      "id": "98c25155ddd87ddf5ef9591977a79a68",
+      "name": "credit.participation.principal.smoke",
+      "owner": {
+        "symbol": "asset.pool"
+      },
+      "direction": "outflow",
+      "currency": "USD",
+      "category": "financing.security.principal",
+      "schedule": {
+        "kind": "Every",
+        "every": "monthly",
+        "from": "2026-01-01",
+        "to": "2027-03-01"
+      },
+      "amount": {
+        "lang": "cfdl",
+        "src": "1.0 * (series_sum(\"credit.pool.sched_principal.smoke\", time.t, time.t) + series_sum(\"credit.pool.bullet.smoke\", time.t, time.t) + series_sum(\"credit.pool.prepay.smoke\", time.t, time.t) + series_sum(\"credit.pool.recoveries.smoke\", time.t, time.t))"
+      },
+      "active_when": {
+        "lang": "cfdl",
+        "src": "true"
+      },
+      "provenance": {
+        "source_file": "model.cfdl",
+        "source_span": {
+          "start_line": 31,
+          "start_col": 1,
+          "end_line": 41,
+          "end_col": 1
+        },
+        "generated_by": {
+          "pack": {
+            "name": "credit",
+            "version": "0.1.0"
+          },
+          "rule_id": "credit_participation_principal",
+          "line": "principal",
+          "contract": "credit.participation.smoke"
+        }
+      }
+    },
+    {
+      "id": "0478c929a7f8f3cd37ff9221efe4b040",
+      "name": "credit.pool.interest.smoke",
+      "owner": {
+        "symbol": "asset.pool"
+      },
+      "direction": "inflow",
+      "currency": "USD",
+      "category": "operating.collection.interest",
+      "schedule": {
+        "kind": "Every",
+        "every": "monthly",
+        "from": "2026-01-01",
+        "to": "2027-03-01"
+      },
+      "amount": {
+        "lang": "cfdl",
+        "src": "if(months_between(parse_date(\"2026-01-01\"), time.date) < 12.0, (1200000.0 * (pv(0.06 / 12.0, 12.0 - months_between(parse_date(\"2026-01-01\"), time.date), -1.0) / pv(0.06 / 12.0, 12.0, -1.0)) * entity.asset.pool.credit_level_pay_survival_smoke) * (1.0 - cpr_to_periodic(if(0.0 == 0.0, 0.03, 0.0 * (min(0.0002 * min(max(1.0, (0.0 + (months_between(parse_date(\"2026-01-01\"), time.date))) + 1.0), 30.0), 0.006) - 0.000095 * max(0.0, min(max(1.0, (0.0 + (months_between(parse_date(\"2026-01-01\"), time.date))) + 1.0), 120.0) - 60.0))), 12.0)) * (0.06 / 12.0), 0.0)"
+      },
+      "active_when": {
+        "lang": "cfdl",
+        "src": "true"
+      },
+      "provenance": {
+        "source_file": "model.cfdl",
+        "source_span": {
+          "start_line": 10,
+          "start_col": 1,
+          "end_line": 22,
+          "end_col": 1
+        },
+        "generated_by": {
+          "pack": {
+            "name": "credit",
+            "version": "0.1.0"
+          },
+          "rule_id": "credit_pool_level_pay_interest",
+          "line": "interest",
+          "contract": "credit.pool_level_pay.smoke"
+        }
+      }
+    },
+    {
+      "id": "0085c9e8423e9c65828f0e07a89a8e1f",
+      "name": "credit.pool.penalty.smoke",
+      "owner": {
+        "symbol": "asset.pool"
+      },
+      "direction": "inflow",
+      "currency": "USD",
+      "category": "operating.collection.penalty",
+      "schedule": {
+        "kind": "Every",
+        "every": "monthly",
+        "from": "2026-01-01",
+        "to": "2027-03-01"
+      },
+      "amount": {
+        "lang": "cfdl",
+        "src": "if(months_between(parse_date(\"2026-01-01\"), time.date) < 12.0, (1200000.0 * (pv(0.06 / 12.0, 12.0 - months_between(parse_date(\"2026-01-01\"), time.date), -1.0) / pv(0.06 / 12.0, 12.0, -1.0)) * entity.asset.pool.credit_level_pay_survival_smoke) * (1.0 - ((-pmt(0.06 / 12.0, 12.0 - months_between(parse_date(\"2026-01-01\"), time.date), 1.0)) - (0.06 / 12.0))) * if(0.0 == 0.0, cpr_to_periodic(if(0.0 == 0.0, 0.10, min(0.0 * 0.002 * max(1.0, min((0.0 + (months_between(parse_date(\"2026-01-01\"), time.date))) + 1.0, 30.0)), 1.0)), 12.0), min(0.0 / max(1.0 - 0.0 * (0.0 + (months_between(parse_date(\"2026-01-01\"), time.date))), 0.000001), 1.0)) * 0.0, 0.0)"
+      },
+      "active_when": {
+        "lang": "cfdl",
+        "src": "true"
+      },
+      "provenance": {
+        "source_file": "model.cfdl",
+        "source_span": {
+          "start_line": 10,
+          "start_col": 1,
+          "end_line": 22,
+          "end_col": 1
+        },
+        "generated_by": {
+          "pack": {
+            "name": "credit",
+            "version": "0.1.0"
+          },
+          "rule_id": "credit_pool_level_pay_penalty",
+          "line": "penalty",
+          "contract": "credit.pool_level_pay.smoke"
+        }
+      }
+    },
+    {
+      "id": "a132a05d1f301dab8fe7edf705c6ef4a",
+      "name": "credit.pool.prepay.smoke",
+      "owner": {
+        "symbol": "asset.pool"
+      },
+      "direction": "inflow",
+      "currency": "USD",
+      "category": "operating.collection.prepayment",
+      "schedule": {
+        "kind": "Every",
+        "every": "monthly",
+        "from": "2026-01-01",
+        "to": "2027-03-01"
+      },
+      "amount": {
+        "lang": "cfdl",
+        "src": "if(months_between(parse_date(\"2026-01-01\"), time.date) < 12.0, (1200000.0 * (pv(0.06 / 12.0, 12.0 - months_between(parse_date(\"2026-01-01\"), time.date), -1.0) / pv(0.06 / 12.0, 12.0, -1.0)) * entity.asset.pool.credit_level_pay_survival_smoke) * (1.0 - ((-pmt(0.06 / 12.0, 12.0 - months_between(parse_date(\"2026-01-01\"), time.date), 1.0)) - (0.06 / 12.0))) * if(0.0 == 0.0, cpr_to_periodic(if(0.0 == 0.0, 0.10, min(0.0 * 0.002 * max(1.0, min((0.0 + (months_between(parse_date(\"2026-01-01\"), time.date))) + 1.0, 30.0)), 1.0)), 12.0), min(0.0 / max(1.0 - 0.0 * (0.0 + (months_between(parse_date(\"2026-01-01\"), time.date))), 0.000001), 1.0)), 0.0)"
+      },
+      "active_when": {
+        "lang": "cfdl",
+        "src": "true"
+      },
+      "provenance": {
+        "source_file": "model.cfdl",
+        "source_span": {
+          "start_line": 10,
+          "start_col": 1,
+          "end_line": 22,
+          "end_col": 1
+        },
+        "generated_by": {
+          "pack": {
+            "name": "credit",
+            "version": "0.1.0"
+          },
+          "rule_id": "credit_pool_level_pay_prepay",
+          "line": "prepayment",
+          "contract": "credit.pool_level_pay.smoke"
+        }
+      }
+    },
+    {
+      "id": "d2df1b43a4a061f8d4e0637efda0157f",
+      "name": "credit.pool.recoveries.smoke",
+      "owner": {
+        "symbol": "asset.pool"
+      },
+      "direction": "inflow",
+      "currency": "USD",
+      "category": "operating.collection.recovery",
+      "schedule": {
+        "kind": "Every",
+        "every": "monthly",
+        "from": "2026-01-01",
+        "to": "2027-03-01"
+      },
+      "amount": {
+        "lang": "cfdl",
+        "src": "if(months_between(parse_date(\"2026-01-01\"), time.date) >= 3.0 and months_between(parse_date(\"2026-01-01\"), time.date) < 12.0 + 3.0, (1200000.0 * (pv(0.06 / 12.0, 12.0 - (months_between(parse_date(\"2026-01-01\"), time.date) - 3.0), -1.0) / pv(0.06 / 12.0, 12.0, -1.0)) * entity.asset.pool.credit_level_pay_survival_lag_smoke) * cpr_to_periodic(if(0.0 == 0.0, 0.03, 0.0 * (min(0.0002 * min(max(1.0, (0.0 + (months_between(parse_date(\"2026-01-01\"), time.date) - 3.0)) + 1.0), 30.0), 0.006) - 0.000095 * max(0.0, min(max(1.0, (0.0 + (months_between(parse_date(\"2026-01-01\"), time.date) - 3.0)) + 1.0), 120.0) - 60.0))), 12.0) * max(0.0, (pv(0.06 / 12.0, 12.0 - months_between(parse_date(\"2026-01-01\"), time.date), -1.0) / pv(0.06 / 12.0, 12.0 - (months_between(parse_date(\"2026-01-01\"), time.date) - 3.0), -1.0)) - 0.50), 0.0)"
+      },
+      "active_when": {
+        "lang": "cfdl",
+        "src": "true"
+      },
+      "provenance": {
+        "source_file": "model.cfdl",
+        "source_span": {
+          "start_line": 10,
+          "start_col": 1,
+          "end_line": 22,
+          "end_col": 1
+        },
+        "generated_by": {
+          "pack": {
+            "name": "credit",
+            "version": "0.1.0"
+          },
+          "rule_id": "credit_pool_level_pay_recoveries",
+          "line": "recovery",
+          "contract": "credit.pool_level_pay.smoke"
+        }
+      }
+    },
+    {
+      "id": "4d62489ebd62f2dfae7f359e77ba9070",
+      "name": "credit.pool.sched_principal.smoke",
+      "owner": {
+        "symbol": "asset.pool"
+      },
+      "direction": "inflow",
+      "currency": "USD",
+      "category": "operating.collection.principal",
+      "schedule": {
+        "kind": "Every",
+        "every": "monthly",
+        "from": "2026-01-01",
+        "to": "2027-03-01"
+      },
+      "amount": {
+        "lang": "cfdl",
+        "src": "if(months_between(parse_date(\"2026-01-01\"), time.date) < 12.0, (1200000.0 * (pv(0.06 / 12.0, 12.0 - months_between(parse_date(\"2026-01-01\"), time.date), -1.0) / pv(0.06 / 12.0, 12.0, -1.0)) * entity.asset.pool.credit_level_pay_survival_smoke) * (1.0 - cpr_to_periodic(if(0.0 == 0.0, 0.03, 0.0 * (min(0.0002 * min(max(1.0, (0.0 + (months_between(parse_date(\"2026-01-01\"), time.date))) + 1.0), 30.0), 0.006) - 0.000095 * max(0.0, min(max(1.0, (0.0 + (months_between(parse_date(\"2026-01-01\"), time.date))) + 1.0), 120.0) - 60.0))), 12.0)) * ((-pmt(0.06 / 12.0, 12.0 - months_between(parse_date(\"2026-01-01\"), time.date), 1.0)) - (0.06 / 12.0)), 0.0)"
+      },
+      "active_when": {
+        "lang": "cfdl",
+        "src": "true"
+      },
+      "provenance": {
+        "source_file": "model.cfdl",
+        "source_span": {
+          "start_line": 10,
+          "start_col": 1,
+          "end_line": 22,
+          "end_col": 1
+        },
+        "generated_by": {
+          "pack": {
+            "name": "credit",
+            "version": "0.1.0"
+          },
+          "rule_id": "credit_pool_level_pay_sched_principal",
+          "line": "principal",
+          "contract": "credit.pool_level_pay.smoke"
+        }
+      }
+    },
+    {
+      "id": "bd3a16724d538b8cfcee202428fb48cf",
+      "name": "credit.pool.servicing.smoke",
+      "owner": {
+        "symbol": "asset.pool"
+      },
+      "direction": "outflow",
+      "currency": "USD",
+      "category": "operating.expense.servicing",
+      "schedule": {
+        "kind": "Every",
+        "every": "monthly",
+        "from": "2026-01-01",
+        "to": "2027-03-01"
+      },
+      "amount": {
+        "lang": "cfdl",
+        "src": "if(months_between(parse_date(\"2026-01-01\"), time.date) < 12.0, (1200000.0 * (pv(0.06 / 12.0, 12.0 - months_between(parse_date(\"2026-01-01\"), time.date), -1.0) / pv(0.06 / 12.0, 12.0, -1.0)) * entity.asset.pool.credit_level_pay_survival_smoke) * (1.0 - cpr_to_periodic(if(0.0 == 0.0, 0.03, 0.0 * (min(0.0002 * min(max(1.0, (0.0 + (months_between(parse_date(\"2026-01-01\"), time.date))) + 1.0), 30.0), 0.006) - 0.000095 * max(0.0, min(max(1.0, (0.0 + (months_between(parse_date(\"2026-01-01\"), time.date))) + 1.0), 120.0) - 60.0))), 12.0)) * (0.005 / 12.0), 0.0)"
+      },
+      "active_when": {
+        "lang": "cfdl",
+        "src": "true"
+      },
+      "provenance": {
+        "source_file": "model.cfdl",
+        "source_span": {
+          "start_line": 10,
+          "start_col": 1,
+          "end_line": 22,
+          "end_col": 1
+        },
+        "generated_by": {
+          "pack": {
+            "name": "credit",
+            "version": "0.1.0"
+          },
+          "rule_id": "credit_pool_level_pay_servicing",
+          "line": "servicing",
+          "contract": "credit.pool_level_pay.smoke"
+        }
+      }
+    }
+  ],
+  "stream_inputs": [
+    {
+      "stream": "credit.pool.interest.smoke",
+      "contract": "credit.pool_level_pay.smoke",
+      "terms": {
+        "abs_speed": "0",
+        "age_months": "0",
+        "cdr": "0.03",
+        "cpr": "0.10",
+        "interest_rate": "0.06",
+        "payment_frequency": "",
+        "principal": "1200000",
+        "psa_speed": "0",
+        "sda_speed": "0"
+      },
+      "defaults_applied": [
+        "abs_speed",
+        "age_months",
+        "payment_frequency",
+        "psa_speed",
+        "sda_speed"
+      ]
+    },
+    {
+      "stream": "credit.pool.penalty.smoke",
+      "contract": "credit.pool_level_pay.smoke",
+      "terms": {
+        "abs_speed": "0",
+        "age_months": "0",
+        "cdr": "0.03",
+        "cpr": "0.10",
+        "interest_rate": "0.06",
+        "payment_frequency": "",
+        "prepay_penalty_rate": "0",
+        "principal": "1200000",
+        "psa_speed": "0",
+        "sda_speed": "0"
+      },
+      "defaults_applied": [
+        "abs_speed",
+        "age_months",
+        "payment_frequency",
+        "prepay_penalty_rate",
+        "psa_speed",
+        "sda_speed"
+      ]
+    },
+    {
+      "stream": "credit.pool.prepay.smoke",
+      "contract": "credit.pool_level_pay.smoke",
+      "terms": {
+        "abs_speed": "0",
+        "age_months": "0",
+        "cdr": "0.03",
+        "cpr": "0.10",
+        "interest_rate": "0.06",
+        "payment_frequency": "",
+        "principal": "1200000",
+        "psa_speed": "0",
+        "sda_speed": "0"
+      },
+      "defaults_applied": [
+        "abs_speed",
+        "age_months",
+        "payment_frequency",
+        "psa_speed",
+        "sda_speed"
+      ]
+    },
+    {
+      "stream": "credit.pool.recoveries.smoke",
+      "contract": "credit.pool_level_pay.smoke",
+      "terms": {
+        "abs_speed": "0",
+        "age_months": "0",
+        "cdr": "0.03",
+        "cpr": "0.10",
+        "interest_rate": "0.06",
+        "payment_frequency": "",
+        "principal": "1200000",
+        "psa_speed": "0",
+        "sda_speed": "0",
+        "severity": "0.50"
+      },
+      "defaults_applied": [
+        "abs_speed",
+        "age_months",
+        "payment_frequency",
+        "psa_speed",
+        "sda_speed"
+      ]
+    },
+    {
+      "stream": "credit.pool.sched_principal.smoke",
+      "contract": "credit.pool_level_pay.smoke",
+      "terms": {
+        "abs_speed": "0",
+        "age_months": "0",
+        "cdr": "0.03",
+        "cpr": "0.10",
+        "interest_rate": "0.06",
+        "payment_frequency": "",
+        "principal": "1200000",
+        "psa_speed": "0",
+        "sda_speed": "0"
+      },
+      "defaults_applied": [
+        "abs_speed",
+        "age_months",
+        "payment_frequency",
+        "psa_speed",
+        "sda_speed"
+      ]
+    },
+    {
+      "stream": "credit.pool.servicing.smoke",
+      "contract": "credit.pool_level_pay.smoke",
+      "terms": {
+        "abs_speed": "0",
+        "age_months": "0",
+        "cdr": "0.03",
+        "cpr": "0.10",
+        "interest_rate": "0.06",
+        "payment_frequency": "",
+        "principal": "1200000",
+        "psa_speed": "0",
+        "sda_speed": "0",
+        "servicing_fee": "0.005"
+      },
+      "defaults_applied": [
+        "abs_speed",
+        "age_months",
+        "payment_frequency",
+        "psa_speed",
+        "sda_speed"
+      ]
+    },
+    {
+      "stream": "credit.participation.interest.smoke",
+      "contract": "credit.participation.smoke",
+      "terms": {
+        "share": "1.0"
+      }
+    },
+    {
+      "stream": "credit.participation.principal.smoke",
+      "contract": "credit.participation.smoke",
+      "terms": {
+        "share": "1.0"
+      }
+    }
+  ],
+  "events": [],
+  "options": [],
+  "runs": [
+    {
+      "kind": "deterministic"
+    }
+  ],
+  "required_observables": [],
+  "required_refs": [],
+  "provenance": {
+    "sources": [
+      "model.cfdl"
+    ],
+    "compiler": {
+      "name": "cfdl",
+      "version": "0.9.0",
+      "hash": "a3f82ed4ab8eea8020071ddf3bdf74de",
+      "notes": [
+        "active_pack=credit@0.1.0"
+      ]
+    }
+  }
+}

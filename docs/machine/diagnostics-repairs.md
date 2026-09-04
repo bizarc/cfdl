@@ -11,7 +11,7 @@ Diagnostics are the repair signal: read the `code`, `message`, `span`, and
 `hint`, change the model, recompile. The catalog is how an agent learns what
 each code looks like in the flesh before it meets one.
 
-**Coverage:** 218 codes in the docs/08 §7 register; 105 exemplified here; 70 of 113 examples carry a recorded fix.
+**Coverage:** 219 codes in the docs/08 §7 register; 105 exemplified here; 70 of 113 examples carry a recorded fix.
 
 ## active_in_unknown_state — E1332_UNKNOWN_ACTIVE_STATE
 
@@ -4742,6 +4742,7 @@ Documented in docs/08 §7, awaiting a minimal failing fixture:
 - `E9018_CREDIT_INVALID_ABS_SPEED` — `abs_speed` is the Absolute Prepayment
 - `E9019_CREDIT_INVALID_AGE_MONTHS` — `age_months` is the pool's weighted
 - `E9020_CREDIT_RATE_FLOOR_ABOVE_CAP` — 
+- `E9021_CREDIT_INVALID_SHARE` — a participation's `share` is not in (0, 1]. A share above one pays out more than the pool produced; zero is a participation in nothing.
 - `W3001_EXPR_TYPE_UNKNOWN` — an expression's type could not be determined ahead of evaluation. It still runs; the warning notes the check was skipped.
 - `W3002_OBS_REF_EXTRACTION_FAILED` — an observation reference could not be read out of an expression, so the run may not know it needs that input.
 - `W3500_STATEMENT_UNCLASSIFIED_STREAM` — cash that no row of the statement

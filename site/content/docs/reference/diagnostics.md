@@ -269,8 +269,9 @@ register, so it cannot fall behind the language.
 | `E9018_CREDIT_INVALID_ABS_SPEED` | Pack domain validations | `abs_speed` is the Absolute Prepayment Model speed: the fraction of ORIGINAL balance prepaying each month. Already monthly, so unlike `cpr`/`cdr` it is not converted. Must be 0..1. |
 | `E9019_CREDIT_INVALID_AGE_MONTHS` | Pack domain validations | `age_months` is the pool's weighted average age at closing. PSA, SDA and the ABS model are all indexed from ORIGINATION, so a seasoned pool starts part-way up the ramp; leaving it at the default 0 on a seasoned pool understates prepayment. Non-negative integer. |
 | `E9020_CREDIT_RATE_FLOOR_ABOVE_CAP` | Pack domain validations |  |
+| `E9021_CREDIT_INVALID_SHARE` | Pack domain validations | a participation's `share` is not in (0, 1]. A share above one pays out more than the pool produced; zero is a participation in nothing. |
 
-*218 codes.*
+*219 codes.*
 <!-- /cfdl:generated diagnostics-catalog -->
 
 ## Related

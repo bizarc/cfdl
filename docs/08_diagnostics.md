@@ -681,6 +681,7 @@ Credit pack codes:
   the default 0 on a seasoned pool understates prepayment. Non-negative
   integer.
 - `E9020_CREDIT_RATE_FLOOR_ABOVE_CAP`
+- `E9021_CREDIT_INVALID_SHARE` — a participation's `share` is not in (0, 1]. A share above one pays out more than the pool produced; zero is a participation in nothing.
 
 ---
 

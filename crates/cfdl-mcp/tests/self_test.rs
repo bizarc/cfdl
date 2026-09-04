@@ -205,7 +205,12 @@ fn lookup_reads_a_master_by_name() {
     assert!(master.is_abstract);
     assert!(master.fields.iter().any(|f| f.name == "face" && f.required));
     assert!(
-        master.lines.iter().any(|l| l == "principal (allocated)"),
+        master.lines.iter().any(|l| l == "principal"),
+        "{:?}",
+        master.lines
+    );
+    assert!(
+        master.lines.iter().any(|l| l == "proceeds (optional)"),
         "{:?}",
         master.lines
     );

@@ -419,8 +419,9 @@ unbound = true
 A field's type is `decimal`, `integer`, `string`, `date`, or `contract` —
 a reference to a declared contract by name, as a guarantee's `covered`.
 A line may be marked `allocated = true` (a waterfall step pays it; no rule
-may emit it) or `optional = true` (a name the master reserves; no rule
-must emit it). A field may carry `one_of = "<group>"`: fields sharing a group are
+may emit it — a refinement may mark an inherited line allocated where its
+form of the agreement is paid by a structure, never the reverse) or
+`optional = true` (a name the master reserves; no rule must emit it). A field may carry `one_of = "<group>"`: fields sharing a group are
 alternatives and a contract must state at least one of them (a debt's
 amount is `principal`, `commitment` or `draw_curve`; its rate is
 `interest_rate` or `index_curve` with `margin`). A refinement may put a
