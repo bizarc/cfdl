@@ -321,6 +321,12 @@ pub(crate) struct IrWaterfallStep {
     #[allow(dead_code)]
     #[serde(default)]
     pub(crate) payee_is_account: bool,
+    /// The agreement and line this step pays, when the model says so
+    /// (docs/40 §6). Republished on the step's series and in the graph.
+    #[serde(default)]
+    pub(crate) contract: Option<String>,
+    #[serde(default)]
+    pub(crate) line: Option<String>,
     pub(crate) amount: IrExpr,
 }
 

@@ -338,10 +338,14 @@ position is its share of the pool's. Stage 6's balance role belongs to
 `Contract.Debt`. **First refinement:** the credit pack's
 `credit.participation` — a `share` of a pool's cash, both lines lowered,
 carrying the pool's suffix; `fixtures/valid/credit_participation` shows
-a share of one reconciling to the pool's net collections. **Second:** the
-structured note, with the auto ABS pilot's seven classes declared as notes
-whose steps read `face` and `coupon` from the contract — the change that
-also lands the step naming the contract and line it pays.
+a share of one reconciling to the pool's net collections. **Second:** `credit.note`,
+the structured note — both lines marked allocated, two field-only rules
+lowering the claim (`face` less the prior balance of `principal_account`,
+an `account` reference) and the interest due on it, and the waterfall
+steps paying each and naming the note and line they pay
+(`for contract credit.note.a2 line principal`). The auto ABS pilot's seven
+classes are declared this way with every asserted number unchanged, and
+`fixtures/valid/credit_note` shows one class end to end.
 
 ### 4.14 `Contract.Equity`
 *Reworked from the governing document, 4 September 2026.* The source is a
@@ -568,7 +572,11 @@ Pack load checks that, for every concrete type, the set of `line` values
 across its rules covers its effective LOWERED lines. An ALLOCATED line is
 what a structure pays through a priority of payments: no rule may emit
 it, and a waterfall step pays it into the holder's account (the step
-naming the contract and line it pays is the change that follows). WHO
+naming the contract and line it pays — `pay a2_principal to party.a2_holders
+for contract credit.note.a2 line principal` — so the step's series carries
+both, the graph lists the step under the contract, and a slice by type and
+line reaches it; a step naming a line the type does not declare allocated is
+refused, `E1377`). WHO
 MARKS IT: a master marks a line allocated only where every form of the
 agreement is paid by a structure — a guarantee's `claim`, sized by the
 covered agreement's shortfall; a security's `principal` and an equity

@@ -1,0 +1,21 @@
+version 0.1
+model "contract-reference-unknown"
+use pack "credit" version "0.1.0"
+time calendar monthly from 2026-01 for 15
+
+entity container trust : Container.SPV
+entity party holders : Credit.Party.Investor { name = "Class A noteholders" }
+
+account a_principal { owner party.holders }
+
+// A REFERENCE TERM NAMES SOMETHING THE MODEL DECLARES (docs/40 §3). A note's
+// `principal_account` is an account reference; a name no account carries is
+// refused with the near miss, rather than read as zero.
+contract credit.note a on entity container.trust {
+  term 2026-01..2027-03
+  terms {
+    face = 1000000
+    coupon = 0.05
+    principal_account = a_princpal
+  }
+}

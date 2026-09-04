@@ -2362,10 +2362,13 @@ fn parse_ontology(raw: &str, source: &str, pack_name: &str) -> Result<PackOntolo
         relations: parsed.relations,
     };
 
-    // A FIELD'S TYPE IS ONE OF A KNOWN FEW. `contract` is a reference to a
-    // declared contract by name (docs/40 §3) — a guarantee's `covered` — and
-    // the compiler resolves it; the rest are values.
-    const FIELD_TYPES: [&str; 6] = ["decimal", "integer", "number", "string", "date", "contract"];
+    // A FIELD'S TYPE IS ONE OF A KNOWN FEW. `contract` and `account` are
+    // references to a declared contract or account by name (docs/40 §3) —
+    // a guarantee's `covered`, a note's `principal_account` — and the
+    // compiler resolves them; the rest are values.
+    const FIELD_TYPES: [&str; 7] = [
+        "decimal", "integer", "number", "string", "date", "contract", "account",
+    ];
     let fields_of = ontology
         .entities
         .iter()
@@ -2959,9 +2962,11 @@ fn validate_ontology_against_rules(
         let Some(rule_name) = contract.contract_name.as_deref() else {
             continue;
         };
+        // A field-only rule lowers a claim, not a line of cash, so it stands
+        // outside the line discipline.
         let own_rules: Vec<&LoweringRule> = rules
             .iter()
-            .filter(|r| r.contract_name == rule_name)
+            .filter(|r| r.contract_name == rule_name && !r.stream_name.is_empty())
             .collect();
         if own_rules.iter().all(|r| r.line.is_none()) {
             continue;
@@ -3865,6 +3870,10 @@ fn validate_rule_categories(
                 ),
             });
         }
+        // A field-only rule emits no stream, so it has no category to check.
+        if rule.stream_name.is_empty() {
+            continue;
+        }
         if categories.iter().any(|c| c == &rule.category) {
             continue;
         }
@@ -3889,6 +3898,21 @@ fn parse_lowering_rules(raw: &str, source: &str) -> Result<Vec<LoweringRule>, Pa
         message: format!("Failed to parse lowering rules '{source}': {err}"),
     })?;
     for rule in &parsed.rules {
+        // A FIELD-ONLY RULE lowers a claim, not cash: a structured note's
+        // outstanding claim and interest due are fields the priority of
+        // payments reads, and the steps do the paying (docs/40 §4.13). It
+        // states no stream. A rule with neither is a rule that does nothing.
+        if rule.stream_name.is_empty() {
+            if rule.field_name.is_empty() {
+                return Err(PackLoadError {
+                    message: format!(
+                        "Lowering rule '{}' names neither a stream nor a field; a rule lowers one or the other.",
+                        rule.id
+                    ),
+                });
+            }
+            continue;
+        }
         // Templated stream names ({{contract.*}}) are validated post-expansion
         // by the compiler.
         if !rule.stream_name.contains("{{") && !is_qualified_name(&rule.stream_name) {

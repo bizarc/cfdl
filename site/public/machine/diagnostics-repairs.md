@@ -11,7 +11,7 @@ Diagnostics are the repair signal: read the `code`, `message`, `span`, and
 `hint`, change the model, recompile. The catalog is how an agent learns what
 each code looks like in the flesh before it meets one.
 
-**Coverage:** 219 codes in the docs/08 §7 register; 105 exemplified here; 70 of 113 examples carry a recorded fix.
+**Coverage:** 222 codes in the docs/08 §7 register; 107 exemplified here; 70 of 115 examples carry a recorded fix.
 
 ## active_in_unknown_state — E1332_UNKNOWN_ACTIVE_STATE
 
@@ -432,6 +432,39 @@ contract cre.lease on entity asset.tower {
 - `E1372_MISSING_CONTRACT_TERM` (error): Contract 'cre.lease_unit.tenant_a' omits term 'rent_year', which type 'CRE.Contract.UnitLease' requires.
 - `E1372_MISSING_CONTRACT_TERM` (error): Contract 'cre.lease' states none of rent, rent_year; type 'CRE.Contract.Lease' requires one of them.
 - `E6001_CRE_LEASE_MISSING_BASE_RENT` (error): CRE lease must state a rent: 'rent' (per period) or 'rent_year' (annual).
+
+Fix: not yet recorded.
+
+## contract_reference_unknown — E1376_UNKNOWN_REFERENCE
+
+Failing example:
+
+```cfdl
+version 0.1
+model "contract-reference-unknown"
+use pack "credit" version "0.1.0"
+time calendar monthly from 2026-01 for 15
+
+entity container trust : Container.SPV
+entity party holders : Credit.Party.Investor { name = "Class A noteholders" }
+
+account a_principal { owner party.holders }
+
+// A REFERENCE TERM NAMES SOMETHING THE MODEL DECLARES (docs/40 §3). A note's
+// `principal_account` is an account reference; a name no account carries is
+// refused with the near miss, rather than read as zero.
+contract credit.note a on entity container.trust {
+  term 2026-01..2027-03
+  terms {
+    face = 1000000
+    coupon = 0.05
+    principal_account = a_princpal
+  }
+}
+```
+
+- `E1376_UNKNOWN_REFERENCE` (error): Contract 'credit.note.a' term 'principal_account' names account 'a_princpal', which this model does not declare.
+  - hint: Did you mean a_principal?
 
 Fix: not yet recorded.
 
@@ -3791,6 +3824,47 @@ statement wrong {
 
 Fix: not yet recorded.
 
+## step_line_not_allocated — E1377_STEP_LINE_NOT_ALLOCATED
+
+Failing example:
+
+```cfdl
+version 0.1
+model "step-line-not-allocated"
+use pack "cre" version "0.1.0"
+time calendar monthly from 2026-01 for 24
+
+entity asset tower : CRE.Asset.RealProperty
+entity party lender : Party { name = "Lender" }
+
+contract cre.permanent_debt on entity asset.tower {
+  term 2026-01..2027-12
+  terms {
+    principal = 3000000
+    interest_rate = 0.06
+    amortization_months = 300
+  }
+}
+
+account lender_receipts { owner party.lender }
+
+// A STEP PAYS WHAT THE STRUCTURE ALLOCATES. A permanent loan's interest is a
+// line its rule lowers, so a step claiming to pay it would count the cash
+// twice; the step may name only a line the contract's type declares
+// allocated (docs/40 §6).
+waterfall distribution on entity asset.tower {
+  schedule every month from 2026-01 to 2027-12
+  from available
+  pay interest to party.lender for contract cre.permanent_debt line interest
+        = min(remaining, 15000)
+}
+```
+
+- `E1377_STEP_LINE_NOT_ALLOCATED` (error): Waterfall 'distribution' step 'interest' pays line 'interest' of contract 'cre.permanent_debt', which type 'CRE.Contract.PermanentDebt' does not declare as allocated. A step pays what the structure allocates; a line a rule lowers is paid by the rule.
+  - hint: Allocated lines of 'CRE.Contract.PermanentDebt': none.
+
+Fix: not yet recorded.
+
 ## stream_active_not_bool — E2202_STREAM_ACTIVE_NOT_BOOL
 
 Failing example:
@@ -4743,6 +4817,7 @@ Documented in docs/08 §7, awaiting a minimal failing fixture:
 - `E9019_CREDIT_INVALID_AGE_MONTHS` — `age_months` is the pool's weighted
 - `E9020_CREDIT_RATE_FLOOR_ABOVE_CAP` — 
 - `E9021_CREDIT_INVALID_SHARE` — a participation's `share` is not in (0, 1]. A share above one pays out more than the pool produced; zero is a participation in nothing.
+- `E9022_CREDIT_INVALID_COUPON` — a note's `coupon` is negative.
 - `W3001_EXPR_TYPE_UNKNOWN` — an expression's type could not be determined ahead of evaluation. It still runs; the warning notes the check was skipped.
 - `W3002_OBS_REF_EXTRACTION_FAILED` — an observation reference could not be read out of an expression, so the run may not know it needs that input.
 - `W3500_STATEMENT_UNCLASSIFIED_STREAM` — cash that no row of the statement

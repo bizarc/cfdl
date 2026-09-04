@@ -1623,6 +1623,14 @@
         "payee_is_account": {
           "type": "boolean",
           "description": "The payee is an ACCOUNT rather than a party. Allocating to a party allocates into that party's account when it has one; naming an account directly is the explicit form, and is how a reserve is funded. Omitted when false, so existing IR stays byte-identical."
+        },
+        "contract": {
+          "$ref": "#/$defs/Qname",
+          "description": "The agreement this step pays, by qualified name — `for contract credit.note.a2`. Present only when the model says so; the step's series then carries the contract and the results graph lists the step under it."
+        },
+        "line": {
+          "type": "string",
+          "description": "Which of the contract's lines this step pays (`principal`, `interest`), which the contract's type must declare as allocated (E1377)."
         }
       }
     },

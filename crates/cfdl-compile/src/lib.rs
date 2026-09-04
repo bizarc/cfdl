@@ -490,6 +490,13 @@ struct IrWaterfallStep {
     /// existing IR stays byte-identical.
     #[serde(skip_serializing_if = "std::ops::Not::not")]
     payee_is_account: bool,
+    /// The agreement this step pays, and which of its lines (docs/40 §6):
+    /// `for contract credit.note.a2 line principal`. Present only when the
+    /// model says so; the results attribute the step's series to both.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    contract: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    line: Option<String>,
     /// What the step is owed. The engine pays `min(max(0, this), remaining)`.
     amount: IrExpr,
 }
@@ -1464,8 +1471,20 @@ fn check_participant_returns(
     }
 }
 
-fn check_field_paths(resolve_output: &cfdl_resolver::ResolveOutput) -> Result<(), Vec<Diagnostic>> {
+fn check_field_paths(
+    resolve_output: &cfdl_resolver::ResolveOutput,
+    // Fields a pack's rules lower onto entities, keyed (owner symbol, field):
+    // a structured note's claim is one, and a waterfall step reads it by
+    // path exactly as it reads a declared field (docs/40 §4.13).
+    lowered_fields: &BTreeMap<(String, String), IrFieldRule>,
+) -> Result<(), Vec<Diagnostic>> {
     let mut known: BTreeMap<String, BTreeSet<String>> = BTreeMap::new();
+    for (owner, field) in lowered_fields.keys() {
+        known
+            .entry(owner.clone())
+            .or_default()
+            .insert(field.clone());
+    }
 
     for source_stmt in &resolve_output.source_statements {
         if let Stmt::Entity(entity) = &source_stmt.statement {
@@ -3887,7 +3906,6 @@ fn build_ir(
     check_prev_first_period(resolve_output, &time_start)?;
     check_constant_expressions(resolve_output)?;
     check_participant_returns(resolve_output)?;
-    check_field_paths(resolve_output)?;
     let (machines, machines_by_entity) = resolve_machines(resolve_output, &ontology);
     check_lifecycle_augmentations(resolve_output, &machines)?;
     check_arrival_action_fields(resolve_output, &machines, &machines_by_entity, &ontology)?;
@@ -4286,6 +4304,9 @@ fn build_ir(
             default_owner: &first_entity_symbol,
         },
     );
+    // After lowering, so a field a pack rule hangs on an entity is a name a
+    // model expression may read.
+    check_field_paths(resolve_output, &lowered.fields)?;
     if lowered
         .diagnostics
         .iter()
@@ -4508,6 +4529,86 @@ fn build_ir(
         }
     }
 
+    // A STEP THAT NAMES AN AGREEMENT NAMES ONE THIS MODEL DECLARES, and a line
+    // that agreement's type declares ALLOCATED (docs/40 §6): a step paying a
+    // security's `principal` is the mechanism the master describes; a step
+    // claiming to pay a line a rule lowers would count the cash twice.
+    let declared_contracts: BTreeMap<String, &cfdl_parser::ContractStmt> = resolve_output
+        .source_statements
+        .iter()
+        .filter_map(|s| match &s.statement {
+            Stmt::Contract(c) => Some((c.name.clone(), c)),
+            _ => None,
+        })
+        .collect();
+    let mut step_diagnostics: Vec<Diagnostic> = Vec::new();
+    for source_stmt in &resolve_output.source_statements {
+        let Stmt::Waterfall(w) = &source_stmt.statement else {
+            continue;
+        };
+        for step in &w.steps {
+            let (Some(contract_name), Some(line)) =
+                (step.contract.as_deref(), step.line.as_deref())
+            else {
+                continue;
+            };
+            let subject = format!("Waterfall '{}' step '{}'", w.name, step.name);
+            let Some(contract) = declared_contracts.get(contract_name) else {
+                let mut known: Vec<&str> = declared_contracts.keys().map(|k| k.as_str()).collect();
+                known.sort_unstable();
+                let near: Vec<&str> = known
+                    .iter()
+                    .copied()
+                    .filter(|k| is_near_miss(k, contract_name))
+                    .collect();
+                step_diagnostics.push(Diagnostic {
+                    code: "E1376_UNKNOWN_REFERENCE".to_string(),
+                    severity: "error".to_string(),
+                    message: format!("{subject} pays for contract '{contract_name}', which this model does not declare."),
+                    file: Some(source_stmt.file.clone()),
+                    span: Some(map_span(step.span)),
+                    path: None,
+                    hint: Some(if near.is_empty() {
+                        format!("Declared contracts: {}.", join_or_none(&known.iter().map(|k| k.to_string()).collect::<Vec<_>>()))
+                    } else {
+                        format!("Did you mean {}?", near.join(" or "))
+                    }),
+                    notes: vec![],
+                });
+                continue;
+            };
+            let Some(binding) = resolve_contract_binding(contract, &ontology) else {
+                continue;
+            };
+            let lines = ontology.effective_lines(&binding.type_id);
+            let allocated: Vec<&str> = lines
+                .iter()
+                .filter(|l| l.allocated)
+                .map(|l| l.name.as_str())
+                .collect();
+            let ok = lines.iter().any(|l| l.name == line && l.allocated);
+            if !ok {
+                step_diagnostics.push(Diagnostic {
+                    code: "E1377_STEP_LINE_NOT_ALLOCATED".to_string(),
+                    severity: "error".to_string(),
+                    message: format!(
+                        "{subject} pays line '{line}' of contract '{contract_name}', which type '{}' does not declare as allocated. A step pays what the structure allocates; a line a rule lowers is paid by the rule.",
+                        binding.type_id
+                    ),
+                    file: Some(source_stmt.file.clone()),
+                    span: Some(map_span(step.span)),
+                    path: None,
+                    hint: Some(format!("Allocated lines of '{}': {}.", binding.type_id, join_or_none(&allocated.iter().map(|l| l.to_string()).collect::<Vec<_>>()))),
+                    notes: vec![],
+                });
+            }
+        }
+    }
+    if !step_diagnostics.is_empty() {
+        sort_compile_diagnostics(&mut step_diagnostics);
+        return Err(step_diagnostics);
+    }
+
     let ir_waterfalls: Vec<IrWaterfall> = resolve_output
         .source_statements
         .iter()
@@ -4538,6 +4639,8 @@ fn build_ir(
                         name: step.name.clone(),
                         payee: step.payee.clone(),
                         payee_is_account: step.to_account,
+                        contract: step.contract.clone(),
+                        line: step.line.clone(),
                         amount: IrExpr {
                             lang: "cfdl".to_string(),
                             src: step
@@ -4587,6 +4690,34 @@ fn build_ir(
                 .collect()
         })
         .unwrap_or_default();
+    // Steps that pay for a contract, with the contract's type and the line.
+    let attributed_steps: Vec<(String, String, String)> = resolve_output
+        .source_statements
+        .iter()
+        .filter_map(|s| match &s.statement {
+            Stmt::Waterfall(w) => Some(w),
+            _ => None,
+        })
+        .flat_map(|w| {
+            let declared_contracts = &declared_contracts;
+            let ontology = &ontology;
+            w.steps.iter().filter_map(move |step| {
+                let (Some(name), Some(line)) = (step.contract.as_deref(), step.line.as_deref())
+                else {
+                    return None;
+                };
+                let type_id = declared_contracts
+                    .get(name)
+                    .and_then(|c| resolve_contract_binding(c, ontology))
+                    .map(|b| b.type_id)?;
+                Some((
+                    format!("{}.{}", w.name, step.name),
+                    type_id,
+                    line.to_string(),
+                ))
+            })
+        })
+        .collect();
     let mut view_diagnostics: Vec<Diagnostic> = Vec::new();
     let mut statement_spans: BTreeMap<String, (String, cfdl_parser::Span)> = BTreeMap::new();
     for source_stmt in &resolve_output.source_statements {
@@ -4626,6 +4757,7 @@ fn build_ir(
                             &onto,
                             &rule_type,
                             &rule_line,
+                            &attributed_steps,
                             &source_stmt.file,
                             statement_stmt.span,
                             &mut view_diagnostics,
@@ -4716,6 +4848,7 @@ fn build_ir(
                 &onto,
                 &rule_type,
                 &rule_line,
+                &attributed_steps,
                 &source_stmt.file,
                 slice_stmt.span,
                 &mut slice_diagnostics,
@@ -4961,6 +5094,10 @@ fn expand_type_and_line_clauses(
     onto: &cfdl_pack::PackOntology,
     rule_type: &BTreeMap<&str, &str>,
     rule_line: &BTreeMap<&str, &str>,
+    // A waterfall step that pays for a contract: (`<waterfall>.<step>`,
+    // the contract's type, the line). Allocated lines are paid by steps,
+    // so a selection by type and line reaches them here.
+    steps: &[(String, String, String)],
     file: &str,
     span: cfdl_parser::Span,
     diagnostics: &mut Vec<Diagnostic>,
@@ -5014,6 +5151,11 @@ fn expand_type_and_line_clauses(
                 by_type.insert(stream.name.clone());
             }
         }
+        for (step, type_id, _) in steps {
+            if onto.is_a(type_id, wanted) {
+                by_type.insert(step.clone());
+            }
+        }
     }
     let mut by_line: BTreeSet<String> = BTreeSet::new();
     if !lines.is_empty() {
@@ -5053,6 +5195,11 @@ fn expand_type_and_line_clauses(
                     .is_some_and(|l| *l == wanted.as_str())
                 {
                     by_line.insert(stream.name.clone());
+                }
+            }
+            for (step, _, line) in steps {
+                if line == wanted {
+                    by_line.insert(step.clone());
                 }
             }
         }
@@ -5679,6 +5826,24 @@ fn lower_contract_streams(
     let mut rules = pack.lowering_rules.clone();
     rules.sort_by(|a, b| a.id.cmp(&b.id));
 
+    // What a reference term may name (docs/40 §3).
+    let declared_contract_names: Vec<String> = resolve_output
+        .source_statements
+        .iter()
+        .filter_map(|s| match &s.statement {
+            Stmt::Contract(c) => Some(c.name.clone()),
+            _ => None,
+        })
+        .collect();
+    let declared_account_names: Vec<String> = resolve_output
+        .source_statements
+        .iter()
+        .filter_map(|s| match &s.statement {
+            Stmt::Account(a) => Some(a.name.clone()),
+            _ => None,
+        })
+        .collect();
+
     // Terms may defer to a declared input. Collect the declared names first so
     // a term naming an input that does not exist is a compile error rather
     // than an expression that quietly resolves to nothing at runtime.
@@ -5785,6 +5950,47 @@ fn lower_contract_streams(
                 );
                 diag.hint = Some(if near.is_empty() {
                     format!("Terms of '{}': {}.", binding.type_id, roster())
+                } else {
+                    format!("Did you mean {}?", near.join(" or "))
+                });
+                diagnostics.push(diag);
+            }
+            // A REFERENCE TERM NAMES SOMETHING THIS MODEL DECLARES: a
+            // guarantee's `covered` names a contract, a note's
+            // `principal_account` names an account (docs/40 §3). Checked here
+            // so a misspelled account is refused rather than read as zero.
+            for field in fields
+                .iter()
+                .filter(|f| f.field_type == "contract" || f.field_type == "account")
+            {
+                let Some(term) = contract.terms.get(&field.name) else {
+                    continue;
+                };
+                let named = term.value.trim().trim_matches('"');
+                let (kind, known): (&str, Vec<String>) = if field.field_type == "contract" {
+                    ("contract", declared_contract_names.clone())
+                } else {
+                    ("account", declared_account_names.clone())
+                };
+                if known.iter().any(|k| k == named) {
+                    continue;
+                }
+                let near: Vec<&str> = known
+                    .iter()
+                    .map(|k| k.as_str())
+                    .filter(|k| is_near_miss(k, named))
+                    .collect();
+                let mut diag = lowering_rule_diag(
+                    "E1376_UNKNOWN_REFERENCE",
+                    &format!(
+                        "Contract '{}' term '{}' names {kind} '{named}', which this model does not declare.",
+                        contract.name, field.name
+                    ),
+                    source_stmt,
+                    term.span,
+                );
+                diag.hint = Some(if near.is_empty() {
+                    format!("Declared {kind}s: {}.", join_or_none(&known))
                 } else {
                     format!("Did you mean {}?", near.join(" or "))
                 });
@@ -5948,7 +6154,13 @@ fn lower_contract_streams(
             if !rule_matches_contract(&rule.contract_name, &contract.name) {
                 continue;
             }
-            if !rule.stream_name.contains("{{") && !is_qualified_name(&rule.stream_name) {
+            // A field-only rule (an empty stream name) lowers a claim and no
+            // cash; the loader admitted it because it names a field.
+            let field_only = rule.stream_name.is_empty();
+            if !field_only
+                && !rule.stream_name.contains("{{")
+                && !is_qualified_name(&rule.stream_name)
+            {
                 diagnostics.push(lowering_rule_diag(
                     "E5004_INVALID_LOWERING_RULE",
                     &format!(
@@ -6311,7 +6523,7 @@ fn lower_contract_streams(
                 }
                 continue;
             }
-            if !is_qualified_name(&expanded_rule.stream_name) {
+            if !field_only && !is_qualified_name(&expanded_rule.stream_name) {
                 diagnostics.push(lowering_rule_diag(
                     "E5004_INVALID_LOWERING_RULE",
                     &format!(
@@ -6485,8 +6697,11 @@ fn lower_contract_streams(
             // expression the parser rejects. Catch it here: the engine's
             // fallback is to evaluate a failed expression as zero and carry on
             // with a warning, which turns a malformed model into a silently
-            // empty stream.
-            if let Err(err) = cfdl_expr::compile_expr(&amount_src) {
+            // empty stream. A field-only rule has no amount to compile.
+            if let Err(err) = cfdl_expr::compile_expr(&amount_src)
+                .map(|_| ())
+                .or_else(|e| if field_only { Ok(()) } else { Err(e) })
+            {
                 diagnostics.push(lowering_rule_diag(
                     "E5009_LOWERED_EXPR_INVALID",
                     &format!(
@@ -6578,6 +6793,11 @@ fn lower_contract_streams(
                 }
             }
 
+            // A FIELD-ONLY RULE IS DONE HERE: its claim is lowered, and there is
+            // no stream to emit — the priority of payments pays it.
+            if field_only {
+                continue;
+            }
             // AND THE EXPRESSIONS READ THE FIELD. A rule writes `field.<name>`
             // because it cannot know which entity it will be attached to; here
             // that placeholder becomes the path the value actually lives at.

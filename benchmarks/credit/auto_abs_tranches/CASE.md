@@ -31,16 +31,18 @@ The trust as a container, the notes as claims on its cash, and the priority of
 payments as two ordered allocations from the two amounts the indenture defines.
 
 Interest collected, net of the servicer's fee and the trust's own expense, is
-one account; principal collected is another. Each distribution date allocates
-the first to the classes' coupons and the second to their principal, by
-seniority. Every holder owns an account that receives its principal, and that
-account IS the class's position: what a class is still owed is its face less
-what its holder has been paid, so a step reads the account the previous
-distributions filled and states its claim in one line:
+one account; principal collected is another. Each class is a `credit.note`
+the trust issued — a face, a coupon, and the account its holder's principal
+is paid into — and each distribution date allocates the first account to the
+classes' interest and the second to their principal, by seniority. Every
+holder owns an account that receives its principal, and that account IS the
+class's position: what a class is still owed is its face less what its
+holder has been paid, which the note lowers as its claim, so a step pays the
+claim and says which note and line it pays:
 
 ```cfdl
-pay a3_principal to party.a3_holders =
-      min(remaining, inputs.a3_face - if(time.t == 0.0, 0.0, prev.a3_principal))
+pay a3_principal to party.a3_holders for contract credit.note.a3 line principal =
+      min(remaining, container.trust.credit_note_claim_a3)
 ```
 
 Declaration order is seniority. A retired class contributes zero because its

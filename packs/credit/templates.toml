@@ -113,3 +113,30 @@ term_start = "2026-01"
 term_end = "2031-12"
 face = "10000000"
 share = "1.0"
+
+[[templates]]
+id = "credit.note"
+label = "Structured note (a class paid by the priority of payments)"
+kind = "contract"
+body = """
+entity container trust : Container.SPV
+entity party class_a_holders : Credit.Party.Investor { name = "Class A noteholders" }
+account class_a_principal { owner party.class_a_holders }
+
+contract credit.note class_a on entity container.trust {
+  term ${term_start}..${term_end}
+  terms {
+    face = ${face}
+    coupon = ${coupon}
+    principal_account = class_a_principal
+  }
+  parties {
+    holder = party.class_a_holders
+  }
+}
+"""
+[templates.defaults]
+term_start = "2026-01"
+term_end = "2031-12"
+face = "10000000"
+coupon = "0.05"

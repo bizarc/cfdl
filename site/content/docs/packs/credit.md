@@ -28,6 +28,7 @@ each classified so it lands on the right line of a
 | `credit.pool_float_io_bullet` | `abs_speed`, `age_months`, `cdr`, `cpr`, `index_curve`, `margin`, `payment_frequency`, `prepay_penalty_rate`, `principal`, `psa_speed`, `rate_cap`, `rate_floor`, `sda_speed`, `servicing_fee`, `severity` | `credit.pool.interest[.suffix]`, `credit.pool.prepay[.suffix]`, `credit.pool.bullet[.suffix]`, `credit.pool.recoveries[.suffix]`, `credit.pool.servicing[.suffix]`, `credit.pool.penalty[.suffix]` |
 | `credit.purchase` | `price` | `credit.purchase.price[.suffix]` |
 | `credit.participation` | `share` | `credit.participation.interest[.suffix]`, `credit.participation.principal[.suffix]` |
+| `credit.note` | `coupon`, `face`, `payment_frequency`, `principal_account` |  |
 <!-- /cfdl:generated contracts-credit -->
 
 A contract can be declared more than once by giving it a suffix, so the pieces

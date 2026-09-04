@@ -4,7 +4,7 @@
 
 CFDL 0.9.0. Every model below compiles, and its IR and
 results are byte-asserted against goldens in CI (`fixtures/valid/`,
-153 models.
+154 models.
 
 `gold/ir/`, `gold/results/`). Each is single-purpose: the directory name
 says what it exercises. This is what right looks like — positive few-shot
@@ -1431,6 +1431,87 @@ contract credit.purchase.smoke on entity asset.buyer {
   terms {
     price = 1200000
   }
+}
+```
+
+## credit_note
+
+```cfdl
+version 0.1
+model "credit-note"
+use pack "credit" version "0.1.0"
+time calendar monthly from 2026-01 for 15
+
+entity container trust : Container.SPV
+entity asset pool : Credit.Asset.LoanPool {
+  part of container.trust
+}
+entity party holders : Credit.Party.Investor { name = "Class A noteholders" }
+
+contract credit.pool_level_pay.smoke on entity asset.pool {
+  term 2026-01..2027-03
+  terms {
+    principal = 1200000
+    interest_rate = 0.06
+    term_months = 12
+    cpr = 0.10
+    cdr = 0.03
+    severity = 0.50
+    recovery_lag_months = 3
+  }
+}
+
+// A STRUCTURED NOTE is the second refinement of Contract.Security (docs/40
+// §4.13), and the opposite shape from the participation: both of its lines
+// are allocated, so the contract lowers no cash. It lowers two claims as
+// fields on the trust — face less what the holder's principal account had
+// received, and the interest due on it — and the priority of payments pays
+// them. Each step names the contract and line it pays, so the results
+// attribute the allocation to the note and a slice by type and line reaches
+// it.
+contract credit.note a on entity container.trust {
+  term 2026-01..2027-03
+  terms {
+    face = 1000000
+    coupon = 0.05
+    principal_account = a_principal
+  }
+  parties {
+    holder = party.holders
+  }
+}
+
+account interest_collections {
+  from series_sum("credit.pool.interest.*", time.t, time.t)
+     + series_sum("credit.pool.servicing.*", time.t, time.t)
+}
+
+account principal_collections {
+  from series_sum("credit.pool.sched_principal.*", time.t, time.t)
+     + series_sum("credit.pool.prepay.*", time.t, time.t)
+     + series_sum("credit.pool.recoveries.*", time.t, time.t)
+}
+
+account a_principal { owner party.holders }
+account a_interest { from 0.0 }
+
+waterfall notes.interest on entity container.trust {
+  schedule every month from 2026-01 to 2027-03
+  from interest_collections
+  pay a_interest to account a_interest for contract credit.note.a line interest
+        = min(remaining, container.trust.credit_note_interest_due_a)
+}
+
+waterfall notes.principal on entity container.trust {
+  schedule every month from 2026-01 to 2027-03
+  from principal_collections
+  pay a_principal to party.holders for contract credit.note.a line principal
+        = min(remaining, container.trust.credit_note_claim_a)
+}
+
+slice note_principal {
+  type Contract.Security
+  line principal
 }
 ```
 

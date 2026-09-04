@@ -1,0 +1,17 @@
+[
+  {
+    "code": "E1376_UNKNOWN_REFERENCE",
+    "severity": "error",
+    "message": "Contract 'credit.note.a' term 'principal_account' names account 'a_princpal', which this model does not declare.",
+    "file": "model.cfdl",
+    "span": {
+      "start_line": 19,
+      "start_col": 5,
+      "end_line": 19,
+      "end_col": 34
+    },
+    "path": null,
+    "hint": "Did you mean a_principal?",
+    "notes": []
+  }
+]

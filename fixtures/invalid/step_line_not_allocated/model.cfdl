@@ -1,0 +1,29 @@
+version 0.1
+model "step-line-not-allocated"
+use pack "cre" version "0.1.0"
+time calendar monthly from 2026-01 for 24
+
+entity asset tower : CRE.Asset.RealProperty
+entity party lender : Party { name = "Lender" }
+
+contract cre.permanent_debt on entity asset.tower {
+  term 2026-01..2027-12
+  terms {
+    principal = 3000000
+    interest_rate = 0.06
+    amortization_months = 300
+  }
+}
+
+account lender_receipts { owner party.lender }
+
+// A STEP PAYS WHAT THE STRUCTURE ALLOCATES. A permanent loan's interest is a
+// line its rule lowers, so a step claiming to pay it would count the cash
+// twice; the step may name only a line the contract's type declares
+// allocated (docs/40 §6).
+waterfall distribution on entity asset.tower {
+  schedule every month from 2026-01 to 2027-12
+  from available
+  pay interest to party.lender for contract cre.permanent_debt line interest
+        = min(remaining, 15000)
+}

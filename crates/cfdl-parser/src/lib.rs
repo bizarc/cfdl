@@ -808,6 +808,15 @@ pub struct WaterfallStep {
     pub payee: String,
     /// `to account <name>` rather than `to <party>`.
     pub to_account: bool,
+    /// `for contract <name> line <role>` — the agreement and the line this
+    /// step pays (docs/40 §6). A structured note's principal is what the
+    /// priority of payments allocates it; the step saying so is what lets the
+    /// results attribute the allocation to the contract, and a slice by
+    /// `type Contract.Security line principal` reach it.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub contract: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub line: Option<String>,
     /// What this step is owed. The engine pays `min(max(0, this), remaining)`,
     /// so the pot cannot go negative however the expression is written.
     pub amount: Option<ExprSlot>,
@@ -2644,6 +2653,39 @@ impl<'a> Parser<'a> {
             self.parse_entity_ref_token(&payee_tok)?
         };
 
+        // `for contract <name> line <role>` — optional, and both halves or
+        // neither: a step that names an agreement says which of its lines it
+        // pays.
+        let mut contract = None;
+        let mut line = None;
+        if matches!(self.peek().kind, TokenKind::Keyword(Keyword::For)) {
+            let _ = self.bump();
+            let _ = self.expect_keyword(Keyword::Contract, "'contract' after 'for'")?;
+            let name_tok = self.bump();
+            contract = Some(match name_tok.kind {
+                TokenKind::Qname(ref q) => q.clone(),
+                _ => {
+                    self.push_expected(
+                        name_tok.span,
+                        "Expected a contract's qualified name after 'for contract' (e.g. credit.note.a2).".to_string(),
+                    );
+                    return None;
+                }
+            });
+            let line_tok = self.bump();
+            match line_tok.kind {
+                TokenKind::Ident(ref word) if word == "line" => {}
+                _ => {
+                    self.push_expected(
+                        line_tok.span,
+                        "Expected 'line <role>' after the contract a step pays for.".to_string(),
+                    );
+                    return None;
+                }
+            }
+            line = Some(self.parse_line_role()?);
+        }
+
         let eq = self.expect_punct(Punct::Equal, "'=' before the amount this step pays")?;
         let amount = self.parse_expr_slot_until(eq.span, &["pay"]);
 
@@ -2651,6 +2693,8 @@ impl<'a> Parser<'a> {
             name,
             payee,
             to_account,
+            contract,
+            line,
             amount,
             span: merge_spans(start.span, eq.span),
         })

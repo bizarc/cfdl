@@ -2721,7 +2721,7 @@
           },
           {
             "kind": "line",
-            "label": "Passed through to holders: interest",
+            "label": "Paid to holders: interest",
             "depth": 1,
             "display_sign": -1.0,
             "values": [
@@ -2790,7 +2790,7 @@
           },
           {
             "kind": "line",
-            "label": "Passed through to holders: principal",
+            "label": "Paid to holders: principal",
             "depth": 1,
             "display_sign": -1.0,
             "values": [
@@ -3075,7 +3075,7 @@
           },
           {
             "kind": "line",
-            "label": "Passed through to holders: interest",
+            "label": "Paid to holders: interest",
             "depth": 1,
             "display_sign": -1.0,
             "values": [
@@ -3092,7 +3092,7 @@
           },
           {
             "kind": "line",
-            "label": "Passed through to holders: principal",
+            "label": "Paid to holders: principal",
             "depth": 1,
             "display_sign": -1.0,
             "values": [
@@ -3927,7 +3927,7 @@
           },
           {
             "kind": "line",
-            "label": "Passed through to holders: interest",
+            "label": "Paid to holders: interest",
             "depth": 1,
             "display_sign": -1.0,
             "values": [
@@ -3996,7 +3996,7 @@
           },
           {
             "kind": "line",
-            "label": "Passed through to holders: principal",
+            "label": "Paid to holders: principal",
             "depth": 1,
             "display_sign": -1.0,
             "values": [
@@ -4883,7 +4883,7 @@
           },
           {
             "kind": "line",
-            "label": "Passed through to holders: interest",
+            "label": "Paid to holders: interest",
             "depth": 1,
             "display_sign": -1.0,
             "values": [
@@ -4952,7 +4952,7 @@
           },
           {
             "kind": "line",
-            "label": "Passed through to holders: principal",
+            "label": "Paid to holders: principal",
             "depth": 1,
             "display_sign": -1.0,
             "values": [

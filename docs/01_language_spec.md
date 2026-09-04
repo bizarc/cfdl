@@ -511,9 +511,10 @@ A term's value is one of:
 
 - a **literal** — a number, string, date, or `true`/`false`;
 - a **reference to one declared input**, written `inputs.<name>`;
-- a **reference to a declared contract**, by its qualified name, where the
-  type's field is of type `contract` (a guarantee's `covered`; `docs/40`
-  §4.17); or
+- a **reference to a declared contract or account**, by name, where the
+  type's field is of type `contract` or `account` (a guarantee's `covered`,
+  a note's `principal_account`; `docs/40` §4.13, §4.17) — a name nothing
+  declares is refused (`E1376`); or
 - an **expression**.
 
 A contract records what was agreed — and what was agreed is often itself an
@@ -696,6 +697,16 @@ arithmetic over the names in §10.3.
   clawing cash back.
 - At least one step MUST read `remaining`, so the residual has a named payee
   instead of vanishing.
+
+**A step may say which agreement and line it pays.** `pay <step> to <payee>
+for contract <name> line <role> = <expr>` names a declared contract and one
+of the lines its type declares ALLOCATED (`docs/40` §6) — a structured
+note's `principal`, an equity interest's `distribution`. The step's series
+then carries the contract and the line, the results graph lists the step
+under the contract, and a slice or statement row by `type` and `line`
+reaches it. A contract nothing declares is refused (`E1376`); a line the
+type does not declare allocated is refused (`E1377`), because a line a rule
+lowers is paid by the rule and a step paying it would count the cash twice.
 
 ### 10.3 What a step may read
 On top of the ordinary expression environment (§16):

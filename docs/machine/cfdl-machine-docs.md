@@ -531,9 +531,10 @@ A term's value is one of:
 
 - a **literal** — a number, string, date, or `true`/`false`;
 - a **reference to one declared input**, written `inputs.<name>`;
-- a **reference to a declared contract**, by its qualified name, where the
-  type's field is of type `contract` (a guarantee's `covered`; `docs/40`
-  §4.17); or
+- a **reference to a declared contract or account**, by name, where the
+  type's field is of type `contract` or `account` (a guarantee's `covered`,
+  a note's `principal_account`; `docs/40` §4.13, §4.17) — a name nothing
+  declares is refused (`E1376`); or
 - an **expression**.
 
 A contract records what was agreed — and what was agreed is often itself an
@@ -716,6 +717,16 @@ arithmetic over the names in §10.3.
   clawing cash back.
 - At least one step MUST read `remaining`, so the residual has a named payee
   instead of vanishing.
+
+**A step may say which agreement and line it pays.** `pay <step> to <payee>
+for contract <name> line <role> = <expr>` names a declared contract and one
+of the lines its type declares ALLOCATED (`docs/40` §6) — a structured
+note's `principal`, an equity interest's `distribution`. The step's series
+then carries the contract and the line, the results graph lists the step
+under the contract, and a slice or statement row by `type` and `line`
+reaches it. A contract nothing declares is refused (`E1376`); a line the
+type does not declare allocated is refused (`E1377`), because a line a rule
+lowers is paid by the rule and a step paying it would count the cash twice.
 
 ### 10.3 What a step may read
 On top of the ordinary expression environment (§16):
@@ -4353,6 +4364,14 @@ against it by `make ir-schema`.
         "payee_is_account": {
           "type": "boolean",
           "description": "The payee is an ACCOUNT rather than a party. Allocating to a party allocates into that party's account when it has one; naming an account directly is the explicit form, and is how a reserve is funded. Omitted when false, so existing IR stays byte-identical."
+        },
+        "contract": {
+          "$ref": "#/$defs/Qname",
+          "description": "The agreement this step pays, by qualified name — `for contract credit.note.a2`. Present only when the model says so; the step's series then carries the contract and the results graph lists the step under it."
+        },
+        "line": {
+          "type": "string",
+          "description": "Which of the contract's lines this step pays (`principal`, `interest`), which the contract's type must declare as allocated (E1377)."
         }
       }
     },
@@ -6463,8 +6482,12 @@ name = "buyer"
 unbound = true
 ```
 
-A field's type is `decimal`, `integer`, `string`, `date`, or `contract` —
-a reference to a declared contract by name, as a guarantee's `covered`.
+A field's type is `decimal`, `integer`, `string`, `date`, `contract` or
+`account` — the last two references to a declared contract or account by
+name, as a guarantee's `covered` and a note's `principal_account`, which the
+compiler resolves (`E1376`). A rule may lower a FIELD and no stream (an empty
+`stream_name` with a `field_name`): a structured note's claim is one, read by
+the waterfall steps that pay it; such a rule names no line and no category.
 A line may be marked `allocated = true` (a waterfall step pays it; no rule
 may emit it — a refinement may mark an inherited line allocated where its
 form of the agreement is paid by a structure, never the reverse) or
@@ -7607,6 +7630,8 @@ Fields that move:
 - `E1362_SLICE_UNKNOWN_ENTITY` — a slice's `entity` (or `except entity`) names an entity the model does not declare. A slice selects by reference, and a reference is what the compiler can check — refused rather than silently matching nothing.
 - `E1363_SLICE_UNKNOWN_TYPE` — a slice's or a statement row's `type` names an ontology type the active ontology does not define. The hint lists the known contract types; a master type (`Contract.Debt`) matches transitively through `refines`.
 - `E1375_UNKNOWN_LINE_ROLE` — a slice's or a statement row's `line` names a line no contract type in the active ontology produces. A line is a role a master names (`docs/40` §6) — `interest`, `rent`, `proceeds` — and each pack rule names the one it emits, so the hint offers the near miss or lists the lines the vocabulary can produce.
+- `E1376_UNKNOWN_REFERENCE` — a reference names something this model does not declare: a term of type `contract` or `account` (a guarantee's `covered`, a note's `principal_account`), or a waterfall step's `for contract`. Refused with the near miss rather than read as zero; a reference is what the compiler can check (`docs/40` §3).
+- `E1377_STEP_LINE_NOT_ALLOCATED` — a waterfall step pays `for contract <name> line <role>` and the contract's type does not declare that line allocated. A step pays what the structure allocates; a line a rule lowers is paid by the rule, and a step paying it would count the cash twice. The hint lists the type's allocated lines (`docs/40` §6).
 - `E1364_SLICE_CATEGORY_ROOT` — a slice's category selector is not rooted in operating, investing or financing. A selector that could never match anything is a typo, not a choice.
 - `E1371_UNKNOWN_CONTRACT_TERM` — a contract states a term its type does not declare. The roster is the pack type's own terms plus its masters' (`docs/40` §3); a term outside it is read by no rule, so before this check a misspelled `escalation` was a lease that never escalated. The hint names the near miss, or lists the type's terms.
 - `E1372_MISSING_CONTRACT_TERM` — a contract omits a term its type requires, or states none of a group of alternatives (`one_of`: a lease's rent is `rent` or `rent_year`). Checked against the effective roster before any rule is expanded; `E5006` remains the rule-consumption backstop for a term a rule reads with no default.
@@ -8024,6 +8049,7 @@ Credit pack codes:
   integer.
 - `E9020_CREDIT_RATE_FLOOR_ABOVE_CAP`
 - `E9021_CREDIT_INVALID_SHARE` — a participation's `share` is not in (0, 1]. A share above one pays out more than the pool produced; zero is a participation in nothing.
+- `E9022_CREDIT_INVALID_COUPON` — a note's `coupon` is negative.
 
 ---
 
@@ -9326,6 +9352,7 @@ Contract types (a `contract <name>` declaration lowers to streams through the pa
 | `Credit.Contract.FloatingInterestOnlyPool` | `credit.pool_float_io_bullet` | holder | Coupon resets off a declared reference rather than being fixed at origination. |
 | `Credit.Contract.Purchase` | `credit.purchase` | buyer, seller |  |
 | `Credit.Contract.Participation` | `credit.participation` | issuer, holder | A pro rata interest in a pool's cash, passed through to the holder each period — a pass-through certificate or a loan participation. Instanced with the suffix of the pool it participates in. |
+| `Credit.Contract.Note` | `credit.note` | issuer, holder | A class of notes in a securitisation: a face and a coupon, paid interest and principal by the trust's priority of payments. The steps that pay it name it; its claim is face less what the holder's principal account has received. |
 | `Credit.Contract.CleanUpCall` | (election) | holder | The issuer's right to retire the pool once it falls below a stated size. |
 
 Metrics: `domain.credit.interest`, `domain.credit.principal`, `domain.credit.recoveries`, `domain.credit.penalties`, `domain.credit.servicing`, `domain.credit.wal_years`, `domain.credit.collections`, `domain.credit.purchase`, `domain.credit.collections_multiple`
@@ -9337,6 +9364,7 @@ Templates (starting points; the `skeleton` MCP tool assembles them into a compil
 - `credit.pool_float_io_bullet` — Floating-rate IO pool, bullet at maturity
 - `credit.purchase` — Pool purchase price
 - `credit.participation` — Participation (pass-through of a pool's cash)
+- `credit.note` — Structured note (a class paid by the priority of payments)
 
 ### Pack `energy` 0.1.0
 

@@ -111,6 +111,8 @@ register, so it cannot fall behind the language.
 | `E1362_SLICE_UNKNOWN_ENTITY` | Symbols and references | a slice's `entity` (or `except entity`) names an entity the model does not declare. A slice selects by reference, and a reference is what the compiler can check — refused rather than silently matching nothing. |
 | `E1363_SLICE_UNKNOWN_TYPE` | Symbols and references | a slice's or a statement row's `type` names an ontology type the active ontology does not define. The hint lists the known contract types; a master type (`Contract.Debt`) matches transitively through `refines`. |
 | `E1375_UNKNOWN_LINE_ROLE` | Symbols and references | a slice's or a statement row's `line` names a line no contract type in the active ontology produces. A line is a role a master names (`docs/40` §6) — `interest`, `rent`, `proceeds` — and each pack rule names the one it emits, so the hint offers the near miss or lists the lines the vocabulary can produce. |
+| `E1376_UNKNOWN_REFERENCE` | Symbols and references | a reference names something this model does not declare: a term of type `contract` or `account` (a guarantee's `covered`, a note's `principal_account`), or a waterfall step's `for contract`. Refused with the near miss rather than read as zero; a reference is what the compiler can check (`docs/40` §3). |
+| `E1377_STEP_LINE_NOT_ALLOCATED` | Symbols and references | a waterfall step pays `for contract <name> line <role>` and the contract's type does not declare that line allocated. A step pays what the structure allocates; a line a rule lowers is paid by the rule, and a step paying it would count the cash twice. The hint lists the type's allocated lines (`docs/40` §6). |
 | `E1364_SLICE_CATEGORY_ROOT` | Symbols and references | a slice's category selector is not rooted in operating, investing or financing. A selector that could never match anything is a typo, not a choice. |
 | `E1371_UNKNOWN_CONTRACT_TERM` | Symbols and references | a contract states a term its type does not declare. The roster is the pack type's own terms plus its masters' (`docs/40` §3); a term outside it is read by no rule, so before this check a misspelled `escalation` was a lease that never escalated. The hint names the near miss, or lists the type's terms. |
 | `E1372_MISSING_CONTRACT_TERM` | Symbols and references | a contract omits a term its type requires, or states none of a group of alternatives (`one_of`: a lease's rent is `rent` or `rent_year`). Checked against the effective roster before any rule is expanded; `E5006` remains the rule-consumption backstop for a term a rule reads with no default. |
@@ -270,8 +272,9 @@ register, so it cannot fall behind the language.
 | `E9019_CREDIT_INVALID_AGE_MONTHS` | Pack domain validations | `age_months` is the pool's weighted average age at closing. PSA, SDA and the ABS model are all indexed from ORIGINATION, so a seasoned pool starts part-way up the ramp; leaving it at the default 0 on a seasoned pool understates prepayment. Non-negative integer. |
 | `E9020_CREDIT_RATE_FLOOR_ABOVE_CAP` | Pack domain validations |  |
 | `E9021_CREDIT_INVALID_SHARE` | Pack domain validations | a participation's `share` is not in (0, 1]. A share above one pays out more than the pool produced; zero is a participation in nothing. |
+| `E9022_CREDIT_INVALID_COUPON` | Pack domain validations | a note's `coupon` is negative. |
 
-*219 codes.*
+*222 codes.*
 <!-- /cfdl:generated diagnostics-catalog -->
 
 ## Related

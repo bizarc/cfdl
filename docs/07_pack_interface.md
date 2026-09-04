@@ -416,8 +416,12 @@ name = "buyer"
 unbound = true
 ```
 
-A field's type is `decimal`, `integer`, `string`, `date`, or `contract` —
-a reference to a declared contract by name, as a guarantee's `covered`.
+A field's type is `decimal`, `integer`, `string`, `date`, `contract` or
+`account` — the last two references to a declared contract or account by
+name, as a guarantee's `covered` and a note's `principal_account`, which the
+compiler resolves (`E1376`). A rule may lower a FIELD and no stream (an empty
+`stream_name` with a `field_name`): a structured note's claim is one, read by
+the waterfall steps that pay it; such a rule names no line and no category.
 A line may be marked `allocated = true` (a waterfall step pays it; no rule
 may emit it — a refinement may mark an inherited line allocated where its
 form of the agreement is paid by a structure, never the reverse) or
