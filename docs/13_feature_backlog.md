@@ -3113,3 +3113,17 @@ and coupon-on-what-is-outstanding case: today each is a field that copies
 the account first. The silent zero from the `series_sum` spelling is the
 §7.101 defect again, at an account. Related: §7.76, §7.101, the party-owns-
 several-accounts entry above.
+
+### 7.106 MOIC of a zero cash flow is a ratio of sign noise
+
+Belongs with §5, metrics. Found 4 September 2026 when the decimal-to-float
+conversion became deterministic.
+
+`fixtures/valid/credit_participation` passes every dollar of the pool
+through to the holder, so `model.net_cash_flow` is zero in every period.
+`model.moic` published 0.818182 before the conversion change and 0.9 after
+it: both are counts of which periods' zeros carried a negative sign at the
+28th digit. A multiple on money that never moved should be null, as the
+pool factor is before the pool is bought, not a number that changes when a
+float flips its last bit. The same applies to `model.irr` on such a series.
+

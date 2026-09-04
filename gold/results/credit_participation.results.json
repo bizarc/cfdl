@@ -132,7 +132,7 @@
     "status": "ok",
     "metrics": {
       "entity.asset.pool.total": {
-        "amount": -0.0,
+        "amount": 0.0,
         "currency": "USD"
       },
       "entity.party.investors.total": {
@@ -143,7 +143,7 @@
         "amount": 0.0,
         "currency": "USD"
       },
-      "model.moic": 0.818182,
+      "model.moic": 0.9,
       "model.npv": {
         "amount": 0.0,
         "currency": "USD"

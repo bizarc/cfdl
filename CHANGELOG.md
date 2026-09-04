@@ -22,6 +22,16 @@ move only on the two field series' names). A lowering rule may now read
 `field.<name>` for ANY field its contract lowers, not only its own. The
 two interest-only families still carry a survival fraction; they follow.
 
+**Results are the same float on every platform.** A decimal's conversion to
+the `f64` the results carry is now correctly rounded and deterministic
+(`cfdl_calc::decimal_to_f64`): an exact mantissa under an exact power of ten
+is one division, anything else goes through the decimal's text and core's
+correctly rounded parser. `rust_decimal`'s own conversion multiplied by
+`10^scale` and divided back, which is not an identity in floating point and
+depends on how the target computes the power — the level-pay balance, a
+28-digit mantissa, came back one bit apart on Windows. Nine results goldens
+move in their last bit; every benchmark is unchanged.
+
 **Master contract types, stages 3–4 (`docs/40`).** A contract's type is
 resolved once from its declaration and carried: the two-token
 `contract cre.lease_unit tenant_a` states it, the fused spelling still

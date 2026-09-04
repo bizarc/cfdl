@@ -900,8 +900,7 @@ fn fold_or_no_answer(value: Option<f64>) -> SeriesFold {
 }
 
 fn to_f64(d: Decimal) -> Option<f64> {
-    use rust_decimal::prelude::ToPrimitive;
-    d.to_f64()
+    Some(cfdl_calc::decimal_to_f64(d))
 }
 
 /// The quantile function at `share`, clamped flat outside [first, last].
@@ -1093,7 +1092,7 @@ fn domain_to_calc(v: &Value) -> Option<cfdl_calc::Value> {
 
 fn calc_to_domain(v: cfdl_calc::Value) -> Value {
     match v {
-        cfdl_calc::Value::Number(d) => Value::Decimal(d.to_f64().unwrap_or(f64::NAN)),
+        cfdl_calc::Value::Number(d) => Value::Decimal(cfdl_calc::decimal_to_f64(d)),
         cfdl_calc::Value::Bool(b) => Value::Bool(b),
         cfdl_calc::Value::Text(s) => Value::String(s),
         cfdl_calc::Value::Date(d) => Value::Date(Date {

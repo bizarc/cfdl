@@ -1,7 +1,7 @@
 {
   "results_version": "0.13",
   "model_hash": "fa25cd53d479b96635ce90cb698f5572babc05120d12fcbb82d8609fa4fdb966",
-  "ledger_hash": "46cc55b83312bd401188b45b49069a3798708d828f3debef3e77fe17d2adaf6d",
+  "ledger_hash": "2798fb3aecaacc353fff6b669a3fb2e4ac5a3ef35ebb87da8dc8c7bfd80b860f",
   "engine": {
     "name": "cfdl-engine",
     "version": "0.9.0"
@@ -182,8 +182,8 @@
           1002485.4532270713,
           803983.3337202778,
           604488.7036159508,
-          403996.6003611021,
-          202502.03658997884
+          403996.600361102,
+          202502.03658997882
         ]
       },
       "asset.pool.credit_level_pay_balance_pool": {
@@ -197,8 +197,8 @@
           1002485.4532270713,
           803983.3337202778,
           604488.7036159508,
-          403996.6003611021,
-          202502.03658997884
+          403996.600361102,
+          202502.03658997882
         ]
       },
       "domain.credit.balance_outstanding": {
