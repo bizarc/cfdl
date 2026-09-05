@@ -25,10 +25,10 @@ period_tolerance = 1.00
 # is asserted as well as every balance: if the waterfall and the fields drift
 # apart, a cash column breaks even though the grid still matches.
 [tolerance]
-"asset.trust.bal_a1" = 1.00
-"asset.trust.bal_a2" = 1.00
-"asset.trust.bal_a3" = 1.00
-"asset.trust.bal_b" = 1.00
-"asset.trust.bal_c" = 1.00
-"asset.trust.bal_d" = 1.00
-"asset.trust.bal_e" = 1.00
+"container.trust.bal_a1" = 1.00
+"container.trust.bal_a2" = 1.00
+"container.trust.bal_a3" = 1.00
+"container.trust.bal_b" = 1.00
+"container.trust.bal_c" = 1.00
+"container.trust.bal_d" = 1.00
+"container.trust.bal_e" = 1.00

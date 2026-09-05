@@ -8,6 +8,17 @@ This project follows Semantic Versioning: https://semver.org/
 
 ## [Unreleased]
 
+**The clean-up call, written once at the trust.** `americredit_2017_1`
+no longer states its pool balance: the trust is a `Container.SPV` whose
+balance is the fold of its twelve loans' (`prev.container.trust.balance`),
+the class recurrences and the waterfall read it, and the closed forms that
+restated twelve amortizations are gone. The call is one event at the trust
+that repurchases the loans when the opening balance first falls to 10% of
+the cutoff, each loan's machine writing its balance off. Every asserted cell
+is unchanged. `auto_abs_wal`, `auto_abs_speed_050` and `auto_abs_speed_150`
+type their trusts as containers; their exhibits assume no call and they
+model none.
+
 **Every debt opens its balance (`docs/42` §3.5, fourth PR).**
 `cre.permanent_debt`, `cre.construction_loan`, `opco.term_debt` and
 `energy.debt_service` declare `side = "pays"` and open the `balance`

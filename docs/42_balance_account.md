@@ -404,7 +404,11 @@ Separate from the engine restructure, and before it.
 2. **The level-pay loan onto accounts**, replacing the stopgap field.
    Numbers unchanged: the lines are the same, only who sums them changes.
 3. **The clean-up call** on the auto ABS cases and AmeriCredit, reading the
-   trust's fold. The first demonstration.
+   trust's fold. The first demonstration. **Built** (5 September 2026) on
+   AmeriCredit: the pool balance stated nowhere, the trust's fold read by the
+   class recurrences and the waterfall, one event repurchasing the twelve
+   loans, every asserted cell unchanged. The auto ABS exhibits assume no
+   call; those cases type their trusts as containers and model none.
 4. **The note's `claim`** with shortfall and write-down; REMIC tranches as
    notes.
 5. **Construction lending** per §4.2, with a conversion case.

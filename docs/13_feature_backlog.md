@@ -2808,63 +2808,6 @@ Related: §7.38, §7.95, §7.74, `docs/28` §4 and §5.1, `docs/17` §5 and §13
 rule: no class carries a balance, and the published grid is asserted as the
 holders' account balances.
 
-### 7.98 The remaining pool balance is not readable in the causal plane
-
-*Belongs with the language and the credit pack (sections 2 and 5). Found
-converting `benchmarks/credit/auto_abs_tranches`, 2 September 2026; the same
-absence made `americredit_2017_1` restate its pool as a closed form.*
-
-**What could not be expressed:** "what the trust still owns". A container's
-`part of` relation folds its members' CASH — `entity.container.trust.
-net_cash_flow` — and folds nothing else. The credit pack lowers each pool's
-interest, principal, prepayments and servicing as streams and carries one
-piece of state, the surviving fraction, but publishes no balance series per
-pool; the balance is inside every rule's closed form. The reporting plane has
-it — `domain.credit.balance_outstanding` and `domain.credit.pool_factor` are
-statement subtotals a reader can see — and a guard, a field or a step cannot
-read `domain.*`, because a subtotal is a fold over the settled ledger and
-inside the walk the ledger has not settled (`docs/01` §13.1).
-
-**What forced the discovery.** `auto_abs_tranches` does not need the balance:
-a no-loss sequential deal tests nothing against the pool. The next deal shape
-does, and the one case that has it shows the cost: AmeriCredit's
-overcollateralization target and clean-up call both read the pool balance the
-trust carried in, and the trust restates it as `pool_bal`/`pool_prior` — a
-closed form summing twelve pools' amortization arithmetic, written a second
-time beside the contracts that already carry it. Every trust with a target,
-a trigger or a call will need the same field, and every one will restate the
-pack.
-
-**The shape**, in two halves that are separately useful — **the first is
-built for `credit.loan`** (4 September 2026: `credit_level_pay_
-balance_<instance>` fills the `balance` role and every stream reads it; the
-interest-only families follow), the second is open:
-
-1. **The pack publishes the balance as a field.** `credit.loan` and
-   its siblings declare a rule field `credit_<family>_balance{{contract.
-   suffix_ident}}` beside the survival fraction — the opening balance the
-   rules already compute, carried as state so a guard can read
-   `asset.p01.credit_loan_balance_p01` by declared name (the discipline
-   `docs/28` §4 and the withdrawn selector-validation entry both land on: a
-   guard reads a name, never a pattern).
-2. **A container can fold its members' fields.** **Built for accounts, 4
-   September 2026 (`docs/42` §3.4):** a container's account of a name its
-   members carry is their sum, opening and closing, read as
-   `prev.container.trust.balance` and declared nowhere. Fields do not fold;
-   the balance is an account now, which is the one query every SPV asks —
-   what do I hold, and how much of it is left — so this half closes when the
-   credit pack's balance moves onto the account (half 1's remainder).
-
-Until both land, a trust that needs its balance in a guard materializes it
-as a field summing named member fields, which is what AmeriCredit does and
-what `auto_abs_tranches`' NOTES.md records as the gap the clean-up call will
-meet.
-
-Related: §7.88 (a container is not a kind of asset), §7.89 (the relation
-vocabulary), §7.74 (Intex scope — every trigger there reads a pool balance),
-§7.97 (why the balance must come from the collateral and never from the
-waterfall).
-
 ### 7.99 A `reference` names an external series and cannot reach one
 
 *Belongs with the language and engine (section 5), and with the ontology.*

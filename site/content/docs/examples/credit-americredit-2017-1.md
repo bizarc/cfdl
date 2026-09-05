@@ -133,9 +133,8 @@ Every published weighted average life is reproduced, to call and to maturity.
   series or metric to check it against.
 - **Anything after the clean-up call.** The call retires the notes at period 47
   and there is no trust left to distribute from, so the cash columns end there.
-  The model's contracts keep amortizing past it, because a contract runs for
-  its declared term and nothing can end it early; the certificateholder absorbs
-  what they produce and `model.total` includes it.
+  The loans are repurchased at the next period — one event at the trust,
+  reading the balance it holds — and produce nothing more inside the model.
 - **Mutation testing.** `docs/20` §3.3 asks for it and it has not been run. The
   hole `docs/20` §3.2 warns about is present by construction here: the
   certificateholder's step-down release absorbs whatever the notes are not
@@ -195,52 +194,33 @@ time calendar monthly from 2017-01 for 71
 // period inside the waterfall. They are the same arithmetic and they must stay
 // that way. Recorded as a capability gap; see NOTES.md.
 //
-// The three fields that carry the collateral — `pool_bal`, `pool_prior` and
-// `pool_int` — are closed forms of the twelve assumed pools rather than
-// recurrences, for the same reason: a field cannot read the pack's own
-// collateral series. The pack contracts below produce the cash the waterfall
-// allocates, so the two are independent statements of the same pool and
-// `expected.csv` pins both.
+// THE POOL BALANCE IS NOT STATED HERE AT ALL. Each loan's balance is an
+// account its contract opens and its own collections move (docs/42), and the
+// trust's balance is the fold of its twelve loans' through `part of` — read
+// as `prev.container.trust.balance`, the balance the pool carried into the
+// period. The balance after this period's collections is that opening less
+// the principal the loans paid this period, which the waterfall computes from
+// the loans' own series where the prospectus measures against it. The
+// interest and servicing bases stay as closed forms (`pool_int`, `pool_fee`):
+// they need the balance at each loan's own accrual dates, which is the
+// pack's arithmetic and not a sum of accounts.
 //
 // Reference: EXTERNAL. Rule 424(b)(5) prospectus dated 21 February 2017,
 // pp. 57-62 — see SOURCE.md. Run at 1.50% ABS; the other three published
 // speeds are this model with one term changed.
 
 
-entity asset trust : Credit.Asset.Loan {
-  collateral_type = "auto"
-
-  // The pool after this period's collections. Period 0 is the
-  // January collection period, before any distribution.
-  pool_bal init 1011969929.28
-           next if((time.t) <= 0.0, 1011969929.28, 999357.60 * (max(1.0 - 0.015 * (53.0 + (time.t)), 0.0) / 0.2050000000) * (pv(0.0131575000, max(61.0 - (53.0 + (time.t)), 0.0), -1.0) / pv(0.0131575000, 8.0, -1.0))
-           + 18401017.06 * (max(1.0 - 0.015 * (53.0 + (time.t)), 0.0) / 0.2050000000) * (pv(0.0111400000, max(72.0 - (53.0 + (time.t)), 0.0), -1.0) / pv(0.0111400000, 19.0, -1.0))
-           + 3063342.92 * (max(1.0 - 0.015 * (38.0 + (time.t)), 0.0) / 0.4300000000) * (pv(0.0115650000, max(65.0 - (38.0 + (time.t)), 0.0), -1.0) / pv(0.0115650000, 27.0, -1.0))
-           + 2629247.98 * (max(1.0 - 0.015 * (2.0 + (time.t)), 0.0) / 0.9700000000) * (pv(0.0102091667, max(48.0 - (2.0 + (time.t)), 0.0), -1.0) / pv(0.0102091667, 46.0, -1.0))
-           + 21301021.93 * (max(1.0 - 0.015 * (3.0 + (time.t)), 0.0) / 0.9550000000) * (pv(0.0107941667, max(61.0 - (3.0 + (time.t)), 0.0), -1.0) / pv(0.0107941667, 58.0, -1.0))
-           + 285432214.08 * (max(1.0 - 0.015 * (2.0 + (time.t)), 0.0) / 0.9700000000) * (pv(0.0105358333, max(72.0 - (2.0 + (time.t)), 0.0), -1.0) / pv(0.0105358333, 70.0, -1.0))
-           + 2076350.36 * (max(1.0 - 0.015 * (54.0 + (time.t)), 0.0) / 0.2050000000) * (pv(0.0129500000, max(61.0 - (54.0 + (time.t)), 0.0), -1.0) / pv(0.0129500000, 8.0, -1.0))
-           + 37654758.33 * (max(1.0 - 0.015 * (54.0 + (time.t)), 0.0) / 0.2050000000) * (pv(0.0114466667, max(72.0 - (54.0 + (time.t)), 0.0), -1.0) / pv(0.0114466667, 19.0, -1.0))
-           + 9848795.79 * (max(1.0 - 0.015 * (41.0 + (time.t)), 0.0) / 0.4000000000) * (pv(0.0115608333, max(67.0 - (41.0 + (time.t)), 0.0), -1.0) / pv(0.0115608333, 27.0, -1.0))
-           + 4675311.33 * (max(1.0 - 0.015 * (4.0 + (time.t)), 0.0) / 0.9550000000) * (pv(0.0106325000, max(49.0 - (4.0 + (time.t)), 0.0), -1.0) / pv(0.0106325000, 46.0, -1.0))
-           + 43859779.20 * (max(1.0 - 0.015 * (4.0 + (time.t)), 0.0) / 0.9550000000) * (pv(0.0109775000, max(61.0 - (4.0 + (time.t)), 0.0), -1.0) / pv(0.0109775000, 58.0, -1.0))
-           + 582028732.70 * (max(1.0 - 0.015 * (3.0 + (time.t)), 0.0) / 0.9700000000) * (pv(0.0104741667, max(72.0 - (3.0 + (time.t)), 0.0), -1.0) / pv(0.0104741667, 70.0, -1.0)))
-
-
-  // The same, one period back: what the pool carried into the period.
+entity container trust : Container.SPV {
+  // What the pool carried into the period: the trust's balance is the fold of
+  // its twelve loans' balances (docs/42 §3.4), read as the prior close. The
+  // field exists so the class balances, which read one period back, can see
+  // what the pool carried into the period before.
+  // At the first distribution the pool "carried in" is the cutoff balance:
+  // the January loans have already paid once in period 0, and that payment
+  // belongs to the first distribution rather than to the balance the classes
+  // are measured against.
   pool_prior init 1011969929.28
-             next if((time.t - 1.0) <= 0.0, 1011969929.28, 999357.60 * (max(1.0 - 0.015 * (53.0 + (time.t - 1.0)), 0.0) / 0.2050000000) * (pv(0.0131575000, max(61.0 - (53.0 + (time.t - 1.0)), 0.0), -1.0) / pv(0.0131575000, 8.0, -1.0))
-           + 18401017.06 * (max(1.0 - 0.015 * (53.0 + (time.t - 1.0)), 0.0) / 0.2050000000) * (pv(0.0111400000, max(72.0 - (53.0 + (time.t - 1.0)), 0.0), -1.0) / pv(0.0111400000, 19.0, -1.0))
-           + 3063342.92 * (max(1.0 - 0.015 * (38.0 + (time.t - 1.0)), 0.0) / 0.4300000000) * (pv(0.0115650000, max(65.0 - (38.0 + (time.t - 1.0)), 0.0), -1.0) / pv(0.0115650000, 27.0, -1.0))
-           + 2629247.98 * (max(1.0 - 0.015 * (2.0 + (time.t - 1.0)), 0.0) / 0.9700000000) * (pv(0.0102091667, max(48.0 - (2.0 + (time.t - 1.0)), 0.0), -1.0) / pv(0.0102091667, 46.0, -1.0))
-           + 21301021.93 * (max(1.0 - 0.015 * (3.0 + (time.t - 1.0)), 0.0) / 0.9550000000) * (pv(0.0107941667, max(61.0 - (3.0 + (time.t - 1.0)), 0.0), -1.0) / pv(0.0107941667, 58.0, -1.0))
-           + 285432214.08 * (max(1.0 - 0.015 * (2.0 + (time.t - 1.0)), 0.0) / 0.9700000000) * (pv(0.0105358333, max(72.0 - (2.0 + (time.t - 1.0)), 0.0), -1.0) / pv(0.0105358333, 70.0, -1.0))
-           + 2076350.36 * (max(1.0 - 0.015 * (54.0 + (time.t - 1.0)), 0.0) / 0.2050000000) * (pv(0.0129500000, max(61.0 - (54.0 + (time.t - 1.0)), 0.0), -1.0) / pv(0.0129500000, 8.0, -1.0))
-           + 37654758.33 * (max(1.0 - 0.015 * (54.0 + (time.t - 1.0)), 0.0) / 0.2050000000) * (pv(0.0114466667, max(72.0 - (54.0 + (time.t - 1.0)), 0.0), -1.0) / pv(0.0114466667, 19.0, -1.0))
-           + 9848795.79 * (max(1.0 - 0.015 * (41.0 + (time.t - 1.0)), 0.0) / 0.4000000000) * (pv(0.0115608333, max(67.0 - (41.0 + (time.t - 1.0)), 0.0), -1.0) / pv(0.0115608333, 27.0, -1.0))
-           + 4675311.33 * (max(1.0 - 0.015 * (4.0 + (time.t - 1.0)), 0.0) / 0.9550000000) * (pv(0.0106325000, max(49.0 - (4.0 + (time.t - 1.0)), 0.0), -1.0) / pv(0.0106325000, 46.0, -1.0))
-           + 43859779.20 * (max(1.0 - 0.015 * (4.0 + (time.t - 1.0)), 0.0) / 0.9550000000) * (pv(0.0109775000, max(61.0 - (4.0 + (time.t - 1.0)), 0.0), -1.0) / pv(0.0109775000, 58.0, -1.0))
-           + 582028732.70 * (max(1.0 - 0.015 * (3.0 + (time.t - 1.0)), 0.0) / 0.9700000000) * (pv(0.0104741667, max(72.0 - (3.0 + (time.t - 1.0)), 0.0), -1.0) / pv(0.0104741667, 70.0, -1.0)))
+             next if(time.t <= 1.0, prev, prev.container.trust.balance)
 
 
   // Interest collected for this distribution. The January pools
@@ -285,20 +265,20 @@ entity asset trust : Credit.Asset.Loan {
   // computed here because the waterfall cannot tell it.
   bal_a1 init 182000000.00
        next if(time.t <= 1.0, prev,
-                max(prev - (min(max((if((prev.asset.trust.pool_bal) <= 101196992.93, (prev.asset.trust.bal_a1 + prev.asset.trust.bal_a2 + prev.asset.trust.bal_a3 + prev.asset.trust.bal_b + prev.asset.trust.bal_c + prev.asset.trust.bal_d + prev.asset.trust.bal_e),
-         max((prev.asset.trust.bal_a1 + prev.asset.trust.bal_a2 + prev.asset.trust.bal_a3 + prev.asset.trust.bal_b + prev.asset.trust.bal_c + prev.asset.trust.bal_d + prev.asset.trust.bal_e) - (min((prev.asset.trust.pool_bal) - 5059849.65,
-          max(((prev.asset.trust.pool_bal) - max(0.1475 * (prev.asset.trust.pool_bal) - prev.reserve, 0.0)),
-              (prev.asset.trust.bal_a1 + prev.asset.trust.bal_a2 + prev.asset.trust.bal_a3 + prev.asset.trust.bal_b + prev.asset.trust.bal_c + prev.asset.trust.bal_d + prev.asset.trust.bal_e) - ((prev.asset.trust.pool_prior) - (prev.asset.trust.pool_bal)) - max(((prev.asset.trust.pool_int)
-           - (prev.asset.trust.pool_fee) * 0.0018750000
+                max(prev - (min(max((if((prev.container.trust.balance) <= 101196992.93, (prev.container.trust.bal_a1 + prev.container.trust.bal_a2 + prev.container.trust.bal_a3 + prev.container.trust.bal_b + prev.container.trust.bal_c + prev.container.trust.bal_d + prev.container.trust.bal_e),
+         max((prev.container.trust.bal_a1 + prev.container.trust.bal_a2 + prev.container.trust.bal_a3 + prev.container.trust.bal_b + prev.container.trust.bal_c + prev.container.trust.bal_d + prev.container.trust.bal_e) - (min((prev.container.trust.balance) - 5059849.65,
+          max(((prev.container.trust.balance) - max(0.1475 * (prev.container.trust.balance) - prev.reserve, 0.0)),
+              (prev.container.trust.bal_a1 + prev.container.trust.bal_a2 + prev.container.trust.bal_a3 + prev.container.trust.bal_b + prev.container.trust.bal_c + prev.container.trust.bal_d + prev.container.trust.bal_e) - ((prev.container.trust.pool_prior) - (prev.container.trust.balance)) - max(((prev.container.trust.pool_int)
+           - (prev.container.trust.pool_fee) * 0.0018750000
            - 625.0
-           - (prev.asset.trust.bal_a1 * 0.0007916667
-           + prev.asset.trust.bal_a2 * 0.0011331000
-           + prev.asset.trust.bal_a3 * 0.0015916667
-           + prev.asset.trust.bal_b * 0.0019583333
-           + prev.asset.trust.bal_c * 0.0024000000
-           + prev.asset.trust.bal_d * 0.0026916667
-           + prev.asset.trust.bal_e * 0.0000000000)), 0.0)))), 0.0)))
-           - (0.0), 0.0), prev.asset.trust.bal_a1)), 0.0))
+           - (prev.container.trust.bal_a1 * 0.0007916667
+           + prev.container.trust.bal_a2 * 0.0011331000
+           + prev.container.trust.bal_a3 * 0.0015916667
+           + prev.container.trust.bal_b * 0.0019583333
+           + prev.container.trust.bal_c * 0.0024000000
+           + prev.container.trust.bal_d * 0.0026916667
+           + prev.container.trust.bal_e * 0.0000000000)), 0.0)))), 0.0)))
+           - (0.0), 0.0), prev.container.trust.bal_a1)), 0.0))
 
 
   // Class A-2, the balance it carries into the distribution date. It is what
@@ -306,20 +286,20 @@ entity asset trust : Credit.Asset.Loan {
   // computed here because the waterfall cannot tell it.
   bal_a2 init 305000000.00
        next if(time.t <= 1.0, prev,
-                max(prev - (min(max((if((prev.asset.trust.pool_bal) <= 101196992.93, (prev.asset.trust.bal_a1 + prev.asset.trust.bal_a2 + prev.asset.trust.bal_a3 + prev.asset.trust.bal_b + prev.asset.trust.bal_c + prev.asset.trust.bal_d + prev.asset.trust.bal_e),
-         max((prev.asset.trust.bal_a1 + prev.asset.trust.bal_a2 + prev.asset.trust.bal_a3 + prev.asset.trust.bal_b + prev.asset.trust.bal_c + prev.asset.trust.bal_d + prev.asset.trust.bal_e) - (min((prev.asset.trust.pool_bal) - 5059849.65,
-          max(((prev.asset.trust.pool_bal) - max(0.1475 * (prev.asset.trust.pool_bal) - prev.reserve, 0.0)),
-              (prev.asset.trust.bal_a1 + prev.asset.trust.bal_a2 + prev.asset.trust.bal_a3 + prev.asset.trust.bal_b + prev.asset.trust.bal_c + prev.asset.trust.bal_d + prev.asset.trust.bal_e) - ((prev.asset.trust.pool_prior) - (prev.asset.trust.pool_bal)) - max(((prev.asset.trust.pool_int)
-           - (prev.asset.trust.pool_fee) * 0.0018750000
+                max(prev - (min(max((if((prev.container.trust.balance) <= 101196992.93, (prev.container.trust.bal_a1 + prev.container.trust.bal_a2 + prev.container.trust.bal_a3 + prev.container.trust.bal_b + prev.container.trust.bal_c + prev.container.trust.bal_d + prev.container.trust.bal_e),
+         max((prev.container.trust.bal_a1 + prev.container.trust.bal_a2 + prev.container.trust.bal_a3 + prev.container.trust.bal_b + prev.container.trust.bal_c + prev.container.trust.bal_d + prev.container.trust.bal_e) - (min((prev.container.trust.balance) - 5059849.65,
+          max(((prev.container.trust.balance) - max(0.1475 * (prev.container.trust.balance) - prev.reserve, 0.0)),
+              (prev.container.trust.bal_a1 + prev.container.trust.bal_a2 + prev.container.trust.bal_a3 + prev.container.trust.bal_b + prev.container.trust.bal_c + prev.container.trust.bal_d + prev.container.trust.bal_e) - ((prev.container.trust.pool_prior) - (prev.container.trust.balance)) - max(((prev.container.trust.pool_int)
+           - (prev.container.trust.pool_fee) * 0.0018750000
            - 625.0
-           - (prev.asset.trust.bal_a1 * 0.0007916667
-           + prev.asset.trust.bal_a2 * 0.0011331000
-           + prev.asset.trust.bal_a3 * 0.0015916667
-           + prev.asset.trust.bal_b * 0.0019583333
-           + prev.asset.trust.bal_c * 0.0024000000
-           + prev.asset.trust.bal_d * 0.0026916667
-           + prev.asset.trust.bal_e * 0.0000000000)), 0.0)))), 0.0)))
-           - (prev.asset.trust.bal_a1), 0.0), prev.asset.trust.bal_a2)), 0.0))
+           - (prev.container.trust.bal_a1 * 0.0007916667
+           + prev.container.trust.bal_a2 * 0.0011331000
+           + prev.container.trust.bal_a3 * 0.0015916667
+           + prev.container.trust.bal_b * 0.0019583333
+           + prev.container.trust.bal_c * 0.0024000000
+           + prev.container.trust.bal_d * 0.0026916667
+           + prev.container.trust.bal_e * 0.0000000000)), 0.0)))), 0.0)))
+           - (prev.container.trust.bal_a1), 0.0), prev.container.trust.bal_a2)), 0.0))
 
 
   // Class A-3, the balance it carries into the distribution date. It is what
@@ -327,20 +307,20 @@ entity asset trust : Credit.Asset.Loan {
   // computed here because the waterfall cannot tell it.
   bal_a3 init 189000000.00
        next if(time.t <= 1.0, prev,
-                max(prev - (min(max((if((prev.asset.trust.pool_bal) <= 101196992.93, (prev.asset.trust.bal_a1 + prev.asset.trust.bal_a2 + prev.asset.trust.bal_a3 + prev.asset.trust.bal_b + prev.asset.trust.bal_c + prev.asset.trust.bal_d + prev.asset.trust.bal_e),
-         max((prev.asset.trust.bal_a1 + prev.asset.trust.bal_a2 + prev.asset.trust.bal_a3 + prev.asset.trust.bal_b + prev.asset.trust.bal_c + prev.asset.trust.bal_d + prev.asset.trust.bal_e) - (min((prev.asset.trust.pool_bal) - 5059849.65,
-          max(((prev.asset.trust.pool_bal) - max(0.1475 * (prev.asset.trust.pool_bal) - prev.reserve, 0.0)),
-              (prev.asset.trust.bal_a1 + prev.asset.trust.bal_a2 + prev.asset.trust.bal_a3 + prev.asset.trust.bal_b + prev.asset.trust.bal_c + prev.asset.trust.bal_d + prev.asset.trust.bal_e) - ((prev.asset.trust.pool_prior) - (prev.asset.trust.pool_bal)) - max(((prev.asset.trust.pool_int)
-           - (prev.asset.trust.pool_fee) * 0.0018750000
+                max(prev - (min(max((if((prev.container.trust.balance) <= 101196992.93, (prev.container.trust.bal_a1 + prev.container.trust.bal_a2 + prev.container.trust.bal_a3 + prev.container.trust.bal_b + prev.container.trust.bal_c + prev.container.trust.bal_d + prev.container.trust.bal_e),
+         max((prev.container.trust.bal_a1 + prev.container.trust.bal_a2 + prev.container.trust.bal_a3 + prev.container.trust.bal_b + prev.container.trust.bal_c + prev.container.trust.bal_d + prev.container.trust.bal_e) - (min((prev.container.trust.balance) - 5059849.65,
+          max(((prev.container.trust.balance) - max(0.1475 * (prev.container.trust.balance) - prev.reserve, 0.0)),
+              (prev.container.trust.bal_a1 + prev.container.trust.bal_a2 + prev.container.trust.bal_a3 + prev.container.trust.bal_b + prev.container.trust.bal_c + prev.container.trust.bal_d + prev.container.trust.bal_e) - ((prev.container.trust.pool_prior) - (prev.container.trust.balance)) - max(((prev.container.trust.pool_int)
+           - (prev.container.trust.pool_fee) * 0.0018750000
            - 625.0
-           - (prev.asset.trust.bal_a1 * 0.0007916667
-           + prev.asset.trust.bal_a2 * 0.0011331000
-           + prev.asset.trust.bal_a3 * 0.0015916667
-           + prev.asset.trust.bal_b * 0.0019583333
-           + prev.asset.trust.bal_c * 0.0024000000
-           + prev.asset.trust.bal_d * 0.0026916667
-           + prev.asset.trust.bal_e * 0.0000000000)), 0.0)))), 0.0)))
-           - (prev.asset.trust.bal_a1 + prev.asset.trust.bal_a2), 0.0), prev.asset.trust.bal_a3)), 0.0))
+           - (prev.container.trust.bal_a1 * 0.0007916667
+           + prev.container.trust.bal_a2 * 0.0011331000
+           + prev.container.trust.bal_a3 * 0.0015916667
+           + prev.container.trust.bal_b * 0.0019583333
+           + prev.container.trust.bal_c * 0.0024000000
+           + prev.container.trust.bal_d * 0.0026916667
+           + prev.container.trust.bal_e * 0.0000000000)), 0.0)))), 0.0)))
+           - (prev.container.trust.bal_a1 + prev.container.trust.bal_a2), 0.0), prev.container.trust.bal_a3)), 0.0))
 
 
   // Class B, the balance it carries into the distribution date. It is what
@@ -348,20 +328,20 @@ entity asset trust : Credit.Asset.Loan {
   // computed here because the waterfall cannot tell it.
   bal_b init 73370000.00
        next if(time.t <= 1.0, prev,
-                max(prev - (min(max((if((prev.asset.trust.pool_bal) <= 101196992.93, (prev.asset.trust.bal_a1 + prev.asset.trust.bal_a2 + prev.asset.trust.bal_a3 + prev.asset.trust.bal_b + prev.asset.trust.bal_c + prev.asset.trust.bal_d + prev.asset.trust.bal_e),
-         max((prev.asset.trust.bal_a1 + prev.asset.trust.bal_a2 + prev.asset.trust.bal_a3 + prev.asset.trust.bal_b + prev.asset.trust.bal_c + prev.asset.trust.bal_d + prev.asset.trust.bal_e) - (min((prev.asset.trust.pool_bal) - 5059849.65,
-          max(((prev.asset.trust.pool_bal) - max(0.1475 * (prev.asset.trust.pool_bal) - prev.reserve, 0.0)),
-              (prev.asset.trust.bal_a1 + prev.asset.trust.bal_a2 + prev.asset.trust.bal_a3 + prev.asset.trust.bal_b + prev.asset.trust.bal_c + prev.asset.trust.bal_d + prev.asset.trust.bal_e) - ((prev.asset.trust.pool_prior) - (prev.asset.trust.pool_bal)) - max(((prev.asset.trust.pool_int)
-           - (prev.asset.trust.pool_fee) * 0.0018750000
+                max(prev - (min(max((if((prev.container.trust.balance) <= 101196992.93, (prev.container.trust.bal_a1 + prev.container.trust.bal_a2 + prev.container.trust.bal_a3 + prev.container.trust.bal_b + prev.container.trust.bal_c + prev.container.trust.bal_d + prev.container.trust.bal_e),
+         max((prev.container.trust.bal_a1 + prev.container.trust.bal_a2 + prev.container.trust.bal_a3 + prev.container.trust.bal_b + prev.container.trust.bal_c + prev.container.trust.bal_d + prev.container.trust.bal_e) - (min((prev.container.trust.balance) - 5059849.65,
+          max(((prev.container.trust.balance) - max(0.1475 * (prev.container.trust.balance) - prev.reserve, 0.0)),
+              (prev.container.trust.bal_a1 + prev.container.trust.bal_a2 + prev.container.trust.bal_a3 + prev.container.trust.bal_b + prev.container.trust.bal_c + prev.container.trust.bal_d + prev.container.trust.bal_e) - ((prev.container.trust.pool_prior) - (prev.container.trust.balance)) - max(((prev.container.trust.pool_int)
+           - (prev.container.trust.pool_fee) * 0.0018750000
            - 625.0
-           - (prev.asset.trust.bal_a1 * 0.0007916667
-           + prev.asset.trust.bal_a2 * 0.0011331000
-           + prev.asset.trust.bal_a3 * 0.0015916667
-           + prev.asset.trust.bal_b * 0.0019583333
-           + prev.asset.trust.bal_c * 0.0024000000
-           + prev.asset.trust.bal_d * 0.0026916667
-           + prev.asset.trust.bal_e * 0.0000000000)), 0.0)))), 0.0)))
-           - (prev.asset.trust.bal_a1 + prev.asset.trust.bal_a2 + prev.asset.trust.bal_a3), 0.0), prev.asset.trust.bal_b)), 0.0))
+           - (prev.container.trust.bal_a1 * 0.0007916667
+           + prev.container.trust.bal_a2 * 0.0011331000
+           + prev.container.trust.bal_a3 * 0.0015916667
+           + prev.container.trust.bal_b * 0.0019583333
+           + prev.container.trust.bal_c * 0.0024000000
+           + prev.container.trust.bal_d * 0.0026916667
+           + prev.container.trust.bal_e * 0.0000000000)), 0.0)))), 0.0)))
+           - (prev.container.trust.bal_a1 + prev.container.trust.bal_a2 + prev.container.trust.bal_a3), 0.0), prev.container.trust.bal_b)), 0.0))
 
 
   // Class C, the balance it carries into the distribution date. It is what
@@ -369,20 +349,20 @@ entity asset trust : Credit.Asset.Loan {
   // computed here because the waterfall cannot tell it.
   bal_c init 91080000.00
        next if(time.t <= 1.0, prev,
-                max(prev - (min(max((if((prev.asset.trust.pool_bal) <= 101196992.93, (prev.asset.trust.bal_a1 + prev.asset.trust.bal_a2 + prev.asset.trust.bal_a3 + prev.asset.trust.bal_b + prev.asset.trust.bal_c + prev.asset.trust.bal_d + prev.asset.trust.bal_e),
-         max((prev.asset.trust.bal_a1 + prev.asset.trust.bal_a2 + prev.asset.trust.bal_a3 + prev.asset.trust.bal_b + prev.asset.trust.bal_c + prev.asset.trust.bal_d + prev.asset.trust.bal_e) - (min((prev.asset.trust.pool_bal) - 5059849.65,
-          max(((prev.asset.trust.pool_bal) - max(0.1475 * (prev.asset.trust.pool_bal) - prev.reserve, 0.0)),
-              (prev.asset.trust.bal_a1 + prev.asset.trust.bal_a2 + prev.asset.trust.bal_a3 + prev.asset.trust.bal_b + prev.asset.trust.bal_c + prev.asset.trust.bal_d + prev.asset.trust.bal_e) - ((prev.asset.trust.pool_prior) - (prev.asset.trust.pool_bal)) - max(((prev.asset.trust.pool_int)
-           - (prev.asset.trust.pool_fee) * 0.0018750000
+                max(prev - (min(max((if((prev.container.trust.balance) <= 101196992.93, (prev.container.trust.bal_a1 + prev.container.trust.bal_a2 + prev.container.trust.bal_a3 + prev.container.trust.bal_b + prev.container.trust.bal_c + prev.container.trust.bal_d + prev.container.trust.bal_e),
+         max((prev.container.trust.bal_a1 + prev.container.trust.bal_a2 + prev.container.trust.bal_a3 + prev.container.trust.bal_b + prev.container.trust.bal_c + prev.container.trust.bal_d + prev.container.trust.bal_e) - (min((prev.container.trust.balance) - 5059849.65,
+          max(((prev.container.trust.balance) - max(0.1475 * (prev.container.trust.balance) - prev.reserve, 0.0)),
+              (prev.container.trust.bal_a1 + prev.container.trust.bal_a2 + prev.container.trust.bal_a3 + prev.container.trust.bal_b + prev.container.trust.bal_c + prev.container.trust.bal_d + prev.container.trust.bal_e) - ((prev.container.trust.pool_prior) - (prev.container.trust.balance)) - max(((prev.container.trust.pool_int)
+           - (prev.container.trust.pool_fee) * 0.0018750000
            - 625.0
-           - (prev.asset.trust.bal_a1 * 0.0007916667
-           + prev.asset.trust.bal_a2 * 0.0011331000
-           + prev.asset.trust.bal_a3 * 0.0015916667
-           + prev.asset.trust.bal_b * 0.0019583333
-           + prev.asset.trust.bal_c * 0.0024000000
-           + prev.asset.trust.bal_d * 0.0026916667
-           + prev.asset.trust.bal_e * 0.0000000000)), 0.0)))), 0.0)))
-           - (prev.asset.trust.bal_a1 + prev.asset.trust.bal_a2 + prev.asset.trust.bal_a3 + prev.asset.trust.bal_b), 0.0), prev.asset.trust.bal_c)), 0.0))
+           - (prev.container.trust.bal_a1 * 0.0007916667
+           + prev.container.trust.bal_a2 * 0.0011331000
+           + prev.container.trust.bal_a3 * 0.0015916667
+           + prev.container.trust.bal_b * 0.0019583333
+           + prev.container.trust.bal_c * 0.0024000000
+           + prev.container.trust.bal_d * 0.0026916667
+           + prev.container.trust.bal_e * 0.0000000000)), 0.0)))), 0.0)))
+           - (prev.container.trust.bal_a1 + prev.container.trust.bal_a2 + prev.container.trust.bal_a3 + prev.container.trust.bal_b), 0.0), prev.container.trust.bal_c)), 0.0))
 
 
   // Class D, the balance it carries into the distribution date. It is what
@@ -390,20 +370,20 @@ entity asset trust : Credit.Asset.Loan {
   // computed here because the waterfall cannot tell it.
   bal_d init 89550000.00
        next if(time.t <= 1.0, prev,
-                max(prev - (min(max((if((prev.asset.trust.pool_bal) <= 101196992.93, (prev.asset.trust.bal_a1 + prev.asset.trust.bal_a2 + prev.asset.trust.bal_a3 + prev.asset.trust.bal_b + prev.asset.trust.bal_c + prev.asset.trust.bal_d + prev.asset.trust.bal_e),
-         max((prev.asset.trust.bal_a1 + prev.asset.trust.bal_a2 + prev.asset.trust.bal_a3 + prev.asset.trust.bal_b + prev.asset.trust.bal_c + prev.asset.trust.bal_d + prev.asset.trust.bal_e) - (min((prev.asset.trust.pool_bal) - 5059849.65,
-          max(((prev.asset.trust.pool_bal) - max(0.1475 * (prev.asset.trust.pool_bal) - prev.reserve, 0.0)),
-              (prev.asset.trust.bal_a1 + prev.asset.trust.bal_a2 + prev.asset.trust.bal_a3 + prev.asset.trust.bal_b + prev.asset.trust.bal_c + prev.asset.trust.bal_d + prev.asset.trust.bal_e) - ((prev.asset.trust.pool_prior) - (prev.asset.trust.pool_bal)) - max(((prev.asset.trust.pool_int)
-           - (prev.asset.trust.pool_fee) * 0.0018750000
+                max(prev - (min(max((if((prev.container.trust.balance) <= 101196992.93, (prev.container.trust.bal_a1 + prev.container.trust.bal_a2 + prev.container.trust.bal_a3 + prev.container.trust.bal_b + prev.container.trust.bal_c + prev.container.trust.bal_d + prev.container.trust.bal_e),
+         max((prev.container.trust.bal_a1 + prev.container.trust.bal_a2 + prev.container.trust.bal_a3 + prev.container.trust.bal_b + prev.container.trust.bal_c + prev.container.trust.bal_d + prev.container.trust.bal_e) - (min((prev.container.trust.balance) - 5059849.65,
+          max(((prev.container.trust.balance) - max(0.1475 * (prev.container.trust.balance) - prev.reserve, 0.0)),
+              (prev.container.trust.bal_a1 + prev.container.trust.bal_a2 + prev.container.trust.bal_a3 + prev.container.trust.bal_b + prev.container.trust.bal_c + prev.container.trust.bal_d + prev.container.trust.bal_e) - ((prev.container.trust.pool_prior) - (prev.container.trust.balance)) - max(((prev.container.trust.pool_int)
+           - (prev.container.trust.pool_fee) * 0.0018750000
            - 625.0
-           - (prev.asset.trust.bal_a1 * 0.0007916667
-           + prev.asset.trust.bal_a2 * 0.0011331000
-           + prev.asset.trust.bal_a3 * 0.0015916667
-           + prev.asset.trust.bal_b * 0.0019583333
-           + prev.asset.trust.bal_c * 0.0024000000
-           + prev.asset.trust.bal_d * 0.0026916667
-           + prev.asset.trust.bal_e * 0.0000000000)), 0.0)))), 0.0)))
-           - (prev.asset.trust.bal_a1 + prev.asset.trust.bal_a2 + prev.asset.trust.bal_a3 + prev.asset.trust.bal_b + prev.asset.trust.bal_c), 0.0), prev.asset.trust.bal_d)), 0.0))
+           - (prev.container.trust.bal_a1 * 0.0007916667
+           + prev.container.trust.bal_a2 * 0.0011331000
+           + prev.container.trust.bal_a3 * 0.0015916667
+           + prev.container.trust.bal_b * 0.0019583333
+           + prev.container.trust.bal_c * 0.0024000000
+           + prev.container.trust.bal_d * 0.0026916667
+           + prev.container.trust.bal_e * 0.0000000000)), 0.0)))), 0.0)))
+           - (prev.container.trust.bal_a1 + prev.container.trust.bal_a2 + prev.container.trust.bal_a3 + prev.container.trust.bal_b + prev.container.trust.bal_c), 0.0), prev.container.trust.bal_d)), 0.0))
 
 
   // Class E, the balance it carries into the distribution date. It is what
@@ -411,81 +391,81 @@ entity asset trust : Credit.Asset.Loan {
   // computed here because the waterfall cannot tell it.
   bal_e init 23780000.00
        next if(time.t <= 1.0, prev,
-                max(prev - (min(max((if((prev.asset.trust.pool_bal) <= 101196992.93, (prev.asset.trust.bal_a1 + prev.asset.trust.bal_a2 + prev.asset.trust.bal_a3 + prev.asset.trust.bal_b + prev.asset.trust.bal_c + prev.asset.trust.bal_d + prev.asset.trust.bal_e),
-         max((prev.asset.trust.bal_a1 + prev.asset.trust.bal_a2 + prev.asset.trust.bal_a3 + prev.asset.trust.bal_b + prev.asset.trust.bal_c + prev.asset.trust.bal_d + prev.asset.trust.bal_e) - (min((prev.asset.trust.pool_bal) - 5059849.65,
-          max(((prev.asset.trust.pool_bal) - max(0.1475 * (prev.asset.trust.pool_bal) - prev.reserve, 0.0)),
-              (prev.asset.trust.bal_a1 + prev.asset.trust.bal_a2 + prev.asset.trust.bal_a3 + prev.asset.trust.bal_b + prev.asset.trust.bal_c + prev.asset.trust.bal_d + prev.asset.trust.bal_e) - ((prev.asset.trust.pool_prior) - (prev.asset.trust.pool_bal)) - max(((prev.asset.trust.pool_int)
-           - (prev.asset.trust.pool_fee) * 0.0018750000
+                max(prev - (min(max((if((prev.container.trust.balance) <= 101196992.93, (prev.container.trust.bal_a1 + prev.container.trust.bal_a2 + prev.container.trust.bal_a3 + prev.container.trust.bal_b + prev.container.trust.bal_c + prev.container.trust.bal_d + prev.container.trust.bal_e),
+         max((prev.container.trust.bal_a1 + prev.container.trust.bal_a2 + prev.container.trust.bal_a3 + prev.container.trust.bal_b + prev.container.trust.bal_c + prev.container.trust.bal_d + prev.container.trust.bal_e) - (min((prev.container.trust.balance) - 5059849.65,
+          max(((prev.container.trust.balance) - max(0.1475 * (prev.container.trust.balance) - prev.reserve, 0.0)),
+              (prev.container.trust.bal_a1 + prev.container.trust.bal_a2 + prev.container.trust.bal_a3 + prev.container.trust.bal_b + prev.container.trust.bal_c + prev.container.trust.bal_d + prev.container.trust.bal_e) - ((prev.container.trust.pool_prior) - (prev.container.trust.balance)) - max(((prev.container.trust.pool_int)
+           - (prev.container.trust.pool_fee) * 0.0018750000
            - 625.0
-           - (prev.asset.trust.bal_a1 * 0.0007916667
-           + prev.asset.trust.bal_a2 * 0.0011331000
-           + prev.asset.trust.bal_a3 * 0.0015916667
-           + prev.asset.trust.bal_b * 0.0019583333
-           + prev.asset.trust.bal_c * 0.0024000000
-           + prev.asset.trust.bal_d * 0.0026916667
-           + prev.asset.trust.bal_e * 0.0000000000)), 0.0)))), 0.0)))
-           - (prev.asset.trust.bal_a1 + prev.asset.trust.bal_a2 + prev.asset.trust.bal_a3 + prev.asset.trust.bal_b + prev.asset.trust.bal_c + prev.asset.trust.bal_d), 0.0), prev.asset.trust.bal_e)), 0.0))
+           - (prev.container.trust.bal_a1 * 0.0007916667
+           + prev.container.trust.bal_a2 * 0.0011331000
+           + prev.container.trust.bal_a3 * 0.0015916667
+           + prev.container.trust.bal_b * 0.0019583333
+           + prev.container.trust.bal_c * 0.0024000000
+           + prev.container.trust.bal_d * 0.0026916667
+           + prev.container.trust.bal_e * 0.0000000000)), 0.0)))), 0.0)))
+           - (prev.container.trust.bal_a1 + prev.container.trust.bal_a2 + prev.container.trust.bal_a3 + prev.container.trust.bal_b + prev.container.trust.bal_c + prev.container.trust.bal_d), 0.0), prev.container.trust.bal_e)), 0.0))
 
 }
 
 entity asset p01 : Credit.Asset.Loan {
   collateral_type = "auto"
-  part of asset.trust
+  part of container.trust
 }
 
 entity asset p02 : Credit.Asset.Loan {
   collateral_type = "auto"
-  part of asset.trust
+  part of container.trust
 }
 
 entity asset p03 : Credit.Asset.Loan {
   collateral_type = "auto"
-  part of asset.trust
+  part of container.trust
 }
 
 entity asset p04 : Credit.Asset.Loan {
   collateral_type = "auto"
-  part of asset.trust
+  part of container.trust
 }
 
 entity asset p05 : Credit.Asset.Loan {
   collateral_type = "auto"
-  part of asset.trust
+  part of container.trust
 }
 
 entity asset p06 : Credit.Asset.Loan {
   collateral_type = "auto"
-  part of asset.trust
+  part of container.trust
 }
 
 entity asset p07 : Credit.Asset.Loan {
   collateral_type = "auto"
-  part of asset.trust
+  part of container.trust
 }
 
 entity asset p08 : Credit.Asset.Loan {
   collateral_type = "auto"
-  part of asset.trust
+  part of container.trust
 }
 
 entity asset p09 : Credit.Asset.Loan {
   collateral_type = "auto"
-  part of asset.trust
+  part of container.trust
 }
 
 entity asset p10 : Credit.Asset.Loan {
   collateral_type = "auto"
-  part of asset.trust
+  part of container.trust
 }
 
 entity asset p11 : Credit.Asset.Loan {
   collateral_type = "auto"
-  part of asset.trust
+  part of container.trust
 }
 
 entity asset p12 : Credit.Asset.Loan {
   collateral_type = "auto"
-  part of asset.trust
+  part of container.trust
 }
 
 
@@ -634,6 +614,27 @@ contract credit.loan.p12 on entity asset.p12 {
   }
 }
 
+// THE CLEAN-UP CALL REPURCHASES THE COLLATERAL. The redemption price joins
+// the pot at the distribution where the pool first falls to 10% (the
+// waterfall's own test, below); from the next period the loans belong to the
+// servicer, so the trust collects nothing more. One event, at the trust,
+// reading the fold; each loan's machine writes the balance off on
+// `repurchased` (docs/42 §3.5).
+event clean_up_call when prev.container.trust.balance <= 101196992.93 {
+  set entity asset.p01.status = "repurchased"
+  set entity asset.p02.status = "repurchased"
+  set entity asset.p03.status = "repurchased"
+  set entity asset.p04.status = "repurchased"
+  set entity asset.p05.status = "repurchased"
+  set entity asset.p06.status = "repurchased"
+  set entity asset.p07.status = "repurchased"
+  set entity asset.p08.status = "repurchased"
+  set entity asset.p09.status = "repurchased"
+  set entity asset.p10.status = "repurchased"
+  set entity asset.p11.status = "repurchased"
+  set entity asset.p12.status = "repurchased"
+}
+
 entity party servicer : Credit.Party.Servicer { name = "Servicer" }
 entity party trustee : Credit.Party.Issuer { name = "Trustee, owner trustee, collateral agent and asset representations reviewer" }
 entity party certificate : Credit.Party.Investor { name = "Certificateholder" }
@@ -687,7 +688,7 @@ account reserve {
 // in period 0 and distribute in period 1, and `available` is one period), and
 // the clean-up call adds a redemption price that is not stream cash. Both are
 // stated in the windowed pot below.
-waterfall notes.distribution on entity asset.trust {
+waterfall notes.distribution on entity container.trust {
   schedule every month from 2017-02 to 2022-11
 
   // Collections for this distribution, and at the first one the January
@@ -696,7 +697,7 @@ waterfall notes.distribution on entity asset.trust {
   from series_sum("credit.loan.sched_principal.*", if(time.t == 1.0, 0.0, time.t), time.t)
        + series_sum("credit.loan.prepay.*", if(time.t == 1.0, 0.0, time.t), time.t)
        + series_sum("credit.loan.interest.*", if(time.t == 1.0, 0.0, time.t), time.t)
-       + if(asset.trust.pool_bal <= 101196992.93 and asset.trust.pool_prior > 101196992.93, asset.trust.pool_bal, 0.0)
+       + if((prev.container.trust.balance - series_sum("credit.loan.sched_principal.*", time.t, time.t) - series_sum("credit.loan.prepay.*", time.t, time.t) + series_sum("credit.loan.defaults.*", time.t, time.t)) <= 101196992.93 and if(time.t <= 1.0, 1011969929.28, prev.container.trust.balance) > 101196992.93, (prev.container.trust.balance - series_sum("credit.loan.sched_principal.*", time.t, time.t) - series_sum("credit.loan.prepay.*", time.t, time.t) + series_sum("credit.loan.defaults.*", time.t, time.t)), 0.0)
 
   //  1. the servicer. The pack carries the fee as a negative series on each
   //     pool, so the step is its sum with the sign turned round.
@@ -708,13 +709,13 @@ waterfall notes.distribution on entity asset.trust {
   pay trustee_fees to party.trustee = 625.0
 
   //  3. interest on the Class A-1 Notes (clause 3 pays the Class A classes pari passu)
-  pay a1_interest to party.a1_holders = asset.trust.bal_a1 * 0.0007916667
+  pay a1_interest to party.a1_holders = container.trust.bal_a1 * 0.0007916667
 
   //  3. interest on the Class A-2 Notes
-  pay a2_interest to party.a2_holders = asset.trust.bal_a2 * 0.0011331000
+  pay a2_interest to party.a2_holders = container.trust.bal_a2 * 0.0011331000
 
   //  3. interest on the Class A-3 Notes
-  pay a3_interest to party.a3_holders = asset.trust.bal_a3 * 0.0015916667
+  pay a3_interest to party.a3_holders = container.trust.bal_a3 * 0.0015916667
 
   //  4. principal to reduce the Class A balance to the pool
   //     balance. THE TWO SIDES ARE MEASURED ON THE SAME DATE: the
@@ -727,13 +728,13 @@ waterfall notes.distribution on entity asset.trust {
   //     clause 18. The prospectus says what these clauses are for —
   //     'principal payments made to cure this undercollateralization,
   //     if any then exists' — and with no losses assumed, none does.
-  pay a3_parity to party.a3_holders = max((asset.trust.bal_a1 + asset.trust.bal_a2 + asset.trust.bal_a3) - asset.trust.pool_prior, 0.0)
+  pay a3_parity to party.a3_holders = max((container.trust.bal_a1 + container.trust.bal_a2 + container.trust.bal_a3) - if(time.t <= 1.0, 1011969929.28, prev.container.trust.balance), 0.0)
 
   //  5. the remaining Class A balance on its final scheduled date
-  pay a3_final to party.a3_holders = if(time.t >= 12.0, asset.trust.bal_a1, 0.0) + if(time.t >= 39.0, asset.trust.bal_a2, 0.0) + if(time.t >= 54.0, asset.trust.bal_a3, 0.0)
+  pay a3_final to party.a3_holders = if(time.t >= 12.0, container.trust.bal_a1, 0.0) + if(time.t >= 39.0, container.trust.bal_a2, 0.0) + if(time.t >= 54.0, container.trust.bal_a3, 0.0)
 
   //  6. interest on the Class B Notes
-  pay b_interest to party.b_holders = asset.trust.bal_b * 0.0019583333
+  pay b_interest to party.b_holders = container.trust.bal_b * 0.0019583333
 
   //  7. principal to reduce the Class B balance and everything senior to the pool
   //     balance. THE TWO SIDES ARE MEASURED ON THE SAME DATE: the
@@ -746,13 +747,13 @@ waterfall notes.distribution on entity asset.trust {
   //     clause 18. The prospectus says what these clauses are for —
   //     'principal payments made to cure this undercollateralization,
   //     if any then exists' — and with no losses assumed, none does.
-  pay b_parity to party.b_holders = max((asset.trust.bal_a1 + asset.trust.bal_a2 + asset.trust.bal_a3 + asset.trust.bal_b) - asset.trust.pool_prior, 0.0)
+  pay b_parity to party.b_holders = max((container.trust.bal_a1 + container.trust.bal_a2 + container.trust.bal_a3 + container.trust.bal_b) - if(time.t <= 1.0, 1011969929.28, prev.container.trust.balance), 0.0)
 
   //  8. the remaining Class B balance on its final scheduled date
-  pay b_final to party.b_holders = if(time.t >= 60.0, asset.trust.bal_b, 0.0)
+  pay b_final to party.b_holders = if(time.t >= 60.0, container.trust.bal_b, 0.0)
 
   //  9. interest on the Class C Notes
-  pay c_interest to party.c_holders = asset.trust.bal_c * 0.0024000000
+  pay c_interest to party.c_holders = container.trust.bal_c * 0.0024000000
 
   //  10. principal to reduce the Class C balance and everything senior to the pool
   //     balance. THE TWO SIDES ARE MEASURED ON THE SAME DATE: the
@@ -765,13 +766,13 @@ waterfall notes.distribution on entity asset.trust {
   //     clause 18. The prospectus says what these clauses are for —
   //     'principal payments made to cure this undercollateralization,
   //     if any then exists' — and with no losses assumed, none does.
-  pay c_parity to party.c_holders = max((asset.trust.bal_a1 + asset.trust.bal_a2 + asset.trust.bal_a3 + asset.trust.bal_b + asset.trust.bal_c) - asset.trust.pool_prior, 0.0)
+  pay c_parity to party.c_holders = max((container.trust.bal_a1 + container.trust.bal_a2 + container.trust.bal_a3 + container.trust.bal_b + container.trust.bal_c) - if(time.t <= 1.0, 1011969929.28, prev.container.trust.balance), 0.0)
 
   //  11. the remaining Class C balance on its final scheduled date
-  pay c_final to party.c_holders = if(time.t >= 66.0, asset.trust.bal_c, 0.0)
+  pay c_final to party.c_holders = if(time.t >= 66.0, container.trust.bal_c, 0.0)
 
   //  12. interest on the Class D Notes
-  pay d_interest to party.d_holders = asset.trust.bal_d * 0.0026916667
+  pay d_interest to party.d_holders = container.trust.bal_d * 0.0026916667
 
   //  13. principal to reduce the Class D balance and everything senior to the pool
   //     balance. THE TWO SIDES ARE MEASURED ON THE SAME DATE: the
@@ -784,13 +785,13 @@ waterfall notes.distribution on entity asset.trust {
   //     clause 18. The prospectus says what these clauses are for —
   //     'principal payments made to cure this undercollateralization,
   //     if any then exists' — and with no losses assumed, none does.
-  pay d_parity to party.d_holders = max((asset.trust.bal_a1 + asset.trust.bal_a2 + asset.trust.bal_a3 + asset.trust.bal_b + asset.trust.bal_c + asset.trust.bal_d) - asset.trust.pool_prior, 0.0)
+  pay d_parity to party.d_holders = max((container.trust.bal_a1 + container.trust.bal_a2 + container.trust.bal_a3 + container.trust.bal_b + container.trust.bal_c + container.trust.bal_d) - if(time.t <= 1.0, 1011969929.28, prev.container.trust.balance), 0.0)
 
   //  14. the remaining Class D balance on its final scheduled date
-  pay d_final to party.d_holders = if(time.t >= 71.0, asset.trust.bal_d, 0.0)
+  pay d_final to party.d_holders = if(time.t >= 71.0, container.trust.bal_d, 0.0)
 
   //  15. interest on the Class E Notes
-  pay e_interest to party.e_holders = asset.trust.bal_e * 0.0000000000
+  pay e_interest to party.e_holders = container.trust.bal_e * 0.0000000000
 
   //  16. principal to reduce the Class E balance and everything senior to the pool
   //     balance. THE TWO SIDES ARE MEASURED ON THE SAME DATE: the
@@ -803,126 +804,126 @@ waterfall notes.distribution on entity asset.trust {
   //     clause 18. The prospectus says what these clauses are for —
   //     'principal payments made to cure this undercollateralization,
   //     if any then exists' — and with no losses assumed, none does.
-  pay e_parity to party.e_holders = max((asset.trust.bal_a1 + asset.trust.bal_a2 + asset.trust.bal_a3 + asset.trust.bal_b + asset.trust.bal_c + asset.trust.bal_d + asset.trust.bal_e) - asset.trust.pool_prior, 0.0)
+  pay e_parity to party.e_holders = max((container.trust.bal_a1 + container.trust.bal_a2 + container.trust.bal_a3 + container.trust.bal_b + container.trust.bal_c + container.trust.bal_d + container.trust.bal_e) - if(time.t <= 1.0, 1011969929.28, prev.container.trust.balance), 0.0)
 
   //  17. the remaining Class E balance on its final scheduled date
-  pay e_final to party.e_holders = if(time.t >= 90.0, asset.trust.bal_e, 0.0)
+  pay e_final to party.e_holders = if(time.t >= 90.0, container.trust.bal_e, 0.0)
 
   // 18. the Noteholders' Principal Distributable Amount — principal
   //     collected LESS the Step-Down Amount, to the most senior class
   //     outstanding and then down.
 
   pay a1_principal to party.a1_holders =
-        min(max((min((if((asset.trust.pool_bal) <= 101196992.93, (asset.trust.bal_a1 + asset.trust.bal_a2 + asset.trust.bal_a3 + asset.trust.bal_b + asset.trust.bal_c + asset.trust.bal_d + asset.trust.bal_e),
-         max((asset.trust.bal_a1 + asset.trust.bal_a2 + asset.trust.bal_a3 + asset.trust.bal_b + asset.trust.bal_c + asset.trust.bal_d + asset.trust.bal_e) - (min((asset.trust.pool_bal) - 5059849.65,
-          max(((asset.trust.pool_bal) - max(0.1475 * (asset.trust.pool_bal) - prev.reserve, 0.0)),
-              (asset.trust.bal_a1 + asset.trust.bal_a2 + asset.trust.bal_a3 + asset.trust.bal_b + asset.trust.bal_c + asset.trust.bal_d + asset.trust.bal_e) - ((asset.trust.pool_prior) - (asset.trust.pool_bal)) - max(((asset.trust.pool_int)
-           - (asset.trust.pool_fee) * 0.0018750000
+        min(max((min((if((prev.container.trust.balance - series_sum("credit.loan.sched_principal.*", time.t, time.t) - series_sum("credit.loan.prepay.*", time.t, time.t) + series_sum("credit.loan.defaults.*", time.t, time.t)) <= 101196992.93, (container.trust.bal_a1 + container.trust.bal_a2 + container.trust.bal_a3 + container.trust.bal_b + container.trust.bal_c + container.trust.bal_d + container.trust.bal_e),
+         max((container.trust.bal_a1 + container.trust.bal_a2 + container.trust.bal_a3 + container.trust.bal_b + container.trust.bal_c + container.trust.bal_d + container.trust.bal_e) - (min((prev.container.trust.balance - series_sum("credit.loan.sched_principal.*", time.t, time.t) - series_sum("credit.loan.prepay.*", time.t, time.t) + series_sum("credit.loan.defaults.*", time.t, time.t)) - 5059849.65,
+          max(((prev.container.trust.balance - series_sum("credit.loan.sched_principal.*", time.t, time.t) - series_sum("credit.loan.prepay.*", time.t, time.t) + series_sum("credit.loan.defaults.*", time.t, time.t)) - max(0.1475 * (prev.container.trust.balance - series_sum("credit.loan.sched_principal.*", time.t, time.t) - series_sum("credit.loan.prepay.*", time.t, time.t) + series_sum("credit.loan.defaults.*", time.t, time.t)) - prev.reserve, 0.0)),
+              (container.trust.bal_a1 + container.trust.bal_a2 + container.trust.bal_a3 + container.trust.bal_b + container.trust.bal_c + container.trust.bal_d + container.trust.bal_e) - ((if(time.t <= 1.0, 1011969929.28, prev.container.trust.balance)) - (prev.container.trust.balance - series_sum("credit.loan.sched_principal.*", time.t, time.t) - series_sum("credit.loan.prepay.*", time.t, time.t) + series_sum("credit.loan.defaults.*", time.t, time.t))) - max(((container.trust.pool_int)
+           - (container.trust.pool_fee) * 0.0018750000
            - 625.0
-           - (asset.trust.bal_a1 * 0.0007916667
-           + asset.trust.bal_a2 * 0.0011331000
-           + asset.trust.bal_a3 * 0.0015916667
-           + asset.trust.bal_b * 0.0019583333
-           + asset.trust.bal_c * 0.0024000000
-           + asset.trust.bal_d * 0.0026916667
-           + asset.trust.bal_e * 0.0000000000)), 0.0)))), 0.0))), ((asset.trust.pool_prior) - (asset.trust.pool_bal))))
-           - (0.0), 0.0), asset.trust.bal_a1)
+           - (container.trust.bal_a1 * 0.0007916667
+           + container.trust.bal_a2 * 0.0011331000
+           + container.trust.bal_a3 * 0.0015916667
+           + container.trust.bal_b * 0.0019583333
+           + container.trust.bal_c * 0.0024000000
+           + container.trust.bal_d * 0.0026916667
+           + container.trust.bal_e * 0.0000000000)), 0.0)))), 0.0))), ((if(time.t <= 1.0, 1011969929.28, prev.container.trust.balance)) - (prev.container.trust.balance - series_sum("credit.loan.sched_principal.*", time.t, time.t) - series_sum("credit.loan.prepay.*", time.t, time.t) + series_sum("credit.loan.defaults.*", time.t, time.t)))))
+           - (0.0), 0.0), container.trust.bal_a1)
 
   pay a2_principal to party.a2_holders =
-        min(max((min((if((asset.trust.pool_bal) <= 101196992.93, (asset.trust.bal_a1 + asset.trust.bal_a2 + asset.trust.bal_a3 + asset.trust.bal_b + asset.trust.bal_c + asset.trust.bal_d + asset.trust.bal_e),
-         max((asset.trust.bal_a1 + asset.trust.bal_a2 + asset.trust.bal_a3 + asset.trust.bal_b + asset.trust.bal_c + asset.trust.bal_d + asset.trust.bal_e) - (min((asset.trust.pool_bal) - 5059849.65,
-          max(((asset.trust.pool_bal) - max(0.1475 * (asset.trust.pool_bal) - prev.reserve, 0.0)),
-              (asset.trust.bal_a1 + asset.trust.bal_a2 + asset.trust.bal_a3 + asset.trust.bal_b + asset.trust.bal_c + asset.trust.bal_d + asset.trust.bal_e) - ((asset.trust.pool_prior) - (asset.trust.pool_bal)) - max(((asset.trust.pool_int)
-           - (asset.trust.pool_fee) * 0.0018750000
+        min(max((min((if((prev.container.trust.balance - series_sum("credit.loan.sched_principal.*", time.t, time.t) - series_sum("credit.loan.prepay.*", time.t, time.t) + series_sum("credit.loan.defaults.*", time.t, time.t)) <= 101196992.93, (container.trust.bal_a1 + container.trust.bal_a2 + container.trust.bal_a3 + container.trust.bal_b + container.trust.bal_c + container.trust.bal_d + container.trust.bal_e),
+         max((container.trust.bal_a1 + container.trust.bal_a2 + container.trust.bal_a3 + container.trust.bal_b + container.trust.bal_c + container.trust.bal_d + container.trust.bal_e) - (min((prev.container.trust.balance - series_sum("credit.loan.sched_principal.*", time.t, time.t) - series_sum("credit.loan.prepay.*", time.t, time.t) + series_sum("credit.loan.defaults.*", time.t, time.t)) - 5059849.65,
+          max(((prev.container.trust.balance - series_sum("credit.loan.sched_principal.*", time.t, time.t) - series_sum("credit.loan.prepay.*", time.t, time.t) + series_sum("credit.loan.defaults.*", time.t, time.t)) - max(0.1475 * (prev.container.trust.balance - series_sum("credit.loan.sched_principal.*", time.t, time.t) - series_sum("credit.loan.prepay.*", time.t, time.t) + series_sum("credit.loan.defaults.*", time.t, time.t)) - prev.reserve, 0.0)),
+              (container.trust.bal_a1 + container.trust.bal_a2 + container.trust.bal_a3 + container.trust.bal_b + container.trust.bal_c + container.trust.bal_d + container.trust.bal_e) - ((if(time.t <= 1.0, 1011969929.28, prev.container.trust.balance)) - (prev.container.trust.balance - series_sum("credit.loan.sched_principal.*", time.t, time.t) - series_sum("credit.loan.prepay.*", time.t, time.t) + series_sum("credit.loan.defaults.*", time.t, time.t))) - max(((container.trust.pool_int)
+           - (container.trust.pool_fee) * 0.0018750000
            - 625.0
-           - (asset.trust.bal_a1 * 0.0007916667
-           + asset.trust.bal_a2 * 0.0011331000
-           + asset.trust.bal_a3 * 0.0015916667
-           + asset.trust.bal_b * 0.0019583333
-           + asset.trust.bal_c * 0.0024000000
-           + asset.trust.bal_d * 0.0026916667
-           + asset.trust.bal_e * 0.0000000000)), 0.0)))), 0.0))), ((asset.trust.pool_prior) - (asset.trust.pool_bal))))
-           - (asset.trust.bal_a1), 0.0), asset.trust.bal_a2)
+           - (container.trust.bal_a1 * 0.0007916667
+           + container.trust.bal_a2 * 0.0011331000
+           + container.trust.bal_a3 * 0.0015916667
+           + container.trust.bal_b * 0.0019583333
+           + container.trust.bal_c * 0.0024000000
+           + container.trust.bal_d * 0.0026916667
+           + container.trust.bal_e * 0.0000000000)), 0.0)))), 0.0))), ((if(time.t <= 1.0, 1011969929.28, prev.container.trust.balance)) - (prev.container.trust.balance - series_sum("credit.loan.sched_principal.*", time.t, time.t) - series_sum("credit.loan.prepay.*", time.t, time.t) + series_sum("credit.loan.defaults.*", time.t, time.t)))))
+           - (container.trust.bal_a1), 0.0), container.trust.bal_a2)
 
   pay a3_principal to party.a3_holders =
-        min(max((min((if((asset.trust.pool_bal) <= 101196992.93, (asset.trust.bal_a1 + asset.trust.bal_a2 + asset.trust.bal_a3 + asset.trust.bal_b + asset.trust.bal_c + asset.trust.bal_d + asset.trust.bal_e),
-         max((asset.trust.bal_a1 + asset.trust.bal_a2 + asset.trust.bal_a3 + asset.trust.bal_b + asset.trust.bal_c + asset.trust.bal_d + asset.trust.bal_e) - (min((asset.trust.pool_bal) - 5059849.65,
-          max(((asset.trust.pool_bal) - max(0.1475 * (asset.trust.pool_bal) - prev.reserve, 0.0)),
-              (asset.trust.bal_a1 + asset.trust.bal_a2 + asset.trust.bal_a3 + asset.trust.bal_b + asset.trust.bal_c + asset.trust.bal_d + asset.trust.bal_e) - ((asset.trust.pool_prior) - (asset.trust.pool_bal)) - max(((asset.trust.pool_int)
-           - (asset.trust.pool_fee) * 0.0018750000
+        min(max((min((if((prev.container.trust.balance - series_sum("credit.loan.sched_principal.*", time.t, time.t) - series_sum("credit.loan.prepay.*", time.t, time.t) + series_sum("credit.loan.defaults.*", time.t, time.t)) <= 101196992.93, (container.trust.bal_a1 + container.trust.bal_a2 + container.trust.bal_a3 + container.trust.bal_b + container.trust.bal_c + container.trust.bal_d + container.trust.bal_e),
+         max((container.trust.bal_a1 + container.trust.bal_a2 + container.trust.bal_a3 + container.trust.bal_b + container.trust.bal_c + container.trust.bal_d + container.trust.bal_e) - (min((prev.container.trust.balance - series_sum("credit.loan.sched_principal.*", time.t, time.t) - series_sum("credit.loan.prepay.*", time.t, time.t) + series_sum("credit.loan.defaults.*", time.t, time.t)) - 5059849.65,
+          max(((prev.container.trust.balance - series_sum("credit.loan.sched_principal.*", time.t, time.t) - series_sum("credit.loan.prepay.*", time.t, time.t) + series_sum("credit.loan.defaults.*", time.t, time.t)) - max(0.1475 * (prev.container.trust.balance - series_sum("credit.loan.sched_principal.*", time.t, time.t) - series_sum("credit.loan.prepay.*", time.t, time.t) + series_sum("credit.loan.defaults.*", time.t, time.t)) - prev.reserve, 0.0)),
+              (container.trust.bal_a1 + container.trust.bal_a2 + container.trust.bal_a3 + container.trust.bal_b + container.trust.bal_c + container.trust.bal_d + container.trust.bal_e) - ((if(time.t <= 1.0, 1011969929.28, prev.container.trust.balance)) - (prev.container.trust.balance - series_sum("credit.loan.sched_principal.*", time.t, time.t) - series_sum("credit.loan.prepay.*", time.t, time.t) + series_sum("credit.loan.defaults.*", time.t, time.t))) - max(((container.trust.pool_int)
+           - (container.trust.pool_fee) * 0.0018750000
            - 625.0
-           - (asset.trust.bal_a1 * 0.0007916667
-           + asset.trust.bal_a2 * 0.0011331000
-           + asset.trust.bal_a3 * 0.0015916667
-           + asset.trust.bal_b * 0.0019583333
-           + asset.trust.bal_c * 0.0024000000
-           + asset.trust.bal_d * 0.0026916667
-           + asset.trust.bal_e * 0.0000000000)), 0.0)))), 0.0))), ((asset.trust.pool_prior) - (asset.trust.pool_bal))))
-           - (asset.trust.bal_a1 + asset.trust.bal_a2), 0.0), asset.trust.bal_a3)
+           - (container.trust.bal_a1 * 0.0007916667
+           + container.trust.bal_a2 * 0.0011331000
+           + container.trust.bal_a3 * 0.0015916667
+           + container.trust.bal_b * 0.0019583333
+           + container.trust.bal_c * 0.0024000000
+           + container.trust.bal_d * 0.0026916667
+           + container.trust.bal_e * 0.0000000000)), 0.0)))), 0.0))), ((if(time.t <= 1.0, 1011969929.28, prev.container.trust.balance)) - (prev.container.trust.balance - series_sum("credit.loan.sched_principal.*", time.t, time.t) - series_sum("credit.loan.prepay.*", time.t, time.t) + series_sum("credit.loan.defaults.*", time.t, time.t)))))
+           - (container.trust.bal_a1 + container.trust.bal_a2), 0.0), container.trust.bal_a3)
 
   pay b_principal to party.b_holders =
-        min(max((min((if((asset.trust.pool_bal) <= 101196992.93, (asset.trust.bal_a1 + asset.trust.bal_a2 + asset.trust.bal_a3 + asset.trust.bal_b + asset.trust.bal_c + asset.trust.bal_d + asset.trust.bal_e),
-         max((asset.trust.bal_a1 + asset.trust.bal_a2 + asset.trust.bal_a3 + asset.trust.bal_b + asset.trust.bal_c + asset.trust.bal_d + asset.trust.bal_e) - (min((asset.trust.pool_bal) - 5059849.65,
-          max(((asset.trust.pool_bal) - max(0.1475 * (asset.trust.pool_bal) - prev.reserve, 0.0)),
-              (asset.trust.bal_a1 + asset.trust.bal_a2 + asset.trust.bal_a3 + asset.trust.bal_b + asset.trust.bal_c + asset.trust.bal_d + asset.trust.bal_e) - ((asset.trust.pool_prior) - (asset.trust.pool_bal)) - max(((asset.trust.pool_int)
-           - (asset.trust.pool_fee) * 0.0018750000
+        min(max((min((if((prev.container.trust.balance - series_sum("credit.loan.sched_principal.*", time.t, time.t) - series_sum("credit.loan.prepay.*", time.t, time.t) + series_sum("credit.loan.defaults.*", time.t, time.t)) <= 101196992.93, (container.trust.bal_a1 + container.trust.bal_a2 + container.trust.bal_a3 + container.trust.bal_b + container.trust.bal_c + container.trust.bal_d + container.trust.bal_e),
+         max((container.trust.bal_a1 + container.trust.bal_a2 + container.trust.bal_a3 + container.trust.bal_b + container.trust.bal_c + container.trust.bal_d + container.trust.bal_e) - (min((prev.container.trust.balance - series_sum("credit.loan.sched_principal.*", time.t, time.t) - series_sum("credit.loan.prepay.*", time.t, time.t) + series_sum("credit.loan.defaults.*", time.t, time.t)) - 5059849.65,
+          max(((prev.container.trust.balance - series_sum("credit.loan.sched_principal.*", time.t, time.t) - series_sum("credit.loan.prepay.*", time.t, time.t) + series_sum("credit.loan.defaults.*", time.t, time.t)) - max(0.1475 * (prev.container.trust.balance - series_sum("credit.loan.sched_principal.*", time.t, time.t) - series_sum("credit.loan.prepay.*", time.t, time.t) + series_sum("credit.loan.defaults.*", time.t, time.t)) - prev.reserve, 0.0)),
+              (container.trust.bal_a1 + container.trust.bal_a2 + container.trust.bal_a3 + container.trust.bal_b + container.trust.bal_c + container.trust.bal_d + container.trust.bal_e) - ((if(time.t <= 1.0, 1011969929.28, prev.container.trust.balance)) - (prev.container.trust.balance - series_sum("credit.loan.sched_principal.*", time.t, time.t) - series_sum("credit.loan.prepay.*", time.t, time.t) + series_sum("credit.loan.defaults.*", time.t, time.t))) - max(((container.trust.pool_int)
+           - (container.trust.pool_fee) * 0.0018750000
            - 625.0
-           - (asset.trust.bal_a1 * 0.0007916667
-           + asset.trust.bal_a2 * 0.0011331000
-           + asset.trust.bal_a3 * 0.0015916667
-           + asset.trust.bal_b * 0.0019583333
-           + asset.trust.bal_c * 0.0024000000
-           + asset.trust.bal_d * 0.0026916667
-           + asset.trust.bal_e * 0.0000000000)), 0.0)))), 0.0))), ((asset.trust.pool_prior) - (asset.trust.pool_bal))))
-           - (asset.trust.bal_a1 + asset.trust.bal_a2 + asset.trust.bal_a3), 0.0), asset.trust.bal_b)
+           - (container.trust.bal_a1 * 0.0007916667
+           + container.trust.bal_a2 * 0.0011331000
+           + container.trust.bal_a3 * 0.0015916667
+           + container.trust.bal_b * 0.0019583333
+           + container.trust.bal_c * 0.0024000000
+           + container.trust.bal_d * 0.0026916667
+           + container.trust.bal_e * 0.0000000000)), 0.0)))), 0.0))), ((if(time.t <= 1.0, 1011969929.28, prev.container.trust.balance)) - (prev.container.trust.balance - series_sum("credit.loan.sched_principal.*", time.t, time.t) - series_sum("credit.loan.prepay.*", time.t, time.t) + series_sum("credit.loan.defaults.*", time.t, time.t)))))
+           - (container.trust.bal_a1 + container.trust.bal_a2 + container.trust.bal_a3), 0.0), container.trust.bal_b)
 
   pay c_principal to party.c_holders =
-        min(max((min((if((asset.trust.pool_bal) <= 101196992.93, (asset.trust.bal_a1 + asset.trust.bal_a2 + asset.trust.bal_a3 + asset.trust.bal_b + asset.trust.bal_c + asset.trust.bal_d + asset.trust.bal_e),
-         max((asset.trust.bal_a1 + asset.trust.bal_a2 + asset.trust.bal_a3 + asset.trust.bal_b + asset.trust.bal_c + asset.trust.bal_d + asset.trust.bal_e) - (min((asset.trust.pool_bal) - 5059849.65,
-          max(((asset.trust.pool_bal) - max(0.1475 * (asset.trust.pool_bal) - prev.reserve, 0.0)),
-              (asset.trust.bal_a1 + asset.trust.bal_a2 + asset.trust.bal_a3 + asset.trust.bal_b + asset.trust.bal_c + asset.trust.bal_d + asset.trust.bal_e) - ((asset.trust.pool_prior) - (asset.trust.pool_bal)) - max(((asset.trust.pool_int)
-           - (asset.trust.pool_fee) * 0.0018750000
+        min(max((min((if((prev.container.trust.balance - series_sum("credit.loan.sched_principal.*", time.t, time.t) - series_sum("credit.loan.prepay.*", time.t, time.t) + series_sum("credit.loan.defaults.*", time.t, time.t)) <= 101196992.93, (container.trust.bal_a1 + container.trust.bal_a2 + container.trust.bal_a3 + container.trust.bal_b + container.trust.bal_c + container.trust.bal_d + container.trust.bal_e),
+         max((container.trust.bal_a1 + container.trust.bal_a2 + container.trust.bal_a3 + container.trust.bal_b + container.trust.bal_c + container.trust.bal_d + container.trust.bal_e) - (min((prev.container.trust.balance - series_sum("credit.loan.sched_principal.*", time.t, time.t) - series_sum("credit.loan.prepay.*", time.t, time.t) + series_sum("credit.loan.defaults.*", time.t, time.t)) - 5059849.65,
+          max(((prev.container.trust.balance - series_sum("credit.loan.sched_principal.*", time.t, time.t) - series_sum("credit.loan.prepay.*", time.t, time.t) + series_sum("credit.loan.defaults.*", time.t, time.t)) - max(0.1475 * (prev.container.trust.balance - series_sum("credit.loan.sched_principal.*", time.t, time.t) - series_sum("credit.loan.prepay.*", time.t, time.t) + series_sum("credit.loan.defaults.*", time.t, time.t)) - prev.reserve, 0.0)),
+              (container.trust.bal_a1 + container.trust.bal_a2 + container.trust.bal_a3 + container.trust.bal_b + container.trust.bal_c + container.trust.bal_d + container.trust.bal_e) - ((if(time.t <= 1.0, 1011969929.28, prev.container.trust.balance)) - (prev.container.trust.balance - series_sum("credit.loan.sched_principal.*", time.t, time.t) - series_sum("credit.loan.prepay.*", time.t, time.t) + series_sum("credit.loan.defaults.*", time.t, time.t))) - max(((container.trust.pool_int)
+           - (container.trust.pool_fee) * 0.0018750000
            - 625.0
-           - (asset.trust.bal_a1 * 0.0007916667
-           + asset.trust.bal_a2 * 0.0011331000
-           + asset.trust.bal_a3 * 0.0015916667
-           + asset.trust.bal_b * 0.0019583333
-           + asset.trust.bal_c * 0.0024000000
-           + asset.trust.bal_d * 0.0026916667
-           + asset.trust.bal_e * 0.0000000000)), 0.0)))), 0.0))), ((asset.trust.pool_prior) - (asset.trust.pool_bal))))
-           - (asset.trust.bal_a1 + asset.trust.bal_a2 + asset.trust.bal_a3 + asset.trust.bal_b), 0.0), asset.trust.bal_c)
+           - (container.trust.bal_a1 * 0.0007916667
+           + container.trust.bal_a2 * 0.0011331000
+           + container.trust.bal_a3 * 0.0015916667
+           + container.trust.bal_b * 0.0019583333
+           + container.trust.bal_c * 0.0024000000
+           + container.trust.bal_d * 0.0026916667
+           + container.trust.bal_e * 0.0000000000)), 0.0)))), 0.0))), ((if(time.t <= 1.0, 1011969929.28, prev.container.trust.balance)) - (prev.container.trust.balance - series_sum("credit.loan.sched_principal.*", time.t, time.t) - series_sum("credit.loan.prepay.*", time.t, time.t) + series_sum("credit.loan.defaults.*", time.t, time.t)))))
+           - (container.trust.bal_a1 + container.trust.bal_a2 + container.trust.bal_a3 + container.trust.bal_b), 0.0), container.trust.bal_c)
 
   pay d_principal to party.d_holders =
-        min(max((min((if((asset.trust.pool_bal) <= 101196992.93, (asset.trust.bal_a1 + asset.trust.bal_a2 + asset.trust.bal_a3 + asset.trust.bal_b + asset.trust.bal_c + asset.trust.bal_d + asset.trust.bal_e),
-         max((asset.trust.bal_a1 + asset.trust.bal_a2 + asset.trust.bal_a3 + asset.trust.bal_b + asset.trust.bal_c + asset.trust.bal_d + asset.trust.bal_e) - (min((asset.trust.pool_bal) - 5059849.65,
-          max(((asset.trust.pool_bal) - max(0.1475 * (asset.trust.pool_bal) - prev.reserve, 0.0)),
-              (asset.trust.bal_a1 + asset.trust.bal_a2 + asset.trust.bal_a3 + asset.trust.bal_b + asset.trust.bal_c + asset.trust.bal_d + asset.trust.bal_e) - ((asset.trust.pool_prior) - (asset.trust.pool_bal)) - max(((asset.trust.pool_int)
-           - (asset.trust.pool_fee) * 0.0018750000
+        min(max((min((if((prev.container.trust.balance - series_sum("credit.loan.sched_principal.*", time.t, time.t) - series_sum("credit.loan.prepay.*", time.t, time.t) + series_sum("credit.loan.defaults.*", time.t, time.t)) <= 101196992.93, (container.trust.bal_a1 + container.trust.bal_a2 + container.trust.bal_a3 + container.trust.bal_b + container.trust.bal_c + container.trust.bal_d + container.trust.bal_e),
+         max((container.trust.bal_a1 + container.trust.bal_a2 + container.trust.bal_a3 + container.trust.bal_b + container.trust.bal_c + container.trust.bal_d + container.trust.bal_e) - (min((prev.container.trust.balance - series_sum("credit.loan.sched_principal.*", time.t, time.t) - series_sum("credit.loan.prepay.*", time.t, time.t) + series_sum("credit.loan.defaults.*", time.t, time.t)) - 5059849.65,
+          max(((prev.container.trust.balance - series_sum("credit.loan.sched_principal.*", time.t, time.t) - series_sum("credit.loan.prepay.*", time.t, time.t) + series_sum("credit.loan.defaults.*", time.t, time.t)) - max(0.1475 * (prev.container.trust.balance - series_sum("credit.loan.sched_principal.*", time.t, time.t) - series_sum("credit.loan.prepay.*", time.t, time.t) + series_sum("credit.loan.defaults.*", time.t, time.t)) - prev.reserve, 0.0)),
+              (container.trust.bal_a1 + container.trust.bal_a2 + container.trust.bal_a3 + container.trust.bal_b + container.trust.bal_c + container.trust.bal_d + container.trust.bal_e) - ((if(time.t <= 1.0, 1011969929.28, prev.container.trust.balance)) - (prev.container.trust.balance - series_sum("credit.loan.sched_principal.*", time.t, time.t) - series_sum("credit.loan.prepay.*", time.t, time.t) + series_sum("credit.loan.defaults.*", time.t, time.t))) - max(((container.trust.pool_int)
+           - (container.trust.pool_fee) * 0.0018750000
            - 625.0
-           - (asset.trust.bal_a1 * 0.0007916667
-           + asset.trust.bal_a2 * 0.0011331000
-           + asset.trust.bal_a3 * 0.0015916667
-           + asset.trust.bal_b * 0.0019583333
-           + asset.trust.bal_c * 0.0024000000
-           + asset.trust.bal_d * 0.0026916667
-           + asset.trust.bal_e * 0.0000000000)), 0.0)))), 0.0))), ((asset.trust.pool_prior) - (asset.trust.pool_bal))))
-           - (asset.trust.bal_a1 + asset.trust.bal_a2 + asset.trust.bal_a3 + asset.trust.bal_b + asset.trust.bal_c), 0.0), asset.trust.bal_d)
+           - (container.trust.bal_a1 * 0.0007916667
+           + container.trust.bal_a2 * 0.0011331000
+           + container.trust.bal_a3 * 0.0015916667
+           + container.trust.bal_b * 0.0019583333
+           + container.trust.bal_c * 0.0024000000
+           + container.trust.bal_d * 0.0026916667
+           + container.trust.bal_e * 0.0000000000)), 0.0)))), 0.0))), ((if(time.t <= 1.0, 1011969929.28, prev.container.trust.balance)) - (prev.container.trust.balance - series_sum("credit.loan.sched_principal.*", time.t, time.t) - series_sum("credit.loan.prepay.*", time.t, time.t) + series_sum("credit.loan.defaults.*", time.t, time.t)))))
+           - (container.trust.bal_a1 + container.trust.bal_a2 + container.trust.bal_a3 + container.trust.bal_b + container.trust.bal_c), 0.0), container.trust.bal_d)
 
   pay e_principal to party.e_holders =
-        min(max((min((if((asset.trust.pool_bal) <= 101196992.93, (asset.trust.bal_a1 + asset.trust.bal_a2 + asset.trust.bal_a3 + asset.trust.bal_b + asset.trust.bal_c + asset.trust.bal_d + asset.trust.bal_e),
-         max((asset.trust.bal_a1 + asset.trust.bal_a2 + asset.trust.bal_a3 + asset.trust.bal_b + asset.trust.bal_c + asset.trust.bal_d + asset.trust.bal_e) - (min((asset.trust.pool_bal) - 5059849.65,
-          max(((asset.trust.pool_bal) - max(0.1475 * (asset.trust.pool_bal) - prev.reserve, 0.0)),
-              (asset.trust.bal_a1 + asset.trust.bal_a2 + asset.trust.bal_a3 + asset.trust.bal_b + asset.trust.bal_c + asset.trust.bal_d + asset.trust.bal_e) - ((asset.trust.pool_prior) - (asset.trust.pool_bal)) - max(((asset.trust.pool_int)
-           - (asset.trust.pool_fee) * 0.0018750000
+        min(max((min((if((prev.container.trust.balance - series_sum("credit.loan.sched_principal.*", time.t, time.t) - series_sum("credit.loan.prepay.*", time.t, time.t) + series_sum("credit.loan.defaults.*", time.t, time.t)) <= 101196992.93, (container.trust.bal_a1 + container.trust.bal_a2 + container.trust.bal_a3 + container.trust.bal_b + container.trust.bal_c + container.trust.bal_d + container.trust.bal_e),
+         max((container.trust.bal_a1 + container.trust.bal_a2 + container.trust.bal_a3 + container.trust.bal_b + container.trust.bal_c + container.trust.bal_d + container.trust.bal_e) - (min((prev.container.trust.balance - series_sum("credit.loan.sched_principal.*", time.t, time.t) - series_sum("credit.loan.prepay.*", time.t, time.t) + series_sum("credit.loan.defaults.*", time.t, time.t)) - 5059849.65,
+          max(((prev.container.trust.balance - series_sum("credit.loan.sched_principal.*", time.t, time.t) - series_sum("credit.loan.prepay.*", time.t, time.t) + series_sum("credit.loan.defaults.*", time.t, time.t)) - max(0.1475 * (prev.container.trust.balance - series_sum("credit.loan.sched_principal.*", time.t, time.t) - series_sum("credit.loan.prepay.*", time.t, time.t) + series_sum("credit.loan.defaults.*", time.t, time.t)) - prev.reserve, 0.0)),
+              (container.trust.bal_a1 + container.trust.bal_a2 + container.trust.bal_a3 + container.trust.bal_b + container.trust.bal_c + container.trust.bal_d + container.trust.bal_e) - ((if(time.t <= 1.0, 1011969929.28, prev.container.trust.balance)) - (prev.container.trust.balance - series_sum("credit.loan.sched_principal.*", time.t, time.t) - series_sum("credit.loan.prepay.*", time.t, time.t) + series_sum("credit.loan.defaults.*", time.t, time.t))) - max(((container.trust.pool_int)
+           - (container.trust.pool_fee) * 0.0018750000
            - 625.0
-           - (asset.trust.bal_a1 * 0.0007916667
-           + asset.trust.bal_a2 * 0.0011331000
-           + asset.trust.bal_a3 * 0.0015916667
-           + asset.trust.bal_b * 0.0019583333
-           + asset.trust.bal_c * 0.0024000000
-           + asset.trust.bal_d * 0.0026916667
-           + asset.trust.bal_e * 0.0000000000)), 0.0)))), 0.0))), ((asset.trust.pool_prior) - (asset.trust.pool_bal))))
-           - (asset.trust.bal_a1 + asset.trust.bal_a2 + asset.trust.bal_a3 + asset.trust.bal_b + asset.trust.bal_c + asset.trust.bal_d), 0.0), asset.trust.bal_e)
+           - (container.trust.bal_a1 * 0.0007916667
+           + container.trust.bal_a2 * 0.0011331000
+           + container.trust.bal_a3 * 0.0015916667
+           + container.trust.bal_b * 0.0019583333
+           + container.trust.bal_c * 0.0024000000
+           + container.trust.bal_d * 0.0026916667
+           + container.trust.bal_e * 0.0000000000)), 0.0)))), 0.0))), ((if(time.t <= 1.0, 1011969929.28, prev.container.trust.balance)) - (prev.container.trust.balance - series_sum("credit.loan.sched_principal.*", time.t, time.t) - series_sum("credit.loan.prepay.*", time.t, time.t) + series_sum("credit.loan.defaults.*", time.t, time.t)))))
+           - (container.trust.bal_a1 + container.trust.bal_a2 + container.trust.bal_a3 + container.trust.bal_b + container.trust.bal_c + container.trust.bal_d), 0.0), container.trust.bal_e)
 
   // 19. the reserve account. This step is the TOP-UP: whatever the
   //     account is short of its required amount, restored out of
@@ -939,214 +940,214 @@ waterfall notes.distribution on entity asset.trust {
   //     remaining balance.
 
   pay a1_accelerated to party.a1_holders =
-        max(min(max((if((asset.trust.pool_bal) <= 101196992.93, (asset.trust.bal_a1 + asset.trust.bal_a2 + asset.trust.bal_a3 + asset.trust.bal_b + asset.trust.bal_c + asset.trust.bal_d + asset.trust.bal_e),
-         max((asset.trust.bal_a1 + asset.trust.bal_a2 + asset.trust.bal_a3 + asset.trust.bal_b + asset.trust.bal_c + asset.trust.bal_d + asset.trust.bal_e) - (min((asset.trust.pool_bal) - 5059849.65,
-          max(((asset.trust.pool_bal) - max(0.1475 * (asset.trust.pool_bal) - prev.reserve, 0.0)),
-              (asset.trust.bal_a1 + asset.trust.bal_a2 + asset.trust.bal_a3 + asset.trust.bal_b + asset.trust.bal_c + asset.trust.bal_d + asset.trust.bal_e) - ((asset.trust.pool_prior) - (asset.trust.pool_bal)) - max(((asset.trust.pool_int)
-           - (asset.trust.pool_fee) * 0.0018750000
+        max(min(max((if((prev.container.trust.balance - series_sum("credit.loan.sched_principal.*", time.t, time.t) - series_sum("credit.loan.prepay.*", time.t, time.t) + series_sum("credit.loan.defaults.*", time.t, time.t)) <= 101196992.93, (container.trust.bal_a1 + container.trust.bal_a2 + container.trust.bal_a3 + container.trust.bal_b + container.trust.bal_c + container.trust.bal_d + container.trust.bal_e),
+         max((container.trust.bal_a1 + container.trust.bal_a2 + container.trust.bal_a3 + container.trust.bal_b + container.trust.bal_c + container.trust.bal_d + container.trust.bal_e) - (min((prev.container.trust.balance - series_sum("credit.loan.sched_principal.*", time.t, time.t) - series_sum("credit.loan.prepay.*", time.t, time.t) + series_sum("credit.loan.defaults.*", time.t, time.t)) - 5059849.65,
+          max(((prev.container.trust.balance - series_sum("credit.loan.sched_principal.*", time.t, time.t) - series_sum("credit.loan.prepay.*", time.t, time.t) + series_sum("credit.loan.defaults.*", time.t, time.t)) - max(0.1475 * (prev.container.trust.balance - series_sum("credit.loan.sched_principal.*", time.t, time.t) - series_sum("credit.loan.prepay.*", time.t, time.t) + series_sum("credit.loan.defaults.*", time.t, time.t)) - prev.reserve, 0.0)),
+              (container.trust.bal_a1 + container.trust.bal_a2 + container.trust.bal_a3 + container.trust.bal_b + container.trust.bal_c + container.trust.bal_d + container.trust.bal_e) - ((if(time.t <= 1.0, 1011969929.28, prev.container.trust.balance)) - (prev.container.trust.balance - series_sum("credit.loan.sched_principal.*", time.t, time.t) - series_sum("credit.loan.prepay.*", time.t, time.t) + series_sum("credit.loan.defaults.*", time.t, time.t))) - max(((container.trust.pool_int)
+           - (container.trust.pool_fee) * 0.0018750000
            - 625.0
-           - (asset.trust.bal_a1 * 0.0007916667
-           + asset.trust.bal_a2 * 0.0011331000
-           + asset.trust.bal_a3 * 0.0015916667
-           + asset.trust.bal_b * 0.0019583333
-           + asset.trust.bal_c * 0.0024000000
-           + asset.trust.bal_d * 0.0026916667
-           + asset.trust.bal_e * 0.0000000000)), 0.0)))), 0.0)))
-           - (0.0), 0.0), asset.trust.bal_a1)
-            - (min(max((min((if((asset.trust.pool_bal) <= 101196992.93, (asset.trust.bal_a1 + asset.trust.bal_a2 + asset.trust.bal_a3 + asset.trust.bal_b + asset.trust.bal_c + asset.trust.bal_d + asset.trust.bal_e),
-         max((asset.trust.bal_a1 + asset.trust.bal_a2 + asset.trust.bal_a3 + asset.trust.bal_b + asset.trust.bal_c + asset.trust.bal_d + asset.trust.bal_e) - (min((asset.trust.pool_bal) - 5059849.65,
-          max(((asset.trust.pool_bal) - max(0.1475 * (asset.trust.pool_bal) - prev.reserve, 0.0)),
-              (asset.trust.bal_a1 + asset.trust.bal_a2 + asset.trust.bal_a3 + asset.trust.bal_b + asset.trust.bal_c + asset.trust.bal_d + asset.trust.bal_e) - ((asset.trust.pool_prior) - (asset.trust.pool_bal)) - max(((asset.trust.pool_int)
-           - (asset.trust.pool_fee) * 0.0018750000
+           - (container.trust.bal_a1 * 0.0007916667
+           + container.trust.bal_a2 * 0.0011331000
+           + container.trust.bal_a3 * 0.0015916667
+           + container.trust.bal_b * 0.0019583333
+           + container.trust.bal_c * 0.0024000000
+           + container.trust.bal_d * 0.0026916667
+           + container.trust.bal_e * 0.0000000000)), 0.0)))), 0.0)))
+           - (0.0), 0.0), container.trust.bal_a1)
+            - (min(max((min((if((prev.container.trust.balance - series_sum("credit.loan.sched_principal.*", time.t, time.t) - series_sum("credit.loan.prepay.*", time.t, time.t) + series_sum("credit.loan.defaults.*", time.t, time.t)) <= 101196992.93, (container.trust.bal_a1 + container.trust.bal_a2 + container.trust.bal_a3 + container.trust.bal_b + container.trust.bal_c + container.trust.bal_d + container.trust.bal_e),
+         max((container.trust.bal_a1 + container.trust.bal_a2 + container.trust.bal_a3 + container.trust.bal_b + container.trust.bal_c + container.trust.bal_d + container.trust.bal_e) - (min((prev.container.trust.balance - series_sum("credit.loan.sched_principal.*", time.t, time.t) - series_sum("credit.loan.prepay.*", time.t, time.t) + series_sum("credit.loan.defaults.*", time.t, time.t)) - 5059849.65,
+          max(((prev.container.trust.balance - series_sum("credit.loan.sched_principal.*", time.t, time.t) - series_sum("credit.loan.prepay.*", time.t, time.t) + series_sum("credit.loan.defaults.*", time.t, time.t)) - max(0.1475 * (prev.container.trust.balance - series_sum("credit.loan.sched_principal.*", time.t, time.t) - series_sum("credit.loan.prepay.*", time.t, time.t) + series_sum("credit.loan.defaults.*", time.t, time.t)) - prev.reserve, 0.0)),
+              (container.trust.bal_a1 + container.trust.bal_a2 + container.trust.bal_a3 + container.trust.bal_b + container.trust.bal_c + container.trust.bal_d + container.trust.bal_e) - ((if(time.t <= 1.0, 1011969929.28, prev.container.trust.balance)) - (prev.container.trust.balance - series_sum("credit.loan.sched_principal.*", time.t, time.t) - series_sum("credit.loan.prepay.*", time.t, time.t) + series_sum("credit.loan.defaults.*", time.t, time.t))) - max(((container.trust.pool_int)
+           - (container.trust.pool_fee) * 0.0018750000
            - 625.0
-           - (asset.trust.bal_a1 * 0.0007916667
-           + asset.trust.bal_a2 * 0.0011331000
-           + asset.trust.bal_a3 * 0.0015916667
-           + asset.trust.bal_b * 0.0019583333
-           + asset.trust.bal_c * 0.0024000000
-           + asset.trust.bal_d * 0.0026916667
-           + asset.trust.bal_e * 0.0000000000)), 0.0)))), 0.0))), ((asset.trust.pool_prior) - (asset.trust.pool_bal))))
-           - (0.0), 0.0), asset.trust.bal_a1)), 0.0)
+           - (container.trust.bal_a1 * 0.0007916667
+           + container.trust.bal_a2 * 0.0011331000
+           + container.trust.bal_a3 * 0.0015916667
+           + container.trust.bal_b * 0.0019583333
+           + container.trust.bal_c * 0.0024000000
+           + container.trust.bal_d * 0.0026916667
+           + container.trust.bal_e * 0.0000000000)), 0.0)))), 0.0))), ((if(time.t <= 1.0, 1011969929.28, prev.container.trust.balance)) - (prev.container.trust.balance - series_sum("credit.loan.sched_principal.*", time.t, time.t) - series_sum("credit.loan.prepay.*", time.t, time.t) + series_sum("credit.loan.defaults.*", time.t, time.t)))))
+           - (0.0), 0.0), container.trust.bal_a1)), 0.0)
 
   pay a2_accelerated to party.a2_holders =
-        max(min(max((if((asset.trust.pool_bal) <= 101196992.93, (asset.trust.bal_a1 + asset.trust.bal_a2 + asset.trust.bal_a3 + asset.trust.bal_b + asset.trust.bal_c + asset.trust.bal_d + asset.trust.bal_e),
-         max((asset.trust.bal_a1 + asset.trust.bal_a2 + asset.trust.bal_a3 + asset.trust.bal_b + asset.trust.bal_c + asset.trust.bal_d + asset.trust.bal_e) - (min((asset.trust.pool_bal) - 5059849.65,
-          max(((asset.trust.pool_bal) - max(0.1475 * (asset.trust.pool_bal) - prev.reserve, 0.0)),
-              (asset.trust.bal_a1 + asset.trust.bal_a2 + asset.trust.bal_a3 + asset.trust.bal_b + asset.trust.bal_c + asset.trust.bal_d + asset.trust.bal_e) - ((asset.trust.pool_prior) - (asset.trust.pool_bal)) - max(((asset.trust.pool_int)
-           - (asset.trust.pool_fee) * 0.0018750000
+        max(min(max((if((prev.container.trust.balance - series_sum("credit.loan.sched_principal.*", time.t, time.t) - series_sum("credit.loan.prepay.*", time.t, time.t) + series_sum("credit.loan.defaults.*", time.t, time.t)) <= 101196992.93, (container.trust.bal_a1 + container.trust.bal_a2 + container.trust.bal_a3 + container.trust.bal_b + container.trust.bal_c + container.trust.bal_d + container.trust.bal_e),
+         max((container.trust.bal_a1 + container.trust.bal_a2 + container.trust.bal_a3 + container.trust.bal_b + container.trust.bal_c + container.trust.bal_d + container.trust.bal_e) - (min((prev.container.trust.balance - series_sum("credit.loan.sched_principal.*", time.t, time.t) - series_sum("credit.loan.prepay.*", time.t, time.t) + series_sum("credit.loan.defaults.*", time.t, time.t)) - 5059849.65,
+          max(((prev.container.trust.balance - series_sum("credit.loan.sched_principal.*", time.t, time.t) - series_sum("credit.loan.prepay.*", time.t, time.t) + series_sum("credit.loan.defaults.*", time.t, time.t)) - max(0.1475 * (prev.container.trust.balance - series_sum("credit.loan.sched_principal.*", time.t, time.t) - series_sum("credit.loan.prepay.*", time.t, time.t) + series_sum("credit.loan.defaults.*", time.t, time.t)) - prev.reserve, 0.0)),
+              (container.trust.bal_a1 + container.trust.bal_a2 + container.trust.bal_a3 + container.trust.bal_b + container.trust.bal_c + container.trust.bal_d + container.trust.bal_e) - ((if(time.t <= 1.0, 1011969929.28, prev.container.trust.balance)) - (prev.container.trust.balance - series_sum("credit.loan.sched_principal.*", time.t, time.t) - series_sum("credit.loan.prepay.*", time.t, time.t) + series_sum("credit.loan.defaults.*", time.t, time.t))) - max(((container.trust.pool_int)
+           - (container.trust.pool_fee) * 0.0018750000
            - 625.0
-           - (asset.trust.bal_a1 * 0.0007916667
-           + asset.trust.bal_a2 * 0.0011331000
-           + asset.trust.bal_a3 * 0.0015916667
-           + asset.trust.bal_b * 0.0019583333
-           + asset.trust.bal_c * 0.0024000000
-           + asset.trust.bal_d * 0.0026916667
-           + asset.trust.bal_e * 0.0000000000)), 0.0)))), 0.0)))
-           - (asset.trust.bal_a1), 0.0), asset.trust.bal_a2)
-            - (min(max((min((if((asset.trust.pool_bal) <= 101196992.93, (asset.trust.bal_a1 + asset.trust.bal_a2 + asset.trust.bal_a3 + asset.trust.bal_b + asset.trust.bal_c + asset.trust.bal_d + asset.trust.bal_e),
-         max((asset.trust.bal_a1 + asset.trust.bal_a2 + asset.trust.bal_a3 + asset.trust.bal_b + asset.trust.bal_c + asset.trust.bal_d + asset.trust.bal_e) - (min((asset.trust.pool_bal) - 5059849.65,
-          max(((asset.trust.pool_bal) - max(0.1475 * (asset.trust.pool_bal) - prev.reserve, 0.0)),
-              (asset.trust.bal_a1 + asset.trust.bal_a2 + asset.trust.bal_a3 + asset.trust.bal_b + asset.trust.bal_c + asset.trust.bal_d + asset.trust.bal_e) - ((asset.trust.pool_prior) - (asset.trust.pool_bal)) - max(((asset.trust.pool_int)
-           - (asset.trust.pool_fee) * 0.0018750000
+           - (container.trust.bal_a1 * 0.0007916667
+           + container.trust.bal_a2 * 0.0011331000
+           + container.trust.bal_a3 * 0.0015916667
+           + container.trust.bal_b * 0.0019583333
+           + container.trust.bal_c * 0.0024000000
+           + container.trust.bal_d * 0.0026916667
+           + container.trust.bal_e * 0.0000000000)), 0.0)))), 0.0)))
+           - (container.trust.bal_a1), 0.0), container.trust.bal_a2)
+            - (min(max((min((if((prev.container.trust.balance - series_sum("credit.loan.sched_principal.*", time.t, time.t) - series_sum("credit.loan.prepay.*", time.t, time.t) + series_sum("credit.loan.defaults.*", time.t, time.t)) <= 101196992.93, (container.trust.bal_a1 + container.trust.bal_a2 + container.trust.bal_a3 + container.trust.bal_b + container.trust.bal_c + container.trust.bal_d + container.trust.bal_e),
+         max((container.trust.bal_a1 + container.trust.bal_a2 + container.trust.bal_a3 + container.trust.bal_b + container.trust.bal_c + container.trust.bal_d + container.trust.bal_e) - (min((prev.container.trust.balance - series_sum("credit.loan.sched_principal.*", time.t, time.t) - series_sum("credit.loan.prepay.*", time.t, time.t) + series_sum("credit.loan.defaults.*", time.t, time.t)) - 5059849.65,
+          max(((prev.container.trust.balance - series_sum("credit.loan.sched_principal.*", time.t, time.t) - series_sum("credit.loan.prepay.*", time.t, time.t) + series_sum("credit.loan.defaults.*", time.t, time.t)) - max(0.1475 * (prev.container.trust.balance - series_sum("credit.loan.sched_principal.*", time.t, time.t) - series_sum("credit.loan.prepay.*", time.t, time.t) + series_sum("credit.loan.defaults.*", time.t, time.t)) - prev.reserve, 0.0)),
+              (container.trust.bal_a1 + container.trust.bal_a2 + container.trust.bal_a3 + container.trust.bal_b + container.trust.bal_c + container.trust.bal_d + container.trust.bal_e) - ((if(time.t <= 1.0, 1011969929.28, prev.container.trust.balance)) - (prev.container.trust.balance - series_sum("credit.loan.sched_principal.*", time.t, time.t) - series_sum("credit.loan.prepay.*", time.t, time.t) + series_sum("credit.loan.defaults.*", time.t, time.t))) - max(((container.trust.pool_int)
+           - (container.trust.pool_fee) * 0.0018750000
            - 625.0
-           - (asset.trust.bal_a1 * 0.0007916667
-           + asset.trust.bal_a2 * 0.0011331000
-           + asset.trust.bal_a3 * 0.0015916667
-           + asset.trust.bal_b * 0.0019583333
-           + asset.trust.bal_c * 0.0024000000
-           + asset.trust.bal_d * 0.0026916667
-           + asset.trust.bal_e * 0.0000000000)), 0.0)))), 0.0))), ((asset.trust.pool_prior) - (asset.trust.pool_bal))))
-           - (asset.trust.bal_a1), 0.0), asset.trust.bal_a2)), 0.0)
+           - (container.trust.bal_a1 * 0.0007916667
+           + container.trust.bal_a2 * 0.0011331000
+           + container.trust.bal_a3 * 0.0015916667
+           + container.trust.bal_b * 0.0019583333
+           + container.trust.bal_c * 0.0024000000
+           + container.trust.bal_d * 0.0026916667
+           + container.trust.bal_e * 0.0000000000)), 0.0)))), 0.0))), ((if(time.t <= 1.0, 1011969929.28, prev.container.trust.balance)) - (prev.container.trust.balance - series_sum("credit.loan.sched_principal.*", time.t, time.t) - series_sum("credit.loan.prepay.*", time.t, time.t) + series_sum("credit.loan.defaults.*", time.t, time.t)))))
+           - (container.trust.bal_a1), 0.0), container.trust.bal_a2)), 0.0)
 
   pay a3_accelerated to party.a3_holders =
-        max(min(max((if((asset.trust.pool_bal) <= 101196992.93, (asset.trust.bal_a1 + asset.trust.bal_a2 + asset.trust.bal_a3 + asset.trust.bal_b + asset.trust.bal_c + asset.trust.bal_d + asset.trust.bal_e),
-         max((asset.trust.bal_a1 + asset.trust.bal_a2 + asset.trust.bal_a3 + asset.trust.bal_b + asset.trust.bal_c + asset.trust.bal_d + asset.trust.bal_e) - (min((asset.trust.pool_bal) - 5059849.65,
-          max(((asset.trust.pool_bal) - max(0.1475 * (asset.trust.pool_bal) - prev.reserve, 0.0)),
-              (asset.trust.bal_a1 + asset.trust.bal_a2 + asset.trust.bal_a3 + asset.trust.bal_b + asset.trust.bal_c + asset.trust.bal_d + asset.trust.bal_e) - ((asset.trust.pool_prior) - (asset.trust.pool_bal)) - max(((asset.trust.pool_int)
-           - (asset.trust.pool_fee) * 0.0018750000
+        max(min(max((if((prev.container.trust.balance - series_sum("credit.loan.sched_principal.*", time.t, time.t) - series_sum("credit.loan.prepay.*", time.t, time.t) + series_sum("credit.loan.defaults.*", time.t, time.t)) <= 101196992.93, (container.trust.bal_a1 + container.trust.bal_a2 + container.trust.bal_a3 + container.trust.bal_b + container.trust.bal_c + container.trust.bal_d + container.trust.bal_e),
+         max((container.trust.bal_a1 + container.trust.bal_a2 + container.trust.bal_a3 + container.trust.bal_b + container.trust.bal_c + container.trust.bal_d + container.trust.bal_e) - (min((prev.container.trust.balance - series_sum("credit.loan.sched_principal.*", time.t, time.t) - series_sum("credit.loan.prepay.*", time.t, time.t) + series_sum("credit.loan.defaults.*", time.t, time.t)) - 5059849.65,
+          max(((prev.container.trust.balance - series_sum("credit.loan.sched_principal.*", time.t, time.t) - series_sum("credit.loan.prepay.*", time.t, time.t) + series_sum("credit.loan.defaults.*", time.t, time.t)) - max(0.1475 * (prev.container.trust.balance - series_sum("credit.loan.sched_principal.*", time.t, time.t) - series_sum("credit.loan.prepay.*", time.t, time.t) + series_sum("credit.loan.defaults.*", time.t, time.t)) - prev.reserve, 0.0)),
+              (container.trust.bal_a1 + container.trust.bal_a2 + container.trust.bal_a3 + container.trust.bal_b + container.trust.bal_c + container.trust.bal_d + container.trust.bal_e) - ((if(time.t <= 1.0, 1011969929.28, prev.container.trust.balance)) - (prev.container.trust.balance - series_sum("credit.loan.sched_principal.*", time.t, time.t) - series_sum("credit.loan.prepay.*", time.t, time.t) + series_sum("credit.loan.defaults.*", time.t, time.t))) - max(((container.trust.pool_int)
+           - (container.trust.pool_fee) * 0.0018750000
            - 625.0
-           - (asset.trust.bal_a1 * 0.0007916667
-           + asset.trust.bal_a2 * 0.0011331000
-           + asset.trust.bal_a3 * 0.0015916667
-           + asset.trust.bal_b * 0.0019583333
-           + asset.trust.bal_c * 0.0024000000
-           + asset.trust.bal_d * 0.0026916667
-           + asset.trust.bal_e * 0.0000000000)), 0.0)))), 0.0)))
-           - (asset.trust.bal_a1 + asset.trust.bal_a2), 0.0), asset.trust.bal_a3)
-            - (min(max((min((if((asset.trust.pool_bal) <= 101196992.93, (asset.trust.bal_a1 + asset.trust.bal_a2 + asset.trust.bal_a3 + asset.trust.bal_b + asset.trust.bal_c + asset.trust.bal_d + asset.trust.bal_e),
-         max((asset.trust.bal_a1 + asset.trust.bal_a2 + asset.trust.bal_a3 + asset.trust.bal_b + asset.trust.bal_c + asset.trust.bal_d + asset.trust.bal_e) - (min((asset.trust.pool_bal) - 5059849.65,
-          max(((asset.trust.pool_bal) - max(0.1475 * (asset.trust.pool_bal) - prev.reserve, 0.0)),
-              (asset.trust.bal_a1 + asset.trust.bal_a2 + asset.trust.bal_a3 + asset.trust.bal_b + asset.trust.bal_c + asset.trust.bal_d + asset.trust.bal_e) - ((asset.trust.pool_prior) - (asset.trust.pool_bal)) - max(((asset.trust.pool_int)
-           - (asset.trust.pool_fee) * 0.0018750000
+           - (container.trust.bal_a1 * 0.0007916667
+           + container.trust.bal_a2 * 0.0011331000
+           + container.trust.bal_a3 * 0.0015916667
+           + container.trust.bal_b * 0.0019583333
+           + container.trust.bal_c * 0.0024000000
+           + container.trust.bal_d * 0.0026916667
+           + container.trust.bal_e * 0.0000000000)), 0.0)))), 0.0)))
+           - (container.trust.bal_a1 + container.trust.bal_a2), 0.0), container.trust.bal_a3)
+            - (min(max((min((if((prev.container.trust.balance - series_sum("credit.loan.sched_principal.*", time.t, time.t) - series_sum("credit.loan.prepay.*", time.t, time.t) + series_sum("credit.loan.defaults.*", time.t, time.t)) <= 101196992.93, (container.trust.bal_a1 + container.trust.bal_a2 + container.trust.bal_a3 + container.trust.bal_b + container.trust.bal_c + container.trust.bal_d + container.trust.bal_e),
+         max((container.trust.bal_a1 + container.trust.bal_a2 + container.trust.bal_a3 + container.trust.bal_b + container.trust.bal_c + container.trust.bal_d + container.trust.bal_e) - (min((prev.container.trust.balance - series_sum("credit.loan.sched_principal.*", time.t, time.t) - series_sum("credit.loan.prepay.*", time.t, time.t) + series_sum("credit.loan.defaults.*", time.t, time.t)) - 5059849.65,
+          max(((prev.container.trust.balance - series_sum("credit.loan.sched_principal.*", time.t, time.t) - series_sum("credit.loan.prepay.*", time.t, time.t) + series_sum("credit.loan.defaults.*", time.t, time.t)) - max(0.1475 * (prev.container.trust.balance - series_sum("credit.loan.sched_principal.*", time.t, time.t) - series_sum("credit.loan.prepay.*", time.t, time.t) + series_sum("credit.loan.defaults.*", time.t, time.t)) - prev.reserve, 0.0)),
+              (container.trust.bal_a1 + container.trust.bal_a2 + container.trust.bal_a3 + container.trust.bal_b + container.trust.bal_c + container.trust.bal_d + container.trust.bal_e) - ((if(time.t <= 1.0, 1011969929.28, prev.container.trust.balance)) - (prev.container.trust.balance - series_sum("credit.loan.sched_principal.*", time.t, time.t) - series_sum("credit.loan.prepay.*", time.t, time.t) + series_sum("credit.loan.defaults.*", time.t, time.t))) - max(((container.trust.pool_int)
+           - (container.trust.pool_fee) * 0.0018750000
            - 625.0
-           - (asset.trust.bal_a1 * 0.0007916667
-           + asset.trust.bal_a2 * 0.0011331000
-           + asset.trust.bal_a3 * 0.0015916667
-           + asset.trust.bal_b * 0.0019583333
-           + asset.trust.bal_c * 0.0024000000
-           + asset.trust.bal_d * 0.0026916667
-           + asset.trust.bal_e * 0.0000000000)), 0.0)))), 0.0))), ((asset.trust.pool_prior) - (asset.trust.pool_bal))))
-           - (asset.trust.bal_a1 + asset.trust.bal_a2), 0.0), asset.trust.bal_a3)), 0.0)
+           - (container.trust.bal_a1 * 0.0007916667
+           + container.trust.bal_a2 * 0.0011331000
+           + container.trust.bal_a3 * 0.0015916667
+           + container.trust.bal_b * 0.0019583333
+           + container.trust.bal_c * 0.0024000000
+           + container.trust.bal_d * 0.0026916667
+           + container.trust.bal_e * 0.0000000000)), 0.0)))), 0.0))), ((if(time.t <= 1.0, 1011969929.28, prev.container.trust.balance)) - (prev.container.trust.balance - series_sum("credit.loan.sched_principal.*", time.t, time.t) - series_sum("credit.loan.prepay.*", time.t, time.t) + series_sum("credit.loan.defaults.*", time.t, time.t)))))
+           - (container.trust.bal_a1 + container.trust.bal_a2), 0.0), container.trust.bal_a3)), 0.0)
 
   pay b_accelerated to party.b_holders =
-        max(min(max((if((asset.trust.pool_bal) <= 101196992.93, (asset.trust.bal_a1 + asset.trust.bal_a2 + asset.trust.bal_a3 + asset.trust.bal_b + asset.trust.bal_c + asset.trust.bal_d + asset.trust.bal_e),
-         max((asset.trust.bal_a1 + asset.trust.bal_a2 + asset.trust.bal_a3 + asset.trust.bal_b + asset.trust.bal_c + asset.trust.bal_d + asset.trust.bal_e) - (min((asset.trust.pool_bal) - 5059849.65,
-          max(((asset.trust.pool_bal) - max(0.1475 * (asset.trust.pool_bal) - prev.reserve, 0.0)),
-              (asset.trust.bal_a1 + asset.trust.bal_a2 + asset.trust.bal_a3 + asset.trust.bal_b + asset.trust.bal_c + asset.trust.bal_d + asset.trust.bal_e) - ((asset.trust.pool_prior) - (asset.trust.pool_bal)) - max(((asset.trust.pool_int)
-           - (asset.trust.pool_fee) * 0.0018750000
+        max(min(max((if((prev.container.trust.balance - series_sum("credit.loan.sched_principal.*", time.t, time.t) - series_sum("credit.loan.prepay.*", time.t, time.t) + series_sum("credit.loan.defaults.*", time.t, time.t)) <= 101196992.93, (container.trust.bal_a1 + container.trust.bal_a2 + container.trust.bal_a3 + container.trust.bal_b + container.trust.bal_c + container.trust.bal_d + container.trust.bal_e),
+         max((container.trust.bal_a1 + container.trust.bal_a2 + container.trust.bal_a3 + container.trust.bal_b + container.trust.bal_c + container.trust.bal_d + container.trust.bal_e) - (min((prev.container.trust.balance - series_sum("credit.loan.sched_principal.*", time.t, time.t) - series_sum("credit.loan.prepay.*", time.t, time.t) + series_sum("credit.loan.defaults.*", time.t, time.t)) - 5059849.65,
+          max(((prev.container.trust.balance - series_sum("credit.loan.sched_principal.*", time.t, time.t) - series_sum("credit.loan.prepay.*", time.t, time.t) + series_sum("credit.loan.defaults.*", time.t, time.t)) - max(0.1475 * (prev.container.trust.balance - series_sum("credit.loan.sched_principal.*", time.t, time.t) - series_sum("credit.loan.prepay.*", time.t, time.t) + series_sum("credit.loan.defaults.*", time.t, time.t)) - prev.reserve, 0.0)),
+              (container.trust.bal_a1 + container.trust.bal_a2 + container.trust.bal_a3 + container.trust.bal_b + container.trust.bal_c + container.trust.bal_d + container.trust.bal_e) - ((if(time.t <= 1.0, 1011969929.28, prev.container.trust.balance)) - (prev.container.trust.balance - series_sum("credit.loan.sched_principal.*", time.t, time.t) - series_sum("credit.loan.prepay.*", time.t, time.t) + series_sum("credit.loan.defaults.*", time.t, time.t))) - max(((container.trust.pool_int)
+           - (container.trust.pool_fee) * 0.0018750000
            - 625.0
-           - (asset.trust.bal_a1 * 0.0007916667
-           + asset.trust.bal_a2 * 0.0011331000
-           + asset.trust.bal_a3 * 0.0015916667
-           + asset.trust.bal_b * 0.0019583333
-           + asset.trust.bal_c * 0.0024000000
-           + asset.trust.bal_d * 0.0026916667
-           + asset.trust.bal_e * 0.0000000000)), 0.0)))), 0.0)))
-           - (asset.trust.bal_a1 + asset.trust.bal_a2 + asset.trust.bal_a3), 0.0), asset.trust.bal_b)
-            - (min(max((min((if((asset.trust.pool_bal) <= 101196992.93, (asset.trust.bal_a1 + asset.trust.bal_a2 + asset.trust.bal_a3 + asset.trust.bal_b + asset.trust.bal_c + asset.trust.bal_d + asset.trust.bal_e),
-         max((asset.trust.bal_a1 + asset.trust.bal_a2 + asset.trust.bal_a3 + asset.trust.bal_b + asset.trust.bal_c + asset.trust.bal_d + asset.trust.bal_e) - (min((asset.trust.pool_bal) - 5059849.65,
-          max(((asset.trust.pool_bal) - max(0.1475 * (asset.trust.pool_bal) - prev.reserve, 0.0)),
-              (asset.trust.bal_a1 + asset.trust.bal_a2 + asset.trust.bal_a3 + asset.trust.bal_b + asset.trust.bal_c + asset.trust.bal_d + asset.trust.bal_e) - ((asset.trust.pool_prior) - (asset.trust.pool_bal)) - max(((asset.trust.pool_int)
-           - (asset.trust.pool_fee) * 0.0018750000
+           - (container.trust.bal_a1 * 0.0007916667
+           + container.trust.bal_a2 * 0.0011331000
+           + container.trust.bal_a3 * 0.0015916667
+           + container.trust.bal_b * 0.0019583333
+           + container.trust.bal_c * 0.0024000000
+           + container.trust.bal_d * 0.0026916667
+           + container.trust.bal_e * 0.0000000000)), 0.0)))), 0.0)))
+           - (container.trust.bal_a1 + container.trust.bal_a2 + container.trust.bal_a3), 0.0), container.trust.bal_b)
+            - (min(max((min((if((prev.container.trust.balance - series_sum("credit.loan.sched_principal.*", time.t, time.t) - series_sum("credit.loan.prepay.*", time.t, time.t) + series_sum("credit.loan.defaults.*", time.t, time.t)) <= 101196992.93, (container.trust.bal_a1 + container.trust.bal_a2 + container.trust.bal_a3 + container.trust.bal_b + container.trust.bal_c + container.trust.bal_d + container.trust.bal_e),
+         max((container.trust.bal_a1 + container.trust.bal_a2 + container.trust.bal_a3 + container.trust.bal_b + container.trust.bal_c + container.trust.bal_d + container.trust.bal_e) - (min((prev.container.trust.balance - series_sum("credit.loan.sched_principal.*", time.t, time.t) - series_sum("credit.loan.prepay.*", time.t, time.t) + series_sum("credit.loan.defaults.*", time.t, time.t)) - 5059849.65,
+          max(((prev.container.trust.balance - series_sum("credit.loan.sched_principal.*", time.t, time.t) - series_sum("credit.loan.prepay.*", time.t, time.t) + series_sum("credit.loan.defaults.*", time.t, time.t)) - max(0.1475 * (prev.container.trust.balance - series_sum("credit.loan.sched_principal.*", time.t, time.t) - series_sum("credit.loan.prepay.*", time.t, time.t) + series_sum("credit.loan.defaults.*", time.t, time.t)) - prev.reserve, 0.0)),
+              (container.trust.bal_a1 + container.trust.bal_a2 + container.trust.bal_a3 + container.trust.bal_b + container.trust.bal_c + container.trust.bal_d + container.trust.bal_e) - ((if(time.t <= 1.0, 1011969929.28, prev.container.trust.balance)) - (prev.container.trust.balance - series_sum("credit.loan.sched_principal.*", time.t, time.t) - series_sum("credit.loan.prepay.*", time.t, time.t) + series_sum("credit.loan.defaults.*", time.t, time.t))) - max(((container.trust.pool_int)
+           - (container.trust.pool_fee) * 0.0018750000
            - 625.0
-           - (asset.trust.bal_a1 * 0.0007916667
-           + asset.trust.bal_a2 * 0.0011331000
-           + asset.trust.bal_a3 * 0.0015916667
-           + asset.trust.bal_b * 0.0019583333
-           + asset.trust.bal_c * 0.0024000000
-           + asset.trust.bal_d * 0.0026916667
-           + asset.trust.bal_e * 0.0000000000)), 0.0)))), 0.0))), ((asset.trust.pool_prior) - (asset.trust.pool_bal))))
-           - (asset.trust.bal_a1 + asset.trust.bal_a2 + asset.trust.bal_a3), 0.0), asset.trust.bal_b)), 0.0)
+           - (container.trust.bal_a1 * 0.0007916667
+           + container.trust.bal_a2 * 0.0011331000
+           + container.trust.bal_a3 * 0.0015916667
+           + container.trust.bal_b * 0.0019583333
+           + container.trust.bal_c * 0.0024000000
+           + container.trust.bal_d * 0.0026916667
+           + container.trust.bal_e * 0.0000000000)), 0.0)))), 0.0))), ((if(time.t <= 1.0, 1011969929.28, prev.container.trust.balance)) - (prev.container.trust.balance - series_sum("credit.loan.sched_principal.*", time.t, time.t) - series_sum("credit.loan.prepay.*", time.t, time.t) + series_sum("credit.loan.defaults.*", time.t, time.t)))))
+           - (container.trust.bal_a1 + container.trust.bal_a2 + container.trust.bal_a3), 0.0), container.trust.bal_b)), 0.0)
 
   pay c_accelerated to party.c_holders =
-        max(min(max((if((asset.trust.pool_bal) <= 101196992.93, (asset.trust.bal_a1 + asset.trust.bal_a2 + asset.trust.bal_a3 + asset.trust.bal_b + asset.trust.bal_c + asset.trust.bal_d + asset.trust.bal_e),
-         max((asset.trust.bal_a1 + asset.trust.bal_a2 + asset.trust.bal_a3 + asset.trust.bal_b + asset.trust.bal_c + asset.trust.bal_d + asset.trust.bal_e) - (min((asset.trust.pool_bal) - 5059849.65,
-          max(((asset.trust.pool_bal) - max(0.1475 * (asset.trust.pool_bal) - prev.reserve, 0.0)),
-              (asset.trust.bal_a1 + asset.trust.bal_a2 + asset.trust.bal_a3 + asset.trust.bal_b + asset.trust.bal_c + asset.trust.bal_d + asset.trust.bal_e) - ((asset.trust.pool_prior) - (asset.trust.pool_bal)) - max(((asset.trust.pool_int)
-           - (asset.trust.pool_fee) * 0.0018750000
+        max(min(max((if((prev.container.trust.balance - series_sum("credit.loan.sched_principal.*", time.t, time.t) - series_sum("credit.loan.prepay.*", time.t, time.t) + series_sum("credit.loan.defaults.*", time.t, time.t)) <= 101196992.93, (container.trust.bal_a1 + container.trust.bal_a2 + container.trust.bal_a3 + container.trust.bal_b + container.trust.bal_c + container.trust.bal_d + container.trust.bal_e),
+         max((container.trust.bal_a1 + container.trust.bal_a2 + container.trust.bal_a3 + container.trust.bal_b + container.trust.bal_c + container.trust.bal_d + container.trust.bal_e) - (min((prev.container.trust.balance - series_sum("credit.loan.sched_principal.*", time.t, time.t) - series_sum("credit.loan.prepay.*", time.t, time.t) + series_sum("credit.loan.defaults.*", time.t, time.t)) - 5059849.65,
+          max(((prev.container.trust.balance - series_sum("credit.loan.sched_principal.*", time.t, time.t) - series_sum("credit.loan.prepay.*", time.t, time.t) + series_sum("credit.loan.defaults.*", time.t, time.t)) - max(0.1475 * (prev.container.trust.balance - series_sum("credit.loan.sched_principal.*", time.t, time.t) - series_sum("credit.loan.prepay.*", time.t, time.t) + series_sum("credit.loan.defaults.*", time.t, time.t)) - prev.reserve, 0.0)),
+              (container.trust.bal_a1 + container.trust.bal_a2 + container.trust.bal_a3 + container.trust.bal_b + container.trust.bal_c + container.trust.bal_d + container.trust.bal_e) - ((if(time.t <= 1.0, 1011969929.28, prev.container.trust.balance)) - (prev.container.trust.balance - series_sum("credit.loan.sched_principal.*", time.t, time.t) - series_sum("credit.loan.prepay.*", time.t, time.t) + series_sum("credit.loan.defaults.*", time.t, time.t))) - max(((container.trust.pool_int)
+           - (container.trust.pool_fee) * 0.0018750000
            - 625.0
-           - (asset.trust.bal_a1 * 0.0007916667
-           + asset.trust.bal_a2 * 0.0011331000
-           + asset.trust.bal_a3 * 0.0015916667
-           + asset.trust.bal_b * 0.0019583333
-           + asset.trust.bal_c * 0.0024000000
-           + asset.trust.bal_d * 0.0026916667
-           + asset.trust.bal_e * 0.0000000000)), 0.0)))), 0.0)))
-           - (asset.trust.bal_a1 + asset.trust.bal_a2 + asset.trust.bal_a3 + asset.trust.bal_b), 0.0), asset.trust.bal_c)
-            - (min(max((min((if((asset.trust.pool_bal) <= 101196992.93, (asset.trust.bal_a1 + asset.trust.bal_a2 + asset.trust.bal_a3 + asset.trust.bal_b + asset.trust.bal_c + asset.trust.bal_d + asset.trust.bal_e),
-         max((asset.trust.bal_a1 + asset.trust.bal_a2 + asset.trust.bal_a3 + asset.trust.bal_b + asset.trust.bal_c + asset.trust.bal_d + asset.trust.bal_e) - (min((asset.trust.pool_bal) - 5059849.65,
-          max(((asset.trust.pool_bal) - max(0.1475 * (asset.trust.pool_bal) - prev.reserve, 0.0)),
-              (asset.trust.bal_a1 + asset.trust.bal_a2 + asset.trust.bal_a3 + asset.trust.bal_b + asset.trust.bal_c + asset.trust.bal_d + asset.trust.bal_e) - ((asset.trust.pool_prior) - (asset.trust.pool_bal)) - max(((asset.trust.pool_int)
-           - (asset.trust.pool_fee) * 0.0018750000
+           - (container.trust.bal_a1 * 0.0007916667
+           + container.trust.bal_a2 * 0.0011331000
+           + container.trust.bal_a3 * 0.0015916667
+           + container.trust.bal_b * 0.0019583333
+           + container.trust.bal_c * 0.0024000000
+           + container.trust.bal_d * 0.0026916667
+           + container.trust.bal_e * 0.0000000000)), 0.0)))), 0.0)))
+           - (container.trust.bal_a1 + container.trust.bal_a2 + container.trust.bal_a3 + container.trust.bal_b), 0.0), container.trust.bal_c)
+            - (min(max((min((if((prev.container.trust.balance - series_sum("credit.loan.sched_principal.*", time.t, time.t) - series_sum("credit.loan.prepay.*", time.t, time.t) + series_sum("credit.loan.defaults.*", time.t, time.t)) <= 101196992.93, (container.trust.bal_a1 + container.trust.bal_a2 + container.trust.bal_a3 + container.trust.bal_b + container.trust.bal_c + container.trust.bal_d + container.trust.bal_e),
+         max((container.trust.bal_a1 + container.trust.bal_a2 + container.trust.bal_a3 + container.trust.bal_b + container.trust.bal_c + container.trust.bal_d + container.trust.bal_e) - (min((prev.container.trust.balance - series_sum("credit.loan.sched_principal.*", time.t, time.t) - series_sum("credit.loan.prepay.*", time.t, time.t) + series_sum("credit.loan.defaults.*", time.t, time.t)) - 5059849.65,
+          max(((prev.container.trust.balance - series_sum("credit.loan.sched_principal.*", time.t, time.t) - series_sum("credit.loan.prepay.*", time.t, time.t) + series_sum("credit.loan.defaults.*", time.t, time.t)) - max(0.1475 * (prev.container.trust.balance - series_sum("credit.loan.sched_principal.*", time.t, time.t) - series_sum("credit.loan.prepay.*", time.t, time.t) + series_sum("credit.loan.defaults.*", time.t, time.t)) - prev.reserve, 0.0)),
+              (container.trust.bal_a1 + container.trust.bal_a2 + container.trust.bal_a3 + container.trust.bal_b + container.trust.bal_c + container.trust.bal_d + container.trust.bal_e) - ((if(time.t <= 1.0, 1011969929.28, prev.container.trust.balance)) - (prev.container.trust.balance - series_sum("credit.loan.sched_principal.*", time.t, time.t) - series_sum("credit.loan.prepay.*", time.t, time.t) + series_sum("credit.loan.defaults.*", time.t, time.t))) - max(((container.trust.pool_int)
+           - (container.trust.pool_fee) * 0.0018750000
            - 625.0
-           - (asset.trust.bal_a1 * 0.0007916667
-           + asset.trust.bal_a2 * 0.0011331000
-           + asset.trust.bal_a3 * 0.0015916667
-           + asset.trust.bal_b * 0.0019583333
-           + asset.trust.bal_c * 0.0024000000
-           + asset.trust.bal_d * 0.0026916667
-           + asset.trust.bal_e * 0.0000000000)), 0.0)))), 0.0))), ((asset.trust.pool_prior) - (asset.trust.pool_bal))))
-           - (asset.trust.bal_a1 + asset.trust.bal_a2 + asset.trust.bal_a3 + asset.trust.bal_b), 0.0), asset.trust.bal_c)), 0.0)
+           - (container.trust.bal_a1 * 0.0007916667
+           + container.trust.bal_a2 * 0.0011331000
+           + container.trust.bal_a3 * 0.0015916667
+           + container.trust.bal_b * 0.0019583333
+           + container.trust.bal_c * 0.0024000000
+           + container.trust.bal_d * 0.0026916667
+           + container.trust.bal_e * 0.0000000000)), 0.0)))), 0.0))), ((if(time.t <= 1.0, 1011969929.28, prev.container.trust.balance)) - (prev.container.trust.balance - series_sum("credit.loan.sched_principal.*", time.t, time.t) - series_sum("credit.loan.prepay.*", time.t, time.t) + series_sum("credit.loan.defaults.*", time.t, time.t)))))
+           - (container.trust.bal_a1 + container.trust.bal_a2 + container.trust.bal_a3 + container.trust.bal_b), 0.0), container.trust.bal_c)), 0.0)
 
   pay d_accelerated to party.d_holders =
-        max(min(max((if((asset.trust.pool_bal) <= 101196992.93, (asset.trust.bal_a1 + asset.trust.bal_a2 + asset.trust.bal_a3 + asset.trust.bal_b + asset.trust.bal_c + asset.trust.bal_d + asset.trust.bal_e),
-         max((asset.trust.bal_a1 + asset.trust.bal_a2 + asset.trust.bal_a3 + asset.trust.bal_b + asset.trust.bal_c + asset.trust.bal_d + asset.trust.bal_e) - (min((asset.trust.pool_bal) - 5059849.65,
-          max(((asset.trust.pool_bal) - max(0.1475 * (asset.trust.pool_bal) - prev.reserve, 0.0)),
-              (asset.trust.bal_a1 + asset.trust.bal_a2 + asset.trust.bal_a3 + asset.trust.bal_b + asset.trust.bal_c + asset.trust.bal_d + asset.trust.bal_e) - ((asset.trust.pool_prior) - (asset.trust.pool_bal)) - max(((asset.trust.pool_int)
-           - (asset.trust.pool_fee) * 0.0018750000
+        max(min(max((if((prev.container.trust.balance - series_sum("credit.loan.sched_principal.*", time.t, time.t) - series_sum("credit.loan.prepay.*", time.t, time.t) + series_sum("credit.loan.defaults.*", time.t, time.t)) <= 101196992.93, (container.trust.bal_a1 + container.trust.bal_a2 + container.trust.bal_a3 + container.trust.bal_b + container.trust.bal_c + container.trust.bal_d + container.trust.bal_e),
+         max((container.trust.bal_a1 + container.trust.bal_a2 + container.trust.bal_a3 + container.trust.bal_b + container.trust.bal_c + container.trust.bal_d + container.trust.bal_e) - (min((prev.container.trust.balance - series_sum("credit.loan.sched_principal.*", time.t, time.t) - series_sum("credit.loan.prepay.*", time.t, time.t) + series_sum("credit.loan.defaults.*", time.t, time.t)) - 5059849.65,
+          max(((prev.container.trust.balance - series_sum("credit.loan.sched_principal.*", time.t, time.t) - series_sum("credit.loan.prepay.*", time.t, time.t) + series_sum("credit.loan.defaults.*", time.t, time.t)) - max(0.1475 * (prev.container.trust.balance - series_sum("credit.loan.sched_principal.*", time.t, time.t) - series_sum("credit.loan.prepay.*", time.t, time.t) + series_sum("credit.loan.defaults.*", time.t, time.t)) - prev.reserve, 0.0)),
+              (container.trust.bal_a1 + container.trust.bal_a2 + container.trust.bal_a3 + container.trust.bal_b + container.trust.bal_c + container.trust.bal_d + container.trust.bal_e) - ((if(time.t <= 1.0, 1011969929.28, prev.container.trust.balance)) - (prev.container.trust.balance - series_sum("credit.loan.sched_principal.*", time.t, time.t) - series_sum("credit.loan.prepay.*", time.t, time.t) + series_sum("credit.loan.defaults.*", time.t, time.t))) - max(((container.trust.pool_int)
+           - (container.trust.pool_fee) * 0.0018750000
            - 625.0
-           - (asset.trust.bal_a1 * 0.0007916667
-           + asset.trust.bal_a2 * 0.0011331000
-           + asset.trust.bal_a3 * 0.0015916667
-           + asset.trust.bal_b * 0.0019583333
-           + asset.trust.bal_c * 0.0024000000
-           + asset.trust.bal_d * 0.0026916667
-           + asset.trust.bal_e * 0.0000000000)), 0.0)))), 0.0)))
-           - (asset.trust.bal_a1 + asset.trust.bal_a2 + asset.trust.bal_a3 + asset.trust.bal_b + asset.trust.bal_c), 0.0), asset.trust.bal_d)
-            - (min(max((min((if((asset.trust.pool_bal) <= 101196992.93, (asset.trust.bal_a1 + asset.trust.bal_a2 + asset.trust.bal_a3 + asset.trust.bal_b + asset.trust.bal_c + asset.trust.bal_d + asset.trust.bal_e),
-         max((asset.trust.bal_a1 + asset.trust.bal_a2 + asset.trust.bal_a3 + asset.trust.bal_b + asset.trust.bal_c + asset.trust.bal_d + asset.trust.bal_e) - (min((asset.trust.pool_bal) - 5059849.65,
-          max(((asset.trust.pool_bal) - max(0.1475 * (asset.trust.pool_bal) - prev.reserve, 0.0)),
-              (asset.trust.bal_a1 + asset.trust.bal_a2 + asset.trust.bal_a3 + asset.trust.bal_b + asset.trust.bal_c + asset.trust.bal_d + asset.trust.bal_e) - ((asset.trust.pool_prior) - (asset.trust.pool_bal)) - max(((asset.trust.pool_int)
-           - (asset.trust.pool_fee) * 0.0018750000
+           - (container.trust.bal_a1 * 0.0007916667
+           + container.trust.bal_a2 * 0.0011331000
+           + container.trust.bal_a3 * 0.0015916667
+           + container.trust.bal_b * 0.0019583333
+           + container.trust.bal_c * 0.0024000000
+           + container.trust.bal_d * 0.0026916667
+           + container.trust.bal_e * 0.0000000000)), 0.0)))), 0.0)))
+           - (container.trust.bal_a1 + container.trust.bal_a2 + container.trust.bal_a3 + container.trust.bal_b + container.trust.bal_c), 0.0), container.trust.bal_d)
+            - (min(max((min((if((prev.container.trust.balance - series_sum("credit.loan.sched_principal.*", time.t, time.t) - series_sum("credit.loan.prepay.*", time.t, time.t) + series_sum("credit.loan.defaults.*", time.t, time.t)) <= 101196992.93, (container.trust.bal_a1 + container.trust.bal_a2 + container.trust.bal_a3 + container.trust.bal_b + container.trust.bal_c + container.trust.bal_d + container.trust.bal_e),
+         max((container.trust.bal_a1 + container.trust.bal_a2 + container.trust.bal_a3 + container.trust.bal_b + container.trust.bal_c + container.trust.bal_d + container.trust.bal_e) - (min((prev.container.trust.balance - series_sum("credit.loan.sched_principal.*", time.t, time.t) - series_sum("credit.loan.prepay.*", time.t, time.t) + series_sum("credit.loan.defaults.*", time.t, time.t)) - 5059849.65,
+          max(((prev.container.trust.balance - series_sum("credit.loan.sched_principal.*", time.t, time.t) - series_sum("credit.loan.prepay.*", time.t, time.t) + series_sum("credit.loan.defaults.*", time.t, time.t)) - max(0.1475 * (prev.container.trust.balance - series_sum("credit.loan.sched_principal.*", time.t, time.t) - series_sum("credit.loan.prepay.*", time.t, time.t) + series_sum("credit.loan.defaults.*", time.t, time.t)) - prev.reserve, 0.0)),
+              (container.trust.bal_a1 + container.trust.bal_a2 + container.trust.bal_a3 + container.trust.bal_b + container.trust.bal_c + container.trust.bal_d + container.trust.bal_e) - ((if(time.t <= 1.0, 1011969929.28, prev.container.trust.balance)) - (prev.container.trust.balance - series_sum("credit.loan.sched_principal.*", time.t, time.t) - series_sum("credit.loan.prepay.*", time.t, time.t) + series_sum("credit.loan.defaults.*", time.t, time.t))) - max(((container.trust.pool_int)
+           - (container.trust.pool_fee) * 0.0018750000
            - 625.0
-           - (asset.trust.bal_a1 * 0.0007916667
-           + asset.trust.bal_a2 * 0.0011331000
-           + asset.trust.bal_a3 * 0.0015916667
-           + asset.trust.bal_b * 0.0019583333
-           + asset.trust.bal_c * 0.0024000000
-           + asset.trust.bal_d * 0.0026916667
-           + asset.trust.bal_e * 0.0000000000)), 0.0)))), 0.0))), ((asset.trust.pool_prior) - (asset.trust.pool_bal))))
-           - (asset.trust.bal_a1 + asset.trust.bal_a2 + asset.trust.bal_a3 + asset.trust.bal_b + asset.trust.bal_c), 0.0), asset.trust.bal_d)), 0.0)
+           - (container.trust.bal_a1 * 0.0007916667
+           + container.trust.bal_a2 * 0.0011331000
+           + container.trust.bal_a3 * 0.0015916667
+           + container.trust.bal_b * 0.0019583333
+           + container.trust.bal_c * 0.0024000000
+           + container.trust.bal_d * 0.0026916667
+           + container.trust.bal_e * 0.0000000000)), 0.0)))), 0.0))), ((if(time.t <= 1.0, 1011969929.28, prev.container.trust.balance)) - (prev.container.trust.balance - series_sum("credit.loan.sched_principal.*", time.t, time.t) - series_sum("credit.loan.prepay.*", time.t, time.t) + series_sum("credit.loan.defaults.*", time.t, time.t)))))
+           - (container.trust.bal_a1 + container.trust.bal_a2 + container.trust.bal_a3 + container.trust.bal_b + container.trust.bal_c), 0.0), container.trust.bal_d)), 0.0)
 
   pay e_accelerated to party.e_holders =
-        max(min(max((if((asset.trust.pool_bal) <= 101196992.93, (asset.trust.bal_a1 + asset.trust.bal_a2 + asset.trust.bal_a3 + asset.trust.bal_b + asset.trust.bal_c + asset.trust.bal_d + asset.trust.bal_e),
-         max((asset.trust.bal_a1 + asset.trust.bal_a2 + asset.trust.bal_a3 + asset.trust.bal_b + asset.trust.bal_c + asset.trust.bal_d + asset.trust.bal_e) - (min((asset.trust.pool_bal) - 5059849.65,
-          max(((asset.trust.pool_bal) - max(0.1475 * (asset.trust.pool_bal) - prev.reserve, 0.0)),
-              (asset.trust.bal_a1 + asset.trust.bal_a2 + asset.trust.bal_a3 + asset.trust.bal_b + asset.trust.bal_c + asset.trust.bal_d + asset.trust.bal_e) - ((asset.trust.pool_prior) - (asset.trust.pool_bal)) - max(((asset.trust.pool_int)
-           - (asset.trust.pool_fee) * 0.0018750000
+        max(min(max((if((prev.container.trust.balance - series_sum("credit.loan.sched_principal.*", time.t, time.t) - series_sum("credit.loan.prepay.*", time.t, time.t) + series_sum("credit.loan.defaults.*", time.t, time.t)) <= 101196992.93, (container.trust.bal_a1 + container.trust.bal_a2 + container.trust.bal_a3 + container.trust.bal_b + container.trust.bal_c + container.trust.bal_d + container.trust.bal_e),
+         max((container.trust.bal_a1 + container.trust.bal_a2 + container.trust.bal_a3 + container.trust.bal_b + container.trust.bal_c + container.trust.bal_d + container.trust.bal_e) - (min((prev.container.trust.balance - series_sum("credit.loan.sched_principal.*", time.t, time.t) - series_sum("credit.loan.prepay.*", time.t, time.t) + series_sum("credit.loan.defaults.*", time.t, time.t)) - 5059849.65,
+          max(((prev.container.trust.balance - series_sum("credit.loan.sched_principal.*", time.t, time.t) - series_sum("credit.loan.prepay.*", time.t, time.t) + series_sum("credit.loan.defaults.*", time.t, time.t)) - max(0.1475 * (prev.container.trust.balance - series_sum("credit.loan.sched_principal.*", time.t, time.t) - series_sum("credit.loan.prepay.*", time.t, time.t) + series_sum("credit.loan.defaults.*", time.t, time.t)) - prev.reserve, 0.0)),
+              (container.trust.bal_a1 + container.trust.bal_a2 + container.trust.bal_a3 + container.trust.bal_b + container.trust.bal_c + container.trust.bal_d + container.trust.bal_e) - ((if(time.t <= 1.0, 1011969929.28, prev.container.trust.balance)) - (prev.container.trust.balance - series_sum("credit.loan.sched_principal.*", time.t, time.t) - series_sum("credit.loan.prepay.*", time.t, time.t) + series_sum("credit.loan.defaults.*", time.t, time.t))) - max(((container.trust.pool_int)
+           - (container.trust.pool_fee) * 0.0018750000
            - 625.0
-           - (asset.trust.bal_a1 * 0.0007916667
-           + asset.trust.bal_a2 * 0.0011331000
-           + asset.trust.bal_a3 * 0.0015916667
-           + asset.trust.bal_b * 0.0019583333
-           + asset.trust.bal_c * 0.0024000000
-           + asset.trust.bal_d * 0.0026916667
-           + asset.trust.bal_e * 0.0000000000)), 0.0)))), 0.0)))
-           - (asset.trust.bal_a1 + asset.trust.bal_a2 + asset.trust.bal_a3 + asset.trust.bal_b + asset.trust.bal_c + asset.trust.bal_d), 0.0), asset.trust.bal_e)
-            - (min(max((min((if((asset.trust.pool_bal) <= 101196992.93, (asset.trust.bal_a1 + asset.trust.bal_a2 + asset.trust.bal_a3 + asset.trust.bal_b + asset.trust.bal_c + asset.trust.bal_d + asset.trust.bal_e),
-         max((asset.trust.bal_a1 + asset.trust.bal_a2 + asset.trust.bal_a3 + asset.trust.bal_b + asset.trust.bal_c + asset.trust.bal_d + asset.trust.bal_e) - (min((asset.trust.pool_bal) - 5059849.65,
-          max(((asset.trust.pool_bal) - max(0.1475 * (asset.trust.pool_bal) - prev.reserve, 0.0)),
-              (asset.trust.bal_a1 + asset.trust.bal_a2 + asset.trust.bal_a3 + asset.trust.bal_b + asset.trust.bal_c + asset.trust.bal_d + asset.trust.bal_e) - ((asset.trust.pool_prior) - (asset.trust.pool_bal)) - max(((asset.trust.pool_int)
-           - (asset.trust.pool_fee) * 0.0018750000
+           - (container.trust.bal_a1 * 0.0007916667
+           + container.trust.bal_a2 * 0.0011331000
+           + container.trust.bal_a3 * 0.0015916667
+           + container.trust.bal_b * 0.0019583333
+           + container.trust.bal_c * 0.0024000000
+           + container.trust.bal_d * 0.0026916667
+           + container.trust.bal_e * 0.0000000000)), 0.0)))), 0.0)))
+           - (container.trust.bal_a1 + container.trust.bal_a2 + container.trust.bal_a3 + container.trust.bal_b + container.trust.bal_c + container.trust.bal_d), 0.0), container.trust.bal_e)
+            - (min(max((min((if((prev.container.trust.balance - series_sum("credit.loan.sched_principal.*", time.t, time.t) - series_sum("credit.loan.prepay.*", time.t, time.t) + series_sum("credit.loan.defaults.*", time.t, time.t)) <= 101196992.93, (container.trust.bal_a1 + container.trust.bal_a2 + container.trust.bal_a3 + container.trust.bal_b + container.trust.bal_c + container.trust.bal_d + container.trust.bal_e),
+         max((container.trust.bal_a1 + container.trust.bal_a2 + container.trust.bal_a3 + container.trust.bal_b + container.trust.bal_c + container.trust.bal_d + container.trust.bal_e) - (min((prev.container.trust.balance - series_sum("credit.loan.sched_principal.*", time.t, time.t) - series_sum("credit.loan.prepay.*", time.t, time.t) + series_sum("credit.loan.defaults.*", time.t, time.t)) - 5059849.65,
+          max(((prev.container.trust.balance - series_sum("credit.loan.sched_principal.*", time.t, time.t) - series_sum("credit.loan.prepay.*", time.t, time.t) + series_sum("credit.loan.defaults.*", time.t, time.t)) - max(0.1475 * (prev.container.trust.balance - series_sum("credit.loan.sched_principal.*", time.t, time.t) - series_sum("credit.loan.prepay.*", time.t, time.t) + series_sum("credit.loan.defaults.*", time.t, time.t)) - prev.reserve, 0.0)),
+              (container.trust.bal_a1 + container.trust.bal_a2 + container.trust.bal_a3 + container.trust.bal_b + container.trust.bal_c + container.trust.bal_d + container.trust.bal_e) - ((if(time.t <= 1.0, 1011969929.28, prev.container.trust.balance)) - (prev.container.trust.balance - series_sum("credit.loan.sched_principal.*", time.t, time.t) - series_sum("credit.loan.prepay.*", time.t, time.t) + series_sum("credit.loan.defaults.*", time.t, time.t))) - max(((container.trust.pool_int)
+           - (container.trust.pool_fee) * 0.0018750000
            - 625.0
-           - (asset.trust.bal_a1 * 0.0007916667
-           + asset.trust.bal_a2 * 0.0011331000
-           + asset.trust.bal_a3 * 0.0015916667
-           + asset.trust.bal_b * 0.0019583333
-           + asset.trust.bal_c * 0.0024000000
-           + asset.trust.bal_d * 0.0026916667
-           + asset.trust.bal_e * 0.0000000000)), 0.0)))), 0.0))), ((asset.trust.pool_prior) - (asset.trust.pool_bal))))
-           - (asset.trust.bal_a1 + asset.trust.bal_a2 + asset.trust.bal_a3 + asset.trust.bal_b + asset.trust.bal_c + asset.trust.bal_d), 0.0), asset.trust.bal_e)), 0.0)
+           - (container.trust.bal_a1 * 0.0007916667
+           + container.trust.bal_a2 * 0.0011331000
+           + container.trust.bal_a3 * 0.0015916667
+           + container.trust.bal_b * 0.0019583333
+           + container.trust.bal_c * 0.0024000000
+           + container.trust.bal_d * 0.0026916667
+           + container.trust.bal_e * 0.0000000000)), 0.0)))), 0.0))), ((if(time.t <= 1.0, 1011969929.28, prev.container.trust.balance)) - (prev.container.trust.balance - series_sum("credit.loan.sched_principal.*", time.t, time.t) - series_sum("credit.loan.prepay.*", time.t, time.t) + series_sum("credit.loan.defaults.*", time.t, time.t)))))
+           - (container.trust.bal_a1 + container.trust.bal_a2 + container.trust.bal_a3 + container.trust.bal_b + container.trust.bal_c + container.trust.bal_d), 0.0), container.trust.bal_e)), 0.0)
 
   // 21. trustee amounts above the cap that held them at clause 2
   pay trustee_excess to party.trustee = owed.trustee_fees - paid.trustee_fees
@@ -1167,13 +1168,13 @@ waterfall notes.distribution on entity asset.trust {
 
 Checked period by period: **31 series** across **64 periods** — **1576 values** in all, each within ±1.00 of the reference.
 
-- `asset.trust.bal_a1`
-- `asset.trust.bal_a2`
-- `asset.trust.bal_a3`
-- `asset.trust.bal_b`
-- `asset.trust.bal_c`
-- `asset.trust.bal_d`
-- `asset.trust.bal_e`
+- `container.trust.bal_a1`
+- `container.trust.bal_a2`
+- `container.trust.bal_a3`
+- `container.trust.bal_b`
+- `container.trust.bal_c`
+- `container.trust.bal_d`
+- `container.trust.bal_e`
 - `notes.distribution.servicing`
 - `notes.distribution.trustee_fees`
 - `notes.distribution.a1_interest`
@@ -1203,4 +1204,4 @@ Summary metrics for the base run:
 
 | Metric | Value | Tolerance |
 |---|---:|---:|
-| `model.total` | 1,215,935,766.43 | ±1 |
+| `model.total` | 1,115,050,449.22 | ±1 |
