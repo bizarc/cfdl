@@ -1267,22 +1267,65 @@ state those write — never by the record of the agreement.
 
 ---
 
-## 14. Options (real options, minimal v0.1)
+## 14. Options (elections)
+
+An option is a contract with an election: a right someone holds to make
+something happen, on stated terms. It is declared with the `option`
+keyword rather than `contract` because it lowers through no pack rule — its
+cash is the payoff of the election, resolved by the engine — but it carries
+what every contract carries: what it is written on, who it is between, and
+its terms.
 
 ### 14.1 Option declaration
-Syntax:
+Syntax (normative):
 
 ```cfdl
-option refi_1 type Option.Refinance exercisable in construction {
-  exercise when curve_value("sofr", time.date) < 0.045
-  payoff cfg.refi_savings_estimate - 250000
+option call_at_120 on entity asset.plant type Option.Call {
+  parties { holder = party.holder }
+  terms { strike = 120.0 }
+  exercise when asset.plant.book_value > contract.strike
+  payoff asset.plant.book_value - contract.strike
 }
 ```
 
 Rules:
-- Options MAY be activated/deactivated via events.
-- v0.1 supports only deterministic exercise triggers.
-- Optimization/search policies are out of scope for v0.1.
+- `option <name> [on entity <EntityRef> | on contract <ContractName>] type
+  <TypeId> [exercisable in <phase>] { parties / terms / exercise when /
+  payoff }`. The body's items may appear in any order.
+- `type` names an election: a concrete refinement of `Contract.Option` in
+  the active pack, or one of the four the language base carries so a model
+  with no pack can write one — `Option.Call`, `Option.Put`,
+  `Option.Renewal`, `Option.Refinance`. A type the ontology does not
+  define is `E1373`; a master is `E1374`; a lowered type written as an
+  option is `E1373` with the hint to declare it with `contract`.
+- **What it is written on.** `on entity` names the asset the right is over.
+  `on contract` names the AGREEMENT the right is over — a renewal is a
+  right over a lease, a prepayment a right over a loan — and the option
+  takes that agreement's entity as its own. A contract the model does not
+  declare is `E1376`. Either form may be omitted, in which case the payoff
+  belongs to no entity and falls out of every per-entity total.
+- **Parties** bind the roles the election type declares, checked against
+  its master chain as a contract's are (`docs/40` §5).
+- **Terms** are checked against the election type's effective fields
+  exactly as a contract's terms are (§8.1): `Contract.Option` declares
+  `strike` (optional), and a pack election adds its own. An unknown term
+  is `E1371`; a required term omitted is `E1372`.
+- **`contract.<term>`** in `exercise when` or `payoff` reads a stated term —
+  the option's own first, then, where the option is written `on contract`,
+  the agreement's. The value is spliced at compile time, so a term may be a
+  literal, an `inputs.` reference or an expression, as a contract's may. A
+  read of a term nothing states is `E1372`: a read with no value is a
+  missing term, never a zero.
+- `exercise when` is the election, evaluated once per period against the
+  state as the period OPENED (§13.3), and may read entity fields by
+  qualified path and its owner's entity state; it cannot read a stream. The
+  option fires at most once, when the election holds inside its
+  `exercisable in` window or an event forces it there (§13.2). Exercise is
+  rule-based: the model exercises when the stated condition says so, never
+  when a search over holder value says it should.
+- `payoff` is the cash the exercise produces, published as a series under
+  the option's name — zero where it did not exercise, so a non-exercise is
+  assertable.
 
 ---
 

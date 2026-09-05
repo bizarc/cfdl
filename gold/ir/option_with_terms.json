@@ -1,0 +1,178 @@
+{
+  "ir_version": "0.1",
+  "model": {
+    "name": "option-with-terms",
+    "currency": "USD"
+  },
+  "time": {
+    "calendar": "annual",
+    "start": "2026-01-01",
+    "periods": 4
+  },
+  "phases": [],
+  "entities": [
+    {
+      "id": "8ca71b46277588990b2687beb5fc6196",
+      "symbol": "asset.plant",
+      "type": "Asset.Real",
+      "fields": {},
+      "rules": {
+        "book_value": {
+          "init": {
+            "lang": "cfdl",
+            "src": "100.0"
+          },
+          "next": {
+            "lang": "cfdl",
+            "src": "prev * 1.10"
+          }
+        }
+      },
+      "state": {}
+    },
+    {
+      "id": "05e0f5f63d961c9d49138ee28dd07373",
+      "symbol": "party.holder",
+      "type": "Party",
+      "fields": {
+        "name": "Holder"
+      },
+      "state": {}
+    }
+  ],
+  "assumptions": {
+    "constants": {
+      "high_strike": {
+        "expr": {
+          "lang": "cfdl",
+          "src": "500.0"
+        },
+        "name": "high_strike",
+        "type": "Decimal"
+      }
+    },
+    "random": {}
+  },
+  "contracts": [],
+  "streams": [
+    {
+      "id": "327dcd0f0062ecf38e6786c7a3ca1246",
+      "name": "plant.revenue",
+      "owner": {
+        "symbol": "asset.plant"
+      },
+      "direction": "inflow",
+      "currency": "USD",
+      "schedule": {
+        "kind": "Every",
+        "every": "annual",
+        "from": "2026-01-01",
+        "to": "2029-01-01"
+      },
+      "amount": {
+        "lang": "cfdl",
+        "src": "10.0"
+      },
+      "active_when": {
+        "lang": "cfdl",
+        "src": "true"
+      },
+      "provenance": {
+        "source_file": "model.cfdl",
+        "source_span": {
+          "start_line": 34,
+          "start_col": 1,
+          "end_line": 37,
+          "end_col": 1
+        }
+      }
+    }
+  ],
+  "events": [],
+  "options": [
+    {
+      "exercise_when": {
+        "lang": "cfdl",
+        "src": "asset.plant.book_value > (120.0)"
+      },
+      "id": "2b30c9a85e21e4a212a08118e434d021",
+      "name": "call",
+      "owner": {
+        "symbol": "asset.plant"
+      },
+      "parties": [
+        {
+          "entity": {
+            "symbol": "party.holder"
+          },
+          "role": "holder"
+        }
+      ],
+      "payoff": {
+        "lang": "cfdl",
+        "src": "asset.plant.book_value - (120.0)"
+      },
+      "provenance": {
+        "source_file": "model.cfdl",
+        "source_span": {
+          "end_col": 1,
+          "end_line": 23,
+          "start_col": 1,
+          "start_line": 18
+        }
+      },
+      "terms": {
+        "strike": 120.0
+      },
+      "type": "Option.Call"
+    },
+    {
+      "exercise_when": {
+        "lang": "cfdl",
+        "src": "asset.plant.book_value > (inputs.high_strike)"
+      },
+      "id": "17b5d1603b4f07922982d6b476d29d98",
+      "name": "call_high",
+      "owner": {
+        "symbol": "asset.plant"
+      },
+      "payoff": {
+        "lang": "cfdl",
+        "src": "asset.plant.book_value - (inputs.high_strike)"
+      },
+      "provenance": {
+        "source_file": "model.cfdl",
+        "source_span": {
+          "end_col": 1,
+          "end_line": 30,
+          "start_col": 1,
+          "start_line": 26
+        }
+      },
+      "terms": {
+        "strike": {
+          "lang": "cfdl",
+          "src": "inputs.high_strike"
+        }
+      },
+      "type": "Option.Call"
+    }
+  ],
+  "runs": [
+    {
+      "kind": "deterministic"
+    }
+  ],
+  "required_observables": [],
+  "required_refs": [],
+  "provenance": {
+    "sources": [
+      "model.cfdl"
+    ],
+    "compiler": {
+      "name": "cfdl",
+      "version": "0.9.0",
+      "hash": "6bebad0d68f4babc5c564c4ea7ecc1f2"
+    }
+  }
+}

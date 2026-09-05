@@ -1,0 +1,32 @@
+[
+  {
+    "code": "E1372_MISSING_CONTRACT_TERM",
+    "severity": "error",
+    "message": "Option 'call' reads `contract.strike` in its exercise when, and no term by that name is stated.",
+    "file": "model.cfdl",
+    "span": {
+      "start_line": 13,
+      "start_col": 1,
+      "end_line": 16,
+      "end_col": 1
+    },
+    "path": null,
+    "hint": "State `strike` in the option's `terms`, or write the option `on contract <name>` to read the agreement's.",
+    "notes": []
+  },
+  {
+    "code": "E1372_MISSING_CONTRACT_TERM",
+    "severity": "error",
+    "message": "Option 'call' reads `contract.strike` in its payoff, and no term by that name is stated.",
+    "file": "model.cfdl",
+    "span": {
+      "start_line": 13,
+      "start_col": 1,
+      "end_line": 16,
+      "end_col": 1
+    },
+    "path": null,
+    "hint": "State `strike` in the option's `terms`, or write the option `on contract <name>` to read the agreement's.",
+    "notes": []
+  }
+]

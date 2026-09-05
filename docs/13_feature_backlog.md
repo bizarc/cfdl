@@ -1261,21 +1261,6 @@ contract block, so it is a stopgap and should be labelled one.
 
 ---
 
-### 7.62 An option accepts `on entity`, which nothing documents
-
-*Belongs with the language (section 5). Found reconciling the grammar.*
-
-`option call_at_120 on entity asset.plant type Option.Call { … }` parses and
-ships in models. §14.1 of the language specification does not show the clause,
-and the EBNF does not have it — the parser grew it and neither document
-followed.
-
-Resolve in one direction: document it in §14.1 and the grammar, or remove it and
-migrate the models that use it. It is small either way, and it should not
-survive to v1 as surface nobody wrote down.
-
----
-
 ### 7.66 Two published pages disagree about the arithmetic, and nothing checks
 
 *Belongs with the documentation (section 7). Found reading the live site.*

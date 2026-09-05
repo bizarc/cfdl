@@ -1264,7 +1264,18 @@
         },
         "owner": {
           "$ref": "#/$defs/EntityRef",
-          "description": "The asset this option is written on. AN OPTION IS A CONTRACT WITH AN ELECTION, so it attaches to something the way every other contract does. Absent on an option written before options had owners; without one its payoff belongs to no entity and falls out of every per-entity total."
+          "description": "The asset this option is written on. AN OPTION IS A CONTRACT WITH AN ELECTION, so it attaches to something the way every other contract does. Absent on an option written before options had owners; without one its payoff belongs to no entity and falls out of every per-entity total. An option written `on contract` takes that contract's entity."
+        },
+        "contract": {
+          "$ref": "#/$defs/Qname",
+          "description": "The contract this option is written against (`on contract <name>`): a renewal over a lease, a prepayment over a loan. The election's subject is the agreement; its stated terms are readable in the election and the payoff as `contract.<term>` where the option states none of its own. Absent on an option written on an entity."
+        },
+        "terms": {
+          "type": "object",
+          "description": "What the option states, checked against the election type's effective fields exactly as a contract's terms are (`Contract.Option` declares `strike`; a pack election adds its own). The election and the payoff carry the values already spliced.",
+          "additionalProperties": {
+            "$ref": "#/$defs/TypedValue"
+          }
         },
         "parties": {
           "type": "array",

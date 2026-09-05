@@ -1,0 +1,729 @@
+{
+  "results_version": "0.13",
+  "model_hash": "d3b8293af9decc245b52f0ef8e5745bfb4bc9a019186148553d104a1f3fc6bcc",
+  "ledger_hash": "6cbd0c54398203b794f7bdfdab3a069effe55afd35d970dc165973f61ba23c4e",
+  "engine": {
+    "name": "cfdl-engine",
+    "version": "0.9.0"
+  },
+  "warnings": [],
+  "inputs": {
+    "streams": [
+      {
+        "contract": "cre.lease_unit.tenant_a",
+        "stream": "cre.unit.abatement.tenant_a",
+        "terms": {
+          "escalation": "0.03",
+          "rent_year": "480000"
+        }
+      },
+      {
+        "contract": "cre.lease_unit.tenant_a",
+        "stream": "cre.unit.base_rent.tenant_a",
+        "terms": {
+          "escalation": "0.03",
+          "rent_year": "480000"
+        }
+      },
+      {
+        "contract": "cre.lease_unit.tenant_a",
+        "defaults_applied": [
+          "expense_stop_year",
+          "gross_up_factor",
+          "opex_escalation",
+          "opex_year",
+          "pro_rata_share"
+        ],
+        "stream": "cre.unit.recoveries.tenant_a",
+        "terms": {
+          "expense_stop_year": "0",
+          "gross_up_factor": "1",
+          "opex_escalation": "0",
+          "opex_year": "0",
+          "pro_rata_share": "0"
+        }
+      },
+      {
+        "contract": "cre.lease_unit.tenant_a",
+        "defaults_applied": [
+          "lc_total",
+          "ti_total"
+        ],
+        "stream": "cre.unit.ti_lc.tenant_a",
+        "terms": {
+          "lc_total": "0",
+          "ti_total": "0"
+        }
+      }
+    ]
+  },
+  "deterministic": {
+    "status": "ok",
+    "metrics": {
+      "entity.asset.tower.total": {
+        "amount": 1531632.0,
+        "currency": "USD"
+      },
+      "entity.party.acme.total": {
+        "amount": 0.0,
+        "currency": "USD"
+      },
+      "entity.party.landlord_co.total": {
+        "amount": 0.0,
+        "currency": "USD"
+      },
+      "model.npv": {
+        "amount": 1389009.394234,
+        "currency": "USD"
+      },
+      "model.total": {
+        "amount": 1531632.0,
+        "currency": "USD"
+      },
+      "model.wal_years": 2.019086,
+      "run.annual_discount_rate": 0.05,
+      "run.periods_per_year": 1.0,
+      "stream.cre.unit.abatement.tenant_a.total": {
+        "amount": 0.0,
+        "currency": "USD"
+      },
+      "stream.cre.unit.base_rent.tenant_a.total": {
+        "amount": 1483632.0,
+        "currency": "USD"
+      },
+      "stream.cre.unit.recoveries.tenant_a.total": {
+        "amount": 0.0,
+        "currency": "USD"
+      },
+      "stream.cre.unit.ti_lc.tenant_a.total": {
+        "amount": 0.0,
+        "currency": "USD"
+      },
+      "stream.option.renewal.total": {
+        "amount": 48000.0,
+        "currency": "USD"
+      }
+    },
+    "series": {
+      "domain.cre.debt_service": {
+        "index": {
+          "calendar": "annual",
+          "start": "2026-01-01",
+          "periods": 4
+        },
+        "values": [
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          }
+        ]
+      },
+      "domain.cre.dscr": {
+        "index": {
+          "calendar": "annual",
+          "start": "2026-01-01",
+          "periods": 4
+        },
+        "values": [
+          null,
+          null,
+          null,
+          null
+        ]
+      },
+      "domain.cre.egi": {
+        "index": {
+          "calendar": "annual",
+          "start": "2026-01-01",
+          "periods": 4
+        },
+        "values": [
+          {
+            "amount": 480000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 494400.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 509232.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          }
+        ]
+      },
+      "domain.cre.leasing_costs": {
+        "index": {
+          "calendar": "annual",
+          "start": "2026-01-01",
+          "periods": 4
+        },
+        "values": [
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          }
+        ]
+      },
+      "domain.cre.noi": {
+        "index": {
+          "calendar": "annual",
+          "start": "2026-01-01",
+          "periods": 4
+        },
+        "values": [
+          {
+            "amount": 480000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 494400.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 509232.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          }
+        ]
+      },
+      "domain.cre.opex_total": {
+        "index": {
+          "calendar": "annual",
+          "start": "2026-01-01",
+          "periods": 4
+        },
+        "values": [
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          }
+        ]
+      },
+      "domain.cre.pgr": {
+        "index": {
+          "calendar": "annual",
+          "start": "2026-01-01",
+          "periods": 4
+        },
+        "values": [
+          {
+            "amount": 480000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 494400.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 509232.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          }
+        ]
+      },
+      "entity.asset.tower.net_cash_flow": {
+        "index": {
+          "calendar": "annual",
+          "start": "2026-01-01",
+          "periods": 4
+        },
+        "values": [
+          {
+            "amount": 480000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 494400.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 557232.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          }
+        ]
+      },
+      "entity.party.acme.net_cash_flow": {
+        "index": {
+          "calendar": "annual",
+          "start": "2026-01-01",
+          "periods": 4
+        },
+        "values": [
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          }
+        ]
+      },
+      "entity.party.landlord_co.net_cash_flow": {
+        "index": {
+          "calendar": "annual",
+          "start": "2026-01-01",
+          "periods": 4
+        },
+        "values": [
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          }
+        ]
+      },
+      "model.net_cash_flow": {
+        "index": {
+          "calendar": "annual",
+          "start": "2026-01-01",
+          "periods": 4
+        },
+        "values": [
+          {
+            "amount": 480000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 494400.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 557232.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          }
+        ]
+      },
+      "stream.cre.unit.abatement.tenant_a": {
+        "index": {
+          "calendar": "annual",
+          "start": "2026-01-01",
+          "periods": 4
+        },
+        "offset": 1.0,
+        "entity": "asset.tower",
+        "category": "operating.deduction.abatement",
+        "contract": "cre.lease_unit.tenant_a",
+        "line": "abatement",
+        "values": [
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          }
+        ]
+      },
+      "stream.cre.unit.base_rent.tenant_a": {
+        "index": {
+          "calendar": "annual",
+          "start": "2026-01-01",
+          "periods": 4
+        },
+        "offset": 1.0,
+        "entity": "asset.tower",
+        "category": "operating.revenue.base_rent",
+        "contract": "cre.lease_unit.tenant_a",
+        "line": "rent",
+        "values": [
+          {
+            "amount": 480000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 494400.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 509232.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          }
+        ]
+      },
+      "stream.cre.unit.recoveries.tenant_a": {
+        "index": {
+          "calendar": "annual",
+          "start": "2026-01-01",
+          "periods": 4
+        },
+        "offset": 1.0,
+        "entity": "asset.tower",
+        "category": "operating.revenue.recovery",
+        "contract": "cre.lease_unit.tenant_a",
+        "line": "recovery",
+        "values": [
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          }
+        ]
+      },
+      "stream.cre.unit.ti_lc.tenant_a": {
+        "index": {
+          "calendar": "annual",
+          "start": "2026-01-01",
+          "periods": 4
+        },
+        "offset": 0.0,
+        "entity": "asset.tower",
+        "category": "investing.capital.leasing",
+        "contract": "cre.lease_unit.tenant_a",
+        "line": "leasing_cost",
+        "values": [
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          }
+        ]
+      },
+      "stream.option.renewal": {
+        "index": {
+          "calendar": "annual",
+          "start": "2026-01-01",
+          "periods": 4
+        },
+        "offset": 0.0,
+        "values": [
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 48000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          }
+        ]
+      }
+    },
+    "journal": [
+      {
+        "period": 2,
+        "date": "2028-01-01",
+        "actor": "option:renewal",
+        "action": "exercise_option",
+        "target": "renewal",
+        "outcome": "applied",
+        "note": "its own `exercise when` held"
+      }
+    ]
+  },
+  "scenarios": {
+    "status": "not_run",
+    "summaries": []
+  },
+  "monte_carlo": {
+    "status": "not_run",
+    "trials": 1,
+    "seed": 0,
+    "metrics": {},
+    "trial_summaries": []
+  },
+  "statements": {
+    "statements": [
+      {
+        "id": "by_entity",
+        "label": "Cash by entity",
+        "default": true,
+        "grain": {
+          "calendar": "annual",
+          "start": "2026-01-01",
+          "labels": [
+            "2026",
+            "2027",
+            "2028",
+            "2029"
+          ]
+        },
+        "rows": [
+          {
+            "kind": "line",
+            "label": "Tower",
+            "depth": 0,
+            "display_sign": 1.0,
+            "values": [
+              {
+                "amount": 480000.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 494400.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 509232.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              }
+            ],
+            "total": 1483632.0,
+            "streams": [
+              "cre.unit.abatement.tenant_a",
+              "cre.unit.base_rent.tenant_a",
+              "cre.unit.recoveries.tenant_a",
+              "cre.unit.ti_lc.tenant_a"
+            ]
+          },
+          {
+            "kind": "line",
+            "label": "Acme",
+            "depth": 0,
+            "display_sign": 1.0,
+            "values": [
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              }
+            ],
+            "total": 0.0
+          },
+          {
+            "kind": "line",
+            "label": "Landlord co",
+            "depth": 0,
+            "display_sign": 1.0,
+            "values": [
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              }
+            ],
+            "total": 0.0
+          },
+          {
+            "kind": "residual",
+            "label": "Unclassified",
+            "depth": 1,
+            "display_sign": 1.0,
+            "values": [
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 48000.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              }
+            ],
+            "total": 48000.0,
+            "streams": [
+              "option.renewal"
+            ]
+          }
+        ],
+        "reconciliation": {
+          "bottom_line": 1531632.0,
+          "model_total": 1531632.0,
+          "residual": 0.0
+        },
+        "diagnostics": [
+          {
+            "code": "W3500_STATEMENT_UNCLASSIFIED_STREAM",
+            "message": "1 stream(s) are in no row of statement 'by_entity', so the bottom line is short by 48000.00: option.renewal. Classify them, or give the statement a row that claims them."
+          }
+        ]
+      }
+    ]
+  },
+  "graph": {
+    "entities": [
+      {
+        "symbol": "asset.tower",
+        "family": "asset",
+        "type": "CRE.Asset.RealProperty"
+      },
+      {
+        "symbol": "party.acme",
+        "family": "party",
+        "type": "Party"
+      },
+      {
+        "symbol": "party.landlord_co",
+        "family": "party",
+        "type": "Party"
+      }
+    ],
+    "contracts": [
+      {
+        "name": "cre.lease_unit.tenant_a",
+        "type": "CRE.Contract.UnitLease",
+        "master": "Contract.Lease",
+        "contract_name": "cre.lease_unit",
+        "instance": "tenant_a",
+        "subject": "asset.tower",
+        "parties": [
+          {
+            "role": "landlord",
+            "master_role": "lessor",
+            "entity": "party.landlord_co"
+          },
+          {
+            "role": "tenant",
+            "master_role": "lessee",
+            "entity": "party.acme"
+          }
+        ],
+        "streams": [
+          "cre.unit.abatement.tenant_a",
+          "cre.unit.base_rent.tenant_a",
+          "cre.unit.recoveries.tenant_a",
+          "cre.unit.ti_lc.tenant_a"
+        ]
+      }
+    ]
+  }
+}

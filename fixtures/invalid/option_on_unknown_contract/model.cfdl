@@ -1,0 +1,19 @@
+version 0.1
+model "option-on-unknown-contract"
+use pack "cre" version "0.1.0"
+time calendar annual from 2026-01 for 3
+
+entity asset tower : CRE.Asset.RealProperty
+
+contract cre.lease_unit tenant_a on entity asset.tower {
+  term 2026-01..2028-12
+  terms { rent_year = 480000 }
+}
+
+// `on contract` names an agreement the model declares; a name nothing
+// declares is refused with the near miss rather than read as an option on
+// nothing.
+option renewal on contract cre.lease_unit.tenant_b type CRE.Contract.RenewalOption {
+  exercise when time.t >= 2
+  payoff contract.rent_year * 0.10
+}

@@ -1,0 +1,14 @@
+version 0.1
+model "option-unknown-term"
+time calendar annual from 2026-01 for 3
+
+// AN OPTION'S TERMS ARE CHECKED AGAINST ITS TYPE'S ROSTER, as a contract's
+// are. `Contract.Option` declares `strike`; `strke` is read by nothing.
+
+entity asset plant : Asset.Real
+
+option call on entity asset.plant type Option.Call {
+  terms { strke = 120.0 }
+  exercise when false
+  payoff 1
+}

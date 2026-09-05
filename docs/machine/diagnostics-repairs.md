@@ -11,7 +11,7 @@ Diagnostics are the repair signal: read the `code`, `message`, `span`, and
 `hint`, change the model, recompile. The catalog is how an agent learns what
 each code looks like in the flesh before it meets one.
 
-**Coverage:** 230 codes in the docs/08 §7 register; 115 exemplified here; 70 of 124 examples carry a recorded fix.
+**Coverage:** 230 codes in the docs/08 §7 register; 115 exemplified here; 70 of 127 examples carry a recorded fix.
 
 ## account_read_without_prev — E1382_ACCOUNT_READ_WITHOUT_PREV
 
@@ -2661,6 +2661,95 @@ option renewal type Contract.Option { exercise when false payoff 1 }
 
 - `E1374_ABSTRACT_TYPE_INSTANTIATED` (error): Option 'renewal' declares type 'Contract.Option', which is a master. A master is refined, never declared.
   - hint: Concrete elections: Option.Call, Option.Put, Option.Refinance, Option.Renewal.
+
+Fix: not yet recorded.
+
+## option_on_unknown_contract — E1372_MISSING_CONTRACT_TERM, E1376_UNKNOWN_REFERENCE
+
+Failing example:
+
+```cfdl
+version 0.1
+model "option-on-unknown-contract"
+use pack "cre" version "0.1.0"
+time calendar annual from 2026-01 for 3
+
+entity asset tower : CRE.Asset.RealProperty
+
+contract cre.lease_unit tenant_a on entity asset.tower {
+  term 2026-01..2028-12
+  terms { rent_year = 480000 }
+}
+
+// `on contract` names an agreement the model declares; a name nothing
+// declares is refused with the near miss rather than read as an option on
+// nothing.
+option renewal on contract cre.lease_unit.tenant_b type CRE.Contract.RenewalOption {
+  exercise when time.t >= 2
+  payoff contract.rent_year * 0.10
+}
+```
+
+- `E1376_UNKNOWN_REFERENCE` (error): Option 'renewal' is written on contract 'cre.lease_unit.tenant_b', which this model does not declare.
+  - hint: Did you mean cre.lease_unit.tenant_a?
+- `E1372_MISSING_CONTRACT_TERM` (error): Option 'renewal' reads `contract.rent_year` in its payoff, and no term by that name is stated.
+  - hint: State `rent_year` in the option's `terms`.
+
+Fix: not yet recorded.
+
+## option_reads_unstated_term — E1372_MISSING_CONTRACT_TERM
+
+Failing example:
+
+```cfdl
+version 0.1
+model "option-reads-unstated-term"
+time calendar annual from 2026-01 for 3
+
+// A READ WITH NO VALUE IS A MISSING TERM, NOT A ZERO. The payoff reads
+// `contract.strike` and the option states no strike; nothing it is written on
+// could supply one either.
+
+entity asset plant : Asset.Real {
+  book_value init 100.0 next prev * 1.10
+}
+
+option call on entity asset.plant type Option.Call {
+  exercise when asset.plant.book_value > contract.strike
+  payoff asset.plant.book_value - contract.strike
+}
+```
+
+- `E1372_MISSING_CONTRACT_TERM` (error): Option 'call' reads `contract.strike` in its exercise when, and no term by that name is stated.
+  - hint: State `strike` in the option's `terms`, or write the option `on contract <name>` to read the agreement's.
+- `E1372_MISSING_CONTRACT_TERM` (error): Option 'call' reads `contract.strike` in its payoff, and no term by that name is stated.
+  - hint: State `strike` in the option's `terms`, or write the option `on contract <name>` to read the agreement's.
+
+Fix: not yet recorded.
+
+## option_unknown_term — E1371_UNKNOWN_CONTRACT_TERM
+
+Failing example:
+
+```cfdl
+version 0.1
+model "option-unknown-term"
+time calendar annual from 2026-01 for 3
+
+// AN OPTION'S TERMS ARE CHECKED AGAINST ITS TYPE'S ROSTER, as a contract's
+// are. `Contract.Option` declares `strike`; `strke` is read by nothing.
+
+entity asset plant : Asset.Real
+
+option call on entity asset.plant type Option.Call {
+  terms { strke = 120.0 }
+  exercise when false
+  payoff 1
+}
+```
+
+- `E1371_UNKNOWN_CONTRACT_TERM` (error): Option 'call' states term 'strke', which type 'Option.Call' does not declare. The term would never be read.
+  - hint: Did you mean strike?
 
 Fix: not yet recorded.
 

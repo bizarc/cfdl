@@ -1,0 +1,39 @@
+version 0.1
+model "option-with-terms"
+time calendar annual from 2026-01 for 4
+
+// AN OPTION STATES ITS TERMS AS A CONTRACT DOES. `Contract.Option` declares
+// `strike`; before this the only place a strike could live was as a literal
+// inside `payoff`, restated in `exercise when`. The terms block is checked
+// against the election type's effective fields (E1371, E1372), and the
+// election and the payoff read it as `contract.<term>`.
+
+entity asset plant : Asset.Real {
+  book_value init 100.0
+             next prev * 1.10
+}
+entity party holder : Party { name = "Holder" }
+
+// 100, 110, 121 -> in the money at period 2. Reads the strike once.
+option call on entity asset.plant type Option.Call {
+  parties { holder = party.holder }
+  terms { strike = 120.0 }
+  exercise when asset.plant.book_value > contract.strike
+  payoff asset.plant.book_value - contract.strike
+}
+
+// A term may be an input reference, the way a contract's may.
+option call_high on entity asset.plant type Option.Call {
+  terms { strike = inputs.high_strike }
+  exercise when asset.plant.book_value > contract.strike
+  payoff asset.plant.book_value - contract.strike
+}
+
+assume high_strike = 500.0
+
+stream plant.revenue on entity asset.plant inflow currency USD {
+  schedule every year from 2026-01 to 2029-01
+  amount = 10
+}
+
+run deterministic

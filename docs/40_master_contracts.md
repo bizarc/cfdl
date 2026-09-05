@@ -212,15 +212,23 @@ attribute against a revenue authority, with a period" — and that is what
 the core says. Refinements carry the rest.
 
 ### 4.8 `Contract.Option`
-Roles `grantor`, `holder`. Fields: `strike` (opt); the election and the
-payoff come from the `option` grammar (`exercise when`, `payoff`) and are
-declared there, not in `terms`. Line: `payoff`. An election binds no
-lowering rule. The base carries four generic elections as concrete
-refinements — `Option.Call`, `Option.Put`, `Option.Renewal`,
-`Option.Refinance` — so a model with no pack active can write one, and an
-option's type is checked against them and the pack's own (`E1373`,
-`E1374`; stage 3). Stage 7 aligns the grammar with the master and decides
-whether the generic names stay.
+Roles `grantor`, `holder`. Fields: `strike` (opt), stated in the option's
+`terms` and checked against the effective roster as any contract's are
+(`E1371`, `E1372`); the election and the payoff come from the `option`
+grammar (`exercise when`, `payoff`) and read the terms as
+`contract.<term>`. Line: `payoff`. An election binds no lowering rule. An
+option is written on an entity or ON A CONTRACT — a renewal is a right
+over a lease, a prepayment a right over a loan — and written on a
+contract it takes the agreement's entity and reads the agreement's terms
+where it states none of its own (`docs/01` §14). The base carries four
+generic elections as concrete refinements — `Option.Call`, `Option.Put`,
+`Option.Renewal`, `Option.Refinance` — so a model with no pack active can
+write one, and an option's type is checked against them and the pack's
+own (`E1373`, `E1374`; stage 3). DECIDED 5 September 2026: the four stay.
+Call, put, renewal and refinance are the generic vocabulary of elections,
+not domain words, and a pack-free model must be able to write one; stage
+7's second part gives an election a schedule, an exercise count and
+actions on exercise.
 
 ### 4.9 Construction — removed from the roster, 4 September 2026
 There is no `Contract.Construction`. A build is capital expenditure on a
@@ -789,8 +797,11 @@ contract names, and their accounts hold what they received (`docs/13`
    machine action naming the role on such an entity is refused. A
    security's and an equity interest's balance is the holder's account
    (§4.13, §4.14), derived rather than lowered, so neither needs the role.
-7. **Elections**: `Contract.Option`'s core in the `option` grammar; base
-   option names retired.
+7. **Elections**: `Contract.Option`'s core in the `option` grammar — first
+   part BUILT 5 September 2026: `terms` on an option checked against its
+   type's roster and read as `contract.<term>`; `on contract <name>` as the
+   subject; the four base election names STAY (§4.8). Second part: a
+   schedule on an election, an exercise count, actions on exercise.
 
 `docs/13` §7.58, §7.63, §7.67 and §7.92 closed with stage 3; §7.96–7.98
 close with the stages that answer them.
