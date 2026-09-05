@@ -824,7 +824,8 @@ one or two modules per PR, each a pure move proven by byte-identical
 goldens. **Built so far: `occurrence`** — events and options as one module,
 stepped inside the state walk after the machine moves; **`prepare`** — the
 once-per-model work; **`accounts`** — the balance plane; **`walk`** — the
-period loop and the walk-or-column choice.*
+period loop and the walk-or-column choice; **`fold`** — from what the
+evaluation settled to what the results carry.*
 
 What remains is the second step the original entry proposed: making the stages
 CRATES rather than modules, so the compiler enforces the layering that the
