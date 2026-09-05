@@ -8,6 +8,17 @@ This project follows Semantic Versioning: https://semver.org/
 
 ## [Unreleased]
 
+**The engine restructure, `fold`.** Everything the results carry, computed
+over what the evaluation settled — streams the walk did not run evaluated a
+column at a time, the subtotals, the account and entity roll-ups, every
+published series, the metrics, the slices, the declared metrics, the annual
+roll-up and the statements' inputs — is `crates/cfdl-engine/src/fold.rs`
+(`fold_results`), with the run output, the fatal unresolved-name check and
+the stream attribution helpers. The deterministic run in the orchestrator is
+now the stage list: inputs, evaluate, fold. A pure move: every results
+golden byte-identical, 46/46 benchmarks, the walk and the column order
+still agree. The orchestrator is 1,977 lines from 3,421 (`docs/13` §7.44).
+
 **The engine restructure, `walk`.** The period loop — the cash already
 settled handed over, the state stage, this period's streams in waves, the
 account plane, the waterfall stage, the folds, then `t + 1` — is
