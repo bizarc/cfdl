@@ -1,0 +1,16 @@
+version 0.1
+model "option-reads-unstated-term"
+time calendar annual from 2026-01 for 3
+
+// A READ WITH NO VALUE IS A MISSING TERM, NOT A ZERO. The payoff reads
+// `contract.strike` and the option states no strike; nothing it is written on
+// could supply one either.
+
+entity asset plant : Asset.Real {
+  book_value init 100.0 next prev * 1.10
+}
+
+option call on entity asset.plant type Option.Call {
+  exercise when asset.plant.book_value > contract.strike
+  payoff asset.plant.book_value - contract.strike
+}

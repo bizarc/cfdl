@@ -1,0 +1,33 @@
+version 0.1
+model "option-on-contract"
+use pack "cre" version "0.1.0"
+time calendar annual from 2026-01 for 4
+
+entity asset tower : CRE.Asset.RealProperty
+entity party landlord_co : Party
+entity party acme : Party
+
+contract cre.lease_unit tenant_a on entity asset.tower {
+  term 2026-01..2028-12
+  terms {
+    rent_year = 480000
+    escalation = 0.03
+  }
+  parties {
+    landlord = party.landlord_co
+    tenant = party.acme
+  }
+}
+
+// AN ELECTION IS A RIGHT OVER AN AGREEMENT. A renewal option is written on
+// the lease, not on the tower: `on contract` names the agreement, the option
+// takes the lease's entity as its own, and `contract.<term>` reads the lease's
+// stated terms where the option states none of its own. The renewal fee is a
+// tenth of the base rent the lease states — one number, stated once.
+option renewal on contract cre.lease_unit.tenant_a type CRE.Contract.RenewalOption {
+  parties { landlord = party.landlord_co, tenant = party.acme }
+  exercise when time.t >= 2
+  payoff contract.rent_year * 0.10
+}
+
+run deterministic

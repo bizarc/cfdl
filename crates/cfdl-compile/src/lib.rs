@@ -3539,6 +3539,269 @@ fn is_name_byte(b: u8) -> bool {
     b.is_ascii_alphanumeric() || b == b'_' || b == b'.'
 }
 
+/// The `contract.<term>` paths an expression reads, in order of appearance,
+/// deduplicated. Whole-path: `contract.strike` is read from `contract.strike_2`
+/// as nothing, and `subcontract.x` is not a read at all.
+fn contract_term_reads(src: &str) -> Vec<String> {
+    let mut out: Vec<String> = Vec::new();
+    let bytes = src.as_bytes();
+    let mut i = 0;
+    while let Some(idx) = src[i..].find("contract.") {
+        let at = i + idx;
+        let before_ok = at == 0 || {
+            let c = bytes[at - 1] as char;
+            !c.is_alphanumeric() && c != '_' && c != '.'
+        };
+        let start = at + "contract.".len();
+        let mut end = start;
+        while end < bytes.len() {
+            let c = bytes[end] as char;
+            if c.is_alphanumeric() || c == '_' {
+                end += 1;
+            } else {
+                break;
+            }
+        }
+        let after_ok = end >= bytes.len() || bytes[end] as char != '.';
+        if before_ok && after_ok && end > start {
+            let key = src[start..end].to_string();
+            if !out.contains(&key) {
+                out.push(key);
+            }
+        }
+        i = end.max(at + 1);
+    }
+    out
+}
+
+/// Splice the stated value of every `contract.<term>` an expression reads,
+/// parenthesized, the way a pack rule's `{{contract.<term>}}` is spliced. A
+/// term is a literal, an `inputs.` reference or an expression, and each reads
+/// correctly inside parentheses.
+fn substitute_contract_terms(src: &str, terms: &BTreeMap<&str, &str>) -> String {
+    let mut out = String::new();
+    let mut rest = src;
+    while let Some(idx) = rest.find("contract.") {
+        let before_ok = out
+            .chars()
+            .next_back()
+            .or_else(|| rest[..idx].chars().next_back())
+            .is_none_or(|c| !c.is_alphanumeric() && c != '_' && c != '.');
+        let start = idx + "contract.".len();
+        let key_len = rest[start..]
+            .chars()
+            .take_while(|c| c.is_alphanumeric() || *c == '_')
+            .map(char::len_utf8)
+            .sum::<usize>();
+        let key = &rest[start..start + key_len];
+        let after_ok = !rest[start + key_len..].starts_with('.');
+        out.push_str(&rest[..idx]);
+        match terms.get(key) {
+            Some(value) if before_ok && after_ok && key_len > 0 => {
+                out.push('(');
+                out.push_str(value.trim());
+                out.push(')');
+            }
+            _ => out.push_str(&rest[idx..start + key_len]),
+        }
+        rest = &rest[start + key_len..];
+    }
+    out.push_str(rest);
+    out
+}
+
+/// AN OPTION'S TERMS ARE CHECKED AS A CONTRACT'S ARE (`docs/40` §4.8). The
+/// election type's effective fields are the roster: a term outside it is
+/// `E1371`, a required term or group it omits is `E1372`, and a
+/// `contract.<term>` its election or payoff reads that neither the option nor
+/// the agreement it is written on states is `E1372` too — a read with no value
+/// is a missing term, not a zero. `on contract <name>` must name a contract the
+/// model declares (`E1376`).
+fn check_option_terms(
+    resolve_output: &cfdl_resolver::ResolveOutput,
+    ontology: &cfdl_pack::PackOntology,
+) -> Result<(), Vec<Diagnostic>> {
+    let contracts: BTreeMap<&str, &cfdl_parser::ContractStmt> = resolve_output
+        .source_statements
+        .iter()
+        .filter_map(|s| match &s.statement {
+            Stmt::Contract(c) => Some((c.name.as_str(), c)),
+            _ => None,
+        })
+        .collect();
+    let mut diagnostics: Vec<Diagnostic> = Vec::new();
+    let diag =
+        |code: &str, message: String, hint: Option<String>, file: &str, span: cfdl_parser::Span| {
+            Diagnostic {
+                code: code.to_string(),
+                severity: "error".to_string(),
+                message,
+                file: Some(file.to_string()),
+                span: Some(map_span(span)),
+                path: None,
+                hint,
+                notes: vec![],
+            }
+        };
+    for source_stmt in &resolve_output.source_statements {
+        let Stmt::Option(option) = &source_stmt.statement else {
+            continue;
+        };
+        let file = source_stmt.file.as_str();
+        let subject_contract = match option.subject_contract.as_deref() {
+            Some(named) => match contracts.get(named) {
+                Some(contract) => Some(*contract),
+                None => {
+                    let known: Vec<&str> = contracts.keys().copied().collect();
+                    let near: Vec<&str> = known
+                        .iter()
+                        .copied()
+                        .filter(|k| is_near_miss(k, named))
+                        .collect();
+                    diagnostics.push(diag(
+                        "E1376_UNKNOWN_REFERENCE",
+                        format!(
+                            "Option '{}' is written on contract '{named}', which this model does not declare.",
+                            option.name
+                        ),
+                        Some(if near.is_empty() {
+                            format!(
+                                "Declared contracts: {}.",
+                                join_or_none(&known.iter().map(|k| k.to_string()).collect::<Vec<_>>())
+                            )
+                        } else {
+                            format!("Did you mean {}?", near.join(" or "))
+                        }),
+                        file,
+                        option.span,
+                    ));
+                    None
+                }
+            },
+            None => None,
+        };
+        // The type was checked before this (`E1373`/`E1374`); an unknown type
+        // has no roster to check against.
+        if ontology.contract(&option.type_name).is_some() {
+            let fields = ontology.effective_fields(&option.type_name);
+            let roster = || {
+                fields
+                    .iter()
+                    .map(|f| f.name.as_str())
+                    .collect::<Vec<_>>()
+                    .join(", ")
+            };
+            for (key, term) in &option.terms {
+                if fields.iter().any(|f| f.name == *key) {
+                    continue;
+                }
+                let near: Vec<&str> = fields
+                    .iter()
+                    .filter(|f| is_near_miss(&f.name, key))
+                    .map(|f| f.name.as_str())
+                    .collect();
+                diagnostics.push(diag(
+                    "E1371_UNKNOWN_CONTRACT_TERM",
+                    format!(
+                        "Option '{}' states term '{key}', which type '{}' does not declare. The term would never be read.",
+                        option.name, option.type_name
+                    ),
+                    Some(if near.is_empty() {
+                        format!("Terms of '{}': {}.", option.type_name, roster())
+                    } else {
+                        format!("Did you mean {}?", near.join(" or "))
+                    }),
+                    file,
+                    term.span,
+                ));
+            }
+            for field in fields.iter().filter(|f| f.required) {
+                if !option.terms.contains_key(&field.name) {
+                    diagnostics.push(diag(
+                        "E1372_MISSING_CONTRACT_TERM",
+                        format!(
+                            "Option '{}' omits term '{}', which type '{}' requires.",
+                            option.name, field.name, option.type_name
+                        ),
+                        None,
+                        file,
+                        option.span,
+                    ));
+                }
+            }
+            let mut groups: Vec<&str> = fields.iter().filter_map(|f| f.one_of.as_deref()).collect();
+            groups.sort_unstable();
+            groups.dedup();
+            for group in groups {
+                let members: Vec<&cfdl_pack::OntologyField> = fields
+                    .iter()
+                    .filter(|f| f.one_of.as_deref() == Some(group))
+                    .collect();
+                if members.iter().any(|m| m.required) {
+                    continue;
+                }
+                if !members.iter().any(|m| option.terms.contains_key(&m.name)) {
+                    diagnostics.push(diag(
+                        "E1372_MISSING_CONTRACT_TERM",
+                        format!(
+                            "Option '{}' states none of {}; type '{}' requires one of them.",
+                            option.name,
+                            members
+                                .iter()
+                                .map(|m| m.name.as_str())
+                                .collect::<Vec<_>>()
+                                .join(", "),
+                            option.type_name
+                        ),
+                        None,
+                        file,
+                        option.span,
+                    ));
+                }
+            }
+        }
+        // Every `contract.<term>` read has a stated value: the option's own
+        // first, then the agreement's it is written on.
+        for (clause, src) in [
+            ("exercise when", option.exercise_when.as_deref()),
+            ("payoff", option.payoff.as_deref()),
+        ] {
+            let Some(src) = src else { continue };
+            for key in contract_term_reads(src) {
+                if option.terms.contains_key(&key)
+                    || subject_contract.is_some_and(|c| c.terms.contains_key(&key))
+                {
+                    continue;
+                }
+                let hint = match (&option.subject_contract, subject_contract) {
+                    (Some(named), Some(_)) => format!(
+                        "State `{key}` in the option's `terms`, or on contract '{named}'."
+                    ),
+                    (Some(_), None) => format!("State `{key}` in the option's `terms`."),
+                    (None, _) => format!(
+                        "State `{key}` in the option's `terms`, or write the option `on contract <name>` to read the agreement's."
+                    ),
+                };
+                diagnostics.push(diag(
+                    "E1372_MISSING_CONTRACT_TERM",
+                    format!(
+                        "Option '{}' reads `contract.{key}` in its {clause}, and no term by that name is stated.",
+                        option.name
+                    ),
+                    Some(hint),
+                    file,
+                    option.span,
+                ));
+            }
+        }
+    }
+    if diagnostics.is_empty() {
+        Ok(())
+    } else {
+        Err(diagnostics)
+    }
+}
+
 fn check_exercise_targets(
     resolve_output: &cfdl_resolver::ResolveOutput,
 ) -> Result<(), Vec<Diagnostic>> {
@@ -4447,6 +4710,7 @@ fn build_ir(
         active_pack.map(|p| p.name.as_str()),
     )?;
     check_party_bindings(resolve_output, &ontology)?;
+    check_option_terms(resolve_output, &ontology)?;
     check_exercise_targets(resolve_output)?;
     check_waterfalls(resolve_output)?;
     check_stream_moves(resolve_output)?;
@@ -8486,8 +8750,36 @@ fn lower_events_options(
                     ));
                     continue;
                 };
+                // `on contract <name>`: the agreement the election is a right
+                // over. Its entity is the option's, and its terms are readable
+                // where the option states none of its own. Checked to exist
+                // before this (`E1376`).
+                let subject_contract = option.subject_contract.as_deref().and_then(|named| {
+                    resolve_output
+                        .source_statements
+                        .iter()
+                        .find_map(|s| match &s.statement {
+                            Stmt::Contract(c) if c.name == named => Some(c),
+                            _ => None,
+                        })
+                });
+                // `contract.<term>` reads the stated value, spliced the way a
+                // pack rule splices `{{contract.<term>}}`: the option's own
+                // terms first, then the agreement's. Every read was checked to
+                // have a value (`E1372`).
+                let mut term_values: BTreeMap<&str, &str> = BTreeMap::new();
+                if let Some(contract) = subject_contract {
+                    for (key, term) in &contract.terms {
+                        term_values.insert(key.as_str(), term.value.as_str());
+                    }
+                }
+                for (key, term) in &option.terms {
+                    term_values.insert(key.as_str(), term.value.as_str());
+                }
+                let exercise_when = substitute_contract_terms(exercise_when, &term_values);
+                let payoff = substitute_contract_terms(payoff, &term_values);
                 let mut bad = false;
-                for src in [exercise_when, payoff] {
+                for src in [&exercise_when, &payoff] {
                     if let Err(err) = cfdl_expr::compile_expr(src) {
                         diags.push(diag(&err.code, err.message));
                         bad = true;
@@ -8511,9 +8803,24 @@ fn lower_events_options(
                 // An option is a contract with an election, so it carries the
                 // same two things every contract does: what it is written on,
                 // and who it is between. Without an owner its payoff belonged
-                // to no entity and fell out of every per-entity total.
-                if let Some(subject) = &option.subject_entity {
+                // to no entity and fell out of every per-entity total. Written
+                // on a contract, its owner is the contract's entity.
+                let owner = option
+                    .subject_entity
+                    .clone()
+                    .or_else(|| subject_contract.and_then(|c| c.subject_entity.clone()));
+                if let Some(subject) = owner {
                     obj["owner"] = serde_json::json!({ "symbol": subject });
+                }
+                if let Some(contract) = subject_contract {
+                    obj["contract"] = serde_json::json!(contract.name);
+                }
+                if !option.terms.is_empty() {
+                    obj["terms"] = serde_json::json!(option
+                        .terms
+                        .iter()
+                        .map(|(k, v)| (k.clone(), term_value_json(v)))
+                        .collect::<serde_json::Map<String, serde_json::Value>>());
                 }
                 if !option.parties.is_empty() {
                     obj["parties"] = serde_json::json!(option
@@ -10003,5 +10310,33 @@ mod pack_validation_parity_tests {
                 "an unconstrained pack must not be gated on {calendar}"
             );
         }
+    }
+}
+
+#[cfg(test)]
+mod option_term_tests {
+    use super::*;
+
+    #[test]
+    fn contract_term_reads_are_whole_paths() {
+        let reads = contract_term_reads(
+            "asset.plant.book_value > contract.strike + contract.strike_2 - subcontract.x + contract.a.b",
+        );
+        assert_eq!(reads, vec!["strike".to_string(), "strike_2".to_string()]);
+    }
+
+    #[test]
+    fn substitute_contract_terms_splices_parenthesized_values() {
+        let mut terms: BTreeMap<&str, &str> = BTreeMap::new();
+        terms.insert("strike", "120.0");
+        terms.insert("rate", "inputs.rate");
+        let out = substitute_contract_terms(
+            "asset.plant.book_value > contract.strike * (1 + contract.rate) and contract.strike_2 > 0",
+            &terms,
+        );
+        assert_eq!(
+            out,
+            "asset.plant.book_value > (120.0) * (1 + (inputs.rate)) and contract.strike_2 > 0"
+        );
     }
 }

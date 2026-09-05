@@ -4,7 +4,7 @@
 
 CFDL 0.9.0. Every model below compiles, and its IR and
 results are byte-asserted against goldens in CI (`fixtures/valid/`,
-157 models.
+159 models.
 
 `gold/ir/`, `gold/results/`). Each is single-purpose: the directory name
 says what it exercises. This is what right looks like — positive few-shot
@@ -3591,6 +3591,44 @@ stream opco.revenue on entity asset.target inflow currency USD {
 }
 ```
 
+## option_on_contract
+
+```cfdl
+version 0.1
+model "option-on-contract"
+use pack "cre" version "0.1.0"
+time calendar annual from 2026-01 for 4
+
+entity asset tower : CRE.Asset.RealProperty
+entity party landlord_co : Party
+entity party acme : Party
+
+contract cre.lease_unit tenant_a on entity asset.tower {
+  term 2026-01..2028-12
+  terms {
+    rent_year = 480000
+    escalation = 0.03
+  }
+  parties {
+    landlord = party.landlord_co
+    tenant = party.acme
+  }
+}
+
+// AN ELECTION IS A RIGHT OVER AN AGREEMENT. A renewal option is written on
+// the lease, not on the tower: `on contract` names the agreement, the option
+// takes the lease's entity as its own, and `contract.<term>` reads the lease's
+// stated terms where the option states none of its own. The renewal fee is a
+// tenth of the base rent the lease states — one number, stated once.
+option renewal on contract cre.lease_unit.tenant_a type CRE.Contract.RenewalOption {
+  parties { landlord = party.landlord_co, tenant = party.acme }
+  exercise when time.t >= 2
+  payoff contract.rent_year * 0.10
+}
+
+run deterministic
+```
+
 ## option_reads_state
 
 ```cfdl
@@ -3631,6 +3669,50 @@ stream plant.revenue on entity asset.plant inflow currency USD {
   schedule every year from 2026-01 to 2029-01
   amount = 10
 }
+```
+
+## option_with_terms
+
+```cfdl
+version 0.1
+model "option-with-terms"
+time calendar annual from 2026-01 for 4
+
+// AN OPTION STATES ITS TERMS AS A CONTRACT DOES. `Contract.Option` declares
+// `strike`; before this the only place a strike could live was as a literal
+// inside `payoff`, restated in `exercise when`. The terms block is checked
+// against the election type's effective fields (E1371, E1372), and the
+// election and the payoff read it as `contract.<term>`.
+
+entity asset plant : Asset.Real {
+  book_value init 100.0
+             next prev * 1.10
+}
+entity party holder : Party { name = "Holder" }
+
+// 100, 110, 121 -> in the money at period 2. Reads the strike once.
+option call on entity asset.plant type Option.Call {
+  parties { holder = party.holder }
+  terms { strike = 120.0 }
+  exercise when asset.plant.book_value > contract.strike
+  payoff asset.plant.book_value - contract.strike
+}
+
+// A term may be an input reference, the way a contract's may.
+option call_high on entity asset.plant type Option.Call {
+  terms { strike = inputs.high_strike }
+  exercise when asset.plant.book_value > contract.strike
+  payoff asset.plant.book_value - contract.strike
+}
+
+assume high_strike = 500.0
+
+stream plant.revenue on entity asset.plant inflow currency USD {
+  schedule every year from 2026-01 to 2029-01
+  amount = 10
+}
+
+run deterministic
 ```
 
 ## pack_amortization_day_count

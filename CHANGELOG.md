@@ -8,6 +8,27 @@ This project follows Semantic Versioning: https://semver.org/
 
 ## [Unreleased]
 
+**An option states its terms, and may be written on a contract (stage 7,
+first part).** An option is a contract with an election, and now carries
+what every contract carries. `terms { strike = 120.0 }` is checked against
+the election type's effective fields exactly as a contract's terms are
+(`E1371`, `E1372`), and `exercise when` and `payoff` read them as
+`contract.<term>` — a literal, an `inputs.` reference or an expression,
+spliced at compile time the way a pack rule splices its own. `on contract
+<name>` writes the election on the AGREEMENT the right is over — a renewal
+on a lease, a prepayment on a loan — and the option takes the agreement's
+entity and reads its stated terms where it states none of its own; a
+contract nothing declares is `E1376`, and a `contract.<term>` read that
+nothing states is `E1372`, because a read with no value is a missing term
+and never a zero. The IR option carries `terms` and `contract`. The four
+base elections — `Option.Call`, `Option.Put`, `Option.Renewal`,
+`Option.Refinance` — STAY, reversing `docs/40` §10's plan to retire them:
+they are the generic vocabulary, not domain words, and a pack-free model
+must be able to write one. `docs/01` §14 rewritten; the grammar gains the
+`option` production it never had, with `on entity` documented, which
+closes backlog 7.62. Fixtures `option_with_terms`, `option_on_contract`,
+and three invalid. No number moves. Backlog: 59 items.
+
 **Backlog: 7.44 closed, as modules.** The engine restructure proposed
 stages first and crates second. The stages shipped as modules across five
 PRs; the crate step is declined — the stages share the IR and results

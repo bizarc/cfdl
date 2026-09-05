@@ -444,17 +444,24 @@ deactivate_stream_stmt = "deactivate" "stream" qname ;
 exercise_option_stmt   = "exercise" "option" qname ;
 
 (* --- options --- *)
-(* The parser ALSO accepts `on entity <ref>` after the name, and shipped models
-   use it. Neither §14.1 of the language specification nor this grammar
-   documents it — an extension that grew in the implementation. Resolve it in
-   one direction or the other before v1; see backlog 7.62. *)
+(* An option is a contract with an election (docs/01 §14, docs/40 §4.8). It is
+   written ON something — an entity, or the agreement the right is over: a
+   renewal on a lease, a prepayment on a loan — and is BETWEEN parties in the
+   roles its election type declares. Its `terms` are checked against that
+   type's effective fields as a contract's are, and the election and the
+   payoff read them as `contract.<term>`; written on a contract, the
+   agreement's terms are readable the same way where the option states none
+   of its own. The items may appear in any order. *)
 option_stmt     = "option" qname
+                  [ "on" ( "entity" entity_ref | "contract" qname ) ]
                   "type" qname
                   [ "exercisable" "in" qname ]
                   option_block ;
 
 option_block    = "{" option_item* "}" ;
-option_item     = "exercise" "when" expr
+option_item     = parties_block
+                | terms_block
+                | "exercise" "when" expr
                 | "payoff" expr
                 ;
 

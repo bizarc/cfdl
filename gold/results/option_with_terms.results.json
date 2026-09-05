@@ -1,0 +1,370 @@
+{
+  "results_version": "0.13",
+  "model_hash": "d80cf567f968e9d4d96d74dac8b6be4c16ec94d0ab90bce7625d92581fdc6b2d",
+  "ledger_hash": "43886bb69282cb91152117b7a02e289213c822ea73545039f32ceadbc2eeed1f",
+  "engine": {
+    "name": "cfdl-engine",
+    "version": "0.9.0"
+  },
+  "warnings": [],
+  "inputs": {
+    "resolved": {
+      "high_strike": 500.0
+    }
+  },
+  "deterministic": {
+    "status": "ok",
+    "metrics": {
+      "entity.asset.plant.total": {
+        "amount": 41.0,
+        "currency": "USD"
+      },
+      "entity.party.holder.total": {
+        "amount": 0.0,
+        "currency": "USD"
+      },
+      "model.npv": {
+        "amount": 36.366535,
+        "currency": "USD"
+      },
+      "model.total": {
+        "amount": 41.0,
+        "currency": "USD"
+      },
+      "model.wal_years": 2.487805,
+      "run.annual_discount_rate": 0.05,
+      "run.periods_per_year": 1.0,
+      "stream.option.call.total": {
+        "amount": 1.0,
+        "currency": "USD"
+      },
+      "stream.option.call_high.total": {
+        "amount": 0.0,
+        "currency": "USD"
+      },
+      "stream.plant.revenue.total": {
+        "amount": 40.0,
+        "currency": "USD"
+      }
+    },
+    "series": {
+      "asset.plant.book_value": {
+        "index": {
+          "calendar": "annual",
+          "start": "2026-01-01",
+          "periods": 4
+        },
+        "values": [
+          100.0,
+          110.0,
+          121.0,
+          133.1
+        ]
+      },
+      "entity.asset.plant.net_cash_flow": {
+        "index": {
+          "calendar": "annual",
+          "start": "2026-01-01",
+          "periods": 4
+        },
+        "values": [
+          {
+            "amount": 10.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 10.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 11.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 10.0,
+            "currency": "USD"
+          }
+        ]
+      },
+      "entity.party.holder.net_cash_flow": {
+        "index": {
+          "calendar": "annual",
+          "start": "2026-01-01",
+          "periods": 4
+        },
+        "values": [
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          }
+        ]
+      },
+      "model.net_cash_flow": {
+        "index": {
+          "calendar": "annual",
+          "start": "2026-01-01",
+          "periods": 4
+        },
+        "values": [
+          {
+            "amount": 10.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 10.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 11.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 10.0,
+            "currency": "USD"
+          }
+        ]
+      },
+      "stream.option.call": {
+        "index": {
+          "calendar": "annual",
+          "start": "2026-01-01",
+          "periods": 4
+        },
+        "offset": 0.0,
+        "values": [
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 1.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          }
+        ]
+      },
+      "stream.option.call_high": {
+        "index": {
+          "calendar": "annual",
+          "start": "2026-01-01",
+          "periods": 4
+        },
+        "offset": 0.0,
+        "values": [
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          }
+        ]
+      },
+      "stream.plant.revenue": {
+        "index": {
+          "calendar": "annual",
+          "start": "2026-01-01",
+          "periods": 4
+        },
+        "offset": 1.0,
+        "entity": "asset.plant",
+        "values": [
+          {
+            "amount": 10.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 10.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 10.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 10.0,
+            "currency": "USD"
+          }
+        ]
+      }
+    },
+    "journal": [
+      {
+        "period": 2,
+        "date": "2028-01-01",
+        "actor": "option:call",
+        "action": "exercise_option",
+        "target": "call",
+        "outcome": "applied",
+        "note": "its own `exercise when` held"
+      }
+    ]
+  },
+  "scenarios": {
+    "status": "not_run",
+    "summaries": []
+  },
+  "monte_carlo": {
+    "status": "not_run",
+    "trials": 1,
+    "seed": 0,
+    "metrics": {},
+    "trial_summaries": []
+  },
+  "statements": {
+    "statements": [
+      {
+        "id": "by_entity",
+        "label": "Cash by entity",
+        "default": true,
+        "grain": {
+          "calendar": "annual",
+          "start": "2026-01-01",
+          "labels": [
+            "2026",
+            "2027",
+            "2028",
+            "2029"
+          ]
+        },
+        "rows": [
+          {
+            "kind": "line",
+            "label": "Plant",
+            "depth": 0,
+            "display_sign": 1.0,
+            "values": [
+              {
+                "amount": 10.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 10.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 10.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 10.0,
+                "currency": "USD"
+              }
+            ],
+            "total": 40.0,
+            "streams": [
+              "plant.revenue"
+            ]
+          },
+          {
+            "kind": "line",
+            "label": "Holder",
+            "depth": 0,
+            "display_sign": 1.0,
+            "values": [
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              }
+            ],
+            "total": 0.0
+          },
+          {
+            "kind": "residual",
+            "label": "Unclassified",
+            "depth": 1,
+            "display_sign": 1.0,
+            "values": [
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 1.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              }
+            ],
+            "total": 1.0,
+            "streams": [
+              "option.call",
+              "option.call_high"
+            ]
+          }
+        ],
+        "reconciliation": {
+          "bottom_line": 41.0,
+          "model_total": 41.0,
+          "residual": 0.0
+        },
+        "diagnostics": [
+          {
+            "code": "W3500_STATEMENT_UNCLASSIFIED_STREAM",
+            "message": "2 stream(s) are in no row of statement 'by_entity', so the bottom line is short by 1.00: option.call, option.call_high. Classify them, or give the statement a row that claims them."
+          }
+        ]
+      }
+    ]
+  },
+  "graph": {
+    "entities": [
+      {
+        "symbol": "asset.plant",
+        "family": "asset",
+        "type": "Asset.Real"
+      },
+      {
+        "symbol": "party.holder",
+        "family": "party",
+        "type": "Party"
+      }
+    ]
+  }
+}

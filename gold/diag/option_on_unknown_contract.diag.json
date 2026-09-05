@@ -1,0 +1,32 @@
+[
+  {
+    "code": "E1376_UNKNOWN_REFERENCE",
+    "severity": "error",
+    "message": "Option 'renewal' is written on contract 'cre.lease_unit.tenant_b', which this model does not declare.",
+    "file": "model.cfdl",
+    "span": {
+      "start_line": 16,
+      "start_col": 1,
+      "end_line": 19,
+      "end_col": 1
+    },
+    "path": null,
+    "hint": "Did you mean cre.lease_unit.tenant_a?",
+    "notes": []
+  },
+  {
+    "code": "E1372_MISSING_CONTRACT_TERM",
+    "severity": "error",
+    "message": "Option 'renewal' reads `contract.rent_year` in its payoff, and no term by that name is stated.",
+    "file": "model.cfdl",
+    "span": {
+      "start_line": 16,
+      "start_col": 1,
+      "end_line": 19,
+      "end_col": 1
+    },
+    "path": null,
+    "hint": "State `rent_year` in the option's `terms`.",
+    "notes": []
+  }
+]

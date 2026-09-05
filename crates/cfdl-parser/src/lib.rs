@@ -748,9 +748,22 @@ pub struct OptionStmt {
     /// to no entity and fell out of every per-entity total.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub subject_entity: Option<String>,
+    /// The contract this option is written against — `on contract
+    /// cre.lease_unit.tenant_a`. A renewal is a right over a lease, a
+    /// prepayment a right over a loan: the election's subject is the
+    /// agreement, and it inherits that agreement's entity. Its terms are read
+    /// as `contract.<term>` wherever the option states none of its own.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub subject_contract: Option<String>,
     /// Who the option is between, by role.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub parties: Vec<PartyBinding>,
+    /// What was agreed, checked against the election type's effective fields
+    /// exactly as a contract's terms are (`Contract.Option` declares `strike`;
+    /// a pack election adds its own). Read in `exercise when` and `payoff` as
+    /// `contract.<term>`.
+    #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
+    pub terms: BTreeMap<String, ContractTerm>,
     pub exercisable_in: Option<String>,
     /// Boolean trigger expression (raw source).
     pub exercise_when: Option<String>,
@@ -893,6 +906,9 @@ enum TokStopKind {
     Action,
     /// Stop at `payoff`.
     Payoff,
+    /// Stop at the other items an option body carries (`parties`, `terms`),
+    /// so an election written before them does not swallow them.
+    OptionItem,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -3618,6 +3634,9 @@ impl<'a> Parser<'a> {
                 | TokenKind::Keyword(Keyword::Deactivate)
                 | TokenKind::Keyword(Keyword::Exercise) => stops.contains(&TokStopKind::Action),
                 TokenKind::Keyword(Keyword::Payoff) => stops.contains(&TokStopKind::Payoff),
+                TokenKind::Keyword(Keyword::Parties) | TokenKind::Keyword(Keyword::Terms) => {
+                    stops.contains(&TokStopKind::OptionItem)
+                }
                 _ => false,
             };
             if stop {
@@ -3805,11 +3824,41 @@ impl<'a> Parser<'a> {
         // `on entity <ref>` — the asset the option is written on. Optional so
         // every option written before options had owners still parses.
         let mut subject_entity = None;
+        let mut subject_contract = None;
         if matches!(self.peek().kind, TokenKind::Keyword(Keyword::On)) {
             let _ = self.bump();
-            let _ = self.expect_keyword(Keyword::Entity, "'entity'")?;
-            let entity_tok = self.bump();
-            subject_entity = Some(self.parse_entity_ref_token(&entity_tok)?);
+            match self.peek().kind {
+                TokenKind::Keyword(Keyword::Entity) => {
+                    let _ = self.bump();
+                    let entity_tok = self.bump();
+                    subject_entity = Some(self.parse_entity_ref_token(&entity_tok)?);
+                }
+                // `on contract <name>` — the election is a right over an
+                // agreement, and takes that agreement's entity as its own.
+                TokenKind::Keyword(Keyword::Contract) => {
+                    let _ = self.bump();
+                    let contract_tok = self.bump();
+                    match contract_tok.kind {
+                        TokenKind::Ident(ref s) | TokenKind::Qname(ref s) => {
+                            subject_contract = Some(s.clone());
+                        }
+                        _ => {
+                            self.push_expected(
+                                contract_tok.span,
+                                "Expected contract name after 'on contract'.".to_string(),
+                            );
+                            return None;
+                        }
+                    }
+                }
+                _ => {
+                    self.push_expected(
+                        self.current_span(),
+                        "Expected 'entity' or 'contract' after 'on'.".to_string(),
+                    );
+                    return None;
+                }
+            }
         }
         let _ = self.expect_keyword(Keyword::Type, "'type'")?;
         let type_tok = self.bump();
@@ -3839,14 +3888,18 @@ impl<'a> Parser<'a> {
         let mut exercise_when = None;
         let mut payoff = None;
         let mut parties: Vec<PartyBinding> = Vec::new();
+        let mut terms: BTreeMap<String, ContractTerm> = BTreeMap::new();
         loop {
             match self.peek().kind {
                 TokenKind::Punct(Punct::RBrace) | TokenKind::Eof => break,
                 TokenKind::Keyword(Keyword::Exercise) => {
                     let _ = self.bump();
                     let _ = self.expect_keyword(Keyword::When, "'when'")?;
-                    exercise_when =
-                        self.consume_expr_until(&[TokStopKind::Payoff, TokStopKind::Action]);
+                    exercise_when = self.consume_expr_until(&[
+                        TokStopKind::Payoff,
+                        TokStopKind::Action,
+                        TokStopKind::OptionItem,
+                    ]);
                     if exercise_when.is_none() {
                         self.push_expected(
                             self.current_span(),
@@ -3857,7 +3910,8 @@ impl<'a> Parser<'a> {
                 }
                 TokenKind::Keyword(Keyword::Payoff) => {
                     let _ = self.bump();
-                    payoff = self.consume_expr_until(&[TokStopKind::Action]);
+                    payoff =
+                        self.consume_expr_until(&[TokStopKind::Action, TokStopKind::OptionItem]);
                     if payoff.is_none() {
                         self.push_expected(
                             self.current_span(),
@@ -3870,10 +3924,24 @@ impl<'a> Parser<'a> {
                     let _ = self.bump();
                     parties = self.parse_parties_block()?;
                 }
+                TokenKind::Keyword(Keyword::Terms) => {
+                    let _ = self.bump();
+                    let Some((parsed_terms, _)) = self.parse_contract_terms_block() else {
+                        self.push_expected(
+                            self.current_span(),
+                            "Expected '{' after 'terms'.".to_string(),
+                        );
+                        return None;
+                    };
+                    for (key, value) in parsed_terms {
+                        terms.insert(key, value);
+                    }
+                }
                 _ => {
                     self.push_expected(
                         self.current_span(),
-                        "Expected 'parties', 'exercise when', 'payoff', or '}'.".to_string(),
+                        "Expected 'parties', 'terms', 'exercise when', 'payoff', or '}'."
+                            .to_string(),
                     );
                     return None;
                 }
@@ -3884,7 +3952,9 @@ impl<'a> Parser<'a> {
             name,
             type_name,
             subject_entity,
+            subject_contract,
             parties,
+            terms,
             exercisable_in,
             exercise_when,
             payoff,
