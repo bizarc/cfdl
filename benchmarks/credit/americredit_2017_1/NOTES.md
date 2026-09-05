@@ -161,11 +161,27 @@ the twenty-two clauses that pay the cash. Nothing enforces that they agree.
 That is the case's structural weakness and it is worth knowing before reading
 the file.
 
-Three fields carry the collateral as closed forms of the twelve assumed pools —
-`pool_bal`, `pool_prior` and `pool_int` — for the same reason: a recurrence
-cannot read the pack's own series either. The pack contracts produce the cash
-the waterfall allocates, so the pool is stated twice as well, independently,
-and both are pinned to the published grid through `expected.csv`.
+The pool balance is stated nowhere. Each loan's balance is an account its
+contract opens and its own collections move, and the trust's balance is the
+fold of its twelve loans' through `part of` — `prev.container.trust.balance`,
+the balance the pool carried into the period. The class recurrences read it
+one period back, and the waterfall computes the balance after this period's
+collections from the loans' own series where the prospectus measures the
+overcollateralization target against it. What remains as closed forms are the
+interest and servicing bases (`pool_int`, `pool_fee`): those need the balance
+at each loan's own accrual dates, which is the pack's arithmetic and not a sum
+of accounts. One guard survives from the old shape: at the first distribution
+the pool "carried in" is the cutoff balance, because the January loans have
+paid once in period 0 and that payment belongs to the first distribution, not
+to the balance the classes are measured against.
+
+The clean-up call is one event at the trust. When the opening balance first
+falls to 10% of the cutoff balance the twelve loans are repurchased, each
+loan's machine writes its balance off, and the trust collects nothing more —
+the redemption price having joined the pot at the prior distribution, where
+the waterfall's own test fires. Every asserted cell is unchanged; what changed
+is that the post-call periods now show a trust with nothing in it rather than
+loans amortizing for a servicer who already owns them.
 
 ## The distribution, in four lines instead of forty
 
@@ -307,6 +323,12 @@ The literal was 20,239,398.59. The deal is 2.0% of 1,011,969,929.28, which is
 rounded number moves **260 cells**, by at most **0.0044 dollars**, on figures of
 about twelve million — the model moving onto the reference's own arithmetic.
 The published assertions are unaffected at the case's tolerance.
+
+`model.total` is the case's own regression anchor. It moved once, from
+1,215,935,766.43 to 1,115,050,449.22, when the clean-up call began
+repurchasing the loans: the difference is the collections the twelve loans
+kept producing after the call, which the old model routed to the
+certificateholder and which belong to the servicer who bought them.
 
 The same shape remains in two other places and is deliberately left alone:
 5,059,849.65 is 0.50% of the initial pool (the step-down floor) and
