@@ -1,7 +1,8 @@
 # 42 — The balance is an account: a claim, rolled by the engine from the lines that move it
 
 *Drafted 4 September 2026 from the conversation that followed the level-pay
-balance (PR #289); revised the same day after review. Status: DESIGN NOTE,
+balance (PR #289); revised the same day after review, and again once the
+surface was settled (§3.2, §3.5, §3.6). Status: DESIGN NOTE,
 nothing built. It is a language and engine item of its own, separate from
 the engine restructure (`docs/13` §7.44), and it should be settled before
 the restructure so the restructure is not reopened for it. Where this note
@@ -11,10 +12,11 @@ stopgap.*
 ## 0. The sentence
 
 A balance is what is owed. It changes only because something happened —
-cash moved, a claim accrued, a claim moved between books, a claim was
-extinguished — and every one of those happenings has an amount, a period
-and a cause. The balance is the sum of them. Nothing else is allowed to
-compute it.
+cash moved, a claim accrued, a claim was written off — and every one of
+those happenings has an amount, a period and a cause. The balance is the
+sum of them. Nothing else is allowed to compute it. The state of the
+entity that owes it does not change the balance; it changes what happens
+to it next.
 
 ## 1. What is wrong today
 
@@ -82,8 +84,8 @@ reserve balances — and those need to be first-class and foldable.
 |---|---|---|---|
 | cash (draws, principal, prepayments, recoveries) | yes | yes | streams |
 | accrual (capitalized construction interest, PIK, interest shortfall) | yes (construction) | yes | none |
-| transfer (performing → defaulted → resolved) | — | yes | none |
 | write-off (realized collateral loss, bond write-down) | — | yes | none |
+| balances by entity state (performing, delinquent, defaulted) | — | yes | none — a fold by state |
 
 What neither needs: revenue recognition, receivable ageing, bad-debt
 expense, a profit-and-loss or a balance sheet. Those are the accounting
@@ -102,24 +104,46 @@ closing(t)  = opening(t) + Σ lines that move it in t
 ```
 
 Nothing in a model or a pack writes an account's value. An account moves
-only through **lines**, each with an amount, a period, a cause (the
-contract and line that produced it) and a **kind**. The construct is the
-account of `docs/01` §10.6, generalized as §3.6 lists; the word "ledger"
-is not used, and the word "role" (`docs/40` §3) goes with it.
+only through **streams** that name it, each with an amount, a period, a
+cause (the contract and line that produced it) and a direction. The
+construct is the account of `docs/01` §10.6, generalized as §3.6 lists;
+the word "ledger" is not used, and the word "role" (`docs/40` §3) goes
+with it.
 
-### 3.2 Four kinds of line
+### 3.2 One shape: a stream, with a direction and an optional account
 
-| kind | what it is | in cash aggregation | example |
+A stream is the only line there is. What is added is one clause,
+`moves <account>`, and two words in the slot the direction already
+occupies:
+
+| direction | cash? | moves an account? | what it is |
 |---|---|---|---|
-| `cash` | money moved | yes — this is a stream | scheduled principal, a draw, a recovery |
-| `accrual` | a claim increased, to be settled by cash later | no | capitalized construction interest, a PIK coupon, an interest shortfall |
-| `transfer` | a claim moved from one account to another | no | performing → defaulted on default |
-| `write-off` | a claim extinguished without cash | no | realized loss after the recovery window; a bond write-down |
+| `inflow` | yes | optionally | money in — a draw to the borrower, a principal receipt to the lender |
+| `outflow` | yes | optionally | money out — a principal payment, an advance |
+| `accrual` | no | must | a claim raised without cash — capitalized construction interest, a PIK coupon, an interest shortfall |
+| `writeoff` | no | must | a claim extinguished without cash — the realized loss, a bond write-down |
 
-Every kind is activity with detail. None is a number pulled from the air:
-each is a happening a servicer report, a trustee statement or a draw
-request carries as a line. A default is a transfer, not a loss; the loss is
-what remains after recoveries, and it is reported with its detail.
+Most streams move nothing: revenue, opex, capex, interest, servicing are
+cash that lands in the entity's net cash flow and changes nothing owed.
+A stream names an account only when it changes a claim. Scheduled
+principal, prepayments, draws and recoveries are all CASH — the balance
+falls because the borrower paid, not because a schedule said so. The two
+non-cash directions are the only movements that are not.
+
+Whether a cash stream RAISES or LOWERS the balance is not written on the
+stream. It follows from the account's **side** (§3.6): a draw is an inflow
+to the borrower and raises a loan the borrower owes; the same draw is an
+outflow to the lender and raises the loan the lender is due. An accrual
+always raises a claim and a write-off always lowers it, on either side. A
+modeller never writes increase or decrease, and the compiler refuses a
+principal payment that would raise a liability.
+
+A default moves nothing. The borrower who stops paying owes exactly what
+they owed; the loan's STATE changes, and with it what happens next —
+interest stops arriving, principal stops arriving, and after the recovery
+window the recovery is an inflow and the loss is a write-off, both against
+the one balance. Intex's performing and defaulted buckets are the fold of
+`balance` by entity state: a report, not a second account.
 
 ### 3.3 What reads an account, and when
 
@@ -165,10 +189,12 @@ A refinement's lowering rules say which lines move it and how:
 [[rules]]
 id = "credit_loan_sched_principal"
 line = "principal"
-kind = "cash"
+direction = "inflow"
 account = "balance"
-effect = "decrease"
 ```
+
+`direction` accepts the same four words a model stream does; `account`
+is the only new key.
 
 Load checks: every account the master declares has at least one line that
 moves it; a line that names an account names one the type carries; a pack
@@ -182,16 +208,18 @@ own streams:
 
 ```cfdl
 entity asset loan : Asset.Financial {
-  account balance init 1000000
+  account balance owed init 1000000
 }
-stream loan.principal on entity asset.loan outflow {
-  schedule monthly from 2026-01 for 120
-  amount = ...
-  moves balance decrease
-}
+
+stream loan.draw      on entity asset.loan inflow   { ... moves balance }
+stream loan.principal on entity asset.loan outflow  { ... moves balance }
+stream loan.pik       on entity asset.loan accrual  { ... moves balance }
+stream loan.loss      on entity asset.loan writeoff { ... moves balance }
+stream loan.interest  on entity asset.loan outflow  { ... }
 ```
 
-The surface is a sketch; §7 lists what is undecided.
+Five streams, one shape, one new clause, two new words in an existing
+slot, one word on the account. Interest moves nothing.
 
 ### 3.6 The account, generalized — the whole change
 
@@ -202,8 +230,17 @@ balance construct as well, and they are the entire language change:
 
 1. **An entity may own an account.** The subject of an agreement carries
    the agreement's balance. `owner` is unchanged for party accounts.
-2. **Lines of all four kinds may move it.** `from` remains the cash
-   spelling; `moves <account> <effect>` on a line is the general one.
+2. **Streams may move it, in any of the four directions.** `from` remains
+   the expression-fed spelling for a cash pot; `moves <account>` on a
+   stream is the general one, and `pay … to account` is already it.
+   An account has a **side**, `owed` or `due` from its owner's view, and
+   the effect of a cash stream follows from its direction and that side.
+   For a pack contract the side comes from the MASTER — `Contract.Debt`
+   says the balance is owed by the borrower to the lender, and the pack
+   contract already states which role its subject plays: the CRE
+   permanent loan on the owner is owed, the credit pool on the trust is
+   due — so no pack and no modeller using one ever writes it. The
+   one-word declaration exists for a model with no contract.
 3. **A stream may read its opening balance.** Today refused (§7.105); the
    opening is settled, so the refusal was of the wrong value, not of the
    read.
@@ -216,7 +253,7 @@ lines. A step pays `min(remaining, opening claim)`.
 
 ### 3.7 What does not change
 
-Cash aggregation folds `cash` lines only. `net_cash_flow`, `model.total`,
+Cash aggregation folds `inflow` and `outflow` streams only. `net_cash_flow`, `model.total`,
 IRR, MOIC, NPV, WAL and every statement that exists today read exactly what
 they read now. The account adds the balance plane beside the cash plane; it
 takes nothing from the cash plane.
@@ -250,34 +287,32 @@ design owes nothing to it.
 ### 4.1 The credit pack
 
 `credit.pool_level_pay`, `pool_io_bullet` and `pool_float_io_bullet` become
-representative loans, each carrying two accounts:
+representative loans, each carrying ONE account, `balance` (due — the
+subject is the lender's side): init `principal`; lowered by scheduled
+principal, prepayments and recoveries (inflows); lowered by the loss
+(write-off) after `recovery_lag_months`; the interest-only families add
+the bullet. Interest and servicing move nothing.
 
-- **`balance`** (performing): init `principal`; decreased by the
-  scheduled-principal and prepayment cash lines; decreased by the default
-  transfer; the interest-only families add the bullet.
-- **`defaulted`**: init 0; increased by the default transfer; decreased by
-  the recovery cash line and by the write-off that realizes the loss after
-  `recovery_lag_months`.
+The defaulted fraction is not an account. In a loan-level model it is the
+loan's state, and the pool's "defaulted balance" is the fold of `balance`
+over loans in that state. In the representative loan the pack keeps
+whatever private field it needs to report the fraction in default, as it
+keeps a lagged twin today. The survival field and the stopgap balance
+field disappear; the pool factor is `balance` over `principal`, read from
+the account rather than reconstructed in the statement.
 
-Lines: interest (cash, moves nothing), servicing (cash, moves nothing),
-scheduled principal (cash, decreases `balance`), prepayment (cash,
-decreases `balance`), default (transfer, `balance` → `defaulted`), recovery
-(cash, decreases `defaulted`), loss (write-off, decreases `defaulted`).
-The survival field and today's balance field and lag twin all disappear;
-the pool factor is `balance` over `principal`, read from the account rather
-than reconstructed in the statement.
+The trust folds its loans' `balance`. The clean-up call is one event at
+the trust reading its opening `balance`; retirement is a write-off on
+every loan, journaled. The overcollateralization target and every
+Intex-style trigger read the same number and, where they need the
+buckets, the fold by state.
 
-The trust folds its loans' `balance` and `defaulted`. The clean-up call is
-one event at the trust reading its opening `balance`; retirement is a
-write-off line on every loan, journaled. The overcollateralization target
-and every Intex-style trigger read the same two numbers.
-
-`credit.note` carries a `claim` account: init `face`; decreased by principal
-allocated to the holder (the step's cash line, attributed to the contract
-and line it pays); increased by an interest-shortfall accrual; decreased by
-a write-down (write-off) when the waterfall allocates a loss. That is the
-deferred-interest and write-down behaviour `docs/38` lists and no case can
-express today.
+`credit.note` carries a `claim` account (owed — the subject is the issuer's
+side): init `face`; lowered by principal allocated to the holder (the
+step's cash line, attributed to the contract and line it pays); raised by
+an interest-shortfall accrual; lowered by a write-down (write-off) when
+the waterfall allocates a loss. That is the deferred-interest and
+write-down behaviour `docs/38` lists and no case can express today.
 
 ### 4.2 Construction lending: capitalized interest and conversion
 
@@ -290,10 +325,10 @@ line on the same account:
 
 - *Capitalized into the loan*, funded from an interest reserve in the
   budget. The balance grows by the interest each period, no cash moves, and
-  the claim is settled at payoff or conversion. An `accrual` line
-  increasing `balance`. This is the common development-model case.
-- *Paid currently* from equity, or from operations once in service. A
-  `cash` line; the balance does not grow.
+  the claim is settled at payoff or conversion. An `accrual` stream moving
+  `balance`. This is the common development-model case.
+- *Paid currently* from equity, or from operations once in service. An
+  `outflow`; the balance does not grow.
 - *Drawn from a funded reserve.* The reserve is a party account holding
   cash; the interest is a cash line paid out of it; no accrual.
 
@@ -325,17 +360,17 @@ forward unchanged.
 `cre.permanent_debt`, `opco.term_debt` and `energy.project_debt` provide
 `balance` with their existing lines: draws increase it, scheduled principal
 decreases it, a balloon decreases it to zero. PIK on the OpCo notes is an
-`accrual` line. No closed form is restated anywhere.
+`accrual` stream. No closed form is restated anywhere.
 
 ## 5. Sequencing
 
 Separate from the engine restructure, and before it.
 
-1. **Language and engine.** The four generalizations of §3.6, the line
-   kinds, the read rules (§3.3), the results series (`account.<name>`
-   opening and closing), the journal lines, the category roots the non-cash
-   kinds need (`docs/35`). One PR for the construct, one for the fold and
-   results.
+1. **Language and engine.** The four generalizations of §3.6, the two
+   non-cash directions, the read rules (§3.3), the results series
+   (`account.<name>` opening and closing), the journal lines, the category
+   roots the non-cash directions need (`docs/35`). One PR for the
+   construct, one for the fold and results.
 2. **The level-pay loan onto accounts**, replacing the stopgap field.
    Numbers unchanged: the lines are the same, only who sums them changes.
 3. **The clean-up call** on the auto ABS cases and AmeriCredit, reading the
@@ -348,20 +383,21 @@ Separate from the engine restructure, and before it.
 
 ## 6. What falls out later, and is not a goal
 
-A profit-and-loss is a statement over `accrual` and `write-off` lines; a
+A profit-and-loss is a statement over `accrual` and `writeoff` streams; a
 balance sheet is a statement over account closings; a receivable is an
-account increased by rent due (accrual) and decreased by rent received
-(cash) and by write-offs. All of it is expressible once the generalized
+account raised by rent due (accrual) and lowered by rent received (inflow)
+and by write-offs. All of it is expressible once the generalized
 account exists, and none of it is asked for by any parity target.
 `docs/35` §6 holds the open question of a model-declared statement; this
 note adds nothing to it.
 
 ## 7. Open questions
 
-- **Surface.** Whether a line names its account (`moves balance decrease`)
-  or an account names its lines (`account balance { from … }`). The first
-  keeps the cause on the line, which is what the journal wants; the second
-  is today's spelling. Decide in prose before the parser.
+- **Settled (4 September 2026).** Streams name the account they move
+  (`moves <account>`); `from` stays for expression-fed cash pots. One
+  shape: a stream, whose direction is one of `inflow`, `outflow`,
+  `accrual`, `writeoff`. No `kind`, no `effect`, no `transfer`, no second
+  account for defaults. An account's side comes from the master.
 - **Opening in expressions.** The spelling by which a stream reads the
   opening balance — `asset.loan.balance` resolving to the opening because
   that is the only value a stream may see, or an explicit `opening(…)`.
@@ -372,9 +408,8 @@ note adds nothing to it.
   model period, most with no lines; the opening the monthly interest stream
   reads is the close of the prior day, which is the prior payment's close.
   Confirm this dissolves §7.102 for the balance.
-- **Transfers across entities.** A default moves a claim between two
-  accounts on one entity. A sale of a loan moves it between entities. Out
-  of scope here; note it.
+- **A claim moving between entities.** A sale of a loan moves its balance
+  from one owner to another. Out of scope here; note it.
 - **Rounding.** A `round_step` on an account, or on the lines only.
 
 ## 8. Related
