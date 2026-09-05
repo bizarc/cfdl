@@ -11,16 +11,17 @@
 # [templates.defaults].
 
 [[templates]]
-id = "credit.pool_level_pay"
-label = "Level-pay pool (six collection streams)"
+id = "credit.loan"
+label = "Loan, or a representative loan for a pool (six collection streams)"
 kind = "contract"
 body = """
-contract credit.pool_level_pay.pool_a {
+contract credit.loan.loan_a {
   term ${term_start}..${term_end}
   terms {
     principal = ${principal}
     interest_rate = ${interest_rate}
     term_months = ${term_months}
+    amortization = "${amortization}"
     severity = ${severity}
     servicing_fee = ${servicing_fee}
   }
@@ -32,59 +33,16 @@ term_end = "2031-12"
 principal = "10000000"
 interest_rate = "0.06"
 term_months = "72"
+amortization = "level_pay"
 severity = "0"
 servicing_fee = "0"
 
 [[templates]]
-id = "credit.pool_io_bullet"
-label = "Interest-only pool, bullet at maturity"
-kind = "contract"
-body = """
-contract credit.pool_io_bullet.pool_a {
-  term ${term_start}..${term_end}
-  terms {
-    principal = ${principal}
-    interest_rate = ${interest_rate}
-    term_months = ${term_months}
-  }
-}
-"""
-[templates.defaults]
-term_start = "2026-01"
-term_end = "2031-12"
-principal = "10000000"
-interest_rate = "0.06"
-term_months = "72"
-
-[[templates]]
-id = "credit.pool_float_io_bullet"
-label = "Floating-rate IO pool, bullet at maturity"
-kind = "contract"
-body = """
-contract credit.pool_float_io_bullet.pool_a {
-  term ${term_start}..${term_end}
-  terms {
-    principal = ${principal}
-    index_curve = "${index_curve}"
-    margin = ${margin}
-    term_months = ${term_months}
-  }
-}
-"""
-[templates.defaults]
-term_start = "2026-01"
-term_end = "2031-12"
-principal = "10000000"
-index_curve = "sofr"
-margin = "0.025"
-term_months = "72"
-
-[[templates]]
 id = "credit.purchase"
-label = "Pool purchase price"
+label = "Purchase price of a loan or a pool of loans"
 kind = "contract"
 body = """
-contract credit.purchase.pool_a {
+contract credit.purchase.loan_a {
   term ${term_start}..${term_start}
   terms {
     price = ${price}
@@ -97,10 +55,10 @@ price = "0"
 
 [[templates]]
 id = "credit.participation"
-label = "Participation (pass-through of a pool's cash)"
+label = "Participation (pass-through of the collateral's cash)"
 kind = "contract"
 body = """
-contract credit.participation.pool_a {
+contract credit.participation.loan_a {
   term ${term_start}..${term_end}
   terms {
     face = ${face}

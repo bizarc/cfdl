@@ -3,7 +3,7 @@ model "waterfall-smoke"
 use pack "credit" version "0.1.0"
 time calendar monthly from 2017-02 for 4
 
-entity asset trust : Credit.Asset.LoanPool {
+entity asset trust : Credit.Asset.Loan {
   original_balance = 1000
   pool_balance    init 900.0
                   next prev

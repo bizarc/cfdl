@@ -1509,13 +1509,14 @@ curve sofr linear {
   2027-01: 0.038
 }
 
-entity asset buyer : Credit.Asset.LoanPool
+entity asset buyer : Credit.Asset.Loan
 
 // Small floating IO pool: SOFR + 300, floor 7.25% (binds late), 12-month
 // bullet, prepay/default/severity with a 3-month recovery lag.
-contract credit.pool_float_io_bullet.smoke on entity asset.buyer {
+contract credit.loan.smoke on entity asset.buyer {
   term 2026-01..2027-03
   terms {
+    amortization = "interest_only"
     principal = 1200000
     index_curve = "sofr"
     margin = 0.03
@@ -1546,12 +1547,12 @@ use pack "credit" version "0.1.0"
 time calendar monthly from 2026-01 for 15
 
 entity container trust : Container.SPV
-entity asset pool : Credit.Asset.LoanPool {
+entity asset pool : Credit.Asset.Loan {
   part of container.trust
 }
 entity party holders : Credit.Party.Investor { name = "Class A noteholders" }
 
-contract credit.pool_level_pay.smoke on entity asset.pool {
+contract credit.loan.smoke on entity asset.pool {
   term 2026-01..2027-03
   terms {
     principal = 1200000
@@ -1585,14 +1586,14 @@ contract credit.note a on entity container.trust {
 }
 
 account interest_collections {
-  from series_sum("credit.pool.interest.*", time.t, time.t)
-     + series_sum("credit.pool.servicing.*", time.t, time.t)
+  from series_sum("credit.loan.interest.*", time.t, time.t)
+     + series_sum("credit.loan.servicing.*", time.t, time.t)
 }
 
 account principal_collections {
-  from series_sum("credit.pool.sched_principal.*", time.t, time.t)
-     + series_sum("credit.pool.prepay.*", time.t, time.t)
-     + series_sum("credit.pool.recoveries.*", time.t, time.t)
+  from series_sum("credit.loan.sched_principal.*", time.t, time.t)
+     + series_sum("credit.loan.prepay.*", time.t, time.t)
+     + series_sum("credit.loan.recoveries.*", time.t, time.t)
 }
 
 account a_principal { owner party.holders }
@@ -1626,11 +1627,11 @@ model "credit-participation"
 use pack "credit" version "0.1.0"
 time calendar monthly from 2026-01 for 15
 
-entity asset pool : Credit.Asset.LoanPool
+entity asset pool : Credit.Asset.Loan
 entity party issuer : Credit.Party.Servicer { name = "Issuer" }
 entity party investors : Credit.Party.Investor { name = "Certificate holders" }
 
-contract credit.pool_level_pay.smoke on entity asset.pool {
+contract credit.loan.smoke on entity asset.pool {
   term 2026-01..2027-03
   terms {
     principal = 1200000
@@ -1682,11 +1683,11 @@ model "credit-pool-smoke"
 use pack "credit" version "0.1.0"
 time calendar monthly from 2026-01 for 15
 
-entity asset buyer : Credit.Asset.LoanPool
+entity asset buyer : Credit.Asset.Loan
 
 // Small level-pay pool: 12-month amortization, prepay/default/severity with
 // a 3-month recovery lag (term spans 12 + 3 months).
-contract credit.pool_level_pay.smoke on entity asset.buyer {
+contract credit.loan.smoke on entity asset.buyer {
   term 2026-01..2027-03
   terms {
     principal = 1200000
@@ -1715,7 +1716,7 @@ model "credit-zero-rate-pool"
 use pack "credit" version "0.1.0"
 time calendar monthly from 2026-01 for 12
 
-entity asset lender : Credit.Asset.LoanPool
+entity asset lender : Credit.Asset.Loan
 
 // A 0% APR pool — promotional financing, ordinary in auto and retail credit
 // and about 3% of a real published auto-ABS collateral table.
@@ -1731,7 +1732,7 @@ entity asset lender : Credit.Asset.LoanPool
 //
 // The `rate` validation only ever required non-negative, so before this a zero
 // rate was accepted and produced NaN rather than an answer or a refusal.
-contract credit.pool_level_pay on entity asset.lender {
+contract credit.loan on entity asset.lender {
   term 2026-01..2026-12
   terms {
     principal = 1200000
@@ -2205,7 +2206,7 @@ time calendar annual from 2026-01 for 2
 // deciding who gets paid. Every waterfall example in the documentation was
 // written that way.
 
-entity asset trust   : Credit.Asset.LoanPool { collateral_type = "auto" }
+entity asset trust   : Credit.Asset.Loan { collateral_type = "auto" }
 entity asset class_a : Credit.Asset.Tranche  { original_balance = 5000.0 seniority = 1 }
 entity party residual : Party { name = "Residual holder" }
 
@@ -2257,7 +2258,7 @@ time calendar monthly from 2017-01 for 4
 // See `docs/03_expression_environment.md` §3.1 and §3.2 for the rules, and
 // `docs/13_feature_backlog.md` §7.37 for what the ordering costs.
 
-entity asset pool : Credit.Asset.LoanPool {
+entity asset pool : Credit.Asset.Loan {
   collateral_type = "auto"
   trigger_level = 700000.0
   cash_trigger = 200000.0
@@ -2270,7 +2271,7 @@ entity asset pool : Credit.Asset.LoanPool {
 
 entity party investor : Credit.Party.Investor { name = "Investor" }
 
-contract credit.pool_level_pay.one on entity asset.pool {
+contract credit.loan.one on entity asset.pool {
   term 2017-01..2017-04
   terms { principal = 1000000 interest_rate = 0.12 term_months = 4 cpr = 0 cdr = 0 }
 }
@@ -3640,7 +3641,7 @@ model "pack-amortization-day-count"
 use pack "credit" version "0.1.0"
 time calendar monthly from 2025-01 for 13
 
-entity asset buyer : Credit.Asset.LoanPool
+entity asset buyer : Credit.Asset.Loan
 
 // A commercial Actual/360 loan: interest accrues on actual days, but the
 // payment is struck once on a 30/360 schedule and held constant, with
@@ -3649,7 +3650,7 @@ entity asset buyer : Credit.Asset.LoanPool
 // which no loan document does.
 //
 // No prepayments or defaults, so this isolates the two rate bases.
-contract credit.pool_level_pay.p on entity asset.buyer {
+contract credit.loan.p on entity asset.buyer {
   term 2025-01..2025-12
   terms {
     principal = 100000000
@@ -3832,7 +3833,7 @@ model "pack-cadence-credit-daily_monthly_pay"
 use pack "credit" version "0.1.0"
 time calendar daily from 2025-01 for 1186
 
-entity asset buyer : Credit.Asset.LoanPool
+entity asset buyer : Credit.Asset.Loan
 
 // The SAME pool: a 36-month level-pay loan with a 3-month recovery lag, once
 // on a monthly grid and once on a DAILY book that still pays monthly.
@@ -3845,7 +3846,7 @@ entity asset buyer : Credit.Asset.LoanPool
 // So these two must agree EXACTLY on annual totals: they are literally the
 // same 36 payments. That is the sharpest available proof that the payment
 // grid and the model grid are separated correctly.
-contract credit.pool_level_pay.book on entity asset.buyer {
+contract credit.loan.book on entity asset.buyer {
   term 2025-01..2028-03
   terms {
     principal = 1200000
@@ -3868,7 +3869,7 @@ model "pack-cadence-credit-monthly"
 use pack "credit" version "0.1.0"
 time calendar monthly from 2025-01 for 39
 
-entity asset buyer : Credit.Asset.LoanPool
+entity asset buyer : Credit.Asset.Loan
 
 // The SAME pool: a 36-month level-pay loan with a 3-month recovery lag, once
 // on a monthly grid and once on a DAILY book that still pays monthly.
@@ -3881,7 +3882,7 @@ entity asset buyer : Credit.Asset.LoanPool
 // So these two must agree EXACTLY on annual totals: they are literally the
 // same 36 payments. That is the sharpest available proof that the payment
 // grid and the model grid are separated correctly.
-contract credit.pool_level_pay.book on entity asset.buyer {
+contract credit.loan.book on entity asset.buyer {
   term 2025-01..2028-03
   terms {
     principal = 1200000
@@ -4374,7 +4375,7 @@ model "pack-day-count-act360"
 use pack "credit" version "0.1.0"
 time calendar monthly from 2025-01 for 13
 
-entity asset buyer : Credit.Asset.LoanPool
+entity asset buyer : Credit.Asset.Loan
 
 // Actual/360, the USD credit convention. A nominal annual rate is divided by
 // the rule's accrual divisor, which the default reads as periods-per-year —
@@ -4384,9 +4385,10 @@ entity asset buyer : Credit.Asset.LoanPool
 // So interest is 6,200 in a 31-day January and 5,600 in a 28-day February,
 // against a flat 6,000 under 30/360, and 73,000 over a 365-day year rather
 // than 72,000. That 365/360 uplift is the point of the convention.
-contract credit.pool_io_bullet.p on entity asset.buyer {
+contract credit.loan.p on entity asset.buyer {
   term 2025-01..2025-12
   terms {
+    amortization = "interest_only"
     principal = 1200000
     interest_rate = 0.06
     term_months = 12
@@ -4656,9 +4658,9 @@ model "pool-retires-by-role"
 use pack "credit" version "0.1.0"
 time calendar monthly from 2026-01 for 15
 
-entity asset pool : Credit.Asset.LoanPool
+entity asset pool : Credit.Asset.Loan
 
-contract credit.pool_level_pay.smoke on entity asset.pool {
+contract credit.loan.smoke on entity asset.pool {
   term 2026-01..2027-03
   terms {
     principal = 1200000
@@ -4671,15 +4673,15 @@ contract credit.pool_level_pay.smoke on entity asset.pool {
   }
 }
 
-// STATE OWNED BY THE AGREEMENT (docs/40 §3, stage 6). The pool's machine
-// carries `on enter retired { set balance = 0 }`, where `balance` is the
+// STATE OWNED BY THE AGREEMENT (docs/40 §3, stage 6). The loan's machine
+// carries `on enter repurchased { set balance = 0 }`, where `balance` is the
 // field ROLE the pack's rules fill — the pool's balance every stream reads
 // and its lagged twin — so the model retires the pool with one status
-// write and names no instance's field. Retirement is an occurrence: a
-// clean-up call, here at the sixth distribution. From the next period every
+// write and names no instance's field. A clean-up call REPURCHASES the remaining
+// collateral, here at the sixth distribution. From the next period every
 // stream the pool lowers reads zero, with no per-entity write in the model.
 event clean_up_call when time.t == 6 {
-  set entity asset.pool.status = "retired"
+  set entity asset.pool.status = "repurchased"
 }
 ```
 
@@ -6334,7 +6336,7 @@ time calendar monthly from 2017-02 for 6
 // sizes, coupons and final scheduled distribution dates are the transaction's;
 // the pool and collection figures below are not, and are marked where they
 // appear.
-entity asset trust    : Credit.Asset.LoanPool { collateral_type = "auto"  original_balance = 984243280
+entity asset trust    : Credit.Asset.Loan { collateral_type = "auto"  original_balance = 984243280
   pool_balance init 960000000.0
                next prev * 0.96
   reserve_balance init 18000000.0
@@ -6535,14 +6537,14 @@ time calendar monthly from 2018-10 for 6
 // This fixture is that order: a contract, then an assume, then a waterfall,
 // with nothing after them to stop an over-eager scan.
 
-entity asset trust : Credit.Asset.LoanPool { collateral_type = "auto" }
-entity asset pool  : Credit.Asset.LoanPool {
+entity asset trust : Credit.Asset.Loan { collateral_type = "auto" }
+entity asset pool  : Credit.Asset.Loan {
   collateral_type = "auto"
   part of asset.trust
 }
 entity party holders : Credit.Party.Investor { name = "Noteholders" }
 
-contract credit.pool_level_pay.pool on entity asset.pool {
+contract credit.loan.pool on entity asset.pool {
   term 2018-10..2019-03
   terms {
     principal = 1200000.0
@@ -6560,7 +6562,7 @@ waterfall notes.principal on entity asset.trust {
   // NARROWER THAN `available`, deliberately: this waterfall allocates the
   // principal collections the exhibit tabulates, not the deal's whole cash. `docs/03` §3.2
   // keeps the `from` expression free for exactly this.
-  from series_sum("credit.pool.sched_principal.pool", time.t, time.t)
+  from series_sum("credit.loan.sched_principal.pool", time.t, time.t)
 
   // THE CAP IS PER-PERIOD, NOT CUMULATIVE, AND THAT IS THE HONEST SPELLING.
   //
@@ -7109,7 +7111,7 @@ model "waterfall-smoke"
 use pack "credit" version "0.1.0"
 time calendar monthly from 2017-02 for 4
 
-entity asset trust : Credit.Asset.LoanPool {
+entity asset trust : Credit.Asset.Loan {
   original_balance = 1000
   pool_balance    init 900.0
                   next prev

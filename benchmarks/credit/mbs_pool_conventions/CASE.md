@@ -21,7 +21,7 @@ and cited as facts.
 | | |
 |---|---|
 | Pack | `credit` |
-| Contract types | `credit.pool_level_pay` |
+| Contract types | `credit.loan` |
 | Language features | pack contract lowering to four separate cash flow lines |
 | Conventions | CPR-to-SMM conversion, constant default rate, loss severity, recovery lag |
 

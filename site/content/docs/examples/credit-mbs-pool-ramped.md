@@ -34,7 +34,7 @@ and cited as facts.
 | | |
 |---|---|
 | Pack | `credit` |
-| Contract types | `credit.pool_level_pay` |
+| Contract types | `credit.loan` |
 | Language features | pack contract lowering to four cash flow lines; a per-period pool factor carried as state |
 | Conventions | a prepayment ramp over thirty months, CPR-to-SMM conversion, default, severity, recovery lag |
 
@@ -61,7 +61,7 @@ model "mbs-pool-ramped"
 use pack "credit" version "0.1.0"
 time calendar monthly from 2026-01 for 372
 
-entity asset buyer : Credit.Asset.LoanPool
+entity asset buyer : Credit.Asset.Loan
 
 // The SAME 30-year agency-MBS pool as benchmarks/credit/mbs_pool_conventions —
 // $100m, 8% WAC, 20% loss severity, 12-month recovery — run at the published
@@ -82,7 +82,7 @@ entity asset buyer : Credit.Asset.LoanPool
 // age_months is 0 — a new pool, so the curves start at their first month.
 //
 // 372 periods = 360 months of pool life plus the 12-month recovery tail.
-contract credit.pool_level_pay.a on entity asset.buyer {
+contract credit.loan.a on entity asset.buyer {
   term 2026-01..2056-12
   terms {
     principal = 100000000
@@ -110,8 +110,8 @@ contract credit.pool_level_pay.a on entity asset.buyer {
 
 Checked period by period: **4 series** across **25 periods** — **95 values** in all, each within ±0.51 of the reference.
 
-- `credit.pool.interest.a`
-- `credit.pool.sched_principal.a`
-- `credit.pool.prepay.a`
-- `credit.pool.recoveries.a`
+- `credit.loan.interest.a`
+- `credit.loan.sched_principal.a`
+- `credit.loan.prepay.a`
+- `credit.loan.recoveries.a`
 

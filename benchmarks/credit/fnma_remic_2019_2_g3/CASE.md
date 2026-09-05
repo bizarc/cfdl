@@ -35,7 +35,7 @@ This case takes the 198% PSA column, the pricing speed.
 | | |
 |---|---|
 | Pack | `credit` |
-| Contract types | `credit.pool_level_pay` |
+| Contract types | `credit.loan` |
 | Language features | two waterfalls over one collateral, one for principal and one for interest; entity fields carrying class balances |
 | Conventions | PSA on a pool seasoned past the ramp, a servicing and guaranty strip, a stripped coupon, a notional interest-only class |
 

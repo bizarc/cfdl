@@ -4596,7 +4596,7 @@ fn build_ir(
             .map(|pack| pack.lowering_rules.as_slice())
             .unwrap_or(&[])
             .iter()
-            .filter(|rule| rule_matches_contract(&rule.contract_name, &contract.name))
+            .filter(|rule| rule_applies(rule, contract))
             .filter(|rule| !rule.stream_name.is_empty())
             .count();
         if contract.category.is_some() && emitted > 1 {
@@ -6268,6 +6268,9 @@ fn filter_pack_aware_validation(
             let Stmt::Contract(contract) = &source_stmt.statement else {
                 return None;
             };
+            // By NAME: the type is known if any rule lowers contracts of it.
+            // Whether a rule's selection admits this contract's terms is
+            // `E1385`'s question, not this one's.
             if pack
                 .lowering_rules
                 .iter()
@@ -6580,6 +6583,47 @@ fn lower_contract_streams(
                 });
                 diagnostics.push(diag);
             }
+            // EVERY LINE THE TYPE PRODUCES HAS A RULE FOR THIS CONTRACT. Load
+            // checks that per type; selection by term (`when`) makes it a
+            // fact about the instance — a floating level-pay loan matches no
+            // fixed-coupon row, and without this it would lower nothing for
+            // those lines and say nothing (`docs/07` §6.4).
+            {
+                let produced: BTreeSet<&str> = pack
+                    .lowering_rules
+                    .iter()
+                    .filter(|rule| rule_applies(rule, contract))
+                    .filter_map(|rule| rule.line.as_deref())
+                    .collect();
+                let missing: Vec<String> = pack
+                    .ontology
+                    .effective_lines(&binding.type_id)
+                    .iter()
+                    .filter(|l| !l.allocated && !l.optional)
+                    .filter(|l| !produced.contains(l.name.as_str()))
+                    .map(|l| l.name.clone())
+                    .collect();
+                if !missing.is_empty() {
+                    let mut diag = lowering_rule_diag(
+                        "E1385_LINE_HAS_NO_RULE_FOR_TERMS",
+                        &format!(
+                            "Contract '{}' produces no {}: type '{}' declares the line{}, and no rule that lowers {} applies to the terms as stated.",
+                            contract.name,
+                            missing.join(", "),
+                            binding.type_id,
+                            if missing.len() > 1 { "s" } else { "" },
+                            if missing.len() > 1 { "them" } else { "it" }
+                        ),
+                        source_stmt,
+                        contract.span,
+                    );
+                    diag.hint = Some(
+                        "A rule selects on a term's value (`when`) or on whether a term is stated; the combination written here is one the pack has no row for — a floating level-pay loan, say. Change the terms, or extend the pack."
+                            .to_string(),
+                    );
+                    diagnostics.push(diag);
+                }
+            }
             for field in fields.iter().filter(|f| f.required) {
                 if !contract.terms.contains_key(&field.name) {
                     diagnostics.push(lowering_rule_diag(
@@ -6647,7 +6691,7 @@ fn lower_contract_streams(
             let matched = pack
                 .lowering_rules
                 .iter()
-                .find(|rule| rule_matches_contract(&rule.contract_name, &contract.name));
+                .find(|rule| rule_applies(rule, contract));
             if let (Some(stated), Some(rule)) = (term.unit.as_deref(), matched) {
                 if let Some(declared) = rule.units.get(key.as_str()) {
                     if !units_equal(stated, declared) {
@@ -6735,7 +6779,7 @@ fn lower_contract_streams(
             continue;
         }
         for rule in &rules {
-            if !rule_matches_contract(&rule.contract_name, &contract.name) {
+            if !rule_applies(rule, contract) {
                 continue;
             }
             // A field-only rule (an empty stream name) lowers a claim and no
@@ -7813,6 +7857,22 @@ fn units_equal(a: &str, b: &str) -> bool {
             .collect::<String>()
     };
     norm(a) == norm(b)
+}
+
+/// The terms a contract states, as text, for rule selection (`docs/07` §6.5).
+fn stated_terms(contract: &cfdl_parser::ContractStmt) -> BTreeMap<String, String> {
+    contract
+        .terms
+        .iter()
+        .map(|(k, v)| (k.clone(), v.value.clone()))
+        .collect()
+}
+
+/// Does this rule lower this contract? Its type's name, and then its `when`
+/// selection on the contract's stated terms.
+fn rule_applies(rule: &cfdl_pack::LoweringRule, contract: &cfdl_parser::ContractStmt) -> bool {
+    rule_matches_contract(&rule.contract_name, &contract.name)
+        && cfdl_pack::rule_applies_to_terms(rule, &stated_terms(contract))
 }
 
 fn rule_matches_contract(rule_contract: &str, contract_name: &str) -> bool {

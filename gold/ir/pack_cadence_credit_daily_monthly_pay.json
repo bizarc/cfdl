@@ -14,10 +14,10 @@
     {
       "id": "c8726c9577f18720c017fefa34ac122b",
       "symbol": "asset.buyer",
-      "type": "Credit.Asset.LoanPool",
+      "type": "Credit.Asset.Loan",
       "fields": {},
       "rules": {
-        "credit_level_pay_balance_book": {
+        "credit_loan_balance_book": {
           "init": {
             "lang": "cfdl",
             "src": "1200000"
@@ -33,7 +33,7 @@
             "to": "2028-03-01"
           }
         },
-        "credit_level_pay_balance_lag_book": {
+        "credit_loan_balance_lag_book": {
           "init": {
             "lang": "cfdl",
             "src": "1200000"
@@ -52,12 +52,12 @@
       },
       "field_roles": {
         "balance": [
-          "credit_level_pay_balance_book",
-          "credit_level_pay_balance_lag_book"
+          "credit_loan_balance_book",
+          "credit_loan_balance_lag_book"
         ]
       },
       "state": {},
-      "lifecycle": "credit.pool"
+      "lifecycle": "credit.loan"
     }
   ],
   "assumptions": {
@@ -66,48 +66,97 @@
   },
   "lifecycles": [
     {
-      "id": "credit.pool",
-      "initial": "amortizing",
+      "id": "credit.loan",
+      "initial": "current",
       "states": [
-        "warehouse",
-        "revolving",
-        "amortizing",
-        "rapid_amortization",
-        "retired"
+        "current",
+        "delinquent",
+        "defaulted",
+        "in_foreclosure",
+        "liquidated",
+        "prepaid",
+        "matured",
+        "repurchased"
       ],
       "edges": [
         {
-          "from": "warehouse",
-          "to": "revolving"
+          "from": "current",
+          "to": "delinquent"
         },
         {
-          "from": "warehouse",
-          "to": "amortizing"
+          "from": "delinquent",
+          "to": "current"
         },
         {
-          "from": "revolving",
-          "to": "amortizing"
+          "from": "delinquent",
+          "to": "defaulted"
         },
         {
-          "from": "revolving",
-          "to": "rapid_amortization"
+          "from": "defaulted",
+          "to": "current"
         },
         {
-          "from": "amortizing",
-          "to": "rapid_amortization"
+          "from": "defaulted",
+          "to": "in_foreclosure"
         },
         {
-          "from": "amortizing",
-          "to": "retired"
+          "from": "in_foreclosure",
+          "to": "current"
         },
         {
-          "from": "rapid_amortization",
-          "to": "retired"
+          "from": "in_foreclosure",
+          "to": "liquidated"
+        },
+        {
+          "from": "current",
+          "to": "prepaid"
+        },
+        {
+          "from": "delinquent",
+          "to": "prepaid"
+        },
+        {
+          "from": "defaulted",
+          "to": "prepaid"
+        },
+        {
+          "from": "current",
+          "to": "matured"
+        },
+        {
+          "from": "delinquent",
+          "to": "matured"
+        },
+        {
+          "from": "current",
+          "to": "repurchased"
+        },
+        {
+          "from": "delinquent",
+          "to": "repurchased"
+        },
+        {
+          "from": "defaulted",
+          "to": "repurchased"
         }
       ],
       "entry_actions": [
         {
-          "state": "retired",
+          "state": "prepaid",
+          "actions": [
+            {
+              "kind": "SetRole",
+              "author": "pack",
+              "field": "balance",
+              "value": {
+                "lang": "cfdl",
+                "src": "0.0"
+              }
+            }
+          ]
+        },
+        {
+          "state": "repurchased",
           "actions": [
             {
               "kind": "SetRole",
@@ -219,10 +268,10 @@
   ],
   "contracts": [
     {
-      "id": "a4835fbae4b45ef98841555fae108bcd",
-      "name": "credit.pool_level_pay.book",
-      "type": "Credit.Contract.LevelPayPool",
-      "contract_name": "credit.pool_level_pay",
+      "id": "2f1aa80a05ade6c7106ce2967bbf1890",
+      "name": "credit.loan.book",
+      "type": "Credit.Contract.Loan",
+      "contract_name": "credit.loan",
       "master": "Contract.Debt",
       "instance": "book",
       "subject": {
@@ -259,8 +308,8 @@
   ],
   "streams": [
     {
-      "id": "fff18624a7073585b85ba5e58fc35eb4",
-      "name": "credit.pool.interest.book",
+      "id": "3850fc7c08e414b9ce248d73795b2f12",
+      "name": "credit.loan.interest.book",
       "owner": {
         "symbol": "asset.buyer"
       },
@@ -275,7 +324,7 @@
       },
       "amount": {
         "lang": "cfdl",
-        "src": "if(months_between(parse_date(\"2025-01-01\"), time.date) < 36.0, entity.asset.buyer.credit_level_pay_balance_book * (1.0 - cpr_to_periodic(if(0.0 == 0.0, 0.03, 0.0 * (min(0.0002 * min(max(1.0, (0.0 + (months_between(parse_date(\"2025-01-01\"), time.date))) + 1.0), 30.0), 0.006) - 0.000095 * max(0.0, min(max(1.0, (0.0 + (months_between(parse_date(\"2025-01-01\"), time.date))) + 1.0), 120.0) - 60.0))), 12.0)) * (0.06 / 12.0), 0.0)"
+        "src": "if(months_between(parse_date(\"2025-01-01\"), time.date) < 36.0, entity.asset.buyer.credit_loan_balance_book * (1.0 - cpr_to_periodic(if(0.0 == 0.0, 0.03, 0.0 * (min(0.0002 * min(max(1.0, (0.0 + (months_between(parse_date(\"2025-01-01\"), time.date))) + 1.0), 30.0), 0.006) - 0.000095 * max(0.0, min(max(1.0, (0.0 + (months_between(parse_date(\"2025-01-01\"), time.date))) + 1.0), 120.0) - 60.0))), 12.0)) * (0.06 / 12.0), 0.0)"
       },
       "active_when": {
         "lang": "cfdl",
@@ -294,15 +343,15 @@
             "name": "credit",
             "version": "0.1.0"
           },
-          "rule_id": "credit_pool_level_pay_interest",
+          "rule_id": "credit_loan_level_pay_interest",
           "line": "interest",
-          "contract": "credit.pool_level_pay.book"
+          "contract": "credit.loan.book"
         }
       }
     },
     {
-      "id": "bb535ef15bcdb72c5bfe213d76a51dc4",
-      "name": "credit.pool.penalty.book",
+      "id": "6c525cabb11ce4b44edac478e3a6290e",
+      "name": "credit.loan.penalty.book",
       "owner": {
         "symbol": "asset.buyer"
       },
@@ -317,7 +366,7 @@
       },
       "amount": {
         "lang": "cfdl",
-        "src": "if(months_between(parse_date(\"2025-01-01\"), time.date) < 36.0, entity.asset.buyer.credit_level_pay_balance_book * (1.0 - ((-pmt(0.06 / 12.0, 36.0 - months_between(parse_date(\"2025-01-01\"), time.date), 1.0)) - (0.06 / 12.0))) * if(0.0 == 0.0, cpr_to_periodic(if(0.0 == 0.0, 0.10, min(0.0 * 0.002 * max(1.0, min((0.0 + (months_between(parse_date(\"2025-01-01\"), time.date))) + 1.0, 30.0)), 1.0)), 12.0), min(0.0 / max(1.0 - 0.0 * (0.0 + (months_between(parse_date(\"2025-01-01\"), time.date))), 0.000001), 1.0)) * 0.0, 0.0)"
+        "src": "if(months_between(parse_date(\"2025-01-01\"), time.date) < 36.0, entity.asset.buyer.credit_loan_balance_book * (1.0 - ((-pmt(0.06 / 12.0, 36.0 - months_between(parse_date(\"2025-01-01\"), time.date), 1.0)) - (0.06 / 12.0))) * if(0.0 == 0.0, cpr_to_periodic(if(0.0 == 0.0, 0.10, min(0.0 * 0.002 * max(1.0, min((0.0 + (months_between(parse_date(\"2025-01-01\"), time.date))) + 1.0, 30.0)), 1.0)), 12.0), min(0.0 / max(1.0 - 0.0 * (0.0 + (months_between(parse_date(\"2025-01-01\"), time.date))), 0.000001), 1.0)) * 0.0, 0.0)"
       },
       "active_when": {
         "lang": "cfdl",
@@ -336,15 +385,15 @@
             "name": "credit",
             "version": "0.1.0"
           },
-          "rule_id": "credit_pool_level_pay_penalty",
+          "rule_id": "credit_loan_level_pay_penalty",
           "line": "penalty",
-          "contract": "credit.pool_level_pay.book"
+          "contract": "credit.loan.book"
         }
       }
     },
     {
-      "id": "1c56514e36da054a62431229c3c7db9a",
-      "name": "credit.pool.prepay.book",
+      "id": "47723db69214a58c9eabad7336caa3bd",
+      "name": "credit.loan.prepay.book",
       "owner": {
         "symbol": "asset.buyer"
       },
@@ -359,7 +408,7 @@
       },
       "amount": {
         "lang": "cfdl",
-        "src": "if(months_between(parse_date(\"2025-01-01\"), time.date) < 36.0, entity.asset.buyer.credit_level_pay_balance_book * (1.0 - ((-pmt(0.06 / 12.0, 36.0 - months_between(parse_date(\"2025-01-01\"), time.date), 1.0)) - (0.06 / 12.0))) * if(0.0 == 0.0, cpr_to_periodic(if(0.0 == 0.0, 0.10, min(0.0 * 0.002 * max(1.0, min((0.0 + (months_between(parse_date(\"2025-01-01\"), time.date))) + 1.0, 30.0)), 1.0)), 12.0), min(0.0 / max(1.0 - 0.0 * (0.0 + (months_between(parse_date(\"2025-01-01\"), time.date))), 0.000001), 1.0)), 0.0)"
+        "src": "if(months_between(parse_date(\"2025-01-01\"), time.date) < 36.0, entity.asset.buyer.credit_loan_balance_book * (1.0 - ((-pmt(0.06 / 12.0, 36.0 - months_between(parse_date(\"2025-01-01\"), time.date), 1.0)) - (0.06 / 12.0))) * if(0.0 == 0.0, cpr_to_periodic(if(0.0 == 0.0, 0.10, min(0.0 * 0.002 * max(1.0, min((0.0 + (months_between(parse_date(\"2025-01-01\"), time.date))) + 1.0, 30.0)), 1.0)), 12.0), min(0.0 / max(1.0 - 0.0 * (0.0 + (months_between(parse_date(\"2025-01-01\"), time.date))), 0.000001), 1.0)), 0.0)"
       },
       "active_when": {
         "lang": "cfdl",
@@ -378,15 +427,15 @@
             "name": "credit",
             "version": "0.1.0"
           },
-          "rule_id": "credit_pool_level_pay_prepay",
+          "rule_id": "credit_loan_level_pay_prepay",
           "line": "prepayment",
-          "contract": "credit.pool_level_pay.book"
+          "contract": "credit.loan.book"
         }
       }
     },
     {
-      "id": "a6663135fa4e880941385918c1d8e048",
-      "name": "credit.pool.recoveries.book",
+      "id": "4549766cf647e4fa211ed1e4b66e372f",
+      "name": "credit.loan.recoveries.book",
       "owner": {
         "symbol": "asset.buyer"
       },
@@ -401,7 +450,7 @@
       },
       "amount": {
         "lang": "cfdl",
-        "src": "if(months_between(parse_date(\"2025-01-01\"), time.date) >= 3.0 and months_between(parse_date(\"2025-01-01\"), time.date) < 36.0 + 3.0, entity.asset.buyer.credit_level_pay_balance_lag_book * cpr_to_periodic(if(0.0 == 0.0, 0.03, 0.0 * (min(0.0002 * min(max(1.0, (0.0 + (months_between(parse_date(\"2025-01-01\"), time.date) - 3.0)) + 1.0), 30.0), 0.006) - 0.000095 * max(0.0, min(max(1.0, (0.0 + (months_between(parse_date(\"2025-01-01\"), time.date) - 3.0)) + 1.0), 120.0) - 60.0))), 12.0) * max(0.0, (pv(0.06 / 12.0, 36.0 - months_between(parse_date(\"2025-01-01\"), time.date), -1.0) / pv(0.06 / 12.0, 36.0 - (months_between(parse_date(\"2025-01-01\"), time.date) - 3.0), -1.0)) - 0.50), 0.0)"
+        "src": "if(months_between(parse_date(\"2025-01-01\"), time.date) >= 3.0 and months_between(parse_date(\"2025-01-01\"), time.date) < 36.0 + 3.0, entity.asset.buyer.credit_loan_balance_lag_book * cpr_to_periodic(if(0.0 == 0.0, 0.03, 0.0 * (min(0.0002 * min(max(1.0, (0.0 + (months_between(parse_date(\"2025-01-01\"), time.date) - 3.0)) + 1.0), 30.0), 0.006) - 0.000095 * max(0.0, min(max(1.0, (0.0 + (months_between(parse_date(\"2025-01-01\"), time.date) - 3.0)) + 1.0), 120.0) - 60.0))), 12.0) * max(0.0, (pv(0.06 / 12.0, 36.0 - months_between(parse_date(\"2025-01-01\"), time.date), -1.0) / pv(0.06 / 12.0, 36.0 - (months_between(parse_date(\"2025-01-01\"), time.date) - 3.0), -1.0)) - 0.50), 0.0)"
       },
       "active_when": {
         "lang": "cfdl",
@@ -420,15 +469,15 @@
             "name": "credit",
             "version": "0.1.0"
           },
-          "rule_id": "credit_pool_level_pay_recoveries",
+          "rule_id": "credit_loan_level_pay_recoveries",
           "line": "recovery",
-          "contract": "credit.pool_level_pay.book"
+          "contract": "credit.loan.book"
         }
       }
     },
     {
-      "id": "3121716324013d0f6446e0e3e132d1a2",
-      "name": "credit.pool.sched_principal.book",
+      "id": "09464b9e316df2087089869821b98134",
+      "name": "credit.loan.sched_principal.book",
       "owner": {
         "symbol": "asset.buyer"
       },
@@ -443,7 +492,7 @@
       },
       "amount": {
         "lang": "cfdl",
-        "src": "if(months_between(parse_date(\"2025-01-01\"), time.date) < 36.0, entity.asset.buyer.credit_level_pay_balance_book * (1.0 - cpr_to_periodic(if(0.0 == 0.0, 0.03, 0.0 * (min(0.0002 * min(max(1.0, (0.0 + (months_between(parse_date(\"2025-01-01\"), time.date))) + 1.0), 30.0), 0.006) - 0.000095 * max(0.0, min(max(1.0, (0.0 + (months_between(parse_date(\"2025-01-01\"), time.date))) + 1.0), 120.0) - 60.0))), 12.0)) * ((-pmt(0.06 / 12.0, 36.0 - months_between(parse_date(\"2025-01-01\"), time.date), 1.0)) - (0.06 / 12.0)), 0.0)"
+        "src": "if(months_between(parse_date(\"2025-01-01\"), time.date) < 36.0, entity.asset.buyer.credit_loan_balance_book * (1.0 - cpr_to_periodic(if(0.0 == 0.0, 0.03, 0.0 * (min(0.0002 * min(max(1.0, (0.0 + (months_between(parse_date(\"2025-01-01\"), time.date))) + 1.0), 30.0), 0.006) - 0.000095 * max(0.0, min(max(1.0, (0.0 + (months_between(parse_date(\"2025-01-01\"), time.date))) + 1.0), 120.0) - 60.0))), 12.0)) * ((-pmt(0.06 / 12.0, 36.0 - months_between(parse_date(\"2025-01-01\"), time.date), 1.0)) - (0.06 / 12.0)), 0.0)"
       },
       "active_when": {
         "lang": "cfdl",
@@ -462,15 +511,15 @@
             "name": "credit",
             "version": "0.1.0"
           },
-          "rule_id": "credit_pool_level_pay_sched_principal",
+          "rule_id": "credit_loan_level_pay_sched_principal",
           "line": "principal",
-          "contract": "credit.pool_level_pay.book"
+          "contract": "credit.loan.book"
         }
       }
     },
     {
-      "id": "df682b917942c8e28b69a036fcc9997f",
-      "name": "credit.pool.servicing.book",
+      "id": "a813f252e1cd0bfea09d7aac9a61680f",
+      "name": "credit.loan.servicing.book",
       "owner": {
         "symbol": "asset.buyer"
       },
@@ -485,7 +534,7 @@
       },
       "amount": {
         "lang": "cfdl",
-        "src": "if(months_between(parse_date(\"2025-01-01\"), time.date) < 36.0, entity.asset.buyer.credit_level_pay_balance_book * (1.0 - cpr_to_periodic(if(0.0 == 0.0, 0.03, 0.0 * (min(0.0002 * min(max(1.0, (0.0 + (months_between(parse_date(\"2025-01-01\"), time.date))) + 1.0), 30.0), 0.006) - 0.000095 * max(0.0, min(max(1.0, (0.0 + (months_between(parse_date(\"2025-01-01\"), time.date))) + 1.0), 120.0) - 60.0))), 12.0)) * (0.0 / 12.0), 0.0)"
+        "src": "if(months_between(parse_date(\"2025-01-01\"), time.date) < 36.0, entity.asset.buyer.credit_loan_balance_book * (1.0 - cpr_to_periodic(if(0.0 == 0.0, 0.03, 0.0 * (min(0.0002 * min(max(1.0, (0.0 + (months_between(parse_date(\"2025-01-01\"), time.date))) + 1.0), 30.0), 0.006) - 0.000095 * max(0.0, min(max(1.0, (0.0 + (months_between(parse_date(\"2025-01-01\"), time.date))) + 1.0), 120.0) - 60.0))), 12.0)) * (0.0 / 12.0), 0.0)"
       },
       "active_when": {
         "lang": "cfdl",
@@ -504,17 +553,17 @@
             "name": "credit",
             "version": "0.1.0"
           },
-          "rule_id": "credit_pool_level_pay_servicing",
+          "rule_id": "credit_loan_level_pay_servicing",
           "line": "servicing",
-          "contract": "credit.pool_level_pay.book"
+          "contract": "credit.loan.book"
         }
       }
     }
   ],
   "stream_inputs": [
     {
-      "stream": "credit.pool.interest.book",
-      "contract": "credit.pool_level_pay.book",
+      "stream": "credit.loan.interest.book",
+      "contract": "credit.loan.book",
       "terms": {
         "age_months": "0",
         "cdr": "0.03",
@@ -528,8 +577,8 @@
       ]
     },
     {
-      "stream": "credit.pool.penalty.book",
-      "contract": "credit.pool_level_pay.book",
+      "stream": "credit.loan.penalty.book",
+      "contract": "credit.loan.book",
       "terms": {
         "abs_speed": "0",
         "age_months": "0",
@@ -547,8 +596,8 @@
       ]
     },
     {
-      "stream": "credit.pool.prepay.book",
-      "contract": "credit.pool_level_pay.book",
+      "stream": "credit.loan.prepay.book",
+      "contract": "credit.loan.book",
       "terms": {
         "abs_speed": "0",
         "age_months": "0",
@@ -564,8 +613,8 @@
       ]
     },
     {
-      "stream": "credit.pool.recoveries.book",
-      "contract": "credit.pool_level_pay.book",
+      "stream": "credit.loan.recoveries.book",
+      "contract": "credit.loan.book",
       "terms": {
         "age_months": "0",
         "cdr": "0.03",
@@ -580,8 +629,8 @@
       ]
     },
     {
-      "stream": "credit.pool.sched_principal.book",
-      "contract": "credit.pool_level_pay.book",
+      "stream": "credit.loan.sched_principal.book",
+      "contract": "credit.loan.book",
       "terms": {
         "age_months": "0",
         "cdr": "0.03",
@@ -595,8 +644,8 @@
       ]
     },
     {
-      "stream": "credit.pool.servicing.book",
-      "contract": "credit.pool_level_pay.book",
+      "stream": "credit.loan.servicing.book",
+      "contract": "credit.loan.book",
       "terms": {
         "age_months": "0",
         "cdr": "0.03",

@@ -11,7 +11,7 @@ Diagnostics are the repair signal: read the `code`, `message`, `span`, and
 `hint`, change the model, recompile. The catalog is how an agent learns what
 each code looks like in the flesh before it meets one.
 
-**Coverage:** 229 codes in the docs/08 §7 register; 114 exemplified here; 70 of 123 examples carry a recorded fix.
+**Coverage:** 230 codes in the docs/08 §7 register; 115 exemplified here; 70 of 124 examples carry a recorded fix.
 
 ## account_read_without_prev — E1382_ACCOUNT_READ_WITHOUT_PREV
 
@@ -859,11 +859,11 @@ model "credit-invalid-rates"
 use pack "credit" version "0.1.0"
 time calendar monthly from 2026-01 for 24
 
-entity asset buyer : Credit.Asset.LoanPool
+entity asset buyer : Credit.Asset.Loan
 
 // A 500% CPR and a severity above 1 are impossible; the closed-form pool
 // factor would happily compute a nonsense balance path from them.
-contract credit.pool_level_pay.auto_a on entity asset.buyer {
+contract credit.loan.auto_a on entity asset.buyer {
   term 2026-01..2027-12
   terms {
     principal = 25000000
@@ -890,11 +890,11 @@ model "credit-invalid-rates"
 use pack "credit" version "0.1.0"
 time calendar monthly from 2026-01 for 24
 
-entity asset buyer : Credit.Asset.LoanPool
+entity asset buyer : Credit.Asset.Loan
 
 // Fix: cpr/cdr are annual rates in [0, 1], severity is a fraction in [0, 1],
 // and recovery_lag_months is a whole non-negative month count.
-contract credit.pool_level_pay.auto_a on entity asset.buyer {
+contract credit.loan.auto_a on entity asset.buyer {
   term 2026-01..2027-12
   terms {
     principal = 25000000
@@ -2222,6 +2222,43 @@ lifecycle ghost { initial a  state a }
 entity asset x { lifecycle ghost  state a }
 ```
 
+## loan_floating_level_pay — E1385_LINE_HAS_NO_RULE_FOR_TERMS
+
+Failing example:
+
+```cfdl
+version 0.1
+model "loan-floating-level-pay"
+use pack "credit" version "0.1.0"
+time calendar monthly from 2026-01 for 12
+
+curve sofr linear {
+  2026-01: 0.050
+  2027-01: 0.038
+}
+
+entity asset loan : Credit.Asset.Loan
+
+// A floating coupon on a LEVEL-PAY schedule has no closed form, so the pack
+// carries no interest row for it: the type's `interest` line would go
+// unlowered, and the compiler says so rather than producing a loan that
+// pays no interest.
+contract credit.loan.bridge on entity asset.loan {
+  term 2026-01..2026-12
+  terms {
+    principal = 1200000
+    index_curve = "sofr"
+    margin = 0.03
+    term_months = 12
+  }
+}
+```
+
+- `E1385_LINE_HAS_NO_RULE_FOR_TERMS` (error): Contract 'credit.loan.bridge' produces no interest, principal, prepayment, recovery, servicing, penalty: type 'Credit.Contract.Loan' declares the lines, and no rule that lowers them applies to the terms as stated.
+  - hint: A rule selects on a term's value (`when`) or on whether a term is stated; the combination written here is one the pack has no row for — a floating level-pay loan, say. Change the terms, or extend the pack.
+
+Fix: not yet recorded.
+
 ## metric_forward_ref — E1354_METRIC_FORWARD_REF
 
 Failing example:
@@ -2688,9 +2725,9 @@ time calendar monthly from 2026-01 for 361
 // January, 5,594.43 in February — and principal absorbs the difference.
 // `fixtures/valid/pack_amortization_day_count` pins that spelling.
 
-entity asset loan : Credit.Asset.LoanPool
+entity asset loan : Credit.Asset.Loan
 
-contract credit.pool_level_pay on entity asset.loan {
+contract credit.loan on entity asset.loan {
   term 2026-01..2056-01
   terms {
     principal = 1200000
@@ -2704,7 +2741,7 @@ contract credit.pool_level_pay on entity asset.loan {
 }
 ```
 
-- `E5027_ACTUAL_AMORTIZATION_BASIS` (error): Contract 'credit.pool_level_pay' declares amortization_day_count = 'act/360'. A level payment is struck once and held; an Actual basis makes it move with month length, because the divisor is period-local and the annuity applies it to every remaining period. Strike the payment on '30/360' or '30e/360' and accrue interest on the Actual basis with `day_count`, which is what an Actual/360 loan document says.
+- `E5027_ACTUAL_AMORTIZATION_BASIS` (error): Contract 'credit.loan' declares amortization_day_count = 'act/360'. A level payment is struck once and held; an Actual basis makes it move with month length, because the divisor is period-local and the annuity applies it to every remaining period. Strike the payment on '30/360' or '30e/360' and accrue interest on the Actual basis with `day_count`, which is what an Actual/360 loan document says.
 
 Minimal fix (compiles):
 
@@ -2717,9 +2754,9 @@ time calendar monthly from 2026-01 for 361
 // FIX: what an Actual/360 loan document says is the compiling pairing —
 // strike the payment on `30/360`, accrue interest on `act/360`.
 
-entity asset loan : Credit.Asset.LoanPool
+entity asset loan : Credit.Asset.Loan
 
-contract credit.pool_level_pay on entity asset.loan {
+contract credit.loan on entity asset.loan {
   term 2026-01..2056-01
   terms {
     principal = 1200000
@@ -3124,13 +3161,14 @@ model "pack-unknown-day-count"
 use pack "credit" version "0.1.0"
 time calendar monthly from 2025-01 for 13
 
-entity asset buyer : Credit.Asset.LoanPool
+entity asset buyer : Credit.Asset.Loan
 
 // A misspelled convention must not fall back to a default silently: the
 // difference between act/360 and act/365 is about 1.4% of interest.
-contract credit.pool_io_bullet.p on entity asset.buyer {
+contract credit.loan.p on entity asset.buyer {
   term 2025-01..2025-12
   terms {
+    amortization = "interest_only"
     principal = 1200000
     interest_rate = 0.06
     term_months = 12
@@ -3143,7 +3181,7 @@ contract credit.pool_io_bullet.p on entity asset.buyer {
 }
 ```
 
-- `E5019_UNKNOWN_DAY_COUNT` (error): Contract 'credit.pool_io_bullet.p' declares day_count = 'actual/360'. Supported: 30/360, 30e/360, act/360, act/365.
+- `E5019_UNKNOWN_DAY_COUNT` (error): Contract 'credit.loan.p' declares day_count = 'actual/360'. Supported: 30/360, 30e/360, act/360, act/365.
 
 Minimal fix (compiles):
 
@@ -3153,13 +3191,14 @@ model "pack-unknown-day-count"
 use pack "credit" version "0.1.0"
 time calendar monthly from 2025-01 for 13
 
-entity asset buyer : Credit.Asset.LoanPool
+entity asset buyer : Credit.Asset.Loan
 
 // Fix: spell the convention as one of the supported names — "act/360",
 // not "actual/360".
-contract credit.pool_io_bullet.p on entity asset.buyer {
+contract credit.loan.p on entity asset.buyer {
   term 2025-01..2025-12
   terms {
+    amortization = "interest_only"
     principal = 1200000
     interest_rate = 0.06
     term_months = 12
@@ -3272,7 +3311,7 @@ model "party-role-unbound"
 use pack "credit" version "0.1.0"
 time calendar monthly from 2026-01 for 15
 
-entity asset pool : Credit.Asset.LoanPool
+entity asset pool : Credit.Asset.Loan
 entity party obligors : Party { name = "Obligors" }
 
 // ROLES ARE THE TYPE'S, RESOLVED THROUGH ITS MASTER (docs/40 §5). A credit
@@ -3280,7 +3319,7 @@ entity party obligors : Party { name = "Obligors" }
 // the master's `borrower` is UNBOUND — the obligors behind a purchased pool
 // are many and unnamed, so the agreement has no such party in this form.
 // Binding it is refused with the roles a model may bind.
-contract credit.pool_level_pay.smoke on entity asset.pool {
+contract credit.loan.smoke on entity asset.pool {
   term 2026-01..2027-03
   terms {
     principal = 1200000
@@ -3293,7 +3332,7 @@ contract credit.pool_level_pay.smoke on entity asset.pool {
 }
 ```
 
-- `E1322_UNKNOWN_PARTY_ROLE` (error): Contract 'credit.pool_level_pay.smoke' binds role 'borrower', which type 'Credit.Contract.LevelPayPool' leaves unbound: the agreement has no such party in this form.
+- `E1322_UNKNOWN_PARTY_ROLE` (error): Contract 'credit.loan.smoke' binds role 'borrower', which type 'Credit.Contract.Loan' leaves unbound: the agreement has no such party in this form.
   - hint: Roles a model binds: holder (the master's lender).
 
 Fix: not yet recorded.

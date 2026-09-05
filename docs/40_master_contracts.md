@@ -664,7 +664,7 @@ and its templates render (`[[contracts.fields]]`), strengthening a master's
 field where it requires one (`principal`, `interest_rate`, `rent_year`),
 and the loader refuses a pack where a rule, validation or template names a
 term outside the roster. The credit pack's three pool shapes share an
-abstract `Credit.Contract.Pool` for the terms every pool states.
+abstract `Credit.Contract.Loan` for the terms every pool states.
 
 ## 8. What the compiler checks — decision R3, built in stage 3
 

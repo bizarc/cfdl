@@ -4,7 +4,7 @@
 id = "domain.credit.interest"
 kind = "money"
 op = "sum"
-numerator_streams = ["credit.pool.interest.*"]
+numerator_streams = ["credit.loan.interest.*"]
 formula = "sum(numerator_streams)"
 
 [[metrics]]
@@ -12,9 +12,9 @@ id = "domain.credit.principal"
 kind = "money"
 op = "sum"
 numerator_streams = [
-  "credit.pool.sched_principal.*",
-  "credit.pool.prepay.*",
-  "credit.pool.bullet.*",
+  "credit.loan.sched_principal.*",
+  "credit.loan.prepay.*",
+  "credit.loan.bullet.*",
 ]
 formula = "sum(numerator_streams)"
 
@@ -22,21 +22,21 @@ formula = "sum(numerator_streams)"
 id = "domain.credit.recoveries"
 kind = "money"
 op = "sum"
-numerator_streams = ["credit.pool.recoveries.*"]
+numerator_streams = ["credit.loan.recoveries.*"]
 formula = "sum(numerator_streams)"
 
 [[metrics]]
 id = "domain.credit.penalties"
 kind = "money"
 op = "sum"
-numerator_streams = ["credit.pool.penalty.*"]
+numerator_streams = ["credit.loan.penalty.*"]
 formula = "sum(numerator_streams)"
 
 [[metrics]]
 id = "domain.credit.servicing"
 kind = "money"
 op = "negated_sum"
-numerator_streams = ["credit.pool.servicing.*"]
+numerator_streams = ["credit.loan.servicing.*"]
 formula = "-sum(numerator_streams)"
 require_positive = true
 
@@ -48,10 +48,10 @@ id = "domain.credit.wal_years"
 kind = "number"
 op = "wal_years"
 numerator_streams = [
-  "credit.pool.sched_principal.*",
-  "credit.pool.prepay.*",
-  "credit.pool.bullet.*",
-  "credit.pool.recoveries.*",
+  "credit.loan.sched_principal.*",
+  "credit.loan.prepay.*",
+  "credit.loan.bullet.*",
+  "credit.loan.recoveries.*",
 ]
 formula = "wal_years(numerator_streams)"
 
@@ -60,12 +60,12 @@ id = "domain.credit.collections"
 kind = "money"
 op = "sum"
 numerator_streams = [
-  "credit.pool.interest.*",
-  "credit.pool.sched_principal.*",
-  "credit.pool.prepay.*",
-  "credit.pool.bullet.*",
-  "credit.pool.recoveries.*",
-  "credit.pool.penalty.*",
+  "credit.loan.interest.*",
+  "credit.loan.sched_principal.*",
+  "credit.loan.prepay.*",
+  "credit.loan.bullet.*",
+  "credit.loan.recoveries.*",
+  "credit.loan.penalty.*",
 ]
 formula = "sum(numerator_streams)"
 

@@ -1,4 +1,4 @@
-period,credit.pool.interest.a,credit.pool.sched_principal.a,credit.pool.prepay.a,credit.pool.recoveries.a
+period,credit.loan.interest.a,credit.loan.sched_principal.a,credit.loan.prepay.a,credit.loan.recoveries.a
 0,660000,66427,999329,
 1,646366,65532,978680,
 2,633011,64650,958454,

@@ -2,12 +2,12 @@
   {
     "code": "E5019_UNKNOWN_DAY_COUNT",
     "severity": "error",
-    "message": "Contract 'credit.pool_io_bullet.p' declares day_count = 'actual/360'. Supported: 30/360, 30e/360, act/360, act/365.",
+    "message": "Contract 'credit.loan.p' declares day_count = 'actual/360'. Supported: 30/360, 30e/360, act/360, act/365.",
     "file": "model.cfdl",
     "span": {
-      "start_line": 20,
+      "start_line": 21,
       "start_col": 5,
-      "end_line": 20,
+      "end_line": 21,
       "end_col": 28
     },
     "path": null,

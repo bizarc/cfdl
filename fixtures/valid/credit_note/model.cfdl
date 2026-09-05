@@ -4,12 +4,12 @@ use pack "credit" version "0.1.0"
 time calendar monthly from 2026-01 for 15
 
 entity container trust : Container.SPV
-entity asset pool : Credit.Asset.LoanPool {
+entity asset pool : Credit.Asset.Loan {
   part of container.trust
 }
 entity party holders : Credit.Party.Investor { name = "Class A noteholders" }
 
-contract credit.pool_level_pay.smoke on entity asset.pool {
+contract credit.loan.smoke on entity asset.pool {
   term 2026-01..2027-03
   terms {
     principal = 1200000
@@ -43,14 +43,14 @@ contract credit.note a on entity container.trust {
 }
 
 account interest_collections {
-  from series_sum("credit.pool.interest.*", time.t, time.t)
-     + series_sum("credit.pool.servicing.*", time.t, time.t)
+  from series_sum("credit.loan.interest.*", time.t, time.t)
+     + series_sum("credit.loan.servicing.*", time.t, time.t)
 }
 
 account principal_collections {
-  from series_sum("credit.pool.sched_principal.*", time.t, time.t)
-     + series_sum("credit.pool.prepay.*", time.t, time.t)
-     + series_sum("credit.pool.recoveries.*", time.t, time.t)
+  from series_sum("credit.loan.sched_principal.*", time.t, time.t)
+     + series_sum("credit.loan.prepay.*", time.t, time.t)
+     + series_sum("credit.loan.recoveries.*", time.t, time.t)
 }
 
 account a_principal { owner party.holders }

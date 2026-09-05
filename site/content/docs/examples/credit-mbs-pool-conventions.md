@@ -37,7 +37,7 @@ and cited as facts.
 | | |
 |---|---|
 | Pack | `credit` |
-| Contract types | `credit.pool_level_pay` |
+| Contract types | `credit.loan` |
 | Language features | pack contract lowering to four separate cash flow lines |
 | Conventions | CPR-to-SMM conversion, constant default rate, loss severity, recovery lag |
 
@@ -64,7 +64,7 @@ model "mbs-pool-conventions"
 use pack "credit" version "0.1.0"
 time calendar monthly from 2026-01 for 372
 
-entity asset buyer : Credit.Asset.LoanPool
+entity asset buyer : Credit.Asset.Loan
 
 // A 30-year agency-MBS pool at the market-standard prepayment and default
 // conventions, reconciled against the published industry reference schedule.
@@ -82,7 +82,7 @@ entity asset buyer : Credit.Asset.LoanPool
 // having to do this by hand is itself a small gap.
 //
 // 372 periods = 360 months of pool life plus the 12-month recovery tail.
-contract credit.pool_level_pay.a on entity asset.buyer {
+contract credit.loan.a on entity asset.buyer {
   term 2026-01..2056-12
   terms {
     principal = 100000000
@@ -110,8 +110,8 @@ contract credit.pool_level_pay.a on entity asset.buyer {
 
 Checked period by period: **4 series** across **25 periods** — **95 values** in all, each within ±0.51 of the reference.
 
-- `credit.pool.interest.a`
-- `credit.pool.sched_principal.a`
-- `credit.pool.prepay.a`
-- `credit.pool.recoveries.a`
+- `credit.loan.interest.a`
+- `credit.loan.sched_principal.a`
+- `credit.loan.prepay.a`
+- `credit.loan.recoveries.a`
 

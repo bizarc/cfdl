@@ -1,0 +1,17 @@
+[
+  {
+    "code": "E1385_LINE_HAS_NO_RULE_FOR_TERMS",
+    "severity": "error",
+    "message": "Contract 'credit.loan.bridge' produces no interest, principal, prepayment, recovery, servicing, penalty: type 'Credit.Contract.Loan' declares the lines, and no rule that lowers them applies to the terms as stated.",
+    "file": "model.cfdl",
+    "span": {
+      "start_line": 17,
+      "start_col": 1,
+      "end_line": 25,
+      "end_col": 1
+    },
+    "path": null,
+    "hint": "A rule selects on a term's value (`when`) or on whether a term is stated; the combination written here is one the pack has no row for — a floating level-pay loan, say. Change the terms, or extend the pack.",
+    "notes": []
+  }
+]

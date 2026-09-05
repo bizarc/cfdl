@@ -248,7 +248,7 @@ name.
 The pack rules emit 82 model-level states (73 credit, 9 opco), almost all pool
 survival factors. Two wrong answers were proposed before the right one:
 
-**Not a rename onto the pool.** `state.credit_level_pay_survival_a2` becoming
+**Not a rename onto the pool.** `state.credit_loan_survival_a2` becoming
 `asset.pool.factor_a2` keeps the flat namespace and has the pack inventing
 fields on an entity the modeller declared. A pack declares KINDS; a modeller
 declares ENTITIES. A lowering rule writing fields into someone else's entity

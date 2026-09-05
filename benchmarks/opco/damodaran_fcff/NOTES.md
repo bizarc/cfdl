@@ -129,7 +129,7 @@ per-*stream* variation, but this is per-*period* variation, a different axis.
 `growth_curve` on `opco.revenue_line`, `opco.opex_line` and `opco.capex_line`,
 and `tax_rate_curve` on `opco.cash_taxes` — each naming a model `curve`, read
 with `curve_value` at the period's date. This is the mechanism
-`credit.pool_float_io_bullet` already uses for a floating index; nothing new was
+a floating-coupon `credit.loan` already uses for a floating index; nothing new was
 invented.
 
 All four default to `""`, so every existing model stays on the scalar path.

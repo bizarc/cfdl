@@ -565,7 +565,7 @@ EXACT = 1e-6  # published metrics and stream amounts are rounded to six decimals
 
 @check("a zero-hazard pool amortizes exactly like an ipmt/ppmt loan", EXACT)
 def pool_equals_plain_loan() -> tuple[float, float]:
-    # THE one worth having. credit.pool_level_pay reaches its answer through a
+    # THE one worth having. credit.loan reaches its answer through a
     # closed-form pool factor built for constant prepayment and default; with
     # both set to zero it must collapse to an ordinary amortizing loan. ipmt and
     # ppmt compute that from an entirely different code path in cfdl-calc, so a
@@ -576,7 +576,7 @@ model "pool-vs-loan"
 use pack "credit" version "0.1.0"
 time calendar monthly from 2026-01 for 24
 entity legal lender
-contract credit.pool_level_pay.probe on entity legal.lender {
+contract credit.loan.probe on entity legal.lender {
   term 2026-01..2027-12
   terms { principal = 1200000 interest_rate = 0.06 term_months = 24 cpr = 0 cdr = 0 }
 }
@@ -594,8 +594,8 @@ stream loan.principal on entity legal.lender inflow currency USD {
     b = run_pack_model(src, 0.05, "credit")
     # ipmt/ppmt return Excel-signed values for a positive pv, so compare magnitudes.
     worst = 0.0
-    for pack_name, loan_name in (("credit.pool.interest.probe", "loan.interest"),
-                                 ("credit.pool.sched_principal.probe", "loan.principal")):
+    for pack_name, loan_name in (("credit.loan.interest.probe", "loan.interest"),
+                                 ("credit.loan.sched_principal.probe", "loan.principal")):
         for a, e in zip(series(b, pack_name), series(b, loan_name)):
             worst = max(worst, abs(abs(a) - abs(e)))
     return worst, 0.0
@@ -624,13 +624,13 @@ model "principal-sums"
 use pack "credit" version "0.1.0"
 time calendar {calendar} from 2026-01 for {periods}
 entity legal lender
-contract credit.pool_level_pay.p on entity legal.lender {{
+contract credit.loan.p on entity legal.lender {{
   term 2026-01..{term_end}
   terms {{ principal = 900000 interest_rate = 0.075 term_months = {months} cpr = 0 cdr = 0 }}
 }}
 """
         b = run_pack_model(src, 0.05, "credit")
-        v = series(b, "credit.pool.sched_principal.p")
+        v = series(b, "credit.loan.sched_principal.p")
         worst = max(worst, abs(sum(v) - 900000.0) / (len(v) * 5e-7))
     return worst, 0.0
 
@@ -643,13 +643,13 @@ model "bullet-repay"
 use pack "credit" version "0.1.0"
 time calendar monthly from 2026-01 for 12
 entity legal lender
-contract credit.pool_io_bullet.b on entity legal.lender {
+contract credit.loan.b on entity legal.lender {
   term 2026-01..2026-12
-  terms { principal = 500000 interest_rate = 0.05 term_months = 12 cpr = 0 cdr = 0 }
+  terms { principal = 500000 interest_rate = 0.05 term_months = 12 amortization = "interest_only" cpr = 0 cdr = 0 }
 }
 """
     b = run_pack_model(src, 0.05, "credit")
-    bullet = series(b, "credit.pool.bullet.b")
+    bullet = series(b, "credit.loan.bullet.b")
     early = sum(abs(v) for v in bullet[:-1])
     return abs(abs(bullet[-1]) - 500000.0) + early, 0.0
 
@@ -810,9 +810,9 @@ model "hazard-identity"
 use pack "credit" version "0.1.0"
 time calendar monthly from 2026-01 for {periods}
 entity fund buyer
-contract credit.pool_io_bullet.p on entity fund.buyer {{
+contract credit.loan.p on entity fund.buyer {{
   term 2026-01..{2026 + (months - 1) // 12}-{((months - 1) % 12) + 1:02d}
-  terms {{ principal = 100000000  interest_rate = 0.06  term_months = {months}  {terms} }}
+  terms {{ principal = 100000000  interest_rate = 0.06  term_months = {months}  amortization = "interest_only"  {terms} }}
 }}
 """
 
@@ -822,7 +822,7 @@ def credit_constant_hazard_matches_pow() -> tuple[float, float]:
     # A GUARD, not a bite: this held before the pool factor became a state.
     # It exists so the migration cannot have changed what was already right.
     cpr, cdr, ppy = 0.10, 0.03, 12
-    got = _pack_field(_pool("cpr = 0.10  cdr = 0.03"), "credit_io_bullet_survival_p")
+    got = _pack_field(_pool("cpr = 0.10  cdr = 0.03"), "credit_loan_survival_p")
     smm = 1 - (1 - cpr) ** (1 / ppy)
     mdr = 1 - (1 - cdr) ** (1 / ppy)
     k = (1 - mdr) - smm
@@ -834,7 +834,7 @@ def credit_constant_hazard_matches_pow() -> tuple[float, float]:
 def credit_psa_pool_factor() -> tuple[float, float]:
     # The motivating case. The hazard moves every month, so there is no closed
     # form; the reference is the product, computed here.
-    got = _pack_field(_pool("psa_speed = 1.5"), "credit_io_bullet_survival_p")
+    got = _pack_field(_pool("psa_speed = 1.5"), "credit_loan_survival_p")
     acc, want = 1.0, []
     for month in range(60):
         if month:
@@ -850,7 +850,7 @@ def credit_sda_curve() -> tuple[float, float]:
     # per-period ratio inverts straight back to the annual rate.
     got = _pack_field(
         _pool("cpr = 0  sda_speed = 1.0", periods=145, months=144),
-        "credit_io_bullet_survival_p",
+        "credit_loan_survival_p",
     )
     published = {1: 0.0002, 30: 0.0060, 60: 0.0060, 61: 0.005905, 120: 0.0003, 121: 0.0003}
     worst = 0.0
@@ -867,7 +867,7 @@ def credit_abs_prepayment_model() -> tuple[float, float]:
     # implied SMM rises over the life because the denominator is fixed at the
     # original balance while the pool shrinks.
     speed = 0.015
-    got = _pack_field(_pool(f"cdr = 0  abs_speed = {speed}"), "credit_io_bullet_survival_p")
+    got = _pack_field(_pool(f"cdr = 0  abs_speed = {speed}"), "credit_loan_survival_p")
     worst = 0.0
     for month in (1, 12, 24, 36):
         smm = 1 - got[month] / got[month - 1]
@@ -885,8 +885,8 @@ def credit_recovery_lag_shift() -> tuple[float, float]:
     # F_lag(p) must be F(p-lag) exactly, for every p, not merely on average.
     lag = 9
     src = _pool(f"psa_speed = 1.5  sda_speed = 1.0  severity = 0.4  recovery_lag_months = {lag}", periods=75)
-    plain = _pack_field(src, "credit_io_bullet_survival_p")
-    lagged = _pack_field(src, "credit_io_bullet_survival_lag_p")
+    plain = _pack_field(src, "credit_loan_survival_p")
+    lagged = _pack_field(src, "credit_loan_survival_lag_p")
     worst = max(abs(lagged[p] - plain[p - lag]) for p in range(lag, 60))
     return worst, 0.0
 
@@ -903,13 +903,13 @@ model "cadence-identity"
 use pack "credit" version "0.1.0"
 time calendar {calendar} from 2025-01 for {periods}
 entity fund buyer
-contract credit.pool_level_pay.book on entity fund.buyer {{
+contract credit.loan.book on entity fund.buyer {{
   term 2025-01..2027-12
   terms {{ {terms}  payment_frequency = "{freq}" }}
 }}
 """
-    monthly = _pack_field(pool("monthly", 36, "month"), "credit_level_pay_balance_book")
-    daily = _pack_field(pool("daily", 1096, "month"), "credit_level_pay_balance_book")
+    monthly = _pack_field(pool("monthly", 36, "month"), "credit_loan_balance_book")
+    daily = _pack_field(pool("daily", 1096, "month"), "credit_loan_balance_book")
     # The same 36 payments, so the final balance must be identical.
     return abs(daily[-1] - monthly[-1]), 0.0
 

@@ -1,7 +1,7 @@
 {
   "results_version": "0.13",
-  "model_hash": "98afdc743392b560cb78caaedad9ad1e70130682d38da2dacc423c509da5ac43",
-  "ledger_hash": "f1a28784764a98b95a59aecb2ceb1f140beed43d54f19b429c164f06b45e4561",
+  "model_hash": "ef55a2fae16b9f7495c4748387f34f109ffcafb9feecc58d75c27c334946d950",
+  "ledger_hash": "0844096e3c7b90f35857cf6b16bebe3654ad7d35d3e3a93e8066fd6b45946396",
   "engine": {
     "name": "cfdl-engine",
     "version": "0.9.0"
@@ -10,13 +10,13 @@
   "inputs": {
     "streams": [
       {
-        "contract": "credit.pool_level_pay",
+        "contract": "credit.loan",
         "defaults_applied": [
           "age_months",
           "payment_frequency",
           "sda_speed"
         ],
-        "stream": "credit.pool.interest",
+        "stream": "credit.loan.interest",
         "terms": {
           "age_months": "0",
           "cdr": "0",
@@ -26,7 +26,7 @@
         }
       },
       {
-        "contract": "credit.pool_level_pay",
+        "contract": "credit.loan",
         "defaults_applied": [
           "abs_speed",
           "age_months",
@@ -34,7 +34,7 @@
           "prepay_penalty_rate",
           "psa_speed"
         ],
-        "stream": "credit.pool.penalty",
+        "stream": "credit.loan.penalty",
         "terms": {
           "abs_speed": "0",
           "age_months": "0",
@@ -46,14 +46,14 @@
         }
       },
       {
-        "contract": "credit.pool_level_pay",
+        "contract": "credit.loan",
         "defaults_applied": [
           "abs_speed",
           "age_months",
           "payment_frequency",
           "psa_speed"
         ],
-        "stream": "credit.pool.prepay",
+        "stream": "credit.loan.prepay",
         "terms": {
           "abs_speed": "0",
           "age_months": "0",
@@ -64,14 +64,14 @@
         }
       },
       {
-        "contract": "credit.pool_level_pay",
+        "contract": "credit.loan",
         "defaults_applied": [
           "age_months",
           "payment_frequency",
           "sda_speed",
           "severity"
         ],
-        "stream": "credit.pool.recoveries",
+        "stream": "credit.loan.recoveries",
         "terms": {
           "age_months": "0",
           "cdr": "0",
@@ -82,13 +82,13 @@
         }
       },
       {
-        "contract": "credit.pool_level_pay",
+        "contract": "credit.loan",
         "defaults_applied": [
           "age_months",
           "payment_frequency",
           "sda_speed"
         ],
-        "stream": "credit.pool.sched_principal",
+        "stream": "credit.loan.sched_principal",
         "terms": {
           "age_months": "0",
           "cdr": "0",
@@ -98,14 +98,14 @@
         }
       },
       {
-        "contract": "credit.pool_level_pay",
+        "contract": "credit.loan",
         "defaults_applied": [
           "age_months",
           "payment_frequency",
           "sda_speed",
           "servicing_fee"
         ],
-        "stream": "credit.pool.servicing",
+        "stream": "credit.loan.servicing",
         "terms": {
           "age_months": "0",
           "cdr": "0",
@@ -134,33 +134,33 @@
       "model.wal_years": 0.541667,
       "run.annual_discount_rate": 0.05,
       "run.periods_per_year": 12.0,
-      "stream.credit.pool.interest.total": {
+      "stream.credit.loan.interest.total": {
         "amount": 0.0,
         "currency": "USD"
       },
-      "stream.credit.pool.penalty.total": {
+      "stream.credit.loan.penalty.total": {
         "amount": 0.0,
         "currency": "USD"
       },
-      "stream.credit.pool.prepay.total": {
+      "stream.credit.loan.prepay.total": {
         "amount": 0.0,
         "currency": "USD"
       },
-      "stream.credit.pool.recoveries.total": {
+      "stream.credit.loan.recoveries.total": {
         "amount": 0.0,
         "currency": "USD"
       },
-      "stream.credit.pool.sched_principal.total": {
+      "stream.credit.loan.sched_principal.total": {
         "amount": 1200000.0,
         "currency": "USD"
       },
-      "stream.credit.pool.servicing.total": {
+      "stream.credit.loan.servicing.total": {
         "amount": 0.0,
         "currency": "USD"
       }
     },
     "series": {
-      "asset.lender.credit_level_pay_balance": {
+      "asset.lender.credit_loan_balance": {
         "index": {
           "calendar": "monthly",
           "start": "2026-01-01",
@@ -181,7 +181,7 @@
           100000.0
         ]
       },
-      "asset.lender.credit_level_pay_balance_lag": {
+      "asset.lender.credit_loan_balance_lag": {
         "index": {
           "calendar": "monthly",
           "start": "2026-01-01",
@@ -850,7 +850,7 @@
           }
         ]
       },
-      "stream.credit.pool.interest": {
+      "stream.credit.loan.interest": {
         "index": {
           "calendar": "monthly",
           "start": "2026-01-01",
@@ -859,7 +859,7 @@
         "offset": 1.0,
         "entity": "asset.lender",
         "category": "operating.collection.interest",
-        "contract": "credit.pool_level_pay",
+        "contract": "credit.loan",
         "line": "interest",
         "values": [
           {
@@ -912,7 +912,7 @@
           }
         ]
       },
-      "stream.credit.pool.penalty": {
+      "stream.credit.loan.penalty": {
         "index": {
           "calendar": "monthly",
           "start": "2026-01-01",
@@ -921,7 +921,7 @@
         "offset": 1.0,
         "entity": "asset.lender",
         "category": "operating.collection.penalty",
-        "contract": "credit.pool_level_pay",
+        "contract": "credit.loan",
         "line": "penalty",
         "values": [
           {
@@ -974,7 +974,7 @@
           }
         ]
       },
-      "stream.credit.pool.prepay": {
+      "stream.credit.loan.prepay": {
         "index": {
           "calendar": "monthly",
           "start": "2026-01-01",
@@ -983,7 +983,7 @@
         "offset": 1.0,
         "entity": "asset.lender",
         "category": "operating.collection.prepayment",
-        "contract": "credit.pool_level_pay",
+        "contract": "credit.loan",
         "line": "prepayment",
         "values": [
           {
@@ -1036,7 +1036,7 @@
           }
         ]
       },
-      "stream.credit.pool.recoveries": {
+      "stream.credit.loan.recoveries": {
         "index": {
           "calendar": "monthly",
           "start": "2026-01-01",
@@ -1045,7 +1045,7 @@
         "offset": 1.0,
         "entity": "asset.lender",
         "category": "operating.collection.recovery",
-        "contract": "credit.pool_level_pay",
+        "contract": "credit.loan",
         "line": "recovery",
         "values": [
           {
@@ -1098,7 +1098,7 @@
           }
         ]
       },
-      "stream.credit.pool.sched_principal": {
+      "stream.credit.loan.sched_principal": {
         "index": {
           "calendar": "monthly",
           "start": "2026-01-01",
@@ -1107,7 +1107,7 @@
         "offset": 1.0,
         "entity": "asset.lender",
         "category": "operating.collection.principal",
-        "contract": "credit.pool_level_pay",
+        "contract": "credit.loan",
         "line": "principal",
         "values": [
           {
@@ -1160,7 +1160,7 @@
           }
         ]
       },
-      "stream.credit.pool.servicing": {
+      "stream.credit.loan.servicing": {
         "index": {
           "calendar": "monthly",
           "start": "2026-01-01",
@@ -1169,7 +1169,7 @@
         "offset": 1.0,
         "entity": "asset.lender",
         "category": "operating.expense.servicing",
-        "contract": "credit.pool_level_pay",
+        "contract": "credit.loan",
         "line": "servicing",
         "values": [
           {
@@ -1365,7 +1365,7 @@
             }
           ]
         },
-        "stream.credit.pool.interest": {
+        "stream.credit.loan.interest": {
           "index": {
             "calendar": "annual",
             "start": "2026-01-01",
@@ -1378,7 +1378,7 @@
             }
           ]
         },
-        "stream.credit.pool.penalty": {
+        "stream.credit.loan.penalty": {
           "index": {
             "calendar": "annual",
             "start": "2026-01-01",
@@ -1391,7 +1391,7 @@
             }
           ]
         },
-        "stream.credit.pool.prepay": {
+        "stream.credit.loan.prepay": {
           "index": {
             "calendar": "annual",
             "start": "2026-01-01",
@@ -1404,7 +1404,7 @@
             }
           ]
         },
-        "stream.credit.pool.recoveries": {
+        "stream.credit.loan.recoveries": {
           "index": {
             "calendar": "annual",
             "start": "2026-01-01",
@@ -1417,7 +1417,7 @@
             }
           ]
         },
-        "stream.credit.pool.sched_principal": {
+        "stream.credit.loan.sched_principal": {
           "index": {
             "calendar": "annual",
             "start": "2026-01-01",
@@ -1430,7 +1430,7 @@
             }
           ]
         },
-        "stream.credit.pool.servicing": {
+        "stream.credit.loan.servicing": {
           "index": {
             "calendar": "annual",
             "start": "2026-01-01",
@@ -1539,12 +1539,12 @@
             ],
             "total": 1200000.0,
             "streams": [
-              "credit.pool.interest",
-              "credit.pool.penalty",
-              "credit.pool.prepay",
-              "credit.pool.recoveries",
-              "credit.pool.sched_principal",
-              "credit.pool.servicing"
+              "credit.loan.interest",
+              "credit.loan.penalty",
+              "credit.loan.prepay",
+              "credit.loan.recoveries",
+              "credit.loan.sched_principal",
+              "credit.loan.servicing"
             ]
           }
         ],
@@ -1561,23 +1561,23 @@
       {
         "symbol": "asset.lender",
         "family": "asset",
-        "type": "Credit.Asset.LoanPool"
+        "type": "Credit.Asset.Loan"
       }
     ],
     "contracts": [
       {
-        "name": "credit.pool_level_pay",
-        "type": "Credit.Contract.LevelPayPool",
+        "name": "credit.loan",
+        "type": "Credit.Contract.Loan",
         "master": "Contract.Debt",
-        "contract_name": "credit.pool_level_pay",
+        "contract_name": "credit.loan",
         "subject": "asset.lender",
         "streams": [
-          "credit.pool.interest",
-          "credit.pool.penalty",
-          "credit.pool.prepay",
-          "credit.pool.recoveries",
-          "credit.pool.sched_principal",
-          "credit.pool.servicing"
+          "credit.loan.interest",
+          "credit.loan.penalty",
+          "credit.loan.prepay",
+          "credit.loan.recoveries",
+          "credit.loan.sched_principal",
+          "credit.loan.servicing"
         ]
       }
     ]

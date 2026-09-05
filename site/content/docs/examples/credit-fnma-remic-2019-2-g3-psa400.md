@@ -89,11 +89,11 @@ time calendar monthly from 2019-02 for 361
 // own convention: interest is struck on the balance immediately prior to the
 // distribution date).
 
-entity asset trust : Credit.Asset.LoanPool {
+entity asset trust : Credit.Asset.Loan {
   collateral_type = "residential"
 }
 
-entity asset pool : Credit.Asset.LoanPool {
+entity asset pool : Credit.Asset.Loan {
   collateral_type = "residential"
   part of asset.trust
 
@@ -125,7 +125,7 @@ entity party io_holders : Credit.Party.Investor { name = "Class IO holders" }
 entity party residual : Credit.Party.Investor { name = "Classes R and RL" }
 
 // The Pricing Assumptions' collateral, identical to the 198% case: 5.451% WAC, 173 months remaining, 175 months seasoned. Only psa_speed differs.
-contract credit.pool_level_pay.g3 on entity asset.pool {
+contract credit.loan.g3 on entity asset.pool {
   term 2019-02..2033-06
   terms {
     principal = 148372434
@@ -144,8 +144,8 @@ contract credit.pool_level_pay.g3 on entity asset.pool {
 waterfall g3.principal on entity asset.trust {
   schedule every month from 2019-02 to 2033-06
 
-  from series_sum("credit.pool.sched_principal.*", time.t, time.t)
-       + series_sum("credit.pool.prepay.*", time.t, time.t)
+  from series_sum("credit.loan.sched_principal.*", time.t, time.t)
+       + series_sum("credit.loan.prepay.*", time.t, time.t)
 
   pay ab_principal to party.ab_holders = remaining
 }
@@ -161,8 +161,8 @@ waterfall g3.principal on entity asset.trust {
 waterfall g3.interest on entity asset.trust {
   schedule every month from 2019-02 to 2033-06
 
-  from series_sum("credit.pool.interest.*", time.t, time.t)
-       + series_sum("credit.pool.servicing.*", time.t, time.t)
+  from series_sum("credit.loan.interest.*", time.t, time.t)
+       + series_sum("credit.loan.servicing.*", time.t, time.t)
 
   pay ab_interest to party.ab_holders = asset.ab.balance * (0.0325 / 12.0)
   pay io_interest to party.io_holders = asset.io.balance * (0.05 / 12.0)

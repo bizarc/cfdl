@@ -6806,6 +6806,48 @@ the model's calendar is `E2108_SCHEDULE_FINER_THAN_CALENDAR` — occurrences
 inside one period share that period's environment and cannot be told apart, so
 a pack cannot express what a model may not.
 
+### Selecting rules by a term's value
+
+A rule lowers every contract of its type unless it says otherwise. `when`
+narrows it to the contracts whose terms match, so one type carries the rows
+for each pattern an agreement can take without a type per pattern:
+
+```toml
+[[rules]]
+id = "credit_loan_level_pay_sched_principal"
+contract_name = "credit.loan"
+line = "principal"
+...
+[rules.when]
+amortization = "level_pay"
+
+[[rules]]
+id = "credit_loan_interest_only_bullet"
+contract_name = "credit.loan"
+line = "principal"
+...
+[rules.when]
+amortization = ["interest_only", "bullet"]
+```
+
+- `[rules.when]` is a table of term → value; a value may be a list, matching
+  any of them. The comparison reads the term as STATED on the contract, or
+  this rule's own `[rules.defaults]` entry for it when unstated — so a
+  level-pay row that defaults `amortization = "level_pay"` matches a
+  contract that says nothing, and the interest-only row does not.
+- `when_stated = ["index_curve"]` applies the rule only when the contract
+  writes the term; `when_unstated` only when it does not. This is how a
+  floating coupon's row and a fixed coupon's row share a type: the coupon
+  is fixed when `interest_rate` is stated and floating when `index_curve`
+  is.
+- Every term a rule selects on is a field of the type (the load check that
+  covers a rule's placeholders covers these too).
+- Selection makes line coverage a fact about the INSTANCE: load still checks
+  that each line has a rule somewhere, and the compiler checks that each
+  line the type must produce has a rule whose selection admits this
+  contract's terms — `E1385_LINE_HAS_NO_RULE_FOR_TERMS` names the line and
+  the combination the pack has no row for (a floating level-pay loan).
+
 ### Currency
 
 Omit `currency` from a lowering rule. An empty value inherits the model's
@@ -7440,7 +7482,7 @@ formula = "domain.cre.noi / domain.cre.debt_service"
 id = "domain.credit.wal_years"
 kind = "number"                  # wal_years requires kind = "number"
 op = "wal_years"
-numerator_streams = ["credit.pool.sched_principal.*", "credit.pool.prepay.*"]
+numerator_streams = ["credit.loan.sched_principal.*", "credit.loan.prepay.*"]
 formula = "wal_years(numerator_streams)"   # sum(((t + offset)/ppy) * v) / sum(v)
 # weighted average life in years of the matched streams' positive per-period
 # amounts: sum(t/ppy * v) / sum(v), using the engine's run.periods_per_year;
@@ -7746,6 +7788,7 @@ Fields that move:
 - `E1381_MOVED_ACCOUNT_HAS_NO_SIDE` — a cash stream moves an account that declares no side. Whether an inflow raises or lowers a balance follows from `owed` (a liability of its owner) or `due` (a receivable); without one the direction of the movement is undefined.
 - `E1383_FOLDED_ACCOUNT_DECLARED` — a container declares an account a member also declares. The container's account of that name IS the members' fold (`docs/42` §3.4), readable as `prev.<container>.<name>` and declared nowhere; a declaration would double it or hide it. A claim of the container's own takes another name.
 - `E1384_FOLDED_ACCOUNT_MOVED` — a stream `moves` a container's folded account. A fold is the sum of its members' balances and is moved only by moving a member's; the hint says to move the member's account or declare one of another name on the container.
+- `E1385_LINE_HAS_NO_RULE_FOR_TERMS` — a contract's type declares a line, and no rule that lowers it applies to the terms as stated. Rules select on a term's value or on whether a term is stated (`docs/07` §6.4); the combination written is one the pack has no row for — a floating level-pay loan, say. Refused rather than lowered without the line: the cash would simply be missing.
 - `E1382_ACCOUNT_READ_WITHOUT_PREV` — an expression reads an account as a current value (`asset.loan.balance`). A balance is readable inside a period only as its opening, `prev.<account>` — the prior close, settled state. This period's close is the sum of streams still being computed and does not exist yet (`docs/42` §3.3).
 - `E1364_SLICE_CATEGORY_ROOT` — a slice's category selector is not rooted in operating, investing or financing. A selector that could never match anything is a typo, not a choice.
 - `E1371_UNKNOWN_CONTRACT_TERM` — a contract states a term its type does not declare. The roster is the pack type's own terms plus its masters' (`docs/40` §3); a term outside it is read by no rule, so before this check a misspelled `escalation` was a lease that never escalated. The hint names the near miss, or lists the type's terms.
@@ -9461,10 +9504,7 @@ Contract types (a `contract <name>` declaration lowers to streams through the pa
 
 | type | contract name | parties | description |
 |---|---|---|---|
-| `Credit.Contract.Pool` | (election) |  | A pool of amortizing loans held as collateral: balance, rate, term, and the prepayment, default, severity and servicing assumptions every shape shares. |
-| `Credit.Contract.LevelPayPool` | `credit.pool_level_pay` | holder | Amortizing pool with prepayment, default, severity and recovery lag. |
-| `Credit.Contract.InterestOnlyPool` | `credit.pool_io_bullet` | holder |  |
-| `Credit.Contract.FloatingInterestOnlyPool` | `credit.pool_float_io_bullet` | holder | Coupon resets off a declared reference rather than being fixed at origination. |
+| `Credit.Contract.Loan` | `credit.loan` |  | A loan, or a representative loan standing for a pool of them: balance, coupon, term and repayment pattern, with the prepayment, default, severity and servicing assumptions its cash follows. |
 | `Credit.Contract.Purchase` | `credit.purchase` | buyer, seller |  |
 | `Credit.Contract.Participation` | `credit.participation` | issuer, holder | A pro rata interest in a pool's cash, passed through to the holder each period — a pass-through certificate or a loan participation. Instanced with the suffix of the pool it participates in. |
 | `Credit.Contract.Note` | `credit.note` | issuer, holder | A class of notes in a securitisation: a face and a coupon, paid interest and principal by the trust's priority of payments. The steps that pay it name it; its claim is face less what the holder's principal account has received. |
@@ -9474,11 +9514,9 @@ Metrics: `domain.credit.interest`, `domain.credit.principal`, `domain.credit.rec
 
 Templates (starting points; the `skeleton` MCP tool assembles them into a compiling model):
 
-- `credit.pool_level_pay` — Level-pay pool (six collection streams)
-- `credit.pool_io_bullet` — Interest-only pool, bullet at maturity
-- `credit.pool_float_io_bullet` — Floating-rate IO pool, bullet at maturity
-- `credit.purchase` — Pool purchase price
-- `credit.participation` — Participation (pass-through of a pool's cash)
+- `credit.loan` — Loan, or a representative loan for a pool (six collection streams)
+- `credit.purchase` — Purchase price of a loan or a pool of loans
+- `credit.participation` — Participation (pass-through of the collateral's cash)
 - `credit.note` — Structured note (a class paid by the priority of payments)
 
 ### Pack `energy` 0.1.0

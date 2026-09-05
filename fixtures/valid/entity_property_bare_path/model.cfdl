@@ -17,7 +17,7 @@ time calendar annual from 2026-01 for 2
 // deciding who gets paid. Every waterfall example in the documentation was
 // written that way.
 
-entity asset trust   : Credit.Asset.LoanPool { collateral_type = "auto" }
+entity asset trust   : Credit.Asset.Loan { collateral_type = "auto" }
 entity asset class_a : Credit.Asset.Tranche  { original_balance = 5000.0 seniority = 1 }
 entity party residual : Party { name = "Residual holder" }
 

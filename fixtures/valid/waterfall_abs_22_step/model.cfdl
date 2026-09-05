@@ -30,7 +30,7 @@ time calendar monthly from 2017-02 for 6
 // sizes, coupons and final scheduled distribution dates are the transaction's;
 // the pool and collection figures below are not, and are marked where they
 // appear.
-entity asset trust    : Credit.Asset.LoanPool { collateral_type = "auto"  original_balance = 984243280
+entity asset trust    : Credit.Asset.Loan { collateral_type = "auto"  original_balance = 984243280
   pool_balance init 960000000.0
                next prev * 0.96
   reserve_balance init 18000000.0

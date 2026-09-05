@@ -2166,7 +2166,7 @@ A level-payment amortizing loan pool — the constant instalment that splits int
 | | |
 |---|---|
 | Pack | `credit` |
-| Contract types | `credit.pool_level_pay`, `credit.purchase` |
+| Contract types | `credit.loan`, `credit.purchase` |
 | Language features | a pack contract paired with a purchase price |
 | Conventions | level-pay amortization, CPR, CDR, loss severity, recovery lag, a servicing strip, a prepayment penalty, purchase at a discount |
 
@@ -2176,13 +2176,13 @@ model "level-pay-pool"
 use pack "credit" version "0.1.0"
 time calendar monthly from 2026-01 for 126
 
-entity asset buyer : Credit.Asset.LoanPool
+entity asset buyer : Credit.Asset.Loan
 
 // $25m homogeneous level-pay pool, 6.5% note rate, 10-year amortization,
 // 8 CPR, 2 CDR, 35% severity, 6-month recovery lag, 50bp servicing strip,
 // 1% prepayment penalty. The contract term spans term_months +
 // recovery_lag_months so recoveries have periods to land in.
-contract credit.pool_level_pay.auto_a on entity asset.buyer {
+contract credit.loan.auto_a on entity asset.buyer {
   term 2026-01..2036-06
   terms {
     principal = 25000000
@@ -2213,7 +2213,7 @@ A floating-rate bridge loan pool priced off a forward curve, where the coupon re
 | | |
 |---|---|
 | Pack | `credit` |
-| Contract types | `credit.pool_float_io_bullet`, `credit.purchase` |
+| Contract types | `credit.loan`, `credit.purchase` |
 | Language features | a declared `curve` read per period by `curve_value` with step interpolation |
 | Conventions | a coupon that resets rather than fixing at origination, a binding rate floor, a bullet maturity |
 
@@ -2236,15 +2236,16 @@ curve sofr {
   2028-01: 0.0385
 }
 
-entity asset buyer : Credit.Asset.LoanPool
+entity asset buyer : Credit.Asset.Loan
 
 // $15m floating IO bridge pool: SOFR + 275, coupon floored at 7.00% (binds
 // once SOFR + margin falls below it) and capped at 9.00% (never binds),
 // 36-month bullet, 10 CPR, 2.5 CDR, 45% severity, 5-month recovery lag.
 // Contract term spans term_months + recovery_lag_months.
-contract credit.pool_float_io_bullet.bridge_f on entity asset.buyer {
+contract credit.loan.bridge_f on entity asset.buyer {
   term 2026-01..2029-05
   terms {
+    amortization = "interest_only"
     principal = 15000000
     index_curve = "sofr"
     margin = 0.0275
@@ -2310,7 +2311,7 @@ time calendar monthly from 2026-01 for 372
 // The four balances are uneven so that the aggregation is tested: four equal
 // loans would agree with the pool under any rule that divided by four.
 
-entity asset pool : Credit.Asset.LoanPool {
+entity asset pool : Credit.Asset.Loan {
   collateral_type            = "residential_mortgage"
   original_balance           = 100000000
   weighted_average_coupon    = 0.08
@@ -2347,7 +2348,7 @@ entity asset loan_d : Credit.Asset.Loan {
 // as its annual equivalent, 1 - (1 - 0.01)^12, which converts back to exactly
 // 0.01. The same restatement `mbs_pool_conventions` makes.
 
-contract credit.pool_level_pay.a on entity asset.loan_a {
+contract credit.loan.a on entity asset.loan_a {
   term 2026-01..2056-12
   terms {
     principal = 40000000
@@ -2360,7 +2361,7 @@ contract credit.pool_level_pay.a on entity asset.loan_a {
   }
 }
 
-contract credit.pool_level_pay.b on entity asset.loan_b {
+contract credit.loan.b on entity asset.loan_b {
   term 2026-01..2056-12
   terms {
     principal = 30000000
@@ -2373,7 +2374,7 @@ contract credit.pool_level_pay.b on entity asset.loan_b {
   }
 }
 
-contract credit.pool_level_pay.c on entity asset.loan_c {
+contract credit.loan.c on entity asset.loan_c {
   term 2026-01..2056-12
   terms {
     principal = 20000000
@@ -2386,7 +2387,7 @@ contract credit.pool_level_pay.c on entity asset.loan_c {
   }
 }
 
-contract credit.pool_level_pay.d on entity asset.loan_d {
+contract credit.loan.d on entity asset.loan_d {
   term 2026-01..2056-12
   terms {
     principal = 10000000
@@ -2407,7 +2408,7 @@ Security Group 3 of a Fannie Mae REMIC: a seasoned mortgage pool passing through
 | | |
 |---|---|
 | Pack | `credit` |
-| Contract types | `credit.pool_level_pay` |
+| Contract types | `credit.loan` |
 | Language features | two waterfalls over one collateral, one for principal and one for interest; entity fields carrying class balances |
 | Conventions | PSA on a pool seasoned past the ramp, a servicing and guaranty strip, a stripped coupon, a notional interest-only class |
 
@@ -2487,7 +2488,7 @@ time calendar monthly from 2019-02 for 361
 // Reference: Prospectus Supplement dated 24 January 2019 to the REMIC
 // Prospectus dated 1 November 2018. See SOURCE.md.
 
-entity asset trust : Credit.Asset.LoanPool {
+entity asset trust : Credit.Asset.Loan {
   collateral_type = "residential"
 }
 
@@ -2504,7 +2505,7 @@ entity asset trust : Credit.Asset.LoanPool {
 // the model should say is "this pool prepays at 198% PSA", not "this pool
 // prepays at 11.88% CPR" — the second is a consequence, and it stops being true
 // the moment the seasoning changes.
-entity asset pool : Credit.Asset.LoanPool {
+entity asset pool : Credit.Asset.Loan {
   collateral_type = "residential"
   part of asset.trust
 
@@ -2551,7 +2552,7 @@ entity party residual : Credit.Party.Investor { name = "Classes R and RL" }
 // 5.00% pass-through rate is the servicing and guaranty strip, and it is
 // carried as `servicing_fee` so that what reaches the trust is 5.00% exactly —
 // which is what makes the AB and IO coupons add up below.
-contract credit.pool_level_pay.g3 on entity asset.pool {
+contract credit.loan.g3 on entity asset.pool {
   term 2019-02..2033-06
   terms {
     principal = 148372434
@@ -2578,8 +2579,8 @@ contract credit.pool_level_pay.g3 on entity asset.pool {
 waterfall g3.principal on entity asset.trust {
   schedule every month from 2019-02 to 2033-06
 
-  from series_sum("credit.pool.sched_principal.*", time.t, time.t)
-       + series_sum("credit.pool.prepay.*", time.t, time.t)
+  from series_sum("credit.loan.sched_principal.*", time.t, time.t)
+       + series_sum("credit.loan.prepay.*", time.t, time.t)
 
   pay ab_principal to party.ab_holders = remaining
 }
@@ -2605,8 +2606,8 @@ waterfall g3.interest on entity asset.trust {
   // interest line is gross, at the 5.451% mortgage coupon; the servicing and
   // guaranty strip is a separate outflow and is stored negative, so adding it
   // nets it off and leaves the 5.00% pass-through rate exactly.
-  from series_sum("credit.pool.interest.*", time.t, time.t)
-       + series_sum("credit.pool.servicing.*", time.t, time.t)
+  from series_sum("credit.loan.interest.*", time.t, time.t)
+       + series_sum("credit.loan.servicing.*", time.t, time.t)
 
   pay ab_interest to party.ab_holders = asset.ab.balance * (0.0325 / 12.0)
   pay io_interest to party.io_holders = asset.io.balance * (0.05 / 12.0)
@@ -2684,175 +2685,175 @@ time calendar monthly from 2018-10 for 64
 
 entity container trust : Container.SPV
 
-entity asset p01 : Credit.Asset.LoanPool {
+entity asset p01 : Credit.Asset.Loan {
   collateral_type = "auto"
   part of container.trust
 }
-entity asset p02 : Credit.Asset.LoanPool {
+entity asset p02 : Credit.Asset.Loan {
   collateral_type = "auto"
   part of container.trust
 }
-entity asset p03 : Credit.Asset.LoanPool {
+entity asset p03 : Credit.Asset.Loan {
   collateral_type = "auto"
   part of container.trust
 }
-entity asset p04 : Credit.Asset.LoanPool {
+entity asset p04 : Credit.Asset.Loan {
   collateral_type = "auto"
   part of container.trust
 }
-entity asset p06 : Credit.Asset.LoanPool {
+entity asset p06 : Credit.Asset.Loan {
   collateral_type = "auto"
   part of container.trust
 }
-entity asset p07 : Credit.Asset.LoanPool {
+entity asset p07 : Credit.Asset.Loan {
   collateral_type = "auto"
   part of container.trust
 }
-entity asset p08 : Credit.Asset.LoanPool {
+entity asset p08 : Credit.Asset.Loan {
   collateral_type = "auto"
   part of container.trust
 }
-entity asset p09 : Credit.Asset.LoanPool {
+entity asset p09 : Credit.Asset.Loan {
   collateral_type = "auto"
   part of container.trust
 }
-entity asset p11 : Credit.Asset.LoanPool {
+entity asset p11 : Credit.Asset.Loan {
   collateral_type = "auto"
   part of container.trust
 }
-entity asset p12 : Credit.Asset.LoanPool {
+entity asset p12 : Credit.Asset.Loan {
   collateral_type = "auto"
   part of container.trust
 }
-entity asset p13 : Credit.Asset.LoanPool {
+entity asset p13 : Credit.Asset.Loan {
   collateral_type = "auto"
   part of container.trust
 }
-entity asset p14 : Credit.Asset.LoanPool {
+entity asset p14 : Credit.Asset.Loan {
   collateral_type = "auto"
   part of container.trust
 }
-entity asset p16 : Credit.Asset.LoanPool {
+entity asset p16 : Credit.Asset.Loan {
   collateral_type = "auto"
   part of container.trust
 }
-entity asset p17 : Credit.Asset.LoanPool {
+entity asset p17 : Credit.Asset.Loan {
   collateral_type = "auto"
   part of container.trust
 }
-entity asset p18 : Credit.Asset.LoanPool {
+entity asset p18 : Credit.Asset.Loan {
   collateral_type = "auto"
   part of container.trust
 }
-entity asset p19 : Credit.Asset.LoanPool {
+entity asset p19 : Credit.Asset.Loan {
   collateral_type = "auto"
   part of container.trust
 }
-entity asset p21 : Credit.Asset.LoanPool {
+entity asset p21 : Credit.Asset.Loan {
   collateral_type = "auto"
   part of container.trust
 }
-entity asset p22 : Credit.Asset.LoanPool {
+entity asset p22 : Credit.Asset.Loan {
   collateral_type = "auto"
   part of container.trust
 }
-entity asset p23 : Credit.Asset.LoanPool {
+entity asset p23 : Credit.Asset.Loan {
   collateral_type = "auto"
   part of container.trust
 }
-entity asset p24 : Credit.Asset.LoanPool {
+entity asset p24 : Credit.Asset.Loan {
   collateral_type = "auto"
   part of container.trust
 }
-entity asset p26 : Credit.Asset.LoanPool {
+entity asset p26 : Credit.Asset.Loan {
   collateral_type = "auto"
   part of container.trust
 }
-entity asset p27 : Credit.Asset.LoanPool {
+entity asset p27 : Credit.Asset.Loan {
   collateral_type = "auto"
   part of container.trust
 }
-entity asset p28 : Credit.Asset.LoanPool {
+entity asset p28 : Credit.Asset.Loan {
   collateral_type = "auto"
   part of container.trust
 }
-entity asset p29 : Credit.Asset.LoanPool {
+entity asset p29 : Credit.Asset.Loan {
   collateral_type = "auto"
   part of container.trust
 }
-entity asset p31 : Credit.Asset.LoanPool {
+entity asset p31 : Credit.Asset.Loan {
   collateral_type = "auto"
   part of container.trust
 }
-entity asset p32 : Credit.Asset.LoanPool {
+entity asset p32 : Credit.Asset.Loan {
   collateral_type = "auto"
   part of container.trust
 }
-entity asset p33 : Credit.Asset.LoanPool {
+entity asset p33 : Credit.Asset.Loan {
   collateral_type = "auto"
   part of container.trust
 }
-entity asset p34 : Credit.Asset.LoanPool {
+entity asset p34 : Credit.Asset.Loan {
   collateral_type = "auto"
   part of container.trust
 }
-entity asset p36 : Credit.Asset.LoanPool {
+entity asset p36 : Credit.Asset.Loan {
   collateral_type = "auto"
   part of container.trust
 }
-entity asset p37 : Credit.Asset.LoanPool {
+entity asset p37 : Credit.Asset.Loan {
   collateral_type = "auto"
   part of container.trust
 }
-entity asset p38 : Credit.Asset.LoanPool {
+entity asset p38 : Credit.Asset.Loan {
   collateral_type = "auto"
   part of container.trust
 }
-entity asset p39 : Credit.Asset.LoanPool {
+entity asset p39 : Credit.Asset.Loan {
   collateral_type = "auto"
   part of container.trust
 }
-entity asset p40 : Credit.Asset.LoanPool {
+entity asset p40 : Credit.Asset.Loan {
   collateral_type = "auto"
   part of container.trust
 }
-entity asset p41 : Credit.Asset.LoanPool {
+entity asset p41 : Credit.Asset.Loan {
   collateral_type = "auto"
   part of container.trust
 }
-entity asset p42 : Credit.Asset.LoanPool {
+entity asset p42 : Credit.Asset.Loan {
   collateral_type = "auto"
   part of container.trust
 }
-entity asset p43 : Credit.Asset.LoanPool {
+entity asset p43 : Credit.Asset.Loan {
   collateral_type = "auto"
   part of container.trust
 }
-entity asset p44 : Credit.Asset.LoanPool {
+entity asset p44 : Credit.Asset.Loan {
   collateral_type = "auto"
   part of container.trust
 }
-entity asset p45 : Credit.Asset.LoanPool {
+entity asset p45 : Credit.Asset.Loan {
   collateral_type = "auto"
   part of container.trust
 }
-entity asset p46 : Credit.Asset.LoanPool {
+entity asset p46 : Credit.Asset.Loan {
   collateral_type = "auto"
   part of container.trust
 }
-entity asset p47 : Credit.Asset.LoanPool {
+entity asset p47 : Credit.Asset.Loan {
   collateral_type = "auto"
   part of container.trust
 }
-entity asset p48 : Credit.Asset.LoanPool {
+entity asset p48 : Credit.Asset.Loan {
   collateral_type = "auto"
   part of container.trust
 }
-entity asset p49 : Credit.Asset.LoanPool {
+entity asset p49 : Credit.Asset.Loan {
   collateral_type = "auto"
   part of container.trust
 }
-entity asset p50 : Credit.Asset.LoanPool {
+entity asset p50 : Credit.Asset.Loan {
   collateral_type = "auto"
   part of container.trust
 }
@@ -2866,7 +2867,7 @@ entity party b_holders : Credit.Party.Investor { name = "Class B noteholders" }
 entity party c_holders : Credit.Party.Investor { name = "Class C noteholders" }
 entity party d_holders : Credit.Party.Investor { name = "Class D noteholders" }
 
-contract credit.pool_level_pay.p01 on entity asset.p01 {
+contract credit.loan.p01 on entity asset.p01 {
   term 2018-10..2020-03
   terms {
     principal = 5616021.32
@@ -2877,7 +2878,7 @@ contract credit.pool_level_pay.p01 on entity asset.p01 {
   }
 }
 
-contract credit.pool_level_pay.p02 on entity asset.p02 {
+contract credit.loan.p02 on entity asset.p02 {
   term 2018-10..2021-01
   terms {
     principal = 2616054.82
@@ -2888,7 +2889,7 @@ contract credit.pool_level_pay.p02 on entity asset.p02 {
   }
 }
 
-contract credit.pool_level_pay.p03 on entity asset.p03 {
+contract credit.loan.p03 on entity asset.p03 {
   term 2018-10..2022-06
   terms {
     principal = 4635948.89
@@ -2899,7 +2900,7 @@ contract credit.pool_level_pay.p03 on entity asset.p03 {
   }
 }
 
-contract credit.pool_level_pay.p04 on entity asset.p04 {
+contract credit.loan.p04 on entity asset.p04 {
   term 2018-10..2022-12
   terms {
     principal = 2205909.75
@@ -2910,7 +2911,7 @@ contract credit.pool_level_pay.p04 on entity asset.p04 {
   }
 }
 
-contract credit.pool_level_pay.p06 on entity asset.p06 {
+contract credit.loan.p06 on entity asset.p06 {
   term 2018-10..2019-11
   terms {
     principal = 147440.15
@@ -2921,7 +2922,7 @@ contract credit.pool_level_pay.p06 on entity asset.p06 {
   }
 }
 
-contract credit.pool_level_pay.p07 on entity asset.p07 {
+contract credit.loan.p07 on entity asset.p07 {
   term 2018-10..2021-03
   terms {
     principal = 216238.15
@@ -2932,7 +2933,7 @@ contract credit.pool_level_pay.p07 on entity asset.p07 {
   }
 }
 
-contract credit.pool_level_pay.p08 on entity asset.p08 {
+contract credit.loan.p08 on entity asset.p08 {
   term 2018-10..2022-07
   terms {
     principal = 354043.75
@@ -2943,7 +2944,7 @@ contract credit.pool_level_pay.p08 on entity asset.p08 {
   }
 }
 
-contract credit.pool_level_pay.p09 on entity asset.p09 {
+contract credit.loan.p09 on entity asset.p09 {
   term 2018-10..2022-12
   terms {
     principal = 342126.24
@@ -2954,7 +2955,7 @@ contract credit.pool_level_pay.p09 on entity asset.p09 {
   }
 }
 
-contract credit.pool_level_pay.p11 on entity asset.p11 {
+contract credit.loan.p11 on entity asset.p11 {
   term 2018-10..2020-02
   terms {
     principal = 610459.31
@@ -2965,7 +2966,7 @@ contract credit.pool_level_pay.p11 on entity asset.p11 {
   }
 }
 
-contract credit.pool_level_pay.p12 on entity asset.p12 {
+contract credit.loan.p12 on entity asset.p12 {
   term 2018-10..2021-04
   terms {
     principal = 1144291.74
@@ -2976,7 +2977,7 @@ contract credit.pool_level_pay.p12 on entity asset.p12 {
   }
 }
 
-contract credit.pool_level_pay.p13 on entity asset.p13 {
+contract credit.loan.p13 on entity asset.p13 {
   term 2018-10..2022-02
   terms {
     principal = 699535.89
@@ -2987,7 +2988,7 @@ contract credit.pool_level_pay.p13 on entity asset.p13 {
   }
 }
 
-contract credit.pool_level_pay.p14 on entity asset.p14 {
+contract credit.loan.p14 on entity asset.p14 {
   term 2018-10..2022-12
   terms {
     principal = 201897.47
@@ -2998,7 +2999,7 @@ contract credit.pool_level_pay.p14 on entity asset.p14 {
   }
 }
 
-contract credit.pool_level_pay.p16 on entity asset.p16 {
+contract credit.loan.p16 on entity asset.p16 {
   term 2018-10..2020-02
   terms {
     principal = 13918351.08
@@ -3009,7 +3010,7 @@ contract credit.pool_level_pay.p16 on entity asset.p16 {
   }
 }
 
-contract credit.pool_level_pay.p17 on entity asset.p17 {
+contract credit.loan.p17 on entity asset.p17 {
   term 2018-10..2021-04
   terms {
     principal = 26181002.53
@@ -3020,7 +3021,7 @@ contract credit.pool_level_pay.p17 on entity asset.p17 {
   }
 }
 
-contract credit.pool_level_pay.p18 on entity asset.p18 {
+contract credit.loan.p18 on entity asset.p18 {
   term 2018-10..2022-02
   terms {
     principal = 28740527.64
@@ -3031,7 +3032,7 @@ contract credit.pool_level_pay.p18 on entity asset.p18 {
   }
 }
 
-contract credit.pool_level_pay.p19 on entity asset.p19 {
+contract credit.loan.p19 on entity asset.p19 {
   term 2018-10..2022-12
   terms {
     principal = 9735143.46
@@ -3042,7 +3043,7 @@ contract credit.pool_level_pay.p19 on entity asset.p19 {
   }
 }
 
-contract credit.pool_level_pay.p21 on entity asset.p21 {
+contract credit.loan.p21 on entity asset.p21 {
   term 2018-10..2020-02
   terms {
     principal = 14533243.98
@@ -3053,7 +3054,7 @@ contract credit.pool_level_pay.p21 on entity asset.p21 {
   }
 }
 
-contract credit.pool_level_pay.p22 on entity asset.p22 {
+contract credit.loan.p22 on entity asset.p22 {
   term 2018-10..2021-04
   terms {
     principal = 26195374.46
@@ -3064,7 +3065,7 @@ contract credit.pool_level_pay.p22 on entity asset.p22 {
   }
 }
 
-contract credit.pool_level_pay.p23 on entity asset.p23 {
+contract credit.loan.p23 on entity asset.p23 {
   term 2018-10..2022-03
   terms {
     principal = 37348352.52
@@ -3075,7 +3076,7 @@ contract credit.pool_level_pay.p23 on entity asset.p23 {
   }
 }
 
-contract credit.pool_level_pay.p24 on entity asset.p24 {
+contract credit.loan.p24 on entity asset.p24 {
   term 2018-10..2023-01
   terms {
     principal = 19509631.08
@@ -3086,7 +3087,7 @@ contract credit.pool_level_pay.p24 on entity asset.p24 {
   }
 }
 
-contract credit.pool_level_pay.p26 on entity asset.p26 {
+contract credit.loan.p26 on entity asset.p26 {
   term 2018-10..2020-02
   terms {
     principal = 12183065.19
@@ -3097,7 +3098,7 @@ contract credit.pool_level_pay.p26 on entity asset.p26 {
   }
 }
 
-contract credit.pool_level_pay.p27 on entity asset.p27 {
+contract credit.loan.p27 on entity asset.p27 {
   term 2018-10..2021-04
   terms {
     principal = 20323443.61
@@ -3108,7 +3109,7 @@ contract credit.pool_level_pay.p27 on entity asset.p27 {
   }
 }
 
-contract credit.pool_level_pay.p28 on entity asset.p28 {
+contract credit.loan.p28 on entity asset.p28 {
   term 2018-10..2022-03
   terms {
     principal = 32071657.98
@@ -3119,7 +3120,7 @@ contract credit.pool_level_pay.p28 on entity asset.p28 {
   }
 }
 
-contract credit.pool_level_pay.p29 on entity asset.p29 {
+contract credit.loan.p29 on entity asset.p29 {
   term 2018-10..2023-01
   terms {
     principal = 20332473.43
@@ -3130,7 +3131,7 @@ contract credit.pool_level_pay.p29 on entity asset.p29 {
   }
 }
 
-contract credit.pool_level_pay.p31 on entity asset.p31 {
+contract credit.loan.p31 on entity asset.p31 {
   term 2018-10..2020-02
   terms {
     principal = 6428613.14
@@ -3141,7 +3142,7 @@ contract credit.pool_level_pay.p31 on entity asset.p31 {
   }
 }
 
-contract credit.pool_level_pay.p32 on entity asset.p32 {
+contract credit.loan.p32 on entity asset.p32 {
   term 2018-10..2021-05
   terms {
     principal = 16325861.98
@@ -3152,7 +3153,7 @@ contract credit.pool_level_pay.p32 on entity asset.p32 {
   }
 }
 
-contract credit.pool_level_pay.p33 on entity asset.p33 {
+contract credit.loan.p33 on entity asset.p33 {
   term 2018-10..2022-04
   terms {
     principal = 34020451.15
@@ -3163,7 +3164,7 @@ contract credit.pool_level_pay.p33 on entity asset.p33 {
   }
 }
 
-contract credit.pool_level_pay.p34 on entity asset.p34 {
+contract credit.loan.p34 on entity asset.p34 {
   term 2018-10..2023-01
   terms {
     principal = 22175932.04
@@ -3174,7 +3175,7 @@ contract credit.pool_level_pay.p34 on entity asset.p34 {
   }
 }
 
-contract credit.pool_level_pay.p36 on entity asset.p36 {
+contract credit.loan.p36 on entity asset.p36 {
   term 2018-10..2020-03
   terms {
     principal = 4214767.90
@@ -3185,7 +3186,7 @@ contract credit.pool_level_pay.p36 on entity asset.p36 {
   }
 }
 
-contract credit.pool_level_pay.p37 on entity asset.p37 {
+contract credit.loan.p37 on entity asset.p37 {
   term 2018-10..2021-05
   terms {
     principal = 10197295.25
@@ -3196,7 +3197,7 @@ contract credit.pool_level_pay.p37 on entity asset.p37 {
   }
 }
 
-contract credit.pool_level_pay.p38 on entity asset.p38 {
+contract credit.loan.p38 on entity asset.p38 {
   term 2018-10..2022-04
   terms {
     principal = 28511150.24
@@ -3207,7 +3208,7 @@ contract credit.pool_level_pay.p38 on entity asset.p38 {
   }
 }
 
-contract credit.pool_level_pay.p39 on entity asset.p39 {
+contract credit.loan.p39 on entity asset.p39 {
   term 2018-10..2023-01
   terms {
     principal = 21518975.29
@@ -3218,7 +3219,7 @@ contract credit.pool_level_pay.p39 on entity asset.p39 {
   }
 }
 
-contract credit.pool_level_pay.p40 on entity asset.p40 {
+contract credit.loan.p40 on entity asset.p40 {
   term 2018-10..2024-01
   terms {
     principal = 210992.57
@@ -3229,7 +3230,7 @@ contract credit.pool_level_pay.p40 on entity asset.p40 {
   }
 }
 
-contract credit.pool_level_pay.p41 on entity asset.p41 {
+contract credit.loan.p41 on entity asset.p41 {
   term 2018-10..2020-02
   terms {
     principal = 2314366.62
@@ -3240,7 +3241,7 @@ contract credit.pool_level_pay.p41 on entity asset.p41 {
   }
 }
 
-contract credit.pool_level_pay.p42 on entity asset.p42 {
+contract credit.loan.p42 on entity asset.p42 {
   term 2018-10..2021-04
   terms {
     principal = 6049009.56
@@ -3251,7 +3252,7 @@ contract credit.pool_level_pay.p42 on entity asset.p42 {
   }
 }
 
-contract credit.pool_level_pay.p43 on entity asset.p43 {
+contract credit.loan.p43 on entity asset.p43 {
   term 2018-10..2022-04
   terms {
     principal = 17752272.88
@@ -3262,7 +3263,7 @@ contract credit.pool_level_pay.p43 on entity asset.p43 {
   }
 }
 
-contract credit.pool_level_pay.p44 on entity asset.p44 {
+contract credit.loan.p44 on entity asset.p44 {
   term 2018-10..2023-02
   terms {
     principal = 17560641.20
@@ -3273,7 +3274,7 @@ contract credit.pool_level_pay.p44 on entity asset.p44 {
   }
 }
 
-contract credit.pool_level_pay.p45 on entity asset.p45 {
+contract credit.loan.p45 on entity asset.p45 {
   term 2018-10..2024-01
   terms {
     principal = 133227.13
@@ -3284,7 +3285,7 @@ contract credit.pool_level_pay.p45 on entity asset.p45 {
   }
 }
 
-contract credit.pool_level_pay.p46 on entity asset.p46 {
+contract credit.loan.p46 on entity asset.p46 {
   term 2018-10..2020-02
   terms {
     principal = 4089106.53
@@ -3295,7 +3296,7 @@ contract credit.pool_level_pay.p46 on entity asset.p46 {
   }
 }
 
-contract credit.pool_level_pay.p47 on entity asset.p47 {
+contract credit.loan.p47 on entity asset.p47 {
   term 2018-10..2021-04
   terms {
     principal = 9761650.69
@@ -3306,7 +3307,7 @@ contract credit.pool_level_pay.p47 on entity asset.p47 {
   }
 }
 
-contract credit.pool_level_pay.p48 on entity asset.p48 {
+contract credit.loan.p48 on entity asset.p48 {
   term 2018-10..2022-05
   terms {
     principal = 26285138.49
@@ -3317,7 +3318,7 @@ contract credit.pool_level_pay.p48 on entity asset.p48 {
   }
 }
 
-contract credit.pool_level_pay.p49 on entity asset.p49 {
+contract credit.loan.p49 on entity asset.p49 {
   term 2018-10..2023-02
   terms {
     principal = 29949234.04
@@ -3328,7 +3329,7 @@ contract credit.pool_level_pay.p49 on entity asset.p49 {
   }
 }
 
-contract credit.pool_level_pay.p50 on entity asset.p50 {
+contract credit.loan.p50 on entity asset.p50 {
   term 2018-10..2023-11
   terms {
     principal = 279866.82
@@ -3443,8 +3444,8 @@ stream credit.trust.servicing_fee on entity container.trust outflow currency USD
   category operating.expense.servicing
   amount = 0.01 / 12.0 * (inputs.initial_pool
              - if(time.t == 0.0, 0.0,
-                  series_sum("credit.pool.sched_principal.*", 0, time.t - 1)
-                  + series_sum("credit.pool.prepay.*", 0, time.t - 1)))
+                  series_sum("credit.loan.sched_principal.*", 0, time.t - 1)
+                  + series_sum("credit.loan.prepay.*", 0, time.t - 1)))
 }
 
 stream credit.trust.admin_fee on entity container.trust outflow currency USD {
@@ -3463,14 +3464,14 @@ stream credit.trust.admin_fee on entity container.trust outflow currency USD {
 // been earned are never mixed.
 // ---------------------------------------------------------------------------
 account interest_collections {
-  from series_sum("credit.pool.interest.*", time.t, time.t)
+  from series_sum("credit.loan.interest.*", time.t, time.t)
      + series_sum("credit.trust.servicing_fee", time.t, time.t)
      + series_sum("credit.trust.admin_fee", time.t, time.t)
 }
 
 account principal_collections {
-  from series_sum("credit.pool.sched_principal.*", time.t, time.t)
-     + series_sum("credit.pool.prepay.*", time.t, time.t)
+  from series_sum("credit.loan.sched_principal.*", time.t, time.t)
+     + series_sum("credit.loan.prepay.*", time.t, time.t)
 }
 
 account a1_principal { owner party.a1_holders }

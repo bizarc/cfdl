@@ -48,19 +48,19 @@ model "invariant-cash-purity"
 use pack "credit" version "0.1.0"
 time calendar monthly from 2017-01 for 6
 
-entity asset trust : Credit.Asset.LoanPool {
+entity asset trust : Credit.Asset.Loan {
   collateral_type = "auto"
   // A field large enough that leaking into cash is unmissable.
   big_balance init 1000000.0 next prev + 1000000.0
 }
-entity asset pool : Credit.Asset.LoanPool {
+entity asset pool : Credit.Asset.Loan {
   collateral_type = "auto"
   part of asset.trust
 }
 entity party investor : Credit.Party.Investor { name = "Investor" }
 
 // A pack contract, so the credit subtotals (cumulative among them) exist.
-contract credit.pool_level_pay.one on entity asset.pool {
+contract credit.loan.one on entity asset.pool {
   term 2017-01..2017-06
   terms { principal = 1000000 interest_rate = 0.12 term_months = 6 cpr = 0 cdr = 0 }
 }
@@ -82,12 +82,12 @@ waterfall dist on entity asset.trust {
 # The model streams above, spelled out. Waterfall steps also publish under
 # `stream.` and must NOT be in this list — that exclusion is the test.
 MODEL_STREAMS = [
-    "stream.credit.pool.interest.one",
-    "stream.credit.pool.sched_principal.one",
-    "stream.credit.pool.prepay.one",
-    "stream.credit.pool.recoveries.one",
-    "stream.credit.pool.servicing.one",
-    "stream.credit.pool.penalty.one",
+    "stream.credit.loan.interest.one",
+    "stream.credit.loan.sched_principal.one",
+    "stream.credit.loan.prepay.one",
+    "stream.credit.loan.recoveries.one",
+    "stream.credit.loan.servicing.one",
+    "stream.credit.loan.penalty.one",
     "stream.trust.fee_income",
 ]
 WATERFALL_STEPS = ["stream.dist.senior", "stream.dist.residual"]

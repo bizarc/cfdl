@@ -24,9 +24,9 @@ time calendar monthly from 2026-01 for 361
 // January, 5,594.43 in February — and principal absorbs the difference.
 // `fixtures/valid/pack_amortization_day_count` pins that spelling.
 
-entity asset loan : Credit.Asset.LoanPool
+entity asset loan : Credit.Asset.Loan
 
-contract credit.pool_level_pay on entity asset.loan {
+contract credit.loan on entity asset.loan {
   term 2026-01..2056-01
   terms {
     principal = 1200000

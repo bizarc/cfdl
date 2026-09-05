@@ -6,9 +6,9 @@ time calendar monthly from 2026-01 for 361
 // FIX: what an Actual/360 loan document says is the compiling pairing —
 // strike the payment on `30/360`, accrue interest on `act/360`.
 
-entity asset loan : Credit.Asset.LoanPool
+entity asset loan : Credit.Asset.Loan
 
-contract credit.pool_level_pay on entity asset.loan {
+contract credit.loan on entity asset.loan {
   term 2026-01..2056-01
   terms {
     principal = 1200000

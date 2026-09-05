@@ -1,6 +1,6 @@
 {
   "results_version": "0.13",
-  "model_hash": "35116594d0b97b4ca8d3c182e80928545d6b5b6cc32a53ce083c219879bbdb7f",
+  "model_hash": "9ead9904afe322e801e2c610971e7319d185f5c25c7a18f903245d02fd354c75",
   "ledger_hash": "46b6d590fbd6c32b96666efadcf76c5c18c70d2cca6389095c9085465b271af2",
   "engine": {
     "name": "cfdl-engine",
@@ -1089,42 +1089,42 @@
     "lineage": {
       "domain.credit.collections": {
         "numerator_streams": [
-          "credit.pool.interest.*",
-          "credit.pool.sched_principal.*",
-          "credit.pool.prepay.*",
-          "credit.pool.bullet.*",
-          "credit.pool.recoveries.*",
-          "credit.pool.penalty.*"
+          "credit.loan.interest.*",
+          "credit.loan.sched_principal.*",
+          "credit.loan.prepay.*",
+          "credit.loan.bullet.*",
+          "credit.loan.recoveries.*",
+          "credit.loan.penalty.*"
         ],
         "denominator_streams": [],
         "formula": "sum(numerator_streams)"
       },
       "domain.credit.interest": {
         "numerator_streams": [
-          "credit.pool.interest.*"
+          "credit.loan.interest.*"
         ],
         "denominator_streams": [],
         "formula": "sum(numerator_streams)"
       },
       "domain.credit.penalties": {
         "numerator_streams": [
-          "credit.pool.penalty.*"
+          "credit.loan.penalty.*"
         ],
         "denominator_streams": [],
         "formula": "sum(numerator_streams)"
       },
       "domain.credit.principal": {
         "numerator_streams": [
-          "credit.pool.sched_principal.*",
-          "credit.pool.prepay.*",
-          "credit.pool.bullet.*"
+          "credit.loan.sched_principal.*",
+          "credit.loan.prepay.*",
+          "credit.loan.bullet.*"
         ],
         "denominator_streams": [],
         "formula": "sum(numerator_streams)"
       },
       "domain.credit.recoveries": {
         "numerator_streams": [
-          "credit.pool.recoveries.*"
+          "credit.loan.recoveries.*"
         ],
         "denominator_streams": [],
         "formula": "sum(numerator_streams)"
@@ -2369,7 +2369,7 @@
       {
         "symbol": "asset.trust",
         "family": "asset",
-        "type": "Credit.Asset.LoanPool"
+        "type": "Credit.Asset.Loan"
       },
       {
         "symbol": "party.certificate",

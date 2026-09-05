@@ -223,6 +223,22 @@ are conditions the loan is in, which is why neither is spelled as the event \
 that starts it. Delinquency BUCKETS (30-59, 60-89, 90+) are readings of the \
 `days_past_due` field, not states."""
 
+# A LOAN THAT IS PAID OFF OR REPURCHASED OWES NOTHING (docs/40 §3, stage 6).
+# `balance` names the field ROLE the loan's rules fill — the level-pay
+# balance and its lagged twin, the interest-only survival factor — so one
+# entry action ends the cash without naming an instance's field. A clean-up
+# call REPURCHASES the remaining loans: a model writes one status and the
+# collateral is gone from the next period.
+[[lifecycles.entry_actions]]
+state = "repurchased"
+description = "The claim is extinguished: every stream the loan lowers reads zero from the next period."
+actions = [{ set = "balance", value = "0" }]
+
+[[lifecycles.entry_actions]]
+state = "prepaid"
+description = "Paid off in full: every stream the loan lowers reads zero from the next period."
+actions = [{ set = "balance", value = "0" }]
+
 [[lifecycles.transitions]]
 from = "current"
 to = "delinquent"
@@ -301,13 +317,29 @@ to = "repurchased"
 # lender's role is the note HOLDER and the borrowers are the obligors behind
 # the pool — many, unnamed, so the role is unbound. Abstract: a model declares
 # one of the shapes below, never the pool itself.
+# ---------------------------------------------------------------------------
+# THE LOAN (docs/42 §3.8). One type. A loan is the agreement; a pool of loans
+# is a container the modeller names — `Container.SPV`, or one called Pool —
+# and its balance is the fold of its members' (docs/42 §3.4). A loan written
+# with prepayment, default, severity and recovery RATES is a representative
+# loan standing for many; a tape of actual loans is many contracts, each on
+# its own entity, folded by the container. Both are `credit.loan`.
+#
+# The repayment pattern is the master's `amortization` term — `level_pay`
+# (the default), `interest_only` or `bullet` — and the coupon is fixed
+# (`interest_rate`) or floating (`index_curve` + `margin`). The lowering
+# rules select on those terms (docs/07 §6.5), so no type is named after a
+# pattern. A floating level-pay loan has no row and is refused (E1385).
+# ---------------------------------------------------------------------------
 [[contracts]]
-type_id = "Credit.Contract.Pool"
+type_id = "Credit.Contract.Loan"
 refines = "Contract.Debt"
+contract_name = "credit.loan"
 subject_family = "asset"
-abstract = true
-description = "A pool of amortizing loans held as collateral: balance, rate, term, and the prepayment, default, severity and servicing assumptions every shape shares."
+description = "A loan, or a representative loan standing for a pool of them: balance, coupon, term and repayment pattern, with the prepayment, default, severity and servicing assumptions its cash follows."
 
+# The subject is the asset the holder owns; the borrower is the pool's many
+# obligors, or one — unbound either way.
 [[contracts.roles]]
 name = "holder"
 refines = "lender"
@@ -321,14 +353,14 @@ name = "principal"
 field_type = "decimal"
 required = true
 one_of = "amount"
-description = "The pool's balance at the cut-off — what the notes are backed by."
+description = "The balance at the model's start — what is owed when the model opens. A loan that funds inside the run states the amount it funds for."
 
 [[contracts.fields]]
 name = "term_months"
 field_type = "integer"
 required = true
 unit = "months"
-description = "Remaining amortization term of the loans, in months."
+description = "Remaining term, in months."
 
 [[contracts.fields]]
 name = "cpr"
@@ -362,7 +394,7 @@ description = "Absolute prepayment speed: a constant fraction of the original ba
 name = "age_months"
 field_type = "integer"
 unit = "months"
-description = "Weighted average age of the pool at closing; seasons the PSA and SDA curves."
+description = "Age at the model's start, in months; seasons the PSA and SDA curves. A representative loan carries the pool's weighted average."
 
 [[contracts.fields]]
 name = "severity"
@@ -388,113 +420,41 @@ field_type = "decimal"
 unit = "ratio"
 description = "Flat penalty rate on voluntary prepayments."
 
-[[contracts]]
-type_id = "Credit.Contract.LevelPayPool"
-refines = "Credit.Contract.Pool"
-contract_name = "credit.pool_level_pay"
-subject_family = "asset"
-parties = ["holder"]
-description = "Amortizing pool with prepayment, default, severity and recovery lag."
-
-
-[[contracts.roles]]
-name = "borrower"
-unbound = true
+[[contracts.fields]]
+name = "amortization"
+field_type = "string"
+description = "The repayment pattern: level_pay (the default), interest_only, or bullet — interest paid on schedule and the principal at maturity. The lowering rules select on it."
 
 [[contracts.fields]]
 name = "interest_rate"
 field_type = "decimal"
-required = true
 unit = "ratio"
 one_of = "interest"
-description = "Annual note rate of the loans."
-
-[[contracts.lines]]
-name = "principal"
-
-[[contracts.lines]]
-name = "prepayment"
-
-[[contracts.lines]]
-name = "recovery"
-
-[[contracts.lines]]
-name = "servicing"
-
-[[contracts.lines]]
-name = "penalty"
-
-[[contracts]]
-type_id = "Credit.Contract.InterestOnlyPool"
-refines = "Credit.Contract.Pool"
-contract_name = "credit.pool_io_bullet"
-subject_family = "asset"
-parties = ["holder"]
-
-[[contracts.roles]]
-name = "borrower"
-unbound = true
-
-[[contracts.fields]]
-name = "interest_rate"
-field_type = "decimal"
-required = true
-unit = "ratio"
-one_of = "interest"
-description = "Annual note rate of the loans."
-
-[[contracts.lines]]
-name = "prepayment"
-
-[[contracts.lines]]
-name = "principal"
-
-[[contracts.lines]]
-name = "recovery"
-
-[[contracts.lines]]
-name = "servicing"
-
-[[contracts.lines]]
-name = "penalty"
-
-[[contracts]]
-type_id = "Credit.Contract.FloatingInterestOnlyPool"
-refines = "Credit.Contract.Pool"
-contract_name = "credit.pool_float_io_bullet"
-subject_family = "asset"
-parties = ["holder"]
-description = "Coupon resets off a declared reference rather than being fixed at origination."
-
-
-[[contracts.roles]]
-name = "borrower"
-unbound = true
+description = "Annual note rate, when the coupon is fixed."
 
 [[contracts.fields]]
 name = "index_curve"
 field_type = "string"
-required = true
 one_of = "interest"
-description = "The declared curve the coupon resets off."
+description = "The declared curve a floating coupon resets off, with `margin`. Floating coupons are interest-only or bullet: a floating level-pay schedule has no closed form."
 
 [[contracts.fields]]
 name = "rate_floor"
 field_type = "decimal"
 unit = "ratio"
-description = "Coupon floor."
+description = "Coupon floor, on a floating coupon."
 
 [[contracts.fields]]
 name = "rate_cap"
 field_type = "decimal"
 unit = "ratio"
-description = "Coupon cap."
-
-[[contracts.lines]]
-name = "prepayment"
+description = "Coupon cap, on a floating coupon."
 
 [[contracts.lines]]
 name = "principal"
+
+[[contracts.lines]]
+name = "prepayment"
 
 [[contracts.lines]]
 name = "recovery"

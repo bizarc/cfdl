@@ -9,13 +9,14 @@ curve sofr linear {
   2027-01: 0.038
 }
 
-entity asset buyer : Credit.Asset.LoanPool
+entity asset buyer : Credit.Asset.Loan
 
 // Small floating IO pool: SOFR + 300, floor 7.25% (binds late), 12-month
 // bullet, prepay/default/severity with a 3-month recovery lag.
-contract credit.pool_float_io_bullet.smoke on entity asset.buyer {
+contract credit.loan.smoke on entity asset.buyer {
   term 2026-01..2027-03
   terms {
+    amortization = "interest_only"
     principal = 1200000
     index_curve = "sofr"
     margin = 0.03

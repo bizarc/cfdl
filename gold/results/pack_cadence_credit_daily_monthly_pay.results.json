@@ -1,7 +1,7 @@
 {
   "results_version": "0.13",
-  "model_hash": "b8125c6604d4e3907b02120e3a27a762566137b6fc7227695bd1b438fb4b933f",
-  "ledger_hash": "6aa4dcc9e64a33fc256d179e93a682396ec4ffaf41d91b795cf6e532e7755873",
+  "model_hash": "4e5f1be7dc5575e1d19ac2f0a13cc82499e2971dec1f82d8a72de31324cbc29b",
+  "ledger_hash": "3c7e19328aa2aa94eff78d17cf0ee1b963567e1bb7c47d4c1e80c17c3c2da2a0",
   "engine": {
     "name": "cfdl-engine",
     "version": "0.9.0"
@@ -10,12 +10,12 @@
   "inputs": {
     "streams": [
       {
-        "contract": "credit.pool_level_pay.book",
+        "contract": "credit.loan.book",
         "defaults_applied": [
           "age_months",
           "sda_speed"
         ],
-        "stream": "credit.pool.interest.book",
+        "stream": "credit.loan.interest.book",
         "terms": {
           "age_months": "0",
           "cdr": "0.03",
@@ -25,14 +25,14 @@
         }
       },
       {
-        "contract": "credit.pool_level_pay.book",
+        "contract": "credit.loan.book",
         "defaults_applied": [
           "abs_speed",
           "age_months",
           "prepay_penalty_rate",
           "psa_speed"
         ],
-        "stream": "credit.pool.penalty.book",
+        "stream": "credit.loan.penalty.book",
         "terms": {
           "abs_speed": "0",
           "age_months": "0",
@@ -44,13 +44,13 @@
         }
       },
       {
-        "contract": "credit.pool_level_pay.book",
+        "contract": "credit.loan.book",
         "defaults_applied": [
           "abs_speed",
           "age_months",
           "psa_speed"
         ],
-        "stream": "credit.pool.prepay.book",
+        "stream": "credit.loan.prepay.book",
         "terms": {
           "abs_speed": "0",
           "age_months": "0",
@@ -61,12 +61,12 @@
         }
       },
       {
-        "contract": "credit.pool_level_pay.book",
+        "contract": "credit.loan.book",
         "defaults_applied": [
           "age_months",
           "sda_speed"
         ],
-        "stream": "credit.pool.recoveries.book",
+        "stream": "credit.loan.recoveries.book",
         "terms": {
           "age_months": "0",
           "cdr": "0.03",
@@ -77,12 +77,12 @@
         }
       },
       {
-        "contract": "credit.pool_level_pay.book",
+        "contract": "credit.loan.book",
         "defaults_applied": [
           "age_months",
           "sda_speed"
         ],
-        "stream": "credit.pool.sched_principal.book",
+        "stream": "credit.loan.sched_principal.book",
         "terms": {
           "age_months": "0",
           "cdr": "0.03",
@@ -92,13 +92,13 @@
         }
       },
       {
-        "contract": "credit.pool_level_pay.book",
+        "contract": "credit.loan.book",
         "defaults_applied": [
           "age_months",
           "sda_speed",
           "servicing_fee"
         ],
-        "stream": "credit.pool.servicing.book",
+        "stream": "credit.loan.servicing.book",
         "terms": {
           "age_months": "0",
           "cdr": "0.03",
@@ -127,33 +127,33 @@
       "model.wal_years": 1.371948,
       "run.annual_discount_rate": 0.1,
       "run.periods_per_year": 365.0,
-      "stream.credit.pool.interest.book.total": {
+      "stream.credit.loan.interest.book.total": {
         "amount": 100083.352406,
         "currency": "USD"
       },
-      "stream.credit.pool.penalty.book.total": {
+      "stream.credit.loan.penalty.book.total": {
         "amount": 0.0,
         "currency": "USD"
       },
-      "stream.credit.pool.prepay.book.total": {
+      "stream.credit.loan.prepay.book.total": {
         "amount": 166813.820421,
         "currency": "USD"
       },
-      "stream.credit.pool.recoveries.book.total": {
+      "stream.credit.loan.recoveries.book.total": {
         "amount": 18378.836963,
         "currency": "USD"
       },
-      "stream.credit.pool.sched_principal.book.total": {
+      "stream.credit.loan.sched_principal.book.total": {
         "amount": 982313.983332,
         "currency": "USD"
       },
-      "stream.credit.pool.servicing.book.total": {
+      "stream.credit.loan.servicing.book.total": {
         "amount": 0.0,
         "currency": "USD"
       }
     },
     "series": {
-      "asset.buyer.credit_level_pay_balance_book": {
+      "asset.buyer.credit_loan_balance_book": {
         "index": {
           "calendar": "daily",
           "start": "2025-01-01",
@@ -1348,7 +1348,7 @@
           0.0
         ]
       },
-      "asset.buyer.credit_level_pay_balance_lag_book": {
+      "asset.buyer.credit_loan_balance_lag_book": {
         "index": {
           "calendar": "daily",
           "start": "2025-01-01",
@@ -56021,7 +56021,7 @@
           }
         ]
       },
-      "stream.credit.pool.interest.book": {
+      "stream.credit.loan.interest.book": {
         "index": {
           "calendar": "daily",
           "start": "2025-01-01",
@@ -56030,7 +56030,7 @@
         "offset": 1.0,
         "entity": "asset.buyer",
         "category": "operating.collection.interest",
-        "contract": "credit.pool_level_pay.book",
+        "contract": "credit.loan.book",
         "line": "interest",
         "values": [
           {
@@ -60779,7 +60779,7 @@
           }
         ]
       },
-      "stream.credit.pool.penalty.book": {
+      "stream.credit.loan.penalty.book": {
         "index": {
           "calendar": "daily",
           "start": "2025-01-01",
@@ -60788,7 +60788,7 @@
         "offset": 1.0,
         "entity": "asset.buyer",
         "category": "operating.collection.penalty",
-        "contract": "credit.pool_level_pay.book",
+        "contract": "credit.loan.book",
         "line": "penalty",
         "values": [
           {
@@ -65537,7 +65537,7 @@
           }
         ]
       },
-      "stream.credit.pool.prepay.book": {
+      "stream.credit.loan.prepay.book": {
         "index": {
           "calendar": "daily",
           "start": "2025-01-01",
@@ -65546,7 +65546,7 @@
         "offset": 1.0,
         "entity": "asset.buyer",
         "category": "operating.collection.prepayment",
-        "contract": "credit.pool_level_pay.book",
+        "contract": "credit.loan.book",
         "line": "prepayment",
         "values": [
           {
@@ -70295,7 +70295,7 @@
           }
         ]
       },
-      "stream.credit.pool.recoveries.book": {
+      "stream.credit.loan.recoveries.book": {
         "index": {
           "calendar": "daily",
           "start": "2025-01-01",
@@ -70304,7 +70304,7 @@
         "offset": 1.0,
         "entity": "asset.buyer",
         "category": "operating.collection.recovery",
-        "contract": "credit.pool_level_pay.book",
+        "contract": "credit.loan.book",
         "line": "recovery",
         "values": [
           {
@@ -75053,7 +75053,7 @@
           }
         ]
       },
-      "stream.credit.pool.sched_principal.book": {
+      "stream.credit.loan.sched_principal.book": {
         "index": {
           "calendar": "daily",
           "start": "2025-01-01",
@@ -75062,7 +75062,7 @@
         "offset": 1.0,
         "entity": "asset.buyer",
         "category": "operating.collection.principal",
-        "contract": "credit.pool_level_pay.book",
+        "contract": "credit.loan.book",
         "line": "principal",
         "values": [
           {
@@ -79811,7 +79811,7 @@
           }
         ]
       },
-      "stream.credit.pool.servicing.book": {
+      "stream.credit.loan.servicing.book": {
         "index": {
           "calendar": "daily",
           "start": "2025-01-01",
@@ -79820,7 +79820,7 @@
         "offset": 1.0,
         "entity": "asset.buyer",
         "category": "operating.expense.servicing",
-        "contract": "credit.pool_level_pay.book",
+        "contract": "credit.loan.book",
         "line": "servicing",
         "values": [
           {
@@ -84835,7 +84835,7 @@
             }
           ]
         },
-        "stream.credit.pool.interest.book": {
+        "stream.credit.loan.interest.book": {
           "index": {
             "calendar": "annual",
             "start": "2025-01-01",
@@ -84860,7 +84860,7 @@
             }
           ]
         },
-        "stream.credit.pool.penalty.book": {
+        "stream.credit.loan.penalty.book": {
           "index": {
             "calendar": "annual",
             "start": "2025-01-01",
@@ -84885,7 +84885,7 @@
             }
           ]
         },
-        "stream.credit.pool.prepay.book": {
+        "stream.credit.loan.prepay.book": {
           "index": {
             "calendar": "annual",
             "start": "2025-01-01",
@@ -84910,7 +84910,7 @@
             }
           ]
         },
-        "stream.credit.pool.recoveries.book": {
+        "stream.credit.loan.recoveries.book": {
           "index": {
             "calendar": "annual",
             "start": "2025-01-01",
@@ -84935,7 +84935,7 @@
             }
           ]
         },
-        "stream.credit.pool.sched_principal.book": {
+        "stream.credit.loan.sched_principal.book": {
           "index": {
             "calendar": "annual",
             "start": "2025-01-01",
@@ -84960,7 +84960,7 @@
             }
           ]
         },
-        "stream.credit.pool.servicing.book": {
+        "stream.credit.loan.servicing.book": {
           "index": {
             "calendar": "annual",
             "start": "2025-01-01",
@@ -90951,12 +90951,12 @@
             ],
             "total": 1267589.993116,
             "streams": [
-              "credit.pool.interest.book",
-              "credit.pool.penalty.book",
-              "credit.pool.prepay.book",
-              "credit.pool.recoveries.book",
-              "credit.pool.sched_principal.book",
-              "credit.pool.servicing.book"
+              "credit.loan.interest.book",
+              "credit.loan.penalty.book",
+              "credit.loan.prepay.book",
+              "credit.loan.recoveries.book",
+              "credit.loan.sched_principal.book",
+              "credit.loan.servicing.book"
             ]
           }
         ],
@@ -90973,24 +90973,24 @@
       {
         "symbol": "asset.buyer",
         "family": "asset",
-        "type": "Credit.Asset.LoanPool"
+        "type": "Credit.Asset.Loan"
       }
     ],
     "contracts": [
       {
-        "name": "credit.pool_level_pay.book",
-        "type": "Credit.Contract.LevelPayPool",
+        "name": "credit.loan.book",
+        "type": "Credit.Contract.Loan",
         "master": "Contract.Debt",
-        "contract_name": "credit.pool_level_pay",
+        "contract_name": "credit.loan",
         "instance": "book",
         "subject": "asset.buyer",
         "streams": [
-          "credit.pool.interest.book",
-          "credit.pool.penalty.book",
-          "credit.pool.prepay.book",
-          "credit.pool.recoveries.book",
-          "credit.pool.sched_principal.book",
-          "credit.pool.servicing.book"
+          "credit.loan.interest.book",
+          "credit.loan.penalty.book",
+          "credit.loan.prepay.book",
+          "credit.loan.recoveries.book",
+          "credit.loan.sched_principal.book",
+          "credit.loan.servicing.book"
         ]
       }
     ]

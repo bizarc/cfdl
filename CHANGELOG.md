@@ -8,6 +8,20 @@ This project follows Semantic Versioning: https://semver.org/
 
 ## [Unreleased]
 
+**One `credit.loan`.** The credit pack's three pool types collapse into one
+loan type, `credit.loan` (`Credit.Contract.Loan`, refining `Contract.Debt`):
+the repayment pattern is the master's `amortization` term (`level_pay`, the
+default; `interest_only`; `bullet`) and the coupon is fixed or floating by
+whether `interest_rate` or `index_curve` is stated. A pool of loans is a
+container the modeller names, holding loans or one representative loan, and
+its balance is the fold of its members' (`docs/42` §3.8). Lowering rules
+gain selection by term — `[rules.when]`, `when_stated`, `when_unstated`
+(`docs/07` §6.4) — and the compiler checks per contract that every line the
+type produces has a rule whose selection admits the stated terms
+(`E1385`). Streams are `credit.loan.*`; the loan machine extinguishes the
+balance on `repurchased` and `prepaid`; subjects are `Credit.Asset.Loan`.
+Every credit benchmark restated on the new names; 46/46 unchanged.
+
 **The relation folds balances (`docs/42` §3.4, second PR).** Every
 ancestor of an entity that declares a claim carries the sum of its members'
 claims of that name, opening and closing, through `part of`:
@@ -36,8 +50,8 @@ moves an account, rather than publishing zeros. Not yet: the relation
 fold, the pack side, retirement as a write-off.
 
 **The level-pay pool's balance is its state (`docs/40` §3, stage 6
-remainder).** `credit.pool_level_pay` carries one field-only rule for its
-opening balance — `credit_level_pay_balance_<instance>`, filling the
+remainder).** `credit.loan` carries one field-only rule for its
+opening balance — `credit_loan_balance_<instance>`, filling the
 master's `balance` role — rolled forward each payment period as an
 amortization schedule's row (closing = opening less the level-pay principal
 fraction, less defaults and prepayments drawn additively from the opening
@@ -2507,7 +2521,7 @@ have shown them.
 
 - **`domain.credit.wal_years` omitted unsuffixed pools.** `wal_years` matched
   `stream.<prefix>.` against series keys, which carry no `.total`, so a bare
-  `credit.pool.prepay` failed the prefix test. It selects sched_principal,
+  `credit.loan.prepay` failed the prefix test. It selects sched_principal,
   prepay, bullet and recoveries this way and goldens ship all four bare, so an
   unsuffixed pool reported a weighted average life computed over a subset of its
   own principal. (`sum` reached the bare name too — but only because its keys

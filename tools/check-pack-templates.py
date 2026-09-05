@@ -21,7 +21,7 @@ import tomllib, pathlib, re, subprocess, tempfile, os, sys
 ENTITY = {'cre': 'entity asset tower : CRE.Asset.RealProperty',
           'opco': 'entity asset firm : OpCo.Asset.Enterprise',
           'energy': 'entity asset plant : Energy.Asset.GenerationFacility',
-          'credit': 'entity asset pool : Credit.Asset.LoanPool'}
+          'credit': 'entity asset pool : Credit.Asset.Loan'}
 CURVES = {'draws': '2026-01: 1000000\n  2027-01: 500000',
           'sofr': '2026-01: 0.05\n  2027-01: 0.045',
           'occupancy': '2026-01: 1.0'}

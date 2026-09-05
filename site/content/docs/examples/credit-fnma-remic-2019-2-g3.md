@@ -51,7 +51,7 @@ This case takes the 198% PSA column, the pricing speed.
 | | |
 |---|---|
 | Pack | `credit` |
-| Contract types | `credit.pool_level_pay` |
+| Contract types | `credit.loan` |
 | Language features | two waterfalls over one collateral, one for principal and one for interest; entity fields carrying class balances |
 | Conventions | PSA on a pool seasoned past the ramp, a servicing and guaranty strip, a stripped coupon, a notional interest-only class |
 
@@ -190,7 +190,7 @@ time calendar monthly from 2019-02 for 361
 // Reference: Prospectus Supplement dated 24 January 2019 to the REMIC
 // Prospectus dated 1 November 2018. See SOURCE.md.
 
-entity asset trust : Credit.Asset.LoanPool {
+entity asset trust : Credit.Asset.Loan {
   collateral_type = "residential"
 }
 
@@ -207,7 +207,7 @@ entity asset trust : Credit.Asset.LoanPool {
 // the model should say is "this pool prepays at 198% PSA", not "this pool
 // prepays at 11.88% CPR" — the second is a consequence, and it stops being true
 // the moment the seasoning changes.
-entity asset pool : Credit.Asset.LoanPool {
+entity asset pool : Credit.Asset.Loan {
   collateral_type = "residential"
   part of asset.trust
 
@@ -254,7 +254,7 @@ entity party residual : Credit.Party.Investor { name = "Classes R and RL" }
 // 5.00% pass-through rate is the servicing and guaranty strip, and it is
 // carried as `servicing_fee` so that what reaches the trust is 5.00% exactly —
 // which is what makes the AB and IO coupons add up below.
-contract credit.pool_level_pay.g3 on entity asset.pool {
+contract credit.loan.g3 on entity asset.pool {
   term 2019-02..2033-06
   terms {
     principal = 148372434
@@ -281,8 +281,8 @@ contract credit.pool_level_pay.g3 on entity asset.pool {
 waterfall g3.principal on entity asset.trust {
   schedule every month from 2019-02 to 2033-06
 
-  from series_sum("credit.pool.sched_principal.*", time.t, time.t)
-       + series_sum("credit.pool.prepay.*", time.t, time.t)
+  from series_sum("credit.loan.sched_principal.*", time.t, time.t)
+       + series_sum("credit.loan.prepay.*", time.t, time.t)
 
   pay ab_principal to party.ab_holders = remaining
 }
@@ -308,8 +308,8 @@ waterfall g3.interest on entity asset.trust {
   // interest line is gross, at the 5.451% mortgage coupon; the servicing and
   // guaranty strip is a separate outflow and is stored negative, so adding it
   // nets it off and leaves the 5.00% pass-through rate exactly.
-  from series_sum("credit.pool.interest.*", time.t, time.t)
-       + series_sum("credit.pool.servicing.*", time.t, time.t)
+  from series_sum("credit.loan.interest.*", time.t, time.t)
+       + series_sum("credit.loan.servicing.*", time.t, time.t)
 
   pay ab_interest to party.ab_holders = asset.ab.balance * (0.0325 / 12.0)
   pay io_interest to party.io_holders = asset.io.balance * (0.05 / 12.0)

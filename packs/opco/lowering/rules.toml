@@ -39,7 +39,7 @@
 #
 # A varying rate arrives through the term itself —
 # `growth_rate = curve_value("revenue_growth", time.date)` — the same
-# mechanism credit.pool_float_io_bullet uses for a floating index. The
+# mechanism `credit.loan` with a floating coupon uses for a floating index. The
 # `growth_curve`/`tax_rate_curve` twin terms that once selected a curve are
 # gone; a term may hold the expression.
 #

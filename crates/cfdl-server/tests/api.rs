@@ -75,7 +75,7 @@ async fn run_from_files() {
 async fn run_with_embedded_pack_metrics() {
     // A model using the credit pack resolves domain metrics from the embedded
     // registry (no packs directory).
-    let model = "version 0.1\nmodel \"p\"\nuse pack \"credit\" version \"0.1.0\"\ntime calendar monthly from 2026-01 for 6\nentity fund buyer\ncontract credit.pool_io_bullet.a on entity fund.buyer {\n  term 2026-01..2026-06\n  terms { principal = 1000000 interest_rate = 0.07 term_months = 6 }\n}\n";
+    let model = "version 0.1\nmodel \"p\"\nuse pack \"credit\" version \"0.1.0\"\ntime calendar monthly from 2026-01 for 6\nentity fund buyer\ncontract credit.loan.a on entity fund.buyer {\n  term 2026-01..2026-06\n  terms { principal = 1000000 interest_rate = 0.07 term_months = 6 }\n}\n";
     let (status, body) = post(
         "/v1/run",
         json!({ "files": { "model.cfdl": model }, "rate": 0.08, "pack": "credit" }),

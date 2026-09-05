@@ -23,7 +23,7 @@ to it next.
 ### 1.1 Two calculations of one activity
 
 The credit pack's level-pay pool now carries a balance field
-(`credit_level_pay_balance_<instance>`, `docs/40` §3). It is rolled forward
+(`credit_loan_balance_<instance>`, `docs/40` §3). It is rolled forward
 each payment period from the contract's rates: opening, less the level-pay
 principal fraction, less defaults and prepayments drawn from the opening
 balance. The streams are computed from the same rates and read the balance.
@@ -287,8 +287,9 @@ design owes nothing to it.
 
 ### 4.1 The credit pack
 
-`credit.pool_level_pay`, `pool_io_bullet` and `pool_float_io_bullet` become
-representative loans, each carrying ONE account, `balance` (due — the
+`credit.loan` — one type since the pool types collapsed into it, its
+repayment pattern the `amortization` term — is a representative loan
+carrying ONE account, `balance` (due — the
 subject is the lender's side): init `principal`; lowered by scheduled
 principal, prepayments and recoveries (inflows); lowered by the loss
 (write-off) after `recovery_lag_months`; the interest-only families add

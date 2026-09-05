@@ -641,6 +641,48 @@ the model's calendar is `E2108_SCHEDULE_FINER_THAN_CALENDAR` — occurrences
 inside one period share that period's environment and cannot be told apart, so
 a pack cannot express what a model may not.
 
+### Selecting rules by a term's value
+
+A rule lowers every contract of its type unless it says otherwise. `when`
+narrows it to the contracts whose terms match, so one type carries the rows
+for each pattern an agreement can take without a type per pattern:
+
+```toml
+[[rules]]
+id = "credit_loan_level_pay_sched_principal"
+contract_name = "credit.loan"
+line = "principal"
+...
+[rules.when]
+amortization = "level_pay"
+
+[[rules]]
+id = "credit_loan_interest_only_bullet"
+contract_name = "credit.loan"
+line = "principal"
+...
+[rules.when]
+amortization = ["interest_only", "bullet"]
+```
+
+- `[rules.when]` is a table of term → value; a value may be a list, matching
+  any of them. The comparison reads the term as STATED on the contract, or
+  this rule's own `[rules.defaults]` entry for it when unstated — so a
+  level-pay row that defaults `amortization = "level_pay"` matches a
+  contract that says nothing, and the interest-only row does not.
+- `when_stated = ["index_curve"]` applies the rule only when the contract
+  writes the term; `when_unstated` only when it does not. This is how a
+  floating coupon's row and a fixed coupon's row share a type: the coupon
+  is fixed when `interest_rate` is stated and floating when `index_curve`
+  is.
+- Every term a rule selects on is a field of the type (the load check that
+  covers a rule's placeholders covers these too).
+- Selection makes line coverage a fact about the INSTANCE: load still checks
+  that each line has a rule somewhere, and the compiler checks that each
+  line the type must produce has a rule whose selection admits this
+  contract's terms — `E1385_LINE_HAS_NO_RULE_FOR_TERMS` names the line and
+  the combination the pack has no row for (a floating level-pay loan).
+
 ### Currency
 
 Omit `currency` from a lowering rule. An empty value inherits the model's
@@ -1275,7 +1317,7 @@ formula = "domain.cre.noi / domain.cre.debt_service"
 id = "domain.credit.wal_years"
 kind = "number"                  # wal_years requires kind = "number"
 op = "wal_years"
-numerator_streams = ["credit.pool.sched_principal.*", "credit.pool.prepay.*"]
+numerator_streams = ["credit.loan.sched_principal.*", "credit.loan.prepay.*"]
 formula = "wal_years(numerator_streams)"   # sum(((t + offset)/ppy) * v) / sum(v)
 # weighted average life in years of the matched streams' positive per-period
 # amounts: sum(t/ppy * v) / sum(v), using the engine's run.periods_per_year;

@@ -545,7 +545,7 @@ opposite of what `docs/07` §6.2 says a pack is for.
 Belongs with section 4 (credit pack).
 
 `domain.credit.wal_years` folds the pool's own streams —
-`credit.pool.sched_principal.*`, `prepay.*`, `bullet.*`, `recoveries.*` — so it
+`credit.loan.sched_principal.*`, `prepay.*`, `bullet.*`, `recoveries.*` — so it
 answers "when does the collateral come back". A structured deal publishes the
 question one level up: when does *each class* come back. There is no metric for
 that, and a waterfall step's stream cannot be reached by one, because
@@ -2836,15 +2836,15 @@ a trigger or a call will need the same field, and every one will restate the
 pack.
 
 **The shape**, in two halves that are separately useful — **the first is
-built for `credit.pool_level_pay`** (4 September 2026: `credit_level_pay_
+built for `credit.loan`** (4 September 2026: `credit_level_pay_
 balance_<instance>` fills the `balance` role and every stream reads it; the
 interest-only families follow), the second is open:
 
-1. **The pack publishes the balance as a field.** `credit.pool_level_pay` and
+1. **The pack publishes the balance as a field.** `credit.loan` and
    its siblings declare a rule field `credit_<family>_balance{{contract.
    suffix_ident}}` beside the survival fraction — the opening balance the
    rules already compute, carried as state so a guard can read
-   `asset.p01.credit_level_pay_balance_p01` by declared name (the discipline
+   `asset.p01.credit_loan_balance_p01` by declared name (the discipline
    `docs/28` §4 and the withdrawn selector-validation entry both land on: a
    guard reads a name, never a pattern).
 2. **A container can fold its members' fields.** **Built for accounts, 4

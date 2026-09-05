@@ -43,7 +43,7 @@ time calendar monthly from 2017-01 for 71
 // speeds are this model with one term changed.
 
 
-entity asset trust : Credit.Asset.LoanPool {
+entity asset trust : Credit.Asset.Loan {
   collateral_type = "auto"
 
   // The pool after this period's collections. Period 0 is the
@@ -264,69 +264,69 @@ entity asset trust : Credit.Asset.LoanPool {
 
 }
 
-entity asset p01 : Credit.Asset.LoanPool {
+entity asset p01 : Credit.Asset.Loan {
   collateral_type = "auto"
   part of asset.trust
 }
 
-entity asset p02 : Credit.Asset.LoanPool {
+entity asset p02 : Credit.Asset.Loan {
   collateral_type = "auto"
   part of asset.trust
 }
 
-entity asset p03 : Credit.Asset.LoanPool {
+entity asset p03 : Credit.Asset.Loan {
   collateral_type = "auto"
   part of asset.trust
 }
 
-entity asset p04 : Credit.Asset.LoanPool {
+entity asset p04 : Credit.Asset.Loan {
   collateral_type = "auto"
   part of asset.trust
 }
 
-entity asset p05 : Credit.Asset.LoanPool {
+entity asset p05 : Credit.Asset.Loan {
   collateral_type = "auto"
   part of asset.trust
 }
 
-entity asset p06 : Credit.Asset.LoanPool {
+entity asset p06 : Credit.Asset.Loan {
   collateral_type = "auto"
   part of asset.trust
 }
 
-entity asset p07 : Credit.Asset.LoanPool {
+entity asset p07 : Credit.Asset.Loan {
   collateral_type = "auto"
   part of asset.trust
 }
 
-entity asset p08 : Credit.Asset.LoanPool {
+entity asset p08 : Credit.Asset.Loan {
   collateral_type = "auto"
   part of asset.trust
 }
 
-entity asset p09 : Credit.Asset.LoanPool {
+entity asset p09 : Credit.Asset.Loan {
   collateral_type = "auto"
   part of asset.trust
 }
 
-entity asset p10 : Credit.Asset.LoanPool {
+entity asset p10 : Credit.Asset.Loan {
   collateral_type = "auto"
   part of asset.trust
 }
 
-entity asset p11 : Credit.Asset.LoanPool {
+entity asset p11 : Credit.Asset.Loan {
   collateral_type = "auto"
   part of asset.trust
 }
 
-entity asset p12 : Credit.Asset.LoanPool {
+entity asset p12 : Credit.Asset.Loan {
   collateral_type = "auto"
   part of asset.trust
 }
 
 
 
-contract credit.pool_level_pay.p01 on entity asset.p01 {
+contract credit.loan.p01 on entity asset.p01 {
   term 2017-02..2017-09
   terms {
     principal = 999357.6
@@ -338,7 +338,7 @@ contract credit.pool_level_pay.p01 on entity asset.p01 {
   }
 }
 
-contract credit.pool_level_pay.p02 on entity asset.p02 {
+contract credit.loan.p02 on entity asset.p02 {
   term 2017-02..2018-08
   terms {
     principal = 18401017.06
@@ -350,7 +350,7 @@ contract credit.pool_level_pay.p02 on entity asset.p02 {
   }
 }
 
-contract credit.pool_level_pay.p03 on entity asset.p03 {
+contract credit.loan.p03 on entity asset.p03 {
   term 2017-02..2019-04
   terms {
     principal = 3063342.92
@@ -362,7 +362,7 @@ contract credit.pool_level_pay.p03 on entity asset.p03 {
   }
 }
 
-contract credit.pool_level_pay.p04 on entity asset.p04 {
+contract credit.loan.p04 on entity asset.p04 {
   term 2017-02..2020-11
   terms {
     principal = 2629247.98
@@ -374,7 +374,7 @@ contract credit.pool_level_pay.p04 on entity asset.p04 {
   }
 }
 
-contract credit.pool_level_pay.p05 on entity asset.p05 {
+contract credit.loan.p05 on entity asset.p05 {
   term 2017-02..2021-11
   terms {
     principal = 21301021.93
@@ -386,7 +386,7 @@ contract credit.pool_level_pay.p05 on entity asset.p05 {
   }
 }
 
-contract credit.pool_level_pay.p06 on entity asset.p06 {
+contract credit.loan.p06 on entity asset.p06 {
   term 2017-02..2022-11
   terms {
     principal = 285432214.08
@@ -398,7 +398,7 @@ contract credit.pool_level_pay.p06 on entity asset.p06 {
   }
 }
 
-contract credit.pool_level_pay.p07 on entity asset.p07 {
+contract credit.loan.p07 on entity asset.p07 {
   term 2017-01..2017-08
   terms {
     principal = 2076350.36
@@ -410,7 +410,7 @@ contract credit.pool_level_pay.p07 on entity asset.p07 {
   }
 }
 
-contract credit.pool_level_pay.p08 on entity asset.p08 {
+contract credit.loan.p08 on entity asset.p08 {
   term 2017-01..2018-07
   terms {
     principal = 37654758.33
@@ -422,7 +422,7 @@ contract credit.pool_level_pay.p08 on entity asset.p08 {
   }
 }
 
-contract credit.pool_level_pay.p09 on entity asset.p09 {
+contract credit.loan.p09 on entity asset.p09 {
   term 2017-01..2019-03
   terms {
     principal = 9848795.79
@@ -434,7 +434,7 @@ contract credit.pool_level_pay.p09 on entity asset.p09 {
   }
 }
 
-contract credit.pool_level_pay.p10 on entity asset.p10 {
+contract credit.loan.p10 on entity asset.p10 {
   term 2017-01..2020-10
   terms {
     principal = 4675311.33
@@ -446,7 +446,7 @@ contract credit.pool_level_pay.p10 on entity asset.p10 {
   }
 }
 
-contract credit.pool_level_pay.p11 on entity asset.p11 {
+contract credit.loan.p11 on entity asset.p11 {
   term 2017-01..2021-10
   terms {
     principal = 43859779.2
@@ -458,7 +458,7 @@ contract credit.pool_level_pay.p11 on entity asset.p11 {
   }
 }
 
-contract credit.pool_level_pay.p12 on entity asset.p12 {
+contract credit.loan.p12 on entity asset.p12 {
   term 2017-01..2022-10
   terms {
     principal = 582028732.7
@@ -529,15 +529,15 @@ waterfall notes.distribution on entity asset.trust {
   // Collections for this distribution, and at the first one the January
   // pools' extra month. The redemption price joins the pot on the
   // distribution the clean-up call is first available.
-  from series_sum("credit.pool.sched_principal.*", if(time.t == 1.0, 0.0, time.t), time.t)
-       + series_sum("credit.pool.prepay.*", if(time.t == 1.0, 0.0, time.t), time.t)
-       + series_sum("credit.pool.interest.*", if(time.t == 1.0, 0.0, time.t), time.t)
+  from series_sum("credit.loan.sched_principal.*", if(time.t == 1.0, 0.0, time.t), time.t)
+       + series_sum("credit.loan.prepay.*", if(time.t == 1.0, 0.0, time.t), time.t)
+       + series_sum("credit.loan.interest.*", if(time.t == 1.0, 0.0, time.t), time.t)
        + if(asset.trust.pool_bal <= 101196992.93 and asset.trust.pool_prior > 101196992.93, asset.trust.pool_bal, 0.0)
 
   //  1. the servicer. The pack carries the fee as a negative series on each
   //     pool, so the step is its sum with the sign turned round.
   pay servicing to party.servicer =
-        -(series_sum("credit.pool.servicing.*", if(time.t == 1.0, 0.0, time.t), time.t))
+        -(series_sum("credit.loan.servicing.*", if(time.t == 1.0, 0.0, time.t), time.t))
 
   //  2. the trustee, owner trustee, collateral agent and the asset
   //     representations reviewer, inside their annual caps.
