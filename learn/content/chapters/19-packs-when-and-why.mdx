@@ -31,7 +31,7 @@ contract cre.lease {
 }
 ```
 
-Three lines. What they replace, you can write yourself by now: the rent stream, its monthly schedule over the term, the amount from the base rent. The pack's lowering does exactly that — visibly, in the IR, as ordinary streams — so a contract is *shorthand you can audit*, not a black box. Richer contracts carry richer terms: `cre.lease_up` states an occupancy ramp (the chapter-9 idiom, as terms), `cre.permanent_debt` a full amortizing loan, `credit.pool_level_pay` a pool that expands into six streams — interest, scheduled principal, prepayments, recoveries, servicing.
+Three lines. What they replace, you can write yourself by now: the rent stream, its monthly schedule over the term, the amount from the base rent. The pack's lowering does exactly that — visibly, in the IR, as ordinary streams — so a contract is *shorthand you can audit*, not a black box. Richer contracts carry richer terms: `cre.lease_up` states an occupancy ramp (the chapter-9 idiom, as terms), `cre.permanent_debt` a full amortizing loan, `credit.loan` a pool that expands into six streams — interest, scheduled principal, prepayments, recoveries, servicing.
 
 **Domain validation.** The pack checks what the core language cannot know: a lease missing its base rent, an occupancy outside [0,1], an exit with no cap rate. Each is refused at compile, in domain vocabulary, before any number exists. Your deal is reviewed against the domain's checklist every time it compiles.
 

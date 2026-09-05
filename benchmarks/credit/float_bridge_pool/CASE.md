@@ -19,7 +19,7 @@ recreated independently of the model and compared month by month.
 | | |
 |---|---|
 | Pack | `credit` |
-| Contract types | `credit.pool_float_io_bullet`, `credit.purchase` |
+| Contract types | `credit.loan`, `credit.purchase` |
 | Language features | a declared `curve` read per period by `curve_value` with step interpolation |
 | Conventions | a coupon that resets rather than fixing at origination, a binding rate floor, a bullet maturity |
 

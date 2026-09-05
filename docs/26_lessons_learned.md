@@ -407,7 +407,7 @@ pasted in as `0.11361512828387077` — a term holds an expression, so state the
 quoted figure and the identity that converts it:
 
 ```cfdl
-contract credit.pool_level_pay on entity asset.pool {
+contract credit.loan on entity asset.pool {
   terms {
     cpr = 1 - pow(1 - 0.01, time.ppy)   // a 1% SMM pool
     cdr = 1 - pow(1 - 0.0005, time.ppy) // a 0.05% MDR pool

@@ -1312,6 +1312,46 @@ pub struct PackValidation {
 /// that decides what cash a contract produces. Validations were the outlier
 /// and no reason was ever recorded, so the field is gone and both callers
 /// share this.
+/// A `when` value: one literal, or any of several.
+#[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
+#[serde(untagged)]
+pub enum WhenValue {
+    One(String),
+    Any(Vec<String>),
+}
+
+impl WhenValue {
+    fn admits(&self, value: &str) -> bool {
+        match self {
+            WhenValue::One(v) => v == value,
+            WhenValue::Any(vs) => vs.iter().any(|v| v == value),
+        }
+    }
+}
+
+/// Does this rule lower a contract whose STATED terms are `terms` (term →
+/// value text)? Name matching is `matches_contract_name`; this is the
+/// selection by term value on top of it (`docs/07` §6.5).
+pub fn rule_applies_to_terms(rule: &LoweringRule, terms: &BTreeMap<String, String>) -> bool {
+    for (key, wanted) in &rule.when {
+        let value = terms
+            .get(key)
+            .cloned()
+            .or_else(|| rule.defaults.get(key).cloned());
+        match value {
+            Some(v) if wanted.admits(v.trim().trim_matches('"')) => {}
+            _ => return false,
+        }
+    }
+    if rule.when_stated.iter().any(|k| !terms.contains_key(k)) {
+        return false;
+    }
+    if rule.when_unstated.iter().any(|k| terms.contains_key(k)) {
+        return false;
+    }
+    true
+}
+
 pub fn matches_contract_name(declared: &str, contract_name: &str) -> bool {
     contract_name == declared
         || contract_name
@@ -1606,6 +1646,21 @@ pub struct LoweringRule {
     /// prefix), e.g. `"lease_up.months" = "18"`.
     #[serde(default)]
     pub defaults: BTreeMap<String, String>,
+    /// WHICH CONTRACTS OF THE TYPE THIS RULE LOWERS, by a term's value
+    /// (`docs/07` §6.5): `[rules.when] amortization = "level_pay"`. A rule
+    /// with no `when` lowers every contract of its type. A value may be a
+    /// list, matching any of them. Compared against the term as stated, or
+    /// this rule's own default for it when unstated — so one `credit.loan`
+    /// carries level-pay and interest-only rows without a type per pattern.
+    #[serde(default)]
+    pub when: BTreeMap<String, WhenValue>,
+    /// Terms that must be STATED on the contract for this rule to apply — a
+    /// floating coupon's rules apply when `index_curve` is written.
+    #[serde(default)]
+    pub when_stated: Vec<String>,
+    /// Terms that must NOT be stated — the fixed coupon's rules.
+    #[serde(default)]
+    pub when_unstated: Vec<String>,
     /// The unit each term is expressed in — `"credit_per_mwh" = "USD/MWh"`.
     ///
     /// A quantity without a stated dimension is a number that means whatever
@@ -3306,6 +3361,19 @@ fn validate_terms_against_ontology(
                     if !declared(&key) {
                         return Err(refuse(format!("rule '{}' reads term '{key}'", rule.id)));
                     }
+                }
+            }
+            for key in rule
+                .when
+                .keys()
+                .chain(rule.when_stated.iter())
+                .chain(rule.when_unstated.iter())
+            {
+                if !declared(key) {
+                    return Err(refuse(format!(
+                        "rule '{}' selects on term '{key}'",
+                        rule.id
+                    )));
                 }
             }
             for key in rule.defaults.keys().chain(rule.units.keys()) {
@@ -5240,6 +5308,9 @@ allocated = true
             field_from: String::new(),
             field_to: String::new(),
             defaults: BTreeMap::new(),
+            when: BTreeMap::new(),
+            when_stated: Vec::new(),
+            when_unstated: Vec::new(),
             units: BTreeMap::new(),
         };
         // Interest lowered, principal allocated, proceeds optional: one
@@ -5411,6 +5482,9 @@ refines = "Contract.Lease"
             field_from: String::new(),
             field_to: String::new(),
             defaults: BTreeMap::new(),
+            when: BTreeMap::new(),
+            when_stated: Vec::new(),
+            when_unstated: Vec::new(),
             units: BTreeMap::new(),
         };
         // Every typed contract needs its rule, so each call carries both.
@@ -5479,6 +5553,9 @@ refines = "Contract.Debt"
             schedule_to: "{{contract.term_end}}".to_string(),
             field_name: String::new(),
             field_role: None,
+            when: BTreeMap::new(),
+            when_stated: Vec::new(),
+            when_unstated: Vec::new(),
             field_init: String::new(),
             field_next: String::new(),
             field_every: String::new(),

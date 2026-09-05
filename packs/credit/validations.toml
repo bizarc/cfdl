@@ -17,13 +17,9 @@ code_prefix = "E9"
 # --- pool economics ---------------------------------------------------------
 
 [[validations]]
-contracts = [
-  "credit.pool_level_pay",
-  "credit.pool_io_bullet",
-  "credit.pool_float_io_bullet",
-]
+contract = "credit.loan"
 code = "E9001_CREDIT_INVALID_BALANCE"
-message = "Credit pool 'principal' must be greater than 0."
+message = "Credit loan 'principal' must be greater than 0."
 check = "term_number"
 term = "principal"
 when = "present"
@@ -31,9 +27,9 @@ on_invalid = "report"
 exclusive_min = 0.0
 
 [[validations]]
-contracts = ["credit.pool_level_pay", "credit.pool_io_bullet"]
+contract = "credit.loan"
 code = "E9002_CREDIT_INVALID_RATE"
-message = "Credit pool 'interest_rate' must be a non-negative annual rate."
+message = "Credit loan 'interest_rate' must be a non-negative annual rate."
 check = "term_number"
 term = "interest_rate"
 when = "present"
@@ -41,13 +37,9 @@ on_invalid = "report"
 min = 0.0
 
 [[validations]]
-contracts = [
-  "credit.pool_level_pay",
-  "credit.pool_io_bullet",
-  "credit.pool_float_io_bullet",
-]
+contract = "credit.loan"
 code = "E9003_CREDIT_INVALID_TERM_MONTHS"
-message = "Credit pool 'term_months' must be a whole number greater than 0."
+message = "Credit loan 'term_months' must be a whole number greater than 0."
 check = "term_number"
 term = "term_months"
 number = "integer"
@@ -58,11 +50,7 @@ exclusive_min = 0.0
 # --- prepayment, default, and loss ------------------------------------------
 
 [[validations]]
-contracts = [
-  "credit.pool_level_pay",
-  "credit.pool_io_bullet",
-  "credit.pool_float_io_bullet",
-]
+contract = "credit.loan"
 code = "E9010_CREDIT_INVALID_CPR"
 message = "Credit 'cpr' must be an annual rate between 0 and 1."
 check = "term_number"
@@ -73,11 +61,7 @@ min = 0.0
 max = 1.0
 
 [[validations]]
-contracts = [
-  "credit.pool_level_pay",
-  "credit.pool_io_bullet",
-  "credit.pool_float_io_bullet",
-]
+contract = "credit.loan"
 code = "E9011_CREDIT_INVALID_CDR"
 message = "Credit 'cdr' must be an annual rate between 0 and 1."
 check = "term_number"
@@ -88,11 +72,7 @@ min = 0.0
 max = 1.0
 
 [[validations]]
-contracts = [
-  "credit.pool_level_pay",
-  "credit.pool_io_bullet",
-  "credit.pool_float_io_bullet",
-]
+contract = "credit.loan"
 code = "E9012_CREDIT_INVALID_SEVERITY"
 message = "Credit 'severity' must be a fraction between 0 and 1."
 check = "term_number"
@@ -103,11 +83,7 @@ min = 0.0
 max = 1.0
 
 [[validations]]
-contracts = [
-  "credit.pool_level_pay",
-  "credit.pool_io_bullet",
-  "credit.pool_float_io_bullet",
-]
+contract = "credit.loan"
 code = "E9013_CREDIT_INVALID_RECOVERY_LAG"
 message = "Credit 'recovery_lag_months' must be a whole number of months, 0 or more."
 check = "term_number"
@@ -120,11 +96,7 @@ min = 0.0
 # --- servicing and penalties ------------------------------------------------
 
 [[validations]]
-contracts = [
-  "credit.pool_level_pay",
-  "credit.pool_io_bullet",
-  "credit.pool_float_io_bullet",
-]
+contract = "credit.loan"
 code = "E9014_CREDIT_INVALID_SERVICING_FEE"
 message = "Credit 'servicing_fee' must be an annual rate between 0 and 1."
 check = "term_number"
@@ -135,11 +107,7 @@ min = 0.0
 max = 1.0
 
 [[validations]]
-contracts = [
-  "credit.pool_level_pay",
-  "credit.pool_io_bullet",
-  "credit.pool_float_io_bullet",
-]
+contract = "credit.loan"
 code = "E9015_CREDIT_INVALID_PREPAY_PENALTY"
 message = "Credit 'prepay_penalty_rate' must be a rate between 0 and 1."
 check = "term_number"
@@ -154,7 +122,7 @@ max = 1.0
 # A floor above the cap would clamp every coupon to the floor, silently
 # producing a fixed-rate pool.
 [[validations]]
-contract = "credit.pool_float_io_bullet"
+contract = "credit.loan"
 code = "E9020_CREDIT_RATE_FLOOR_ABOVE_CAP"
 message = "Credit 'rate_floor' must be less than or equal to 'rate_cap'."
 check = "term_compare"
@@ -174,11 +142,7 @@ right = "rate_cap"
 # factor flips sign at a specific month with nothing to notice it.
 
 [[validations]]
-contracts = [
-  "credit.pool_level_pay",
-  "credit.pool_io_bullet",
-  "credit.pool_float_io_bullet",
-]
+contract = "credit.loan"
 code = "E9016_CREDIT_INVALID_PSA_SPEED"
 message = "Credit 'psa_speed' is a multiple of the standard prepayment curve, so 1.5 means 150% PSA. It must be between 0 and 10."
 check = "term_number"
@@ -189,11 +153,7 @@ min = 0.0
 max = 10.0
 
 [[validations]]
-contracts = [
-  "credit.pool_level_pay",
-  "credit.pool_io_bullet",
-  "credit.pool_float_io_bullet",
-]
+contract = "credit.loan"
 code = "E9017_CREDIT_INVALID_SDA_SPEED"
 message = "Credit 'sda_speed' is a multiple of the standard default assumption, so 1.0 means 100% SDA. It must be between 0 and 10."
 check = "term_number"
@@ -204,11 +164,7 @@ min = 0.0
 max = 10.0
 
 [[validations]]
-contracts = [
-  "credit.pool_level_pay",
-  "credit.pool_io_bullet",
-  "credit.pool_float_io_bullet",
-]
+contract = "credit.loan"
 code = "E9018_CREDIT_INVALID_ABS_SPEED"
 message = "Credit 'abs_speed' is the Absolute Prepayment Model speed: the fraction of ORIGINAL balance prepaying each month, already monthly. It must be between 0 and 1."
 check = "term_number"
@@ -219,13 +175,9 @@ min = 0.0
 max = 1.0
 
 [[validations]]
-contracts = [
-  "credit.pool_level_pay",
-  "credit.pool_io_bullet",
-  "credit.pool_float_io_bullet",
-]
+contract = "credit.loan"
 code = "E9019_CREDIT_INVALID_AGE_MONTHS"
-message = "Credit 'age_months' is the pool's weighted average age at closing, in months. It must be a non-negative integer."
+message = "Credit 'age_months' is the age at the model's start (a representative loan's weighted average), in months. It must be a non-negative integer."
 check = "term_number"
 term = "age_months"
 number = "integer"

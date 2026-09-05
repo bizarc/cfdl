@@ -19,7 +19,7 @@ filer retains copyright, so figures are asserted against rather than reproduced.
 | | |
 |---|---|
 | Pack | `credit` |
-| Contract types | `credit.pool_level_pay`, 43 instances |
+| Contract types | `credit.loan`, 43 instances |
 | Language features | many instances of one contract type in a single model |
 | Conventions | level-pay amortization, a promotional 0% rate, zero prepayment speed |
 

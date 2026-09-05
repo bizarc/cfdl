@@ -48,7 +48,7 @@ Growth is annual-compound stepped continuously on the model clock:
 >
 > A varying rate is stated in the term itself —
 > `growth_rate = curve_value("cpi", time.date)` — read at each
-> period's date — the same mechanism `credit.pool_float_io_bullet` uses for a
+> period's date — the same mechanism a floating-coupon `credit.loan` uses for a
 > floating index. Empty by default, so a model stating only the scalar is
 > unchanged.
 >

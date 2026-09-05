@@ -1,7 +1,7 @@
 {
   "results_version": "0.13",
-  "model_hash": "a7698aff61e4eebb359bdcc6e63491457a513c4e1c920169588dbe1e4f220f9b",
-  "ledger_hash": "df2cd765abd68935c43a612576abc5dbd2732ae0d2f20830c2d5b0b9c94da096",
+  "model_hash": "c80f3aa30bfbc29c85ec08df05f326f2ae338cff8b3394aaf1f18c42c82f488f",
+  "ledger_hash": "e4c263d8f6dd367968e533dbc26f06d5d8e0f43855ca6fab945c0f4778d42283",
   "engine": {
     "name": "cfdl-engine",
     "version": "0.9.0"
@@ -10,7 +10,7 @@
   "inputs": {
     "streams": [
       {
-        "contract": "credit.pool_io_bullet.p",
+        "contract": "credit.loan.p",
         "defaults_applied": [
           "abs_speed",
           "age_months",
@@ -18,7 +18,7 @@
           "psa_speed",
           "sda_speed"
         ],
-        "stream": "credit.pool.bullet.p",
+        "stream": "credit.loan.bullet.p",
         "terms": {
           "abs_speed": "0",
           "age_months": "0",
@@ -31,7 +31,7 @@
         }
       },
       {
-        "contract": "credit.pool_io_bullet.p",
+        "contract": "credit.loan.p",
         "defaults_applied": [
           "abs_speed",
           "age_months",
@@ -39,7 +39,7 @@
           "psa_speed",
           "sda_speed"
         ],
-        "stream": "credit.pool.interest.p",
+        "stream": "credit.loan.interest.p",
         "terms": {
           "abs_speed": "0",
           "age_months": "0",
@@ -53,7 +53,7 @@
         }
       },
       {
-        "contract": "credit.pool_io_bullet.p",
+        "contract": "credit.loan.p",
         "defaults_applied": [
           "abs_speed",
           "age_months",
@@ -62,7 +62,7 @@
           "psa_speed",
           "sda_speed"
         ],
-        "stream": "credit.pool.penalty.p",
+        "stream": "credit.loan.penalty.p",
         "terms": {
           "abs_speed": "0",
           "age_months": "0",
@@ -76,7 +76,7 @@
         }
       },
       {
-        "contract": "credit.pool_io_bullet.p",
+        "contract": "credit.loan.p",
         "defaults_applied": [
           "abs_speed",
           "age_months",
@@ -84,7 +84,7 @@
           "psa_speed",
           "sda_speed"
         ],
-        "stream": "credit.pool.prepay.p",
+        "stream": "credit.loan.prepay.p",
         "terms": {
           "abs_speed": "0",
           "age_months": "0",
@@ -97,7 +97,7 @@
         }
       },
       {
-        "contract": "credit.pool_io_bullet.p",
+        "contract": "credit.loan.p",
         "defaults_applied": [
           "abs_speed",
           "age_months",
@@ -105,7 +105,7 @@
           "psa_speed",
           "sda_speed"
         ],
-        "stream": "credit.pool.recoveries.p",
+        "stream": "credit.loan.recoveries.p",
         "terms": {
           "abs_speed": "0",
           "age_months": "0",
@@ -119,7 +119,7 @@
         }
       },
       {
-        "contract": "credit.pool_io_bullet.p",
+        "contract": "credit.loan.p",
         "defaults_applied": [
           "abs_speed",
           "age_months",
@@ -128,7 +128,7 @@
           "sda_speed",
           "servicing_fee"
         ],
-        "stream": "credit.pool.servicing.p",
+        "stream": "credit.loan.servicing.p",
         "terms": {
           "abs_speed": "0",
           "age_months": "0",
@@ -161,33 +161,33 @@
       "model.wal_years": 0.973841,
       "run.annual_discount_rate": 0.1,
       "run.periods_per_year": 12.0,
-      "stream.credit.pool.bullet.p.total": {
+      "stream.credit.loan.bullet.p.total": {
         "amount": 1200000.0,
         "currency": "USD"
       },
-      "stream.credit.pool.interest.p.total": {
+      "stream.credit.loan.interest.p.total": {
         "amount": 73000.0,
         "currency": "USD"
       },
-      "stream.credit.pool.penalty.p.total": {
+      "stream.credit.loan.penalty.p.total": {
         "amount": 0.0,
         "currency": "USD"
       },
-      "stream.credit.pool.prepay.p.total": {
+      "stream.credit.loan.prepay.p.total": {
         "amount": 0.0,
         "currency": "USD"
       },
-      "stream.credit.pool.recoveries.p.total": {
+      "stream.credit.loan.recoveries.p.total": {
         "amount": 0.0,
         "currency": "USD"
       },
-      "stream.credit.pool.servicing.p.total": {
+      "stream.credit.loan.servicing.p.total": {
         "amount": 0.0,
         "currency": "USD"
       }
     },
     "series": {
-      "asset.buyer.credit_io_bullet_survival_lag_p": {
+      "asset.buyer.credit_loan_survival_lag_p": {
         "index": {
           "calendar": "monthly",
           "start": "2025-01-01",
@@ -209,7 +209,7 @@
           1.0
         ]
       },
-      "asset.buyer.credit_io_bullet_survival_p": {
+      "asset.buyer.credit_loan_survival_p": {
         "index": {
           "calendar": "monthly",
           "start": "2025-01-01",
@@ -924,7 +924,7 @@
           }
         ]
       },
-      "stream.credit.pool.bullet.p": {
+      "stream.credit.loan.bullet.p": {
         "index": {
           "calendar": "monthly",
           "start": "2025-01-01",
@@ -933,7 +933,7 @@
         "offset": 1.0,
         "entity": "asset.buyer",
         "category": "operating.collection.principal",
-        "contract": "credit.pool_io_bullet.p",
+        "contract": "credit.loan.p",
         "line": "principal",
         "values": [
           {
@@ -990,7 +990,7 @@
           }
         ]
       },
-      "stream.credit.pool.interest.p": {
+      "stream.credit.loan.interest.p": {
         "index": {
           "calendar": "monthly",
           "start": "2025-01-01",
@@ -999,7 +999,7 @@
         "offset": 1.0,
         "entity": "asset.buyer",
         "category": "operating.collection.interest",
-        "contract": "credit.pool_io_bullet.p",
+        "contract": "credit.loan.p",
         "line": "interest",
         "values": [
           {
@@ -1056,7 +1056,7 @@
           }
         ]
       },
-      "stream.credit.pool.penalty.p": {
+      "stream.credit.loan.penalty.p": {
         "index": {
           "calendar": "monthly",
           "start": "2025-01-01",
@@ -1065,7 +1065,7 @@
         "offset": 1.0,
         "entity": "asset.buyer",
         "category": "operating.collection.penalty",
-        "contract": "credit.pool_io_bullet.p",
+        "contract": "credit.loan.p",
         "line": "penalty",
         "values": [
           {
@@ -1122,7 +1122,7 @@
           }
         ]
       },
-      "stream.credit.pool.prepay.p": {
+      "stream.credit.loan.prepay.p": {
         "index": {
           "calendar": "monthly",
           "start": "2025-01-01",
@@ -1131,7 +1131,7 @@
         "offset": 1.0,
         "entity": "asset.buyer",
         "category": "operating.collection.prepayment",
-        "contract": "credit.pool_io_bullet.p",
+        "contract": "credit.loan.p",
         "line": "prepayment",
         "values": [
           {
@@ -1188,7 +1188,7 @@
           }
         ]
       },
-      "stream.credit.pool.recoveries.p": {
+      "stream.credit.loan.recoveries.p": {
         "index": {
           "calendar": "monthly",
           "start": "2025-01-01",
@@ -1197,7 +1197,7 @@
         "offset": 1.0,
         "entity": "asset.buyer",
         "category": "operating.collection.recovery",
-        "contract": "credit.pool_io_bullet.p",
+        "contract": "credit.loan.p",
         "line": "recovery",
         "values": [
           {
@@ -1254,7 +1254,7 @@
           }
         ]
       },
-      "stream.credit.pool.servicing.p": {
+      "stream.credit.loan.servicing.p": {
         "index": {
           "calendar": "monthly",
           "start": "2025-01-01",
@@ -1263,7 +1263,7 @@
         "offset": 1.0,
         "entity": "asset.buyer",
         "category": "operating.expense.servicing",
-        "contract": "credit.pool_io_bullet.p",
+        "contract": "credit.loan.p",
         "line": "servicing",
         "values": [
           {
@@ -1504,7 +1504,7 @@
             }
           ]
         },
-        "stream.credit.pool.bullet.p": {
+        "stream.credit.loan.bullet.p": {
           "index": {
             "calendar": "annual",
             "start": "2025-01-01",
@@ -1521,7 +1521,7 @@
             }
           ]
         },
-        "stream.credit.pool.interest.p": {
+        "stream.credit.loan.interest.p": {
           "index": {
             "calendar": "annual",
             "start": "2025-01-01",
@@ -1538,7 +1538,7 @@
             }
           ]
         },
-        "stream.credit.pool.penalty.p": {
+        "stream.credit.loan.penalty.p": {
           "index": {
             "calendar": "annual",
             "start": "2025-01-01",
@@ -1555,7 +1555,7 @@
             }
           ]
         },
-        "stream.credit.pool.prepay.p": {
+        "stream.credit.loan.prepay.p": {
           "index": {
             "calendar": "annual",
             "start": "2025-01-01",
@@ -1572,7 +1572,7 @@
             }
           ]
         },
-        "stream.credit.pool.recoveries.p": {
+        "stream.credit.loan.recoveries.p": {
           "index": {
             "calendar": "annual",
             "start": "2025-01-01",
@@ -1589,7 +1589,7 @@
             }
           ]
         },
-        "stream.credit.pool.servicing.p": {
+        "stream.credit.loan.servicing.p": {
           "index": {
             "calendar": "annual",
             "start": "2025-01-01",
@@ -1707,12 +1707,12 @@
             ],
             "total": 1273000.0,
             "streams": [
-              "credit.pool.bullet.p",
-              "credit.pool.interest.p",
-              "credit.pool.penalty.p",
-              "credit.pool.prepay.p",
-              "credit.pool.recoveries.p",
-              "credit.pool.servicing.p"
+              "credit.loan.bullet.p",
+              "credit.loan.interest.p",
+              "credit.loan.penalty.p",
+              "credit.loan.prepay.p",
+              "credit.loan.recoveries.p",
+              "credit.loan.servicing.p"
             ]
           }
         ],
@@ -1729,24 +1729,24 @@
       {
         "symbol": "asset.buyer",
         "family": "asset",
-        "type": "Credit.Asset.LoanPool"
+        "type": "Credit.Asset.Loan"
       }
     ],
     "contracts": [
       {
-        "name": "credit.pool_io_bullet.p",
-        "type": "Credit.Contract.InterestOnlyPool",
+        "name": "credit.loan.p",
+        "type": "Credit.Contract.Loan",
         "master": "Contract.Debt",
-        "contract_name": "credit.pool_io_bullet",
+        "contract_name": "credit.loan",
         "instance": "p",
         "subject": "asset.buyer",
         "streams": [
-          "credit.pool.bullet.p",
-          "credit.pool.interest.p",
-          "credit.pool.penalty.p",
-          "credit.pool.prepay.p",
-          "credit.pool.recoveries.p",
-          "credit.pool.servicing.p"
+          "credit.loan.bullet.p",
+          "credit.loan.interest.p",
+          "credit.loan.penalty.p",
+          "credit.loan.prepay.p",
+          "credit.loan.recoveries.p",
+          "credit.loan.servicing.p"
         ]
       }
     ]

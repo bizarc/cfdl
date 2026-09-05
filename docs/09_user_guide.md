@@ -173,7 +173,7 @@ stream loan.interest on entity asset.buyer inflow currency USD {
   compilation with `E5008_INVALID_CURVE`.
 
 Curves are deterministic inputs; the credit pack's floating-rate contracts
-(`credit.pool_float_io_bullet`) read coupon indices from them.
+(`credit.loan`) read coupon indices from them.
 
 ---
 

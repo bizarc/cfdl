@@ -18,7 +18,7 @@ recreated independently of the model and compared month by month.
 | | |
 |---|---|
 | Pack | `credit` |
-| Contract types | `credit.pool_io_bullet`, `credit.purchase` |
+| Contract types | `credit.loan`, `credit.purchase` |
 | Language features | a pack contract paired with a purchase price |
 | Conventions | interest-only accrual, a bullet maturity, CPR, CDR, severity, recovery lag |
 

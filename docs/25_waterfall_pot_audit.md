@@ -38,8 +38,8 @@ Every `.cfdl` file in the repository — 203 of them.
 | waterfalls in total | 31 |
 
 Packs create balances too, and they are the ones that work: 25 `field_name`
-rules across four packs — `credit_level_pay_survival` and its lagged twin,
-`credit_io_bullet_survival`, `credit_float_io_survival`,
+rules across four packs — `credit_loan_survival` and its lagged twin,
+`credit_loan_survival`, `credit_loan_survival`,
 `cre_construction_funded`, `opco_revenue_growth` and the rest. Every one of
 them is a function of time, rate and schedule, which is why a contract can
 maintain it without help.
@@ -129,9 +129,9 @@ earlier waterfall, which §10 and §12 explicitly allow.**
 
 ### A. Reconstructs the flow from the pack's internal stream ids — 18
 
-Sums `credit.pool.sched_principal.*`, `credit.pool.prepay.*`,
-`credit.pool.interest.*` and, where the deal needs it, adds the pack's negative
-`credit.pool.servicing.*` to net the fee off by hand — re-doing the engine's
+Sums `credit.loan.sched_principal.*`, `credit.loan.prepay.*`,
+`credit.loan.interest.*` and, where the deal needs it, adds the pack's negative
+`credit.loan.servicing.*` to net the fee off by hand — re-doing the engine's
 netting one stream family at a time.
 
 | model | waterfall |

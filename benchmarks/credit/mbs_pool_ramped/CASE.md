@@ -18,7 +18,7 @@ and cited as facts.
 | | |
 |---|---|
 | Pack | `credit` |
-| Contract types | `credit.pool_level_pay` |
+| Contract types | `credit.loan` |
 | Language features | pack contract lowering to four cash flow lines; a per-period pool factor carried as state |
 | Conventions | a prepayment ramp over thirty months, CPR-to-SMM conversion, default, severity, recovery lag |
 

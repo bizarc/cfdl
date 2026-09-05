@@ -56,7 +56,7 @@ administration fee. Both are stated as one trust-level stream each —
 `credit.trust.servicing_fee`, 1.00%/12 of the pool balance carried into the
 month (the initial pool less principal collected to date), and
 `credit.trust.admin_fee`. The pack can lower servicing per sub-pool
-(`servicing_fee` on `credit.pool_level_pay`, default 0); stated per pool
+(`servicing_fee` on `credit.loan`, default 0); stated per pool
 the 43 streams sum to the same 9,395,813.31 to the cent, and the single
 trust-level stream is the deal's own statement of the fee. Neither the
 servicer nor the administrator is modeled as a payee: the fees leave the

@@ -3,11 +3,11 @@ model "credit-invalid-rates"
 use pack "credit" version "0.1.0"
 time calendar monthly from 2026-01 for 24
 
-entity asset buyer : Credit.Asset.LoanPool
+entity asset buyer : Credit.Asset.Loan
 
 // Fix: cpr/cdr are annual rates in [0, 1], severity is a fraction in [0, 1],
 // and recovery_lag_months is a whole non-negative month count.
-contract credit.pool_level_pay.auto_a on entity asset.buyer {
+contract credit.loan.auto_a on entity asset.buyer {
   term 2026-01..2027-12
   terms {
     principal = 25000000

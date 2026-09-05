@@ -1,7 +1,7 @@
 {
   "results_version": "0.13",
-  "model_hash": "835ff272744dd0c1da0dc8d1228261ab91e29d17ee420d51aad930d3ee0fa03f",
-  "ledger_hash": "2550bb7484d11081e321d9a182324eb67f51fb7a43972e63f1e8e2a5688aa843",
+  "model_hash": "b6be1b499a66c43036e4964bf0d3ea92daa346866f8d833ec26ca6b5a331d6ea",
+  "ledger_hash": "0a285996371fd827b5312a99fe987bf6eb9cc11a952a21777b1c20bb7dc816e2",
   "engine": {
     "name": "cfdl-engine",
     "version": "0.9.0"
@@ -10,7 +10,7 @@
   "inputs": {
     "streams": [
       {
-        "contract": "credit.pool_float_io_bullet.smoke",
+        "contract": "credit.loan.smoke",
         "defaults_applied": [
           "abs_speed",
           "age_months",
@@ -18,28 +18,7 @@
           "psa_speed",
           "sda_speed"
         ],
-        "stream": "credit.pool.bullet.smoke",
-        "terms": {
-          "abs_speed": "0",
-          "age_months": "0",
-          "cdr": "0.03",
-          "cpr": "0.10",
-          "payment_frequency": "",
-          "principal": "1200000",
-          "psa_speed": "0",
-          "sda_speed": "0"
-        }
-      },
-      {
-        "contract": "credit.pool_float_io_bullet.smoke",
-        "defaults_applied": [
-          "abs_speed",
-          "age_months",
-          "payment_frequency",
-          "psa_speed",
-          "sda_speed"
-        ],
-        "stream": "credit.pool.interest.smoke",
+        "stream": "credit.loan.interest.smoke",
         "terms": {
           "abs_speed": "0",
           "age_months": "0",
@@ -56,7 +35,28 @@
         }
       },
       {
-        "contract": "credit.pool_float_io_bullet.smoke",
+        "contract": "credit.loan.smoke",
+        "defaults_applied": [
+          "abs_speed",
+          "age_months",
+          "payment_frequency",
+          "psa_speed",
+          "sda_speed"
+        ],
+        "stream": "credit.loan.bullet.smoke",
+        "terms": {
+          "abs_speed": "0",
+          "age_months": "0",
+          "cdr": "0.03",
+          "cpr": "0.10",
+          "payment_frequency": "",
+          "principal": "1200000",
+          "psa_speed": "0",
+          "sda_speed": "0"
+        }
+      },
+      {
+        "contract": "credit.loan.smoke",
         "defaults_applied": [
           "abs_speed",
           "age_months",
@@ -65,7 +65,7 @@
           "psa_speed",
           "sda_speed"
         ],
-        "stream": "credit.pool.penalty.smoke",
+        "stream": "credit.loan.penalty.smoke",
         "terms": {
           "abs_speed": "0",
           "age_months": "0",
@@ -79,7 +79,7 @@
         }
       },
       {
-        "contract": "credit.pool_float_io_bullet.smoke",
+        "contract": "credit.loan.smoke",
         "defaults_applied": [
           "abs_speed",
           "age_months",
@@ -87,7 +87,7 @@
           "psa_speed",
           "sda_speed"
         ],
-        "stream": "credit.pool.prepay.smoke",
+        "stream": "credit.loan.prepay.smoke",
         "terms": {
           "abs_speed": "0",
           "age_months": "0",
@@ -100,7 +100,7 @@
         }
       },
       {
-        "contract": "credit.pool_float_io_bullet.smoke",
+        "contract": "credit.loan.smoke",
         "defaults_applied": [
           "abs_speed",
           "age_months",
@@ -108,7 +108,7 @@
           "psa_speed",
           "sda_speed"
         ],
-        "stream": "credit.pool.recoveries.smoke",
+        "stream": "credit.loan.recoveries.smoke",
         "terms": {
           "abs_speed": "0",
           "age_months": "0",
@@ -122,7 +122,7 @@
         }
       },
       {
-        "contract": "credit.pool_float_io_bullet.smoke",
+        "contract": "credit.loan.smoke",
         "defaults_applied": [
           "abs_speed",
           "age_months",
@@ -131,7 +131,7 @@
           "sda_speed",
           "servicing_fee"
         ],
-        "stream": "credit.pool.servicing.smoke",
+        "stream": "credit.loan.servicing.smoke",
         "terms": {
           "abs_speed": "0",
           "age_months": "0",
@@ -175,27 +175,27 @@
       "model.wal_years": 0.921129,
       "run.annual_discount_rate": 0.1,
       "run.periods_per_year": 12.0,
-      "stream.credit.pool.bullet.smoke.total": {
+      "stream.credit.loan.bullet.smoke.total": {
         "amount": 1056577.947869,
         "currency": "USD"
       },
-      "stream.credit.pool.interest.smoke.total": {
+      "stream.credit.loan.interest.smoke.total": {
         "amount": 84732.798597,
         "currency": "USD"
       },
-      "stream.credit.pool.penalty.smoke.total": {
+      "stream.credit.loan.penalty.smoke.total": {
         "amount": 0.0,
         "currency": "USD"
       },
-      "stream.credit.pool.prepay.smoke.total": {
+      "stream.credit.loan.prepay.smoke.total": {
         "amount": 109098.449626,
         "currency": "USD"
       },
-      "stream.credit.pool.recoveries.smoke.total": {
+      "stream.credit.loan.recoveries.smoke.total": {
         "amount": 17161.801253,
         "currency": "USD"
       },
-      "stream.credit.pool.servicing.smoke.total": {
+      "stream.credit.loan.servicing.smoke.total": {
         "amount": 0.0,
         "currency": "USD"
       },
@@ -205,7 +205,7 @@
       }
     },
     "series": {
-      "asset.buyer.credit_float_io_survival_lag_smoke": {
+      "asset.buyer.credit_loan_survival_lag_smoke": {
         "index": {
           "calendar": "monthly",
           "start": "2026-01-01",
@@ -229,7 +229,7 @@
           0.882719359713597
         ]
       },
-      "asset.buyer.credit_float_io_survival_smoke": {
+      "asset.buyer.credit_loan_survival_smoke": {
         "index": {
           "calendar": "monthly",
           "start": "2026-01-01",
@@ -1036,7 +1036,7 @@
           }
         ]
       },
-      "stream.credit.pool.bullet.smoke": {
+      "stream.credit.loan.bullet.smoke": {
         "index": {
           "calendar": "monthly",
           "start": "2026-01-01",
@@ -1045,7 +1045,7 @@
         "offset": 1.0,
         "entity": "asset.buyer",
         "category": "operating.collection.principal",
-        "contract": "credit.pool_float_io_bullet.smoke",
+        "contract": "credit.loan.smoke",
         "line": "principal",
         "values": [
           {
@@ -1110,7 +1110,7 @@
           }
         ]
       },
-      "stream.credit.pool.interest.smoke": {
+      "stream.credit.loan.interest.smoke": {
         "index": {
           "calendar": "monthly",
           "start": "2026-01-01",
@@ -1119,7 +1119,7 @@
         "offset": 1.0,
         "entity": "asset.buyer",
         "category": "operating.collection.interest",
-        "contract": "credit.pool_float_io_bullet.smoke",
+        "contract": "credit.loan.smoke",
         "line": "interest",
         "values": [
           {
@@ -1184,7 +1184,7 @@
           }
         ]
       },
-      "stream.credit.pool.penalty.smoke": {
+      "stream.credit.loan.penalty.smoke": {
         "index": {
           "calendar": "monthly",
           "start": "2026-01-01",
@@ -1193,7 +1193,7 @@
         "offset": 1.0,
         "entity": "asset.buyer",
         "category": "operating.collection.penalty",
-        "contract": "credit.pool_float_io_bullet.smoke",
+        "contract": "credit.loan.smoke",
         "line": "penalty",
         "values": [
           {
@@ -1258,7 +1258,7 @@
           }
         ]
       },
-      "stream.credit.pool.prepay.smoke": {
+      "stream.credit.loan.prepay.smoke": {
         "index": {
           "calendar": "monthly",
           "start": "2026-01-01",
@@ -1267,7 +1267,7 @@
         "offset": 1.0,
         "entity": "asset.buyer",
         "category": "operating.collection.prepayment",
-        "contract": "credit.pool_float_io_bullet.smoke",
+        "contract": "credit.loan.smoke",
         "line": "prepayment",
         "values": [
           {
@@ -1332,7 +1332,7 @@
           }
         ]
       },
-      "stream.credit.pool.recoveries.smoke": {
+      "stream.credit.loan.recoveries.smoke": {
         "index": {
           "calendar": "monthly",
           "start": "2026-01-01",
@@ -1341,7 +1341,7 @@
         "offset": 1.0,
         "entity": "asset.buyer",
         "category": "operating.collection.recovery",
-        "contract": "credit.pool_float_io_bullet.smoke",
+        "contract": "credit.loan.smoke",
         "line": "recovery",
         "values": [
           {
@@ -1406,7 +1406,7 @@
           }
         ]
       },
-      "stream.credit.pool.servicing.smoke": {
+      "stream.credit.loan.servicing.smoke": {
         "index": {
           "calendar": "monthly",
           "start": "2026-01-01",
@@ -1415,7 +1415,7 @@
         "offset": 1.0,
         "entity": "asset.buyer",
         "category": "operating.expense.servicing",
-        "contract": "credit.pool_float_io_bullet.smoke",
+        "contract": "credit.loan.smoke",
         "line": "servicing",
         "values": [
           {
@@ -1738,7 +1738,7 @@
             }
           ]
         },
-        "stream.credit.pool.bullet.smoke": {
+        "stream.credit.loan.bullet.smoke": {
           "index": {
             "calendar": "annual",
             "start": "2026-01-01",
@@ -1755,7 +1755,7 @@
             }
           ]
         },
-        "stream.credit.pool.interest.smoke": {
+        "stream.credit.loan.interest.smoke": {
           "index": {
             "calendar": "annual",
             "start": "2026-01-01",
@@ -1772,7 +1772,7 @@
             }
           ]
         },
-        "stream.credit.pool.penalty.smoke": {
+        "stream.credit.loan.penalty.smoke": {
           "index": {
             "calendar": "annual",
             "start": "2026-01-01",
@@ -1789,7 +1789,7 @@
             }
           ]
         },
-        "stream.credit.pool.prepay.smoke": {
+        "stream.credit.loan.prepay.smoke": {
           "index": {
             "calendar": "annual",
             "start": "2026-01-01",
@@ -1806,7 +1806,7 @@
             }
           ]
         },
-        "stream.credit.pool.recoveries.smoke": {
+        "stream.credit.loan.recoveries.smoke": {
           "index": {
             "calendar": "annual",
             "start": "2026-01-01",
@@ -1823,7 +1823,7 @@
             }
           ]
         },
-        "stream.credit.pool.servicing.smoke": {
+        "stream.credit.loan.servicing.smoke": {
           "index": {
             "calendar": "annual",
             "start": "2026-01-01",
@@ -1904,12 +1904,12 @@
     "lineage": {
       "domain.credit.collections": {
         "numerator_streams": [
-          "credit.pool.interest.*",
-          "credit.pool.sched_principal.*",
-          "credit.pool.prepay.*",
-          "credit.pool.bullet.*",
-          "credit.pool.recoveries.*",
-          "credit.pool.penalty.*"
+          "credit.loan.interest.*",
+          "credit.loan.sched_principal.*",
+          "credit.loan.prepay.*",
+          "credit.loan.bullet.*",
+          "credit.loan.recoveries.*",
+          "credit.loan.penalty.*"
         ],
         "denominator_streams": [],
         "formula": "sum(numerator_streams)"
@@ -1925,23 +1925,23 @@
       },
       "domain.credit.interest": {
         "numerator_streams": [
-          "credit.pool.interest.*"
+          "credit.loan.interest.*"
         ],
         "denominator_streams": [],
         "formula": "sum(numerator_streams)"
       },
       "domain.credit.penalties": {
         "numerator_streams": [
-          "credit.pool.penalty.*"
+          "credit.loan.penalty.*"
         ],
         "denominator_streams": [],
         "formula": "sum(numerator_streams)"
       },
       "domain.credit.principal": {
         "numerator_streams": [
-          "credit.pool.sched_principal.*",
-          "credit.pool.prepay.*",
-          "credit.pool.bullet.*"
+          "credit.loan.sched_principal.*",
+          "credit.loan.prepay.*",
+          "credit.loan.bullet.*"
         ],
         "denominator_streams": [],
         "formula": "sum(numerator_streams)"
@@ -1955,17 +1955,17 @@
       },
       "domain.credit.recoveries": {
         "numerator_streams": [
-          "credit.pool.recoveries.*"
+          "credit.loan.recoveries.*"
         ],
         "denominator_streams": [],
         "formula": "sum(numerator_streams)"
       },
       "domain.credit.wal_years": {
         "numerator_streams": [
-          "credit.pool.sched_principal.*",
-          "credit.pool.prepay.*",
-          "credit.pool.bullet.*",
-          "credit.pool.recoveries.*"
+          "credit.loan.sched_principal.*",
+          "credit.loan.prepay.*",
+          "credit.loan.bullet.*",
+          "credit.loan.recoveries.*"
         ],
         "denominator_streams": [],
         "formula": "wal_years(numerator_streams)"
@@ -2070,7 +2070,7 @@
             ],
             "total": 84732.798599,
             "streams": [
-              "credit.pool.interest.smoke"
+              "credit.loan.interest.smoke"
             ]
           },
           {
@@ -2142,7 +2142,7 @@
             ],
             "total": 1056577.947869,
             "streams": [
-              "credit.pool.bullet.smoke"
+              "credit.loan.bullet.smoke"
             ]
           },
           {
@@ -2214,7 +2214,7 @@
             ],
             "total": 109098.449626,
             "streams": [
-              "credit.pool.prepay.smoke"
+              "credit.loan.prepay.smoke"
             ]
           },
           {
@@ -2286,7 +2286,7 @@
             ],
             "total": 17161.801252,
             "streams": [
-              "credit.pool.recoveries.smoke"
+              "credit.loan.recoveries.smoke"
             ]
           },
           {
@@ -2358,7 +2358,7 @@
             ],
             "total": 0.0,
             "streams": [
-              "credit.pool.penalty.smoke"
+              "credit.loan.penalty.smoke"
             ]
           },
           {
@@ -2568,7 +2568,7 @@
             ],
             "total": 0.0,
             "streams": [
-              "credit.pool.servicing.smoke"
+              "credit.loan.servicing.smoke"
             ]
           },
           {
@@ -2892,7 +2892,7 @@
             ],
             "total": 84732.798599,
             "streams": [
-              "credit.pool.interest.smoke"
+              "credit.loan.interest.smoke"
             ]
           },
           {
@@ -2912,7 +2912,7 @@
             ],
             "total": 1056577.947869,
             "streams": [
-              "credit.pool.bullet.smoke"
+              "credit.loan.bullet.smoke"
             ]
           },
           {
@@ -2932,7 +2932,7 @@
             ],
             "total": 109098.449626,
             "streams": [
-              "credit.pool.prepay.smoke"
+              "credit.loan.prepay.smoke"
             ]
           },
           {
@@ -2952,7 +2952,7 @@
             ],
             "total": 17161.801252,
             "streams": [
-              "credit.pool.recoveries.smoke"
+              "credit.loan.recoveries.smoke"
             ]
           },
           {
@@ -2972,7 +2972,7 @@
             ],
             "total": 0.0,
             "streams": [
-              "credit.pool.penalty.smoke"
+              "credit.loan.penalty.smoke"
             ]
           },
           {
@@ -3026,7 +3026,7 @@
             ],
             "total": 0.0,
             "streams": [
-              "credit.pool.servicing.smoke"
+              "credit.loan.servicing.smoke"
             ]
           },
           {
@@ -3207,7 +3207,7 @@
             ],
             "total": 1056577.947869,
             "streams": [
-              "credit.pool.bullet.smoke"
+              "credit.loan.bullet.smoke"
             ]
           },
           {
@@ -3279,7 +3279,7 @@
             ],
             "total": 109098.449626,
             "streams": [
-              "credit.pool.prepay.smoke"
+              "credit.loan.prepay.smoke"
             ]
           },
           {
@@ -3489,7 +3489,7 @@
             ],
             "total": 84732.798599,
             "streams": [
-              "credit.pool.interest.smoke"
+              "credit.loan.interest.smoke"
             ]
           },
           {
@@ -3561,7 +3561,7 @@
             ],
             "total": 17161.801252,
             "streams": [
-              "credit.pool.recoveries.smoke"
+              "credit.loan.recoveries.smoke"
             ]
           },
           {
@@ -3633,7 +3633,7 @@
             ],
             "total": 0.0,
             "streams": [
-              "credit.pool.penalty.smoke"
+              "credit.loan.penalty.smoke"
             ]
           },
           {
@@ -3774,7 +3774,7 @@
             ],
             "total": 0.0,
             "streams": [
-              "credit.pool.servicing.smoke"
+              "credit.loan.servicing.smoke"
             ]
           },
           {
@@ -4163,7 +4163,7 @@
             ],
             "total": 84732.798599,
             "streams": [
-              "credit.pool.interest.smoke"
+              "credit.loan.interest.smoke"
             ]
           },
           {
@@ -4235,7 +4235,7 @@
             ],
             "total": 0.0,
             "streams": [
-              "credit.pool.penalty.smoke"
+              "credit.loan.penalty.smoke"
             ]
           },
           {
@@ -4445,7 +4445,7 @@
             ],
             "total": 1056577.947869,
             "streams": [
-              "credit.pool.bullet.smoke"
+              "credit.loan.bullet.smoke"
             ]
           },
           {
@@ -4517,7 +4517,7 @@
             ],
             "total": 109098.449626,
             "streams": [
-              "credit.pool.prepay.smoke"
+              "credit.loan.prepay.smoke"
             ]
           },
           {
@@ -4589,7 +4589,7 @@
             ],
             "total": 17161.801252,
             "streams": [
-              "credit.pool.recoveries.smoke"
+              "credit.loan.recoveries.smoke"
             ]
           },
           {
@@ -4730,7 +4730,7 @@
             ],
             "total": 0.0,
             "streams": [
-              "credit.pool.servicing.smoke"
+              "credit.loan.servicing.smoke"
             ]
           },
           {
@@ -5031,24 +5031,24 @@
       {
         "symbol": "asset.buyer",
         "family": "asset",
-        "type": "Credit.Asset.LoanPool"
+        "type": "Credit.Asset.Loan"
       }
     ],
     "contracts": [
       {
-        "name": "credit.pool_float_io_bullet.smoke",
-        "type": "Credit.Contract.FloatingInterestOnlyPool",
+        "name": "credit.loan.smoke",
+        "type": "Credit.Contract.Loan",
         "master": "Contract.Debt",
-        "contract_name": "credit.pool_float_io_bullet",
+        "contract_name": "credit.loan",
         "instance": "smoke",
         "subject": "asset.buyer",
         "streams": [
-          "credit.pool.bullet.smoke",
-          "credit.pool.interest.smoke",
-          "credit.pool.penalty.smoke",
-          "credit.pool.prepay.smoke",
-          "credit.pool.recoveries.smoke",
-          "credit.pool.servicing.smoke"
+          "credit.loan.bullet.smoke",
+          "credit.loan.interest.smoke",
+          "credit.loan.penalty.smoke",
+          "credit.loan.prepay.smoke",
+          "credit.loan.recoveries.smoke",
+          "credit.loan.servicing.smoke"
         ]
       },
       {

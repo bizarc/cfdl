@@ -3,7 +3,7 @@ model "credit-zero-rate-pool"
 use pack "credit" version "0.1.0"
 time calendar monthly from 2026-01 for 12
 
-entity asset lender : Credit.Asset.LoanPool
+entity asset lender : Credit.Asset.Loan
 
 // A 0% APR pool — promotional financing, ordinary in auto and retail credit
 // and about 3% of a real published auto-ABS collateral table.
@@ -19,7 +19,7 @@ entity asset lender : Credit.Asset.LoanPool
 //
 // The `rate` validation only ever required non-negative, so before this a zero
 // rate was accepted and produced NaN rather than an answer or a refusal.
-contract credit.pool_level_pay on entity asset.lender {
+contract credit.loan on entity asset.lender {
   term 2026-01..2026-12
   terms {
     principal = 1200000

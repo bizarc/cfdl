@@ -20,7 +20,7 @@ time calendar monthly from 2026-01 for 372
 // The four balances are uneven so that the aggregation is tested: four equal
 // loans would agree with the pool under any rule that divided by four.
 
-entity asset pool : Credit.Asset.LoanPool {
+entity asset pool : Credit.Asset.Loan {
   collateral_type            = "residential_mortgage"
   original_balance           = 100000000
   weighted_average_coupon    = 0.08
@@ -57,7 +57,7 @@ entity asset loan_d : Credit.Asset.Loan {
 // as its annual equivalent, 1 - (1 - 0.01)^12, which converts back to exactly
 // 0.01. The same restatement `mbs_pool_conventions` makes.
 
-contract credit.pool_level_pay.a on entity asset.loan_a {
+contract credit.loan.a on entity asset.loan_a {
   term 2026-01..2056-12
   terms {
     principal = 40000000
@@ -70,7 +70,7 @@ contract credit.pool_level_pay.a on entity asset.loan_a {
   }
 }
 
-contract credit.pool_level_pay.b on entity asset.loan_b {
+contract credit.loan.b on entity asset.loan_b {
   term 2026-01..2056-12
   terms {
     principal = 30000000
@@ -83,7 +83,7 @@ contract credit.pool_level_pay.b on entity asset.loan_b {
   }
 }
 
-contract credit.pool_level_pay.c on entity asset.loan_c {
+contract credit.loan.c on entity asset.loan_c {
   term 2026-01..2056-12
   terms {
     principal = 20000000
@@ -96,7 +96,7 @@ contract credit.pool_level_pay.c on entity asset.loan_c {
   }
 }
 
-contract credit.pool_level_pay.d on entity asset.loan_d {
+contract credit.loan.d on entity asset.loan_d {
   term 2026-01..2056-12
   terms {
     principal = 10000000

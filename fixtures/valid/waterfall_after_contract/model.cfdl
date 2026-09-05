@@ -17,14 +17,14 @@ time calendar monthly from 2018-10 for 6
 // This fixture is that order: a contract, then an assume, then a waterfall,
 // with nothing after them to stop an over-eager scan.
 
-entity asset trust : Credit.Asset.LoanPool { collateral_type = "auto" }
-entity asset pool  : Credit.Asset.LoanPool {
+entity asset trust : Credit.Asset.Loan { collateral_type = "auto" }
+entity asset pool  : Credit.Asset.Loan {
   collateral_type = "auto"
   part of asset.trust
 }
 entity party holders : Credit.Party.Investor { name = "Noteholders" }
 
-contract credit.pool_level_pay.pool on entity asset.pool {
+contract credit.loan.pool on entity asset.pool {
   term 2018-10..2019-03
   terms {
     principal = 1200000.0
@@ -42,7 +42,7 @@ waterfall notes.principal on entity asset.trust {
   // NARROWER THAN `available`, deliberately: this waterfall allocates the
   // principal collections the exhibit tabulates, not the deal's whole cash. `docs/03` §3.2
   // keeps the `from` expression free for exactly this.
-  from series_sum("credit.pool.sched_principal.pool", time.t, time.t)
+  from series_sum("credit.loan.sched_principal.pool", time.t, time.t)
 
   // THE CAP IS PER-PERIOD, NOT CUMULATIVE, AND THAT IS THE HONEST SPELLING.
   //

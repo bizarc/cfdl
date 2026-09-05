@@ -3,11 +3,11 @@ model "credit-pool-smoke"
 use pack "credit" version "0.1.0"
 time calendar monthly from 2026-01 for 15
 
-entity asset buyer : Credit.Asset.LoanPool
+entity asset buyer : Credit.Asset.Loan
 
 // Small level-pay pool: 12-month amortization, prepay/default/severity with
 // a 3-month recovery lag (term spans 12 + 3 months).
-contract credit.pool_level_pay.smoke on entity asset.buyer {
+contract credit.loan.smoke on entity asset.buyer {
   term 2026-01..2027-03
   terms {
     principal = 1200000

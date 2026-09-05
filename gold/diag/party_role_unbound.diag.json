@@ -2,7 +2,7 @@
   {
     "code": "E1322_UNKNOWN_PARTY_ROLE",
     "severity": "error",
-    "message": "Contract 'credit.pool_level_pay.smoke' binds role 'borrower', which type 'Credit.Contract.LevelPayPool' leaves unbound: the agreement has no such party in this form.",
+    "message": "Contract 'credit.loan.smoke' binds role 'borrower', which type 'Credit.Contract.Loan' leaves unbound: the agreement has no such party in this form.",
     "file": "model.cfdl",
     "span": {
       "start_line": 22,

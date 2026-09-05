@@ -1,0 +1,25 @@
+version 0.1
+model "loan-floating-level-pay"
+use pack "credit" version "0.1.0"
+time calendar monthly from 2026-01 for 12
+
+curve sofr linear {
+  2026-01: 0.050
+  2027-01: 0.038
+}
+
+entity asset loan : Credit.Asset.Loan
+
+// A floating coupon on a LEVEL-PAY schedule has no closed form, so the pack
+// carries no interest row for it: the type's `interest` line would go
+// unlowered, and the compiler says so rather than producing a loan that
+// pays no interest.
+contract credit.loan.bridge on entity asset.loan {
+  term 2026-01..2026-12
+  terms {
+    principal = 1200000
+    index_curve = "sofr"
+    margin = 0.03
+    term_months = 12
+  }
+}

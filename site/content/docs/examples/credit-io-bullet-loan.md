@@ -34,7 +34,7 @@ recreated independently of the model and compared month by month.
 | | |
 |---|---|
 | Pack | `credit` |
-| Contract types | `credit.pool_io_bullet`, `credit.purchase` |
+| Contract types | `credit.loan`, `credit.purchase` |
 | Language features | a pack contract paired with a purchase price |
 | Conventions | interest-only accrual, a bullet maturity, CPR, CDR, severity, recovery lag |
 
@@ -61,14 +61,15 @@ model "io-bullet-loan"
 use pack "credit" version "0.1.0"
 time calendar monthly from 2026-01 for 64
 
-entity asset buyer : Credit.Asset.LoanPool
+entity asset buyer : Credit.Asset.Loan
 
 // $10m interest-only pool, 7.25%, 60-month bullet, 5 CPR, 1.5 CDR,
 // 40% severity, 4-month recovery lag. Contract term spans
 // term_months + recovery_lag_months for the recovery tail.
-contract credit.pool_io_bullet.bridge_a on entity asset.buyer {
+contract credit.loan.bridge_a on entity asset.buyer {
   term 2026-01..2031-04
   terms {
+    amortization = "interest_only"
     principal = 10000000
     interest_rate = 0.0725
     term_months = 60

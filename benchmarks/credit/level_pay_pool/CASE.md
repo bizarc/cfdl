@@ -22,7 +22,7 @@ comparison is against a month-by-month recursion of the same convention.
 | | |
 |---|---|
 | Pack | `credit` |
-| Contract types | `credit.pool_level_pay`, `credit.purchase` |
+| Contract types | `credit.loan`, `credit.purchase` |
 | Language features | a pack contract paired with a purchase price |
 | Conventions | level-pay amortization, CPR, CDR, loss severity, recovery lag, a servicing strip, a prepayment penalty, purchase at a discount |
 

@@ -38,7 +38,7 @@ comparison is against a month-by-month recursion of the same convention.
 | | |
 |---|---|
 | Pack | `credit` |
-| Contract types | `credit.pool_level_pay`, `credit.purchase` |
+| Contract types | `credit.loan`, `credit.purchase` |
 | Language features | a pack contract paired with a purchase price |
 | Conventions | level-pay amortization, CPR, CDR, loss severity, recovery lag, a servicing strip, a prepayment penalty, purchase at a discount |
 
@@ -64,13 +64,13 @@ model "level-pay-pool"
 use pack "credit" version "0.1.0"
 time calendar monthly from 2026-01 for 126
 
-entity asset buyer : Credit.Asset.LoanPool
+entity asset buyer : Credit.Asset.Loan
 
 // $25m homogeneous level-pay pool, 6.5% note rate, 10-year amortization,
 // 8 CPR, 2 CDR, 35% severity, 6-month recovery lag, 50bp servicing strip,
 // 1% prepayment penalty. The contract term spans term_months +
 // recovery_lag_months so recoveries have periods to land in.
-contract credit.pool_level_pay.auto_a on entity asset.buyer {
+contract credit.loan.auto_a on entity asset.buyer {
   term 2026-01..2036-06
   terms {
     principal = 25000000
