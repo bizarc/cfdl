@@ -1,7 +1,7 @@
 {
   "results_version": "0.13",
-  "model_hash": "c80f3aa30bfbc29c85ec08df05f326f2ae338cff8b3394aaf1f18c42c82f488f",
-  "ledger_hash": "e4c263d8f6dd367968e533dbc26f06d5d8e0f43855ca6fab945c0f4778d42283",
+  "model_hash": "c1021a6690f66bf1929c75dbd0da3a0347294b1fd26a11c183dcd72af0be977a",
+  "ledger_hash": "1dcbe94683d1303a6dc9a903e48d7b1349c3c0b98b4bfa431def4395f819bd3c",
   "engine": {
     "name": "cfdl-engine",
     "version": "0.9.0"
@@ -12,43 +12,46 @@
       {
         "contract": "credit.loan.p",
         "defaults_applied": [
-          "abs_speed",
           "age_months",
           "payment_frequency",
-          "psa_speed",
           "sda_speed"
         ],
         "stream": "credit.loan.bullet.p",
         "terms": {
-          "abs_speed": "0",
           "age_months": "0",
           "cdr": "0",
-          "cpr": "0",
           "payment_frequency": "",
-          "principal": "1200000",
-          "psa_speed": "0",
           "sda_speed": "0"
         }
       },
       {
         "contract": "credit.loan.p",
         "defaults_applied": [
-          "abs_speed",
           "age_months",
           "payment_frequency",
-          "psa_speed",
+          "sda_speed"
+        ],
+        "stream": "credit.loan.defaults.p",
+        "terms": {
+          "age_months": "0",
+          "cdr": "0",
+          "payment_frequency": "",
+          "sda_speed": "0"
+        }
+      },
+      {
+        "contract": "credit.loan.p",
+        "defaults_applied": [
+          "age_months",
+          "payment_frequency",
           "sda_speed"
         ],
         "stream": "credit.loan.interest.p",
         "terms": {
-          "abs_speed": "0",
           "age_months": "0",
           "cdr": "0",
-          "cpr": "0",
           "interest_rate": "0.06",
           "payment_frequency": "",
-          "principal": "1200000",
-          "psa_speed": "0",
           "sda_speed": "0"
         }
       },
@@ -59,20 +62,16 @@
           "age_months",
           "payment_frequency",
           "prepay_penalty_rate",
-          "psa_speed",
-          "sda_speed"
+          "psa_speed"
         ],
         "stream": "credit.loan.penalty.p",
         "terms": {
           "abs_speed": "0",
           "age_months": "0",
-          "cdr": "0",
           "cpr": "0",
           "payment_frequency": "",
           "prepay_penalty_rate": "0",
-          "principal": "1200000",
-          "psa_speed": "0",
-          "sda_speed": "0"
+          "psa_speed": "0"
         }
       },
       {
@@ -81,19 +80,15 @@
           "abs_speed",
           "age_months",
           "payment_frequency",
-          "psa_speed",
-          "sda_speed"
+          "psa_speed"
         ],
         "stream": "credit.loan.prepay.p",
         "terms": {
           "abs_speed": "0",
           "age_months": "0",
-          "cdr": "0",
           "cpr": "0",
           "payment_frequency": "",
-          "principal": "1200000",
-          "psa_speed": "0",
-          "sda_speed": "0"
+          "psa_speed": "0"
         }
       },
       {
@@ -121,22 +116,16 @@
       {
         "contract": "credit.loan.p",
         "defaults_applied": [
-          "abs_speed",
           "age_months",
           "payment_frequency",
-          "psa_speed",
           "sda_speed",
           "servicing_fee"
         ],
         "stream": "credit.loan.servicing.p",
         "terms": {
-          "abs_speed": "0",
           "age_months": "0",
           "cdr": "0",
-          "cpr": "0",
           "payment_frequency": "",
-          "principal": "1200000",
-          "psa_speed": "0",
           "sda_speed": "0",
           "servicing_fee": "0"
         }
@@ -165,6 +154,10 @@
         "amount": 1200000.0,
         "currency": "USD"
       },
+      "stream.credit.loan.defaults.p.total": {
+        "amount": 0.0,
+        "currency": "USD"
+      },
       "stream.credit.loan.interest.p.total": {
         "amount": 73000.0,
         "currency": "USD"
@@ -187,48 +180,48 @@
       }
     },
     "series": {
-      "asset.buyer.credit_loan_survival_lag_p": {
+      "account.asset.buyer.balance": {
         "index": {
           "calendar": "monthly",
           "start": "2025-01-01",
           "periods": 13
         },
         "values": [
-          1.0,
-          1.0,
-          1.0,
-          1.0,
-          1.0,
-          1.0,
-          1.0,
-          1.0,
-          1.0,
-          1.0,
-          1.0,
-          1.0,
-          1.0
+          1200000.0,
+          1200000.0,
+          1200000.0,
+          1200000.0,
+          1200000.0,
+          1200000.0,
+          1200000.0,
+          1200000.0,
+          1200000.0,
+          1200000.0,
+          1200000.0,
+          0.0,
+          0.0
         ]
       },
-      "asset.buyer.credit_loan_survival_p": {
+      "asset.buyer.credit_loan_lagged_balance_p": {
         "index": {
           "calendar": "monthly",
           "start": "2025-01-01",
           "periods": 13
         },
         "values": [
-          1.0,
-          1.0,
-          1.0,
-          1.0,
-          1.0,
-          1.0,
-          1.0,
-          1.0,
-          1.0,
-          1.0,
-          1.0,
-          1.0,
-          1.0
+          1200000.0,
+          1200000.0,
+          1200000.0,
+          1200000.0,
+          1200000.0,
+          1200000.0,
+          1200000.0,
+          1200000.0,
+          1200000.0,
+          1200000.0,
+          1200000.0,
+          1200000.0,
+          1200000.0
         ]
       },
       "domain.credit.balance_outstanding": {
@@ -990,6 +983,71 @@
           }
         ]
       },
+      "stream.credit.loan.defaults.p": {
+        "index": {
+          "calendar": "monthly",
+          "start": "2025-01-01",
+          "periods": 13
+        },
+        "offset": 1.0,
+        "entity": "asset.buyer",
+        "contract": "credit.loan.p",
+        "line": "default",
+        "values": [
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          }
+        ]
+      },
       "stream.credit.loan.interest.p": {
         "index": {
           "calendar": "monthly",
@@ -1321,6 +1379,19 @@
         ]
       }
     },
+    "journal": [
+      {
+        "period": 11,
+        "date": "2025-12-01",
+        "actor": "stream:credit.loan.bullet.p",
+        "action": "move",
+        "target": "asset.buyer.balance",
+        "outcome": "applied",
+        "amount": -1200000.0,
+        "pot_before": 1200000.0,
+        "pot_after": 0.0
+      }
+    ],
     "annual_rollup": {
       "series": {
         "domain.credit.balance_outstanding": {
@@ -1521,6 +1592,23 @@
             }
           ]
         },
+        "stream.credit.loan.defaults.p": {
+          "index": {
+            "calendar": "annual",
+            "start": "2025-01-01",
+            "periods": 2
+          },
+          "values": [
+            {
+              "amount": 0.0,
+              "currency": "USD"
+            },
+            {
+              "amount": 0.0,
+              "currency": "USD"
+            }
+          ]
+        },
         "stream.credit.loan.interest.p": {
           "index": {
             "calendar": "annual",
@@ -1708,6 +1796,7 @@
             "total": 1273000.0,
             "streams": [
               "credit.loan.bullet.p",
+              "credit.loan.defaults.p",
               "credit.loan.interest.p",
               "credit.loan.penalty.p",
               "credit.loan.prepay.p",
@@ -1742,6 +1831,7 @@
         "subject": "asset.buyer",
         "streams": [
           "credit.loan.bullet.p",
+          "credit.loan.defaults.p",
           "credit.loan.interest.p",
           "credit.loan.penalty.p",
           "credit.loan.prepay.p",

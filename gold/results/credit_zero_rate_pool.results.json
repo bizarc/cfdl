@@ -1,7 +1,7 @@
 {
   "results_version": "0.13",
-  "model_hash": "ef55a2fae16b9f7495c4748387f34f109ffcafb9feecc58d75c27c334946d950",
-  "ledger_hash": "0844096e3c7b90f35857cf6b16bebe3654ad7d35d3e3a93e8066fd6b45946396",
+  "model_hash": "62883c00ee5f8ee15222f95acdcaab7114df8936c78ee940c31d449b7340b7d2",
+  "ledger_hash": "a987e870cd23c86b684786fb7788f1a3caba9a82ffe79bc435c0041f6866cda8",
   "engine": {
     "name": "cfdl-engine",
     "version": "0.9.0"
@@ -9,6 +9,21 @@
   "warnings": [],
   "inputs": {
     "streams": [
+      {
+        "contract": "credit.loan",
+        "defaults_applied": [
+          "age_months",
+          "payment_frequency",
+          "sda_speed"
+        ],
+        "stream": "credit.loan.defaults",
+        "terms": {
+          "age_months": "0",
+          "cdr": "0",
+          "payment_frequency": "",
+          "sda_speed": "0"
+        }
+      },
       {
         "contract": "credit.loan",
         "defaults_applied": [
@@ -134,6 +149,10 @@
       "model.wal_years": 0.541667,
       "run.annual_discount_rate": 0.05,
       "run.periods_per_year": 12.0,
+      "stream.credit.loan.defaults.total": {
+        "amount": 0.0,
+        "currency": "USD"
+      },
       "stream.credit.loan.interest.total": {
         "amount": 0.0,
         "currency": "USD"
@@ -160,14 +179,13 @@
       }
     },
     "series": {
-      "asset.lender.credit_loan_balance": {
+      "account.asset.lender.balance": {
         "index": {
           "calendar": "monthly",
           "start": "2026-01-01",
           "periods": 12
         },
         "values": [
-          1200000.0,
           1100000.0,
           1000000.0,
           900000.0,
@@ -178,7 +196,8 @@
           400000.0,
           300000.0,
           200000.0,
-          100000.0
+          100000.0,
+          0.0
         ]
       },
       "asset.lender.credit_loan_balance_lag": {
@@ -850,6 +869,67 @@
           }
         ]
       },
+      "stream.credit.loan.defaults": {
+        "index": {
+          "calendar": "monthly",
+          "start": "2026-01-01",
+          "periods": 12
+        },
+        "offset": 1.0,
+        "entity": "asset.lender",
+        "contract": "credit.loan",
+        "line": "default",
+        "values": [
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          }
+        ]
+      },
       "stream.credit.loan.interest": {
         "index": {
           "calendar": "monthly",
@@ -1223,6 +1303,140 @@
         ]
       }
     },
+    "journal": [
+      {
+        "period": 0,
+        "date": "2026-01-01",
+        "actor": "stream:credit.loan.sched_principal",
+        "action": "move",
+        "target": "asset.lender.balance",
+        "outcome": "applied",
+        "amount": -100000.0,
+        "pot_before": 1200000.0,
+        "pot_after": 1100000.0
+      },
+      {
+        "period": 1,
+        "date": "2026-02-01",
+        "actor": "stream:credit.loan.sched_principal",
+        "action": "move",
+        "target": "asset.lender.balance",
+        "outcome": "applied",
+        "amount": -100000.0,
+        "pot_before": 1100000.0,
+        "pot_after": 1000000.0
+      },
+      {
+        "period": 2,
+        "date": "2026-03-01",
+        "actor": "stream:credit.loan.sched_principal",
+        "action": "move",
+        "target": "asset.lender.balance",
+        "outcome": "applied",
+        "amount": -100000.0,
+        "pot_before": 1000000.0,
+        "pot_after": 900000.0
+      },
+      {
+        "period": 3,
+        "date": "2026-04-01",
+        "actor": "stream:credit.loan.sched_principal",
+        "action": "move",
+        "target": "asset.lender.balance",
+        "outcome": "applied",
+        "amount": -100000.0,
+        "pot_before": 900000.0,
+        "pot_after": 800000.0
+      },
+      {
+        "period": 4,
+        "date": "2026-05-01",
+        "actor": "stream:credit.loan.sched_principal",
+        "action": "move",
+        "target": "asset.lender.balance",
+        "outcome": "applied",
+        "amount": -100000.0,
+        "pot_before": 800000.0,
+        "pot_after": 700000.0
+      },
+      {
+        "period": 5,
+        "date": "2026-06-01",
+        "actor": "stream:credit.loan.sched_principal",
+        "action": "move",
+        "target": "asset.lender.balance",
+        "outcome": "applied",
+        "amount": -100000.0,
+        "pot_before": 700000.0,
+        "pot_after": 600000.0
+      },
+      {
+        "period": 6,
+        "date": "2026-07-01",
+        "actor": "stream:credit.loan.sched_principal",
+        "action": "move",
+        "target": "asset.lender.balance",
+        "outcome": "applied",
+        "amount": -100000.0,
+        "pot_before": 600000.0,
+        "pot_after": 500000.0
+      },
+      {
+        "period": 7,
+        "date": "2026-08-01",
+        "actor": "stream:credit.loan.sched_principal",
+        "action": "move",
+        "target": "asset.lender.balance",
+        "outcome": "applied",
+        "amount": -100000.0,
+        "pot_before": 500000.0,
+        "pot_after": 400000.0
+      },
+      {
+        "period": 8,
+        "date": "2026-09-01",
+        "actor": "stream:credit.loan.sched_principal",
+        "action": "move",
+        "target": "asset.lender.balance",
+        "outcome": "applied",
+        "amount": -100000.0,
+        "pot_before": 400000.0,
+        "pot_after": 300000.0
+      },
+      {
+        "period": 9,
+        "date": "2026-10-01",
+        "actor": "stream:credit.loan.sched_principal",
+        "action": "move",
+        "target": "asset.lender.balance",
+        "outcome": "applied",
+        "amount": -100000.0,
+        "pot_before": 300000.0,
+        "pot_after": 200000.0
+      },
+      {
+        "period": 10,
+        "date": "2026-11-01",
+        "actor": "stream:credit.loan.sched_principal",
+        "action": "move",
+        "target": "asset.lender.balance",
+        "outcome": "applied",
+        "amount": -100000.0,
+        "pot_before": 200000.0,
+        "pot_after": 100000.0
+      },
+      {
+        "period": 11,
+        "date": "2026-12-01",
+        "actor": "stream:credit.loan.sched_principal",
+        "action": "move",
+        "target": "asset.lender.balance",
+        "outcome": "applied",
+        "amount": -100000.0,
+        "pot_before": 100000.0,
+        "pot_after": 0.0
+      }
+    ],
     "annual_rollup": {
       "series": {
         "domain.credit.balance_outstanding": {
@@ -1361,6 +1575,19 @@
           "values": [
             {
               "amount": 1200000.0,
+              "currency": "USD"
+            }
+          ]
+        },
+        "stream.credit.loan.defaults": {
+          "index": {
+            "calendar": "annual",
+            "start": "2026-01-01",
+            "periods": 1
+          },
+          "values": [
+            {
+              "amount": 0.0,
               "currency": "USD"
             }
           ]
@@ -1539,6 +1766,7 @@
             ],
             "total": 1200000.0,
             "streams": [
+              "credit.loan.defaults",
               "credit.loan.interest",
               "credit.loan.penalty",
               "credit.loan.prepay",
@@ -1572,6 +1800,7 @@
         "contract_name": "credit.loan",
         "subject": "asset.lender",
         "streams": [
+          "credit.loan.defaults",
           "credit.loan.interest",
           "credit.loan.penalty",
           "credit.loan.prepay",

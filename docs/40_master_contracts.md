@@ -770,11 +770,12 @@ contract names, and their accounts hold what they received (`docs/13`
    before stage 6, whose balance role is defined against the finished
    roster.
 6. **State owned by the agreement** — **built.** `Contract.Debt` names
-   the `balance` field role; the level-pay pool's balance (a field the
-   pack rolls forward and every stream reads — a stream reads the OPENING
-   balance, which is prior state, so nothing needs a same-period value),
-   the interest-only pools' survival factors for now, and the construction
-   loan's drawn balance fill it (`field_role = "balance"` on the rule); the `credit.pool` machine carries `on enter retired { set
+   the `balance` field role and, since `docs/42`, the `balance` ACCOUNT:
+   `credit.loan` opens it at principal and its rows move it (scheduled
+   principal, prepayments and the bullet as cash, the default as a
+   write-off), every row reading the opening as `prev.balance`; the
+   construction loan still fills the role with its drawn balance
+   (`field_role = "balance"` on the rule) until it migrates; the `credit.pool` machine carries `on enter retired { set
    balance = 0 }`, resolved per entity by the compiler (`field_roles` on
    the IR entity) and written field by field by the engine, one journal
    line each. A model retires a pool with one status write —

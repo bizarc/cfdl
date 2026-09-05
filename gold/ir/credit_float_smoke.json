@@ -17,10 +17,10 @@
       "type": "Credit.Asset.Loan",
       "fields": {},
       "rules": {
-        "credit_loan_survival_lag_smoke": {
+        "credit_loan_lagged_balance_smoke": {
           "init": {
             "lang": "cfdl",
-            "src": "1"
+            "src": "1200000"
           },
           "next": {
             "lang": "cfdl",
@@ -32,28 +32,11 @@
             "from": "2026-01-01",
             "to": "2027-03-01"
           }
-        },
-        "credit_loan_survival_smoke": {
-          "init": {
-            "lang": "cfdl",
-            "src": "1"
-          },
-          "next": {
-            "lang": "cfdl",
-            "src": "prev * ((1 - cpr_to_periodic(if(0 == 0, 0.03, 0 * (min(0.0002 * min(max(1, (0 + (months_between(parse_date(\"2026-01-01\"), time.date) - 1)) + 1), 30), 0.006) - 0.000095 * max(0, min(max(1, (0 + (months_between(parse_date(\"2026-01-01\"), time.date) - 1)) + 1), 120) - 60))), 12)) - if(0 == 0, cpr_to_periodic(if(0 == 0, 0.10, min(0 * 0.002 * max(1, min((0 + (months_between(parse_date(\"2026-01-01\"), time.date) - 1)) + 1, 30)), 1)), 12), min(0 / max(1 - 0 * (0 + (months_between(parse_date(\"2026-01-01\"), time.date) - 1)), 0.000001), 1)))"
-          },
-          "schedule": {
-            "kind": "Every",
-            "every": "monthly",
-            "from": "2026-01-01",
-            "to": "2027-03-01"
-          }
         }
       },
       "field_roles": {
         "balance": [
-          "credit_loan_survival_smoke",
-          "credit_loan_survival_lag_smoke"
+          "credit_loan_lagged_balance_smoke"
         ]
       },
       "state": {},
@@ -78,6 +61,17 @@
           "value": 0.038
         }
       ]
+    }
+  ],
+  "accounts": [
+    {
+      "name": "asset.buyer.balance",
+      "owner_entity": "asset.buyer",
+      "side": "due",
+      "init": {
+        "lang": "cfdl",
+        "src": "1200000"
+      }
     }
   ],
   "lifecycles": [
@@ -366,6 +360,7 @@
       "direction": "inflow",
       "currency": "USD",
       "category": "operating.collection.principal",
+      "moves": "asset.buyer.balance",
       "schedule": {
         "kind": "Every",
         "every": "monthly",
@@ -374,7 +369,7 @@
       },
       "amount": {
         "lang": "cfdl",
-        "src": "if(months_between(parse_date(\"2026-01-01\"), time.date) == 12.0 - 1.0, 1200000.0 * entity.asset.buyer.credit_loan_survival_smoke * (1.0 - cpr_to_periodic(if(0.0 == 0.0, 0.03, 0.0 * (min(0.0002 * min(max(1.0, (0.0 + (months_between(parse_date(\"2026-01-01\"), time.date))) + 1.0), 30.0), 0.006) - 0.000095 * max(0.0, min(max(1.0, (0.0 + (months_between(parse_date(\"2026-01-01\"), time.date))) + 1.0), 120.0) - 60.0))), 12.0)), 0.0)"
+        "src": "if(months_between(parse_date(\"2026-01-01\"), time.date) == 12.0 - 1.0, prev.asset.buyer.balance * (1.0 - cpr_to_periodic(if(0.0 == 0.0, 0.03, 0.0 * (min(0.0002 * min(max(1.0, (0.0 + (months_between(parse_date(\"2026-01-01\"), time.date))) + 1.0), 30.0), 0.006) - 0.000095 * max(0.0, min(max(1.0, (0.0 + (months_between(parse_date(\"2026-01-01\"), time.date))) + 1.0), 120.0) - 60.0))), 12.0)), 0.0)"
       },
       "active_when": {
         "lang": "cfdl",
@@ -400,6 +395,48 @@
       }
     },
     {
+      "id": "2e9f355ea3067ed1b5025464d533a8df",
+      "name": "credit.loan.defaults.smoke",
+      "owner": {
+        "symbol": "asset.buyer"
+      },
+      "direction": "writeoff",
+      "currency": "USD",
+      "moves": "asset.buyer.balance",
+      "schedule": {
+        "kind": "Every",
+        "every": "monthly",
+        "from": "2026-01-01",
+        "to": "2027-03-01"
+      },
+      "amount": {
+        "lang": "cfdl",
+        "src": "if(months_between(parse_date(\"2026-01-01\"), time.date) < 12.0, prev.asset.buyer.balance * cpr_to_periodic(if(0.0 == 0.0, 0.03, 0.0 * (min(0.0002 * min(max(1.0, (0.0 + (months_between(parse_date(\"2026-01-01\"), time.date))) + 1.0), 30.0), 0.006) - 0.000095 * max(0.0, min(max(1.0, (0.0 + (months_between(parse_date(\"2026-01-01\"), time.date))) + 1.0), 120.0) - 60.0))), 12.0), 0.0)"
+      },
+      "active_when": {
+        "lang": "cfdl",
+        "src": "true"
+      },
+      "provenance": {
+        "source_file": "model.cfdl",
+        "source_span": {
+          "start_line": 16,
+          "start_col": 1,
+          "end_line": 31,
+          "end_col": 1
+        },
+        "generated_by": {
+          "pack": {
+            "name": "credit",
+            "version": "0.1.0"
+          },
+          "rule_id": "credit_loan_interest_only_defaults",
+          "line": "default",
+          "contract": "credit.loan.smoke"
+        }
+      }
+    },
+    {
       "id": "195b5984a17ed3407e5bdf1e56e28d28",
       "name": "credit.loan.interest.smoke",
       "owner": {
@@ -416,7 +453,7 @@
       },
       "amount": {
         "lang": "cfdl",
-        "src": "if(months_between(parse_date(\"2026-01-01\"), time.date) < 12.0, 1200000.0 * entity.asset.buyer.credit_loan_survival_smoke * (1.0 - cpr_to_periodic(if(0.0 == 0.0, 0.03, 0.0 * (min(0.0002 * min(max(1.0, (0.0 + (months_between(parse_date(\"2026-01-01\"), time.date))) + 1.0), 30.0), 0.006) - 0.000095 * max(0.0, min(max(1.0, (0.0 + (months_between(parse_date(\"2026-01-01\"), time.date))) + 1.0), 120.0) - 60.0))), 12.0)) * clamp(curve_value(\"sofr\", time.date) + 0.03, 0.0725, 0.10) / 12.0, 0.0)"
+        "src": "if(months_between(parse_date(\"2026-01-01\"), time.date) < 12.0, prev.asset.buyer.balance * (1.0 - cpr_to_periodic(if(0.0 == 0.0, 0.03, 0.0 * (min(0.0002 * min(max(1.0, (0.0 + (months_between(parse_date(\"2026-01-01\"), time.date))) + 1.0), 30.0), 0.006) - 0.000095 * max(0.0, min(max(1.0, (0.0 + (months_between(parse_date(\"2026-01-01\"), time.date))) + 1.0), 120.0) - 60.0))), 12.0)) * clamp(curve_value(\"sofr\", time.date) + 0.03, 0.0725, 0.10) / 12.0, 0.0)"
       },
       "active_when": {
         "lang": "cfdl",
@@ -458,7 +495,7 @@
       },
       "amount": {
         "lang": "cfdl",
-        "src": "if(months_between(parse_date(\"2026-01-01\"), time.date) < 12.0 - 1.0, 1200000.0 * entity.asset.buyer.credit_loan_survival_smoke * if(0.0 == 0.0, cpr_to_periodic(if(0.0 == 0.0, 0.10, min(0.0 * 0.002 * max(1.0, min((0.0 + (months_between(parse_date(\"2026-01-01\"), time.date))) + 1.0, 30.0)), 1.0)), 12.0), min(0.0 / max(1.0 - 0.0 * (0.0 + (months_between(parse_date(\"2026-01-01\"), time.date))), 0.000001), 1.0)) * 0.0, 0.0)"
+        "src": "if(months_between(parse_date(\"2026-01-01\"), time.date) < 12.0 - 1.0, prev.asset.buyer.balance * if(0.0 == 0.0, cpr_to_periodic(if(0.0 == 0.0, 0.10, min(0.0 * 0.002 * max(1.0, min((0.0 + (months_between(parse_date(\"2026-01-01\"), time.date))) + 1.0, 30.0)), 1.0)), 12.0), min(0.0 / max(1.0 - 0.0 * (0.0 + (months_between(parse_date(\"2026-01-01\"), time.date))), 0.000001), 1.0)) * 0.0, 0.0)"
       },
       "active_when": {
         "lang": "cfdl",
@@ -492,6 +529,7 @@
       "direction": "inflow",
       "currency": "USD",
       "category": "operating.collection.prepayment",
+      "moves": "asset.buyer.balance",
       "schedule": {
         "kind": "Every",
         "every": "monthly",
@@ -500,7 +538,7 @@
       },
       "amount": {
         "lang": "cfdl",
-        "src": "if(months_between(parse_date(\"2026-01-01\"), time.date) < 12.0 - 1.0, 1200000.0 * entity.asset.buyer.credit_loan_survival_smoke * if(0.0 == 0.0, cpr_to_periodic(if(0.0 == 0.0, 0.10, min(0.0 * 0.002 * max(1.0, min((0.0 + (months_between(parse_date(\"2026-01-01\"), time.date))) + 1.0, 30.0)), 1.0)), 12.0), min(0.0 / max(1.0 - 0.0 * (0.0 + (months_between(parse_date(\"2026-01-01\"), time.date))), 0.000001), 1.0)), 0.0)"
+        "src": "if(months_between(parse_date(\"2026-01-01\"), time.date) < 12.0 - 1.0, prev.asset.buyer.balance * if(0.0 == 0.0, cpr_to_periodic(if(0.0 == 0.0, 0.10, min(0.0 * 0.002 * max(1.0, min((0.0 + (months_between(parse_date(\"2026-01-01\"), time.date))) + 1.0, 30.0)), 1.0)), 12.0), min(0.0 / max(1.0 - 0.0 * (0.0 + (months_between(parse_date(\"2026-01-01\"), time.date))), 0.000001), 1.0)), 0.0)"
       },
       "active_when": {
         "lang": "cfdl",
@@ -542,7 +580,7 @@
       },
       "amount": {
         "lang": "cfdl",
-        "src": "if(months_between(parse_date(\"2026-01-01\"), time.date) >= 3.0 and months_between(parse_date(\"2026-01-01\"), time.date) < 12.0 + 3.0, 1200000.0 * entity.asset.buyer.credit_loan_survival_lag_smoke * cpr_to_periodic(if(0.0 == 0.0, 0.03, 0.0 * (min(0.0002 * min(max(1.0, (0.0 + (months_between(parse_date(\"2026-01-01\"), time.date) - 3.0)) + 1.0), 30.0), 0.006) - 0.000095 * max(0.0, min(max(1.0, (0.0 + (months_between(parse_date(\"2026-01-01\"), time.date) - 3.0)) + 1.0), 120.0) - 60.0))), 12.0) * (1.0 - 0.50), 0.0)"
+        "src": "if(months_between(parse_date(\"2026-01-01\"), time.date) >= 3.0 and months_between(parse_date(\"2026-01-01\"), time.date) < 12.0 + 3.0, entity.asset.buyer.credit_loan_lagged_balance_smoke * cpr_to_periodic(if(0.0 == 0.0, 0.03, 0.0 * (min(0.0002 * min(max(1.0, (0.0 + (months_between(parse_date(\"2026-01-01\"), time.date) - 3.0)) + 1.0), 30.0), 0.006) - 0.000095 * max(0.0, min(max(1.0, (0.0 + (months_between(parse_date(\"2026-01-01\"), time.date) - 3.0)) + 1.0), 120.0) - 60.0))), 12.0) * (1.0 - 0.50), 0.0)"
       },
       "active_when": {
         "lang": "cfdl",
@@ -584,7 +622,7 @@
       },
       "amount": {
         "lang": "cfdl",
-        "src": "if(months_between(parse_date(\"2026-01-01\"), time.date) < 12.0, 1200000.0 * entity.asset.buyer.credit_loan_survival_smoke * (1.0 - cpr_to_periodic(if(0.0 == 0.0, 0.03, 0.0 * (min(0.0002 * min(max(1.0, (0.0 + (months_between(parse_date(\"2026-01-01\"), time.date))) + 1.0), 30.0), 0.006) - 0.000095 * max(0.0, min(max(1.0, (0.0 + (months_between(parse_date(\"2026-01-01\"), time.date))) + 1.0), 120.0) - 60.0))), 12.0)) * (0.0 / 12.0), 0.0)"
+        "src": "if(months_between(parse_date(\"2026-01-01\"), time.date) < 12.0, prev.asset.buyer.balance * (1.0 - cpr_to_periodic(if(0.0 == 0.0, 0.03, 0.0 * (min(0.0002 * min(max(1.0, (0.0 + (months_between(parse_date(\"2026-01-01\"), time.date))) + 1.0), 30.0), 0.006) - 0.000095 * max(0.0, min(max(1.0, (0.0 + (months_between(parse_date(\"2026-01-01\"), time.date))) + 1.0), 120.0) - 60.0))), 12.0)) * (0.0 / 12.0), 0.0)"
       },
       "active_when": {
         "lang": "cfdl",
@@ -655,24 +693,18 @@
       "stream": "credit.loan.interest.smoke",
       "contract": "credit.loan.smoke",
       "terms": {
-        "abs_speed": "0",
         "age_months": "0",
         "cdr": "0.03",
-        "cpr": "0.10",
         "index_curve": "sofr",
         "margin": "0.03",
         "payment_frequency": "",
-        "principal": "1200000",
-        "psa_speed": "0",
         "rate_cap": "0.10",
         "rate_floor": "0.0725",
         "sda_speed": "0"
       },
       "defaults_applied": [
-        "abs_speed",
         "age_months",
         "payment_frequency",
-        "psa_speed",
         "sda_speed"
       ]
     },
@@ -680,20 +712,29 @@
       "stream": "credit.loan.bullet.smoke",
       "contract": "credit.loan.smoke",
       "terms": {
-        "abs_speed": "0",
         "age_months": "0",
         "cdr": "0.03",
-        "cpr": "0.10",
         "payment_frequency": "",
-        "principal": "1200000",
-        "psa_speed": "0",
         "sda_speed": "0"
       },
       "defaults_applied": [
-        "abs_speed",
         "age_months",
         "payment_frequency",
-        "psa_speed",
+        "sda_speed"
+      ]
+    },
+    {
+      "stream": "credit.loan.defaults.smoke",
+      "contract": "credit.loan.smoke",
+      "terms": {
+        "age_months": "0",
+        "cdr": "0.03",
+        "payment_frequency": "",
+        "sda_speed": "0"
+      },
+      "defaults_applied": [
+        "age_months",
+        "payment_frequency",
         "sda_speed"
       ]
     },
@@ -703,21 +744,17 @@
       "terms": {
         "abs_speed": "0",
         "age_months": "0",
-        "cdr": "0.03",
         "cpr": "0.10",
         "payment_frequency": "",
         "prepay_penalty_rate": "0",
-        "principal": "1200000",
-        "psa_speed": "0",
-        "sda_speed": "0"
+        "psa_speed": "0"
       },
       "defaults_applied": [
         "abs_speed",
         "age_months",
         "payment_frequency",
         "prepay_penalty_rate",
-        "psa_speed",
-        "sda_speed"
+        "psa_speed"
       ]
     },
     {
@@ -726,19 +763,15 @@
       "terms": {
         "abs_speed": "0",
         "age_months": "0",
-        "cdr": "0.03",
         "cpr": "0.10",
         "payment_frequency": "",
-        "principal": "1200000",
-        "psa_speed": "0",
-        "sda_speed": "0"
+        "psa_speed": "0"
       },
       "defaults_applied": [
         "abs_speed",
         "age_months",
         "payment_frequency",
-        "psa_speed",
-        "sda_speed"
+        "psa_speed"
       ]
     },
     {
@@ -767,21 +800,15 @@
       "stream": "credit.loan.servicing.smoke",
       "contract": "credit.loan.smoke",
       "terms": {
-        "abs_speed": "0",
         "age_months": "0",
         "cdr": "0.03",
-        "cpr": "0.10",
         "payment_frequency": "",
-        "principal": "1200000",
-        "psa_speed": "0",
         "sda_speed": "0",
         "servicing_fee": "0"
       },
       "defaults_applied": [
-        "abs_speed",
         "age_months",
         "payment_frequency",
-        "psa_speed",
         "sda_speed",
         "servicing_fee"
       ]

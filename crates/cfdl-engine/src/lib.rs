@@ -1064,7 +1064,7 @@ fn account_moves_at(
         moves
             .entry(account.to_string())
             .or_default()
-            .push((stream.name.clone(), delta));
+            .push((format!("stream:{}", stream.name), delta));
     }
     moves
 }
@@ -1249,6 +1249,16 @@ fn walk_periods(
         Arc::new(inits)
     };
     walk.observe_account_inits(Arc::clone(&account_inits));
+    walk.observe_entity_accounts(
+        ir.accounts
+            .iter()
+            .filter(|a| a.owner_entity.is_some() && !a.fold)
+            .map(|a| a.name.clone())
+            .collect(),
+    );
+    // What each period's machines moved on an account, kept for the deferred
+    // stage of a priced model.
+    let mut machine_moves_by_period: Vec<Vec<(String, String, f64)>> = Vec::new();
     let account_side: BTreeMap<&str, &str> = ir
         .accounts
         .iter()
@@ -1293,7 +1303,7 @@ fn walk_periods(
         //    Each account's OPENING this period — the prior close, or the
         //    `init` in the first period — is what a stream reads as
         //    `prev.<account>` (`docs/42` §3.3).
-        let opening_accounts: BTreeMap<String, f64> = account_balances
+        let mut opening_accounts: BTreeMap<String, f64> = account_balances
             .iter()
             .map(|(name, column)| {
                 let opening = if t == 0 {
@@ -1304,6 +1314,21 @@ fn walk_periods(
                 (name.clone(), opening)
             })
             .collect();
+        // A MACHINE'S WRITE TO AN ACCOUNT moves its opening (docs/42 §3.5):
+        // `set balance = 0` on repurchase is a write-off of the whole opening
+        // balance, so every stream reading `prev.balance` this period reads
+        // zero. The movement is journaled by the stage below.
+        let mut machine_moves: Vec<(String, String, f64)> = Vec::new();
+        for (name, value, actor) in walk.take_account_writes() {
+            let before = opening_accounts.get(&name).copied().unwrap_or(0.0);
+            opening_accounts.insert(name.clone(), value);
+            machine_moves.push((name, actor, value - before));
+        }
+        for (fold, of) in &members {
+            let sum: f64 = of.iter().filter_map(|m| opening_accounts.get(m)).sum();
+            opening_accounts.insert(fold.clone(), sum);
+        }
+        machine_moves_by_period.push(machine_moves.clone());
         let (field_values, entity_state, stream_active) = walk.settled();
         for wave in 0..=max_wave {
             let wave_is_active = (0..ir.streams.len()).any(|idx| {
@@ -1355,7 +1380,13 @@ fn walk_periods(
         //     lowers a receivable its owner is due; an accrual raises and a
         //     write-off lowers, whichever side. Applied to the balance by the
         //     stage below, one journal line each.
-        let moves = account_moves_at(ir, &full, &account_side, t);
+        let mut moves = account_moves_at(ir, &full, &account_side, t);
+        for (name, actor, delta) in &machine_moves {
+            moves
+                .entry(name.clone())
+                .or_default()
+                .push((actor.clone(), *delta));
+        }
 
         // 3. THE WATERFALL STAGE, over cash this period has produced and never
         //    interleaved with it. Accounts take their inflow, then each
@@ -1436,7 +1467,13 @@ fn walk_periods(
         }
         for (t, date) in timeline.iter().enumerate() {
             let snapshot = Arc::new(full.clone());
-            let moves = account_moves_at(ir, &full, &account_side, t);
+            let mut moves = account_moves_at(ir, &full, &account_side, t);
+            for (name, actor, delta) in machine_moves_by_period.get(t).into_iter().flatten() {
+                moves
+                    .entry(name.clone())
+                    .or_default()
+                    .push((actor.clone(), *delta));
+            }
             stage.step(
                 ir,
                 config,

@@ -1,7 +1,7 @@
 {
   "results_version": "0.13",
-  "model_hash": "f81c144b45ad4d1c4ded2dd433827c390b38bc25181781044c10e12c57de82f6",
-  "ledger_hash": "e23f3c0c3a482d10a475f16a9db89a067e5c92632d9def83b0e82b4e2d69376d",
+  "model_hash": "b511b1bcf8ae3cf9a7d9bf1c79955bbfa79fa1296e2d138ee0f434afa22f0c67",
+  "ledger_hash": "5d5c091267dfd0eb69e2986205b711829910ca14759c64c142184999478d64ba",
   "engine": {
     "name": "cfdl-engine",
     "version": "0.9.0"
@@ -9,6 +9,21 @@
   "warnings": [],
   "inputs": {
     "streams": [
+      {
+        "contract": "credit.loan.smoke",
+        "defaults_applied": [
+          "age_months",
+          "payment_frequency",
+          "sda_speed"
+        ],
+        "stream": "credit.loan.defaults.smoke",
+        "terms": {
+          "age_months": "0",
+          "cdr": "0.03",
+          "payment_frequency": "",
+          "sda_speed": "0"
+        }
+      },
       {
         "contract": "credit.loan.smoke",
         "defaults_applied": [
@@ -133,6 +148,10 @@
       "model.wal_years": 0.287366,
       "run.annual_discount_rate": 0.1,
       "run.periods_per_year": 12.0,
+      "stream.credit.loan.defaults.smoke.total": {
+        "amount": -14173.04557,
+        "currency": "USD"
+      },
       "stream.credit.loan.interest.smoke.total": {
         "amount": 27883.323684,
         "currency": "USD"
@@ -159,6 +178,30 @@
       }
     },
     "series": {
+      "account.asset.pool.balance": {
+        "index": {
+          "calendar": "monthly",
+          "start": "2026-01-01",
+          "periods": 15
+        },
+        "values": [
+          1090285.283105555,
+          982416.911046227,
+          876370.2055777503,
+          772120.7911746316,
+          669644.5914617726,
+          568917.8256873135,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ]
+      },
       "asset.pool.credit_loan_balance_lag_smoke": {
         "index": {
           "calendar": "monthly",
@@ -172,30 +215,6 @@
           1200000.0,
           1090285.283105555,
           982416.911046227,
-          0.0,
-          0.0,
-          0.0,
-          0.0,
-          0.0,
-          0.0,
-          0.0,
-          0.0,
-          0.0
-        ]
-      },
-      "asset.pool.credit_loan_balance_smoke": {
-        "index": {
-          "calendar": "monthly",
-          "start": "2026-01-01",
-          "periods": 15
-        },
-        "values": [
-          1200000.0,
-          1090285.283105555,
-          982416.911046227,
-          876370.2055777503,
-          772120.7911746312,
-          669644.5914617721,
           0.0,
           0.0,
           0.0,
@@ -990,6 +1009,79 @@
           }
         ]
       },
+      "stream.credit.loan.defaults.smoke": {
+        "index": {
+          "calendar": "monthly",
+          "start": "2026-01-01",
+          "periods": 15
+        },
+        "offset": 1.0,
+        "entity": "asset.pool",
+        "contract": "credit.loan.smoke",
+        "line": "default",
+        "values": [
+          {
+            "amount": -3042.058337,
+            "currency": "USD"
+          },
+          {
+            "amount": -2763.926196,
+            "currency": "USD"
+          },
+          {
+            "amount": -2490.474629,
+            "currency": "USD"
+          },
+          {
+            "amount": -2221.641075,
+            "currency": "USD"
+          },
+          {
+            "amount": -1957.363741,
+            "currency": "USD"
+          },
+          {
+            "amount": -1697.581593,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          }
+        ]
+      },
       "stream.credit.loan.interest.smoke": {
         "index": {
           "calendar": "monthly",
@@ -1462,7 +1554,7 @@
             "date": "2026-07-01",
             "actor": "lifecycle:credit.loan",
             "action": "set",
-            "target": "asset.pool.credit_loan_balance_smoke",
+            "target": "asset.pool.credit_loan_balance_lag_smoke",
             "outcome": "applied",
             "note": "on enter into repurchased: 0.0 = 0"
           },
@@ -1471,11 +1563,220 @@
             "date": "2026-07-01",
             "actor": "lifecycle:credit.loan",
             "action": "set",
-            "target": "asset.pool.credit_loan_balance_lag_smoke",
+            "target": "asset.pool.balance",
             "outcome": "applied",
-            "note": "on enter into repurchased: 0.0 = 0"
+            "note": "an account: its opening becomes 0, applied as a movement — see the `move` line"
           }
         ]
+      },
+      {
+        "period": 0,
+        "date": "2026-01-01",
+        "actor": "stream:credit.loan.defaults.smoke",
+        "action": "move",
+        "target": "asset.pool.balance",
+        "outcome": "applied",
+        "amount": -3042.058337,
+        "pot_before": 1200000.0,
+        "pot_after": 1196957.941663
+      },
+      {
+        "period": 0,
+        "date": "2026-01-01",
+        "actor": "stream:credit.loan.prepay.smoke",
+        "action": "move",
+        "target": "asset.pool.balance",
+        "outcome": "applied",
+        "amount": -9639.551718,
+        "pot_before": 1196957.941663,
+        "pot_after": 1187318.389946
+      },
+      {
+        "period": 0,
+        "date": "2026-01-01",
+        "actor": "stream:credit.loan.sched_principal.smoke",
+        "action": "move",
+        "target": "asset.pool.balance",
+        "outcome": "applied",
+        "amount": -97033.10684,
+        "pot_before": 1187318.389946,
+        "pot_after": 1090285.283106
+      },
+      {
+        "period": 1,
+        "date": "2026-02-01",
+        "actor": "stream:credit.loan.defaults.smoke",
+        "action": "move",
+        "target": "asset.pool.balance",
+        "outcome": "applied",
+        "amount": -2763.926196,
+        "pot_before": 1090285.283106,
+        "pot_after": 1087521.35691
+      },
+      {
+        "period": 1,
+        "date": "2026-02-01",
+        "actor": "stream:credit.loan.prepay.smoke",
+        "action": "move",
+        "target": "asset.pool.balance",
+        "outcome": "applied",
+        "amount": -8685.853849,
+        "pot_before": 1087521.35691,
+        "pot_after": 1078835.503061
+      },
+      {
+        "period": 1,
+        "date": "2026-02-01",
+        "actor": "stream:credit.loan.sched_principal.smoke",
+        "action": "move",
+        "target": "asset.pool.balance",
+        "outcome": "applied",
+        "amount": -96418.592015,
+        "pot_before": 1078835.503061,
+        "pot_after": 982416.911046
+      },
+      {
+        "period": 2,
+        "date": "2026-03-01",
+        "actor": "stream:credit.loan.defaults.smoke",
+        "action": "move",
+        "target": "asset.pool.balance",
+        "outcome": "applied",
+        "amount": -2490.474629,
+        "pot_before": 982416.911046,
+        "pot_after": 979926.436418
+      },
+      {
+        "period": 2,
+        "date": "2026-03-01",
+        "actor": "stream:credit.loan.prepay.smoke",
+        "action": "move",
+        "target": "asset.pool.balance",
+        "outcome": "applied",
+        "amount": -7748.261901,
+        "pot_before": 979926.436418,
+        "pot_after": 972178.174517
+      },
+      {
+        "period": 2,
+        "date": "2026-03-01",
+        "actor": "stream:credit.loan.sched_principal.smoke",
+        "action": "move",
+        "target": "asset.pool.balance",
+        "outcome": "applied",
+        "amount": -95807.968939,
+        "pot_before": 972178.174517,
+        "pot_after": 876370.205578
+      },
+      {
+        "period": 3,
+        "date": "2026-04-01",
+        "actor": "stream:credit.loan.defaults.smoke",
+        "action": "move",
+        "target": "asset.pool.balance",
+        "outcome": "applied",
+        "amount": -2221.641075,
+        "pot_before": 876370.205578,
+        "pot_after": 874148.564503
+      },
+      {
+        "period": 3,
+        "date": "2026-04-01",
+        "actor": "stream:credit.loan.prepay.smoke",
+        "action": "move",
+        "target": "asset.pool.balance",
+        "outcome": "applied",
+        "amount": -6826.560364,
+        "pot_before": 874148.564503,
+        "pot_after": 867322.004139
+      },
+      {
+        "period": 3,
+        "date": "2026-04-01",
+        "actor": "stream:credit.loan.sched_principal.smoke",
+        "action": "move",
+        "target": "asset.pool.balance",
+        "outcome": "applied",
+        "amount": -95201.212965,
+        "pot_before": 867322.004139,
+        "pot_after": 772120.791175
+      },
+      {
+        "period": 4,
+        "date": "2026-05-01",
+        "actor": "stream:credit.loan.defaults.smoke",
+        "action": "move",
+        "target": "asset.pool.balance",
+        "outcome": "applied",
+        "amount": -1957.363741,
+        "pot_before": 772120.791175,
+        "pot_after": 770163.427433
+      },
+      {
+        "period": 4,
+        "date": "2026-05-01",
+        "actor": "stream:credit.loan.prepay.smoke",
+        "action": "move",
+        "target": "asset.pool.balance",
+        "outcome": "applied",
+        "amount": -5920.53637,
+        "pot_before": 770163.427433,
+        "pot_after": 764242.891064
+      },
+      {
+        "period": 4,
+        "date": "2026-05-01",
+        "actor": "stream:credit.loan.sched_principal.smoke",
+        "action": "move",
+        "target": "asset.pool.balance",
+        "outcome": "applied",
+        "amount": -94598.299602,
+        "pot_before": 764242.891064,
+        "pot_after": 669644.591462
+      },
+      {
+        "period": 5,
+        "date": "2026-06-01",
+        "actor": "stream:credit.loan.defaults.smoke",
+        "action": "move",
+        "target": "asset.pool.balance",
+        "outcome": "applied",
+        "amount": -1697.581593,
+        "pot_before": 669644.591462,
+        "pot_after": 667947.009868
+      },
+      {
+        "period": 5,
+        "date": "2026-06-01",
+        "actor": "stream:credit.loan.prepay.smoke",
+        "action": "move",
+        "target": "asset.pool.balance",
+        "outcome": "applied",
+        "amount": -5029.979666,
+        "pot_before": 667947.009868,
+        "pot_after": 662917.030203
+      },
+      {
+        "period": 5,
+        "date": "2026-06-01",
+        "actor": "stream:credit.loan.sched_principal.smoke",
+        "action": "move",
+        "target": "asset.pool.balance",
+        "outcome": "applied",
+        "amount": -93999.204515,
+        "pot_before": 662917.030203,
+        "pot_after": 568917.825687
+      },
+      {
+        "period": 6,
+        "date": "2026-07-01",
+        "actor": "lifecycle:credit.loan",
+        "action": "move",
+        "target": "asset.pool.balance",
+        "outcome": "applied",
+        "amount": -568917.825687,
+        "pot_before": 568917.825687,
+        "pot_after": 0.0
       }
     ],
     "annual_rollup": {
@@ -1661,6 +1962,23 @@
             }
           ]
         },
+        "stream.credit.loan.defaults.smoke": {
+          "index": {
+            "calendar": "annual",
+            "start": "2026-01-01",
+            "periods": 2
+          },
+          "values": [
+            {
+              "amount": -14173.04557,
+              "currency": "USD"
+            },
+            {
+              "amount": 0.0,
+              "currency": "USD"
+            }
+          ]
+        },
         "stream.credit.loan.interest.smoke": {
           "index": {
             "calendar": "annual",
@@ -1812,27 +2130,27 @@
             "display_sign": 1.0,
             "values": [
               {
-                "amount": 112657.448266,
+                "amount": 109615.389929,
                 "currency": "USD"
               },
               {
-                "amount": 110542.052649,
+                "amount": 107778.126453,
                 "currency": "USD"
               },
               {
-                "amount": 108455.863022,
+                "amount": 105965.388393,
                 "currency": "USD"
               },
               {
-                "amount": 107176.013598,
+                "amount": 104954.372523,
                 "currency": "USD"
               },
               {
-                "amount": 105012.793303,
+                "amount": 103055.429562,
                 "currency": "USD"
               },
               {
-                "amount": 102880.012637,
+                "amount": 101182.431044,
                 "currency": "USD"
               },
               {
@@ -1872,8 +2190,9 @@
                 "currency": "USD"
               }
             ],
-            "total": 646724.183475,
+            "total": 632551.137904,
             "streams": [
+              "credit.loan.defaults.smoke",
               "credit.loan.interest.smoke",
               "credit.loan.penalty.smoke",
               "credit.loan.prepay.smoke",
@@ -1884,10 +2203,16 @@
           }
         ],
         "reconciliation": {
-          "bottom_line": 646724.183475,
+          "bottom_line": 632551.137904,
           "model_total": 646724.183474,
-          "residual": 1e-6
-        }
+          "residual": -14173.04557
+        },
+        "diagnostics": [
+          {
+            "code": "W3502_STATEMENT_BOTTOM_LINE_RESIDUAL",
+            "message": "Statement 'by_entity' totals 632551.137904 against model.total 646724.183474, a residual of -14173.045570."
+          }
+        ]
       }
     ]
   },
@@ -1908,6 +2233,7 @@
         "instance": "smoke",
         "subject": "asset.pool",
         "streams": [
+          "credit.loan.defaults.smoke",
           "credit.loan.interest.smoke",
           "credit.loan.penalty.smoke",
           "credit.loan.prepay.smoke",

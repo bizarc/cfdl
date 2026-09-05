@@ -1,7 +1,7 @@
 {
   "results_version": "0.13",
-  "model_hash": "7d12560aa815f5e1fe94a328123691a1f36bce5b149ff474ea8f62ad0a428e94",
-  "ledger_hash": "1f53c5339642cb9fd1fc88255496b09a18a64f7d3132884f4a51170fb22c22c6",
+  "model_hash": "dde92080fb00fa49b6f16233eab33b6ca2884617ccf73d383c0650bc8980e817",
+  "ledger_hash": "d64a3a56341ee76fc0e4b8466f5b41636985fad808156e26c934df5c776e047a",
   "engine": {
     "name": "cfdl-engine",
     "version": "0.9.0"
@@ -9,6 +9,21 @@
   "warnings": [],
   "inputs": {
     "streams": [
+      {
+        "contract": "credit.loan.one",
+        "defaults_applied": [
+          "age_months",
+          "payment_frequency",
+          "sda_speed"
+        ],
+        "stream": "credit.loan.defaults.one",
+        "terms": {
+          "age_months": "0",
+          "cdr": "0",
+          "payment_frequency": "",
+          "sda_speed": "0"
+        }
+      },
       {
         "contract": "credit.loan.one",
         "defaults_applied": [
@@ -138,6 +153,10 @@
       "model.wal_years": 0.208333,
       "run.annual_discount_rate": 0.03,
       "run.periods_per_year": 12.0,
+      "stream.credit.loan.defaults.one.total": {
+        "amount": 0.0,
+        "currency": "USD"
+      },
       "stream.credit.loan.interest.one.total": {
         "amount": 25124.375647,
         "currency": "USD"
@@ -164,6 +183,19 @@
       }
     },
     "series": {
+      "account.asset.pool.balance": {
+        "index": {
+          "calendar": "monthly",
+          "start": "2017-01-01",
+          "periods": 4
+        },
+        "values": [
+          753718.9060883395,
+          504975.0012375623,
+          253743.6573382777,
+          0.0
+        ]
+      },
       "asset.pool.cash_flag": {
         "index": {
           "calendar": "monthly",
@@ -178,19 +210,6 @@
         ]
       },
       "asset.pool.credit_loan_balance_lag_one": {
-        "index": {
-          "calendar": "monthly",
-          "start": "2017-01-01",
-          "periods": 4
-        },
-        "values": [
-          1000000.0,
-          753718.9060883395,
-          504975.0012375628,
-          253743.65733827793
-        ]
-      },
-      "asset.pool.credit_loan_balance_one": {
         "index": {
           "calendar": "monthly",
           "start": "2017-01-01",
@@ -542,6 +561,35 @@
           }
         ]
       },
+      "stream.credit.loan.defaults.one": {
+        "index": {
+          "calendar": "monthly",
+          "start": "2017-01-01",
+          "periods": 4
+        },
+        "offset": 1.0,
+        "entity": "asset.pool",
+        "contract": "credit.loan.one",
+        "line": "default",
+        "values": [
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          }
+        ]
+      },
       "stream.credit.loan.interest.one": {
         "index": {
           "calendar": "monthly",
@@ -826,6 +874,17 @@
       {
         "period": 0,
         "date": "2017-01-01",
+        "actor": "stream:credit.loan.sched_principal.one",
+        "action": "move",
+        "target": "asset.pool.balance",
+        "outcome": "applied",
+        "amount": -246281.093912,
+        "pot_before": 1000000.0,
+        "pot_after": 753718.906088
+      },
+      {
+        "period": 0,
+        "date": "2017-01-01",
         "actor": "waterfall:dist",
         "action": "pay",
         "target": "reads_fee_rate -> party.investor",
@@ -859,6 +918,17 @@
       {
         "period": 1,
         "date": "2017-02-01",
+        "actor": "stream:credit.loan.sched_principal.one",
+        "action": "move",
+        "target": "asset.pool.balance",
+        "outcome": "applied",
+        "amount": -248743.904851,
+        "pot_before": 753718.906088,
+        "pot_after": 504975.001238
+      },
+      {
+        "period": 1,
+        "date": "2017-02-01",
         "actor": "waterfall:dist",
         "action": "pay",
         "target": "reads_fee_rate -> party.investor",
@@ -888,6 +958,17 @@
         "amount": 236281.093912,
         "pot_before": 236281.093912,
         "pot_after": 0.0
+      },
+      {
+        "period": 2,
+        "date": "2017-03-01",
+        "actor": "stream:credit.loan.sched_principal.one",
+        "action": "move",
+        "target": "asset.pool.balance",
+        "outcome": "applied",
+        "amount": -251231.343899,
+        "pot_before": 504975.001238,
+        "pot_after": 253743.657338
       },
       {
         "period": 2,
@@ -920,6 +1001,17 @@
         "outcome": "applied",
         "amount": 206281.093912,
         "pot_before": 206281.093912,
+        "pot_after": 0.0
+      },
+      {
+        "period": 3,
+        "date": "2017-04-01",
+        "actor": "stream:credit.loan.sched_principal.one",
+        "action": "move",
+        "target": "asset.pool.balance",
+        "outcome": "applied",
+        "amount": -253743.657338,
+        "pot_before": 253743.657338,
         "pot_after": 0.0
       },
       {
@@ -1098,6 +1190,19 @@
             }
           ]
         },
+        "stream.credit.loan.defaults.one": {
+          "index": {
+            "calendar": "annual",
+            "start": "2017-01-01",
+            "periods": 1
+          },
+          "values": [
+            {
+              "amount": 0.0,
+              "currency": "USD"
+            }
+          ]
+        },
         "stream.credit.loan.interest.one": {
           "index": {
             "calendar": "annual",
@@ -1232,6 +1337,7 @@
             ],
             "total": 1025124.375646,
             "streams": [
+              "credit.loan.defaults.one",
               "credit.loan.interest.one",
               "credit.loan.penalty.one",
               "credit.loan.prepay.one",
@@ -1296,6 +1402,7 @@
         "instance": "one",
         "subject": "asset.pool",
         "streams": [
+          "credit.loan.defaults.one",
           "credit.loan.interest.one",
           "credit.loan.penalty.one",
           "credit.loan.prepay.one",

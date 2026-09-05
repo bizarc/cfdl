@@ -278,6 +278,10 @@ def stream_totals(results: dict) -> dict[str, float]:
         if name != "model.net_cash_flow"
         and not name.startswith("state.")
         and not name.startswith("domain.")
+        # An account is a POSITION, not a flow (docs/42): its series is a
+        # balance the pack opens for every loan, published as bare numbers
+        # that never enter a total, so a zero says nothing about the example.
+        and not name.startswith("account.")
         # A field: `<family>.<entity>.<field>`, three segments and no prefix
         # this gate knows. A stream is `stream.<name>`, so the two never
         # collide.
@@ -355,6 +359,10 @@ def nonzero_period_counts(results: dict) -> dict[str, int]:
         if name != "model.net_cash_flow"
         and not name.startswith("state.")
         and not name.startswith("domain.")
+        # An account is a POSITION, not a flow (docs/42): its series is a
+        # balance the pack opens for every loan, published as bare numbers
+        # that never enter a total, so a zero says nothing about the example.
+        and not name.startswith("account.")
         # A field: `<family>.<entity>.<field>`, three segments and no prefix
         # this gate knows. A stream is `stream.<name>`, so the two never
         # collide.

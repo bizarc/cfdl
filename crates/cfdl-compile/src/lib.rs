@@ -316,6 +316,8 @@ struct ActivePackContext {
     /// Per-period subtotal declarations, in declaration order.
     subtotal_specs: Vec<cfdl_pack::SubtotalSpec>,
     lowering_rules: Vec<cfdl_pack::LoweringRule>,
+    /// The accounts the pack's refinements open (`docs/42` §3.5).
+    account_decls: Vec<cfdl_pack::AccountDecl>,
     validations: Vec<cfdl_pack::PackValidation>,
     /// What a model using this pack may be ABOUT, merged over the language's
     /// own base vocabulary. A pack adds types; it cannot remove the ones every
@@ -334,6 +336,10 @@ struct PackLoweringOutput {
     field_roles: BTreeMap<(String, String), Vec<String>>,
     /// What each lowered stream consumed. Parallel to `streams`.
     stream_inputs: Vec<IrStreamInputs>,
+    /// The accounts the contracts OPEN (`docs/42` §3.5): `<subject>.<name>`
+    /// for each `[[accounts]]` declaration whose selection admits the
+    /// contract, with the side the type's `side` implies.
+    accounts: Vec<IrAccount>,
     diagnostics: Vec<Diagnostic>,
 }
 
@@ -462,7 +468,7 @@ struct IrCurve {
 /// A named value per period, defined by a recurrence. `init` and `next` are
 /// both required by validation (E1120/E1121) before lowering runs, so they are
 /// plain fields rather than options here.
-#[derive(Debug, Serialize)]
+#[derive(Debug, Clone, Serialize)]
 struct IrAccount {
     name: String,
     /// The party this account belongs to, when it belongs to one. A general
@@ -1514,6 +1520,9 @@ fn check_participant_returns(
 
 fn check_field_paths(
     resolve_output: &cfdl_resolver::ResolveOutput,
+    // The accounts the packs' contracts open (`docs/42` §3.5), read as
+    // `prev.<subject>.<name>` like a declared claim.
+    lowered_accounts: &[IrAccount],
     // Fields a pack's rules lower onto entities, keyed (owner symbol, field):
     // a structured note's claim is one, and a waterfall step reads it by
     // path exactly as it reads a declared field (docs/40 §4.13).
@@ -1547,8 +1556,13 @@ fn check_field_paths(
             names.insert("state".to_string());
         }
     }
-    // A container's folded accounts read the same way (`docs/42` §3.4).
-    for full in folded_accounts_of(resolve_output).keys() {
+    // A container's folded accounts read the same way (`docs/42` §3.4), and
+    // so do the accounts a pack's contracts open.
+    for full in folded_accounts_of(resolve_output)
+        .keys()
+        .cloned()
+        .chain(lowered_accounts.iter().map(|a| a.name.clone()))
+    {
         if let Some((owner, name)) = full.rsplit_once('.') {
             known
                 .entry(owner.to_string())
@@ -1940,8 +1954,21 @@ fn check_event_stream_targets(
 fn check_lowered_prev_first_period(
     lowered: &[((String, String), IrStream)],
     stream_inputs: &[IrStreamInputs],
+    lowered_accounts: &[IrAccount],
     model_start: &str,
 ) -> Result<(), Vec<Diagnostic>> {
+    let accounts: BTreeMap<String, DeclaredAccount> = lowered_accounts
+        .iter()
+        .map(|a| {
+            (
+                a.name.clone(),
+                DeclaredAccount {
+                    side: a.side.clone(),
+                    fold: a.fold,
+                },
+            )
+        })
+        .collect();
     let contract_of: BTreeMap<&str, &str> = stream_inputs
         .iter()
         .map(|inputs| (inputs.stream.as_str(), inputs.contract.as_str()))
@@ -1959,7 +1986,11 @@ fn check_lowered_prev_first_period(
         if !starts_at_zero {
             continue;
         }
-        if !reads_prev_field(&stream.amount.src) && !reads_prev_field(&stream.active_when.src) {
+        // An account's opening exists in the first period — the `init` —
+        // so a `prev.<account>` read is not a missing close (docs/42 §7).
+        if !reads_prev_field(&strip_prev_accounts(&stream.amount.src, &accounts))
+            && !reads_prev_field(&strip_prev_accounts(&stream.active_when.src, &accounts))
+        {
             continue;
         }
         // Name the contract when provenance carries it. A rule that consumed no
@@ -2274,14 +2305,22 @@ fn check_arrival_action_fields(
     // Field roles the pack's rules fill per entity, (owner, role) → fields
     // (docs/40 §3, stage 6). An action may name a role instead of a field.
     field_roles: &BTreeMap<(String, String), Vec<String>>,
+    // The accounts the packs' contracts open (`docs/42` §3.5): `set balance
+    // = 0` on an entity carrying `<entity>.balance` writes the account.
+    lowered_accounts: &[IrAccount],
 ) -> Result<(), Vec<Diagnostic>> {
     let mut diagnostics: Vec<Diagnostic> = Vec::new();
-    // Every role any master names, so an unfilled role is told apart from a
-    // misspelled field.
+    // Every role any master names, and every account, so an unfilled name is
+    // told apart from a misspelled field.
     let declared_roles: BTreeSet<&str> = ontology
         .contracts
         .iter()
-        .flat_map(|c| c.field_roles.iter().map(|r| r.name.as_str()))
+        .flat_map(|c| {
+            c.field_roles
+                .iter()
+                .map(|r| r.name.as_str())
+                .chain(c.accounts.iter().map(|a| a.name.as_str()))
+        })
         .collect();
     for source_stmt in &resolve_output.source_statements {
         let Stmt::Entity(entity) = &source_stmt.statement else {
@@ -2303,11 +2342,18 @@ fn check_arrival_action_fields(
         {
             known.extend(ty.fields.iter().map(|f| f.name.as_str()));
         }
-        let filled: BTreeSet<&str> = field_roles
+        let mut filled: BTreeSet<&str> = field_roles
             .keys()
             .filter(|(owner, _)| *owner == symbol)
             .map(|(_, role)| role.as_str())
             .collect();
+        for account in lowered_accounts {
+            if account.owner_entity.as_deref() == Some(symbol.as_str()) {
+                if let Some((_, name)) = account.name.rsplit_once('.') {
+                    filled.insert(name);
+                }
+            }
+        }
         let mut report = |action: &ActionDef, where_: String| {
             if known.contains(action.field.as_str()) || filled.contains(action.field.as_str()) {
                 return;
@@ -4824,13 +4870,14 @@ fn build_ir(
     // After lowering, so a field a pack rule hangs on an entity is a name a
     // model expression may read, and a role its rules fill is one an arrival
     // action may name.
-    check_field_paths(resolve_output, &lowered.fields)?;
+    check_field_paths(resolve_output, &lowered.accounts, &lowered.fields)?;
     check_arrival_action_fields(
         resolve_output,
         &machines,
         &machines_by_entity,
         &ontology,
         &lowered.field_roles,
+        &lowered.accounts,
     )?;
     if lowered
         .diagnostics
@@ -4865,7 +4912,12 @@ fn build_ir(
         }
     }
     check_event_stream_targets(resolve_output, &streams, &lowered.streams)?;
-    check_lowered_prev_first_period(&lowered.streams, &lowered.stream_inputs, &time_start)?;
+    check_lowered_prev_first_period(
+        &lowered.streams,
+        &lowered.stream_inputs,
+        &lowered.accounts,
+        &time_start,
+    )?;
     // A LOWERING RULE'S FIELD HANGS ON THE ENTITY IT DESCRIBES.
     //
     // The rule already names its owner — `owner_entity = "${subject}"` — so no
@@ -4974,19 +5026,54 @@ fn build_ir(
             _ => {}
         }
     }
+    // THE ACCOUNTS THE PACKS' CONTRACTS OPEN (docs/42 §3.5).
+    ir_accounts.extend(lowered.accounts.iter().cloned());
     // THE RELATION FOLD (`docs/42` §3.4): every ancestor of an entity that
-    // declares a claim carries the sum of its members' claims of that name,
-    // as a published account with nothing of its own.
-    for full in folded_accounts_of(resolve_output).keys() {
-        ir_accounts.push(IrAccount {
-            name: full.clone(),
-            owner: None,
-            owner_entity: full.rsplit_once('.').map(|(owner, _)| owner.to_string()),
-            side: None,
-            init: None,
-            inflow: None,
-            fold: true,
-        });
+    // carries a claim — declared or opened by a contract — carries the sum of
+    // its members' claims of that name, as a published account with nothing
+    // of its own.
+    {
+        let parent_of: BTreeMap<String, String> = resolve_output
+            .source_statements
+            .iter()
+            .filter_map(|s| match &s.statement {
+                Stmt::Entity(e) => e.parent.clone().map(|p| (e.symbol(), p)),
+                _ => None,
+            })
+            .collect();
+        let existing: BTreeSet<String> = ir_accounts.iter().map(|a| a.name.clone()).collect();
+        let mut folds: BTreeSet<String> = BTreeSet::new();
+        for account in ir_accounts.iter().filter(|a| !a.fold) {
+            let Some(owner) = account.owner_entity.as_deref() else {
+                continue;
+            };
+            let Some((_, short)) = account.name.rsplit_once('.') else {
+                continue;
+            };
+            let mut cursor = parent_of.get(owner);
+            let mut seen: BTreeSet<&str> = BTreeSet::new();
+            while let Some(ancestor) = cursor {
+                if !seen.insert(ancestor.as_str()) {
+                    break;
+                }
+                let full = format!("{ancestor}.{short}");
+                if !existing.contains(&full) {
+                    folds.insert(full);
+                }
+                cursor = parent_of.get(ancestor);
+            }
+        }
+        for full in folds {
+            ir_accounts.push(IrAccount {
+                name: full.clone(),
+                owner: None,
+                owner_entity: full.rsplit_once('.').map(|(owner, _)| owner.to_string()),
+                side: None,
+                init: None,
+                inflow: None,
+                fold: true,
+            });
+        }
     }
 
     // Only machines an entity actually binds are published: an unbound
@@ -4996,7 +5083,12 @@ fn build_ir(
     let declared_field_roles: BTreeSet<String> = ontology
         .contracts
         .iter()
-        .flat_map(|c| c.field_roles.iter().map(|r| r.name.clone()))
+        .flat_map(|c| {
+            c.field_roles
+                .iter()
+                .map(|r| r.name.clone())
+                .chain(c.accounts.iter().map(|a| a.name.clone()))
+        })
         .collect();
     let ir_lifecycles: Vec<IrLifecycle> = {
         let bound: std::collections::BTreeSet<&String> = machines_by_entity.values().collect();
@@ -6221,6 +6313,7 @@ fn resolve_active_pack_inner(
         categories: registry.categories(&active.name),
         subtotal_specs: registry.subtotal_specs(&active.name),
         lowering_rules: registry.lowering_rules(&active.name),
+        account_decls: registry.account_decls(&active.name),
         validations: registry.validations(&active.name),
         ontology: registry
             .ontology(&active.name)
@@ -6406,6 +6499,7 @@ fn lower_contract_streams(
             fields: BTreeMap::new(),
             field_roles: BTreeMap::new(),
             stream_inputs: vec![],
+            accounts: vec![],
             diagnostics: vec![],
         };
     };
@@ -6481,6 +6575,10 @@ fn lower_contract_streams(
     // while these were global.
     let mut lowered_fields: BTreeMap<(String, String), IrFieldRule> = BTreeMap::new();
     let mut lowered_field_roles: BTreeMap<(String, String), Vec<String>> = BTreeMap::new();
+    let mut lowered_accounts: Vec<IrAccount> = Vec::new();
+    // The same accounts as the rewrite sees them: `prev.balance` in a rule's
+    // amount is the subject's own claim, spelled out for the engine.
+    let mut lowered_account_map: BTreeMap<String, DeclaredAccount> = BTreeMap::new();
     let mut stream_inputs: Vec<IrStreamInputs> = Vec::new();
     let mut diagnostics = Vec::new();
     for source_stmt in &resolve_output.source_statements {
@@ -6777,6 +6875,91 @@ fn lower_contract_streams(
             .any(|diag| diag.severity == "error")
         {
             continue;
+        }
+        // THE ACCOUNTS THIS CONTRACT OPENS (docs/42 §3.5). One per
+        // `[[accounts]]` declaration whose selection admits the stated terms:
+        // `<subject>.<name>`, owed by the subject when the type's side is
+        // `pays` and due to it when `receives`, opening at `init`.
+        {
+            let subject = contract
+                .subject_entity
+                .clone()
+                .unwrap_or_else(|| ctx.default_owner.to_string());
+            let terms = stated_terms(contract);
+            for decl in &pack.account_decls {
+                if !rule_matches_contract(&decl.contract_name, &contract.name)
+                    || !cfdl_pack::account_decl_applies(decl, &terms)
+                {
+                    continue;
+                }
+                let side = pack
+                    .ontology
+                    .contract_for_rule(&decl.contract_name)
+                    .and_then(|c| c.side.as_deref())
+                    .map(|side| match side {
+                        "pays" => "owed".to_string(),
+                        _ => "due".to_string(),
+                    });
+                if side.is_none() {
+                    diagnostics.push(lowering_rule_diag(
+                        "E5004_INVALID_LOWERING_RULE",
+                        &format!(
+                            "Contract '{}' opens account '{}', but its type declares no `side`, so whether the subject owes it or is due it is undefined. Declare `side = \"pays\"` or `side = \"receives\"` on the type.",
+                            contract.name, decl.name
+                        ),
+                        source_stmt,
+                        contract.span,
+                    ));
+                    continue;
+                }
+                // The expander hands over the bare term name, `contract.`
+                // already stripped.
+                let resolver = |key: &str| -> Option<String> {
+                    contract.terms.get(key).map(|t| t.value.trim().to_string())
+                };
+                let init = if decl.init.is_empty() {
+                    None
+                } else {
+                    match cfdl_pack::expand_rule_template(&decl.init, &resolver) {
+                        Ok(expanded) => Some(expanded),
+                        Err(missing) => {
+                            diagnostics.push(lowering_rule_diag(
+                                "E5006_MISSING_CONTRACT_TERM",
+                                &format!(
+                                    "Contract '{}' opens account '{}' at `{}`, and states no {}.",
+                                    contract.name,
+                                    decl.name,
+                                    decl.init,
+                                    missing.join(", ")
+                                ),
+                                source_stmt,
+                                contract.span,
+                            ));
+                            continue;
+                        }
+                    }
+                };
+                let full = format!("{subject}.{}", decl.name);
+                lowered_account_map.insert(
+                    full.clone(),
+                    DeclaredAccount {
+                        side: side.clone(),
+                        fold: false,
+                    },
+                );
+                lowered_accounts.push(IrAccount {
+                    name: full,
+                    owner: None,
+                    owner_entity: Some(subject.clone()),
+                    side,
+                    init: init.map(|src| IrExpr {
+                        lang: "cfdl".to_string(),
+                        src,
+                    }),
+                    inflow: None,
+                    fold: false,
+                });
+            }
         }
         for rule in &rules {
             if !rule_applies(rule, contract) {
@@ -7317,6 +7500,15 @@ fn lower_contract_streams(
                 contract.payment_net,
             );
             let mut amount_src = rule.amount_expr.clone();
+            // `prev.balance` in a rule is the subject's own claim (docs/42
+            // §3.3), spelled out for the engine as `prev.<subject>.balance`.
+            {
+                let subject = contract
+                    .subject_entity
+                    .clone()
+                    .unwrap_or_else(|| owner_symbol.clone());
+                amount_src = rewrite_prev_accounts(&amount_src, &subject, &lowered_account_map);
+            }
             // Pack terms are applied declaratively via rule templates; the
             // legacy hardcoded paths (CRE, then OpCo) were removed with the
             // v1 rule migrations.
@@ -7521,6 +7713,16 @@ fn lower_contract_streams(
                 }
             }
 
+            // The account this row moves, on the subject (docs/42 §3.2).
+            let moves_account = rule.account.as_deref().map(|account| {
+                format!(
+                    "{}.{account}",
+                    contract
+                        .subject_entity
+                        .clone()
+                        .unwrap_or_else(|| owner_symbol.clone())
+                )
+            });
             lowered.push((
                 (rule.stream_name.clone(), stable_key.clone()),
                 IrStream {
@@ -7529,7 +7731,7 @@ fn lower_contract_streams(
                     owner: IrEntityRef {
                         symbol: owner_symbol,
                     },
-                    moves: None,
+                    moves: moves_account,
                     direction: if rule.direction.is_empty() {
                         "outflow".to_string()
                     } else {
@@ -7590,6 +7792,7 @@ fn lower_contract_streams(
         fields: lowered_fields,
         field_roles: lowered_field_roles,
         stream_inputs,
+        accounts: lowered_accounts,
         diagnostics,
     }
 }
@@ -9401,6 +9604,7 @@ mod pack_validation_parity_tests {
             categories: registry.categories(pack),
             subtotal_specs: registry.subtotal_specs(pack),
             lowering_rules: registry.lowering_rules(pack),
+            account_decls: registry.account_decls(pack),
             validations: registry.validations(pack),
             ontology: registry
                 .ontology(pack)
