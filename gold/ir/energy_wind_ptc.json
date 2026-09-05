@@ -24,6 +24,17 @@
     "constants": {},
     "random": {}
   },
+  "accounts": [
+    {
+      "name": "asset.windfarm.balance",
+      "owner_entity": "asset.windfarm",
+      "side": "owed",
+      "init": {
+        "lang": "cfdl",
+        "src": "25000000 * (1 - 1)"
+      }
+    }
+  ],
   "lifecycles": [
     {
       "id": "energy.facility",
@@ -466,6 +477,7 @@
       "direction": "outflow",
       "currency": "USD",
       "category": "financing.debt.principal",
+      "moves": "asset.windfarm.balance",
       "schedule": {
         "kind": "Every",
         "every": "monthly",
@@ -508,6 +520,7 @@
       "direction": "inflow",
       "currency": "USD",
       "category": "financing.debt.proceeds",
+      "moves": "asset.windfarm.balance",
       "schedule": {
         "kind": "OnDate",
         "on": "2027-01-01"

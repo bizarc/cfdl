@@ -770,12 +770,16 @@ contract names, and their accounts hold what they received (`docs/13`
    before stage 6, whose balance role is defined against the finished
    roster.
 6. **State owned by the agreement** — **built.** `Contract.Debt` names
-   the `balance` field role and, since `docs/42`, the `balance` ACCOUNT:
-   `credit.loan` opens it at principal and its rows move it (scheduled
-   principal, prepayments and the bullet as cash, the default as a
-   write-off), every row reading the opening as `prev.balance`; the
-   construction loan still fills the role with its drawn balance
-   (`field_role = "balance"` on the rule) until it migrates; the `credit.pool` machine carries `on enter retired { set
+   the `balance` ACCOUNT (`docs/42` §3.5), and every refinement opens it —
+   the loader requires it: `credit.loan` at principal, its rows moving it
+   (scheduled principal, prepayments and the bullet as cash, the default
+   as a write-off); `cre.permanent_debt`, `opco.term_debt` and
+   `energy.debt_service` at zero when funded at close, the proceeds raising
+   it, scheduled principal lowering it and the balloon paying what is left;
+   `cre.construction_loan` at zero, raised by its loan draws and its
+   capitalized interest as an accrual. The `balance` field ROLE remains as
+   the narrower companion: a private field the machine ends with the
+   account (the credit loan's lagged twin); the `credit.pool` machine carries `on enter retired { set
    balance = 0 }`, resolved per entity by the compiler (`field_roles` on
    the IR entity) and written field by field by the engine, one journal
    line each. A model retires a pool with one status write —

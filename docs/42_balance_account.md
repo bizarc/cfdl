@@ -389,9 +389,18 @@ Separate from the engine restructure, and before it.
    repurchase or payoff is a write-off of the opening balance journaled
    as a `move`. The survival factors and the stopgap balance field are
    gone; the lagged twin recoveries read stays a private field that the
-   machine also ends. Every stream unchanged to the digit. Not yet: the
-   other four `Contract.Debt` refinements, deletion of `field_role`, the
-   non-cash category roots.
+   machine also ends. Every stream unchanged to the digit. **The other four
+   `Contract.Debt` refinements followed** (5 September 2026): each declares
+   `side = "pays"`, opens `balance` (at zero when funded at close, the
+   proceeds raising it), moves it from its principal row, and pays what is
+   left as the balloon — `prev.balance` in place of the closed-form future
+   value, which is the §7.104 drift made visible: a term loan on act/360
+   now pays off exactly what remains. The construction loan grows from its
+   loan draws and a `capitalized_interest` accrual row; its funded field is
+   private. The loader requires every refinement of a master with an
+   account to open it and to move it. `field_role` stays, narrowed to a
+   private field the machine ends with the account. Not yet: the non-cash
+   category roots; §6's statements.
 2. **The level-pay loan onto accounts**, replacing the stopgap field.
    Numbers unchanged: the lines are the same, only who sums them changes.
 3. **The clean-up call** on the auto ABS cases and AmeriCredit, reading the
@@ -455,6 +464,11 @@ note adds nothing to it.
 - **A claim moving between entities.** A sale of a loan moves its balance
   from one owner to another. Out of scope here; note it.
 - **Rounding.** A `round_step` on an account, or on the lines only.
+- **The construction loan's within-period compounding.** Its interest row
+  accrues on a base that already includes the period's own capitalized
+  interest, which the funded field's evaluation order produced and the
+  account reproduces exactly (`docs/13` §7.107). A loan does not compound
+  interest on interest accrued in the same period; decide with the pack.
 
 ## 8. Related
 

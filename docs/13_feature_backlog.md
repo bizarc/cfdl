@@ -3112,3 +3112,19 @@ it: both are counts of which periods' zeros carried a negative sign at the
 pool factor is before the pool is bought, not a number that changes when a
 float flips its last bit. The same applies to `model.irr` on such a series.
 
+### 7.107 The construction loan compounds interest within the period
+
+Belongs with §1, CRE pack. Found 5 September 2026 moving the construction
+loan onto the balance account.
+
+`cre.construction_loan`'s interest row accrues on `funded − draw − equity`,
+and `funded` at that point already includes the period's own capitalized
+interest (the funded field's `next` adds it before the streams read the
+field). So interest is charged on interest accrued in the same period — a
+compounding no loan agreement writes. The account reproduces it exactly
+(the `capitalized_interest` accrual row copies the interest row's base) so
+that no number moves; the right base is the opening balance plus the
+period's draw at its accrual fraction, which is what `prev.balance` would
+give. Decide with the pack, and re-bless `one_lincoln_street_contract`
+when it changes. Related: §7.104.
+

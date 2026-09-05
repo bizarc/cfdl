@@ -414,6 +414,7 @@ type_id = "Energy.Contract.ProjectDebt"
 refines = "Contract.Debt"
 contract_name = "energy.debt_service"
 subject_family = "asset"
+side = "pays"
 parties = ["borrower", "lender"]
 
 

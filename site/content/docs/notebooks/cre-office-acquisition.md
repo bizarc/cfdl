@@ -124,67 +124,75 @@ cf.head()
 ```
 
 ```
-shape: (120, 26)
+shape: (120, 27)
 ```
 
 ```
-         domain.cre.debt_service  domain.cre.dscr  domain.cre.egi  domain.cre.leasing_costs  \
-period                                                                                        
-2026-01             36845.249537        -0.719224         -1500.0                  200000.0   
-2026-02             36845.249537        -0.719224         -1500.0                       0.0   
-2026-03             36845.249537        -0.719224         -1500.0                       0.0   
-2026-04             36845.249537         0.366397         38500.0                       0.0   
-2026-05             36845.249537         0.366397         38500.0                       0.0   
+         account.asset.tower.balance  domain.cre.debt_service  domain.cre.dscr  domain.cre.egi  \
+period                                                                                           
+2026-01                 5.990655e+06             36845.249537        -0.719224         -1500.0   
+2026-02                 5.981267e+06             36845.249537        -0.719224         -1500.0   
+2026-03                 5.971836e+06             36845.249537        -0.719224         -1500.0   
+2026-04                 5.962361e+06             36845.249537         0.366397         38500.0   
+2026-05                 5.952843e+06             36845.249537         0.366397         38500.0   
 
-         domain.cre.noi  domain.cre.opex_total  domain.cre.pgr  entity.asset.tower.net_cash_flow  \
-period                                                                                             
-2026-01        -26500.0               -25000.0         40000.0                    -263345.249537   
-2026-02        -26500.0               -25000.0         40000.0                     -63345.249537   
-2026-03        -26500.0               -25000.0         40000.0                     -63345.249537   
-2026-04         13500.0               -25000.0         40000.0                     -23345.249537   
-2026-05         13500.0               -25000.0         40000.0                     -23345.249537   
+         domain.cre.leasing_costs  domain.cre.noi  domain.cre.opex_total  domain.cre.pgr  \
+period                                                                                     
+2026-01                  200000.0        -26500.0               -25000.0         40000.0   
+2026-02                       0.0        -26500.0               -25000.0         40000.0   
+2026-03                       0.0        -26500.0               -25000.0         40000.0   
+2026-04                       0.0         13500.0               -25000.0         40000.0   
+2026-05                       0.0         13500.0               -25000.0         40000.0   
 
-         model.net_cash_flow  stream.cre.debt.interest  ...  stream.cre.rollover.ti_lc.tenant_a  \
-period                                                  ...                                       
-2026-01       -263345.249537             -27500.000000  ...                                 0.0   
-2026-02        -63345.249537             -27457.167606  ...                                 0.0   
-2026-03        -63345.249537             -27414.138897  ...                                 0.0   
-2026-04        -23345.249537             -27370.912974  ...                                 0.0   
-2026-05        -23345.249537             -27327.488931  ...                                 0.0   
+         entity.asset.tower.net_cash_flow  model.net_cash_flow  ...  \
+period                                                          ...   
+2026-01                    -263345.249537       -263345.249537  ...   
+2026-02                     -63345.249537        -63345.249537  ...   
+2026-03                     -63345.249537        -63345.249537  ...   
+2026-04                     -23345.249537        -23345.249537  ...   
+2026-05                     -23345.249537        -23345.249537  ...   
 
-         stream.cre.unit.abatement.tenant_a  stream.cre.unit.abatement.tenant_b  \
+         stream.cre.rollover.ti_lc.tenant_a  stream.cre.unit.abatement.tenant_a  \
 period                                                                            
-2026-01                            -40000.0                                 0.0   
-2026-02                            -40000.0                                 0.0   
-2026-03                            -40000.0                                 0.0   
+2026-01                                 0.0                            -40000.0   
+2026-02                                 0.0                            -40000.0   
+2026-03                                 0.0                            -40000.0   
 2026-04                                 0.0                                 0.0   
 2026-05                                 0.0                                 0.0   
 
-         stream.cre.unit.base_rent.tenant_a  stream.cre.unit.base_rent.tenant_b  \
+         stream.cre.unit.abatement.tenant_b  stream.cre.unit.base_rent.tenant_a  \
 period                                                                            
-2026-01                             40000.0                                 0.0   
-2026-02                             40000.0                                 0.0   
-2026-03                             40000.0                                 0.0   
-2026-04                             40000.0                                 0.0   
-2026-05                             40000.0                                 0.0   
+2026-01                                 0.0                             40000.0   
+2026-02                                 0.0                             40000.0   
+2026-03                                 0.0                             40000.0   
+2026-04                                 0.0                             40000.0   
+2026-05                                 0.0                             40000.0   
 
-         stream.cre.unit.recoveries.tenant_a  stream.cre.unit.recoveries.tenant_b  \
-period                                                                              
-2026-01                                  0.0                                  0.0   
-2026-02                                  0.0                                  0.0   
-2026-03                                  0.0                                  0.0   
-2026-04                                  0.0                                  0.0   
-2026-05                                  0.0                                  0.0   
+         stream.cre.unit.base_rent.tenant_b  stream.cre.unit.recoveries.tenant_a  \
+period                                                                             
+2026-01                                 0.0                                  0.0   
+2026-02                                 0.0                                  0.0   
+2026-03                                 0.0                                  0.0   
+2026-04                                 0.0                                  0.0   
+2026-05                                 0.0                                  0.0   
 
-         stream.cre.unit.ti_lc.tenant_a  stream.cre.unit.ti_lc.tenant_b  stream.cre.vacancy.loss  
-period                                                                                            
-2026-01                       -200000.0                             0.0                  -1500.0  
-2026-02                             0.0                             0.0                  -1500.0  
-2026-03                             0.0                             0.0                  -1500.0  
-2026-04                             0.0                             0.0                  -1500.0  
-2026-05                             0.0                             0.0                  -1500.0  
+         stream.cre.unit.recoveries.tenant_b  stream.cre.unit.ti_lc.tenant_a  \
+period                                                                         
+2026-01                                  0.0                       -200000.0   
+2026-02                                  0.0                             0.0   
+2026-03                                  0.0                             0.0   
+2026-04                                  0.0                             0.0   
+2026-05                                  0.0                             0.0   
 
-[5 rows x 26 columns]
+         stream.cre.unit.ti_lc.tenant_b  stream.cre.vacancy.loss  
+period                                                            
+2026-01                             0.0                  -1500.0  
+2026-02                             0.0                  -1500.0  
+2026-03                             0.0                  -1500.0  
+2026-04                             0.0                  -1500.0  
+2026-05                             0.0                  -1500.0  
+
+[5 rows x 27 columns]
 ```
 
 ```python

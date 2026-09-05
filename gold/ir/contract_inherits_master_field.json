@@ -23,6 +23,17 @@
     "constants": {},
     "random": {}
   },
+  "accounts": [
+    {
+      "name": "asset.target.balance",
+      "owner_entity": "asset.target",
+      "side": "owed",
+      "init": {
+        "lang": "cfdl",
+        "src": "5000000 * (1 - 1)"
+      }
+    }
+  ],
   "subtotals": [
     {
       "id": "domain.opco.revenue_periodic",
@@ -217,6 +228,7 @@
       "direction": "outflow",
       "currency": "USD",
       "category": "financing.debt.principal",
+      "moves": "asset.target.balance",
       "schedule": {
         "kind": "Every",
         "every": "monthly",
@@ -225,7 +237,7 @@
       },
       "amount": {
         "lang": "cfdl",
-        "src": "if(months_between(parse_date(\"2026-01-01\"), time.date) < 0.0, 0.0, -ppmt(0.08 / (360.0 / time.days_in_period), months_between(parse_date(\"2026-01-01\"), time.date) - 0.0 + 1.0, 84.0, 5000000.0)) + if(months_between(time.date, parse_date(\"2027-12-01\")) == 0.0, -fv(0.08 / (360.0 / time.days_in_period), months_between(parse_date(\"2026-01-01\"), time.date) - 0.0 + 1.0, pmt(0.08 / (360.0 / time.days_in_period), 84.0, 5000000.0), 5000000.0), 0.0)"
+        "src": "if(months_between(time.date, parse_date(\"2027-12-01\")) == 0.0, prev.asset.target.balance, if(months_between(parse_date(\"2026-01-01\"), time.date) < 0.0, 0.0, -ppmt(0.08 / (360.0 / time.days_in_period), months_between(parse_date(\"2026-01-01\"), time.date) - 0.0 + 1.0, 84.0, 5000000.0)))"
       },
       "active_when": {
         "lang": "cfdl",
@@ -259,6 +271,7 @@
       "direction": "inflow",
       "currency": "USD",
       "category": "financing.debt.proceeds",
+      "moves": "asset.target.balance",
       "schedule": {
         "kind": "OnDate",
         "on": "2026-01-01"

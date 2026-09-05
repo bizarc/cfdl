@@ -15,6 +15,17 @@
 #   payment count they must divide into whole periods ({{whole_periods.X}}).
 # - time.t is the 0-based period index; contract term ranges gate schedules.
 
+
+# THE BALANCE IS AN ACCOUNT (docs/42 §3.5): owed by the project, raised by the
+# proceeds and amortized to zero by the scheduled principal.
+[[accounts]]
+contract_name = "energy.debt_service"
+name = "balance"
+init = "{{contract.principal}} * (1 - {{contract.funded_at_close}})"
+
+[accounts.defaults]
+funded_at_close = "1"
+
 [[rules]]
 id = "energy_ppa_revenue"
 contract_name = "energy.ppa"
@@ -165,6 +176,7 @@ amount = "USD"
 id = "energy_debt_proceeds"
 contract_name = "energy.debt_service"
 line = "proceeds"
+account = "balance"
 stream_name = "energy.debt.proceeds{{contract.dot_suffix}}"
 owner_entity = "${subject}"
 direction = "inflow"
@@ -203,6 +215,7 @@ term_months = "months"
 id = "energy_debt_principal"
 contract_name = "energy.debt_service"
 line = "principal"
+account = "balance"
 stream_name = "energy.debt.principal{{contract.dot_suffix}}"
 owner_entity = "${subject}"
 direction = "outflow"

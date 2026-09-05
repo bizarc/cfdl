@@ -1,7 +1,7 @@
 {
   "results_version": "0.13",
-  "model_hash": "32d7ed1fc6bbe9f2941ed7ebc6044238ed2b140ab31ccfea9fba3a3575262784",
-  "ledger_hash": "840eace1998bd437c3354d8c75cc66af8cf637d954d9b2a6977dbc9689161992",
+  "model_hash": "e7b9ffbc49b810637efb64889081c689ec5c183ccefeb852c18ff172a57afab6",
+  "ledger_hash": "4dccc46ef895c748bf89798e1e522073ef4eba3b2833f35123bdb5c7d4707c38",
   "engine": {
     "name": "cfdl-engine",
     "version": "0.9.0"
@@ -148,6 +148,39 @@
       }
     },
     "series": {
+      "account.asset.tower.balance": {
+        "index": {
+          "calendar": "monthly",
+          "start": "2026-01-01",
+          "periods": 24
+        },
+        "values": [
+          2995670.957955435,
+          2991320.270700647,
+          2986947.830009585,
+          2982553.5271150675,
+          2978137.2527060774,
+          2973698.8969250424,
+          2969238.349365102,
+          2964755.4990673624,
+          2960250.234518134,
+          2955722.4436461595,
+          2951172.013819825,
+          2946598.8318443587,
+          2942002.7839590153,
+          2937383.755834245,
+          2932741.632568851,
+          2928076.29868713,
+          2923387.638136001,
+          2918675.5342821158,
+          2913939.869908961,
+          2909180.5272139404,
+          2904397.3878054447,
+          2899590.3326999065,
+          2894759.2423188407,
+          2889903.99648587
+        ]
+      },
       "domain.cre.debt_service": {
         "index": {
           "calendar": "monthly",
@@ -1792,6 +1825,283 @@
         ]
       }
     },
+    "journal": [
+      {
+        "period": 0,
+        "date": "2026-01-01",
+        "actor": "stream:cre.debt.principal",
+        "action": "move",
+        "target": "asset.tower.balance",
+        "outcome": "applied",
+        "amount": -4329.042045,
+        "pot_before": 0.0,
+        "pot_after": -4329.042045
+      },
+      {
+        "period": 0,
+        "date": "2026-01-01",
+        "actor": "stream:cre.debt.proceeds",
+        "action": "move",
+        "target": "asset.tower.balance",
+        "outcome": "applied",
+        "amount": 3000000.0,
+        "pot_before": -4329.042045,
+        "pot_after": 2995670.957955
+      },
+      {
+        "period": 1,
+        "date": "2026-02-01",
+        "actor": "stream:cre.debt.principal",
+        "action": "move",
+        "target": "asset.tower.balance",
+        "outcome": "applied",
+        "amount": -4350.687255,
+        "pot_before": 2995670.957955,
+        "pot_after": 2991320.270701
+      },
+      {
+        "period": 2,
+        "date": "2026-03-01",
+        "actor": "stream:cre.debt.principal",
+        "action": "move",
+        "target": "asset.tower.balance",
+        "outcome": "applied",
+        "amount": -4372.440691,
+        "pot_before": 2991320.270701,
+        "pot_after": 2986947.83001
+      },
+      {
+        "period": 3,
+        "date": "2026-04-01",
+        "actor": "stream:cre.debt.principal",
+        "action": "move",
+        "target": "asset.tower.balance",
+        "outcome": "applied",
+        "amount": -4394.302895,
+        "pot_before": 2986947.83001,
+        "pot_after": 2982553.527115
+      },
+      {
+        "period": 4,
+        "date": "2026-05-01",
+        "actor": "stream:cre.debt.principal",
+        "action": "move",
+        "target": "asset.tower.balance",
+        "outcome": "applied",
+        "amount": -4416.274409,
+        "pot_before": 2982553.527115,
+        "pot_after": 2978137.252706
+      },
+      {
+        "period": 5,
+        "date": "2026-06-01",
+        "actor": "stream:cre.debt.principal",
+        "action": "move",
+        "target": "asset.tower.balance",
+        "outcome": "applied",
+        "amount": -4438.355781,
+        "pot_before": 2978137.252706,
+        "pot_after": 2973698.896925
+      },
+      {
+        "period": 6,
+        "date": "2026-07-01",
+        "actor": "stream:cre.debt.principal",
+        "action": "move",
+        "target": "asset.tower.balance",
+        "outcome": "applied",
+        "amount": -4460.54756,
+        "pot_before": 2973698.896925,
+        "pot_after": 2969238.349365
+      },
+      {
+        "period": 7,
+        "date": "2026-08-01",
+        "actor": "stream:cre.debt.principal",
+        "action": "move",
+        "target": "asset.tower.balance",
+        "outcome": "applied",
+        "amount": -4482.850298,
+        "pot_before": 2969238.349365,
+        "pot_after": 2964755.499067
+      },
+      {
+        "period": 8,
+        "date": "2026-09-01",
+        "actor": "stream:cre.debt.principal",
+        "action": "move",
+        "target": "asset.tower.balance",
+        "outcome": "applied",
+        "amount": -4505.264549,
+        "pot_before": 2964755.499067,
+        "pot_after": 2960250.234518
+      },
+      {
+        "period": 9,
+        "date": "2026-10-01",
+        "actor": "stream:cre.debt.principal",
+        "action": "move",
+        "target": "asset.tower.balance",
+        "outcome": "applied",
+        "amount": -4527.790872,
+        "pot_before": 2960250.234518,
+        "pot_after": 2955722.443646
+      },
+      {
+        "period": 10,
+        "date": "2026-11-01",
+        "actor": "stream:cre.debt.principal",
+        "action": "move",
+        "target": "asset.tower.balance",
+        "outcome": "applied",
+        "amount": -4550.429826,
+        "pot_before": 2955722.443646,
+        "pot_after": 2951172.01382
+      },
+      {
+        "period": 11,
+        "date": "2026-12-01",
+        "actor": "stream:cre.debt.principal",
+        "action": "move",
+        "target": "asset.tower.balance",
+        "outcome": "applied",
+        "amount": -4573.181975,
+        "pot_before": 2951172.01382,
+        "pot_after": 2946598.831844
+      },
+      {
+        "period": 12,
+        "date": "2027-01-01",
+        "actor": "stream:cre.debt.principal",
+        "action": "move",
+        "target": "asset.tower.balance",
+        "outcome": "applied",
+        "amount": -4596.047885,
+        "pot_before": 2946598.831844,
+        "pot_after": 2942002.783959
+      },
+      {
+        "period": 13,
+        "date": "2027-02-01",
+        "actor": "stream:cre.debt.principal",
+        "action": "move",
+        "target": "asset.tower.balance",
+        "outcome": "applied",
+        "amount": -4619.028125,
+        "pot_before": 2942002.783959,
+        "pot_after": 2937383.755834
+      },
+      {
+        "period": 14,
+        "date": "2027-03-01",
+        "actor": "stream:cre.debt.principal",
+        "action": "move",
+        "target": "asset.tower.balance",
+        "outcome": "applied",
+        "amount": -4642.123265,
+        "pot_before": 2937383.755834,
+        "pot_after": 2932741.632569
+      },
+      {
+        "period": 15,
+        "date": "2027-04-01",
+        "actor": "stream:cre.debt.principal",
+        "action": "move",
+        "target": "asset.tower.balance",
+        "outcome": "applied",
+        "amount": -4665.333882,
+        "pot_before": 2932741.632569,
+        "pot_after": 2928076.298687
+      },
+      {
+        "period": 16,
+        "date": "2027-05-01",
+        "actor": "stream:cre.debt.principal",
+        "action": "move",
+        "target": "asset.tower.balance",
+        "outcome": "applied",
+        "amount": -4688.660551,
+        "pot_before": 2928076.298687,
+        "pot_after": 2923387.638136
+      },
+      {
+        "period": 17,
+        "date": "2027-06-01",
+        "actor": "stream:cre.debt.principal",
+        "action": "move",
+        "target": "asset.tower.balance",
+        "outcome": "applied",
+        "amount": -4712.103854,
+        "pot_before": 2923387.638136,
+        "pot_after": 2918675.534282
+      },
+      {
+        "period": 18,
+        "date": "2027-07-01",
+        "actor": "stream:cre.debt.principal",
+        "action": "move",
+        "target": "asset.tower.balance",
+        "outcome": "applied",
+        "amount": -4735.664373,
+        "pot_before": 2918675.534282,
+        "pot_after": 2913939.869909
+      },
+      {
+        "period": 19,
+        "date": "2027-08-01",
+        "actor": "stream:cre.debt.principal",
+        "action": "move",
+        "target": "asset.tower.balance",
+        "outcome": "applied",
+        "amount": -4759.342695,
+        "pot_before": 2913939.869909,
+        "pot_after": 2909180.527214
+      },
+      {
+        "period": 20,
+        "date": "2027-09-01",
+        "actor": "stream:cre.debt.principal",
+        "action": "move",
+        "target": "asset.tower.balance",
+        "outcome": "applied",
+        "amount": -4783.139408,
+        "pot_before": 2909180.527214,
+        "pot_after": 2904397.387805
+      },
+      {
+        "period": 21,
+        "date": "2027-10-01",
+        "actor": "stream:cre.debt.principal",
+        "action": "move",
+        "target": "asset.tower.balance",
+        "outcome": "applied",
+        "amount": -4807.055106,
+        "pot_before": 2904397.387805,
+        "pot_after": 2899590.3327
+      },
+      {
+        "period": 22,
+        "date": "2027-11-01",
+        "actor": "stream:cre.debt.principal",
+        "action": "move",
+        "target": "asset.tower.balance",
+        "outcome": "applied",
+        "amount": -4831.090381,
+        "pot_before": 2899590.3327,
+        "pot_after": 2894759.242319
+      },
+      {
+        "period": 23,
+        "date": "2027-12-01",
+        "actor": "stream:cre.debt.principal",
+        "action": "move",
+        "target": "asset.tower.balance",
+        "outcome": "applied",
+        "amount": -4855.245833,
+        "pot_before": 2894759.242319,
+        "pot_after": 2889903.996486
+      }
+    ],
     "annual_rollup": {
       "series": {
         "domain.cre.debt_service": {

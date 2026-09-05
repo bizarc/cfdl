@@ -6514,14 +6514,19 @@ actions = [{ set = "in_place_rent", value = "prev.in_place_rent * (1 + inputs.bu
 - The field name is **entity-relative**, refused at pack load if qualified:
   one lifecycle is bound by many entities, and the behavior belongs to
   whichever one transitioned.
-- **`set` may name a FIELD ROLE instead of a field** (`docs/40` §3, stage 6):
-  `set balance = 0` on the `credit.pool` machine. A master names the role
-  (`Contract.Debt` names `balance`), a rule that lowers the field fills it
-  (`field_role = "balance"` beside `field_name`), and the compiler resolves
-  the role per entity to every field that plays it — a pool's balance and
-  its lagged twin — which the engine writes one by one. A role
-  nothing on the transitioning entity fills is refused (`E1359`): a
-  closed-form debt has no balance field to extinguish.
+- **`set` may name the ACCOUNT a master declares** (`docs/42` §3.5):
+  `set balance = 0` on the `credit.loan` machine. The entity carries
+  `<entity>.balance` because its contract opened it, so the write is a
+  movement of the opening balance to that value — a write-off on repurchase
+  — journaled as a `move` from the machine, and every row reading
+  `prev.balance` that period reads the new opening. A FIELD ROLE
+  (`field_role = "balance"` beside `field_name`) is the narrower companion:
+  a private field the machine ends together with the account — the lagged
+  twin a loan's recoveries read, so a repurchased loan recovers nothing for
+  its seller. The compiler resolves the name per entity to the account and
+  to every field that plays the role; a name nothing on the transitioning
+  entity carries is refused (`E1359`) for a model's action and is a no-op
+  for a pack's.
 - **The field itself comes from the pack's lowering rules**, like every other
   pack-populated field (`field_name` / `field_init` / `field_next` in
   §7). Those run per contract instance, so whether a given entity has the

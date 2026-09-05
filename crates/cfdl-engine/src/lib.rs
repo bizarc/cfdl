@@ -2233,10 +2233,14 @@ fn run_deterministic(
     // number under its own prefix — never as cash and never into a total —
     // because the cash it holds has already been counted once as the stream
     // that produced it. The step series is the flow; this is the position.
+    // Cut at the cash horizon like every other series: the walk carries a
+    // balance through the projection tail for lookups, and a reader lining
+    // series up by period must find one length.
     for (name, values) in &account_balances {
+        let cash = &values[..values.len().min(ir.time.periods as usize)];
         series_map.insert(
             format!("account.{name}"),
-            Series::from_plain(&ir.time.calendar, &ir.time.start, periods as u32, values),
+            Series::from_plain(&ir.time.calendar, &ir.time.start, periods as u32, cash),
         );
     }
     // Each waterfall step is a stream, so a priority of payments publishes
@@ -2959,7 +2963,8 @@ fn run_deterministic(
             visible.insert(format!("entity.{symbol}.net_cash_flow"), values.clone());
         }
         for (name, values) in &account_balances {
-            visible.insert(format!("account.{name}"), values.clone());
+            let cash = &values[..values.len().min(ir.time.periods as usize)];
+            visible.insert(format!("account.{name}"), cash.to_vec());
         }
         for (name, values) in &state_values {
             // A field publishes under the thing that owns it, a model-level

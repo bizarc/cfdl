@@ -8,6 +8,22 @@ This project follows Semantic Versioning: https://semver.org/
 
 ## [Unreleased]
 
+**Every debt opens its balance (`docs/42` §3.5, fourth PR).**
+`cre.permanent_debt`, `cre.construction_loan`, `opco.term_debt` and
+`energy.debt_service` declare `side = "pays"` and open the `balance`
+account: at zero when funded at close, the proceeds raising it (a loan
+outstanding at the start opens at principal); scheduled principal lowers
+it; the balloon pays what is left, `prev.balance` in place of the
+closed-form future value. The construction loan grows from its loan draws
+and a new `capitalized_interest` accrual row; its funded field stays
+private. The loader now requires every refinement of a master that
+declares an account to open it and to move it. `field_role` remains,
+narrowed to a private field the machine ends together with the account.
+46/46 benchmarks unchanged. One fixture moves: `contract_inherits_master_field`,
+a term loan on act/360, whose old balloon was a future value struck at a
+constant rate while its scheduled principal varied by month — the account
+pays off exactly what remains and lands at zero (`docs/13` §7.104).
+
 **The loan's balance is the account (`docs/42` §3.5, third PR).**
 `Contract.Debt` declares the `balance` account, owed by the borrower. A
 refinement opens it — `[[accounts]] contract_name = "credit.loan" name =
