@@ -810,6 +810,13 @@ account reserve {
 - **Streams move it** (§9.1): `moves <account>` on an inflow or outflow, an
   accrual or a write-off. Each movement is a journal line naming the stream
   that caused it.
+- **The relation folds it** (`docs/42` §3.4). A container's account of a
+  given name is the sum, opening and closing, of its members' accounts of
+  that name through `part of` — `container.trust.balance` when the trust's
+  loans each carry a `balance`. It is declared nowhere (`E1383`), moved only
+  by moving a member's (`E1384`), read as `prev.container.trust.balance` and
+  published as `account.container.trust.balance`. Cash and balances roll up
+  through the same relation by the same rule.
 - `from` is the per-period inflow, reading cash that has settled this
   period. It MAY be negative, and **the balance has no floor**: an account
   fed a deal's whole net cash IS the deal's cumulative position, negative
@@ -4478,6 +4485,10 @@ against it by `make ir-schema`.
         "init": {
           "$ref": "#/$defs/Expr",
           "description": "The balance at the timeline's first period. Absent means zero: a balance created during the run is raised from zero by the cash that creates it, and `prev.<account>` is never absent."
+        },
+        "fold": {
+          "type": "boolean",
+          "description": "A relation fold (docs/42 §3.4): this container's account of this name is the sum, opening and closing, of its members' accounts of the same name through `part of`. Synthesized by the compiler for every ancestor of an entity that declares a claim; it carries no side, init, inflow or movement of its own, and a declaration of the same name on the container is refused (E1383). Absent means a declared account."
         }
       }
     },
@@ -7733,6 +7744,8 @@ Fields that move:
 - `E1379_NONCASH_STREAM_CATEGORY` — an `accrual` or `writeoff` stream carries a cash flow category. The category roots classify cash; a non-cash stream is excluded from every cash fold, so a category on it would be a claim it cannot keep.
 - `E1380_UNKNOWN_ACCOUNT_MOVED` — `moves <name>` names an account declared neither on the stream's entity nor as a structure account. Declare it (`account <name> owed|due [init <expr>]` in the entity block, or at the model level) or correct the name; unrejected the movement would land nowhere.
 - `E1381_MOVED_ACCOUNT_HAS_NO_SIDE` — a cash stream moves an account that declares no side. Whether an inflow raises or lowers a balance follows from `owed` (a liability of its owner) or `due` (a receivable); without one the direction of the movement is undefined.
+- `E1383_FOLDED_ACCOUNT_DECLARED` — a container declares an account a member also declares. The container's account of that name IS the members' fold (`docs/42` §3.4), readable as `prev.<container>.<name>` and declared nowhere; a declaration would double it or hide it. A claim of the container's own takes another name.
+- `E1384_FOLDED_ACCOUNT_MOVED` — a stream `moves` a container's folded account. A fold is the sum of its members' balances and is moved only by moving a member's; the hint says to move the member's account or declare one of another name on the container.
 - `E1382_ACCOUNT_READ_WITHOUT_PREV` — an expression reads an account as a current value (`asset.loan.balance`). A balance is readable inside a period only as its opening, `prev.<account>` — the prior close, settled state. This period's close is the sum of streams still being computed and does not exist yet (`docs/42` §3.3).
 - `E1364_SLICE_CATEGORY_ROOT` — a slice's category selector is not rooted in operating, investing or financing. A selector that could never match anything is a typo, not a choice.
 - `E1371_UNKNOWN_CONTRACT_TERM` — a contract states a term its type does not declare. The roster is the pack type's own terms plus its masters' (`docs/40` §3); a term outside it is read by no rule, so before this check a misspelled `escalation` was a lease that never escalated. The hint names the near miss, or lists the type's terms.

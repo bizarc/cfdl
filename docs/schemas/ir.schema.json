@@ -1685,6 +1685,10 @@
         "init": {
           "$ref": "#/$defs/Expr",
           "description": "The balance at the timeline's first period. Absent means zero: a balance created during the run is raised from zero by the cash that creates it, and `prev.<account>` is never absent."
+        },
+        "fold": {
+          "type": "boolean",
+          "description": "A relation fold (docs/42 §3.4): this container's account of this name is the sum, opening and closing, of its members' accounts of the same name through `part of`. Synthesized by the compiler for every ancestor of an entity that declares a claim; it carries no side, init, inflow or movement of its own, and a declaration of the same name on the container is refused (E1383). Absent means a declared account."
         }
       }
     },

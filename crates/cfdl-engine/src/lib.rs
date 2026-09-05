@@ -978,6 +978,63 @@ type WalkOutput = (
     Vec<JournalEntry>,
 );
 
+/// Which declared accounts each fold sums (`docs/42` §3.4): every account
+/// of the same short name on a descendant of the fold's owner, through
+/// `part of`. Folds of folds are not summed — the leaves are, once.
+fn fold_members(ir: &Ir) -> BTreeMap<String, Vec<String>> {
+    let parent_of: BTreeMap<&str, &str> = ir
+        .entities
+        .iter()
+        .filter_map(|e| e.parent.as_deref().map(|p| (e.symbol.as_str(), p)))
+        .collect();
+    let mut out: BTreeMap<String, Vec<String>> = BTreeMap::new();
+    for fold in ir.accounts.iter().filter(|a| a.fold) {
+        let Some((owner, name)) = fold.name.rsplit_once('.') else {
+            continue;
+        };
+        for account in ir.accounts.iter().filter(|a| !a.fold) {
+            let Some((member, member_name)) = account.name.rsplit_once('.') else {
+                continue;
+            };
+            if member_name != name {
+                continue;
+            }
+            let mut cursor = parent_of.get(member).copied();
+            let mut seen: BTreeSet<&str> = BTreeSet::new();
+            while let Some(ancestor) = cursor {
+                if !seen.insert(ancestor) {
+                    break;
+                }
+                if ancestor == owner {
+                    out.entry(fold.name.clone())
+                        .or_default()
+                        .push(account.name.clone());
+                    break;
+                }
+                cursor = parent_of.get(ancestor).copied();
+            }
+        }
+    }
+    out
+}
+
+/// Settle every fold at `t` as the sum of its members' balances at `t`.
+fn settle_folds(
+    members: &BTreeMap<String, Vec<String>>,
+    balances: &mut BTreeMap<String, Vec<f64>>,
+    t: usize,
+) {
+    for (fold, of) in members {
+        let sum: f64 = of
+            .iter()
+            .filter_map(|m| balances.get(m).and_then(|c| c.get(t)).copied())
+            .sum();
+        if let Some(column) = balances.get_mut(fold) {
+            column[t] = sum;
+        }
+    }
+}
+
 /// What period `t`'s streams moved, per account: (stream, delta), signed
 /// for the account's side (`docs/42` §3.2). A cash stream's signed amount
 /// raises a liability its owner owes and lowers a receivable its owner is
@@ -1180,6 +1237,17 @@ fn walk_periods(
             })
             .collect(),
     );
+    // A fold's opening is its members' openings summed, in the first period
+    // as after it.
+    let members = fold_members(ir);
+    let account_inits: Arc<BTreeMap<String, f64>> = {
+        let mut inits = (*account_inits).clone();
+        for (fold, of) in &members {
+            let sum: f64 = of.iter().filter_map(|m| inits.get(m).copied()).sum();
+            inits.insert(fold.clone(), sum);
+        }
+        Arc::new(inits)
+    };
     walk.observe_account_inits(Arc::clone(&account_inits));
     let account_side: BTreeMap<&str, &str> = ir
         .accounts
@@ -1315,6 +1383,7 @@ fn walk_periods(
                 &mut account_balances,
                 warnings,
             );
+            settle_folds(&members, &mut account_balances, t);
         }
     }
 
@@ -1384,6 +1453,7 @@ fn walk_periods(
                 &mut account_balances,
                 warnings,
             );
+            settle_folds(&members, &mut account_balances, t);
         }
     }
 

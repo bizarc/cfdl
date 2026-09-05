@@ -4,7 +4,7 @@
 
 CFDL 0.9.0. Every model below compiles, and its IR and
 results are byte-asserted against goldens in CI (`fixtures/valid/`,
-156 models.
+157 models.
 
 `gold/ir/`, `gold/results/`). Each is single-purpose: the directory name
 says what it exercises. This is what right looks like — positive few-shot
@@ -652,6 +652,56 @@ stream fund.fee on entity container.fund outflow currency USD {
   schedule every year from 2026-01 to 2028-01
   category operating.expense.management_fee
   amount = 100 * container.fund.fee_rate
+}
+```
+
+## container_folds_member_accounts
+
+```cfdl
+version 0.1
+model "container-folds-member-accounts"
+time calendar monthly from 2026-01 for 8
+
+// THE RELATION FOLDS BALANCES AS IT FOLDS CASH (docs/42 §3.4). Two loans a
+// trust holds, each carrying the claim it is due; the trust declares no
+// balance of its own and has one anyway — `container.trust.balance`, the
+// sum of its members', opening and closing. A field on the trust reads it
+// as `prev.container.trust.balance`, and a clean-up call is written once
+// against the trust, never against a member.
+entity container trust : Container.SPV
+
+entity asset loan_a : Asset.Financial {
+  part of container.trust
+  account balance due init 600000
+}
+entity asset loan_b : Asset.Financial {
+  part of container.trust
+  account balance due init 400000
+}
+
+// What the trust holds at the open of each period, carried as a field so a
+// statement row can show it beside the cash.
+entity container trust_view : Container.SPV {
+  held init 0 next prev.container.trust.balance
+  called init 0
+}
+
+stream loan_a.principal on entity asset.loan_a inflow currency USD {
+  schedule every month from 2026-01 to 2026-06
+  amount = 100000
+  moves balance
+}
+stream loan_b.principal on entity asset.loan_b inflow currency USD {
+  schedule every month from 2026-01 to 2026-08
+  amount = 50000
+  moves balance
+}
+
+// The call: once the trust's opening balance is under a quarter of the
+// initial, the deal is called. One event, at the trust, reading the fold —
+// the seventh period, when the opening is 100,000 against 1,000,000.
+event clean_up_call when prev.container.trust.balance < 250000 {
+  set entity container.trust_view.called = 1
 }
 ```
 

@@ -11,7 +11,7 @@ Diagnostics are the repair signal: read the `code`, `message`, `span`, and
 `hint`, change the model, recompile. The catalog is how an agent learns what
 each code looks like in the flesh before it meets one.
 
-**Coverage:** 227 codes in the docs/08 §7 register; 112 exemplified here; 70 of 121 examples carry a recorded fix.
+**Coverage:** 229 codes in the docs/08 §7 register; 114 exemplified here; 70 of 123 examples carry a recorded fix.
 
 ## account_read_without_prev — E1382_ACCOUNT_READ_WITHOUT_PREV
 
@@ -1685,6 +1685,59 @@ entity asset junior : Credit.Asset.Tranche {
   balance init 50.0 next prev - prev.asset.senior.balance * 0.1
 }
 ```
+
+## folded_account_declared — E1383_FOLDED_ACCOUNT_DECLARED
+
+Failing example:
+
+```cfdl
+version 0.1
+model "folded-account-declared"
+time calendar monthly from 2026-01 for 6
+
+// The trust's `balance` IS its members' fold; declaring one would double it
+// or hide it.
+entity container trust : Container.SPV {
+  account balance due init 0
+}
+entity asset loan : Asset.Financial {
+  part of container.trust
+  account balance due init 600000
+}
+```
+
+- `E1383_FOLDED_ACCOUNT_DECLARED` (error): Entity 'container.trust' declares account 'balance', which its members already carry (asset.loan.balance); the container's 'balance' is their fold and is not declared.
+  - hint: Read the fold as `prev.<container>.<name>`; to carry a claim of the container's own, give it a different name.
+
+Fix: not yet recorded.
+
+## folded_account_moved — E1384_FOLDED_ACCOUNT_MOVED
+
+Failing example:
+
+```cfdl
+version 0.1
+model "folded-account-moved"
+time calendar monthly from 2026-01 for 6
+
+entity container trust : Container.SPV
+entity asset loan : Asset.Financial {
+  part of container.trust
+  account balance due init 600000
+}
+
+// A fold is moved only by moving a member's account.
+stream trust.collections on entity container.trust inflow currency USD {
+  schedule every month from 2026-01 to 2026-06
+  amount = 1000
+  moves balance
+}
+```
+
+- `E1384_FOLDED_ACCOUNT_MOVED` (error): Stream 'trust.collections' moves account 'container.trust.balance', which is a relation fold — the sum of its members' balances — and is moved only by moving a member's.
+  - hint: Move the member's account (`moves balance` on a stream owned by the member), or declare an account of another name on the container.
+
+Fix: not yet recorded.
 
 ## import_cycle — E1201_IMPORT_CYCLE
 

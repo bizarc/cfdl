@@ -450,6 +450,11 @@ impl WaterfallStage {
         //    floor: an account fed a deal's whole net cash IS the cumulative
         //    position, negative through the J-curve.
         for (idx, account) in ir.accounts.iter().enumerate() {
+            // A fold has no inflow and no movement of its own; the walk sums
+            // its members after this stage.
+            if account.fold {
+                continue;
+            }
             let inflow = account_inflow_at(
                 ir,
                 config,

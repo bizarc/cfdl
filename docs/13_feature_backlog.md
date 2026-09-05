@@ -2847,13 +2847,13 @@ interest-only families follow), the second is open:
    `asset.p01.credit_level_pay_balance_p01` by declared name (the discipline
    `docs/28` §4 and the withdrawn selector-validation entry both land on: a
    guard reads a name, never a pattern).
-2. **A container can fold its members' fields.** `part of` today gives the
-   parent its members' cash; a parent should be able to declare a field
-   that is the relation's fold of a member field — `pool_balance = sum of
-   parts' credit_level_pay_balance` — rather than twelve `prev.asset.pNN.…`
-   reads written by hand. That is the same request as reading the relation
-   the run already publishes as `graph.entities`, stated for the one query
-   every SPV asks: what do I hold, and how much of it is left.
+2. **A container can fold its members' fields.** **Built for accounts, 4
+   September 2026 (`docs/42` §3.4):** a container's account of a name its
+   members carry is their sum, opening and closing, read as
+   `prev.container.trust.balance` and declared nowhere. Fields do not fold;
+   the balance is an account now, which is the one query every SPV asks —
+   what do I hold, and how much of it is left — so this half closes when the
+   credit pack's balance moves onto the account (half 1's remainder).
 
 Until both land, a trust that needs its balance in a guard materializes it
 as a field summing named member fields, which is what AmeriCredit does and

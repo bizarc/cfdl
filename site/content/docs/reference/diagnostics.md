@@ -117,6 +117,8 @@ register, so it cannot fall behind the language.
 | `E1379_NONCASH_STREAM_CATEGORY` | Symbols and references | an `accrual` or `writeoff` stream carries a cash flow category. The category roots classify cash; a non-cash stream is excluded from every cash fold, so a category on it would be a claim it cannot keep. |
 | `E1380_UNKNOWN_ACCOUNT_MOVED` | Symbols and references | `moves <name>` names an account declared neither on the stream's entity nor as a structure account. Declare it (`account <name> owed\|due [init <expr>]` in the entity block, or at the model level) or correct the name; unrejected the movement would land nowhere. |
 | `E1381_MOVED_ACCOUNT_HAS_NO_SIDE` | Symbols and references | a cash stream moves an account that declares no side. Whether an inflow raises or lowers a balance follows from `owed` (a liability of its owner) or `due` (a receivable); without one the direction of the movement is undefined. |
+| `E1383_FOLDED_ACCOUNT_DECLARED` | Symbols and references | a container declares an account a member also declares. The container's account of that name IS the members' fold (`docs/42` §3.4), readable as `prev.<container>.<name>` and declared nowhere; a declaration would double it or hide it. A claim of the container's own takes another name. |
+| `E1384_FOLDED_ACCOUNT_MOVED` | Symbols and references | a stream `moves` a container's folded account. A fold is the sum of its members' balances and is moved only by moving a member's; the hint says to move the member's account or declare one of another name on the container. |
 | `E1382_ACCOUNT_READ_WITHOUT_PREV` | Symbols and references | an expression reads an account as a current value (`asset.loan.balance`). A balance is readable inside a period only as its opening, `prev.<account>` — the prior close, settled state. This period's close is the sum of streams still being computed and does not exist yet (`docs/42` §3.3). |
 | `E1364_SLICE_CATEGORY_ROOT` | Symbols and references | a slice's category selector is not rooted in operating, investing or financing. A selector that could never match anything is a typo, not a choice. |
 | `E1371_UNKNOWN_CONTRACT_TERM` | Symbols and references | a contract states a term its type does not declare. The roster is the pack type's own terms plus its masters' (`docs/40` §3); a term outside it is read by no rule, so before this check a misspelled `escalation` was a lease that never escalated. The hint names the near miss, or lists the type's terms. |
@@ -279,7 +281,7 @@ register, so it cannot fall behind the language.
 | `E9021_CREDIT_INVALID_SHARE` | Pack domain validations | a participation's `share` is not in (0, 1]. A share above one pays out more than the pool produced; zero is a participation in nothing. |
 | `E9022_CREDIT_INVALID_COUPON` | Pack domain validations | a note's `coupon` is negative. |
 
-*227 codes.*
+*229 codes.*
 <!-- /cfdl:generated diagnostics-catalog -->
 
 ## Related

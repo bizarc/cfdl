@@ -790,6 +790,13 @@ account reserve {
 - **Streams move it** (§9.1): `moves <account>` on an inflow or outflow, an
   accrual or a write-off. Each movement is a journal line naming the stream
   that caused it.
+- **The relation folds it** (`docs/42` §3.4). A container's account of a
+  given name is the sum, opening and closing, of its members' accounts of
+  that name through `part of` — `container.trust.balance` when the trust's
+  loans each carry a `balance`. It is declared nowhere (`E1383`), moved only
+  by moving a member's (`E1384`), read as `prev.container.trust.balance` and
+  published as `account.container.trust.balance`. Cash and balances roll up
+  through the same relation by the same rule.
 - `from` is the per-period inflow, reading cash that has settled this
   period. It MAY be negative, and **the balance has no floor**: an account
   fed a deal's whole net cash IS the deal's cumulative position, negative

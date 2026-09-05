@@ -1,0 +1,16 @@
+version 0.1
+model "folded-account-moved"
+time calendar monthly from 2026-01 for 6
+
+entity container trust : Container.SPV
+entity asset loan : Asset.Financial {
+  part of container.trust
+  account balance due init 600000
+}
+
+// A fold is moved only by moving a member's account.
+stream trust.collections on entity container.trust inflow currency USD {
+  schedule every month from 2026-01 to 2026-06
+  amount = 1000
+  moves balance
+}
