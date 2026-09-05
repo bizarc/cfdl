@@ -372,7 +372,14 @@ Separate from the engine restructure, and before it.
    non-cash directions, the read rules (§3.3), the results series
    (`account.<name>` opening and closing), the journal lines, the category
    roots the non-cash directions need (`docs/35`). One PR for the
-   construct, one for the fold and results.
+   construct, one for the fold and results. **The construct is built**
+   (4 September 2026): an entity owns an account with a side and an init,
+   streams `moves` it in all four directions, a stream reads the opening
+   as `prev.<account>`, every movement is a `move` journal line, non-cash
+   streams enter no cash total, and `E1378`–`E1382` refuse the malformed
+   cases. Not yet: the relation fold (§3.4), the master-declared account
+   and the pack rule's `account` key (§3.5), the `set balance = 0`
+   retirement as a write-off, the non-cash category roots.
 2. **The level-pay loan onto accounts**, replacing the stopgap field.
    Numbers unchanged: the lines are the same, only who sums them changes.
 3. **The clean-up call** on the auto ABS cases and AmeriCredit, reading the

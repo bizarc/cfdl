@@ -11,7 +11,33 @@ Diagnostics are the repair signal: read the `code`, `message`, `span`, and
 `hint`, change the model, recompile. The catalog is how an agent learns what
 each code looks like in the flesh before it meets one.
 
-**Coverage:** 222 codes in the docs/08 §7 register; 107 exemplified here; 70 of 116 examples carry a recorded fix.
+**Coverage:** 227 codes in the docs/08 §7 register; 112 exemplified here; 70 of 121 examples carry a recorded fix.
+
+## account_read_without_prev — E1382_ACCOUNT_READ_WITHOUT_PREV
+
+Failing example:
+
+```cfdl
+version 0.1
+model "account-read-without-prev"
+time calendar monthly from 2026-01 for 6
+
+entity asset loan : Asset.Financial {
+  account balance owed init 1000000
+}
+
+// A balance is readable inside a period only as its opening, `prev.balance`;
+// this period's close is the sum of streams still being computed.
+stream loan.interest on entity asset.loan outflow currency USD {
+  schedule every month from 2026-01 to 2026-06
+  amount = asset.loan.balance * 0.06 / 12
+}
+```
+
+- `E1382_ACCOUNT_READ_WITHOUT_PREV` (error): Stream 'loan.interest' reads account 'asset.loan.balance' as a current value. A balance is readable inside a period only as its opening: write `prev.asset.loan.balance`.
+  - hint: The opening balance is the prior close — settled state. This period's close is the sum of the streams still being computed.
+
+Fix: not yet recorded.
 
 ## active_in_unknown_state — E1332_UNKNOWN_ACTIVE_STATE
 
@@ -2258,6 +2284,33 @@ stream lease.rent on entity asset.borrower {
 }
 ```
 
+## moved_account_without_side — E1381_MOVED_ACCOUNT_HAS_NO_SIDE
+
+Failing example:
+
+```cfdl
+version 0.1
+model "moved-account-without-side"
+time calendar monthly from 2026-01 for 6
+
+entity asset loan : Asset.Financial {
+  account balance init 1000000
+}
+
+// Whether an outflow raises or lowers the balance follows from its side, and
+// the account declares none.
+stream loan.principal on entity asset.loan outflow currency USD {
+  schedule every month from 2026-01 to 2026-06
+  amount = 10000
+  moves balance
+}
+```
+
+- `E1381_MOVED_ACCOUNT_HAS_NO_SIDE` (error): Stream 'loan.principal' is `outflow` and moves account 'asset.loan.balance', which declares no side.
+  - hint: Whether an inflow raises or lowers a balance follows from the account's side: write `owed` (a liability of its owner) or `due` (a receivable) after the account's name.
+
+Fix: not yet recorded.
+
 ## near_miss_field — E1313_UNKNOWN_ENTITY_FIELD
 
 Failing example:
@@ -2301,6 +2354,59 @@ entity asset tlb : Credit.Asset.Tranche {
   seniority = 1
 }
 ```
+
+## noncash_stream_moves_nothing — E1378_NONCASH_STREAM_MOVES_NOTHING
+
+Failing example:
+
+```cfdl
+version 0.1
+model "noncash-stream-moves-nothing"
+time calendar monthly from 2026-01 for 6
+
+entity asset loan : Asset.Financial {
+  account balance owed init 1000000
+}
+
+// An accrual raises a claim and nothing else, so it must say which one.
+stream loan.pik on entity asset.loan accrual currency USD {
+  schedule every month from 2026-01 to 2026-06
+  amount = prev.balance * 0.01
+}
+```
+
+- `E1378_NONCASH_STREAM_MOVES_NOTHING` (error): Stream 'loan.pik' is `accrual`, which raises or extinguishes a claim, and names no account to move.
+  - hint: A non-cash stream is a movement of a balance and nothing else: add `moves <account>`, or make it an inflow or outflow if money actually moves.
+
+Fix: not yet recorded.
+
+## noncash_stream_with_category — E1379_NONCASH_STREAM_CATEGORY
+
+Failing example:
+
+```cfdl
+version 0.1
+model "noncash-stream-with-category"
+use pack "cre" version "0.1.0"
+time calendar monthly from 2026-01 for 6
+
+entity asset loan : Asset.Financial {
+  account balance owed init 1000000
+}
+
+// A write-off is not cash, so a cash flow category is a claim it cannot keep.
+stream loan.loss on entity asset.loan writeoff currency USD {
+  schedule every month from 2026-03 to 2026-03
+  category financing.debt.principal
+  amount = 5000
+  moves balance
+}
+```
+
+- `E1379_NONCASH_STREAM_CATEGORY` (error): Stream 'loan.loss' is `writeoff` and carries a cash flow category.
+  - hint: The category roots classify cash. An accrual or a write-off is excluded from every cash fold; drop the category.
+
+Fix: not yet recorded.
 
 ## not_implemented_compile — E1109_MISSING_ENTITY
 
@@ -3955,6 +4061,32 @@ stream misc.windfall on entity asset.tower inflow currency USD {
 
 - `E5029_STREAM_MISSING_CATEGORY` (error): Stream 'misc.windfall' declares no category, and pack 'cre' is active. Its cash would reach model.total and fold into no subtotal — invisible to every domain metric, silently.
   - hint: State what the flow IS, as a path into the cash flow statement: `category operating.revenue.rent`, `category financing.debt.interest_paid`. A category is only optional when no pack is active, because then nothing folds.
+
+Fix: not yet recorded.
+
+## stream_moves_unknown_account — E1380_UNKNOWN_ACCOUNT_MOVED
+
+Failing example:
+
+```cfdl
+version 0.1
+model "stream-moves-unknown-account"
+time calendar monthly from 2026-01 for 6
+
+entity asset loan : Asset.Financial {
+  account balance owed init 1000000
+}
+
+// `balanse` is declared nowhere: not on the loan, not as a structure account.
+stream loan.principal on entity asset.loan outflow currency USD {
+  schedule every month from 2026-01 to 2026-06
+  amount = 10000
+  moves balanse
+}
+```
+
+- `E1380_UNKNOWN_ACCOUNT_MOVED` (error): Stream 'loan.principal' moves account 'balanse', which is not declared on 'asset.loan' or as a structure account.
+  - hint: Declare it — `account <name> owed|due [init <expr>]` in the entity block, or `account <name> owed|due { ... }` at the model level — or correct the name.
 
 Fix: not yet recorded.
 

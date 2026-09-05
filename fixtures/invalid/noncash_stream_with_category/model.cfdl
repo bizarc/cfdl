@@ -1,0 +1,16 @@
+version 0.1
+model "noncash-stream-with-category"
+use pack "cre" version "0.1.0"
+time calendar monthly from 2026-01 for 6
+
+entity asset loan : Asset.Financial {
+  account balance owed init 1000000
+}
+
+// A write-off is not cash, so a cash flow category is a claim it cannot keep.
+stream loan.loss on entity asset.loan writeoff currency USD {
+  schedule every month from 2026-03 to 2026-03
+  category financing.debt.principal
+  amount = 5000
+  moves balance
+}

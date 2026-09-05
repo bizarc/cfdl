@@ -977,6 +977,7 @@
             "inflow",
             "allocate_in",
             "allocate_out",
+            "move",
             "transition"
           ]
         },

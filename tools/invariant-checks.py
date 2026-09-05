@@ -178,6 +178,7 @@ WAIVED = {
     "direction": "per lowered stream; the pack's lowering rule declares it",
     "currency": "per lowered stream; the pack's lowering rule declares it",
     "category": "per lowered stream; the pack's lowering rule declares it",
+    "moves": "per lowered stream; the master declares the account and the rule's `account` key moves it (docs/42 §3.5)",
     "amount": "per lowered stream; the lowering rule's amount_expr is the amount",
     "schedule": "a contract's term plus the rule's schedule_kind own the cadence",
 }

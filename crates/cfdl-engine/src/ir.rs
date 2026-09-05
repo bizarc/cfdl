@@ -197,6 +197,18 @@ pub(crate) struct IrAccount {
     #[allow(dead_code)]
     #[serde(default)]
     pub(crate) owner: Option<String>,
+    /// The entity whose claim this is (`docs/42` §3.6). Carried for the
+    /// relation fold; a structure or party account has none.
+    #[allow(dead_code)]
+    #[serde(default)]
+    pub(crate) owner_entity: Option<String>,
+    /// `owed` or `due`, from the owner's view: whether an inflow that moves
+    /// this account raises it (a liability) or lowers it (a receivable).
+    #[serde(default)]
+    pub(crate) side: Option<String>,
+    /// The balance at the timeline's first period; absent means zero.
+    #[serde(default)]
+    pub(crate) init: Option<IrExpr>,
     #[serde(default)]
     pub(crate) inflow: Option<IrExpr>,
 }
@@ -455,6 +467,9 @@ pub(crate) struct IrStream {
     /// genuinely needs, read once per stream rather than per period.
     #[serde(default)]
     pub(crate) category: Option<String>,
+    /// The account this stream moves, by its declared name (`docs/42` §3.2).
+    #[serde(default)]
+    pub(crate) moves: Option<String>,
     pub(crate) schedule: IrSchedule,
     pub(crate) amount: IrExpr,
     #[serde(default)]

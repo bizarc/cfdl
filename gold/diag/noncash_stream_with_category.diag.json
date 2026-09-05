@@ -1,0 +1,17 @@
+[
+  {
+    "code": "E1379_NONCASH_STREAM_CATEGORY",
+    "severity": "error",
+    "message": "Stream 'loan.loss' is `writeoff` and carries a cash flow category.",
+    "file": "model.cfdl",
+    "span": {
+      "start_line": 11,
+      "start_col": 1,
+      "end_line": 16,
+      "end_col": 1
+    },
+    "path": null,
+    "hint": "The category roots classify cash. An accrual or a write-off is excluded from every cash fold; drop the category.",
+    "notes": []
+  }
+]

@@ -1,0 +1,17 @@
+[
+  {
+    "code": "E1381_MOVED_ACCOUNT_HAS_NO_SIDE",
+    "severity": "error",
+    "message": "Stream 'loan.principal' is `outflow` and moves account 'asset.loan.balance', which declares no side.",
+    "file": "model.cfdl",
+    "span": {
+      "start_line": 11,
+      "start_col": 1,
+      "end_line": 15,
+      "end_col": 1
+    },
+    "path": null,
+    "hint": "Whether an inflow raises or lowers a balance follows from the account's side: write `owed` (a liability of its owner) or `due` (a receivable) after the account's name.",
+    "notes": []
+  }
+]

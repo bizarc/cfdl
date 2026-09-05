@@ -3099,21 +3099,6 @@ either the balance rolls forward from the stream (which §7.102 enables), or
 the day-count term is documented as an interest convention that leaves the
 amortization schedule untouched.
 
-### 7.105 A stream cannot read an account
-
-Belongs with §5, language. Confirmed 3–4 September 2026 (probe: a field may
-read `prev.<account>`; a stream's read is refused as `E1123`, and
-`series_sum("account.<name>", …)` from a stream reads zero in silence).
-
-An account is the language's non-cash balance, and the ledger settles it at
-period close, so a stream reading the CURRENT balance would be reading
-unsettled state and the refusal is right. The prior balance is settled, and
-`prev.<account>` from a stream is the interest-on-a-reserve, fee-on-a-balance
-and coupon-on-what-is-outstanding case: today each is a field that copies
-the account first. The silent zero from the `series_sum` spelling is the
-§7.101 defect again, at an account. Related: §7.76, §7.101, the party-owns-
-several-accounts entry above.
-
 ### 7.106 MOIC of a zero cash flow is a ratio of sign noise
 
 Belongs with §5, metrics. Found 4 September 2026 when the decimal-to-float

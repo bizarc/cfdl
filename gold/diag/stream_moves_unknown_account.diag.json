@@ -1,0 +1,17 @@
+[
+  {
+    "code": "E1380_UNKNOWN_ACCOUNT_MOVED",
+    "severity": "error",
+    "message": "Stream 'loan.principal' moves account 'balanse', which is not declared on 'asset.loan' or as a structure account.",
+    "file": "model.cfdl",
+    "span": {
+      "start_line": 10,
+      "start_col": 1,
+      "end_line": 14,
+      "end_col": 1
+    },
+    "path": null,
+    "hint": "Declare it — `account <name> owed|due [init <expr>]` in the entity block, or `account <name> owed|due { ... }` at the model level — or correct the name.",
+    "notes": []
+  }
+]

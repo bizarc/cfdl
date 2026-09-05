@@ -1,0 +1,48 @@
+version 0.1
+model "account-moved-by-streams"
+time calendar monthly from 2026-01 for 8
+
+// THE BALANCE IS AN ACCOUNT THE STREAMS MOVE (docs/42 §3). A loan the
+// borrower owes, rolled by the engine from what happened: principal paid
+// (cash, lowers it), interest capitalized (an accrual, raises it with no
+// money moving), a loss written off (lowers it with no money moving), and
+// interest that READS the opening balance — the prior close, or the init
+// in the first period. Nothing writes the balance.
+entity asset loan : Asset.Financial {
+  account balance owed init 1000000
+}
+
+// The lender's mirror: the same claim as a receivable, DUE. The same
+// direction word moves it the other way, because the side decides.
+entity party lender {
+  account receivable due init 1000000
+}
+
+stream loan.interest on entity asset.loan outflow currency USD {
+  schedule every month from 2026-01 to 2026-08
+  amount = prev.balance * 0.06 / 12
+}
+
+stream loan.principal on entity asset.loan outflow currency USD {
+  schedule every month from 2026-01 to 2026-08
+  amount = 10000
+  moves balance
+}
+
+stream loan.pik on entity asset.loan accrual currency USD {
+  schedule every month from 2026-01 to 2026-08
+  amount = prev.balance * 0.01
+  moves balance
+}
+
+stream loan.loss on entity asset.loan writeoff currency USD {
+  schedule every month from 2026-06 to 2026-06
+  amount = 5000
+  moves balance
+}
+
+stream lender.principal on entity party.lender inflow currency USD {
+  schedule every month from 2026-01 to 2026-08
+  amount = 10000
+  moves receivable
+}

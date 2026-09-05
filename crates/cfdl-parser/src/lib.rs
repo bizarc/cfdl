@@ -109,6 +109,11 @@ pub struct EntityStmt {
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub literal_fields: Vec<EntityLiteralField>,
     pub fields: Vec<EntityField>,
+    /// Accounts declared in the block — `account balance owed init <expr>`.
+    /// A claim the entity owes or is due, rolled by the engine from the
+    /// streams that `moves` it (`docs/42`).
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub accounts: Vec<EntityAccount>,
     /// The parent this entity belongs to, if the model groups it.
     ///
     /// ALWAYS OPTIONAL. A pool models collective behavior perfectly well with
@@ -238,6 +243,17 @@ pub struct EntityLiteralField {
 /// an event may overwrite it, and outputs read what was committed. A building
 /// changes its use, a pool amortizes its factor and then a trigger resets it.
 #[derive(Debug, Clone, PartialEq, Eq, serde::Serialize)]
+pub struct EntityAccount {
+    pub name: String,
+    /// `owed` or `due`, from this entity's view.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub side: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub init: Option<ExprSlot>,
+    pub span: Span,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, serde::Serialize)]
 pub struct EntityField {
     pub name: String,
     pub init: ExprSlot,
@@ -256,8 +272,16 @@ impl EntityStmt {
 pub struct StreamStmt {
     pub name: String,
     pub attached_entity: String,
-    /// Optional: "inflow" or "outflow". Default when lowering is "outflow".
+    /// Optional: `inflow`, `outflow`, `accrual` or `writeoff`. Default when
+    /// lowering is `outflow`. The last two are NOT cash (`docs/42` §3.2): a
+    /// claim raised or extinguished with no money moving, excluded from every
+    /// cash total, and they must name the account they move.
     pub direction: Option<String>,
+    /// `moves <account>` — the account this stream's amount moves, by the
+    /// name declared on the owning entity, or a qualified name. Optional on
+    /// a cash stream (most move nothing); required on `accrual`/`writeoff`.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub moves: Option<String>,
     /// Optional: currency code (e.g. "USD"). Default when lowering is model currency.
     pub currency: Option<String>,
     /// Optional: what this stream IS, economically — `category revenue`.
@@ -292,6 +316,7 @@ pub struct StateGuard {
 /// the tuple had already reached four elements and every caller had to
 /// remember their order.
 struct StreamBlock {
+    moves: Option<String>,
     schedule: Option<ScheduleSpec>,
     amount: Option<ExprSlot>,
     active_when: Option<ExprSlot>,
@@ -758,6 +783,22 @@ pub struct AccountStmt {
     /// `from <expr>` — what flows in each period. May be negative: an account
     /// fed a deal's whole net cash IS the deal's cumulative position.
     pub inflow: Option<ExprSlot>,
+    /// `owed` or `due`, from the owner's view (`docs/42` §3.6): which way a
+    /// cash stream that `moves` this account changes it. Required only when
+    /// something moves it. A pack contract's account takes its side from the
+    /// master; a model states it here.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub side: Option<String>,
+    /// `init <expr>` — the balance at the timeline's first period. Defaults
+    /// to zero: a balance created during the run is raised from zero by the
+    /// cash that creates it.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub init: Option<ExprSlot>,
+    /// The entity that owns this account when it was declared inside an
+    /// entity block (`account balance owed init 1000000`). Its name is then
+    /// the entity symbol plus the account name.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub owner_entity: Option<String>,
     pub span: Span,
 }
 
@@ -1304,6 +1345,7 @@ impl<'a> Parser<'a> {
                 type_name,
                 literal_fields: Vec::new(),
                 fields: Vec::new(),
+                accounts: Vec::new(),
                 parent: None,
                 initial_state: None,
                 lifecycle: None,
@@ -1314,6 +1356,7 @@ impl<'a> Parser<'a> {
 
         let mut literal_fields: Vec<EntityLiteralField> = Vec::new();
         let mut fields: Vec<EntityField> = Vec::new();
+        let mut accounts: Vec<EntityAccount> = Vec::new();
         let mut parent: Option<String> = None;
         let mut initial_state: Option<String> = None;
         let mut lifecycle: Option<String> = None;
@@ -1330,6 +1373,49 @@ impl<'a> Parser<'a> {
                         "Expected a field, 'part of', 'state' or '}' in entity block.".to_string(),
                     );
                     return None;
+                }
+                // `account <name> [owed|due] [init <expr>]` — a claim this
+                // entity owes or is due, rolled by the engine from the
+                // streams that `moves` it (`docs/42` §3). The side is one
+                // word from the entity's view; `init` is the balance at the
+                // timeline's first period and defaults to zero.
+                TokenKind::Keyword(Keyword::Account) => {
+                    let kw = self.bump();
+                    let name_tok = self.bump();
+                    let name = match name_tok.kind {
+                        TokenKind::Ident(ref i) => i.clone(),
+                        _ => {
+                            self.push_expected(
+                                name_tok.span,
+                                "Expected an account name after 'account' in an entity block."
+                                    .to_string(),
+                            );
+                            return None;
+                        }
+                    };
+                    let mut side = None;
+                    let mut end_span = name_tok.span;
+                    if matches!(self.peek().kind, TokenKind::Ident(ref i) if i == "owed" || i == "due")
+                    {
+                        let tok = self.bump();
+                        if let TokenKind::Ident(ref i) = tok.kind {
+                            side = Some(i.clone());
+                        }
+                        end_span = tok.span;
+                    }
+                    let mut init = None;
+                    if matches!(self.peek().kind, TokenKind::Ident(ref i) if i == "init") {
+                        let init_tok = self.bump();
+                        let slot = self.parse_expr_slot_until(init_tok.span, &[])?;
+                        end_span = slot.span;
+                        init = Some(slot);
+                    }
+                    accounts.push(EntityAccount {
+                        name,
+                        side,
+                        init,
+                        span: merge_spans(kw.span, end_span),
+                    });
                 }
                 // `part of <entity>` — optional hierarchy. Never required: a
                 // pool models collective behavior with no loans under it, and
@@ -1506,6 +1592,7 @@ impl<'a> Parser<'a> {
             type_name,
             literal_fields,
             fields,
+            accounts,
             parent,
             initial_state,
             lifecycle,
@@ -2006,6 +2093,12 @@ impl<'a> Parser<'a> {
         } else if matches!(self.peek().kind, TokenKind::Keyword(Keyword::Outflow)) {
             let _ = self.bump();
             direction = Some("outflow".to_string());
+        } else if matches!(self.peek().kind, TokenKind::Keyword(Keyword::Accrual)) {
+            let _ = self.bump();
+            direction = Some("accrual".to_string());
+        } else if matches!(self.peek().kind, TokenKind::Keyword(Keyword::Writeoff)) {
+            let _ = self.bump();
+            direction = Some("writeoff".to_string());
         }
 
         let mut currency = None;
@@ -2022,6 +2115,7 @@ impl<'a> Parser<'a> {
         let mut active_when = None;
         let mut active_in_states: Vec<StateGuard> = Vec::new();
         let mut category = None;
+        let mut moves = None;
         let mut end_span = entity_ref_tok.span;
 
         if matches!(self.peek().kind, TokenKind::Punct(Punct::LBrace)) {
@@ -2031,6 +2125,7 @@ impl<'a> Parser<'a> {
             active_when = block.active_when;
             active_in_states = block.active_in_states;
             category = block.category;
+            moves = block.moves;
             end_span = block.end_span;
         }
 
@@ -2038,6 +2133,7 @@ impl<'a> Parser<'a> {
             name,
             attached_entity,
             direction,
+            moves,
             currency,
             category,
             schedule,
@@ -2055,6 +2151,7 @@ impl<'a> Parser<'a> {
         let mut active_when = None;
         let mut active_in_states: Vec<StateGuard> = Vec::new();
         let mut category = None;
+        let mut moves = None;
         let mut end_span = lbrace.span;
 
         while !self.is_eof() {
@@ -2108,6 +2205,28 @@ impl<'a> Parser<'a> {
                             } else {
                                 end_span = self.consume_stream_item();
                             }
+                        }
+                    }
+                }
+                // `moves <account>` — the account this stream's amount moves
+                // (`docs/42` §3.2). Bare: an account declared on the owning
+                // entity; qualified: any declared account.
+                TokenKind::Keyword(Keyword::Moves) => {
+                    let _ = self.bump();
+                    let value_tok = self.peek().clone();
+                    match &value_tok.kind {
+                        TokenKind::Qname(name) | TokenKind::Ident(name) => {
+                            let _ = self.bump();
+                            end_span = value_tok.span;
+                            moves = Some(name.clone());
+                        }
+                        _ => {
+                            self.push_expected(
+                                value_tok.span,
+                                "Expected an account name after 'moves', e.g. `moves balance`."
+                                    .to_string(),
+                            );
+                            end_span = self.consume_stream_item();
                         }
                     }
                 }
@@ -2173,6 +2292,7 @@ impl<'a> Parser<'a> {
         }
 
         StreamBlock {
+            moves,
             schedule,
             amount,
             active_when,
@@ -2477,6 +2597,15 @@ impl<'a> Parser<'a> {
             }
         };
 
+        // `owed` / `due` after the name (`docs/42` §3.6): which way a cash
+        // stream that `moves` this account changes it, from the owner's
+        // view. Contextual identifiers, not reserved words.
+        let mut side = None;
+        if matches!(self.peek().kind, TokenKind::Ident(ref i) if i == "owed" || i == "due") {
+            if let TokenKind::Ident(ref i) = self.bump().kind {
+                side = Some(i.clone());
+            }
+        }
         let _ = self.expect_punct(Punct::LBrace, "'{'")?;
         // `owner <party>` is optional and lives IN the block: an account with
         // no owner belongs to the structure. `owner` was already reserved with
@@ -2484,6 +2613,7 @@ impl<'a> Parser<'a> {
         // where `owned by` would have cost two.
         let mut owner = None;
         let mut inflow = None;
+        let mut init = None;
         let end;
         loop {
             match self.peek().kind {
@@ -2509,13 +2639,18 @@ impl<'a> Parser<'a> {
                     // Bounded, or the slot swallows the lines after it: an
                     // expression has no terminator of its own, so the block's
                     // other clauses are what end it.
-                    inflow = self.parse_expr_slot_until(kw.span, &["owner"]);
+                    inflow = self.parse_expr_slot_until(kw.span, &["owner", "init"]);
+                }
+                // `init <expr>` — the balance at the timeline's first period.
+                TokenKind::Ident(ref i) if i == "init" => {
+                    let kw = self.bump();
+                    init = self.parse_expr_slot_until(kw.span, &["owner"]);
                 }
                 _ => {
                     let tok = self.bump();
                     self.push_expected(
                         tok.span,
-                        "Expected 'owner', 'from' or '}' in an account block.".to_string(),
+                        "Expected 'owner', 'from', 'init' or '}' in an account block.".to_string(),
                     );
                     return None;
                 }
@@ -2525,6 +2660,9 @@ impl<'a> Parser<'a> {
             name,
             owner,
             inflow,
+            side,
+            init,
+            owner_entity: None,
             span: merge_spans(start.span, end.span),
         })
     }
@@ -2901,6 +3039,7 @@ impl<'a> Parser<'a> {
                 | TokenKind::Keyword(Keyword::Set)
                 | TokenKind::Keyword(Keyword::Schedule)
                 | TokenKind::Keyword(Keyword::Owner)
+                | TokenKind::Keyword(Keyword::Moves)
                 | TokenKind::Keyword(Keyword::Active) => break,
                 // An operand cannot follow an operand — but `and`, `or` and
                 // `not` lex as identifiers and are OPERATORS, so they continue
@@ -5161,6 +5300,9 @@ fn keyword_text(keyword: Keyword) -> &'static str {
         Keyword::Direction => "direction",
         Keyword::Inflow => "inflow",
         Keyword::Outflow => "outflow",
+        Keyword::Accrual => "accrual",
+        Keyword::Writeoff => "writeoff",
+        Keyword::Moves => "moves",
         Keyword::Schedule => "schedule",
         Keyword::Every => "every",
         Keyword::PhaseEnter => "phase_enter",

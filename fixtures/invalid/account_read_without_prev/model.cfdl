@@ -1,0 +1,14 @@
+version 0.1
+model "account-read-without-prev"
+time calendar monthly from 2026-01 for 6
+
+entity asset loan : Asset.Financial {
+  account balance owed init 1000000
+}
+
+// A balance is readable inside a period only as its opening, `prev.balance`;
+// this period's close is the sum of streams still being computed.
+stream loan.interest on entity asset.loan outflow currency USD {
+  schedule every month from 2026-01 to 2026-06
+  amount = asset.loan.balance * 0.06 / 12
+}

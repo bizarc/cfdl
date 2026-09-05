@@ -468,6 +468,22 @@ pub fn validate(output: &ResolveOutput, symbols: &SymbolTables) -> Vec<Validatio
         }
     }
 
+    // Every declared account, by full name: a structure or party account by
+    // its own, an entity's claim as `<entity>.<name>`.
+    let account_names: std::collections::BTreeSet<String> = output
+        .source_statements
+        .iter()
+        .flat_map(|s| match &s.statement {
+            Stmt::Account(a) => vec![a.name.clone()],
+            Stmt::Entity(e) => e
+                .accounts
+                .iter()
+                .map(|a| format!("{}.{}", e.symbol(), a.name))
+                .collect(),
+            _ => Vec::new(),
+        })
+        .collect();
+
     // THERE IS NO `state.` NAMESPACE. A value that changes over time is a field
     // of the entity it describes, so a `state.<name>` read names nothing.
     // Without this check it reaches the engine, which warns and substitutes
@@ -481,7 +497,12 @@ pub fn validate(output: &ResolveOutput, symbols: &SymbolTables) -> Vec<Validatio
                 // reference reaches the engine, warns, and evaluates the whole
                 // stream to zero — cash silently missing, `status: ok`.
                 for slot in stream.amount.iter().chain(stream.active_when.iter()) {
-                    if references_prev_other_than_field(&slot.src) {
+                    // An account's OPENING is readable from a stream as
+                    // `prev.<account>` (`docs/42` §3.3): the prior close,
+                    // settled state.
+                    let without_accounts =
+                        blank_prev_accounts(&slot.src, &stream.attached_entity, &account_names);
+                    if references_prev_other_than_field(&without_accounts) {
                         diagnostics.push(ValidationDiagnostic {
                             code: "E1123_PREV_OUTSIDE_NEXT",
                             message: format!(
@@ -967,6 +988,40 @@ fn fmt_date(date: Date) -> String {
 /// one, which the engine has as a column and which a debt schedule needs for
 /// average-balance interest. It may not read bare `prev` or `prev.<state>`,
 /// which name a recurrence's own previous value and mean nothing outside one.
+/// `src` with every `prev.<account>` read blanked: the owner's own claim
+/// spelled bare (`prev.balance`) or any account spelled in full.
+fn blank_prev_accounts(
+    src: &str,
+    owner: &str,
+    accounts: &std::collections::BTreeSet<String>,
+) -> String {
+    let mut out = src.to_string();
+    let bytes = src.as_bytes();
+    let mut i = 0;
+    while let Some(idx) = src[i..].find("prev.") {
+        let at = i + idx;
+        let start = at + 5;
+        let mut end = start;
+        while end < bytes.len() {
+            let c = bytes[end] as char;
+            if c.is_alphanumeric() || c == '_' || c == '.' {
+                end += 1;
+            } else {
+                break;
+            }
+        }
+        let path = &src[start..end];
+        let bare = path.strip_prefix("entity.").unwrap_or(path);
+        let is_account = accounts.contains(bare)
+            || (!bare.contains('.') && accounts.contains(&format!("{owner}.{bare}")));
+        if is_account {
+            out = out.replace(&format!("prev.{path}"), "0");
+        }
+        i = end.max(start);
+    }
+    out
+}
+
 fn references_prev_other_than_field(src: &str) -> bool {
     let mut rest = src;
     while let Some(idx) = rest.find("prev") {

@@ -35,10 +35,21 @@ pub(crate) fn warn_if_cash_settles_in_tail(
     ));
 }
 
+/// Is this stream money moving? The two non-cash directions (`docs/42`
+/// §3.2) raise or extinguish a claim; they publish as series and move an
+/// account, and they are excluded from every cash total.
+pub(crate) fn is_cash(stream: &IrStream) -> bool {
+    !matches!(stream.direction.as_str(), "accrual" | "writeoff")
+}
+
 pub(crate) fn stream_direction_sign(stream: &IrStream, warnings: &mut Vec<String>) -> f64 {
     match stream.direction.as_str() {
         "inflow" => 1.0,
         "outflow" => -1.0,
+        // Non-cash: an accrual raises a claim, a write-off lowers it. The
+        // sign is the movement's, published as such and never summed as cash.
+        "accrual" => 1.0,
+        "writeoff" => -1.0,
         _ => {
             warnings.push(format!(
                 "Stream '{}' has unknown direction '{}'; treating as outflow.",
@@ -144,6 +155,12 @@ impl<'a> StreamPlan<'a> {
         // are finished, which is the column order; `Some(t)` under a walk,
         // where reading past `t` would read an allocation rather than a value.
         series_available_to: Option<usize>,
+        // Each account's OPENING balance this period — the prior close, or
+        // the `init` in the first period — read as `prev.<account>`
+        // (`docs/42` §3.3). `None` under the column order, which carries no
+        // balances; the compiler and `run_deterministic` keep a stream that
+        // reads or moves one off that order.
+        opening_accounts: Option<&BTreeMap<String, f64>>,
     ) -> f64 {
         let event_mask = stream_active.get(&self.stream.name);
         let mut settled = 0.0_f64;
@@ -167,6 +184,13 @@ impl<'a> StreamPlan<'a> {
             apply_entity_state(&mut env, &entity_state[idx], &self.stream.owner.symbol);
             bind_states(&mut env, states, idx);
             bind_all_entity_state(&mut env, &entity_state[idx]);
+            if let Some(opening) = opening_accounts {
+                for (name, value) in opening {
+                    env.prev_states
+                        .entry(name.clone())
+                        .or_insert(ExprValue::Decimal(*value));
+                }
+            }
             if let Some(series) = series {
                 env.series = Arc::clone(series);
             }
@@ -313,6 +337,7 @@ pub(crate) fn evaluate_stream(
             warnings,
             activation_refused,
             None,
+            None,
         );
     }
     Ok(values)
@@ -328,8 +353,12 @@ pub(crate) fn record_stream(
     stream_series: &mut BTreeMap<String, Vec<f64>>,
 ) {
     let cash = &values[..cash_periods.min(values.len())];
-    for (idx, value) in cash.iter().enumerate() {
-        model_series[idx] += *value;
+    // A non-cash stream publishes and totals under its own name, and never
+    // enters the model's cash (`docs/42` §3.7).
+    if is_cash(stream) {
+        for (idx, value) in cash.iter().enumerate() {
+            model_series[idx] += *value;
+        }
     }
     let total = cash.iter().sum::<f64>();
     stream_totals.insert(stream.name.clone(), total);

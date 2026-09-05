@@ -113,9 +113,9 @@
       "provenance": {
         "source_file": "model.cfdl",
         "source_span": {
-          "start_line": 40,
+          "start_line": 42,
           "start_col": 1,
-          "end_line": 43,
+          "end_line": 45,
           "end_col": 1
         }
       }
@@ -145,9 +145,9 @@
       "provenance": {
         "source_file": "model.cfdl",
         "source_span": {
-          "start_line": 33,
+          "start_line": 35,
           "start_col": 1,
-          "end_line": 36,
+          "end_line": 38,
           "end_col": 1
         }
       }

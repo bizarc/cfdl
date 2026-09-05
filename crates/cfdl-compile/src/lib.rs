@@ -469,6 +469,19 @@ struct IrAccount {
     /// account has none.
     #[serde(skip_serializing_if = "Option::is_none")]
     owner: Option<String>,
+    /// The entity that owns a claim declared in its block (`docs/42` §3.6):
+    /// `asset.loan` for `asset.loan.balance`. Absent on a structure or
+    /// party account.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    owner_entity: Option<String>,
+    /// `owed` or `due`, from the owner's view: which way a cash stream that
+    /// moves this account changes it. Absent when nothing moves it.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    side: Option<String>,
+    /// The balance at the timeline's first period. Absent means zero: a
+    /// balance created during the run is raised by the cash that creates it.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    init: Option<IrExpr>,
     /// What flows in each period. May be negative: an account fed a deal's
     /// whole net cash IS the deal's cumulative position.
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -979,6 +992,10 @@ struct IrStream {
     /// model that classifies nothing produces the IR it always did.
     #[serde(skip_serializing_if = "Option::is_none")]
     category: Option<String>,
+    /// The account this stream's amount moves, resolved to its declared
+    /// name (`docs/42` §3.2). Absent on a stream that changes nothing owed.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    moves: Option<String>,
     schedule: IrSchedule,
     amount: IrExpr,
     active_when: IrExpr,
@@ -1512,6 +1529,11 @@ fn check_field_paths(
             for f in &entity.fields {
                 names.insert(f.name.clone());
             }
+            // An entity's claim reads as `prev.<entity>.<account>`; the
+            // opening-only rule is `check_stream_moves`' business.
+            for a in &entity.accounts {
+                names.insert(a.name.clone());
+            }
             // Lifecycle status stays open: an event may write it later, and a
             // pack's lifecycle declares the states rather than the model.
             names.insert("status".to_string());
@@ -1750,6 +1772,7 @@ fn check_prev_first_period(
     model_start: &str,
 ) -> Result<(), Vec<Diagnostic>> {
     let mut diagnostics: Vec<Diagnostic> = Vec::new();
+    let accounts = declared_accounts_of(resolve_output);
     for source_stmt in &resolve_output.source_statements {
         let Stmt::Stream(stream) = &source_stmt.statement else {
             continue;
@@ -1768,7 +1791,10 @@ fn check_prev_first_period(
             continue;
         }
         for slot in stream.amount.iter().chain(stream.active_when.iter()) {
-            if reads_prev_field(&slot.src) {
+            // An account's opening exists in the first period — it is the
+            // `init` — so a `prev.<account>` read is not a missing close.
+            let without_accounts = strip_prev_accounts(&slot.src, &accounts);
+            if reads_prev_field(&without_accounts) {
                 diagnostics.push(Diagnostic {
                     code: "E1129_PREV_IN_FIRST_PERIOD".to_string(),
                     severity: "error".to_string(),
@@ -1793,6 +1819,19 @@ fn check_prev_first_period(
     } else {
         Err(diagnostics)
     }
+}
+
+/// `src` with every `prev.<account>` read blanked, so the field-only checks
+/// see only field reads.
+fn strip_prev_accounts(src: &str, accounts: &BTreeMap<String, DeclaredAccount>) -> String {
+    let mut out = src.to_string();
+    for path in prev_paths(src) {
+        let bare = path.strip_prefix("entity.").unwrap_or(&path);
+        if accounts.contains_key(bare) {
+            out = out.replace(&format!("prev.{path}"), "0");
+        }
+    }
+    out
 }
 
 /// Does this expression read `prev.<family>.<entity>.<field>`?
@@ -2674,6 +2713,315 @@ fn check_state_guards(
 ///     capped, pays a shortfall that cannot exist;
 ///   * a missing or misplaced `remainder` silently LOSES whatever is left in
 ///     the pot, which is the failure the residual step exists to prevent.
+// A declared account as the checks see it: its side (`docs/42` §3.6).
+#[derive(Clone, Debug)]
+struct DeclaredAccount {
+    side: Option<String>,
+}
+
+/// Every account the model declares, by its full name — a structure or
+/// party account by its own name, an entity's claim as `<entity>.<name>`.
+fn declared_accounts_of(
+    resolve_output: &cfdl_resolver::ResolveOutput,
+) -> BTreeMap<String, DeclaredAccount> {
+    let mut out: BTreeMap<String, DeclaredAccount> = BTreeMap::new();
+    for source_stmt in &resolve_output.source_statements {
+        match &source_stmt.statement {
+            Stmt::Account(a) => {
+                out.insert(
+                    a.name.clone(),
+                    DeclaredAccount {
+                        side: a.side.clone(),
+                    },
+                );
+            }
+            Stmt::Entity(entity) => {
+                for acct in &entity.accounts {
+                    out.insert(
+                        format!("{}.{}", entity.symbol(), acct.name),
+                        DeclaredAccount {
+                            side: acct.side.clone(),
+                        },
+                    );
+                }
+            }
+            _ => {}
+        }
+    }
+    out
+}
+
+/// `moves <name>` on a stream owned by `owner`: a bare name is the owner's
+/// own claim first, then a structure account; a qualified name is taken as
+/// written.
+fn resolve_moved_account(
+    owner: &str,
+    moves: &str,
+    accounts: &BTreeMap<String, DeclaredAccount>,
+) -> Option<String> {
+    let own = format!("{owner}.{moves}");
+    if accounts.contains_key(&own) {
+        return Some(own);
+    }
+    if accounts.contains_key(moves) {
+        return Some(moves.to_string());
+    }
+    None
+}
+
+/// The two non-cash directions (`docs/42` §3.2): a claim raised or
+/// extinguished with no money moving.
+fn is_cash_direction(direction: &str) -> bool {
+    !matches!(direction, "accrual" | "writeoff")
+}
+
+/// Every `prev.<path>` read in `src`, as the path after `prev.`.
+fn prev_paths(src: &str) -> Vec<String> {
+    let mut out = Vec::new();
+    let bytes = src.as_bytes();
+    let mut i = 0;
+    while let Some(idx) = src[i..].find("prev.") {
+        let at = i + idx;
+        let boundary_ok = at == 0 || {
+            let c = bytes[at - 1] as char;
+            !c.is_alphanumeric() && c != '_' && c != '.'
+        };
+        let start = at + 5;
+        let mut end = start;
+        while end < bytes.len() {
+            let c = bytes[end] as char;
+            if c.is_alphanumeric() || c == '_' || c == '.' {
+                end += 1;
+            } else {
+                break;
+            }
+        }
+        if boundary_ok && end > start {
+            out.push(src[start..end].to_string());
+        }
+        i = end.max(at + 5);
+    }
+    out
+}
+
+/// A stream or field on `owner` reads its own claim as `prev.balance`; the
+/// engine binds the account by its full name, so the read is spelled out
+/// here — `prev.asset.loan.balance` — once, at lowering.
+fn rewrite_prev_accounts(
+    src: &str,
+    owner: &str,
+    accounts: &BTreeMap<String, DeclaredAccount>,
+) -> String {
+    let mut out = src.to_string();
+    for path in prev_paths(src) {
+        if path.contains('.') {
+            continue;
+        }
+        let full = format!("{owner}.{path}");
+        if accounts.contains_key(&full) {
+            let from = format!("prev.{path}");
+            let to = format!("prev.{full}");
+            // Whole-path replacement: `prev.balance` must not touch
+            // `prev.balance_lag`.
+            let mut rebuilt = String::new();
+            let mut rest = out.as_str();
+            while let Some(idx) = rest.find(&from) {
+                let after = rest[idx + from.len()..].chars().next();
+                let before = rebuilt.chars().next_back().or_else(|| {
+                    if idx == 0 {
+                        None
+                    } else {
+                        rest[..idx].chars().next_back()
+                    }
+                });
+                let before_ok = before.is_none_or(|c| !c.is_alphanumeric() && c != '_' && c != '.');
+                let after_ok = after.is_none_or(|c| !c.is_alphanumeric() && c != '_' && c != '.');
+                rebuilt.push_str(&rest[..idx]);
+                if before_ok && after_ok {
+                    rebuilt.push_str(&to);
+                } else {
+                    rebuilt.push_str(&from);
+                }
+                rest = &rest[idx + from.len()..];
+            }
+            rebuilt.push_str(rest);
+            out = rebuilt;
+        }
+    }
+    out
+}
+
+/// `docs/42` §3: a stream that moves an account names one that exists; a
+/// non-cash stream moves something and carries no cash category; a cash
+/// stream moves only an account whose side is declared; and a balance is
+/// read only as `prev.` — the opening — never as a current value.
+fn check_stream_moves(
+    resolve_output: &cfdl_resolver::ResolveOutput,
+) -> Result<(), Vec<Diagnostic>> {
+    let accounts = declared_accounts_of(resolve_output);
+    let mut diagnostics: Vec<Diagnostic> = Vec::new();
+    let diag =
+        |code: &str, message: String, span: cfdl_parser::Span, file: &str, hint: &str| Diagnostic {
+            code: code.to_string(),
+            severity: "error".to_string(),
+            message,
+            file: Some(file.to_string()),
+            span: Some(map_span(span)),
+            path: None,
+            hint: Some(hint.to_string()),
+            notes: Vec::new(),
+        };
+    for source_stmt in &resolve_output.source_statements {
+        let file = &source_stmt.file;
+        match &source_stmt.statement {
+            Stmt::Stream(stream) => {
+                let direction = stream.direction.as_deref().unwrap_or("outflow");
+                let cash = is_cash_direction(direction);
+                if !cash && stream.moves.is_none() {
+                    diagnostics.push(diag(
+                        "E1378_NONCASH_STREAM_MOVES_NOTHING",
+                        format!(
+                            "Stream '{}' is `{direction}`, which raises or extinguishes a claim, and names no account to move.",
+                            stream.name
+                        ),
+                        stream.span,
+                        file,
+                        "A non-cash stream is a movement of a balance and nothing else: add `moves <account>`, or make it an inflow or outflow if money actually moves.",
+                    ));
+                }
+                if !cash && stream.category.is_some() {
+                    diagnostics.push(diag(
+                        "E1379_NONCASH_STREAM_CATEGORY",
+                        format!(
+                            "Stream '{}' is `{direction}` and carries a cash flow category.",
+                            stream.name
+                        ),
+                        stream.span,
+                        file,
+                        "The category roots classify cash. An accrual or a write-off is excluded from every cash fold; drop the category.",
+                    ));
+                }
+                if let Some(moves) = &stream.moves {
+                    match resolve_moved_account(&stream.attached_entity, moves, &accounts) {
+                        None => diagnostics.push(diag(
+                            "E1380_UNKNOWN_ACCOUNT_MOVED",
+                            format!(
+                                "Stream '{}' moves account '{moves}', which is not declared on '{}' or as a structure account.",
+                                stream.name, stream.attached_entity
+                            ),
+                            stream.span,
+                            file,
+                            "Declare it — `account <name> owed|due [init <expr>]` in the entity block, or `account <name> owed|due { ... }` at the model level — or correct the name.",
+                        )),
+                        Some(full) => {
+                            if cash && accounts[&full].side.is_none() {
+                                diagnostics.push(diag(
+                                    "E1381_MOVED_ACCOUNT_HAS_NO_SIDE",
+                                    format!(
+                                        "Stream '{}' is `{direction}` and moves account '{full}', which declares no side.",
+                                        stream.name
+                                    ),
+                                    stream.span,
+                                    file,
+                                    "Whether an inflow raises or lowers a balance follows from the account's side: write `owed` (a liability of its owner) or `due` (a receivable) after the account's name.",
+                                ));
+                            }
+                        }
+                    }
+                }
+                for slot in stream.amount.iter().chain(stream.active_when.iter()) {
+                    check_current_account_reads(
+                        &slot.src,
+                        &stream.attached_entity,
+                        &accounts,
+                        slot.span,
+                        file,
+                        &format!("Stream '{}'", stream.name),
+                        &mut diagnostics,
+                    );
+                }
+            }
+            Stmt::Entity(entity) => {
+                for f in &entity.fields {
+                    let ctx = format!("Field '{}.{}'", entity.symbol(), f.name);
+                    for slot in std::iter::once(&f.init).chain(f.next.iter()) {
+                        check_current_account_reads(
+                            &slot.src,
+                            &entity.symbol(),
+                            &accounts,
+                            slot.span,
+                            file,
+                            &ctx,
+                            &mut diagnostics,
+                        );
+                    }
+                }
+            }
+            _ => {}
+        }
+    }
+    if diagnostics.is_empty() {
+        Ok(())
+    } else {
+        Err(diagnostics)
+    }
+}
+
+/// A balance is readable inside a period only as its opening, `prev.<name>`
+/// (`docs/42` §3.3). A bare `asset.loan.balance` would name this period's
+/// close, which does not exist yet, and would read as zero.
+#[allow(clippy::too_many_arguments)]
+fn check_current_account_reads(
+    src: &str,
+    owner: &str,
+    accounts: &BTreeMap<String, DeclaredAccount>,
+    span: cfdl_parser::Span,
+    file: &str,
+    ctx: &str,
+    diagnostics: &mut Vec<Diagnostic>,
+) {
+    for full in accounts.keys() {
+        // The owner's own claim may be spelled bare; every account may be
+        // spelled in full. Either way the read must be through `prev.`.
+        let mut spellings = vec![full.clone()];
+        if let Some(short) = full.strip_prefix(&format!("{owner}.")) {
+            if !short.contains('.') {
+                spellings.push(short.to_string());
+            }
+        }
+        for spelling in spellings {
+            let mut rest = src;
+            while let Some(idx) = rest.find(&spelling) {
+                let before = rest[..idx].chars().next_back();
+                let after = rest[idx + spelling.len()..].chars().next();
+                let before_ok = before.is_none_or(|c| !c.is_alphanumeric() && c != '_' && c != '.');
+                let after_ok = after.is_none_or(|c| !c.is_alphanumeric() && c != '_' && c != '.');
+                let through_prev = rest[..idx].ends_with("prev.");
+                let through_entity = rest[..idx].ends_with("prev.entity.");
+                if before_ok && after_ok && !through_prev && !through_entity {
+                    diagnostics.push(Diagnostic {
+                        code: "E1382_ACCOUNT_READ_WITHOUT_PREV".to_string(),
+                        severity: "error".to_string(),
+                        message: format!(
+                            "{ctx} reads account '{full}' as a current value. A balance is readable inside a period only as its opening: write `prev.{spelling}`."
+                        ),
+                        file: Some(file.to_string()),
+                        span: Some(map_span(span)),
+                        path: None,
+                        hint: Some(
+                            "The opening balance is the prior close — settled state. This period's close is the sum of the streams still being computed."
+                                .to_string(),
+                        ),
+                        notes: Vec::new(),
+                    });
+                    return;
+                }
+                rest = &rest[idx + spelling.len()..];
+            }
+        }
+    }
+}
+
 fn check_waterfalls(resolve_output: &cfdl_resolver::ResolveOutput) -> Result<(), Vec<Diagnostic>> {
     let entities: BTreeSet<String> = resolve_output
         .source_statements
@@ -2754,14 +3102,8 @@ fn check_waterfalls(resolve_output: &cfdl_resolver::ResolveOutput) -> Result<(),
         }
     }
 
-    let declared_accounts: std::collections::BTreeSet<String> = resolve_output
-        .source_statements
-        .iter()
-        .filter_map(|st| match &st.statement {
-            Stmt::Account(a) => Some(a.name.clone()),
-            _ => None,
-        })
-        .collect();
+    let declared_accounts: std::collections::BTreeSet<String> =
+        declared_accounts_of(resolve_output).into_keys().collect();
 
     let mut waterfall_order = 0usize;
     for source_stmt in &resolve_output.source_statements {
@@ -3962,6 +4304,7 @@ fn build_ir(
     check_party_bindings(resolve_output, &ontology)?;
     check_exercise_targets(resolve_output)?;
     check_waterfalls(resolve_output)?;
+    check_stream_moves(resolve_output)?;
     check_state_guards(resolve_output, &ontology)?;
     check_prev_first_period(resolve_output, &time_start)?;
     check_constant_expressions(resolve_output)?;
@@ -3998,6 +4341,7 @@ fn build_ir(
             // A field with no `next` HOLDS, which is the recurrence
             // `next prev` — so the absent rule is written out rather than
             // special-cased downstream.
+            let declared = declared_accounts_of(resolve_output);
             let rules = entity
                 .fields
                 .iter()
@@ -4007,7 +4351,7 @@ fn build_ir(
                         IrFieldRule {
                             init: IrExpr {
                                 lang: f.init.lang.clone(),
-                                src: f.init.src.clone(),
+                                src: rewrite_prev_accounts(&f.init.src, &symbol, &declared),
                             },
                             schedule: None,
                             next: f.next.as_ref().map_or_else(
@@ -4017,7 +4361,7 @@ fn build_ir(
                                 },
                                 |n| IrExpr {
                                     lang: n.lang.clone(),
-                                    src: n.src.clone(),
+                                    src: rewrite_prev_accounts(&n.src, &symbol, &declared),
                                 },
                             ),
                         },
@@ -4296,13 +4640,18 @@ fn build_ir(
                 notes: vec![],
             }]
         })?;
-        let ir_stream = IrStream {
+        let declared = declared_accounts_of(resolve_output);
+        let mut ir_stream = IrStream {
             id: deterministic_id("Stream", &stable_key, &id_seed),
             name: stream.name.clone(),
             owner: IrEntityRef {
                 symbol: stream.attached_entity.clone(),
             },
             category: stream.category.clone(),
+            moves: stream
+                .moves
+                .as_deref()
+                .and_then(|m| resolve_moved_account(&stream.attached_entity, m, &declared)),
             direction: stream.direction.as_deref().unwrap_or("outflow").to_string(),
             currency: stream
                 .currency
@@ -4348,6 +4697,15 @@ fn build_ir(
                 generated_by: None,
             },
         };
+        // `prev.balance` on the owning entity is its own claim, spelled out
+        // for the engine as `prev.<entity>.balance` (`docs/42` §7).
+        ir_stream.amount.src =
+            rewrite_prev_accounts(&ir_stream.amount.src, &stream.attached_entity, &declared);
+        ir_stream.active_when.src = rewrite_prev_accounts(
+            &ir_stream.active_when.src,
+            &stream.attached_entity,
+            &declared,
+        );
         streams.push(((stream.name.clone(), source_stmt.file.clone()), ir_stream));
     }
     let lowered = lower_contract_streams(
@@ -4478,21 +4836,43 @@ fn build_ir(
     // A pack no longer contributes model-level state: its rules hang fields on
     // the entities they describe, folded into the entity map below.
 
-    let ir_accounts: Vec<IrAccount> = resolve_output
-        .source_statements
-        .iter()
-        .filter_map(|source_stmt| match &source_stmt.statement {
-            Stmt::Account(a) => Some(IrAccount {
+    let mut ir_accounts: Vec<IrAccount> = Vec::new();
+    for source_stmt in &resolve_output.source_statements {
+        match &source_stmt.statement {
+            Stmt::Account(a) => ir_accounts.push(IrAccount {
                 name: a.name.clone(),
                 owner: a.owner.clone(),
+                owner_entity: a.owner_entity.clone(),
+                side: a.side.clone(),
+                init: a.init.as_ref().map(|slot| IrExpr {
+                    lang: "cfdl".to_string(),
+                    src: slot.src.clone(),
+                }),
                 inflow: a.inflow.as_ref().map(|slot| IrExpr {
                     lang: "cfdl".to_string(),
                     src: slot.src.clone(),
                 }),
             }),
-            _ => None,
-        })
-        .collect();
+            // A claim declared in an entity block: named by its owner, so
+            // two loans' balances never collide (`docs/42` §3.5).
+            Stmt::Entity(entity) => {
+                for acct in &entity.accounts {
+                    ir_accounts.push(IrAccount {
+                        name: format!("{}.{}", entity.symbol(), acct.name),
+                        owner: None,
+                        owner_entity: Some(entity.symbol()),
+                        side: acct.side.clone(),
+                        init: acct.init.as_ref().map(|slot| IrExpr {
+                            lang: "cfdl".to_string(),
+                            src: slot.src.clone(),
+                        }),
+                        inflow: None,
+                    });
+                }
+            }
+            _ => {}
+        }
+    }
 
     // Only machines an entity actually binds are published: an unbound
     // machine governs nothing, and the IR is a record of this model.
@@ -6990,6 +7370,7 @@ fn lower_contract_streams(
                     owner: IrEntityRef {
                         symbol: owner_symbol,
                     },
+                    moves: None,
                     direction: if rule.direction.is_empty() {
                         "outflow".to_string()
                     } else {

@@ -1000,6 +1000,7 @@ against it by `make results-schema`.
             "inflow",
             "allocate_in",
             "allocate_out",
+            "move",
             "transition"
           ]
         },

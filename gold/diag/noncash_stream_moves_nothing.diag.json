@@ -1,0 +1,17 @@
+[
+  {
+    "code": "E1378_NONCASH_STREAM_MOVES_NOTHING",
+    "severity": "error",
+    "message": "Stream 'loan.pik' is `accrual`, which raises or extinguishes a claim, and names no account to move.",
+    "file": "model.cfdl",
+    "span": {
+      "start_line": 10,
+      "start_col": 1,
+      "end_line": 13,
+      "end_col": 1
+    },
+    "path": null,
+    "hint": "A non-cash stream is a movement of a balance and nothing else: add `moves <account>`, or make it an inflow or outflow if money actually moves.",
+    "notes": []
+  }
+]
