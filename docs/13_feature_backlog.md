@@ -822,7 +822,8 @@ stage — `prepare`, `state`, `occurrence`, `streams`, `accounts`,
 `distributions`, `walk`, `fold`, `runs`, the orchestrator a stage list —
 one or two modules per PR, each a pure move proven by byte-identical
 goldens. **Built so far: `occurrence`** — events and options as one module,
-stepped inside the state walk after the machine moves.*
+stepped inside the state walk after the machine moves; **`prepare`** — the
+once-per-model work; **`accounts`** — the balance plane.*
 
 What remains is the second step the original entry proposed: making the stages
 CRATES rather than modules, so the compiler enforces the layering that the
