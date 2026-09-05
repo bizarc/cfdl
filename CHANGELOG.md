@@ -8,6 +8,17 @@ This project follows Semantic Versioning: https://semver.org/
 
 ## [Unreleased]
 
+**The engine restructure, `prepare` and `accounts`.** Everything about a
+model that does not vary from run to run — the grid, each stream's
+dependency graph and wave, the priced closure, walk eligibility, the
+compiled plans and openings — is `crates/cfdl-engine/src/prepare.rs`; the
+balance plane — each account's opening in the first period with the folds'
+openings summed, the movements a period's streams and machines made signed
+by the account's side, the relation fold, the declared inflow — is
+`accounts.rs`. Pure moves: every results golden byte-identical, 46/46
+benchmarks, the walk and the column order still agree. The orchestrator is
+3,800 lines from 4,503 (`docs/13` §7.44).
+
 **The engine restructure, first module: `occurrence`.** Events and options
 are one idea — something that happens on a date or a condition and changes
 what follows — and they now live in one module, `crates/cfdl-engine/src/

@@ -11,6 +11,8 @@ use std::sync::Arc;
 // `fixtures/valid/evaluation_order` pins the boundaries.
 //
 //   config         the run: rates, scenarios, the valuation grain
+//   prepare        once per model: the grid, the dependency waves, the priced
+//                  closure, walk eligibility, compiled plans and openings
 //   timeline       the grid: dates, schedules, period arithmetic
 //   ir             what the compiler hands us
 //   env            the expression environment each stage evaluates in
@@ -21,6 +23,8 @@ use std::sync::Arc;
 //                  election, at most once), stepped inside the state walk
 //                  after the machine and writing through its stores (one value per path)
 //   streams        stage 3 — activity, in two phases
+//   accounts       the balance plane: openings, movements by side, the
+//                  relation fold, the declared inflow
 //   distributions  the waterfall stage. Under the walk it runs INSIDE each
 //                  period, after that period's streams (`docs/28` §3 stage 3);
 //                  under the column order it stays a post-pass over all time
@@ -30,12 +34,16 @@ use std::sync::Arc;
 // `run_deterministic` below is the orchestrator and the only place the order
 // is written down.
 mod config;
+pub(crate) use accounts::*;
 pub use config::*;
+pub(crate) use prepare::*;
 mod results;
 pub use results::*;
 mod distributions;
 use distributions::*;
+mod accounts;
 mod occurrence;
+mod prepare;
 mod streams;
 use streams::*;
 mod state;
@@ -157,80 +165,6 @@ fn model_only(document: &Value) -> Value {
         object.remove("views");
     }
     model
-}
-
-/// A series read where no stream value exists — the engine's backstop for the
-/// compiler's `E1134_SERIES_READ_IN_LOGIC`.
-///
-/// The compiler refuses this on every model it sees, which is every model
-/// written in CFDL. The engine also accepts IR directly — the WASM, server and
-/// Python paths all do — and there the compiler's check has not run. Without
-/// this the engine warns once per period and substitutes `false` or `0`,
-/// publishing a full set of numbers under `status: ok`: a guard that never
-/// fires, or a recurrence whose collapse `prev` carries for the rest of the
-/// run (`docs/13` §7.71).
-///
-/// `docs/28` §4 is where this becomes an ordering rule rather than a
-/// prohibition: under the period walk a guard may read a stream's settled
-/// history, at or before the previous period. Same-period and forward reads
-/// stay refused, so this narrows rather than disappears.
-fn refuse_series_reads_in_logic(ir: &Ir) -> Result<(), EngineError> {
-    let mut offences: Vec<String> = Vec::new();
-
-    let mut check = |src: &str, site: String| {
-        // Narrowed in phase 3: settled history is readable, this period and
-        // the future are not. `docs/28` §4.
-        if let Some(w) = cfdl_expr::series_windows(src)
-            .into_iter()
-            .find(|w| !cfdl_expr::window_bound_is_strictly_backward(&w.to_src))
-        {
-            offences.push(format!("{site} reads `{}` to `{}`", w.name, w.to_src));
-        }
-    };
-
-    for entity in &ir.entities {
-        for (field, rule) in &entity.rules {
-            check(
-                &rule.init.src,
-                format!("field '{}.{field}' in 'init'", entity.symbol),
-            );
-            check(
-                &rule.next.src,
-                format!("field '{}.{field}' in 'next'", entity.symbol),
-            );
-        }
-    }
-    for event in &ir.events {
-        if let Some(when) = &event.when {
-            check(&when.src, format!("event '{}' guard", event.name));
-        }
-        for action in &event.actions {
-            if let Some(value) = &action.value {
-                check(&value.src, format!("event '{}' action value", event.name));
-            }
-        }
-    }
-    for option in &ir.options {
-        check(
-            &option.exercise_when.src,
-            format!("option '{}' election", option.name),
-        );
-        check(
-            &option.payoff.src,
-            format!("option '{}' payoff", option.name),
-        );
-    }
-
-    if offences.is_empty() {
-        return Ok(());
-    }
-    Err(EngineError::SeriesReadInLogic(format!(
-        "logic cannot read this period or later: {}. An event's guard and action values, a \
-         field's rule, and an option's election and payoff all settle before this period's \
-         cash exists, so only settled history is readable — end the window at `time.t - 1` \
-         or earlier.",
-        offences.join("; ")
-    )))
 }
 
 fn compute_results(ir: &Ir, model_hash: String, config: RunConfig) -> Result<Results, EngineError> {
@@ -697,213 +631,6 @@ fn unresolved_names(warnings: &[String], declared: &BTreeSet<String>) -> Vec<Str
     seen.into_iter().collect()
 }
 
-/// One stream's series-read facts, extracted before any stream evaluates.
-struct StreamDeps {
-    /// Calls `series_sum`/`series_avg` anywhere in its amount or guard.
-    uses: bool,
-    /// At least one of those calls computes its series name at runtime.
-    computed: bool,
-    /// The literal read patterns, as written — globs included.
-    refs: Vec<String>,
-    /// Reads a window that can reach at or beyond the current period's future.
-    ///
-    /// A period walk can serve a read only if everything it reaches has
-    /// already happened, so this is what decides whether a model can be
-    /// walked. `docs/29` §2.0 measured the corpus: two benchmarks and two
-    /// fixtures read forward, and they are exactly the two constructs
-    /// `docs/28` §7 migrates to the valuation plane. Everything else reads
-    /// cumulatively backward, which a walk serves exactly.
-    reads_forward: bool,
-    /// The forward reach is in the AMOUNT alone — the priced exception's
-    /// shape (`docs/28` §7): the amount is a valuation over cells beyond the
-    /// flow, and may set a causal amount where the graph stays acyclic. A
-    /// forward-reaching GUARD is not priced: whether a stream is active is a
-    /// causal fact, and a fact cannot be read from the future.
-    amount_reads_forward: bool,
-}
-
-/// The cycle the priced exception refuses (`docs/28` §7), as a hard error
-/// with the path named — not a routing decision, because no evaluation order
-/// serves it: LOGIC settles before the priced pass in the walk, and reads
-/// nothing at all under the column order. Sale proceeds feeding state that
-/// feeds what is being capitalized is the canonical instance; logic reading
-/// `prev.<account>` in a priced model is the same read through a balance
-/// that may carry priced cash.
-fn priced_refusal(ir: &Ir, deps: &[StreamDeps]) -> Option<String> {
-    let closure = priced_closure(ir, deps);
-    if !closure.iter().any(|p| *p) {
-        return None;
-    }
-    let closure_names: Vec<&str> = ir
-        .streams
-        .iter()
-        .zip(&closure)
-        .filter(|(_, inc)| **inc)
-        .map(|(stream, _)| stream.name.as_str())
-        .collect();
-    for (site, src) in &logic_expression_sources(ir) {
-        for pattern in cfdl_expr::series_references(src) {
-            if let Some(hit) = closure_names
-                .iter()
-                .find(|p| cfdl_expr::selector_matches(&pattern, p))
-            {
-                return Some(format!(
-                    "{site} reads '{hit}', which a priced amount sets: a valuation feeding logic that feeds what is being capitalized is the cycle the priced exception refuses (docs/28 §7)"
-                ));
-            }
-        }
-        for account in &ir.accounts {
-            let needle = format!("prev.{}", account.name);
-            if src.contains(&needle) {
-                return Some(format!(
-                    "{site} reads {needle} in a model with a priced amount, and a balance may carry priced cash logic cannot yet see"
-                ));
-            }
-        }
-    }
-    None
-}
-
-/// Which streams the priced pass owns: the priced amounts and every stream
-/// that transitively reads one (`docs/28` §7). A priced amount SETS a causal
-/// amount, and causal cells reading it are ordinary downstream flow — the
-/// management fee on collections that include a priced recovery is the
-/// shipped case. They evaluate together, in wave order, after the causal
-/// walk settles; what stays outside is anything the walk itself must serve.
-fn priced_closure(ir: &Ir, deps: &[StreamDeps]) -> Vec<bool> {
-    let mut in_closure: Vec<bool> = deps.iter().map(|d| d.amount_reads_forward).collect();
-    loop {
-        let mut changed = false;
-        for (idx, dep) in deps.iter().enumerate() {
-            if in_closure[idx] {
-                continue;
-            }
-            let reads_closure = dep.refs.iter().any(|pattern| {
-                ir.streams.iter().enumerate().any(|(j, other)| {
-                    in_closure[j] && cfdl_expr::selector_matches(pattern, &other.name)
-                })
-            });
-            if reads_closure {
-                in_closure[idx] = true;
-                changed = true;
-            }
-        }
-        if !changed {
-            break;
-        }
-    }
-    in_closure
-}
-
-/// Every LOGIC expression a model has — event guards and their set values,
-/// field rules, and machine edge guards — each with a name a refusal can
-/// print. Logic settles before the priced pass runs, which is why a priced
-/// coupling here routes the model back to the column order.
-fn logic_expression_sources(ir: &Ir) -> Vec<(String, String)> {
-    let mut sources: Vec<(String, String)> = Vec::new();
-    for event in &ir.events {
-        if let Some(when) = &event.when {
-            sources.push((format!("event '{}' guard", event.name), when.src.clone()));
-        }
-        for action in &event.actions {
-            if let Some(value) = &action.value {
-                sources.push((
-                    format!("event '{}' set value", event.name),
-                    value.src.clone(),
-                ));
-            }
-        }
-    }
-    for entity in &ir.entities {
-        for (name, rule) in &entity.rules {
-            sources.push((
-                format!("field '{}.{name}' init", entity.symbol),
-                rule.init.src.clone(),
-            ));
-            sources.push((
-                format!("field '{}.{name}' next", entity.symbol),
-                rule.next.src.clone(),
-            ));
-        }
-    }
-    for lifecycle in &ir.lifecycles {
-        for edge in &lifecycle.edges {
-            if let Some(guard) = &edge.guard {
-                sources.push((
-                    format!(
-                        "lifecycle '{}' edge '{} -> {}' guard",
-                        lifecycle.id, edge.from, edge.to
-                    ),
-                    guard.src.clone(),
-                ));
-            }
-        }
-    }
-    sources
-}
-
-/// Can this model be evaluated one period at a time?
-///
-/// The question the period walk asks before it runs. `None` means yes;
-/// `Some(reason)` names the first stream that reads forward, so a refusal or a
-/// routing decision can say which construct forced it.
-///
-/// Not yet a routing decision: until `docs/28` §4's backward reads land, no
-/// model couples cash into logic, so the walk and the column order agree
-/// wherever both can run. This is the predicate that will choose between them,
-/// and the one the equivalence test uses to know which fixtures to compare.
-/// Each stream's series dependencies, the reads it makes and whether any
-/// window reaches forward. Extracted so the walk's eligibility query and the
-/// wave ordering compute it the same way rather than twice.
-fn stream_deps(ir: &Ir) -> Vec<StreamDeps> {
-    let mut deps: Vec<StreamDeps> = Vec::with_capacity(ir.streams.len());
-    for stream in &ir.streams {
-        // A STREAM READS SERIES IF *ANY* OF ITS EXPRESSIONS DOES, not just its
-        // amount. `active when series_sum(...) > 0` on a stream whose amount
-        // happens not to use one was once handed an empty series map, and its
-        // guard then failed — warned, evaluated FALSE, and the stream silently
-        // produced nothing at all. An expression that fails to compile
-        // contributes nothing here; `evaluate_stream` warns about it later.
-        let probe = |src: &str| -> (bool, bool) {
-            cfdl_expr::compile_expr(src)
-                .map(|c| {
-                    (
-                        cfdl_expr::uses_series(&c),
-                        cfdl_expr::has_computed_series_name(&c),
-                    )
-                })
-                .unwrap_or((false, false))
-        };
-        // A window reaching forward is measured over the same expressions the
-        // reads are extracted from, so a guard cannot smuggle one past.
-        let forward = |src: &str| -> bool {
-            cfdl_expr::series_windows(src).iter().any(|w| {
-                !(cfdl_expr::window_bound_is_backward(&w.from_src)
-                    && cfdl_expr::window_bound_is_backward(&w.to_src))
-            })
-        };
-        let (mut uses, mut computed) = probe(&stream.amount.src);
-        let mut refs = cfdl_expr::series_references(&stream.amount.src);
-        let amount_reads_forward = forward(&stream.amount.src);
-        let mut reads_forward = amount_reads_forward;
-        if let Some(guard) = &stream.active_when {
-            let (guard_uses, guard_computed) = probe(&guard.src);
-            uses |= guard_uses;
-            computed |= guard_computed;
-            refs.extend(cfdl_expr::series_references(&guard.src));
-            reads_forward |= forward(&guard.src);
-        }
-        deps.push(StreamDeps {
-            uses,
-            computed,
-            refs,
-            reads_forward,
-            amount_reads_forward,
-        });
-    }
-    deps
-}
-
 /// Both evaluation orders over one model, for comparison.
 ///
 /// The collapse property of phase 2 is a claim that the walk computes what the
@@ -982,151 +709,6 @@ type WalkOutput = (
     Vec<JournalEntry>,
 );
 
-/// Which declared accounts each fold sums (`docs/42` §3.4): every account
-/// of the same short name on a descendant of the fold's owner, through
-/// `part of`. Folds of folds are not summed — the leaves are, once.
-fn fold_members(ir: &Ir) -> BTreeMap<String, Vec<String>> {
-    let parent_of: BTreeMap<&str, &str> = ir
-        .entities
-        .iter()
-        .filter_map(|e| e.parent.as_deref().map(|p| (e.symbol.as_str(), p)))
-        .collect();
-    let mut out: BTreeMap<String, Vec<String>> = BTreeMap::new();
-    for fold in ir.accounts.iter().filter(|a| a.fold) {
-        let Some((owner, name)) = fold.name.rsplit_once('.') else {
-            continue;
-        };
-        for account in ir.accounts.iter().filter(|a| !a.fold) {
-            let Some((member, member_name)) = account.name.rsplit_once('.') else {
-                continue;
-            };
-            if member_name != name {
-                continue;
-            }
-            let mut cursor = parent_of.get(member).copied();
-            let mut seen: BTreeSet<&str> = BTreeSet::new();
-            while let Some(ancestor) = cursor {
-                if !seen.insert(ancestor) {
-                    break;
-                }
-                if ancestor == owner {
-                    out.entry(fold.name.clone())
-                        .or_default()
-                        .push(account.name.clone());
-                    break;
-                }
-                cursor = parent_of.get(ancestor).copied();
-            }
-        }
-    }
-    out
-}
-
-/// Settle every fold at `t` as the sum of its members' balances at `t`.
-fn settle_folds(
-    members: &BTreeMap<String, Vec<String>>,
-    balances: &mut BTreeMap<String, Vec<f64>>,
-    t: usize,
-) {
-    for (fold, of) in members {
-        let sum: f64 = of
-            .iter()
-            .filter_map(|m| balances.get(m).and_then(|c| c.get(t)).copied())
-            .sum();
-        if let Some(column) = balances.get_mut(fold) {
-            column[t] = sum;
-        }
-    }
-}
-
-/// What period `t`'s streams moved, per account: (stream, delta), signed
-/// for the account's side (`docs/42` §3.2). A cash stream's signed amount
-/// raises a liability its owner owes and lowers a receivable its owner is
-/// due; an accrual raises and a write-off lowers, whichever side.
-fn account_moves_at(
-    ir: &Ir,
-    columns: &BTreeMap<String, Vec<f64>>,
-    account_side: &BTreeMap<&str, &str>,
-    t: usize,
-) -> BTreeMap<String, Vec<(String, f64)>> {
-    let mut moves: BTreeMap<String, Vec<(String, f64)>> = BTreeMap::new();
-    for stream in &ir.streams {
-        let Some(account) = stream.moves.as_deref() else {
-            continue;
-        };
-        let Some(value) = columns.get(&stream.name).and_then(|c| c.get(t)).copied() else {
-            continue;
-        };
-        let delta = if streams::is_cash(stream) {
-            match account_side.get(account).copied() {
-                Some("due") => -value,
-                _ => value,
-            }
-        } else {
-            value
-        };
-        moves
-            .entry(account.to_string())
-            .or_default()
-            .push((format!("stream:{}", stream.name), delta));
-    }
-    moves
-}
-
-/// An account's balance, period by period.
-///
-/// `balance(t) = balance(t-1) + inflow(t)`, and draws are subtracted as a
-/// waterfall takes them — which is why this is computed INSIDE the walk rather
-/// than as a post-pass: the balance at `t` is what a distribution at `t` may
-/// draw on, and what logic at `t + 1` may read.
-///
-/// A NEGATIVE INFLOW LOWERS THE BALANCE, with no floor. The language models
-/// returns, and an account fed a deal's whole net cash IS the deal's
-/// cumulative position — negative through the J-curve and positive after. What
-/// is floored is the DRAW: cash that is not there cannot be allocated.
-#[allow(clippy::too_many_arguments)] // stage inputs, as elsewhere in this file
-fn account_inflow_at(
-    ir: &Ir,
-    config: &RunConfig,
-    account: &IrAccount,
-    compiled: Option<&cfdl_expr::CompiledExpr>,
-    t: usize,
-    date: &Date,
-    base_inputs: &BTreeMap<String, f64>,
-    series: Option<&Arc<BTreeMap<String, Vec<f64>>>>,
-    warnings: &mut Vec<String>,
-) -> f64 {
-    let Some(compiled) = compiled else {
-        return 0.0;
-    };
-    let mut env = build_expr_env(ir, None, config, t, date, base_inputs);
-    if let Some(series) = series {
-        env.series = Arc::clone(series);
-    }
-    // An account's inflow reads cash that has settled this period, the way a
-    // waterfall's pot does — it is the period's cash arriving, not logic
-    // deciding on it.
-    env.series_available_to = Some(t);
-    match cfdl_expr::eval(compiled, &env) {
-        Ok(ExprValue::Decimal(v)) => v,
-        Ok(ExprValue::Int(v)) => v as f64,
-        Ok(other) => {
-            warnings.push(format!(
-                "Account '{}' inflow evaluated to {other:?}, which is not a number; using 0.",
-                account.name
-            ));
-            0.0
-        }
-        Err(err) => {
-            warnings.push(format!(
-                "Account '{}' inflow failed [{}]: {}; using 0.",
-                account.name, err.code, err.message
-            ));
-            0.0
-        }
-    }
-}
-
 /// THE PERIOD WALK. One period at a time: state settles, then that period's
 /// streams evaluate against it.
 ///
@@ -1202,56 +784,10 @@ fn walk_periods(
         .iter()
         .map(|a| (a.name.clone(), vec![0.0_f64; timeline.len()]))
         .collect();
-    // EACH ACCOUNT'S `init`: the balance at the timeline's first period,
-    // evaluated once against the run's inputs (`docs/42` §7). Absent means
-    // zero — a balance created during the run is raised by the cash that
-    // creates it.
-    let account_inits: Arc<BTreeMap<String, f64>> = Arc::new(
-        ir.accounts
-            .iter()
-            .enumerate()
-            .map(|(idx, account)| {
-                let value = prep
-                    .account_inits
-                    .get(idx)
-                    .and_then(|c| c.as_ref())
-                    .map(|compiled| {
-                        let env = build_expr_env(ir, None, config, 0, &timeline[0], base_inputs);
-                        match cfdl_expr::eval(compiled, &env) {
-                            Ok(ExprValue::Decimal(v)) => v,
-                            Ok(ExprValue::Int(v)) => v as f64,
-                            Ok(other) => {
-                                warnings.push(format!(
-                                    "Account '{}' init evaluated to {other:?}, which is not a number; opens at zero.",
-                                    account.name
-                                ));
-                                0.0
-                            }
-                            Err(err) => {
-                                warnings.push(format!(
-                                    "Account '{}' init failed to evaluate [{}]: {}; opens at zero.",
-                                    account.name, err.code, err.message
-                                ));
-                                0.0
-                            }
-                        }
-                    })
-                    .unwrap_or(0.0);
-                (account.name.clone(), value)
-            })
-            .collect(),
-    );
-    // A fold's opening is its members' openings summed, in the first period
-    // as after it.
-    let members = fold_members(ir);
-    let account_inits: Arc<BTreeMap<String, f64>> = {
-        let mut inits = (*account_inits).clone();
-        for (fold, of) in &members {
-            let sum: f64 = of.iter().filter_map(|m| inits.get(m).copied()).sum();
-            inits.insert(fold.clone(), sum);
-        }
-        Arc::new(inits)
-    };
+    // Each account's opening in the first period, folds included, and the
+    // members every fold sums (`accounts.rs`).
+    let (account_inits, members) =
+        initial_balances(ir, config, prep, timeline, base_inputs, warnings);
     walk.observe_account_inits(Arc::clone(&account_inits));
     walk.observe_entity_accounts(
         ir.accounts
@@ -1263,11 +799,7 @@ fn walk_periods(
     // What each period's machines moved on an account, kept for the deferred
     // stage of a priced model.
     let mut machine_moves_by_period: Vec<Vec<(String, String, f64)>> = Vec::new();
-    let account_side: BTreeMap<&str, &str> = ir
-        .accounts
-        .iter()
-        .filter_map(|a| a.side.as_deref().map(|side| (a.name.as_str(), side)))
-        .collect();
+    let account_side = account_sides(ir);
 
     for t in 0..timeline.len() {
         // 0. THE CASH ALREADY SETTLED, handed over before this period's state
@@ -1530,245 +1062,6 @@ pub fn walk_eligibility(raw_ir: &str) -> Result<Option<String>, EngineError> {
     let ir: Ir = serde_json::from_str(raw_ir)?;
     let deps = stream_deps(&ir);
     Ok(walk_ineligible_reason(&ir, &deps))
-}
-
-fn walk_ineligible_reason(ir: &Ir, deps: &[StreamDeps]) -> Option<String> {
-    // THE PRICED EXCEPTION (`docs/28` §7). A forward window in an AMOUNT is a
-    // valuation setting a causal amount — the forward-income exit, the
-    // expense stop's base year — and the walk serves it in a priced pass
-    // after the causal cells settle. A forward window in a GUARD is not
-    // priced: activity is a causal fact, and the model keeps the column
-    // order, named.
-    let mut priced: Vec<&str> = Vec::new();
-    for (stream, dep) in ir.streams.iter().zip(deps) {
-        if dep.reads_forward && !dep.amount_reads_forward {
-            return Some(format!(
-                "stream '{}' has a guard whose series window can reach beyond the current period",
-                stream.name
-            ));
-        }
-        if dep.amount_reads_forward {
-            priced.push(&stream.name);
-        }
-    }
-    let _ = priced;
-    // A WATERFALL'S STEPS READ SERIES TOO, and they are not in `ir.streams`.
-    // `waterfall_nested_split` reads `[0..5]` from a step, which a
-    // streams-only check reported as walkable — the fund waterfall composition
-    // of `docs/17` is exactly where an absolute window is natural.
-    let reaches_forward = |src: &str| -> bool {
-        cfdl_expr::series_windows(src).iter().any(|w| {
-            !(cfdl_expr::window_bound_is_backward(&w.from_src)
-                && cfdl_expr::window_bound_is_backward(&w.to_src))
-        })
-    };
-    for waterfall in &ir.waterfalls {
-        {
-            if reaches_forward(&waterfall.source.src) {
-                return Some(format!(
-                    "waterfall '{}' draws from a pot whose window can reach beyond the current period",
-                    waterfall.name
-                ));
-            }
-        }
-        for step in &waterfall.steps {
-            if reaches_forward(&step.amount.src) {
-                return Some(format!(
-                    "waterfall '{}' step '{}' reads a series window that can reach beyond the current period",
-                    waterfall.name, step.name
-                ));
-            }
-        }
-    }
-    None
-}
-
-/// Assign each stream the wave it evaluates in: 0 for streams that read no
-/// series, and one past the deepest stream it reads for everything else. The
-/// only rejections are the ones no order can satisfy — a circular read, and a
-/// read into a stream whose series names are computed at runtime.
-fn assign_waves(names: &[&str], deps: &[StreamDeps]) -> Result<Vec<usize>, EngineError> {
-    // Resolve each literal pattern to the streams it names, reader -> producers.
-    // Matched as SELECTORS, not exact names: `cre.unit.recoveries.*` as written
-    // must find `cre.unit.recoveries.suite_100` as lowered.
-    let mut edges: Vec<BTreeSet<usize>> = vec![BTreeSet::new(); names.len()];
-    for (reader, dep) in deps.iter().enumerate() {
-        for pattern in &dep.refs {
-            for (producer, name) in names.iter().enumerate() {
-                if cfdl_expr::selector_matches(pattern, name) {
-                    edges[reader].insert(producer);
-                }
-            }
-        }
-    }
-
-    // A computed-name reader cannot be placed in the order (its edges are
-    // unknowable), so it evaluates after every literally-named stream — and
-    // nothing may read it, because such a read could never be ordered.
-    for (reader, edge_set) in edges.iter().enumerate() {
-        for &producer in edge_set {
-            if deps[producer].computed {
-                return Err(EngineError::SeriesCycle(format!(
-                    "Stream '{}' reads series '{}', which computes its series names at \
-                     runtime, so its place in the evaluation order cannot be determined. \
-                     A stream with computed series names always evaluates last and cannot \
-                     be read by another stream.",
-                    names[reader], names[producer]
-                )));
-            }
-        }
-    }
-
-    // Depth-first depth assignment. GRAY means "on the current chain", so
-    // reaching a GRAY stream closes a genuine cycle — the one thing that has
-    // no evaluation order. The engine refuses it rather than iterating toward
-    // a fixed point.
-    const WHITE: u8 = 0;
-    const GRAY: u8 = 1;
-    const BLACK: u8 = 2;
-    fn depth_of(
-        node: usize,
-        names: &[&str],
-        deps: &[StreamDeps],
-        edges: &[BTreeSet<usize>],
-        color: &mut [u8],
-        depth: &mut [usize],
-        chain: &mut Vec<usize>,
-    ) -> Result<usize, EngineError> {
-        if color[node] == BLACK {
-            return Ok(depth[node]);
-        }
-        if color[node] == GRAY {
-            let start = chain.iter().position(|&n| n == node).unwrap_or(0);
-            let mut path: Vec<&str> = chain[start..].iter().map(|&n| names[n]).collect();
-            path.push(names[node]);
-            return Err(EngineError::SeriesCycle(format!(
-                "cyclic series reads: {}. Each read needs the stream it names \
-                 finished first, so no evaluation order exists. CFDL refuses a \
-                 circular reference rather than iterating it; break the cycle by \
-                 removing one of the reads.",
-                path.iter()
-                    .map(|n| format!("'{n}'"))
-                    .collect::<Vec<_>>()
-                    .join(" -> ")
-            )));
-        }
-        color[node] = GRAY;
-        chain.push(node);
-        let mut deepest = 0usize;
-        for &producer in &edges[node] {
-            deepest = deepest.max(depth_of(producer, names, deps, edges, color, depth, chain)?);
-        }
-        chain.pop();
-        color[node] = BLACK;
-        // A reader is never wave 0 even when its reads resolve to nothing: it
-        // still receives the sealed store, exactly as the old phase 2 did, so
-        // an unresolved read keeps aggregating to zero under W5022 instead of
-        // becoming a missing-context warning.
-        depth[node] = if deps[node].uses { deepest + 1 } else { 0 };
-        Ok(depth[node])
-    }
-
-    let mut color = vec![WHITE; names.len()];
-    let mut depth = vec![0usize; names.len()];
-    let mut chain: Vec<usize> = Vec::new();
-    let mut max_literal = 0usize;
-    for node in 0..names.len() {
-        if deps[node].computed {
-            continue;
-        }
-        let d = depth_of(
-            node, names, deps, &edges, &mut color, &mut depth, &mut chain,
-        )?;
-        max_literal = max_literal.max(d);
-    }
-    for node in 0..names.len() {
-        if deps[node].computed {
-            depth[node] = max_literal + 1;
-        }
-    }
-    Ok(depth)
-}
-
-/// Everything about a model that does not vary from one run to the next.
-///
-/// THE GRID IS BUILT ONCE. Monte Carlo runs the whole deterministic engine per
-/// trial, and a trial varies only its sampled inputs — not the calendar, not
-/// the expressions, not the schedules. Rebuilding those per trial meant twenty
-/// thousand trials compiling one model twenty thousand times, and `docs/29`
-/// §2.2 already said the schedule is "computed once and replayed per scenario
-/// and per trial" while the code did the opposite.
-pub(crate) struct ModelPrep<'a> {
-    timeline: Vec<Date>,
-    /// Compiled amounts, guards and schedules, in `ir.streams` order.
-    plans: Vec<StreamPlan<'a>>,
-    /// Each stream's evaluation wave, from the dependency graph.
-    waves: Vec<usize>,
-    /// Each account's compiled inflow, in `ir.accounts` order.
-    account_inflows: Vec<Option<cfdl_expr::CompiledExpr>>,
-    /// Each account's compiled `init`, likewise; `None` opens at zero.
-    account_inits: Vec<Option<cfdl_expr::CompiledExpr>>,
-    /// Why this model cannot be walked, when it cannot: a window somewhere
-    /// reaches past the period being computed, and a walk has no such period
-    /// yet. `None` means the walk runs it.
-    walk_ineligible: Option<String>,
-}
-
-/// Compile and schedule a model once, for every run that follows.
-fn prepare_model<'a>(ir: &'a Ir, warnings: &mut Vec<String>) -> Result<ModelPrep<'a>, EngineError> {
-    let total_periods = ir.time.periods as usize + ir.time.projection as usize;
-    let timeline = timeline_dates(&ir.time.start, &ir.time.calendar, total_periods)?;
-    let deps = stream_deps(ir);
-    if let Some(path) = priced_refusal(ir, &deps) {
-        return Err(EngineError::SeriesCycle(path));
-    }
-    let stream_names: Vec<&str> = ir.streams.iter().map(|s| s.name.as_str()).collect();
-    let waves = assign_waves(&stream_names, &deps)?;
-    let mut plans = Vec::with_capacity(ir.streams.len());
-    for stream in &ir.streams {
-        plans.push(plan_stream(ir, stream, &timeline, warnings)?);
-    }
-    let account_inflows: Vec<Option<cfdl_expr::CompiledExpr>> = ir
-        .accounts
-        .iter()
-        .map(|account| {
-            account.inflow.as_ref().and_then(|expr| {
-                cfdl_expr::compile_expr(&expr.src)
-                    .map_err(|err| {
-                        warnings.push(format!(
-                            "Account '{}' inflow failed to compile [{}]: {}; treated as zero.",
-                            account.name, err.code, err.message
-                        ));
-                    })
-                    .ok()
-            })
-        })
-        .collect();
-    let account_inits: Vec<Option<cfdl_expr::CompiledExpr>> = ir
-        .accounts
-        .iter()
-        .map(|account| {
-            account.init.as_ref().and_then(|expr| {
-                cfdl_expr::compile_expr(&expr.src)
-                    .map_err(|err| {
-                        warnings.push(format!(
-                            "Account '{}' init failed to compile [{}]: {}; opens at zero.",
-                            account.name, err.code, err.message
-                        ));
-                    })
-                    .ok()
-            })
-        })
-        .collect();
-    let walk_ineligible = walk_ineligible_reason(ir, &deps);
-    Ok(ModelPrep {
-        timeline,
-        plans,
-        waves,
-        account_inflows,
-        account_inits,
-        walk_ineligible,
-    })
 }
 
 fn run_deterministic(
