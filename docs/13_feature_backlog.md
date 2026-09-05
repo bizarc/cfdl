@@ -2835,7 +2835,10 @@ time beside the contracts that already carry it. Every trust with a target,
 a trigger or a call will need the same field, and every one will restate the
 pack.
 
-**The shape**, in two halves that are separately useful:
+**The shape**, in two halves that are separately useful — **the first is
+built for `credit.pool_level_pay`** (4 September 2026: `credit_level_pay_
+balance_<instance>` fills the `balance` role and every stream reads it; the
+interest-only families follow), the second is open:
 
 1. **The pack publishes the balance as a field.** `credit.pool_level_pay` and
    its siblings declare a rule field `credit_<family>_balance{{contract.
@@ -3039,3 +3042,88 @@ that is not cash, chasing a discounted helper for a tariff solve. The
 investigation also refuted an earlier claim of mine that horizon-wide folds are
 unreachable from streams; they are reachable over streams, and the probe pair
 above is what distinguishes the two cases. Related: §7.38, §7.94, §7.95.
+
+### 7.102 A field cannot fold a stream "since my last step"
+
+Belongs with §5, language and engine. Found 4 September 2026 building the
+level-pay pool's balance.
+
+The natural row for a balance is `closing = opening − what the streams paid`:
+a field whose `next` reads the prior period's principal streams, which a
+field may do (`fixtures/valid/recurrence_reads_settled_cash`). On a monthly
+book it works. On a daily book with monthly payments it does not: the field
+steps on payment dates, the streams strike on the same dates, and
+`series_sum(…, time.t − 1, time.t − 1)` reads the prior DAY, which is zero.
+A window in model periods cannot be written in the rule, because the rule
+knows its payment frequency and not the model's calendar, and a month is
+28 to 31 days. So the balance is rolled forward from the RATES instead —
+opening × (1 − principal fraction) × (1 − mdr − smm), the same row written
+in terms of the schedule rather than the cells — which reproduces the
+closed form exactly and restates the hazard fragments the fragment gate
+already polices.
+
+**The ask:** a fold bounded by the reader's own cadence — the stream's
+values since the field last stepped — so a stream-driven balance is
+expressible at every cadence. It is what a loan-level pool will want, where
+the reductions are actual payments and there is no rate to roll forward
+from. Related: §7.98, §7.101 (a stream cannot fold a field), `docs/28` §4.
+
+### 7.103 A division by zero inside a field's recurrence aborts the run
+
+Belongs with §5, engine. Found 4 September 2026.
+
+The balance recurrence calls `pmt(r, n − p, 1)` for the payments left; when
+the contract's `term` runs past its `term_months` the field keeps stepping,
+`n − p` reaches zero, and the engine panicked — a `rust_decimal` division by
+zero out of `annuity`, with no diagnostic, no period, no field named. The
+rule now guards at maturity, but a modeler's own recurrence can do the same
+thing and gets a stack trace. A runtime arithmetic failure inside the walk
+should surface as a diagnostic naming the field, the period and the
+expression, as `E5020` does for a recurrence that fails to parse.
+
+### 7.104 The pool's amortization schedule and its accrued interest can disagree
+
+Belongs with §2, credit pack. Found 4 September 2026 reading the level-pay
+rules against `pack_amortization_day_count`.
+
+The balance amortizes on the annuity factor at the AMORTIZATION divisor
+(`{{model.amortization_divisor}}`, 30/360 by default) while the scheduled
+principal stream is the level payment less interest at the ACCRUAL divisor.
+When the two differ (an `act/360` accrual on a 30/360 amortization) the
+principal the pool pays is not the principal the balance loses, and over a
+term the two drift. A real level-pay loan fixes the PAYMENT and lets
+principal be the remainder after actual interest; the balance then falls by
+that remainder. Not changed here — the balance reproduces the former closed
+form exactly, which is what the rollout needs — but it should be decided:
+either the balance rolls forward from the stream (which §7.102 enables), or
+the day-count term is documented as an interest convention that leaves the
+amortization schedule untouched.
+
+### 7.105 A stream cannot read an account
+
+Belongs with §5, language. Confirmed 3–4 September 2026 (probe: a field may
+read `prev.<account>`; a stream's read is refused as `E1123`, and
+`series_sum("account.<name>", …)` from a stream reads zero in silence).
+
+An account is the language's non-cash balance, and the ledger settles it at
+period close, so a stream reading the CURRENT balance would be reading
+unsettled state and the refusal is right. The prior balance is settled, and
+`prev.<account>` from a stream is the interest-on-a-reserve, fee-on-a-balance
+and coupon-on-what-is-outstanding case: today each is a field that copies
+the account first. The silent zero from the `series_sum` spelling is the
+§7.101 defect again, at an account. Related: §7.76, §7.101, the party-owns-
+several-accounts entry above.
+
+### 7.106 MOIC of a zero cash flow is a ratio of sign noise
+
+Belongs with §5, metrics. Found 4 September 2026 when the decimal-to-float
+conversion became deterministic.
+
+`fixtures/valid/credit_participation` passes every dollar of the pool
+through to the holder, so `model.net_cash_flow` is zero in every period.
+`model.moic` published 0.818182 before the conversion change and 0.9 after
+it: both are counts of which periods' zeros carried a negative sign at the
+28th digit. A multiple on money that never moved should be null, as the
+pool factor is before the pool is bought, not a number that changes when a
+float flips its last bit. The same applies to `model.irr` on such a series.
+

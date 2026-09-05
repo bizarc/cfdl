@@ -249,7 +249,7 @@ results.metrics_frame()
 26         stream.opco.opex.recurring.total -4.301637e+07      USD         core
 27      stream.opco.revenue.recurring.total  6.948579e+07      USD         core
 28             stream.opco.taxes.cash.total -2.648405e+06      USD         core
-29  stream.opco.working_capital.adjustme...  0.000000e+00      USD         core
+29  stream.opco.working_capital.adjustme... -0.000000e+00      USD         core
 ```
 
 ## What-if

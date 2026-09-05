@@ -369,8 +369,8 @@ actions = [{ set = "in_place_rent", value = "prev.in_place_rent * (1 + inputs.bu
   `set balance = 0` on the `credit.pool` machine. A master names the role
   (`Contract.Debt` names `balance`), a rule that lowers the field fills it
   (`field_role = "balance"` beside `field_name`), and the compiler resolves
-  the role per entity to every field that plays it — a pool's survival
-  factor and its lagged twin — which the engine writes one by one. A role
+  the role per entity to every field that plays it — a pool's balance and
+  its lagged twin — which the engine writes one by one. A role
   nothing on the transitioning entity fills is refused (`E1359`): a
   closed-form debt has no balance field to extinguish.
 - **The field itself comes from the pack's lowering rules**, like every other

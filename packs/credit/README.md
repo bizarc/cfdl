@@ -97,7 +97,7 @@ The [mortgage pool conventions benchmark](/docs/examples/credit-mbs-pool-convent
 of a 30-year pool and passes, including recoveries — a level-pay pool's
 defaulted balance keeps amortizing in foreclosure, so what is liquidated is the
 amortized balance rather than face. Age-varying prepayment and default curves
-ARE expressible: the survival factor is a declared state stepped once per
+ARE expressible: the pool's balance is a declared state stepped once per
 payment period, not `pow(k, p)`, so PSA, SDA and the ABS convention all ramp
 correctly.
 
@@ -105,10 +105,17 @@ correctly.
 
 ### `credit.pool_level_pay`
 
-Homogeneous level-pay (fully amortizing) pool. The engine's expression
-dialect has no loops, so streams use the exact closed form for a homogeneous
-pool under constant SMM/MDR (the standard pool-factor decomposition) — see
-the convention block at the top of `lowering/rules.toml`.
+Homogeneous level-pay (fully amortizing) pool. The pool's opening balance
+is its state — `credit_level_pay_balance_<instance>`, the field that fills
+the master's `balance` role — rolled forward each payment period the way an
+amortization schedule's row is: closing is opening less the level-pay
+principal fraction, less defaults and prepayments drawn from the same
+opening balance (the convention block at the top of `lowering/rules.toml`).
+Every stream reads that balance; nothing restates the amortization. A lagged
+twin, `credit_level_pay_balance_lag_<instance>`, is the balance as it stood
+`recovery_lag_months` ago, which is what recoveries liquidate. Defaults are
+not a stream: the write-off is bookkeeping inside the state, and the cash is
+the recovery.
 
 Terms:
 
@@ -244,9 +251,9 @@ way.
 ### Retirement
 
 The `credit.pool` machine carries `on enter retired { set balance = 0 }`.
-`balance` is the field ROLE the pool rules fill — the survival factor every
-stream reads and its lagged twin — so a model retires a pool with one
-status write and names no instance's field:
+`balance` is the field ROLE the pool rules fill — the level-pay pool's
+balance and its lagged twin, the interest-only pools' survival factors — so
+a model retires a pool with one status write and names no instance's field:
 
 ```cfdl
 event clean_up_call when time.t == 6 {

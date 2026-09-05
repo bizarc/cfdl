@@ -135,7 +135,82 @@
 
 # ---------------------------------------------------------------------------
 # credit.pool_level_pay — amortizing (level-pay) pool.
+#
+# THE BALANCE IS THE STATE (docs/40 §3). One field-only rule carries the
+# pool's opening principal balance — the master's `balance` role — and every
+# stream reads it; nothing restates the amortization. The recurrence is the
+# schedule's own row: closing = opening, less the scheduled principal
+# fraction of a level-pay loan with n - p payments left (the annuity-factor
+# ratio AF(n-p-1)/AF(n-p) = 1 - c(p)), less defaults and prepayments drawn
+# ADDITIVELY from the same opening balance (README, "SMM applies to the
+# balance at the BEGINNING of the period"). It reproduces the former closed
+# form principal * AF(n-p)/AF(n) * survival exactly, in real arithmetic, and
+# to the last bit of a double in every golden. Defaults are not a stream —
+# the write-off is bookkeeping inside the state; what is cash is the
+# recovery, lag periods later, read off the lagged twin below.
 # ---------------------------------------------------------------------------
+
+[[rules]]
+id = "credit_pool_level_pay_balance"
+contract_name = "credit.pool_level_pay"
+stream_name = ""
+owner_entity = "${subject}"
+direction = "inflow"
+category = ""
+amount_expr = ""
+schedule_kind = "every"
+schedule_every = "{{contract.payment_frequency}}"
+schedule_from = "{{contract.term_start}}"
+schedule_to = "{{contract.term_end}}"
+field_name = "credit_level_pay_balance{{contract.suffix_ident}}"
+field_role = "balance"
+field_init = "{{contract.principal}}"
+field_next = "if({{time.elapsed_periods}} <= {{whole_periods.term_months}}, prev * (1 - ((-pmt({{contract.interest_rate}} / {{model.amortization_divisor}}, {{whole_periods.term_months}} - ({{time.elapsed_periods}} - 1), 1)) - ({{contract.interest_rate}} / {{model.amortization_divisor}}))) * ((1 - cpr_to_periodic(if({{contract.sda_speed}} == 0, {{contract.cdr}}, {{contract.sda_speed}} * (min(0.0002 * min(max(1, ({{contract.age_months}} + ({{time.elapsed_periods}} - 1)) + 1), 30), 0.006) - 0.000095 * max(0, min(max(1, ({{contract.age_months}} + ({{time.elapsed_periods}} - 1)) + 1), 120) - 60))), {{model.periods_per_year}})) - if({{contract.abs_speed}} == 0, cpr_to_periodic(if({{contract.psa_speed}} == 0, {{contract.cpr}}, min({{contract.psa_speed}} * 0.002 * max(1, min(({{contract.age_months}} + ({{time.elapsed_periods}} - 1)) + 1, 30)), 1)), {{model.periods_per_year}}), min({{contract.abs_speed}} / max(1 - {{contract.abs_speed}} * ({{contract.age_months}} + ({{time.elapsed_periods}} - 1)), 0.000001), 1))), 0)"
+field_every = "{{contract.payment_frequency}}"
+field_from = "{{contract.term_start}}"
+field_to = "{{contract.term_end}}"
+
+[rules.defaults]
+payment_frequency = ""
+cpr = "0"
+cdr = "0"
+psa_speed = "0"
+sda_speed = "0"
+abs_speed = "0"
+age_months = "0"
+
+# The balance as it stood recovery_lag_months ago: the same row, delayed, so
+# recoveries can liquidate what defaulted then. It runs past term_end by the
+# lag, which is why it carries no field_to, and holds still until the lag has
+# elapsed.
+[[rules]]
+id = "credit_pool_level_pay_balance_lag"
+contract_name = "credit.pool_level_pay"
+stream_name = ""
+owner_entity = "${subject}"
+direction = "inflow"
+category = ""
+amount_expr = ""
+schedule_kind = "every"
+schedule_every = "{{contract.payment_frequency}}"
+schedule_from = "{{contract.term_start}}"
+schedule_to = "{{contract.term_end}}"
+field_name = "credit_level_pay_balance_lag{{contract.suffix_ident}}"
+field_role = "balance"
+field_init = "{{contract.principal}}"
+field_next = "if({{time.elapsed_periods}} > {{whole_periods.recovery_lag_months}} and {{time.elapsed_periods}} - {{whole_periods.recovery_lag_months}} < {{whole_periods.term_months}}, prev * (1 - ((-pmt({{contract.interest_rate}} / {{model.amortization_divisor}}, {{whole_periods.term_months}} - ({{time.elapsed_periods}} - {{whole_periods.recovery_lag_months}} - 1), 1)) - ({{contract.interest_rate}} / {{model.amortization_divisor}}))) * ((1 - cpr_to_periodic(if({{contract.sda_speed}} == 0, {{contract.cdr}}, {{contract.sda_speed}} * (min(0.0002 * min(max(1, ({{contract.age_months}} + ({{time.elapsed_periods}} - {{whole_periods.recovery_lag_months}} - 1)) + 1), 30), 0.006) - 0.000095 * max(0, min(max(1, ({{contract.age_months}} + ({{time.elapsed_periods}} - {{whole_periods.recovery_lag_months}} - 1)) + 1), 120) - 60))), {{model.periods_per_year}})) - if({{contract.abs_speed}} == 0, cpr_to_periodic(if({{contract.psa_speed}} == 0, {{contract.cpr}}, min({{contract.psa_speed}} * 0.002 * max(1, min(({{contract.age_months}} + ({{time.elapsed_periods}} - {{whole_periods.recovery_lag_months}} - 1)) + 1, 30)), 1)), {{model.periods_per_year}}), min({{contract.abs_speed}} / max(1 - {{contract.abs_speed}} * ({{contract.age_months}} + ({{time.elapsed_periods}} - {{whole_periods.recovery_lag_months}} - 1)), 0.000001), 1))), prev)"
+field_every = "{{contract.payment_frequency}}"
+field_from = "{{contract.term_start}}"
+
+[rules.defaults]
+payment_frequency = ""
+cpr = "0"
+cdr = "0"
+psa_speed = "0"
+sda_speed = "0"
+abs_speed = "0"
+age_months = "0"
+recovery_lag_months = "0"
 
 [[rules]]
 id = "credit_pool_level_pay_interest"
@@ -146,14 +221,7 @@ owner_entity = "${subject}"
 direction = "inflow"
 category = "operating.collection.interest"
 # interest = performing balance * monthly rate
-amount_expr = "if({{time.elapsed_periods}} < {{whole_periods.term_months}}, ({{contract.principal}} * (pv({{contract.interest_rate}} / {{model.amortization_divisor}}, {{whole_periods.term_months}} - {{time.elapsed_periods}}, -1) / pv({{contract.interest_rate}} / {{model.amortization_divisor}}, {{whole_periods.term_months}}, -1)) * field.credit_level_pay_survival{{contract.suffix_ident}}) * (1 - cpr_to_periodic(if({{contract.sda_speed}} == 0, {{contract.cdr}}, {{contract.sda_speed}} * (min(0.0002 * min(max(1, ({{contract.age_months}} + ({{time.elapsed_periods}})) + 1), 30), 0.006) - 0.000095 * max(0, min(max(1, ({{contract.age_months}} + ({{time.elapsed_periods}})) + 1), 120) - 60))), {{model.periods_per_year}})) * ({{contract.interest_rate}} / {{model.accrual_divisor}}), 0)"
-field_name = "credit_level_pay_survival{{contract.suffix_ident}}"
-field_role = "balance"
-field_init = "1"
-field_next = "prev * ((1 - cpr_to_periodic(if({{contract.sda_speed}} == 0, {{contract.cdr}}, {{contract.sda_speed}} * (min(0.0002 * min(max(1, ({{contract.age_months}} + ({{time.elapsed_periods}} - 1)) + 1), 30), 0.006) - 0.000095 * max(0, min(max(1, ({{contract.age_months}} + ({{time.elapsed_periods}} - 1)) + 1), 120) - 60))), {{model.periods_per_year}})) - if({{contract.abs_speed}} == 0, cpr_to_periodic(if({{contract.psa_speed}} == 0, {{contract.cpr}}, min({{contract.psa_speed}} * 0.002 * max(1, min(({{contract.age_months}} + ({{time.elapsed_periods}} - 1)) + 1, 30)), 1)), {{model.periods_per_year}}), min({{contract.abs_speed}} / max(1 - {{contract.abs_speed}} * ({{contract.age_months}} + ({{time.elapsed_periods}} - 1)), 0.000001), 1)))"
-field_every = "{{contract.payment_frequency}}"
-field_from = "{{contract.term_start}}"
-field_to = "{{contract.term_end}}"
+amount_expr = "if({{time.elapsed_periods}} < {{whole_periods.term_months}}, field.credit_level_pay_balance{{contract.suffix_ident}} * (1 - cpr_to_periodic(if({{contract.sda_speed}} == 0, {{contract.cdr}}, {{contract.sda_speed}} * (min(0.0002 * min(max(1, ({{contract.age_months}} + ({{time.elapsed_periods}})) + 1), 30), 0.006) - 0.000095 * max(0, min(max(1, ({{contract.age_months}} + ({{time.elapsed_periods}})) + 1), 120) - 60))), {{model.periods_per_year}})) * ({{contract.interest_rate}} / {{model.accrual_divisor}}), 0)"
 schedule_kind = "every"
 schedule_every = "{{contract.payment_frequency}}"
 schedule_from = "{{contract.term_start}}"
@@ -179,14 +247,7 @@ owner_entity = "${subject}"
 direction = "inflow"
 category = "operating.collection.principal"
 # scheduled principal = performing balance * c(t), c(t) = r / ((1+r)^(n-p) - 1)
-amount_expr = "if({{time.elapsed_periods}} < {{whole_periods.term_months}}, ({{contract.principal}} * (pv({{contract.interest_rate}} / {{model.amortization_divisor}}, {{whole_periods.term_months}} - {{time.elapsed_periods}}, -1) / pv({{contract.interest_rate}} / {{model.amortization_divisor}}, {{whole_periods.term_months}}, -1)) * field.credit_level_pay_survival{{contract.suffix_ident}}) * (1 - cpr_to_periodic(if({{contract.sda_speed}} == 0, {{contract.cdr}}, {{contract.sda_speed}} * (min(0.0002 * min(max(1, ({{contract.age_months}} + ({{time.elapsed_periods}})) + 1), 30), 0.006) - 0.000095 * max(0, min(max(1, ({{contract.age_months}} + ({{time.elapsed_periods}})) + 1), 120) - 60))), {{model.periods_per_year}})) * ((-pmt({{contract.interest_rate}} / {{model.amortization_divisor}}, {{whole_periods.term_months}} - {{time.elapsed_periods}}, 1)) - ({{contract.interest_rate}} / {{model.accrual_divisor}})), 0)"
-field_name = "credit_level_pay_survival{{contract.suffix_ident}}"
-field_role = "balance"
-field_init = "1"
-field_next = "prev * ((1 - cpr_to_periodic(if({{contract.sda_speed}} == 0, {{contract.cdr}}, {{contract.sda_speed}} * (min(0.0002 * min(max(1, ({{contract.age_months}} + ({{time.elapsed_periods}} - 1)) + 1), 30), 0.006) - 0.000095 * max(0, min(max(1, ({{contract.age_months}} + ({{time.elapsed_periods}} - 1)) + 1), 120) - 60))), {{model.periods_per_year}})) - if({{contract.abs_speed}} == 0, cpr_to_periodic(if({{contract.psa_speed}} == 0, {{contract.cpr}}, min({{contract.psa_speed}} * 0.002 * max(1, min(({{contract.age_months}} + ({{time.elapsed_periods}} - 1)) + 1, 30)), 1)), {{model.periods_per_year}}), min({{contract.abs_speed}} / max(1 - {{contract.abs_speed}} * ({{contract.age_months}} + ({{time.elapsed_periods}} - 1)), 0.000001), 1)))"
-field_every = "{{contract.payment_frequency}}"
-field_from = "{{contract.term_start}}"
-field_to = "{{contract.term_end}}"
+amount_expr = "if({{time.elapsed_periods}} < {{whole_periods.term_months}}, field.credit_level_pay_balance{{contract.suffix_ident}} * (1 - cpr_to_periodic(if({{contract.sda_speed}} == 0, {{contract.cdr}}, {{contract.sda_speed}} * (min(0.0002 * min(max(1, ({{contract.age_months}} + ({{time.elapsed_periods}})) + 1), 30), 0.006) - 0.000095 * max(0, min(max(1, ({{contract.age_months}} + ({{time.elapsed_periods}})) + 1), 120) - 60))), {{model.periods_per_year}})) * ((-pmt({{contract.interest_rate}} / {{model.amortization_divisor}}, {{whole_periods.term_months}} - {{time.elapsed_periods}}, 1)) - ({{contract.interest_rate}} / {{model.accrual_divisor}})), 0)"
 schedule_kind = "every"
 schedule_every = "{{contract.payment_frequency}}"
 schedule_from = "{{contract.term_start}}"
@@ -213,14 +274,7 @@ direction = "inflow"
 category = "operating.collection.prepayment"
 # prepayment = (performing - scheduled principal) * smm
 #            = performing * (1 - c(t)) * smm
-amount_expr = "if({{time.elapsed_periods}} < {{whole_periods.term_months}}, ({{contract.principal}} * (pv({{contract.interest_rate}} / {{model.amortization_divisor}}, {{whole_periods.term_months}} - {{time.elapsed_periods}}, -1) / pv({{contract.interest_rate}} / {{model.amortization_divisor}}, {{whole_periods.term_months}}, -1)) * field.credit_level_pay_survival{{contract.suffix_ident}}) * (1 - ((-pmt({{contract.interest_rate}} / {{model.amortization_divisor}}, {{whole_periods.term_months}} - {{time.elapsed_periods}}, 1)) - ({{contract.interest_rate}} / {{model.accrual_divisor}}))) * if({{contract.abs_speed}} == 0, cpr_to_periodic(if({{contract.psa_speed}} == 0, {{contract.cpr}}, min({{contract.psa_speed}} * 0.002 * max(1, min(({{contract.age_months}} + ({{time.elapsed_periods}})) + 1, 30)), 1)), {{model.periods_per_year}}), min({{contract.abs_speed}} / max(1 - {{contract.abs_speed}} * ({{contract.age_months}} + ({{time.elapsed_periods}})), 0.000001), 1)), 0)"
-field_name = "credit_level_pay_survival{{contract.suffix_ident}}"
-field_role = "balance"
-field_init = "1"
-field_next = "prev * ((1 - cpr_to_periodic(if({{contract.sda_speed}} == 0, {{contract.cdr}}, {{contract.sda_speed}} * (min(0.0002 * min(max(1, ({{contract.age_months}} + ({{time.elapsed_periods}} - 1)) + 1), 30), 0.006) - 0.000095 * max(0, min(max(1, ({{contract.age_months}} + ({{time.elapsed_periods}} - 1)) + 1), 120) - 60))), {{model.periods_per_year}})) - if({{contract.abs_speed}} == 0, cpr_to_periodic(if({{contract.psa_speed}} == 0, {{contract.cpr}}, min({{contract.psa_speed}} * 0.002 * max(1, min(({{contract.age_months}} + ({{time.elapsed_periods}} - 1)) + 1, 30)), 1)), {{model.periods_per_year}}), min({{contract.abs_speed}} / max(1 - {{contract.abs_speed}} * ({{contract.age_months}} + ({{time.elapsed_periods}} - 1)), 0.000001), 1)))"
-field_every = "{{contract.payment_frequency}}"
-field_from = "{{contract.term_start}}"
-field_to = "{{contract.term_end}}"
+amount_expr = "if({{time.elapsed_periods}} < {{whole_periods.term_months}}, field.credit_level_pay_balance{{contract.suffix_ident}} * (1 - ((-pmt({{contract.interest_rate}} / {{model.amortization_divisor}}, {{whole_periods.term_months}} - {{time.elapsed_periods}}, 1)) - ({{contract.interest_rate}} / {{model.accrual_divisor}}))) * if({{contract.abs_speed}} == 0, cpr_to_periodic(if({{contract.psa_speed}} == 0, {{contract.cpr}}, min({{contract.psa_speed}} * 0.002 * max(1, min(({{contract.age_months}} + ({{time.elapsed_periods}})) + 1, 30)), 1)), {{model.periods_per_year}}), min({{contract.abs_speed}} / max(1 - {{contract.abs_speed}} * ({{contract.age_months}} + ({{time.elapsed_periods}})), 0.000001), 1)), 0)"
 schedule_kind = "every"
 schedule_every = "{{contract.payment_frequency}}"
 schedule_from = "{{contract.term_start}}"
@@ -250,13 +304,7 @@ category = "operating.collection.recovery"
 #     [B_beg(p - lag) carries F(p - lag), hence the lagged field.]
 # Set the contract term to cover term_months + recovery_lag_months so the
 # recovery tail has schedule periods.
-amount_expr = "if({{time.elapsed_periods}} >= {{whole_periods.recovery_lag_months}} and {{time.elapsed_periods}} < {{whole_periods.term_months}} + {{whole_periods.recovery_lag_months}}, ({{contract.principal}} * (pv({{contract.interest_rate}} / {{model.amortization_divisor}}, {{whole_periods.term_months}} - ({{time.elapsed_periods}} - {{whole_periods.recovery_lag_months}}), -1) / pv({{contract.interest_rate}} / {{model.amortization_divisor}}, {{whole_periods.term_months}}, -1)) * field.credit_level_pay_survival_lag{{contract.suffix_ident}}) * cpr_to_periodic(if({{contract.sda_speed}} == 0, {{contract.cdr}}, {{contract.sda_speed}} * (min(0.0002 * min(max(1, ({{contract.age_months}} + ({{time.elapsed_periods}} - {{whole_periods.recovery_lag_months}})) + 1), 30), 0.006) - 0.000095 * max(0, min(max(1, ({{contract.age_months}} + ({{time.elapsed_periods}} - {{whole_periods.recovery_lag_months}})) + 1), 120) - 60))), {{model.periods_per_year}}) * max(0, (pv({{contract.interest_rate}} / {{model.amortization_divisor}}, {{whole_periods.term_months}} - {{time.elapsed_periods}}, -1) / pv({{contract.interest_rate}} / {{model.amortization_divisor}}, {{whole_periods.term_months}} - ({{time.elapsed_periods}} - {{whole_periods.recovery_lag_months}}), -1)) - {{contract.severity}}), 0)"
-field_name = "credit_level_pay_survival_lag{{contract.suffix_ident}}"
-field_role = "balance"
-field_init = "1"
-field_next = "if({{time.elapsed_periods}} > {{whole_periods.recovery_lag_months}} and {{time.elapsed_periods}} - {{whole_periods.recovery_lag_months}} < {{whole_periods.term_months}}, prev * ((1 - cpr_to_periodic(if({{contract.sda_speed}} == 0, {{contract.cdr}}, {{contract.sda_speed}} * (min(0.0002 * min(max(1, ({{contract.age_months}} + ({{time.elapsed_periods}} - {{whole_periods.recovery_lag_months}} - 1)) + 1), 30), 0.006) - 0.000095 * max(0, min(max(1, ({{contract.age_months}} + ({{time.elapsed_periods}} - {{whole_periods.recovery_lag_months}} - 1)) + 1), 120) - 60))), {{model.periods_per_year}})) - if({{contract.abs_speed}} == 0, cpr_to_periodic(if({{contract.psa_speed}} == 0, {{contract.cpr}}, min({{contract.psa_speed}} * 0.002 * max(1, min(({{contract.age_months}} + ({{time.elapsed_periods}} - {{whole_periods.recovery_lag_months}} - 1)) + 1, 30)), 1)), {{model.periods_per_year}}), min({{contract.abs_speed}} / max(1 - {{contract.abs_speed}} * ({{contract.age_months}} + ({{time.elapsed_periods}} - {{whole_periods.recovery_lag_months}} - 1)), 0.000001), 1))), prev)"
-field_every = "{{contract.payment_frequency}}"
-field_from = "{{contract.term_start}}"
+amount_expr = "if({{time.elapsed_periods}} >= {{whole_periods.recovery_lag_months}} and {{time.elapsed_periods}} < {{whole_periods.term_months}} + {{whole_periods.recovery_lag_months}}, field.credit_level_pay_balance_lag{{contract.suffix_ident}} * cpr_to_periodic(if({{contract.sda_speed}} == 0, {{contract.cdr}}, {{contract.sda_speed}} * (min(0.0002 * min(max(1, ({{contract.age_months}} + ({{time.elapsed_periods}} - {{whole_periods.recovery_lag_months}})) + 1), 30), 0.006) - 0.000095 * max(0, min(max(1, ({{contract.age_months}} + ({{time.elapsed_periods}} - {{whole_periods.recovery_lag_months}})) + 1), 120) - 60))), {{model.periods_per_year}}) * max(0, (pv({{contract.interest_rate}} / {{model.amortization_divisor}}, {{whole_periods.term_months}} - {{time.elapsed_periods}}, -1) / pv({{contract.interest_rate}} / {{model.amortization_divisor}}, {{whole_periods.term_months}} - ({{time.elapsed_periods}} - {{whole_periods.recovery_lag_months}}), -1)) - {{contract.severity}}), 0)"
 schedule_kind = "every"
 schedule_every = "{{contract.payment_frequency}}"
 schedule_from = "{{contract.term_start}}"
@@ -283,14 +331,7 @@ direction = "outflow"
 category = "operating.expense.servicing"
 # Servicing fee accrues on the performing balance (a NOMINAL annual rate, so
 # rate / ppy).
-amount_expr = "if({{time.elapsed_periods}} < {{whole_periods.term_months}}, ({{contract.principal}} * (pv({{contract.interest_rate}} / {{model.amortization_divisor}}, {{whole_periods.term_months}} - {{time.elapsed_periods}}, -1) / pv({{contract.interest_rate}} / {{model.amortization_divisor}}, {{whole_periods.term_months}}, -1)) * field.credit_level_pay_survival{{contract.suffix_ident}}) * (1 - cpr_to_periodic(if({{contract.sda_speed}} == 0, {{contract.cdr}}, {{contract.sda_speed}} * (min(0.0002 * min(max(1, ({{contract.age_months}} + ({{time.elapsed_periods}})) + 1), 30), 0.006) - 0.000095 * max(0, min(max(1, ({{contract.age_months}} + ({{time.elapsed_periods}})) + 1), 120) - 60))), {{model.periods_per_year}})) * ({{contract.servicing_fee}} / {{model.accrual_divisor}}), 0)"
-field_name = "credit_level_pay_survival{{contract.suffix_ident}}"
-field_role = "balance"
-field_init = "1"
-field_next = "prev * ((1 - cpr_to_periodic(if({{contract.sda_speed}} == 0, {{contract.cdr}}, {{contract.sda_speed}} * (min(0.0002 * min(max(1, ({{contract.age_months}} + ({{time.elapsed_periods}} - 1)) + 1), 30), 0.006) - 0.000095 * max(0, min(max(1, ({{contract.age_months}} + ({{time.elapsed_periods}} - 1)) + 1), 120) - 60))), {{model.periods_per_year}})) - if({{contract.abs_speed}} == 0, cpr_to_periodic(if({{contract.psa_speed}} == 0, {{contract.cpr}}, min({{contract.psa_speed}} * 0.002 * max(1, min(({{contract.age_months}} + ({{time.elapsed_periods}} - 1)) + 1, 30)), 1)), {{model.periods_per_year}}), min({{contract.abs_speed}} / max(1 - {{contract.abs_speed}} * ({{contract.age_months}} + ({{time.elapsed_periods}} - 1)), 0.000001), 1)))"
-field_every = "{{contract.payment_frequency}}"
-field_from = "{{contract.term_start}}"
-field_to = "{{contract.term_end}}"
+amount_expr = "if({{time.elapsed_periods}} < {{whole_periods.term_months}}, field.credit_level_pay_balance{{contract.suffix_ident}} * (1 - cpr_to_periodic(if({{contract.sda_speed}} == 0, {{contract.cdr}}, {{contract.sda_speed}} * (min(0.0002 * min(max(1, ({{contract.age_months}} + ({{time.elapsed_periods}})) + 1), 30), 0.006) - 0.000095 * max(0, min(max(1, ({{contract.age_months}} + ({{time.elapsed_periods}})) + 1), 120) - 60))), {{model.periods_per_year}})) * ({{contract.servicing_fee}} / {{model.accrual_divisor}}), 0)"
 schedule_kind = "every"
 schedule_every = "{{contract.payment_frequency}}"
 schedule_from = "{{contract.term_start}}"
@@ -318,14 +359,7 @@ direction = "inflow"
 category = "operating.collection.penalty"
 # Prepayment penalty: flat rate on voluntary prepayments (simplified yield
 # maintenance; full make-whole needs a discounting engine primitive).
-amount_expr = "if({{time.elapsed_periods}} < {{whole_periods.term_months}}, ({{contract.principal}} * (pv({{contract.interest_rate}} / {{model.amortization_divisor}}, {{whole_periods.term_months}} - {{time.elapsed_periods}}, -1) / pv({{contract.interest_rate}} / {{model.amortization_divisor}}, {{whole_periods.term_months}}, -1)) * field.credit_level_pay_survival{{contract.suffix_ident}}) * (1 - ((-pmt({{contract.interest_rate}} / {{model.amortization_divisor}}, {{whole_periods.term_months}} - {{time.elapsed_periods}}, 1)) - ({{contract.interest_rate}} / {{model.accrual_divisor}}))) * if({{contract.abs_speed}} == 0, cpr_to_periodic(if({{contract.psa_speed}} == 0, {{contract.cpr}}, min({{contract.psa_speed}} * 0.002 * max(1, min(({{contract.age_months}} + ({{time.elapsed_periods}})) + 1, 30)), 1)), {{model.periods_per_year}}), min({{contract.abs_speed}} / max(1 - {{contract.abs_speed}} * ({{contract.age_months}} + ({{time.elapsed_periods}})), 0.000001), 1)) * {{contract.prepay_penalty_rate}}, 0)"
-field_name = "credit_level_pay_survival{{contract.suffix_ident}}"
-field_role = "balance"
-field_init = "1"
-field_next = "prev * ((1 - cpr_to_periodic(if({{contract.sda_speed}} == 0, {{contract.cdr}}, {{contract.sda_speed}} * (min(0.0002 * min(max(1, ({{contract.age_months}} + ({{time.elapsed_periods}} - 1)) + 1), 30), 0.006) - 0.000095 * max(0, min(max(1, ({{contract.age_months}} + ({{time.elapsed_periods}} - 1)) + 1), 120) - 60))), {{model.periods_per_year}})) - if({{contract.abs_speed}} == 0, cpr_to_periodic(if({{contract.psa_speed}} == 0, {{contract.cpr}}, min({{contract.psa_speed}} * 0.002 * max(1, min(({{contract.age_months}} + ({{time.elapsed_periods}} - 1)) + 1, 30)), 1)), {{model.periods_per_year}}), min({{contract.abs_speed}} / max(1 - {{contract.abs_speed}} * ({{contract.age_months}} + ({{time.elapsed_periods}} - 1)), 0.000001), 1)))"
-field_every = "{{contract.payment_frequency}}"
-field_from = "{{contract.term_start}}"
-field_to = "{{contract.term_end}}"
+amount_expr = "if({{time.elapsed_periods}} < {{whole_periods.term_months}}, field.credit_level_pay_balance{{contract.suffix_ident}} * (1 - ((-pmt({{contract.interest_rate}} / {{model.amortization_divisor}}, {{whole_periods.term_months}} - {{time.elapsed_periods}}, 1)) - ({{contract.interest_rate}} / {{model.accrual_divisor}}))) * if({{contract.abs_speed}} == 0, cpr_to_periodic(if({{contract.psa_speed}} == 0, {{contract.cpr}}, min({{contract.psa_speed}} * 0.002 * max(1, min(({{contract.age_months}} + ({{time.elapsed_periods}})) + 1, 30)), 1)), {{model.periods_per_year}}), min({{contract.abs_speed}} / max(1 - {{contract.abs_speed}} * ({{contract.age_months}} + ({{time.elapsed_periods}})), 0.000001), 1)) * {{contract.prepay_penalty_rate}}, 0)"
 schedule_kind = "every"
 schedule_every = "{{contract.payment_frequency}}"
 schedule_from = "{{contract.term_start}}"

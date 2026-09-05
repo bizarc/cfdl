@@ -503,9 +503,36 @@ pub(crate) fn powi_decimal(base: Decimal, n: i64, span: Span) -> Result<Decimal,
     Ok(result)
 }
 
-pub(crate) fn to_f64(d: Decimal, span: Span) -> Result<f64, CalcError> {
-    d.to_f64()
-        .ok_or_else(|| CalcError::new(format!("cannot represent {d} as float"), Some(span)))
+pub(crate) fn to_f64(d: Decimal, _span: Span) -> Result<f64, CalcError> {
+    Ok(decimal_to_f64(d))
+}
+
+/// The correctly rounded `f64` nearest a decimal, the same on every platform.
+///
+/// `rust_decimal`'s own conversion adds the integral and fractional parts as
+/// floats, multiplies by `10^scale` and divides back — and `x * r / r` is not
+/// an identity in floating point, while `10f64.powi(28)` is not the same
+/// float on every target. A 28-digit mantissa (every product the walk carries)
+/// came back one bit apart on Windows from Linux and macOS, and the blessed
+/// corpus is compared exactly. Two paths, both deterministic: an exact
+/// mantissa under an exact power of ten is one correctly rounded division;
+/// anything else goes through the decimal's text and core's correctly
+/// rounded parser, which is the definition of the nearest float.
+pub fn decimal_to_f64(d: Decimal) -> f64 {
+    const POW10: [f64; 23] = [
+        1e0, 1e1, 1e2, 1e3, 1e4, 1e5, 1e6, 1e7, 1e8, 1e9, 1e10, 1e11, 1e12, 1e13, 1e14, 1e15, 1e16,
+        1e17, 1e18, 1e19, 1e20, 1e21, 1e22,
+    ];
+    let d = d.normalize();
+    let mantissa = d.mantissa();
+    let scale = d.scale() as usize;
+    if mantissa.unsigned_abs() < (1u128 << 53) && scale < POW10.len() {
+        // Both operands exact, so the one division rounds once, correctly.
+        return mantissa as f64 / POW10[scale];
+    }
+    d.to_string()
+        .parse::<f64>()
+        .unwrap_or_else(|_| d.to_f64().unwrap_or(f64::NAN))
 }
 
 pub(crate) fn from_f64(x: f64, span: Span) -> Result<Decimal, CalcError> {

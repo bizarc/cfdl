@@ -6898,21 +6898,33 @@ fn lower_contract_streams(
             // AND THE EXPRESSIONS READ THE FIELD. A rule writes `field.<name>`
             // because it cannot know which entity it will be attached to; here
             // that placeholder becomes the path the value actually lives at.
-            if !rule.field_name.is_empty() {
-                let from = format!("field.{}", rule.field_name);
-                // `entity.<owner>.<field>`, the long form. The bare alias covers
-                // the four declared families only, and a lowering rule may sit
-                // on any entity — so the spelling that always resolves is the
-                // one that goes through the entity root.
-                let to = format!(
-                    "entity.{}.{}",
-                    contract
-                        .subject_entity
-                        .clone()
-                        .unwrap_or_else(|| owner_symbol.clone()),
-                    rule.field_name
-                );
-                amount_src = amount_src.replace(&from, &to);
+            // EVERY FIELD THE CONTRACT LOWERS, not only this rule's own: a
+            // field-only rule declares the state once (a pool's balance) and
+            // the stream rules read it without restating it. Longest name
+            // first so `field.x_lag_a` is never clipped by `field.x_a`.
+            {
+                let field_owner = contract
+                    .subject_entity
+                    .clone()
+                    .unwrap_or_else(|| owner_symbol.clone());
+                let mut names: Vec<String> = lowered_fields
+                    .keys()
+                    .filter(|(owner, _)| *owner == field_owner)
+                    .map(|(_, name)| name.clone())
+                    .collect();
+                if !rule.field_name.is_empty() && !names.contains(&rule.field_name) {
+                    names.push(rule.field_name.clone());
+                }
+                names.sort_by(|a, b| b.len().cmp(&a.len()).then(a.cmp(b)));
+                for name in names {
+                    let from = format!("field.{name}");
+                    // `entity.<owner>.<field>`, the long form. The bare alias
+                    // covers the four declared families only, and a lowering
+                    // rule may sit on any entity — so the spelling that always
+                    // resolves is the one that goes through the entity root.
+                    let to = format!("entity.{field_owner}.{name}");
+                    amount_src = amount_src.replace(&from, &to);
+                }
             }
 
             // What this rule actually read to strike this stream. Derived from

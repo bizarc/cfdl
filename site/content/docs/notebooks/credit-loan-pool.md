@@ -124,21 +124,21 @@ shape: (126, 21)
 ```
 
 ```
-         asset.buyer.credit_level_pay_survival_auto_a  \
-period                                                  
-2026-01                                 1.000000        
-2026-02                                 0.991393        
-2026-03                                 0.982861        
-2026-04                                 0.974402        
-2026-05                                 0.966016        
+         asset.buyer.credit_level_pay_balance_auto_a  \
+period                                                 
+2026-01                             2.500000e+07       
+2026-02                             2.463766e+07       
+2026-03                             2.427892e+07       
+2026-04                             2.392374e+07       
+2026-05                             2.357208e+07       
 
-         asset.buyer.credit_level_pay_survival_lag_auto_a  domain.credit.balance_outstanding  \
-period                                                                                         
-2026-01                                      1.0                                2.442971e+07   
-2026-02                                      1.0                                2.411241e+07   
-2026-03                                      1.0                                2.379807e+07   
-2026-04                                      1.0                                2.348667e+07   
-2026-05                                      1.0                                2.317816e+07   
+         asset.buyer.credit_level_pay_balance_lag_auto_a  domain.credit.balance_outstanding  \
+period                                                                                        
+2026-01                               25000000.0                               2.442971e+07   
+2026-02                               25000000.0                               2.411241e+07   
+2026-03                               25000000.0                               2.379807e+07   
+2026-04                               25000000.0                               2.348667e+07   
+2026-05                               25000000.0                               2.317816e+07   
 
          domain.credit.gross_collections  domain.credit.net_collections  \
 period                                                                    
