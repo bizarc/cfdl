@@ -24,6 +24,17 @@
     "constants": {},
     "random": {}
   },
+  "accounts": [
+    {
+      "name": "asset.tower.balance",
+      "owner_entity": "asset.tower",
+      "side": "owed",
+      "init": {
+        "lang": "cfdl",
+        "src": "3000000 * (1 - 1)"
+      }
+    }
+  ],
   "lifecycles": [
     {
       "id": "cre.property",
@@ -269,6 +280,7 @@
       "direction": "outflow",
       "currency": "USD",
       "category": "financing.debt.principal",
+      "moves": "asset.tower.balance",
       "schedule": {
         "kind": "Every",
         "every": "monthly",
@@ -277,7 +289,7 @@
       },
       "amount": {
         "lang": "cfdl",
-        "src": "if(months_between(parse_date(\"2026-01-01\"), time.date) < 0.0, 0.0, -ppmt(0.06 / 12.0, months_between(parse_date(\"2026-01-01\"), time.date) - 0.0 + 1.0, 300.0, 3000000.0)) + if(0.0 == 1.0 and months_between(time.date, parse_date(\"2027-12-01\")) == 0.0, -fv(0.06 / 12.0, months_between(parse_date(\"2026-01-01\"), time.date) - 0.0 + 1.0, pmt(0.06 / 12.0, 300.0, 3000000.0), 3000000.0), 0.0)"
+        "src": "if(0.0 == 1.0 and months_between(time.date, parse_date(\"2027-12-01\")) == 0.0, prev.asset.tower.balance, if(months_between(parse_date(\"2026-01-01\"), time.date) < 0.0, 0.0, -ppmt(0.06 / 12.0, months_between(parse_date(\"2026-01-01\"), time.date) - 0.0 + 1.0, 300.0, 3000000.0)))"
       },
       "active_when": {
         "lang": "cfdl",
@@ -311,6 +323,7 @@
       "direction": "inflow",
       "currency": "USD",
       "category": "financing.debt.proceeds",
+      "moves": "asset.tower.balance",
       "schedule": {
         "kind": "OnDate",
         "on": "2026-01-01"

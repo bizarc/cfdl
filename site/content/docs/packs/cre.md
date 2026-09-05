@@ -23,7 +23,7 @@ each classified so it lands on the right line of a
 <!-- cfdl:generated contracts-cre -->
 | Contract | Terms it reads | Streams it emits |
 |---|---|---|
-| `cre.construction_stub` | `amount` | `cre.construction.draws` |
+| `cre.construction_stub` | `amount`, `funded_at_close`, `principal` | `cre.construction.draws` |
 | `cre.lease` | `rent`, `rent_year` | `cre.lease.base_rent` |
 | `cre.revenue_line` | `amount`, `amount_year`, `growth_rate` | `cre.revenue.line[.suffix]` |
 | `cre.exit_cap` | `cap_rate`, `income` | `cre.exit.sale` |
@@ -36,7 +36,7 @@ each classified so it lands on the right line of a
 | `cre.percentage_rent` | `breakpoint_year`, `overage_pct`, `sales_growth`, `sales_year` | `cre.pct_rent.overage[.suffix]` |
 | `cre.exit_forward` | `cap_rate`, `selling_costs` | `cre.exit.proceeds`, `cre.exit.selling_costs` |
 | `cre.permanent_debt` | `balloon_at_maturity`, `funded_at_close`, `interest_rate`, `payment_frequency`, `principal` | `cre.debt.proceeds[.suffix]`, `cre.debt.interest[.suffix]`, `cre.debt.principal[.suffix]` |
-| `cre.construction_loan` | `capitalize_interest`, `draw_accrual_fraction`, `draw_curve`, `equity_commitment`, `interest_rate` | `cre.construction.equity_draw[.suffix]`, `cre.construction.loan_draw[.suffix]`, `cre.construction.interest[.suffix]` |
+| `cre.construction_loan` | `capitalize_interest`, `draw_accrual_fraction`, `draw_curve`, `equity_commitment`, `interest_rate` | `cre.construction.equity_draw[.suffix]`, `cre.construction.loan_draw[.suffix]`, `cre.construction.interest[.suffix]`, `cre.construction.capitalized_interest[.suffix]` |
 <!-- /cfdl:generated contracts-cre -->
 
 A contract can be declared more than once by giving it a suffix, so the pieces

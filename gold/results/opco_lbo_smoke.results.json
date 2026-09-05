@@ -1,7 +1,7 @@
 {
   "results_version": "0.13",
-  "model_hash": "be70c546e2e5bbfa908636b0b1c21d8ff5930b35717d23b2f5d40a7eb7edf25f",
-  "ledger_hash": "b242dea143412df9c0ca242ee85bcdcc9dd709c0c71cfe0e5224340a52e3bb9a",
+  "model_hash": "aebbe6353c86f3a7771ee8a861754fa72a76c10f14a58a648b7b6161f0d2222b",
+  "ledger_hash": "ec367a71e001beec6bfb4592a91e13d14160e03b395c9a8257cbf3eca99e0717",
   "engine": {
     "name": "cfdl-engine",
     "version": "0.9.0"
@@ -190,6 +190,39 @@
       }
     },
     "series": {
+      "account.asset.target.balance": {
+        "index": {
+          "calendar": "monthly",
+          "start": "2026-01-01",
+          "periods": 24
+        },
+        "values": [
+          3000000.0,
+          3000000.0,
+          3000000.0,
+          3000000.0,
+          3000000.0,
+          3000000.0,
+          2927100.802020178,
+          2853654.8600555076,
+          2779658.0735261017,
+          2705106.3110977253,
+          2629995.410451136,
+          2554321.1780496975,
+          2478079.388905248,
+          2401265.7863422153,
+          2323876.08175996,
+          2245905.9543933375,
+          2167351.0510714655,
+          2088206.9859746795,
+          2008469.3403896675,
+          1928133.662462768,
+          1847195.4669514166,
+          1765650.23497373,
+          1683493.413756211,
+          0.0
+        ]
+      },
       "asset.target.opco_capex_growth": {
         "index": {
           "calendar": "monthly",
@@ -2793,6 +2826,217 @@
         ]
       }
     },
+    "journal": [
+      {
+        "period": 0,
+        "date": "2026-01-01",
+        "actor": "stream:opco.debt.proceeds",
+        "action": "move",
+        "target": "asset.target.balance",
+        "outcome": "applied",
+        "amount": 3000000.0,
+        "pot_before": 0.0,
+        "pot_after": 3000000.0
+      },
+      {
+        "period": 6,
+        "date": "2026-07-01",
+        "actor": "stream:opco.debt.principal",
+        "action": "move",
+        "target": "asset.target.balance",
+        "outcome": "applied",
+        "amount": -72899.19798,
+        "pot_before": 3000000.0,
+        "pot_after": 2927100.80202
+      },
+      {
+        "period": 7,
+        "date": "2026-08-01",
+        "actor": "stream:opco.debt.principal",
+        "action": "move",
+        "target": "asset.target.balance",
+        "outcome": "applied",
+        "amount": -73445.941965,
+        "pot_before": 2927100.80202,
+        "pot_after": 2853654.860056
+      },
+      {
+        "period": 8,
+        "date": "2026-09-01",
+        "actor": "stream:opco.debt.principal",
+        "action": "move",
+        "target": "asset.target.balance",
+        "outcome": "applied",
+        "amount": -73996.786529,
+        "pot_before": 2853654.860056,
+        "pot_after": 2779658.073526
+      },
+      {
+        "period": 9,
+        "date": "2026-10-01",
+        "actor": "stream:opco.debt.principal",
+        "action": "move",
+        "target": "asset.target.balance",
+        "outcome": "applied",
+        "amount": -74551.762428,
+        "pot_before": 2779658.073526,
+        "pot_after": 2705106.311098
+      },
+      {
+        "period": 10,
+        "date": "2026-11-01",
+        "actor": "stream:opco.debt.principal",
+        "action": "move",
+        "target": "asset.target.balance",
+        "outcome": "applied",
+        "amount": -75110.900647,
+        "pot_before": 2705106.311098,
+        "pot_after": 2629995.410451
+      },
+      {
+        "period": 11,
+        "date": "2026-12-01",
+        "actor": "stream:opco.debt.principal",
+        "action": "move",
+        "target": "asset.target.balance",
+        "outcome": "applied",
+        "amount": -75674.232401,
+        "pot_before": 2629995.410451,
+        "pot_after": 2554321.17805
+      },
+      {
+        "period": 12,
+        "date": "2027-01-01",
+        "actor": "stream:opco.debt.principal",
+        "action": "move",
+        "target": "asset.target.balance",
+        "outcome": "applied",
+        "amount": -76241.789144,
+        "pot_before": 2554321.17805,
+        "pot_after": 2478079.388905
+      },
+      {
+        "period": 13,
+        "date": "2027-02-01",
+        "actor": "stream:opco.debt.principal",
+        "action": "move",
+        "target": "asset.target.balance",
+        "outcome": "applied",
+        "amount": -76813.602563,
+        "pot_before": 2478079.388905,
+        "pot_after": 2401265.786342
+      },
+      {
+        "period": 14,
+        "date": "2027-03-01",
+        "actor": "stream:opco.debt.principal",
+        "action": "move",
+        "target": "asset.target.balance",
+        "outcome": "applied",
+        "amount": -77389.704582,
+        "pot_before": 2401265.786342,
+        "pot_after": 2323876.08176
+      },
+      {
+        "period": 15,
+        "date": "2027-04-01",
+        "actor": "stream:opco.debt.principal",
+        "action": "move",
+        "target": "asset.target.balance",
+        "outcome": "applied",
+        "amount": -77970.127367,
+        "pot_before": 2323876.08176,
+        "pot_after": 2245905.954393
+      },
+      {
+        "period": 16,
+        "date": "2027-05-01",
+        "actor": "stream:opco.debt.principal",
+        "action": "move",
+        "target": "asset.target.balance",
+        "outcome": "applied",
+        "amount": -78554.903322,
+        "pot_before": 2245905.954393,
+        "pot_after": 2167351.051071
+      },
+      {
+        "period": 17,
+        "date": "2027-06-01",
+        "actor": "stream:opco.debt.principal",
+        "action": "move",
+        "target": "asset.target.balance",
+        "outcome": "applied",
+        "amount": -79144.065097,
+        "pot_before": 2167351.051071,
+        "pot_after": 2088206.985975
+      },
+      {
+        "period": 18,
+        "date": "2027-07-01",
+        "actor": "stream:opco.debt.principal",
+        "action": "move",
+        "target": "asset.target.balance",
+        "outcome": "applied",
+        "amount": -79737.645585,
+        "pot_before": 2088206.985975,
+        "pot_after": 2008469.34039
+      },
+      {
+        "period": 19,
+        "date": "2027-08-01",
+        "actor": "stream:opco.debt.principal",
+        "action": "move",
+        "target": "asset.target.balance",
+        "outcome": "applied",
+        "amount": -80335.677927,
+        "pot_before": 2008469.34039,
+        "pot_after": 1928133.662463
+      },
+      {
+        "period": 20,
+        "date": "2027-09-01",
+        "actor": "stream:opco.debt.principal",
+        "action": "move",
+        "target": "asset.target.balance",
+        "outcome": "applied",
+        "amount": -80938.195511,
+        "pot_before": 1928133.662463,
+        "pot_after": 1847195.466951
+      },
+      {
+        "period": 21,
+        "date": "2027-10-01",
+        "actor": "stream:opco.debt.principal",
+        "action": "move",
+        "target": "asset.target.balance",
+        "outcome": "applied",
+        "amount": -81545.231978,
+        "pot_before": 1847195.466951,
+        "pot_after": 1765650.234974
+      },
+      {
+        "period": 22,
+        "date": "2027-11-01",
+        "actor": "stream:opco.debt.principal",
+        "action": "move",
+        "target": "asset.target.balance",
+        "outcome": "applied",
+        "amount": -82156.821218,
+        "pot_before": 1765650.234974,
+        "pot_after": 1683493.413756
+      },
+      {
+        "period": 23,
+        "date": "2027-12-01",
+        "actor": "stream:opco.debt.principal",
+        "action": "move",
+        "target": "asset.target.balance",
+        "outcome": "applied",
+        "amount": -1683493.413756,
+        "pot_before": 1683493.413756,
+        "pot_after": 0.0
+      }
+    ],
     "annual_rollup": {
       "series": {
         "domain.opco.cfads": {

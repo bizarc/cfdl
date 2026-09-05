@@ -120,14 +120,24 @@ by arithmetic rather than by a rule. The published One Lincoln Street case is
 shipped twice, once built from primitives and once through this contract, and
 the two agree in all 48 cells with zero difference.
 
-**Interest is paid, not capitalized.** A capitalizing facility compounds and is
-a different recurrence — affine in the closing balance, so it collects rather
-than needing a solver — and is not modeled here.
+**The balance is an account** (`docs/42`): the loan opens `balance` at zero,
+owed by the project; each loan draw raises it and, when `capitalize_interest
+= 1`, so does the `cre.construction.capitalized_interest` accrual row — the
+interest the loan funds rather than the borrower pays, no cash moving. It
+publishes as `account.<subject>.balance`, and a trust or a project company
+holding several facilities reads their sum as `prev.<container>.balance`.
+The funded cost basis the equity split needs stays a private field.
 
 ### `cre.permanent_debt`
 
 A commercial mortgage on a stabilized property. Emits three streams — the
 whole instrument, per the contract design rules:
+
+**The balance is an account** (`docs/42`): the loan opens `balance` at zero
+when funded at close and the proceeds raise it to principal; a loan already
+outstanding when the model begins (`funded_at_close = 0`) opens at principal.
+Scheduled principal lowers it and the balloon pays what is left. It publishes
+as `account.<subject>.balance`.
 
 - `cre.debt.proceeds{.<id>}` — the draw at closing
   (`financing.debt.proceeds`)

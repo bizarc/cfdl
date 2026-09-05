@@ -24,6 +24,17 @@
     "constants": {},
     "random": {}
   },
+  "accounts": [
+    {
+      "name": "asset.microgrid.balance",
+      "owner_entity": "asset.microgrid",
+      "side": "owed",
+      "init": {
+        "lang": "cfdl",
+        "src": "1600000 * (1 - 1)"
+      }
+    }
+  ],
   "lifecycles": [
     {
       "id": "energy.facility",
@@ -532,6 +543,7 @@
       "direction": "outflow",
       "currency": "USD",
       "category": "financing.debt.principal",
+      "moves": "asset.microgrid.balance",
       "schedule": {
         "kind": "Every",
         "every": "monthly",
@@ -574,6 +586,7 @@
       "direction": "inflow",
       "currency": "USD",
       "category": "financing.debt.proceeds",
+      "moves": "asset.microgrid.balance",
       "schedule": {
         "kind": "OnDate",
         "on": "2026-01-01"

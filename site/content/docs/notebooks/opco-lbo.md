@@ -120,49 +120,49 @@ cf.head()
 ```
 
 ```
-shape: (60, 27)
+shape: (60, 28)
 ```
 
 ```
-         asset.target.opco_capex_growth  asset.target.opco_opex_growth  \
-period                                                                   
-2026-01                             1.0                       1.000000   
-2026-02                             1.0                       1.003274   
-2026-03                             1.0                       1.006558   
-2026-04                             1.0                       1.009853   
-2026-05                             1.0                       1.013159   
+         account.asset.target.balance  asset.target.opco_capex_growth  \
+period                                                                  
+2026-01                    21000000.0                             1.0   
+2026-02                    21000000.0                             1.0   
+2026-03                    21000000.0                             1.0   
+2026-04                    21000000.0                             1.0   
+2026-05                    21000000.0                             1.0   
 
-         asset.target.opco_revenue_growth  domain.opco.cfads  domain.opco.debt_service_coverage  \
-period                                                                                            
-2026-01                          1.000000     -745379.794521                          -5.010957   
-2026-02                          1.004868      302754.171794                           2.035322   
-2026-03                          1.009759      304616.658715                           2.047843   
-2026-04                          1.014674      306490.722025                           2.060442   
-2026-05                          1.019613      308376.426292                           2.073119   
+         asset.target.opco_opex_growth  asset.target.opco_revenue_growth  domain.opco.cfads  \
+period                                                                                        
+2026-01                       1.000000                          1.000000     -745379.794521   
+2026-02                       1.003274                          1.004868      302754.171794   
+2026-03                       1.006558                          1.009759      304616.658715   
+2026-04                       1.009853                          1.014674      306490.722025   
+2026-05                       1.013159                          1.019613      308376.426292   
 
-         domain.opco.debt_service_periodic  domain.opco.ebitda_periodic  \
-period                                                                    
-2026-01                           148750.0                350000.000000   
-2026-02                           148750.0                352739.619707   
-2026-03                           148750.0                355495.966170   
-2026-04                           148750.0                358269.131912   
-2026-05                           148750.0                361059.209939   
+         domain.opco.debt_service_coverage  domain.opco.debt_service_periodic  \
+period                                                                          
+2026-01                          -5.010957                           148750.0   
+2026-02                           2.035322                           148750.0   
+2026-03                           2.047843                           148750.0   
+2026-04                           2.060442                           148750.0   
+2026-05                           2.073119                           148750.0   
 
-         domain.opco.lfcf_periodic  domain.opco.net_cash_from_financing  \
-period                                                                    
-2026-01               2.010587e+07                           20851250.0   
-2026-02               1.540042e+05                            -148750.0   
-2026-03               1.558667e+05                            -148750.0   
-2026-04               1.577407e+05                            -148750.0   
-2026-05               1.596264e+05                            -148750.0   
+         domain.opco.ebitda_periodic  domain.opco.lfcf_periodic  \
+period                                                            
+2026-01                350000.000000               2.010587e+07   
+2026-02                352739.619707               1.540042e+05   
+2026-03                355495.966170               1.558667e+05   
+2026-04                358269.131912               1.577407e+05   
+2026-05                361059.209939               1.596264e+05   
 
-         domain.opco.net_cash_from_investing  ...  stream.opco.capex.line  \
+         domain.opco.net_cash_from_financing  ...  stream.opco.capex.line  \
 period                                        ...                           
-2026-01                        -3.363000e+07  ...           -30000.000000   
-2026-02                        -3.014603e+04  ...           -30146.026517   
-2026-03                        -3.029276e+04  ...           -30292.763825   
-2026-04                        -3.044022e+04  ...           -30440.215385   
-2026-05                        -3.058838e+04  ...           -30588.384673   
+2026-01                           20851250.0  ...           -30000.000000   
+2026-02                            -148750.0  ...           -30146.026517   
+2026-03                            -148750.0  ...           -30292.763825   
+2026-04                            -148750.0  ...           -30440.215385   
+2026-05                            -148750.0  ...           -30588.384673   
 
          stream.opco.debt.interest  stream.opco.debt.principal  stream.opco.debt.proceeds  \
 period                                                                                      
@@ -196,7 +196,7 @@ period
 2026-04                           -5.863220e+03  
 2026-05                           -5.894004e+03  
 
-[5 rows x 27 columns]
+[5 rows x 28 columns]
 ```
 
 ```python

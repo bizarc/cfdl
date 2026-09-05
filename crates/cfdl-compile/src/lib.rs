@@ -6915,7 +6915,11 @@ fn lower_contract_streams(
                 // The expander hands over the bare term name, `contract.`
                 // already stripped.
                 let resolver = |key: &str| -> Option<String> {
-                    contract.terms.get(key).map(|t| t.value.trim().to_string())
+                    contract
+                        .terms
+                        .get(key)
+                        .map(|t| t.value.trim().to_string())
+                        .or_else(|| decl.defaults.get(key).cloned())
                 };
                 let init = if decl.init.is_empty() {
                     None

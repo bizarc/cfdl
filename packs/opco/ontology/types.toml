@@ -253,6 +253,7 @@ type_id = "OpCo.Contract.TermDebt"
 refines = "Contract.Debt"
 contract_name = "opco.term_debt"
 subject_family = "asset"
+side = "pays"
 parties = ["borrower", "lender"]
 
 

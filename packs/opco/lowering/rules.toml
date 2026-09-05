@@ -30,6 +30,17 @@
 # Operating lines.
 # ---------------------------------------------------------------------------
 
+
+# THE BALANCE IS AN ACCOUNT (docs/42 §3.5): owed by the company, raised by the
+# proceeds, lowered by scheduled principal, and paid off in full at term end.
+[[accounts]]
+contract_name = "opco.term_debt"
+name = "balance"
+init = "{{contract.principal}} * (1 - {{contract.funded_at_close}})"
+
+[accounts.defaults]
+funded_at_close = "1"
+
 [[rules]]
 # A DRIVER MAY VARY OVER TIME. `growth_rate` and `tax_rate` are scalars, which
 # is right for a stable business and wrong for the thing intrinsic valuation
@@ -214,6 +225,7 @@ pct_of_revenue = "0"
 id = "opco_term_debt_proceeds"
 contract_name = "opco.term_debt"
 line = "proceeds"
+account = "balance"
 stream_name = "opco.debt.proceeds{{contract.dot_suffix}}"
 owner_entity = "${subject}"
 direction = "inflow"
@@ -246,12 +258,13 @@ interest_only_months = "0"
 id = "opco_term_debt_principal"
 contract_name = "opco.term_debt"
 line = "principal"
+account = "balance"
 stream_name = "opco.debt.principal{{contract.dot_suffix}}"
 owner_entity = "${subject}"
 direction = "outflow"
 category = "financing.debt.principal"
 # Scheduled amortization plus the balloon (remaining balance) at term_end.
-amount_expr = "if({{time.elapsed_periods}} < {{whole_periods.interest_only_months}}, 0, -ppmt({{contract.interest_rate}} / {{model.accrual_divisor}}, {{time.elapsed_periods}} - {{whole_periods.interest_only_months}} + 1, {{whole_periods.amortization_months}}, {{contract.principal}})) + if({{time.periods_to_term_end}} == 0, -fv({{contract.interest_rate}} / {{model.accrual_divisor}}, {{time.elapsed_periods}} - {{whole_periods.interest_only_months}} + 1, pmt({{contract.interest_rate}} / {{model.accrual_divisor}}, {{whole_periods.amortization_months}}, {{contract.principal}}), {{contract.principal}}), 0)"
+amount_expr = "if({{time.periods_to_term_end}} == 0, prev.balance, if({{time.elapsed_periods}} < {{whole_periods.interest_only_months}}, 0, -ppmt({{contract.interest_rate}} / {{model.accrual_divisor}}, {{time.elapsed_periods}} - {{whole_periods.interest_only_months}} + 1, {{whole_periods.amortization_months}}, {{contract.principal}})))"
 schedule_kind = "every"
 schedule_from = "{{contract.term_start}}"
 schedule_to = "{{contract.term_end}}"

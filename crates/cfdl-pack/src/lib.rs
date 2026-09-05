@@ -1599,6 +1599,10 @@ pub struct AccountDecl {
     pub name: String,
     #[serde(default)]
     pub init: String,
+    /// Defaults for the terms `init` reads when the contract does not state
+    /// them, as on a rule: `funded_at_close = "1"`.
+    #[serde(default)]
+    pub defaults: BTreeMap<String, String>,
     #[serde(default)]
     pub when: BTreeMap<String, WhenValue>,
     #[serde(default)]
@@ -2147,6 +2151,7 @@ impl PackRegistry {
             validate_terms_against_ontology(
                 &ontology,
                 &lowering_rules,
+                &account_decls,
                 &validations,
                 &templates,
                 &source,
@@ -3444,6 +3449,7 @@ fn template_term_names(body: &str) -> Vec<String> {
 fn validate_terms_against_ontology(
     ontology: &PackOntology,
     rules: &[LoweringRule],
+    account_decls: &[AccountDecl],
     validations: &[PackValidation],
     templates: &[PackTemplate],
     source: &str,
@@ -3566,6 +3572,40 @@ fn validate_terms_against_ontology(
                         template.id
                     )));
                 }
+            }
+        }
+    }
+    // EVERY REFINEMENT OPENS THE ACCOUNTS ITS MASTERS DECLARE (docs/42 §3.5,
+    // §5 step 6): a debt has a balance, so a debt refinement says what it
+    // opens at, and at least one of its rows moves it. Checked on the
+    // decls' names, not their selection — a decl that never applies is the
+    // compiler's `E1385` at the instance.
+    for contract in &ontology.contracts {
+        let Some(rule_name) = contract.contract_name.as_deref() else {
+            continue;
+        };
+        for account in merged.effective_accounts(&contract.type_id) {
+            let opened = account_decls
+                .iter()
+                .any(|d| d.contract_name == rule_name && d.name == account.name);
+            if !opened {
+                return Err(PackLoadError {
+                    message: format!(
+                        "Ontology '{source}': contract type '{}' refines a master that declares account '{}', and its lowering file does not open it. Add `[[accounts]] contract_name = \"{rule_name}\" name = \"{}\"` with the balance at the timeline's first period as `init` (docs/42 §3.5).",
+                        contract.type_id, account.name, account.name
+                    ),
+                });
+            }
+            let moved = rules.iter().any(|r| {
+                r.contract_name == rule_name && r.account.as_deref() == Some(account.name.as_str())
+            });
+            if !moved {
+                return Err(PackLoadError {
+                    message: format!(
+                        "Ontology '{source}': contract type '{}' opens account '{}' and no rule moves it; a balance nothing moves is a number, not a claim (docs/42 §3.5).",
+                        contract.type_id, account.name
+                    ),
+                });
             }
         }
     }
@@ -5749,16 +5789,28 @@ refines = "Contract.Debt"
         };
 
         // A master's field, reached by inheritance, and the declaration keys.
-        let fine = rule(
+        let mut fine = rule(
             "{{contract.principal}} * {{contract.interest_rate}} / 12",
             &[],
         );
-        validate_terms_against_ontology(&ontology, &[fine], &[], &[], "test")
+        // A debt refinement opens the balance its master declares and moves
+        // it (docs/42 §3.5); the loader requires both.
+        fine.account = Some("balance".to_string());
+        let opens = [AccountDecl {
+            contract_name: "t.mortgage".to_string(),
+            name: "balance".to_string(),
+            init: "{{contract.principal}}".to_string(),
+            defaults: BTreeMap::new(),
+            when: BTreeMap::new(),
+            when_stated: Vec::new(),
+            when_unstated: Vec::new(),
+        }];
+        validate_terms_against_ontology(&ontology, &[fine], &opens, &[], &[], "test")
             .expect("inherited terms are fields");
 
         // A key no type in the chain declares.
         let reads = rule("{{contract.principal}} * {{contract.coupon}}", &[]);
-        let err = validate_terms_against_ontology(&ontology, &[reads], &[], &[], "test")
+        let err = validate_terms_against_ontology(&ontology, &[reads], &[], &[], &[], "test")
             .expect_err("an undeclared term is refused");
         assert!(
             err.message.contains("reads term 'coupon'"),
@@ -5768,13 +5820,13 @@ refines = "Contract.Debt"
 
         // ...or defaults.
         let defaults = rule("{{contract.principal}}", &[("fee_bps", "0")]);
-        let err = validate_terms_against_ontology(&ontology, &[defaults], &[], &[], "test")
+        let err = validate_terms_against_ontology(&ontology, &[defaults], &[], &[], &[], "test")
             .expect_err("a default for an undeclared term is refused");
         assert!(err.message.contains("'fee_bps'"), "{}", err.message);
 
         // A `periods.` conversion reaches a term too.
         let periods = rule("{{periods.grace_months}}", &[]);
-        let err = validate_terms_against_ontology(&ontology, &[periods], &[], &[], "test")
+        let err = validate_terms_against_ontology(&ontology, &[periods], &[], &[], &[], "test")
             .expect_err("a converted term is still a term");
         assert!(err.message.contains("'grace_months'"), "{}", err.message);
 
@@ -5793,7 +5845,7 @@ min = 0.0
             "test",
         )
         .expect("validation parses");
-        let err = validate_terms_against_ontology(&ontology, &[], &validation, &[], "test")
+        let err = validate_terms_against_ontology(&ontology, &[], &[], &validation, &[], "test")
             .expect_err("a validation on an undeclared term is refused");
         assert!(
             err.message.contains("checks term 'coupon'"),
@@ -5809,7 +5861,7 @@ min = 0.0
             body: "contract t.mortgage.a {\n  term ${term_start}..${term_end}\n  terms {\n    principal = ${principal}\n    coupon = ${coupon}\n  }\n}\n".to_string(),
             defaults: BTreeMap::new(),
         };
-        let err = validate_terms_against_ontology(&ontology, &[], &[], &[template], "test")
+        let err = validate_terms_against_ontology(&ontology, &[], &[], &[], &[template], "test")
             .expect_err("a template rendering an undeclared term is refused");
         assert!(
             err.message.contains("renders term 'coupon'"),

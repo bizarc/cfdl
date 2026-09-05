@@ -523,6 +523,7 @@ type_id = "CRE.Contract.PermanentDebt"
 refines = "Contract.Debt"
 contract_name = "cre.permanent_debt"
 subject_family = "asset"
+side = "pays"
 parties = ["borrower", "lender"]
 
 
@@ -574,6 +575,7 @@ type_id = "CRE.Contract.ConstructionLoan"
 refines = "Contract.Debt"
 contract_name = "cre.construction_loan"
 subject_family = "asset"
+side = "pays"
 parties = ["lender"]
 description = "A construction facility funded behind an equity commitment: equity draws first, the loan takes the balance once the commitment is exhausted, and interest accrues on the drawn balance through the build."
 
@@ -619,6 +621,13 @@ name = "equity_draw"
 
 [[contracts.lines]]
 name = "proceeds"
+
+# Interest the loan funds rather than the borrower pays: an `accrual` row that
+# raises the balance with no cash moving (docs/42 §4.2), when
+# `capitalize_interest = 1`.
+[[contracts.lines]]
+name = "capitalized_interest"
+optional = true
 
 [[contracts]]
 type_id = "CRE.Contract.Disposition"
