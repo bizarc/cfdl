@@ -1,0 +1,17 @@
+[
+  {
+    "code": "E1382_ACCOUNT_READ_WITHOUT_PREV",
+    "severity": "error",
+    "message": "Stream 'loan.interest' reads account 'asset.loan.balance' as a current value. A balance is readable inside a period only as its opening: write `prev.asset.loan.balance`.",
+    "file": "model.cfdl",
+    "span": {
+      "start_line": 13,
+      "start_col": 3,
+      "end_line": 13,
+      "end_col": 41
+    },
+    "path": null,
+    "hint": "The opening balance is the prior close — settled state. This period's close is the sum of the streams still being computed.",
+    "notes": []
+  }
+]

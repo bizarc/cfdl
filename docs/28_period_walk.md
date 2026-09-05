@@ -255,7 +255,8 @@ waterfall from reading its own output keeps these apart.
   is the mechanism half of every structured-finance trigger structure.
 - **Logic reads a balance**: `prev.<account>` is settled state, strictly
   backward under §4 — an OC/IC-style trigger tests a reserve balance the
-  same way a delinquency edge tests realised rent.
+  same way a delinquency edge tests realised rent. A stream reads it the
+  same way, as the opening balance interest accrues on (`docs/42` §3.3).
 
 ### 5.2 What does not change
 

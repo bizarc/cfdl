@@ -1,0 +1,239 @@
+{
+  "ir_version": "0.1",
+  "model": {
+    "name": "account-moved-by-streams",
+    "currency": "USD"
+  },
+  "time": {
+    "calendar": "monthly",
+    "start": "2026-01-01",
+    "periods": 8
+  },
+  "phases": [],
+  "entities": [
+    {
+      "id": "9ffb8630a7775dd1bab66e6b45ee1f8f",
+      "symbol": "asset.loan",
+      "type": "Asset.Financial",
+      "fields": {},
+      "state": {}
+    },
+    {
+      "id": "1cf9f2f5ecdc0a62bc79ff3c05e92cb4",
+      "symbol": "party.lender",
+      "type": "core.Entity",
+      "fields": {},
+      "state": {}
+    }
+  ],
+  "assumptions": {
+    "constants": {},
+    "random": {}
+  },
+  "accounts": [
+    {
+      "name": "asset.loan.balance",
+      "owner_entity": "asset.loan",
+      "side": "owed",
+      "init": {
+        "lang": "cfdl",
+        "src": "1000000"
+      }
+    },
+    {
+      "name": "party.lender.receivable",
+      "owner_entity": "party.lender",
+      "side": "due",
+      "init": {
+        "lang": "cfdl",
+        "src": "1000000"
+      }
+    }
+  ],
+  "contracts": [],
+  "streams": [
+    {
+      "id": "a798e06096ab45e7aaa868ae923bbe5c",
+      "name": "lender.principal",
+      "owner": {
+        "symbol": "party.lender"
+      },
+      "direction": "inflow",
+      "currency": "USD",
+      "moves": "party.lender.receivable",
+      "schedule": {
+        "kind": "Every",
+        "every": "monthly",
+        "from": "2026-01-01",
+        "to": "2026-08-01"
+      },
+      "amount": {
+        "lang": "cfdl",
+        "src": "10000.0"
+      },
+      "active_when": {
+        "lang": "cfdl",
+        "src": "true"
+      },
+      "provenance": {
+        "source_file": "model.cfdl",
+        "source_span": {
+          "start_line": 44,
+          "start_col": 1,
+          "end_line": 48,
+          "end_col": 1
+        }
+      }
+    },
+    {
+      "id": "4d920b7e296f28bd77e89f85f8cb1dc8",
+      "name": "loan.interest",
+      "owner": {
+        "symbol": "asset.loan"
+      },
+      "direction": "outflow",
+      "currency": "USD",
+      "schedule": {
+        "kind": "Every",
+        "every": "monthly",
+        "from": "2026-01-01",
+        "to": "2026-08-01"
+      },
+      "amount": {
+        "lang": "cfdl",
+        "src": "prev.asset.loan.balance * 0.06 / 12.0"
+      },
+      "active_when": {
+        "lang": "cfdl",
+        "src": "true"
+      },
+      "provenance": {
+        "source_file": "model.cfdl",
+        "source_span": {
+          "start_line": 21,
+          "start_col": 1,
+          "end_line": 24,
+          "end_col": 1
+        }
+      }
+    },
+    {
+      "id": "c2f659bbe980e3b799eff013dc461057",
+      "name": "loan.loss",
+      "owner": {
+        "symbol": "asset.loan"
+      },
+      "direction": "writeoff",
+      "currency": "USD",
+      "moves": "asset.loan.balance",
+      "schedule": {
+        "kind": "Every",
+        "every": "monthly",
+        "from": "2026-06-01",
+        "to": "2026-06-01"
+      },
+      "amount": {
+        "lang": "cfdl",
+        "src": "5000.0"
+      },
+      "active_when": {
+        "lang": "cfdl",
+        "src": "true"
+      },
+      "provenance": {
+        "source_file": "model.cfdl",
+        "source_span": {
+          "start_line": 38,
+          "start_col": 1,
+          "end_line": 42,
+          "end_col": 1
+        }
+      }
+    },
+    {
+      "id": "a6c8113e95f660ed1af509e233fe41cc",
+      "name": "loan.pik",
+      "owner": {
+        "symbol": "asset.loan"
+      },
+      "direction": "accrual",
+      "currency": "USD",
+      "moves": "asset.loan.balance",
+      "schedule": {
+        "kind": "Every",
+        "every": "monthly",
+        "from": "2026-01-01",
+        "to": "2026-08-01"
+      },
+      "amount": {
+        "lang": "cfdl",
+        "src": "prev.asset.loan.balance * 0.01"
+      },
+      "active_when": {
+        "lang": "cfdl",
+        "src": "true"
+      },
+      "provenance": {
+        "source_file": "model.cfdl",
+        "source_span": {
+          "start_line": 32,
+          "start_col": 1,
+          "end_line": 36,
+          "end_col": 1
+        }
+      }
+    },
+    {
+      "id": "88c957ee64f204d3033f19f95006e80f",
+      "name": "loan.principal",
+      "owner": {
+        "symbol": "asset.loan"
+      },
+      "direction": "outflow",
+      "currency": "USD",
+      "moves": "asset.loan.balance",
+      "schedule": {
+        "kind": "Every",
+        "every": "monthly",
+        "from": "2026-01-01",
+        "to": "2026-08-01"
+      },
+      "amount": {
+        "lang": "cfdl",
+        "src": "10000.0"
+      },
+      "active_when": {
+        "lang": "cfdl",
+        "src": "true"
+      },
+      "provenance": {
+        "source_file": "model.cfdl",
+        "source_span": {
+          "start_line": 26,
+          "start_col": 1,
+          "end_line": 30,
+          "end_col": 1
+        }
+      }
+    }
+  ],
+  "events": [],
+  "options": [],
+  "runs": [
+    {
+      "kind": "deterministic"
+    }
+  ],
+  "required_observables": [],
+  "required_refs": [],
+  "provenance": {
+    "sources": [
+      "model.cfdl"
+    ],
+    "compiler": {
+      "name": "cfdl",
+      "version": "0.9.0",
+      "hash": "6bebad0d68f4babc5c564c4ea7ecc1f2"
+    }
+  }
+}

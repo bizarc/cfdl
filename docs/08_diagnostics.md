@@ -173,7 +173,8 @@ Fields that move:
 
 - `E1123_PREV_OUTSIDE_NEXT` — `prev` names a recurrence's own previous value and
   means nothing outside a `next`. A field's previous value is readable elsewhere
-  as `prev.<entity>.<field>`.
+  as `prev.<entity>.<field>`, and an account's opening balance as
+  `prev.<account>` (`docs/42` §3.3).
 - `E1125_NO_STATE_NAMESPACE` — an expression reads `state.<name>`. There is no
   such namespace: a value that changes over time is a field of the entity it
   describes, declared as `<name> init <expr> next <expr>` inside that entity's
@@ -267,6 +268,11 @@ Fields that move:
 - `E1375_UNKNOWN_LINE_ROLE` — a slice's or a statement row's `line` names a line no contract type in the active ontology produces. A line is a role a master names (`docs/40` §6) — `interest`, `rent`, `proceeds` — and each pack rule names the one it emits, so the hint offers the near miss or lists the lines the vocabulary can produce.
 - `E1376_UNKNOWN_REFERENCE` — a reference names something this model does not declare: a term of type `contract` or `account` (a guarantee's `covered`, a note's `principal_account`), or a waterfall step's `for contract`. Refused with the near miss rather than read as zero; a reference is what the compiler can check (`docs/40` §3).
 - `E1377_STEP_LINE_NOT_ALLOCATED` — a waterfall step pays `for contract <name> line <role>` and the contract's type does not declare that line allocated. A step pays what the structure allocates; a line a rule lowers is paid by the rule, and a step paying it would count the cash twice. The hint lists the type's allocated lines (`docs/40` §6).
+- `E1378_NONCASH_STREAM_MOVES_NOTHING` — a stream is `accrual` or `writeoff` and names no account. A non-cash stream is a movement of a balance and nothing else (`docs/42` §3.2): add `moves <account>`, or make it an inflow or outflow if money actually moves.
+- `E1379_NONCASH_STREAM_CATEGORY` — an `accrual` or `writeoff` stream carries a cash flow category. The category roots classify cash; a non-cash stream is excluded from every cash fold, so a category on it would be a claim it cannot keep.
+- `E1380_UNKNOWN_ACCOUNT_MOVED` — `moves <name>` names an account declared neither on the stream's entity nor as a structure account. Declare it (`account <name> owed|due [init <expr>]` in the entity block, or at the model level) or correct the name; unrejected the movement would land nowhere.
+- `E1381_MOVED_ACCOUNT_HAS_NO_SIDE` — a cash stream moves an account that declares no side. Whether an inflow raises or lowers a balance follows from `owed` (a liability of its owner) or `due` (a receivable); without one the direction of the movement is undefined.
+- `E1382_ACCOUNT_READ_WITHOUT_PREV` — an expression reads an account as a current value (`asset.loan.balance`). A balance is readable inside a period only as its opening, `prev.<account>` — the prior close, settled state. This period's close is the sum of streams still being computed and does not exist yet (`docs/42` §3.3).
 - `E1364_SLICE_CATEGORY_ROOT` — a slice's category selector is not rooted in operating, investing or financing. A selector that could never match anything is a typo, not a choice.
 - `E1371_UNKNOWN_CONTRACT_TERM` — a contract states a term its type does not declare. The roster is the pack type's own terms plus its masters' (`docs/40` §3); a term outside it is read by no rule, so before this check a misspelled `escalation` was a lease that never escalated. The hint names the near miss, or lists the type's terms.
 - `E1372_MISSING_CONTRACT_TERM` — a contract omits a term its type requires, or states none of a group of alternatives (`one_of`: a lease's rent is `rent` or `rent_year`). Checked against the effective roster before any rule is expanded; `E5006` remains the rule-consumption backstop for a term a rule reads with no default.

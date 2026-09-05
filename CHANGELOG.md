@@ -8,6 +8,23 @@ This project follows Semantic Versioning: https://semver.org/
 
 ## [Unreleased]
 
+**The balance is an account (`docs/42`, first PR).** The account is
+generalized to the balance an agreement owes or is due: an entity may own
+one (`account balance owed init 1000000` in its block, named
+`asset.loan.balance`), a stream may `moves` it, and a stream's direction is
+one of `inflow`, `outflow`, `accrual`, `writeoff` — the last two a claim
+raised or extinguished with no money moving, published as series and
+excluded from every cash total, category fold and valuation. Whether a
+cash stream raises or lowers the balance follows from the account's side
+(`owed` / `due`); an accrual raises and a write-off lowers on either side.
+A stream reads the opening balance as `prev.<account>`; `init` is the
+first period's opening and defaults to zero, so `prev.<account>` is never
+absent. Every movement is a `move` journal line naming the stream. Three
+keywords (`accrual`, `writeoff`, `moves`); `E1378`–`E1382`. A model kept
+on the column order by a forward-reaching read is refused if a stream
+moves an account, rather than publishing zeros. Not yet: the relation
+fold, the pack side, retirement as a write-off.
+
 **The level-pay pool's balance is its state (`docs/40` §3, stage 6
 remainder).** `credit.pool_level_pay` carries one field-only rule for its
 opening balance — `credit_level_pay_balance_<instance>`, filling the

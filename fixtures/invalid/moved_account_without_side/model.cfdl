@@ -1,0 +1,15 @@
+version 0.1
+model "moved-account-without-side"
+time calendar monthly from 2026-01 for 6
+
+entity asset loan : Asset.Financial {
+  account balance init 1000000
+}
+
+// Whether an outflow raises or lowers the balance follows from its side, and
+// the account declares none.
+stream loan.principal on entity asset.loan outflow currency USD {
+  schedule every month from 2026-01 to 2026-06
+  amount = 10000
+  moves balance
+}

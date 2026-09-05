@@ -360,6 +360,16 @@ fn walk_matches_the_column_order() {
         }) || ir_value["entities"].as_array().is_some_and(|xs| {
             xs.iter()
                 .any(|e| reads_settled_state(e["rules"].to_string()))
+        })
+        // A stream that moves an account, or reads one's opening, needs the
+        // balance carried period by period (`docs/42` §3); the column order
+        // has no period to carry it through and the engine refuses it.
+        || ir_value["streams"].as_array().is_some_and(|xs| {
+            xs.iter().any(|s| {
+                s.get("moves").is_some()
+                    || reads_settled_state(s["amount"].to_string())
+                    || reads_settled_state(s["active_when"].to_string())
+            })
         });
         if logic_reads_cash {
             walk_only += 1;

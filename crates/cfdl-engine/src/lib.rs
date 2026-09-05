@@ -72,6 +72,10 @@ pub enum EngineError {
     /// (`E1134_SERIES_READ_IN_LOGIC`); the engine refuses it too, because IR
     /// reaches the engine from paths the compiler never saw.
     SeriesReadInLogic(String),
+    /// A stream moves or reads an account, and a forward-reaching read keeps
+    /// the model on the column order, where no balance is carried. Refused
+    /// rather than published as zeros (`docs/42` §3).
+    AccountsNeedTheWalk(String),
 }
 
 impl std::fmt::Display for EngineError {
@@ -83,6 +87,7 @@ impl std::fmt::Display for EngineError {
             EngineError::AssumptionCycle(msg) => write!(f, "{msg}"),
             EngineError::UnknownName(msg) => write!(f, "unresolved name: {msg}"),
             EngineError::SeriesReadInLogic(msg) => write!(f, "{msg}"),
+            EngineError::AccountsNeedTheWalk(msg) => write!(f, "{msg}"),
             EngineError::InvalidDate(value) => write!(f, "invalid ISO date: {value}"),
             EngineError::InvalidRunConfig(message) => write!(f, "invalid run config: {message}"),
             EngineError::Schedule(message) => write!(f, "unsupported schedule: {message}"),
@@ -973,6 +978,40 @@ type WalkOutput = (
     Vec<JournalEntry>,
 );
 
+/// What period `t`'s streams moved, per account: (stream, delta), signed
+/// for the account's side (`docs/42` §3.2). A cash stream's signed amount
+/// raises a liability its owner owes and lowers a receivable its owner is
+/// due; an accrual raises and a write-off lowers, whichever side.
+fn account_moves_at(
+    ir: &Ir,
+    columns: &BTreeMap<String, Vec<f64>>,
+    account_side: &BTreeMap<&str, &str>,
+    t: usize,
+) -> BTreeMap<String, Vec<(String, f64)>> {
+    let mut moves: BTreeMap<String, Vec<(String, f64)>> = BTreeMap::new();
+    for stream in &ir.streams {
+        let Some(account) = stream.moves.as_deref() else {
+            continue;
+        };
+        let Some(value) = columns.get(&stream.name).and_then(|c| c.get(t)).copied() else {
+            continue;
+        };
+        let delta = if streams::is_cash(stream) {
+            match account_side.get(account).copied() {
+                Some("due") => -value,
+                _ => value,
+            }
+        } else {
+            value
+        };
+        moves
+            .entry(account.to_string())
+            .or_default()
+            .push((stream.name.clone(), delta));
+    }
+    moves
+}
+
 /// An account's balance, period by period.
 ///
 /// `balance(t) = balance(t-1) + inflow(t)`, and draws are subtracted as a
@@ -1102,6 +1141,51 @@ fn walk_periods(
         .iter()
         .map(|a| (a.name.clone(), vec![0.0_f64; timeline.len()]))
         .collect();
+    // EACH ACCOUNT'S `init`: the balance at the timeline's first period,
+    // evaluated once against the run's inputs (`docs/42` §7). Absent means
+    // zero — a balance created during the run is raised by the cash that
+    // creates it.
+    let account_inits: Arc<BTreeMap<String, f64>> = Arc::new(
+        ir.accounts
+            .iter()
+            .enumerate()
+            .map(|(idx, account)| {
+                let value = prep
+                    .account_inits
+                    .get(idx)
+                    .and_then(|c| c.as_ref())
+                    .map(|compiled| {
+                        let env = build_expr_env(ir, None, config, 0, &timeline[0], base_inputs);
+                        match cfdl_expr::eval(compiled, &env) {
+                            Ok(ExprValue::Decimal(v)) => v,
+                            Ok(ExprValue::Int(v)) => v as f64,
+                            Ok(other) => {
+                                warnings.push(format!(
+                                    "Account '{}' init evaluated to {other:?}, which is not a number; opens at zero.",
+                                    account.name
+                                ));
+                                0.0
+                            }
+                            Err(err) => {
+                                warnings.push(format!(
+                                    "Account '{}' init failed to evaluate [{}]: {}; opens at zero.",
+                                    account.name, err.code, err.message
+                                ));
+                                0.0
+                            }
+                        }
+                    })
+                    .unwrap_or(0.0);
+                (account.name.clone(), value)
+            })
+            .collect(),
+    );
+    walk.observe_account_inits(Arc::clone(&account_inits));
+    let account_side: BTreeMap<&str, &str> = ir
+        .accounts
+        .iter()
+        .filter_map(|a| a.side.as_deref().map(|side| (a.name.as_str(), side)))
+        .collect();
 
     for t in 0..timeline.len() {
         // 0. THE CASH ALREADY SETTLED, handed over before this period's state
@@ -1138,6 +1222,20 @@ fn walk_periods(
         // 2. THIS PERIOD'S STREAMS, against the state just settled. The borrow
         //    of the walk ends with the period, so the next `step` may take it
         //    mutably again — sequential, not simultaneous.
+        //    Each account's OPENING this period — the prior close, or the
+        //    `init` in the first period — is what a stream reads as
+        //    `prev.<account>` (`docs/42` §3.3).
+        let opening_accounts: BTreeMap<String, f64> = account_balances
+            .iter()
+            .map(|(name, column)| {
+                let opening = if t == 0 {
+                    account_inits.get(name).copied().unwrap_or(0.0)
+                } else {
+                    column[t - 1]
+                };
+                (name.clone(), opening)
+            })
+            .collect();
         let (field_values, entity_state, stream_active) = walk.settled();
         for wave in 0..=max_wave {
             let wave_is_active = (0..ir.streams.len()).any(|idx| {
@@ -1170,6 +1268,7 @@ fn walk_periods(
                     warnings,
                     &mut refused,
                     Some(t),
+                    Some(&opening_accounts),
                 );
                 if let Some(column) = full.get_mut(&stream.name) {
                     column[t] = value;
@@ -1182,6 +1281,13 @@ fn walk_periods(
                 }
             }
         }
+
+        // 2b. WHAT THIS PERIOD'S STREAMS MOVED (`docs/42` §3.2). A cash
+        //     stream's signed amount raises a liability its owner owes and
+        //     lowers a receivable its owner is due; an accrual raises and a
+        //     write-off lowers, whichever side. Applied to the balance by the
+        //     stage below, one journal line each.
+        let moves = account_moves_at(ir, &full, &account_side, t);
 
         // 3. THE WATERFALL STAGE, over cash this period has produced and never
         //    interleaved with it. Accounts take their inflow, then each
@@ -1204,6 +1310,8 @@ fn walk_periods(
                 &curves,
                 &snapshot,
                 &prep.account_inflows,
+                &account_inits,
+                &moves,
                 &mut account_balances,
                 warnings,
             );
@@ -1243,6 +1351,7 @@ fn walk_periods(
                         warnings,
                         &mut refused,
                         None,
+                        None,
                     );
                 }
                 if let Some(slot) = full.get_mut(&stream.name) {
@@ -1258,6 +1367,7 @@ fn walk_periods(
         }
         for (t, date) in timeline.iter().enumerate() {
             let snapshot = Arc::new(full.clone());
+            let moves = account_moves_at(ir, &full, &account_side, t);
             stage.step(
                 ir,
                 config,
@@ -1269,6 +1379,8 @@ fn walk_periods(
                 &curves,
                 &snapshot,
                 &prep.account_inflows,
+                &account_inits,
+                &moves,
                 &mut account_balances,
                 warnings,
             );
@@ -1483,6 +1595,8 @@ pub(crate) struct ModelPrep<'a> {
     waves: Vec<usize>,
     /// Each account's compiled inflow, in `ir.accounts` order.
     account_inflows: Vec<Option<cfdl_expr::CompiledExpr>>,
+    /// Each account's compiled `init`, likewise; `None` opens at zero.
+    account_inits: Vec<Option<cfdl_expr::CompiledExpr>>,
     /// Why this model cannot be walked, when it cannot: a window somewhere
     /// reaches past the period being computed, and a walk has no such period
     /// yet. `None` means the walk runs it.
@@ -1519,12 +1633,29 @@ fn prepare_model<'a>(ir: &'a Ir, warnings: &mut Vec<String>) -> Result<ModelPrep
             })
         })
         .collect();
+    let account_inits: Vec<Option<cfdl_expr::CompiledExpr>> = ir
+        .accounts
+        .iter()
+        .map(|account| {
+            account.init.as_ref().and_then(|expr| {
+                cfdl_expr::compile_expr(&expr.src)
+                    .map_err(|err| {
+                        warnings.push(format!(
+                            "Account '{}' init failed to compile [{}]: {}; opens at zero.",
+                            account.name, err.code, err.message
+                        ));
+                    })
+                    .ok()
+            })
+        })
+        .collect();
     let walk_ineligible = walk_ineligible_reason(ir, &deps);
     Ok(ModelPrep {
         timeline,
         plans,
         waves,
         account_inflows,
+        account_inits,
         walk_ineligible,
     })
 }
@@ -1585,6 +1716,17 @@ fn run_deterministic(
         walked_refusals = BTreeMap::new();
         account_balances = BTreeMap::new();
         walked_waterfalls = None;
+        if let Some(moving) = ir.streams.iter().find(|s| s.moves.is_some()) {
+            // A stream that moves or reads a balance needs the balance
+            // carried period by period; the column order has no period to
+            // carry it through. Refused: a zero here is a wrong number.
+            return Err(EngineError::AccountsNeedTheWalk(format!(
+                "Stream '{}' moves account '{}', but a forward-reaching read keeps this model on the column order, where no balance is carried: {}",
+                moving.name,
+                moving.moves.as_deref().unwrap_or_default(),
+                prep.walk_ineligible.as_deref().unwrap_or_default()
+            )));
+        }
         if !ir.accounts.is_empty() {
             // A forward-reading model keeps the column order, and the column
             // order has no periods to carry a balance through. Said rather
@@ -1682,6 +1824,7 @@ fn run_deterministic(
                         &mut warnings,
                         &mut activation_refused,
                         None,
+                        None,
                     );
                 }
             }
@@ -1717,7 +1860,9 @@ fn run_deterministic(
             warn_if_cash_settles_in_tail(stream, &values, cash_periods, &mut warnings);
             let offset = discount_offset(&stream.schedule, &ir.time.calendar);
             stream_offsets.insert(stream.name.clone(), offset);
-            valued_streams.push((values[..cash_periods.min(values.len())].to_vec(), offset));
+            if streams::is_cash(stream) {
+                valued_streams.push((values[..cash_periods.min(values.len())].to_vec(), offset));
+            }
             record_stream(
                 stream,
                 &values,
@@ -1771,6 +1916,14 @@ fn run_deterministic(
         .iter()
         .filter_map(|s| s.category.as_deref().map(|c| (s.name.as_str(), c)))
         .collect();
+    // A non-cash stream is never folded into a money subtotal, by category
+    // or by name (`docs/42` §3.7).
+    let noncash: BTreeSet<&str> = ir
+        .streams
+        .iter()
+        .filter(|s| !streams::is_cash(s))
+        .map(|s| s.name.as_str())
+        .collect();
     let mut subtotal_money: BTreeMap<String, Vec<f64>> = BTreeMap::new();
     let mut subtotal_ratio: BTreeMap<String, Vec<Option<f64>>> = BTreeMap::new();
 
@@ -1780,6 +1933,9 @@ fn run_deterministic(
                 let sign = if spec.op == "negated_sum" { -1.0 } else { 1.0 };
                 let mut acc = vec![0.0_f64; cash_periods];
                 for (name, values) in &stream_series {
+                    if noncash.contains(name.as_str()) {
+                        continue;
+                    }
                     // A stream is folded if its CATEGORY is selected, or if it
                     // is named outright. Category first: it is what the pack
                     // meant, and it keeps a subtotal correct when the pack
@@ -1839,6 +1995,9 @@ fn run_deterministic(
                 };
                 let mut acc = vec![0.0_f64; cash_periods];
                 for (name, values) in &stream_series {
+                    if noncash.contains(name.as_str()) {
+                        continue;
+                    }
                     let by_category = stream_category
                         .get(name.as_str())
                         .is_some_and(|c| cfdl_expr::selector_matches_any(&spec.categories, c));
@@ -2115,6 +2274,9 @@ fn run_deterministic(
         }
     };
     for stream in &ir.streams {
+        if !streams::is_cash(stream) {
+            continue;
+        }
         if let Some(values) = stream_series.get(&stream.name) {
             add_owned(&stream.owner.symbol, values);
         }

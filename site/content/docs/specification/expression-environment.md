@@ -81,7 +81,7 @@ The host (compiler or engine) provides values under these roots:
 | `inputs` | assumption values (`assume` statements), including ones derived from other assumptions (§2.1) |
 | `prev` | a field's own previous value, bare — present inside that field's `next` only |
 | `prev.<entity>.<field>` | a field one period back — `prev.asset.tlb.balance`, inside a rule |
-| `prev.<account>` | an account's balance at the previous period, every allocation through it included — rules, guards, and step expressions; absent (not zero) at period 0 |
+| `prev.<account>` | an account's OPENING balance — the previous period's close, every allocation and movement through it included, or the account's `init` in the first period (`docs/42` §7). Readable in rules, guards, step expressions and stream amounts; a stream never reads a same-period close |
 | `available` | this period's netted stream cash of the waterfall's entity — waterfall `from` and step expressions |
 | `remaining` | what is left in the pot — present in waterfall step expressions only (§3.2) |
 | `paid` | `paid.<step>`, what an earlier waterfall step actually paid — steps only |

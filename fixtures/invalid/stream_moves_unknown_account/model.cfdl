@@ -1,0 +1,14 @@
+version 0.1
+model "stream-moves-unknown-account"
+time calendar monthly from 2026-01 for 6
+
+entity asset loan : Asset.Financial {
+  account balance owed init 1000000
+}
+
+// `balanse` is declared nowhere: not on the loan, not as a structure account.
+stream loan.principal on entity asset.loan outflow currency USD {
+  schedule every month from 2026-01 to 2026-06
+  amount = 10000
+  moves balanse
+}

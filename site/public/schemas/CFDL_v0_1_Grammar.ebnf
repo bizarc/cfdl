@@ -106,6 +106,7 @@ entity_stmt     = "entity" IDENT IDENT [ ":" qname ] [ entity_block ] ;
 entity_block    = "{" { entity_item } "}" ;
 
 entity_item     = entity_field
+                | entity_account
                 | part_of_stmt
                 | entity_state_stmt
                 | entity_lifecycle
@@ -136,6 +137,13 @@ assume_stmt     = "assume" IDENT ( "=" expr | "~" dist_expr ) ;
    `state <name>` inside an entity block is unrelated: it names the lifecycle
    state the entity opens in. --- *)
 entity_field    = IDENT ( "=" expr | "init" expr [ "next" expr ] ) ;
+
+(* A claim this entity owes or is due, rolled by the engine from the streams
+   that `moves` it (docs/42). `owed` is a liability of the entity, `due` a
+   receivable; `init` is the balance at the timeline's first period and
+   defaults to zero. Named `<entity>.<name>` — `asset.loan.balance`. *)
+entity_account  = "account" IDENT [ account_side ] [ "init" expr ] ;
+account_side    = "owed" | "due" ;
 (* --- curves: named date-indexed values, looked up via curve_value() --- *)
 curve_stmt      = "curve" IDENT [ curve_interp ] "{" curve_point { [ "," ] curve_point } "}" ;
 curve_interp    = "step" | "linear" ;
@@ -231,7 +239,10 @@ stream_effect_stmt = "stream" qname
                      "currency" IDENT
                      stream_block ;
 
-direction       = "inflow" | "outflow" ;
+(* `inflow` and `outflow` are cash. `accrual` and `writeoff` are not: a claim
+   raised or extinguished with no money moving (docs/42 §3.2). They publish as
+   series, enter no cash total, carry no category, and must `moves` an account. *)
+direction       = "inflow" | "outflow" | "accrual" | "writeoff" ;
 
 (* --- standalone streams --- *)
 stream_stmt     = "stream" qname
@@ -244,7 +255,13 @@ stream_block    = "{" { stream_item } "}" ;
 stream_item     = schedule_stmt
                 | amount_stmt
                 | active_stmt
+                | moves_stmt
                 ;
+
+(* The account this stream's amount moves: a bare name is a claim declared on
+   the owning entity, a qualified name any declared account. Whether a cash
+   stream raises or lowers it follows from the account's side. *)
+moves_stmt      = "moves" ( IDENT | qname ) ;
 
 active_stmt     = "active" "when" expr ;
 amount_stmt     = "amount" expr ;
@@ -332,12 +349,13 @@ lifecycle_edge  = IDENT "->" IDENT [ "when" expr ] [ action_block ] ;
 action_block    = "{" { state_action_stmt } "}" ;
 state_action_stmt = "set" IDENT "=" expr ;
 
-account_stmt    = "account" IDENT account_block ;
+account_stmt    = "account" IDENT [ account_side ] account_block ;
 
 account_block   = "{" { account_item } "}" ;
-account_item    = account_owner | account_from ;
+account_item    = account_owner | account_from | account_init ;
 account_owner   = "owner" entity_ref ;
 account_from    = "from" expr ;
+account_init    = "init" expr ;
 waterfall_step  = "pay" IDENT "to" entity_ref "=" expr ;
 
 (* --- schedules --- *)

@@ -4,7 +4,7 @@
 
 CFDL 0.9.0. Every model below compiles, and its IR and
 results are byte-asserted against goldens in CI (`fixtures/valid/`,
-155 models.
+156 models.
 
 `gold/ir/`, `gold/results/`). Each is single-purpose: the directory name
 says what it exercises. This is what right looks like — positive few-shot
@@ -103,6 +103,59 @@ stream cre.rent on entity asset.suite inflow currency USD {
 
 account position {
   from series_sum("cre.*", time.t, time.t)
+}
+```
+
+## account_moved_by_streams
+
+```cfdl
+version 0.1
+model "account-moved-by-streams"
+time calendar monthly from 2026-01 for 8
+
+// THE BALANCE IS AN ACCOUNT THE STREAMS MOVE (docs/42 §3). A loan the
+// borrower owes, rolled by the engine from what happened: principal paid
+// (cash, lowers it), interest capitalized (an accrual, raises it with no
+// money moving), a loss written off (lowers it with no money moving), and
+// interest that READS the opening balance — the prior close, or the init
+// in the first period. Nothing writes the balance.
+entity asset loan : Asset.Financial {
+  account balance owed init 1000000
+}
+
+// The lender's mirror: the same claim as a receivable, DUE. The same
+// direction word moves it the other way, because the side decides.
+entity party lender {
+  account receivable due init 1000000
+}
+
+stream loan.interest on entity asset.loan outflow currency USD {
+  schedule every month from 2026-01 to 2026-08
+  amount = prev.balance * 0.06 / 12
+}
+
+stream loan.principal on entity asset.loan outflow currency USD {
+  schedule every month from 2026-01 to 2026-08
+  amount = 10000
+  moves balance
+}
+
+stream loan.pik on entity asset.loan accrual currency USD {
+  schedule every month from 2026-01 to 2026-08
+  amount = prev.balance * 0.01
+  moves balance
+}
+
+stream loan.loss on entity asset.loan writeoff currency USD {
+  schedule every month from 2026-06 to 2026-06
+  amount = 5000
+  moves balance
+}
+
+stream lender.principal on entity party.lender inflow currency USD {
+  schedule every month from 2026-01 to 2026-08
+  amount = 10000
+  moves receivable
 }
 ```
 
@@ -4734,8 +4787,9 @@ time calendar monthly from 2026-01 for 12
 
 entity asset project {
   name = "Project"
-  // A FIELD's rule may read an account strictly backward; a stream's amount
-  // may not. The field carries the balance forward, the stream spends it.
+  // A FIELD's rule reads an account strictly backward — the prior close,
+  // or the init (zero here) in the first period. The field carries the
+  // interest forward and the stream spends it.
   reserve_interest init 0.0 next prev.dsra * 0.005
 }
 entity party sponsor { name = "Sponsor" }
@@ -4745,17 +4799,18 @@ entity party sponsor { name = "Sponsor" }
 // records that the reference EBITDA "includes interest earned on funded
 // reserve accounts (~$4,606 in year one), which CFDL does not model."
 //
-// THE SPELLING MATTERS. A stream's amount may NOT read `prev.<account>` —
-// that is `E1123_PREV_OUTSIDE_NEXT`, because `prev` outside a `next` means
-// nothing. `docs/03` is precise about where an account balance is readable:
-// rules, guards and step expressions. A field's `next` IS a rule, so the
-// field carries the balance forward and the stream reads the field.
+// THE SPELLING MATTERS. `prev.<account>` is the OPENING balance — the prior
+// close, or the account's init in the first period (`docs/42` §7), so the
+// top-up funds from period 0 with nothing guarded. A stream may read it
+// too since the balance generalized (`docs/42` §3.3); this fixture keeps the
+// field so the interest is a rule the reader can see carried forward.
 //
-// The pin: the reserve funds toward 3,000 out of 1,000/month of revenue, and
-// interest accrues on the PRIOR balance at 0.5% — 0 while the balance is 0,
-// 5.00 on the first 1,000, 10.03 on 2,005, then 15.00 a month once the
-// target is held. Reading the balance strictly backward is what keeps the
-// reserve and the interest it earns from being mutually circular.
+// The pin: the reserve funds toward 3,000 out of 1,000/month of revenue from
+// the first period, and interest accrues on the PRIOR balance at 0.5% — 0
+// in the first period, 5.00 on the first 1,000, 10.03 on 2,005, then 15.00
+// a month once the target is held. Reading the balance strictly backward is
+// what keeps the reserve and the interest it earns from being mutually
+// circular.
 
 // A debt service reserve funded to target out of operating cash.
 account dsra { }

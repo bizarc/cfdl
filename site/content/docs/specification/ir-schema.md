@@ -865,6 +865,10 @@ against it by `make ir-schema`.
           "type": "string",
           "description": "What this stream is economically (revenue, opex, debt_service, ...). Aggregation reads this rather than pattern-matching the name, so the meaning is declared once at the point of emission instead of being re-derived by every consumer. Must name a category the active pack declares (E5022). Absent when the stream is unclassified, which is legal and leaves it out of every category fold."
         },
+        "moves": {
+          "type": "string",
+          "description": "The account this stream's amount moves, by its declared name — `asset.loan.balance` for a claim declared in the entity's block, or a structure account's own name (docs/42 §3.2). Absent on a stream that changes nothing owed, which is most of them. A cash stream raises a liability its owner owes and lowers a receivable its owner is due; an accrual raises and a write-off lowers, whichever side."
+        },
         "schedule": {
           "$ref": "#/$defs/Schedule"
         },
@@ -884,8 +888,11 @@ against it by `make ir-schema`.
       "type": "string",
       "enum": [
         "inflow",
-        "outflow"
-      ]
+        "outflow",
+        "accrual",
+        "writeoff"
+      ],
+      "description": "`inflow` and `outflow` are cash. `accrual` and `writeoff` are not (docs/42 §3.2): a claim raised or extinguished with no money moving. They publish as series, move the account they name, and are excluded from every cash total, category fold and valuation."
     },
     "Schedule": {
       "type": "object",
@@ -1684,6 +1691,22 @@ against it by `make ir-schema`.
         "inflow": {
           "$ref": "#/$defs/Expr",
           "description": "What flows in each period. May be negative: an account fed a deal's whole net cash IS the deal's cumulative position, negative through the J-curve and positive after."
+        },
+        "owner_entity": {
+          "type": "string",
+          "description": "The entity whose claim this is, when the account was declared in its block — `asset.loan` for `asset.loan.balance` (docs/42 §3.6). Absent on a structure or party account."
+        },
+        "side": {
+          "type": "string",
+          "enum": [
+            "owed",
+            "due"
+          ],
+          "description": "From the owner's view: `owed` is a liability (an inflow that moves it raises it), `due` a receivable (an inflow lowers it). Required on an account a cash stream moves; a pack contract's account takes it from the master."
+        },
+        "init": {
+          "$ref": "#/$defs/Expr",
+          "description": "The balance at the timeline's first period. Absent means zero: a balance created during the run is raised from zero by the cash that creates it, and `prev.<account>` is never absent."
         }
       }
     },

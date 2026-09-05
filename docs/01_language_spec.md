@@ -607,7 +607,21 @@ stream asset.taxes on entity asset.sunset outflow currency USD {
 
 Rules:
 - Streams MUST be owned by exactly one entity.
-- Streams MUST declare direction: `inflow` or `outflow`.
+- Streams MUST declare direction: `inflow` or `outflow` for cash, or
+  `accrual` or `writeoff` for a movement of a balance with no money moving
+  (`docs/42` §3.2). An accrual raises a claim (capitalized construction
+  interest, a PIK coupon, an interest shortfall); a write-off extinguishes
+  one (a realized loss, a bond write-down). Both publish as series, are
+  excluded from every cash total, category fold and valuation, carry no
+  category (`E1379`), and MUST name the account they move (`E1378`).
+- A stream MAY say `moves <account>`: the account its amount moves — a
+  claim declared on its owning entity by bare name, or any declared account
+  by qualified name (`E1380`). Most streams move nothing. Whether a cash
+  stream raises or lowers the balance follows from the account's side
+  (§10.6), never from a word on the stream.
+- A stream MAY read an account's OPENING balance as `prev.<account>` — the
+  prior close, or the `init` in the first period. It never reads a
+  same-period close (`E1382`).
 - Streams MUST declare a currency.
 - Stream names MUST be qualified names with at least two segments (e.g., `cre.lease.base_rent`, `real_estate.ops_expense`).
 
@@ -762,6 +776,20 @@ account reserve {
   party owns at most one account. A party-owned balance is not an
   obligation — what is still owed under the rules is not in any account, it
   is simply not yet allocated.
+- **An entity may own an account** (`docs/42` §3.6): a claim declared in
+  its block, `account balance owed init 1000000`, named
+  `<entity>.<account>` — `asset.loan.balance`. Its side, `owed` (a
+  liability of the owner) or `due` (a receivable), decides which way a cash
+  stream that `moves` it changes it; a structure account may declare a side
+  the same way, after its name. A pack contract's account takes its side
+  from the master, so no modeller using a pack writes it.
+- `init <expr>` is the balance at the timeline's first period. It defaults
+  to zero: a balance outstanding when the model opens states it; one created
+  during the run is raised from zero by the cash that creates it, and
+  `prev.<account>` is never absent.
+- **Streams move it** (§9.1): `moves <account>` on an inflow or outflow, an
+  accrual or a write-off. Each movement is a journal line naming the stream
+  that caused it.
 - `from` is the per-period inflow, reading cash that has settled this
   period. It MAY be negative, and **the balance has no floor**: an account
   fed a deal's whole net cash IS the deal's cumulative position, negative
@@ -771,8 +799,13 @@ account reserve {
 The balance law, applied at each period:
 
 ```
-balance(t) = balance(t-1) + inflow(t) + allocated_in(t) - allocated_out(t)
+balance(t) = balance(t-1) + inflow(t) + moved(t) + allocated_in(t) - allocated_out(t)
+balance(-1) = init
 ```
+
+where `moved(t)` is what the streams naming this account moved: on an
+`owed` account an inflow raises and an outflow lowers, on a `due` account
+the reverse; an accrual raises and a write-off lowers on either side.
 
 Three uses:
 - **A waterfall draws from an account** — `from <account>` in place of a
@@ -784,10 +817,11 @@ Three uses:
   the reserve pattern's mechanism (fund to target, top up when short,
   release when over). `pay <step> to <party>` lands in that party's account
   when they own one, and behaves exactly as before when they do not.
-- **Logic reads a balance** — `prev.<account>` is settled state, strictly
-  backward: the balance at the previous period, every allocation through it
-  included. At period 0 there is no binding: before the model began is not
-  zero, it is unavailable.
+- **Logic, a step and a stream read a balance** — `prev.<account>` is
+  settled state, strictly backward: the balance at the previous period,
+  every allocation and movement through it included. In the first period it
+  is the `init`. A stream reads it too — interest on the opening balance is
+  the ordinary case — and nothing reads a same-period close.
 
 A step's series is the FLOW and the account's balance is the POSITION. The
 balance publishes as a non-cash series under `account.<name>`, never enters
@@ -1634,18 +1668,18 @@ These MUST compile to typed values in IR.
 A reserved word cannot be used as an identifier. The list is exhaustive and is
 checked against the lexer, so a word added to one appears in the other.
 
-### 18.1 In use (88)
+### 18.1 In use (91)
 
 Read by a production of the grammar:
 
-`account`, `activate`, `active`, `also`, `annual`, `as`, `assume`, `calendar`, `clip`, `contract`, `convention`, `currency`,
+`account`, `accrual`, `activate`, `active`, `also`, `annual`, `as`, `assume`, `calendar`, `clip`, `contract`, `convention`, `currency`,
 `curve`, `daily`, `day`, `days`, `deactivate`, `deterministic`, `effects`, `end`, `entity`, `eom`, `event`,
 `every`, `except`, `exercisable`, `exercise`, `false`, `following`, `for`, `from`, `import`, `in`, `inflow`,
-`LogNormal`, `metric`, `mid`, `model`, `modified_following`, `modified_preceding`, `monte_carlo`, `month`, `monthly`, `months`, `net`, `none`,
+`LogNormal`, `metric`, `mid`, `model`, `modified_following`, `modified_preceding`, `monte_carlo`, `month`, `monthly`, `months`, `moves`, `net`, `none`,
 `Normal`, `on`, `option`, `owner`, `outflow`, `pack`, `parties`, `payment`, `payoff`, `phase`, `phase_end`, `phase_enter`,
 `phase_start`, `preceding`, `quantile`, `quarter`, `quarterly`, `run`, `schedule`, `seed`, `set`, `slice`, `state`, `start`, `statement`, `stream`, `stub`,
 `term`, `terms`, `time`, `to`, `trials`, `Triangular`, `true`, `type`, `Uniform`, `use`, `version`,
-`waterfall`, `week`, `when`, `year`.
+`waterfall`, `week`, `when`, `writeoff`, `year`.
 
 ### 18.2 Reserved, read by no production (13)
 

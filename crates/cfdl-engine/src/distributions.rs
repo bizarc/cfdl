@@ -293,6 +293,9 @@ pub(crate) fn stream_cash_by_entity_at(
 ) -> BTreeMap<String, f64> {
     let mut own: BTreeMap<String, f64> = BTreeMap::new();
     for stream in &ir.streams {
+        if !streams::is_cash(stream) {
+            continue;
+        }
         if let Some(value) = stream_series.get(&stream.name).and_then(|v| v.get(t)) {
             *own.entry(stream.owner.symbol.clone()).or_insert(0.0) += value;
         }
@@ -433,6 +436,11 @@ impl WaterfallStage {
         curves: &BTreeMap<String, cfdl_expr::CurveDef>,
         streams: &Arc<BTreeMap<String, Vec<f64>>>,
         account_inflows: &[Option<cfdl_expr::CompiledExpr>],
+        // Each account's `init`: the balance carried into the first period.
+        account_inits: &BTreeMap<String, f64>,
+        // What this period's streams moved, per account: (stream, delta),
+        // already signed for the account's side (`docs/42` §3.2).
+        moves: &BTreeMap<String, Vec<(String, f64)>>,
         balances: &mut BTreeMap<String, Vec<f64>>,
         warnings: &mut Vec<String>,
     ) {
@@ -454,8 +462,36 @@ impl WaterfallStage {
                 warnings,
             );
             if let Some(column) = balances.get_mut(&account.name) {
-                let carried = if t == 0 { 0.0 } else { column[t - 1] };
+                let carried = if t == 0 {
+                    account_inits.get(&account.name).copied().unwrap_or(0.0)
+                } else {
+                    column[t - 1]
+                };
                 column[t] = carried + inflow;
+                // THE STREAMS THAT MOVE IT, each a journal line naming its
+                // cause: this scheduled principal, from this loan, lowered
+                // this balance by this much.
+                if let Some(moved) = moves.get(&account.name) {
+                    for (stream, delta) in moved {
+                        if *delta == 0.0 {
+                            continue;
+                        }
+                        let before = column[t];
+                        column[t] += delta;
+                        let mut entry = JournalEntry::new(
+                            t,
+                            &date_str,
+                            format!("stream:{stream}"),
+                            "move",
+                            account.name.clone(),
+                            "applied",
+                        );
+                        entry.amount = Some(round_amount(*delta));
+                        entry.pot_before = Some(round_amount(before));
+                        entry.pot_after = Some(round_amount(column[t]));
+                        self.journal.push(entry);
+                    }
+                }
                 if inflow != 0.0 {
                     let mut entry = JournalEntry::new(
                         t,
@@ -508,15 +544,20 @@ impl WaterfallStage {
             // (`fund to target` is `target - prev.<reserve>`). This period's
             // inflow and earlier allocations are NOT in it; they are this
             // period, and this period is not settled while it is being
-            // allocated. At period 0 there is no binding: before the model
-            // began is not zero, it is unavailable.
-            if t > 0 {
-                for account in &ir.accounts {
-                    if let Some(column) = balances.get(&account.name) {
-                        env.prev_states
-                            .entry(account.name.clone())
-                            .or_insert(ExprValue::Decimal(column[t - 1]));
-                    }
+            // allocated. In the first period it is the `init` (`docs/42`
+            // §7): an account without one opens at zero.
+            for account in &ir.accounts {
+                let opening = if t > 0 {
+                    balances.get(&account.name).map(|column| column[t - 1])
+                } else {
+                    // The first period's opening is the `init` (`docs/42`
+                    // §7); an account without one opens at zero.
+                    Some(account_inits.get(&account.name).copied().unwrap_or(0.0))
+                };
+                if let Some(opening) = opening {
+                    env.prev_states
+                        .entry(account.name.clone())
+                        .or_insert(ExprValue::Decimal(opening));
                 }
             }
 

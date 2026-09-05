@@ -233,12 +233,21 @@ pub(crate) struct StateWalk {
     /// balance the same way a delinquency edge tests realised rent — strictly
     /// backward, so at period `t` the binding is the balance at `t - 1`, every
     /// allocation through `t - 1` included, because those stage passes have
-    /// run. At period 0 there is no binding at all: before the model began is
-    /// not zero, it is unavailable.
+    /// run. In the first period the binding is the account's `init`
+    /// (`docs/42` §7): a balance outstanding when the model opens states it,
+    /// one created during the run opens at zero.
     settled_accounts: Arc<BTreeMap<String, Vec<f64>>>,
+    /// Each account's `init` — its opening in the first period, where there
+    /// is no prior close to read (`docs/42` §7).
+    account_inits: Arc<BTreeMap<String, f64>>,
 }
 
 impl StateWalk {
+    /// Hand the walk each account's initial balance, once.
+    pub(crate) fn observe_account_inits(&mut self, inits: Arc<BTreeMap<String, f64>>) {
+        self.account_inits = inits;
+    }
+
     /// Hand the walk the cash settled so far, before stepping the next period.
     pub(crate) fn observe_cash(&mut self, cash: Arc<BTreeMap<String, Vec<f64>>>) {
         self.settled_cash = cash;
@@ -445,6 +454,12 @@ impl StateWalk {
                     .entry(name.clone())
                     .or_insert(ExprValue::Decimal(column[t - 1]));
             }
+        } else {
+            for (name, init) in self.account_inits.iter() {
+                previous
+                    .entry(name.clone())
+                    .or_insert(ExprValue::Decimal(*init));
+            }
         }
 
         for entry in &self.prepared {
@@ -525,13 +540,18 @@ impl StateWalk {
         env.series = Arc::clone(&self.settled_cash);
         env.series_available_to = Some(t.saturating_sub(1));
         // A guard reads `prev.<account>` the way a rule does: the balance at
-        // `t - 1`, and no binding at all in the first period — before the
-        // model began is not zero, it is unavailable.
+        // `t - 1`, and the `init` in the first period (`docs/42` §7).
         if t > 0 {
             for (name, column) in self.settled_accounts.iter() {
                 env.prev_states
                     .entry(name.clone())
                     .or_insert(ExprValue::Decimal(column[t - 1]));
+            }
+        } else {
+            for (name, init) in self.account_inits.iter() {
+                env.prev_states
+                    .entry(name.clone())
+                    .or_insert(ExprValue::Decimal(*init));
             }
         }
         // THE MACHINE MOVES FIRST (`docs/28` §6.1). Each machined entity's
@@ -1342,6 +1362,7 @@ pub(crate) fn prepare_state_walk(
         periods,
         settled_cash: Arc::default(),
         settled_accounts: Arc::default(),
+        account_inits: Arc::default(),
     }
 }
 

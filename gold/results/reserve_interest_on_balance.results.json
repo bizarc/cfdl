@@ -1,19 +1,17 @@
 {
   "results_version": "0.13",
-  "model_hash": "5034a4cb624cb8802ddffed594af57dca32b55c5bd7e64ebe64e4443c8e45e70",
-  "ledger_hash": "67b4e69fad5145ee873570c0be16627ce42da0b3e838c5db1c009dc6e6b54e08",
+  "model_hash": "426296d5bff701779b9da4f1b5dbb54f92da8a1c24d4545fd829f1df617b9d25",
+  "ledger_hash": "0918a1e1d7293d55841b1e7572676c3a0971fe6a6e85de1275d36099aa161aef",
   "engine": {
     "name": "cfdl-engine",
     "version": "0.9.0"
   },
-  "warnings": [
-    "Stream 'funding.top_up' amount evaluation failed [EXPR_UNKNOWN_NAME]: unknown variable `prev.dsra`; using 0."
-  ],
+  "warnings": [],
   "deterministic": {
     "status": "ok",
     "metrics": {
       "entity.asset.project.total": {
-        "amount": 12135.025,
+        "amount": 12150.025,
         "currency": "USD"
       },
       "entity.dsra.total": {
@@ -21,22 +19,22 @@
         "currency": "USD"
       },
       "entity.party.sponsor.total": {
-        "amount": 9135.025,
+        "amount": 9150.025,
         "currency": "USD"
       },
       "model.npv": {
-        "amount": 11527.266236,
+        "amount": 11541.913549,
         "currency": "USD"
       },
       "model.total": {
-        "amount": 12135.025,
+        "amount": 12150.025,
         "currency": "USD"
       },
-      "model.wal_years": 0.543023,
+      "model.wal_years": 0.542661,
       "run.annual_discount_rate": 0.1,
       "run.periods_per_year": 12.0,
       "stream.ops.reserve_interest.total": {
-        "amount": 135.025,
+        "amount": 150.025,
         "currency": "USD"
       },
       "stream.ops.revenue.total": {
@@ -52,9 +50,9 @@
           "periods": 12
         },
         "values": [
-          0.0,
           1000.0,
           2005.0,
+          3000.0,
           3000.0,
           3000.0,
           3000.0,
@@ -74,9 +72,9 @@
         },
         "values": [
           0.0,
-          0.0,
           5.0,
           10.025,
+          15.0,
           15.0,
           15.0,
           15.0,
@@ -99,15 +97,15 @@
             "currency": "USD"
           },
           {
-            "amount": 1000.0,
-            "currency": "USD"
-          },
-          {
             "amount": 1005.0,
             "currency": "USD"
           },
           {
             "amount": 1010.025,
+            "currency": "USD"
+          },
+          {
+            "amount": 1015.0,
             "currency": "USD"
           },
           {
@@ -152,10 +150,6 @@
         },
         "values": [
           {
-            "amount": 0.0,
-            "currency": "USD"
-          },
-          {
             "amount": 1000.0,
             "currency": "USD"
           },
@@ -165,6 +159,10 @@
           },
           {
             "amount": 995.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
             "currency": "USD"
           },
           {
@@ -209,10 +207,6 @@
         },
         "values": [
           {
-            "amount": 1000.0,
-            "currency": "USD"
-          },
-          {
             "amount": 0.0,
             "currency": "USD"
           },
@@ -222,6 +216,10 @@
           },
           {
             "amount": 15.025,
+            "currency": "USD"
+          },
+          {
+            "amount": 1015.0,
             "currency": "USD"
           },
           {
@@ -270,15 +268,15 @@
             "currency": "USD"
           },
           {
-            "amount": 1000.0,
-            "currency": "USD"
-          },
-          {
             "amount": 1005.0,
             "currency": "USD"
           },
           {
             "amount": 1010.025,
+            "currency": "USD"
+          },
+          {
+            "amount": 1015.0,
             "currency": "USD"
           },
           {
@@ -324,10 +322,6 @@
         "entity": "asset.project",
         "values": [
           {
-            "amount": 1000.0,
-            "currency": "USD"
-          },
-          {
             "amount": 0.0,
             "currency": "USD"
           },
@@ -337,6 +331,10 @@
           },
           {
             "amount": 15.025,
+            "currency": "USD"
+          },
+          {
+            "amount": 1015.0,
             "currency": "USD"
           },
           {
@@ -382,10 +380,6 @@
         "entity": "asset.project",
         "values": [
           {
-            "amount": 0.0,
-            "currency": "USD"
-          },
-          {
             "amount": 1000.0,
             "currency": "USD"
           },
@@ -395,6 +389,10 @@
           },
           {
             "amount": 995.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
             "currency": "USD"
           },
           {
@@ -445,15 +443,15 @@
             "currency": "USD"
           },
           {
-            "amount": 0.0,
-            "currency": "USD"
-          },
-          {
             "amount": 5.0,
             "currency": "USD"
           },
           {
             "amount": 10.025,
+            "currency": "USD"
+          },
+          {
+            "amount": 15.0,
             "currency": "USD"
           },
           {
@@ -557,28 +555,6 @@
         "actor": "waterfall:funding",
         "action": "pay",
         "target": "top_up -> dsra",
-        "outcome": "applied",
-        "amount": 0.0,
-        "pot_before": 1000.0,
-        "pot_after": 1000.0
-      },
-      {
-        "period": 0,
-        "date": "2026-01-01",
-        "actor": "waterfall:funding",
-        "action": "pay",
-        "target": "residual -> party.sponsor",
-        "outcome": "applied",
-        "amount": 1000.0,
-        "pot_before": 1000.0,
-        "pot_after": 0.0
-      },
-      {
-        "period": 1,
-        "date": "2026-02-01",
-        "actor": "waterfall:funding",
-        "action": "pay",
-        "target": "top_up -> dsra",
         "outcome": "overridden",
         "amount": 1000.0,
         "pot_before": 1000.0,
@@ -586,8 +562,8 @@
         "note": "the pot was short: the step was owed 3000 and took 1000"
       },
       {
-        "period": 1,
-        "date": "2026-02-01",
+        "period": 0,
+        "date": "2026-01-01",
         "actor": "waterfall:funding",
         "action": "pay",
         "target": "residual -> party.sponsor",
@@ -597,8 +573,8 @@
         "pot_after": 0.0
       },
       {
-        "period": 1,
-        "date": "2026-02-01",
+        "period": 0,
+        "date": "2026-01-01",
         "actor": "waterfall:funding",
         "action": "allocate_in",
         "target": "top_up -> account:dsra",
@@ -608,8 +584,8 @@
         "pot_after": 1000.0
       },
       {
-        "period": 2,
-        "date": "2026-03-01",
+        "period": 1,
+        "date": "2026-02-01",
         "actor": "waterfall:funding",
         "action": "pay",
         "target": "top_up -> dsra",
@@ -620,8 +596,8 @@
         "note": "the pot was short: the step was owed 2000 and took 1005"
       },
       {
-        "period": 2,
-        "date": "2026-03-01",
+        "period": 1,
+        "date": "2026-02-01",
         "actor": "waterfall:funding",
         "action": "pay",
         "target": "residual -> party.sponsor",
@@ -631,8 +607,8 @@
         "pot_after": 0.0
       },
       {
-        "period": 2,
-        "date": "2026-03-01",
+        "period": 1,
+        "date": "2026-02-01",
         "actor": "waterfall:funding",
         "action": "allocate_in",
         "target": "top_up -> account:dsra",
@@ -642,8 +618,8 @@
         "pot_after": 2005.0
       },
       {
-        "period": 3,
-        "date": "2026-04-01",
+        "period": 2,
+        "date": "2026-03-01",
         "actor": "waterfall:funding",
         "action": "pay",
         "target": "top_up -> dsra",
@@ -653,8 +629,8 @@
         "pot_after": 15.025
       },
       {
-        "period": 3,
-        "date": "2026-04-01",
+        "period": 2,
+        "date": "2026-03-01",
         "actor": "waterfall:funding",
         "action": "pay",
         "target": "residual -> party.sponsor",
@@ -664,8 +640,8 @@
         "pot_after": 0.0
       },
       {
-        "period": 3,
-        "date": "2026-04-01",
+        "period": 2,
+        "date": "2026-03-01",
         "actor": "waterfall:funding",
         "action": "allocate_in",
         "target": "top_up -> account:dsra",
@@ -673,6 +649,28 @@
         "amount": 995.0,
         "pot_before": 2005.0,
         "pot_after": 3000.0
+      },
+      {
+        "period": 3,
+        "date": "2026-04-01",
+        "actor": "waterfall:funding",
+        "action": "pay",
+        "target": "top_up -> dsra",
+        "outcome": "applied",
+        "amount": 0.0,
+        "pot_before": 1015.0,
+        "pot_after": 1015.0
+      },
+      {
+        "period": 3,
+        "date": "2026-04-01",
+        "actor": "waterfall:funding",
+        "action": "pay",
+        "target": "residual -> party.sponsor",
+        "outcome": "applied",
+        "amount": 1015.0,
+        "pot_before": 1015.0,
+        "pot_after": 0.0
       },
       {
         "period": 4,
@@ -861,7 +859,7 @@
           },
           "values": [
             {
-              "amount": 12135.025,
+              "amount": 12150.025,
               "currency": "USD"
             }
           ]
@@ -874,7 +872,7 @@
           },
           "values": [
             {
-              "amount": 135.025,
+              "amount": 150.025,
               "currency": "USD"
             }
           ]
@@ -942,10 +940,6 @@
                 "currency": "USD"
               },
               {
-                "amount": 1000.0,
-                "currency": "USD"
-              },
-              {
                 "amount": 1005.0,
                 "currency": "USD"
               },
@@ -984,9 +978,13 @@
               {
                 "amount": 1015.0,
                 "currency": "USD"
+              },
+              {
+                "amount": 1015.0,
+                "currency": "USD"
               }
             ],
-            "total": 12135.025,
+            "total": 12150.025,
             "streams": [
               "ops.reserve_interest",
               "ops.revenue"
@@ -1051,8 +1049,8 @@
           }
         ],
         "reconciliation": {
-          "bottom_line": 12135.025,
-          "model_total": 12135.025,
+          "bottom_line": 12150.025,
+          "model_total": 12150.025,
           "residual": 0.0
         }
       }
