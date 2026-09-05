@@ -1,0 +1,17 @@
+[
+  {
+    "code": "E1384_FOLDED_ACCOUNT_MOVED",
+    "severity": "error",
+    "message": "Stream 'trust.collections' moves account 'container.trust.balance', which is a relation fold — the sum of its members' balances — and is moved only by moving a member's.",
+    "file": "model.cfdl",
+    "span": {
+      "start_line": 12,
+      "start_col": 1,
+      "end_line": 16,
+      "end_col": 1
+    },
+    "path": null,
+    "hint": "Move the member's account (`moves balance` on a stream owned by the member), or declare an account of another name on the container.",
+    "notes": []
+  }
+]

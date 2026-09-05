@@ -1,0 +1,17 @@
+[
+  {
+    "code": "E1383_FOLDED_ACCOUNT_DECLARED",
+    "severity": "error",
+    "message": "Entity 'container.trust' declares account 'balance', which its members already carry (asset.loan.balance); the container's 'balance' is their fold and is not declared.",
+    "file": "model.cfdl",
+    "span": {
+      "start_line": 8,
+      "start_col": 3,
+      "end_line": 8,
+      "end_col": 28
+    },
+    "path": null,
+    "hint": "Read the fold as `prev.<container>.<name>`; to carry a claim of the container's own, give it a different name.",
+    "notes": []
+  }
+]

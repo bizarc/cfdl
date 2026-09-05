@@ -470,7 +470,7 @@ pub fn validate(output: &ResolveOutput, symbols: &SymbolTables) -> Vec<Validatio
 
     // Every declared account, by full name: a structure or party account by
     // its own, an entity's claim as `<entity>.<name>`.
-    let account_names: std::collections::BTreeSet<String> = output
+    let mut account_names: std::collections::BTreeSet<String> = output
         .source_statements
         .iter()
         .flat_map(|s| match &s.statement {
@@ -483,6 +483,41 @@ pub fn validate(output: &ResolveOutput, symbols: &SymbolTables) -> Vec<Validatio
             _ => Vec::new(),
         })
         .collect();
+    // And every ancestor's fold of them (`docs/42` §3.4):
+    // `prev.container.trust.balance` is the members' sum.
+    {
+        let parent_of: std::collections::BTreeMap<String, String> = output
+            .source_statements
+            .iter()
+            .filter_map(|s| match &s.statement {
+                Stmt::Entity(e) => e.parent.clone().map(|p| (e.symbol(), p)),
+                _ => None,
+            })
+            .collect();
+        let declared: Vec<(String, String)> = output
+            .source_statements
+            .iter()
+            .flat_map(|s| match &s.statement {
+                Stmt::Entity(e) => e
+                    .accounts
+                    .iter()
+                    .map(|a| (e.symbol(), a.name.clone()))
+                    .collect(),
+                _ => Vec::new(),
+            })
+            .collect();
+        for (entity, name) in declared {
+            let mut cursor = parent_of.get(&entity);
+            let mut seen = std::collections::BTreeSet::new();
+            while let Some(ancestor) = cursor {
+                if !seen.insert(ancestor.clone()) {
+                    break;
+                }
+                account_names.insert(format!("{ancestor}.{name}"));
+                cursor = parent_of.get(ancestor);
+            }
+        }
+    }
 
     // THERE IS NO `state.` NAMESPACE. A value that changes over time is a field
     // of the entity it describes, so a `state.<name>` read names nothing.

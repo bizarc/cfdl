@@ -1,0 +1,13 @@
+version 0.1
+model "folded-account-declared"
+time calendar monthly from 2026-01 for 6
+
+// The trust's `balance` IS its members' fold; declaring one would double it
+// or hide it.
+entity container trust : Container.SPV {
+  account balance due init 0
+}
+entity asset loan : Asset.Financial {
+  part of container.trust
+  account balance due init 600000
+}

@@ -1,0 +1,215 @@
+{
+  "ir_version": "0.1",
+  "model": {
+    "name": "container-folds-member-accounts",
+    "currency": "USD"
+  },
+  "time": {
+    "calendar": "monthly",
+    "start": "2026-01-01",
+    "periods": 8
+  },
+  "phases": [],
+  "entities": [
+    {
+      "id": "e188f540ae2da85df36d5f1bc92f1b15",
+      "symbol": "asset.loan_a",
+      "type": "Asset.Financial",
+      "fields": {},
+      "state": {},
+      "parent": "container.trust"
+    },
+    {
+      "id": "3364384e12dda2f223eef30b0a4b947c",
+      "symbol": "asset.loan_b",
+      "type": "Asset.Financial",
+      "fields": {},
+      "state": {},
+      "parent": "container.trust"
+    },
+    {
+      "id": "bdc78c089f8a2e60b1782dabfb813628",
+      "symbol": "container.trust",
+      "type": "Container.SPV",
+      "fields": {},
+      "state": {}
+    },
+    {
+      "id": "45c69dd2ccd45dd68acca65c3e5863b9",
+      "symbol": "container.trust_view",
+      "type": "Container.SPV",
+      "fields": {},
+      "rules": {
+        "called": {
+          "init": {
+            "lang": "cfdl",
+            "src": "0"
+          },
+          "next": {
+            "lang": "cfdl",
+            "src": "prev"
+          }
+        },
+        "held": {
+          "init": {
+            "lang": "cfdl",
+            "src": "0"
+          },
+          "next": {
+            "lang": "cfdl",
+            "src": "prev.container.trust.balance"
+          }
+        }
+      },
+      "state": {}
+    }
+  ],
+  "assumptions": {
+    "constants": {},
+    "random": {}
+  },
+  "accounts": [
+    {
+      "name": "asset.loan_a.balance",
+      "owner_entity": "asset.loan_a",
+      "side": "due",
+      "init": {
+        "lang": "cfdl",
+        "src": "600000"
+      }
+    },
+    {
+      "name": "asset.loan_b.balance",
+      "owner_entity": "asset.loan_b",
+      "side": "due",
+      "init": {
+        "lang": "cfdl",
+        "src": "400000"
+      }
+    },
+    {
+      "name": "container.trust.balance",
+      "owner_entity": "container.trust",
+      "fold": true
+    }
+  ],
+  "contracts": [],
+  "streams": [
+    {
+      "id": "83be2b652a20258291ff3d9d0860b922",
+      "name": "loan_a.principal",
+      "owner": {
+        "symbol": "asset.loan_a"
+      },
+      "direction": "inflow",
+      "currency": "USD",
+      "moves": "asset.loan_a.balance",
+      "schedule": {
+        "kind": "Every",
+        "every": "monthly",
+        "from": "2026-01-01",
+        "to": "2026-06-01"
+      },
+      "amount": {
+        "lang": "cfdl",
+        "src": "100000.0"
+      },
+      "active_when": {
+        "lang": "cfdl",
+        "src": "true"
+      },
+      "provenance": {
+        "source_file": "model.cfdl",
+        "source_span": {
+          "start_line": 29,
+          "start_col": 1,
+          "end_line": 33,
+          "end_col": 1
+        }
+      }
+    },
+    {
+      "id": "12a392969d6aa248c63c132aed2cb4cf",
+      "name": "loan_b.principal",
+      "owner": {
+        "symbol": "asset.loan_b"
+      },
+      "direction": "inflow",
+      "currency": "USD",
+      "moves": "asset.loan_b.balance",
+      "schedule": {
+        "kind": "Every",
+        "every": "monthly",
+        "from": "2026-01-01",
+        "to": "2026-08-01"
+      },
+      "amount": {
+        "lang": "cfdl",
+        "src": "50000.0"
+      },
+      "active_when": {
+        "lang": "cfdl",
+        "src": "true"
+      },
+      "provenance": {
+        "source_file": "model.cfdl",
+        "source_span": {
+          "start_line": 34,
+          "start_col": 1,
+          "end_line": 38,
+          "end_col": 1
+        }
+      }
+    }
+  ],
+  "events": [
+    {
+      "actions": [
+        {
+          "entity": {
+            "symbol": "container.trust_view"
+          },
+          "field": "called",
+          "kind": "SetEntityField",
+          "value": {
+            "lang": "cfdl",
+            "src": "1"
+          }
+        }
+      ],
+      "id": "9588053248934618928ee0f45da8775f",
+      "name": "clean_up_call",
+      "provenance": {
+        "source_file": "model.cfdl",
+        "source_span": {
+          "end_col": 1,
+          "end_line": 45,
+          "start_col": 1,
+          "start_line": 43
+        }
+      },
+      "when": {
+        "lang": "cfdl",
+        "src": "prev.container.trust.balance < 250000"
+      }
+    }
+  ],
+  "options": [],
+  "runs": [
+    {
+      "kind": "deterministic"
+    }
+  ],
+  "required_observables": [],
+  "required_refs": [],
+  "provenance": {
+    "sources": [
+      "model.cfdl"
+    ],
+    "compiler": {
+      "name": "cfdl",
+      "version": "0.9.0",
+      "hash": "6bebad0d68f4babc5c564c4ea7ecc1f2"
+    }
+  }
+}

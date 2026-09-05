@@ -211,6 +211,11 @@ pub(crate) struct IrAccount {
     pub(crate) init: Option<IrExpr>,
     #[serde(default)]
     pub(crate) inflow: Option<IrExpr>,
+    /// A relation fold (`docs/42` §3.4): this container's account of this
+    /// name is the sum of its members' accounts of the same name, and has
+    /// no side, init, inflow or movement of its own.
+    #[serde(default)]
+    pub(crate) fold: bool,
 }
 
 /// A declared finite state machine. The states are enumerated; the edges are

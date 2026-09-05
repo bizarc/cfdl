@@ -1,0 +1,885 @@
+{
+  "results_version": "0.13",
+  "model_hash": "d0cb57ad042422e84e183b1aae4cc12d7ae2b0b59ba2aa8a4c8c5f802380bf19",
+  "ledger_hash": "86dd96b909e2da391b129a58edc65ac1313418d8be7b331642404de02957b61f",
+  "engine": {
+    "name": "cfdl-engine",
+    "version": "0.9.0"
+  },
+  "warnings": [],
+  "deterministic": {
+    "status": "ok",
+    "metrics": {
+      "entity.asset.loan_a.total": {
+        "amount": 600000.0,
+        "currency": "USD"
+      },
+      "entity.asset.loan_b.total": {
+        "amount": 400000.0,
+        "currency": "USD"
+      },
+      "entity.container.trust.total": {
+        "amount": 1000000.0,
+        "currency": "USD"
+      },
+      "entity.container.trust_view.total": {
+        "amount": 0.0,
+        "currency": "USD"
+      },
+      "model.npv": {
+        "amount": 969623.963177,
+        "currency": "USD"
+      },
+      "model.total": {
+        "amount": 1000000.0,
+        "currency": "USD"
+      },
+      "model.wal_years": 0.325,
+      "run.annual_discount_rate": 0.1,
+      "run.periods_per_year": 12.0,
+      "stream.loan_a.principal.total": {
+        "amount": 600000.0,
+        "currency": "USD"
+      },
+      "stream.loan_b.principal.total": {
+        "amount": 400000.0,
+        "currency": "USD"
+      }
+    },
+    "series": {
+      "account.asset.loan_a.balance": {
+        "index": {
+          "calendar": "monthly",
+          "start": "2026-01-01",
+          "periods": 8
+        },
+        "values": [
+          500000.0,
+          400000.0,
+          300000.0,
+          200000.0,
+          100000.0,
+          0.0,
+          0.0,
+          0.0
+        ]
+      },
+      "account.asset.loan_b.balance": {
+        "index": {
+          "calendar": "monthly",
+          "start": "2026-01-01",
+          "periods": 8
+        },
+        "values": [
+          350000.0,
+          300000.0,
+          250000.0,
+          200000.0,
+          150000.0,
+          100000.0,
+          50000.0,
+          0.0
+        ]
+      },
+      "account.container.trust.balance": {
+        "index": {
+          "calendar": "monthly",
+          "start": "2026-01-01",
+          "periods": 8
+        },
+        "values": [
+          850000.0,
+          700000.0,
+          550000.0,
+          400000.0,
+          250000.0,
+          100000.0,
+          50000.0,
+          0.0
+        ]
+      },
+      "container.trust_view.called": {
+        "index": {
+          "calendar": "monthly",
+          "start": "2026-01-01",
+          "periods": 8
+        },
+        "values": [
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0,
+          1.0
+        ]
+      },
+      "container.trust_view.held": {
+        "index": {
+          "calendar": "monthly",
+          "start": "2026-01-01",
+          "periods": 8
+        },
+        "values": [
+          0.0,
+          850000.0,
+          700000.0,
+          550000.0,
+          400000.0,
+          250000.0,
+          100000.0,
+          50000.0
+        ]
+      },
+      "entity.asset.loan_a.net_cash_flow": {
+        "index": {
+          "calendar": "monthly",
+          "start": "2026-01-01",
+          "periods": 8
+        },
+        "values": [
+          {
+            "amount": 100000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 100000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 100000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 100000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 100000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 100000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          }
+        ]
+      },
+      "entity.asset.loan_b.net_cash_flow": {
+        "index": {
+          "calendar": "monthly",
+          "start": "2026-01-01",
+          "periods": 8
+        },
+        "values": [
+          {
+            "amount": 50000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 50000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 50000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 50000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 50000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 50000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 50000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 50000.0,
+            "currency": "USD"
+          }
+        ]
+      },
+      "entity.container.trust.net_cash_flow": {
+        "index": {
+          "calendar": "monthly",
+          "start": "2026-01-01",
+          "periods": 8
+        },
+        "values": [
+          {
+            "amount": 150000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 150000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 150000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 150000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 150000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 150000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 50000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 50000.0,
+            "currency": "USD"
+          }
+        ]
+      },
+      "entity.container.trust_view.net_cash_flow": {
+        "index": {
+          "calendar": "monthly",
+          "start": "2026-01-01",
+          "periods": 8
+        },
+        "values": [
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          }
+        ]
+      },
+      "model.net_cash_flow": {
+        "index": {
+          "calendar": "monthly",
+          "start": "2026-01-01",
+          "periods": 8
+        },
+        "values": [
+          {
+            "amount": 150000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 150000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 150000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 150000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 150000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 150000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 50000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 50000.0,
+            "currency": "USD"
+          }
+        ]
+      },
+      "stream.loan_a.principal": {
+        "index": {
+          "calendar": "monthly",
+          "start": "2026-01-01",
+          "periods": 8
+        },
+        "offset": 1.0,
+        "entity": "asset.loan_a",
+        "values": [
+          {
+            "amount": 100000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 100000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 100000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 100000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 100000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 100000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          }
+        ]
+      },
+      "stream.loan_b.principal": {
+        "index": {
+          "calendar": "monthly",
+          "start": "2026-01-01",
+          "periods": 8
+        },
+        "offset": 1.0,
+        "entity": "asset.loan_b",
+        "values": [
+          {
+            "amount": 50000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 50000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 50000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 50000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 50000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 50000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 50000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 50000.0,
+            "currency": "USD"
+          }
+        ]
+      }
+    },
+    "transitions": [
+      {
+        "period": 6,
+        "date": "2026-07-01",
+        "entity": "container.trust_view",
+        "field": "called",
+        "from": "0",
+        "to": "1",
+        "event": "clean_up_call"
+      }
+    ],
+    "journal": [
+      {
+        "period": 6,
+        "date": "2026-07-01",
+        "actor": "event:clean_up_call",
+        "action": "set",
+        "target": "container.trust_view.called",
+        "outcome": "applied",
+        "from": "0",
+        "to": "1"
+      },
+      {
+        "period": 0,
+        "date": "2026-01-01",
+        "actor": "stream:loan_a.principal",
+        "action": "move",
+        "target": "asset.loan_a.balance",
+        "outcome": "applied",
+        "amount": -100000.0,
+        "pot_before": 600000.0,
+        "pot_after": 500000.0
+      },
+      {
+        "period": 0,
+        "date": "2026-01-01",
+        "actor": "stream:loan_b.principal",
+        "action": "move",
+        "target": "asset.loan_b.balance",
+        "outcome": "applied",
+        "amount": -50000.0,
+        "pot_before": 400000.0,
+        "pot_after": 350000.0
+      },
+      {
+        "period": 1,
+        "date": "2026-02-01",
+        "actor": "stream:loan_a.principal",
+        "action": "move",
+        "target": "asset.loan_a.balance",
+        "outcome": "applied",
+        "amount": -100000.0,
+        "pot_before": 500000.0,
+        "pot_after": 400000.0
+      },
+      {
+        "period": 1,
+        "date": "2026-02-01",
+        "actor": "stream:loan_b.principal",
+        "action": "move",
+        "target": "asset.loan_b.balance",
+        "outcome": "applied",
+        "amount": -50000.0,
+        "pot_before": 350000.0,
+        "pot_after": 300000.0
+      },
+      {
+        "period": 2,
+        "date": "2026-03-01",
+        "actor": "stream:loan_a.principal",
+        "action": "move",
+        "target": "asset.loan_a.balance",
+        "outcome": "applied",
+        "amount": -100000.0,
+        "pot_before": 400000.0,
+        "pot_after": 300000.0
+      },
+      {
+        "period": 2,
+        "date": "2026-03-01",
+        "actor": "stream:loan_b.principal",
+        "action": "move",
+        "target": "asset.loan_b.balance",
+        "outcome": "applied",
+        "amount": -50000.0,
+        "pot_before": 300000.0,
+        "pot_after": 250000.0
+      },
+      {
+        "period": 3,
+        "date": "2026-04-01",
+        "actor": "stream:loan_a.principal",
+        "action": "move",
+        "target": "asset.loan_a.balance",
+        "outcome": "applied",
+        "amount": -100000.0,
+        "pot_before": 300000.0,
+        "pot_after": 200000.0
+      },
+      {
+        "period": 3,
+        "date": "2026-04-01",
+        "actor": "stream:loan_b.principal",
+        "action": "move",
+        "target": "asset.loan_b.balance",
+        "outcome": "applied",
+        "amount": -50000.0,
+        "pot_before": 250000.0,
+        "pot_after": 200000.0
+      },
+      {
+        "period": 4,
+        "date": "2026-05-01",
+        "actor": "stream:loan_a.principal",
+        "action": "move",
+        "target": "asset.loan_a.balance",
+        "outcome": "applied",
+        "amount": -100000.0,
+        "pot_before": 200000.0,
+        "pot_after": 100000.0
+      },
+      {
+        "period": 4,
+        "date": "2026-05-01",
+        "actor": "stream:loan_b.principal",
+        "action": "move",
+        "target": "asset.loan_b.balance",
+        "outcome": "applied",
+        "amount": -50000.0,
+        "pot_before": 200000.0,
+        "pot_after": 150000.0
+      },
+      {
+        "period": 5,
+        "date": "2026-06-01",
+        "actor": "stream:loan_a.principal",
+        "action": "move",
+        "target": "asset.loan_a.balance",
+        "outcome": "applied",
+        "amount": -100000.0,
+        "pot_before": 100000.0,
+        "pot_after": 0.0
+      },
+      {
+        "period": 5,
+        "date": "2026-06-01",
+        "actor": "stream:loan_b.principal",
+        "action": "move",
+        "target": "asset.loan_b.balance",
+        "outcome": "applied",
+        "amount": -50000.0,
+        "pot_before": 150000.0,
+        "pot_after": 100000.0
+      },
+      {
+        "period": 6,
+        "date": "2026-07-01",
+        "actor": "stream:loan_b.principal",
+        "action": "move",
+        "target": "asset.loan_b.balance",
+        "outcome": "applied",
+        "amount": -50000.0,
+        "pot_before": 100000.0,
+        "pot_after": 50000.0
+      },
+      {
+        "period": 7,
+        "date": "2026-08-01",
+        "actor": "stream:loan_b.principal",
+        "action": "move",
+        "target": "asset.loan_b.balance",
+        "outcome": "applied",
+        "amount": -50000.0,
+        "pot_before": 50000.0,
+        "pot_after": 0.0
+      }
+    ],
+    "annual_rollup": {
+      "series": {
+        "model.net_cash_flow": {
+          "index": {
+            "calendar": "annual",
+            "start": "2026-01-01",
+            "periods": 1
+          },
+          "values": [
+            {
+              "amount": 1000000.0,
+              "currency": "USD"
+            }
+          ]
+        },
+        "stream.loan_a.principal": {
+          "index": {
+            "calendar": "annual",
+            "start": "2026-01-01",
+            "periods": 1
+          },
+          "values": [
+            {
+              "amount": 600000.0,
+              "currency": "USD"
+            }
+          ]
+        },
+        "stream.loan_b.principal": {
+          "index": {
+            "calendar": "annual",
+            "start": "2026-01-01",
+            "periods": 1
+          },
+          "values": [
+            {
+              "amount": 400000.0,
+              "currency": "USD"
+            }
+          ]
+        }
+      }
+    }
+  },
+  "scenarios": {
+    "status": "not_run",
+    "summaries": []
+  },
+  "monte_carlo": {
+    "status": "not_run",
+    "trials": 1,
+    "seed": 0,
+    "metrics": {},
+    "trial_summaries": []
+  },
+  "statements": {
+    "statements": [
+      {
+        "id": "by_entity",
+        "label": "Cash by entity",
+        "default": true,
+        "grain": {
+          "calendar": "monthly",
+          "start": "2026-01-01",
+          "labels": [
+            "2026-01",
+            "2026-02",
+            "2026-03",
+            "2026-04",
+            "2026-05",
+            "2026-06",
+            "2026-07",
+            "2026-08"
+          ]
+        },
+        "rows": [
+          {
+            "kind": "subtotal",
+            "label": "Trust",
+            "depth": 0,
+            "display_sign": 1.0,
+            "values": [
+              {
+                "amount": 150000.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 150000.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 150000.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 150000.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 150000.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 150000.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 50000.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 50000.0,
+                "currency": "USD"
+              }
+            ],
+            "total": 1000000.0
+          },
+          {
+            "kind": "line",
+            "label": "Loan a",
+            "depth": 1,
+            "display_sign": 1.0,
+            "values": [
+              {
+                "amount": 100000.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 100000.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 100000.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 100000.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 100000.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 100000.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              }
+            ],
+            "total": 600000.0,
+            "streams": [
+              "loan_a.principal"
+            ]
+          },
+          {
+            "kind": "line",
+            "label": "Loan b",
+            "depth": 1,
+            "display_sign": 1.0,
+            "values": [
+              {
+                "amount": 50000.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 50000.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 50000.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 50000.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 50000.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 50000.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 50000.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 50000.0,
+                "currency": "USD"
+              }
+            ],
+            "total": 400000.0,
+            "streams": [
+              "loan_b.principal"
+            ]
+          },
+          {
+            "kind": "line",
+            "label": "Trust view",
+            "depth": 0,
+            "display_sign": 1.0,
+            "values": [
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              }
+            ],
+            "total": 0.0
+          }
+        ],
+        "reconciliation": {
+          "bottom_line": 1000000.0,
+          "model_total": 1000000.0,
+          "residual": 0.0
+        }
+      }
+    ]
+  },
+  "graph": {
+    "entities": [
+      {
+        "symbol": "asset.loan_a",
+        "family": "asset",
+        "type": "Asset.Financial",
+        "parent": "container.trust"
+      },
+      {
+        "symbol": "asset.loan_b",
+        "family": "asset",
+        "type": "Asset.Financial",
+        "parent": "container.trust"
+      },
+      {
+        "symbol": "container.trust",
+        "family": "container",
+        "type": "Container.SPV"
+      },
+      {
+        "symbol": "container.trust_view",
+        "family": "container",
+        "type": "Container.SPV"
+      }
+    ]
+  }
+}

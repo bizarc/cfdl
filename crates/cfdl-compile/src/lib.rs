@@ -486,6 +486,13 @@ struct IrAccount {
     /// whole net cash IS the deal's cumulative position.
     #[serde(skip_serializing_if = "Option::is_none")]
     inflow: Option<IrExpr>,
+    /// A RELATION FOLD (`docs/42` §3.4): this container's account of this
+    /// name is the sum of its members' accounts of the same name, opening
+    /// and closing, through `part of`. Synthesized by the compiler for every
+    /// ancestor of an entity that declares a claim; carries no side, init,
+    /// inflow or movement of its own.
+    #[serde(skip_serializing_if = "std::ops::Not::not")]
+    fold: bool,
 }
 
 #[derive(Debug, Serialize)]
@@ -1538,6 +1545,15 @@ fn check_field_paths(
             // pack's lifecycle declares the states rather than the model.
             names.insert("status".to_string());
             names.insert("state".to_string());
+        }
+    }
+    // A container's folded accounts read the same way (`docs/42` §3.4).
+    for full in folded_accounts_of(resolve_output).keys() {
+        if let Some((owner, name)) = full.rsplit_once('.') {
+            known
+                .entry(owner.to_string())
+                .or_default()
+                .insert(name.to_string());
         }
     }
 
@@ -2713,10 +2729,50 @@ fn check_state_guards(
 ///     capped, pays a shortfall that cannot exist;
 ///   * a missing or misplaced `remainder` silently LOSES whatever is left in
 ///     the pot, which is the failure the residual step exists to prevent.
-// A declared account as the checks see it: its side (`docs/42` §3.6).
+// A declared account as the checks see it: its side (`docs/42` §3.6), and
+// whether it is a relation fold rather than a declaration (§3.4).
 #[derive(Clone, Debug)]
 struct DeclaredAccount {
     side: Option<String>,
+    fold: bool,
+}
+
+/// Every account a relation folds: for each ancestor of an entity that
+/// declares a claim, `<ancestor>.<name>` — the container's balance as the
+/// sum of its members' (`docs/42` §3.4). Keyed by full name, valued by the
+/// member accounts it sums.
+fn folded_accounts_of(
+    resolve_output: &cfdl_resolver::ResolveOutput,
+) -> BTreeMap<String, Vec<String>> {
+    let parent_of: BTreeMap<String, String> = resolve_output
+        .source_statements
+        .iter()
+        .filter_map(|s| match &s.statement {
+            Stmt::Entity(e) => e.parent.clone().map(|p| (e.symbol(), p)),
+            _ => None,
+        })
+        .collect();
+    let mut out: BTreeMap<String, Vec<String>> = BTreeMap::new();
+    for source_stmt in &resolve_output.source_statements {
+        let Stmt::Entity(entity) = &source_stmt.statement else {
+            continue;
+        };
+        for acct in &entity.accounts {
+            let member = format!("{}.{}", entity.symbol(), acct.name);
+            let mut cursor = parent_of.get(&entity.symbol());
+            let mut seen: BTreeSet<&str> = BTreeSet::new();
+            while let Some(ancestor) = cursor {
+                if !seen.insert(ancestor.as_str()) {
+                    break;
+                }
+                out.entry(format!("{ancestor}.{}", acct.name))
+                    .or_default()
+                    .push(member.clone());
+                cursor = parent_of.get(ancestor);
+            }
+        }
+    }
+    out
 }
 
 /// Every account the model declares, by its full name — a structure or
@@ -2732,6 +2788,7 @@ fn declared_accounts_of(
                     a.name.clone(),
                     DeclaredAccount {
                         side: a.side.clone(),
+                        fold: false,
                     },
                 );
             }
@@ -2741,12 +2798,22 @@ fn declared_accounts_of(
                         format!("{}.{}", entity.symbol(), acct.name),
                         DeclaredAccount {
                             side: acct.side.clone(),
+                            fold: false,
                         },
                     );
                 }
             }
             _ => {}
         }
+    }
+    // A container's folded account is readable (`prev.container.trust.balance`)
+    // but declares nothing: a declaration of the same name is refused, not
+    // merged, so the fold stays the sum of its members and nothing else.
+    for name in folded_accounts_of(resolve_output).keys() {
+        out.entry(name.clone()).or_insert(DeclaredAccount {
+            side: None,
+            fold: true,
+        });
     }
     out
 }
@@ -2859,6 +2926,7 @@ fn check_stream_moves(
     resolve_output: &cfdl_resolver::ResolveOutput,
 ) -> Result<(), Vec<Diagnostic>> {
     let accounts = declared_accounts_of(resolve_output);
+    let folded = folded_accounts_of(resolve_output);
     let mut diagnostics: Vec<Diagnostic> = Vec::new();
     let diag =
         |code: &str, message: String, span: cfdl_parser::Span, file: &str, hint: &str| Diagnostic {
@@ -2913,6 +2981,16 @@ fn check_stream_moves(
                             file,
                             "Declare it — `account <name> owed|due [init <expr>]` in the entity block, or `account <name> owed|due { ... }` at the model level — or correct the name.",
                         )),
+                        Some(full) if accounts[&full].fold => diagnostics.push(diag(
+                            "E1384_FOLDED_ACCOUNT_MOVED",
+                            format!(
+                                "Stream '{}' moves account '{full}', which is a relation fold — the sum of its members' balances — and is moved only by moving a member's.",
+                                stream.name
+                            ),
+                            stream.span,
+                            file,
+                            "Move the member's account (`moves balance` on a stream owned by the member), or declare an account of another name on the container.",
+                        )),
                         Some(full) => {
                             if cash && accounts[&full].side.is_none() {
                                 diagnostics.push(diag(
@@ -2942,6 +3020,27 @@ fn check_stream_moves(
                 }
             }
             Stmt::Entity(entity) => {
+                // A container may not declare a claim a member also declares:
+                // its account of that name IS the members' fold (`docs/42`
+                // §3.4), and a declaration would either double it or hide it.
+                for acct in &entity.accounts {
+                    let full = format!("{}.{}", entity.symbol(), acct.name);
+                    if let Some(members) = folded.get(&full) {
+                        diagnostics.push(diag(
+                            "E1383_FOLDED_ACCOUNT_DECLARED",
+                            format!(
+                                "Entity '{}' declares account '{}', which its members already carry ({}); the container's '{}' is their fold and is not declared.",
+                                entity.symbol(),
+                                acct.name,
+                                members.join(", "),
+                                acct.name
+                            ),
+                            acct.span,
+                            file,
+                            "Read the fold as `prev.<container>.<name>`; to carry a claim of the container's own, give it a different name.",
+                        ));
+                    }
+                }
                 for f in &entity.fields {
                     let ctx = format!("Field '{}.{}'", entity.symbol(), f.name);
                     for slot in std::iter::once(&f.init).chain(f.next.iter()) {
@@ -4852,6 +4951,7 @@ fn build_ir(
                     lang: "cfdl".to_string(),
                     src: slot.src.clone(),
                 }),
+                fold: false,
             }),
             // A claim declared in an entity block: named by its owner, so
             // two loans' balances never collide (`docs/42` §3.5).
@@ -4867,11 +4967,26 @@ fn build_ir(
                             src: slot.src.clone(),
                         }),
                         inflow: None,
+                        fold: false,
                     });
                 }
             }
             _ => {}
         }
+    }
+    // THE RELATION FOLD (`docs/42` §3.4): every ancestor of an entity that
+    // declares a claim carries the sum of its members' claims of that name,
+    // as a published account with nothing of its own.
+    for full in folded_accounts_of(resolve_output).keys() {
+        ir_accounts.push(IrAccount {
+            name: full.clone(),
+            owner: None,
+            owner_entity: full.rsplit_once('.').map(|(owner, _)| owner.to_string()),
+            side: None,
+            init: None,
+            inflow: None,
+            fold: true,
+        });
     }
 
     // Only machines an entity actually binds are published: an unbound

@@ -8,6 +8,16 @@ This project follows Semantic Versioning: https://semver.org/
 
 ## [Unreleased]
 
+**The relation folds balances (`docs/42` §3.4, second PR).** Every
+ancestor of an entity that declares a claim carries the sum of its members'
+claims of that name, opening and closing, through `part of`:
+`container.trust.balance` when the trust's loans each carry a `balance`.
+Synthesized by the compiler, published as `account.<container>.<name>`,
+read as `prev.<container>.<name>` by a field, a guard or a stream, and
+carrying nothing of its own — `E1383` refuses declaring it, `E1384` moving
+it. A clean-up call is now one event at the trust reading the fold. Cash
+and balances roll up through the same relation by the same rule.
+
 **The balance is an account (`docs/42`, first PR).** The account is
 generalized to the balance an agreement owes or is due: an entity may own
 one (`account balance owed init 1000000` in its block, named

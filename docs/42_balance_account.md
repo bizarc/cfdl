@@ -377,9 +377,12 @@ Separate from the engine restructure, and before it.
    streams `moves` it in all four directions, a stream reads the opening
    as `prev.<account>`, every movement is a `move` journal line, non-cash
    streams enter no cash total, and `E1378`–`E1382` refuse the malformed
-   cases. Not yet: the relation fold (§3.4), the master-declared account
-   and the pack rule's `account` key (§3.5), the `set balance = 0`
-   retirement as a write-off, the non-cash category roots.
+   cases. **The relation fold is built** (same day): every ancestor of an
+   entity that declares a claim carries the sum of its members' claims of
+   that name, opening and closing, declared nowhere and moved only through
+   a member (`E1383`, `E1384`). Not yet: the master-declared account and
+   the pack rule's `account` key (§3.5), the `set balance = 0` retirement
+   as a write-off, the non-cash category roots.
 2. **The level-pay loan onto accounts**, replacing the stopgap field.
    Numbers unchanged: the lines are the same, only who sums them changes.
 3. **The clean-up call** on the auto ABS cases and AmeriCredit, reading the
