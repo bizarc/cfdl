@@ -815,10 +815,14 @@ descriptions; `docs/06` regenerated.
 
 ### 7.44 The engine's stages are modules, not crates
 
-*Narrowed. The file split shipped: `crates/cfdl-engine/src/` is ten modules and
-`lib.rs` is about 2,200 lines, not the 5,341 this item was filed against.
-`run_deterministic` reads as the stage list it runs — config, timeline, state,
-streams in waves, subtotals, waterfalls, results.*
+*Narrowed, then reopened. The file split shipped once, and the orchestrator
+grew back to 4,500 lines as the walk, the account plane and the fold layer
+landed in it. The restructure agreed 5 September 2026 takes it apart by
+stage — `prepare`, `state`, `occurrence`, `streams`, `accounts`,
+`distributions`, `walk`, `fold`, `runs`, the orchestrator a stage list —
+one or two modules per PR, each a pure move proven by byte-identical
+goldens. **Built so far: `occurrence`** — events and options as one module,
+stepped inside the state walk after the machine moves.*
 
 What remains is the second step the original entry proposed: making the stages
 CRATES rather than modules, so the compiler enforces the layering that the

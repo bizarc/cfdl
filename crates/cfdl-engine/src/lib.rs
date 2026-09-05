@@ -15,8 +15,11 @@ use std::sync::Arc;
 //   ir             what the compiler hands us
 //   env            the expression environment each stage evaluates in
 //   state          stages 1+2, one interleaved walk — fields compute each
-//                  period's candidates, events overwrite, the column settles;
-//                  `prev` reads what settled (one value per path)
+//                  period's candidates, the machine moves, the column settles;
+//                  `prev` reads what settled
+//   occurrence     what happens: events (each occurrence) and options (an
+//                  election, at most once), stepped inside the state walk
+//                  after the machine and writing through its stores (one value per path)
 //   streams        stage 3 — activity, in two phases
 //   distributions  the waterfall stage. Under the walk it runs INSIDE each
 //                  period, after that period's streams (`docs/28` §3 stage 3);
@@ -32,6 +35,7 @@ mod results;
 pub use results::*;
 mod distributions;
 use distributions::*;
+mod occurrence;
 mod streams;
 use streams::*;
 mod state;

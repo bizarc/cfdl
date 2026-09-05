@@ -8,6 +8,17 @@ This project follows Semantic Versioning: https://semver.org/
 
 ## [Unreleased]
 
+**The engine restructure, first module: `occurrence`.** Events and options
+are one idea — something that happens on a date or a condition and changes
+what follows — and they now live in one module, `crates/cfdl-engine/src/
+occurrence.rs`: what carries across periods for both (each event's last
+condition and scheduled occurrences, each option's exercised latch and
+forced exercises, the option cash), prepared once and stepped inside the
+state walk after the machine moves, writing through the walk's stores. A
+pure move: every results golden is byte-identical and every benchmark
+unchanged. This is the seam stage 7 extends. The state module keeps fields
+and machines (`docs/13` §7.44).
+
 **The clean-up call, written once at the trust.** `americredit_2017_1`
 no longer states its pool balance: the trust is a `Container.SPV` whose
 balance is the fold of its twelve loans' (`prev.container.trust.balance`),
