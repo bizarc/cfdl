@@ -319,6 +319,35 @@ direction it runs, and a one-directional gate should record why the other
 direction is not checked. Registers, mirrors and generated pages all have this
 property: drift is only caught on the side the tool looks at.
 
+### The engine's stages are modules, not crates
+
+`docs/13` §7.44 proposed taking the engine apart by stage and then making the
+stages crates, so the compiler would enforce the layering. The first half
+shipped in September 2026 as five pure moves — `occurrence`, `prepare`,
+`accounts`, `walk`, `fold`, `runs` — each proven by byte-identical results
+goldens, with `lib.rs` left as the public API, the error type, the module map
+and the deterministic run written as its stage list. The second half was
+declined, and the reasoning is worth keeping.
+
+A crate is Rust's unit of compilation, dependency and public surface; a module
+is a namespace inside one. A crate boundary enforces a dependency direction
+that a module boundary only suggests. That enforcement is the whole benefit,
+and it is worth paying for when a piece has a consumer of its own, a release
+cadence of its own, or a boundary that discipline has failed to hold. The
+engine's stages have none of those. Every stage reads the IR and writes into
+the same results types, so crate boundaries would mean a shared types crate
+holding most of `ir.rs` and `results.rs`, every stage output made `pub`, and
+re-exports at the top; and nothing outside the engine consumes a stage on its
+own — the CLI, the MCP server and the Python binding all call the top. The
+order the crates would enforce is already documented in the module map and
+tested by `fixtures/valid/evaluation_order` and the goldens.
+
+**The general shape.** Split into crates for a consumer or an enforcement need
+that has shown itself, not for a conceptual layering that modules already
+express. Revisit the engine if a stage acquires its own consumer — the
+language server wanting `prepare` without the walk would be one — or if the
+layering breaks and the goldens do not catch it.
+
 ## How to achieve a behavior
 
 ### A balance swept by the period's free cash flow

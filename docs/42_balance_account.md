@@ -4,7 +4,7 @@
 balance (PR #289); revised the same day after review, and again once the
 surface was settled (§3.2, §3.5, §3.6). Status: DESIGN NOTE,
 nothing built. It is a language and engine item of its own, separate from
-the engine restructure (`docs/13` §7.44), and it should be settled before
+the engine restructure (since done by stage, `docs/26`), and it should be settled before
 the restructure so the restructure is not reopened for it. Where this note
 and the shipped level-pay balance disagree, the shipped balance is the
 stopgap.*

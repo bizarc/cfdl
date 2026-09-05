@@ -8,6 +8,15 @@ This project follows Semantic Versioning: https://semver.org/
 
 ## [Unreleased]
 
+**Backlog: 7.44 closed, as modules.** The engine restructure proposed
+stages first and crates second. The stages shipped as modules across five
+PRs; the crate step is declined — the stages share the IR and results
+types, nothing outside the engine consumes one on its own, and the order a
+crate boundary would enforce is already held by the module map, the
+evaluation-order fixture and 281 byte-identical goldens. The reasoning is
+recorded in `docs/26` ("The engine's stages are modules, not crates"), and
+the entry is removed. Backlog: 60 items.
+
 **The engine restructure, `runs` — and the orchestrator is the stage list.**
 The loops around one deterministic evaluation — the base run, each
 scenario with its drivers and rate overridden, each Monte Carlo trial with
