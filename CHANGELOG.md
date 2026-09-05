@@ -8,6 +8,15 @@ This project follows Semantic Versioning: https://semver.org/
 
 ## [Unreleased]
 
+**The engine restructure, `walk`.** The period loop — the cash already
+settled handed over, the state stage, this period's streams in waves, the
+account plane, the waterfall stage, the folds, then `t + 1` — is
+`crates/cfdl-engine/src/walk.rs`, with the choice between the walk and the
+column order a forward-reaching read forces (`evaluate_model`) beside it as
+the one isolated exception. A pure move: every results golden
+byte-identical, 46/46 benchmarks, the walk and the column order still agree.
+The orchestrator is 3,421 lines from 3,800 (`docs/13` §7.44).
+
 **The engine restructure, `prepare` and `accounts`.** Everything about a
 model that does not vary from run to run — the grid, each stream's
 dependency graph and wave, the priced closure, walk eligibility, the
