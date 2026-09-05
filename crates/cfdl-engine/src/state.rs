@@ -94,19 +94,19 @@ struct Prepared {
 /// but does not own — the IR, the config, the timeline, the resolved inputs —
 /// is passed to `step`.
 /// One entity's machine, guards compiled once (`docs/28` §6.1).
-struct PreparedMachine {
-    lifecycle_id: String,
+pub(crate) struct PreparedMachine {
+    pub(crate) lifecycle_id: String,
     /// Edges in declaration order — the order that resolves two guards
     /// holding in one period, the same rule waterfall steps follow.
-    edges: Vec<PreparedEdge>,
+    pub(crate) edges: Vec<PreparedEdge>,
     /// State -> its entry actions. What is true of the STATE however it was
     /// reached, so it runs before the taken edge's own actions.
     entry_actions: BTreeMap<String, Vec<PreparedAction>>,
 }
 
-struct PreparedEdge {
-    from: String,
-    to: String,
+pub(crate) struct PreparedEdge {
+    pub(crate) from: String,
+    pub(crate) to: String,
     /// `None` for a guard-less edge: a permission an event's write may take,
     /// never fired by the machine on its own.
     guard: Option<cfdl_expr::CompiledExpr>,
@@ -195,30 +195,23 @@ pub(crate) fn entries_into(
 
 pub(crate) struct StateWalk {
     /// Each machine-bound entity's compiled machine, by entity symbol.
-    machines: BTreeMap<String, PreparedMachine>,
+    pub(crate) machines: BTreeMap<String, PreparedMachine>,
     /// Per entity symbol: field role → the fields that play it, so an
     /// arrival action naming a role (`set balance = 0`) writes each.
     field_roles: BTreeMap<String, BTreeMap<String, Vec<String>>>,
     // Read by the walk between periods; see `entity_state_so_far`.
-    values: BTreeMap<String, Vec<f64>>,
+    pub(crate) values: BTreeMap<String, Vec<f64>>,
     prepared: Vec<Prepared>,
     entity_state: Vec<BTreeMap<String, BTreeMap<String, ExprValue>>>,
-    current_state: BTreeMap<String, BTreeMap<String, ExprValue>>,
-    current_active: BTreeMap<String, bool>,
+    pub(crate) current_state: BTreeMap<String, BTreeMap<String, ExprValue>>,
+    pub(crate) current_active: BTreeMap<String, bool>,
     stream_active: BTreeMap<String, Vec<bool>>,
-    option_cash: BTreeMap<String, Vec<f64>>,
-    transitions: Vec<TransitionRecord>,
-    journal: Vec<JournalEntry>,
-    /// Last period's value of each event's condition — the rising edge's
-    /// memory, and the only memory an event has.
-    event_prev_condition: Vec<bool>,
-    /// Per event, which periods its schedule supplies as occurrences. `None`
-    /// when it has no schedule.
-    event_scheduled: Vec<Option<Vec<bool>>>,
-    option_exercised: Vec<bool>,
-    forced_exercise: Vec<String>,
-    compiled_events: Vec<Option<cfdl_expr::CompiledExpr>>,
-    compiled_options: Vec<Option<(cfdl_expr::CompiledExpr, cfdl_expr::CompiledExpr)>>,
+    pub(crate) transitions: Vec<TransitionRecord>,
+    pub(crate) journal: Vec<JournalEntry>,
+    /// What happens: events and options, prepared once and stepped each
+    /// period after the machine moves (`occurrence.rs`, `docs/34`). Taken out
+    /// and put back around its step so it can write through this walk.
+    occurrences: crate::occurrence::Occurrences,
     periods: usize,
     /// Cash that has already settled, for logic to read.
     ///
@@ -305,7 +298,7 @@ impl StateWalk {
     /// the field store is written: everything is evaluated against the frozen
     /// pre-state first, then applied in order.
     #[allow(clippy::too_many_arguments)]
-    fn run_arrival_actions(
+    pub(crate) fn run_arrival_actions(
         &mut self,
         symbol: &str,
         lifecycle_id: &str,
@@ -732,391 +725,16 @@ impl StateWalk {
             self.journal.push(transition_entry);
         }
 
-        for (event_idx, event) in ir.events.iter().enumerate() {
-            // AN EVENT IS SOMETHING THAT HAPPENS, and nothing restricts it to
-            // happening once (`docs/34` D1). A schedule SUPPLIES occurrences
-            // and `when` FILTERS them; with no schedule, an occurrence is the
-            // condition's rising edge — true having been false, re-arming when
-            // it falls.
-            //
-            // A condition that fails to compile disables the event, which is
-            // the shipped behavior: `None` here means no occurrence, never an
-            // unconditional one.
-            let condition = match &self.compiled_events[event_idx] {
-                Some(when) => eval_bool_expr(when, &env, "Event", &event.name, "when", warnings),
-                // No `when` at all: every scheduled occurrence fires. An event
-                // that failed to compile is a different case and is caught by
-                // the `when.is_some()` test below.
-                None => event.when.is_none(),
-            };
-            let disabled = event.when.is_some() && self.compiled_events[event_idx].is_none();
-            let fires = match &self.event_scheduled[event_idx] {
-                // Scheduled: the calendar says WHEN it is tested, the
-                // condition says whether it fires. Four consecutive failing
-                // quarterly tests are four breach events, because the model
-                // declared quarterly testing.
-                Some(mask) => mask.get(t).copied().unwrap_or(false) && condition,
-                // Unscheduled: the condition's own rising edge.
-                None => condition && !self.event_prev_condition[event_idx],
-            };
-            // Recorded whatever happened, so the edge is measured against the
-            // condition and not against whether the event fired.
-            self.event_prev_condition[event_idx] = condition;
-            if disabled || !fires {
-                continue;
-            }
-            for action in &event.actions {
-                match action.kind.as_str() {
-                    "SetEntityField" => {
-                        let (Some(entity), Some(field), Some(value)) =
-                            (&action.entity, &action.field, &action.value)
-                        else {
-                            warnings.push(format!(
-                                "Event '{}' SetEntityField is missing fields; skipped.",
-                                event.name
-                            ));
-                            continue;
-                        };
-                        match cfdl_expr::compile_expr(&value.src)
-                            .and_then(|compiled| cfdl_expr::eval(&compiled, &env))
-                        {
-                            Ok(v) => {
-                                let rule_key = format!("{}.{}", entity.symbol, field);
-                                if let Some(series) = self.values.get_mut(&rule_key) {
-                                    // ONE VALUE PER PATH: the write settles the
-                                    // field store, and the recurrence resumes
-                                    // from it next period. It does NOT enter
-                                    // the entity-state record — that would be
-                                    // a second copy, free to go stale.
-                                    let before =
-                                        Some(describe_value(&ExprValue::Decimal(series[t])));
-                                    let after = describe_value(&v);
-                                    match &v {
-                                        ExprValue::Decimal(d) => series[t] = *d,
-                                        ExprValue::Int(i) => series[t] = *i as f64,
-                                        other => {
-                                            warnings.push(format!(
-                                                "Event '{}' set {} to non-numeric {:?}; store unchanged.",
-                                                event.name, rule_key, other
-                                            ));
-                                        }
-                                    }
-                                    self.transitions.push(TransitionRecord {
-                                        period: t,
-                                        date: date.to_string(),
-                                        entity: entity.symbol.clone(),
-                                        field: field.clone(),
-                                        from: before.clone(),
-                                        to: after.clone(),
-                                        event: event.name.clone(),
-                                    });
-                                    self.journal.push(
-                                        JournalEntry::new(
-                                            t,
-                                            &date.to_string(),
-                                            format!("event:{}", event.name),
-                                            "set",
-                                            rule_key.clone(),
-                                            "applied",
-                                        )
-                                        .with_change(before, after),
-                                    );
-                                    continue;
-                                }
-                                // AN EVENT'S WRITE IS VALIDATED AGAINST THE
-                                // MACHINE (`docs/28` §6.1 rule 3). The
-                                // from-state is the status as it stands NOW
-                                // in the period — a machine move this period
-                                // included — and an absent edge is a refusal
-                                // with the edge named, not a silent
-                                // overwrite. An edge-less machine stays
-                                // unconstrained, `permits()`'s shipped rule;
-                                // any declared edge suffices whether guarded
-                                // or not, because a guard-less edge is
-                                // exactly a permission for a write like this.
-                                if field == "status" {
-                                    if let Some(machine) = self.machines.get(&entity.symbol) {
-                                        if !machine.edges.is_empty() {
-                                            let from = self
-                                                .current_state
-                                                .get(&entity.symbol)
-                                                .and_then(|f| f.get("status"))
-                                                .and_then(|v| match v {
-                                                    ExprValue::String(s) => Some(s.clone()),
-                                                    _ => None,
-                                                })
-                                                .unwrap_or_default();
-                                            let to = match &v {
-                                                ExprValue::String(s) => s.clone(),
-                                                other => describe_value(other),
-                                            };
-                                            let permitted = machine
-                                                .edges
-                                                .iter()
-                                                .any(|e| e.from == from && e.to == to);
-                                            if !permitted {
-                                                warnings.push(format!(
-                                                    "Event '{}' would move '{}' {from} -> {to}, an edge lifecycle '{}' does not declare; the write is refused.",
-                                                    event.name, entity.symbol, machine.lifecycle_id
-                                                ));
-                                                self.journal.push(
-                                                    JournalEntry::new(
-                                                        t,
-                                                        &date.to_string(),
-                                                        format!("event:{}", event.name),
-                                                        "set",
-                                                        format!("{}.status", entity.symbol),
-                                                        "declined",
-                                                    )
-                                                    .with_note(format!(
-                                                        "{from} -> {to} is not a declared edge of lifecycle '{}'",
-                                                        machine.lifecycle_id
-                                                    )),
-                                                );
-                                                continue;
-                                            }
-                                        }
-                                    }
-                                }
-                                let slot =
-                                    self.current_state.entry(entity.symbol.clone()).or_default();
-                                let before = slot.get(field).map(describe_value);
-                                let after = describe_value(&v);
-                                slot.insert(field.clone(), v);
-                                // Recorded even when the value does not change:
-                                // the log answers "did this event fire", and a
-                                // set that wrote the same value still fired.
-                                self.transitions.push(TransitionRecord {
-                                    period: t,
-                                    date: date.to_string(),
-                                    entity: entity.symbol.clone(),
-                                    field: field.clone(),
-                                    from: before.clone(),
-                                    to: after.clone(),
-                                    event: event.name.clone(),
-                                });
-                                let mut entry = JournalEntry::new(
-                                    t,
-                                    &date.to_string(),
-                                    format!("event:{}", event.name),
-                                    "set",
-                                    format!("{}.{}", entity.symbol, field),
-                                    "applied",
-                                )
-                                .with_change(before.clone(), after.clone());
-                                // A `status` write that MOVES the entity is an
-                                // arrival like any other, and runs the target
-                                // state's entry actions and the taken edge's
-                                // (`docs/34` D2, D6). Without this the same
-                                // arrival would mean two different things
-                                // depending on what caused it.
-                                if field == "status" && before.as_deref() != Some(after.as_str()) {
-                                    let plan = self.machines.get(&entity.symbol).map(|m| {
-                                        (
-                                            m.lifecycle_id.clone(),
-                                            m.edges.iter().position(|e| {
-                                                Some(e.from.as_str()) == before.as_deref()
-                                                    && e.to == after
-                                            }),
-                                        )
-                                    });
-                                    if let Some((lifecycle_id, edge_idx)) = plan {
-                                        entry.children = self.run_arrival_actions(
-                                            &entity.symbol,
-                                            &lifecycle_id,
-                                            &after,
-                                            edge_idx,
-                                            t,
-                                            date,
-                                            &env,
-                                            warnings,
-                                        );
-                                    }
-                                }
-                                self.journal.push(entry);
-                            }
-                            Err(err) => {
-                                warnings.push(format!(
-                                    "Event '{}' set {}.{} failed [{}]: {}; skipped.",
-                                    event.name, entity.symbol, field, err.code, err.message
-                                ));
-                                self.journal.push(
-                                    JournalEntry::new(
-                                        t,
-                                        &date.to_string(),
-                                        format!("event:{}", event.name),
-                                        "set",
-                                        format!("{}.{}", entity.symbol, field),
-                                        "failed",
-                                    )
-                                    .with_note(format!("[{}] {}", err.code, err.message)),
-                                );
-                            }
-                        }
-                    }
-                    "ActivateStream" => {
-                        if let Some(stream) = &action.stream {
-                            self.current_active.insert(stream.clone(), true);
-                            // `applied` HERE MEANS THE MASK MOVED, not that the
-                            // stream will pay: the stream's own `active when`
-                            // is a second gate, and `streams.rs` rewrites this
-                            // row to `overridden` for the periods it refuses.
-                            self.journal.push(JournalEntry::new(
-                                t,
-                                &date.to_string(),
-                                format!("event:{}", event.name),
-                                "activate_stream",
-                                stream.clone(),
-                                "applied",
-                            ));
-                        }
-                    }
-                    "DeactivateStream" => {
-                        if let Some(stream) = &action.stream {
-                            self.current_active.insert(stream.clone(), false);
-                            self.journal.push(JournalEntry::new(
-                                t,
-                                &date.to_string(),
-                                format!("event:{}", event.name),
-                                "deactivate_stream",
-                                stream.clone(),
-                                "applied",
-                            ));
-                        }
-                    }
-                    "ExerciseOption" => {
-                        if let Some(option) = &action.option {
-                            self.forced_exercise.push(option.clone());
-                            // Whether it is HELD is decided below, against
-                            // `exercisable in`; this row records the request.
-                            self.journal.push(JournalEntry::new(
-                                t,
-                                &date.to_string(),
-                                format!("event:{}", event.name),
-                                "exercise_option",
-                                option.clone(),
-                                "applied",
-                            ));
-                        }
-                    }
-                    other => {
-                        warnings.push(format!(
-                            "Event '{}': unknown action kind '{other}'; ignored.",
-                            event.name
-                        ));
-                        self.journal.push(
-                            JournalEntry::new(
-                                t,
-                                &date.to_string(),
-                                format!("event:{}", event.name),
-                                other,
-                                String::new(),
-                                "ignored",
-                            )
-                            .with_note("unknown action kind"),
-                        );
-                    }
-                }
-            }
-        }
-
-        for (option_idx, option) in ir.options.iter().enumerate() {
-            if self.option_exercised[option_idx] {
-                continue;
-            }
-            let Some((when, payoff)) = &self.compiled_options[option_idx] else {
-                continue;
-            };
-            // THE PHASE GATE BINDS ON A FORCED EXERCISE TOO. `exercisable in`
-            // is the window the option EXISTS in — a renewal option outside its
-            // window is not an option anyone holds — so an event cannot
-            // exercise one that is not exercisable yet. Previously `forced`
-            // short-circuited the whole test, so an `exercise option` action
-            // fired outside the declared window and against a false condition.
-            // What an event legitimately overrides is the option's own
-            // ELECTION, which is the `exercise when` below.
-            if let Some(phase_name) = &option.exercisable_in_phase {
-                let in_phase = ir.phases.iter().any(|phase| {
-                    phase.name == *phase_name
-                        && Date::parse(&phase.range.start)
-                            .map(|start| *date >= start)
-                            .unwrap_or(false)
-                        && Date::parse(&phase.range.end)
-                            .map(|end| *date <= end)
-                            .unwrap_or(false)
-                });
-                if !in_phase {
-                    if self.forced_exercise.iter().any(|name| name == &option.name) {
-                        warnings.push(format!(
-                            "Option '{}' was forced outside its exercisable phase '{phase_name}'; not exercised.",
-                            option.name
-                        ));
-                        // An option outside its window is not one anyone holds,
-                        // so an event cannot exercise it. The request was
-                        // journaled as made; this is what became of it.
-                        self.journal.push(
-                            JournalEntry::new(
-                                t,
-                                &date.to_string(),
-                                format!("option:{}", option.name),
-                                "exercise_option",
-                                option.name.clone(),
-                                "declined",
-                            )
-                            .with_note(format!(
-                                "forced outside its exercisable phase '{phase_name}'; an option outside its window is not one anyone holds"
-                            )),
-                        );
-                    }
-                    continue;
-                }
-            }
-            // An option HAS an owner, so `entity.<field>` in its guard means
-            // the owner's field — the same thing it means in a stream. Events
-            // have no owner and use the qualified path instead.
-            let mut option_env = env.clone();
-            if let Some(owner) = &option.owner {
-                apply_entity_state(&mut option_env, &pre_state, &owner.symbol);
-            }
-            let env = &option_env;
-            let forced = self.forced_exercise.iter().any(|name| name == &option.name);
-            let triggered = forced
-                || eval_bool_expr(when, env, "Option", &option.name, "exercise when", warnings);
-            if !triggered {
-                continue;
-            }
-            self.option_exercised[option_idx] = true;
-            self.journal.push(
-                JournalEntry::new(
-                    t,
-                    &date.to_string(),
-                    format!("option:{}", option.name),
-                    "exercise_option",
-                    option.name.clone(),
-                    "applied",
-                )
-                .with_note(if forced {
-                    "forced by an event, inside its exercisable window"
-                } else {
-                    "its own `exercise when` held"
-                }),
-            );
-            let mut payoff_values = vec![0.0_f64; self.periods];
-            match cfdl_expr::eval(payoff, env) {
-                Ok(ExprValue::Decimal(v)) => payoff_values[t] = v,
-                Ok(ExprValue::Int(v)) => payoff_values[t] = v as f64,
-                Ok(other) => warnings.push(format!(
-                    "Option '{}' payoff returned non-numeric {other:?}; using 0.",
-                    option.name
-                )),
-                Err(err) => warnings.push(format!(
-                    "Option '{}' payoff failed [{}]: {}; using 0.",
-                    option.name, err.code, err.message
-                )),
-            }
-            self.option_cash.insert(option.name.clone(), payoff_values);
-        }
-        self.forced_exercise.clear();
+        // --- occurrences: events, then options, against the same frozen pre-state ---
+        //
+        // What HAPPENS this period — an event's rising edge or scheduled test,
+        // an option's election or a forced exercise — lives in the occurrence
+        // module (`docs/34`). It reads the environment the machine read and
+        // writes through this walk's stores: the field store, the entity
+        // state, the stream mask, the transition record and the journal.
+        let mut occurrences = std::mem::take(&mut self.occurrences);
+        occurrences.step(ir, t, date, &env, &pre_state, self, warnings);
+        self.occurrences = occurrences;
 
         self.entity_state.push(self.current_state.clone());
         for (stream, active) in &self.current_active {
@@ -1325,77 +943,9 @@ pub(crate) fn prepare_state_walk(
     }
     let current_active: BTreeMap<String, bool> = BTreeMap::new();
     let stream_active: BTreeMap<String, Vec<bool>> = BTreeMap::new();
-    let option_cash: BTreeMap<String, Vec<f64>> = BTreeMap::new();
     let transitions: Vec<TransitionRecord> = Vec::new();
     let journal: Vec<JournalEntry> = Vec::new();
-    // WAS `event_fired`, the latch. It is now last period's CONDITION, which
-    // is what a rising edge compares against (`docs/34` D1). The latch was a
-    // hidden state — "has fired" — living outside the machine, unjournaled and
-    // undeclarable; this carries no memory of its own beyond one period.
-    let event_prev_condition = vec![false; ir.events.len()];
-    // Which periods a scheduled event is TESTED at. `None` for an event with
-    // no schedule, whose occurrences come from its condition's own dynamics.
-    let event_scheduled: Vec<Option<Vec<bool>>> = ir
-        .events
-        .iter()
-        .map(|event| {
-            let schedule = event.schedule.as_ref()?;
-            let mut slots: Vec<Vec<usize>> = vec![Vec::new(); timeline.len()];
-            match crate::timeline::apply_schedule_indices(schedule, timeline, &mut slots) {
-                Ok(()) => Some(slots.iter().map(|s| !s.is_empty()).collect()),
-                Err(err) => {
-                    warnings.push(format!(
-                        "Event '{}' schedule failed: {err}; event disabled.",
-                        event.name
-                    ));
-                    // Every period false: a schedule that could not be read
-                    // supplies no occurrences, rather than silently becoming
-                    // an unscheduled event that fires on its condition.
-                    Some(vec![false; timeline.len()])
-                }
-            }
-        })
-        .collect();
-    let option_exercised = vec![false; ir.options.len()];
-    let forced_exercise: Vec<String> = Vec::new();
-
-    let compiled_events: Vec<Option<cfdl_expr::CompiledExpr>> = ir
-        .events
-        .iter()
-        .map(|event| {
-            // An event with no `when` is purely scheduled: there is nothing to
-            // compile, and every scheduled occurrence fires.
-            let when = event.when.as_ref()?;
-            match cfdl_expr::compile_expr(&when.src) {
-                Ok(compiled) => Some(compiled),
-                Err(err) => {
-                    warnings.push(format!(
-                        "Event '{}' trigger compile failed [{}]: {}; event disabled.",
-                        event.name, err.code, err.message
-                    ));
-                    None
-                }
-            }
-        })
-        .collect();
-    let compiled_options: Vec<Option<(cfdl_expr::CompiledExpr, cfdl_expr::CompiledExpr)>> = ir
-        .options
-        .iter()
-        .map(|option| {
-            let when = cfdl_expr::compile_expr(&option.exercise_when.src);
-            let payoff = cfdl_expr::compile_expr(&option.payoff.src);
-            match (when, payoff) {
-                (Ok(w), Ok(p)) => Some((w, p)),
-                (Err(err), _) | (_, Err(err)) => {
-                    warnings.push(format!(
-                        "Option '{}' expression compile failed [{}]: {}; option disabled.",
-                        option.name, err.code, err.message
-                    ));
-                    None
-                }
-            }
-        })
-        .collect();
+    let occurrences = crate::occurrence::prepare_occurrences(ir, timeline, warnings);
 
     let field_roles: BTreeMap<String, BTreeMap<String, Vec<String>>> = ir
         .entities
@@ -1413,15 +963,9 @@ pub(crate) fn prepare_state_walk(
         current_state,
         current_active,
         stream_active,
-        option_cash,
         transitions,
         journal,
-        event_prev_condition,
-        event_scheduled,
-        option_exercised,
-        forced_exercise,
-        compiled_events,
-        compiled_options,
+        occurrences,
         periods,
         settled_cash: Arc::default(),
         settled_accounts: Arc::default(),
@@ -1453,27 +997,12 @@ impl StateWalk {
             values,
             entity_state,
             stream_active,
-            mut option_cash,
             transitions,
             journal,
-            periods,
+            occurrences,
             ..
         } = self;
-
-        // AN UNEXERCISED OPTION PUBLISHES ZERO, NOT NOTHING.
-        //
-        // `option_cash` was only written on exercise, so an option that stayed out
-        // of the money produced no series at all — a consumer could not tell "did
-        // not exercise" from "does not exist", and a case could not assert a
-        // NON-exercise, which is half of what an option model has to prove.
-        //
-        // Seeded after the loop rather than before it so `option_cash` keeps
-        // meaning "exercised" while the timeline runs.
-        for option in &ir.options {
-            option_cash
-                .entry(option.name.clone())
-                .or_insert_with(|| vec![0.0; periods]);
-        }
+        let option_cash = occurrences.finish(ir);
 
         (
             values,
