@@ -86,9 +86,7 @@ model "auto-abs-speed-150"
 use pack "credit" version "0.1.0"
 time calendar monthly from 2018-10 for 64
 
-entity asset trust : Credit.Asset.Loan {
-  collateral_type = "auto"
-}
+entity container trust : Container.SPV
 
 // THE SUB-POOLS ARE ENTITIES, NOT NAME SUFFIXES.
 //
@@ -101,175 +99,175 @@ entity asset trust : Credit.Asset.Loan {
 // the trust's totals are its children's totals by the relation.
 entity asset p01 : Credit.Asset.Loan {
   collateral_type = "auto"
-  part of asset.trust
+  part of container.trust
 }
 entity asset p02 : Credit.Asset.Loan {
   collateral_type = "auto"
-  part of asset.trust
+  part of container.trust
 }
 entity asset p03 : Credit.Asset.Loan {
   collateral_type = "auto"
-  part of asset.trust
+  part of container.trust
 }
 entity asset p04 : Credit.Asset.Loan {
   collateral_type = "auto"
-  part of asset.trust
+  part of container.trust
 }
 entity asset p06 : Credit.Asset.Loan {
   collateral_type = "auto"
-  part of asset.trust
+  part of container.trust
 }
 entity asset p07 : Credit.Asset.Loan {
   collateral_type = "auto"
-  part of asset.trust
+  part of container.trust
 }
 entity asset p08 : Credit.Asset.Loan {
   collateral_type = "auto"
-  part of asset.trust
+  part of container.trust
 }
 entity asset p09 : Credit.Asset.Loan {
   collateral_type = "auto"
-  part of asset.trust
+  part of container.trust
 }
 entity asset p11 : Credit.Asset.Loan {
   collateral_type = "auto"
-  part of asset.trust
+  part of container.trust
 }
 entity asset p12 : Credit.Asset.Loan {
   collateral_type = "auto"
-  part of asset.trust
+  part of container.trust
 }
 entity asset p13 : Credit.Asset.Loan {
   collateral_type = "auto"
-  part of asset.trust
+  part of container.trust
 }
 entity asset p14 : Credit.Asset.Loan {
   collateral_type = "auto"
-  part of asset.trust
+  part of container.trust
 }
 entity asset p16 : Credit.Asset.Loan {
   collateral_type = "auto"
-  part of asset.trust
+  part of container.trust
 }
 entity asset p17 : Credit.Asset.Loan {
   collateral_type = "auto"
-  part of asset.trust
+  part of container.trust
 }
 entity asset p18 : Credit.Asset.Loan {
   collateral_type = "auto"
-  part of asset.trust
+  part of container.trust
 }
 entity asset p19 : Credit.Asset.Loan {
   collateral_type = "auto"
-  part of asset.trust
+  part of container.trust
 }
 entity asset p21 : Credit.Asset.Loan {
   collateral_type = "auto"
-  part of asset.trust
+  part of container.trust
 }
 entity asset p22 : Credit.Asset.Loan {
   collateral_type = "auto"
-  part of asset.trust
+  part of container.trust
 }
 entity asset p23 : Credit.Asset.Loan {
   collateral_type = "auto"
-  part of asset.trust
+  part of container.trust
 }
 entity asset p24 : Credit.Asset.Loan {
   collateral_type = "auto"
-  part of asset.trust
+  part of container.trust
 }
 entity asset p26 : Credit.Asset.Loan {
   collateral_type = "auto"
-  part of asset.trust
+  part of container.trust
 }
 entity asset p27 : Credit.Asset.Loan {
   collateral_type = "auto"
-  part of asset.trust
+  part of container.trust
 }
 entity asset p28 : Credit.Asset.Loan {
   collateral_type = "auto"
-  part of asset.trust
+  part of container.trust
 }
 entity asset p29 : Credit.Asset.Loan {
   collateral_type = "auto"
-  part of asset.trust
+  part of container.trust
 }
 entity asset p31 : Credit.Asset.Loan {
   collateral_type = "auto"
-  part of asset.trust
+  part of container.trust
 }
 entity asset p32 : Credit.Asset.Loan {
   collateral_type = "auto"
-  part of asset.trust
+  part of container.trust
 }
 entity asset p33 : Credit.Asset.Loan {
   collateral_type = "auto"
-  part of asset.trust
+  part of container.trust
 }
 entity asset p34 : Credit.Asset.Loan {
   collateral_type = "auto"
-  part of asset.trust
+  part of container.trust
 }
 entity asset p36 : Credit.Asset.Loan {
   collateral_type = "auto"
-  part of asset.trust
+  part of container.trust
 }
 entity asset p37 : Credit.Asset.Loan {
   collateral_type = "auto"
-  part of asset.trust
+  part of container.trust
 }
 entity asset p38 : Credit.Asset.Loan {
   collateral_type = "auto"
-  part of asset.trust
+  part of container.trust
 }
 entity asset p39 : Credit.Asset.Loan {
   collateral_type = "auto"
-  part of asset.trust
+  part of container.trust
 }
 entity asset p40 : Credit.Asset.Loan {
   collateral_type = "auto"
-  part of asset.trust
+  part of container.trust
 }
 entity asset p41 : Credit.Asset.Loan {
   collateral_type = "auto"
-  part of asset.trust
+  part of container.trust
 }
 entity asset p42 : Credit.Asset.Loan {
   collateral_type = "auto"
-  part of asset.trust
+  part of container.trust
 }
 entity asset p43 : Credit.Asset.Loan {
   collateral_type = "auto"
-  part of asset.trust
+  part of container.trust
 }
 entity asset p44 : Credit.Asset.Loan {
   collateral_type = "auto"
-  part of asset.trust
+  part of container.trust
 }
 entity asset p45 : Credit.Asset.Loan {
   collateral_type = "auto"
-  part of asset.trust
+  part of container.trust
 }
 entity asset p46 : Credit.Asset.Loan {
   collateral_type = "auto"
-  part of asset.trust
+  part of container.trust
 }
 entity asset p47 : Credit.Asset.Loan {
   collateral_type = "auto"
-  part of asset.trust
+  part of container.trust
 }
 entity asset p48 : Credit.Asset.Loan {
   collateral_type = "auto"
-  part of asset.trust
+  part of container.trust
 }
 entity asset p49 : Credit.Asset.Loan {
   collateral_type = "auto"
-  part of asset.trust
+  part of container.trust
 }
 entity asset p50 : Credit.Asset.Loan {
   collateral_type = "auto"
-  part of asset.trust
+  part of container.trust
 }
 
 contract credit.loan.p01 on entity asset.p01 {
