@@ -790,6 +790,30 @@ stream co.only_cash on entity asset.co inflow currency USD {
 # ---------------------------------------------------------------------------
 
 
+def _pack_balance_factor(source: str, principal: float, owner: str = "fund.buyer") -> list[float]:
+    """The loan's OPENING balance as a fraction of principal, period by period.
+
+    The balance is an account (docs/42): its series is the CLOSING balance, so
+    the opening at t is the close at t-1 and the first opening is principal —
+    the same numbers the former survival factor carried, one index apart.
+    """
+    block = run_pack_model(source, 0.0, "credit")
+    closing = [
+        v if isinstance(v, (int, float)) else v["amount"]
+        for v in block["series"][f"account.{owner}.balance"]["values"]
+    ]
+    return [1.0] + [c / principal for c in closing[:-1]]
+
+
+def _pack_closing_balance(source: str, owner: str = "fund.buyer") -> list[float]:
+    """The account's CLOSING balance, one per model period."""
+    block = run_pack_model(source, 0.0, "credit")
+    return [
+        v if isinstance(v, (int, float)) else v["amount"]
+        for v in block["series"][f"account.{owner}.balance"]["values"]
+    ]
+
+
 def _pack_field(source: str, name: str, owner: str = "fund.buyer") -> list[float]:
     """A pack-lowered FIELD series. Bare numbers, not Money.
 
@@ -822,7 +846,7 @@ def credit_constant_hazard_matches_pow() -> tuple[float, float]:
     # A GUARD, not a bite: this held before the pool factor became a state.
     # It exists so the migration cannot have changed what was already right.
     cpr, cdr, ppy = 0.10, 0.03, 12
-    got = _pack_field(_pool("cpr = 0.10  cdr = 0.03"), "credit_loan_survival_p")
+    got = _pack_balance_factor(_pool("cpr = 0.10  cdr = 0.03"), 100000000.0)
     smm = 1 - (1 - cpr) ** (1 / ppy)
     mdr = 1 - (1 - cdr) ** (1 / ppy)
     k = (1 - mdr) - smm
@@ -834,7 +858,7 @@ def credit_constant_hazard_matches_pow() -> tuple[float, float]:
 def credit_psa_pool_factor() -> tuple[float, float]:
     # The motivating case. The hazard moves every month, so there is no closed
     # form; the reference is the product, computed here.
-    got = _pack_field(_pool("psa_speed = 1.5"), "credit_loan_survival_p")
+    got = _pack_balance_factor(_pool("psa_speed = 1.5"), 100000000.0)
     acc, want = 1.0, []
     for month in range(60):
         if month:
@@ -848,9 +872,9 @@ def credit_psa_pool_factor() -> tuple[float, float]:
 def credit_sda_curve() -> tuple[float, float]:
     # Isolate CDR by setting prepayment to zero, so k = 1 - mdr exactly and the
     # per-period ratio inverts straight back to the annual rate.
-    got = _pack_field(
+    got = _pack_balance_factor(
         _pool("cpr = 0  sda_speed = 1.0", periods=145, months=144),
-        "credit_loan_survival_p",
+        100000000.0,
     )
     published = {1: 0.0002, 30: 0.0060, 60: 0.0060, 61: 0.005905, 120: 0.0003, 121: 0.0003}
     worst = 0.0
@@ -867,7 +891,7 @@ def credit_abs_prepayment_model() -> tuple[float, float]:
     # implied SMM rises over the life because the denominator is fixed at the
     # original balance while the pool shrinks.
     speed = 0.015
-    got = _pack_field(_pool(f"cdr = 0  abs_speed = {speed}"), "credit_loan_survival_p")
+    got = _pack_balance_factor(_pool(f"cdr = 0  abs_speed = {speed}"), 100000000.0)
     worst = 0.0
     for month in (1, 12, 24, 36):
         smm = 1 - got[month] / got[month - 1]
@@ -885,8 +909,8 @@ def credit_recovery_lag_shift() -> tuple[float, float]:
     # F_lag(p) must be F(p-lag) exactly, for every p, not merely on average.
     lag = 9
     src = _pool(f"psa_speed = 1.5  sda_speed = 1.0  severity = 0.4  recovery_lag_months = {lag}", periods=75)
-    plain = _pack_field(src, "credit_loan_survival_p")
-    lagged = _pack_field(src, "credit_loan_survival_lag_p")
+    plain = _pack_balance_factor(src, 100000000.0)
+    lagged = [v / 100000000.0 for v in _pack_field(src, "credit_loan_lagged_balance_p")]
     worst = max(abs(lagged[p] - plain[p - lag]) for p in range(lag, 60))
     return worst, 0.0
 
@@ -908,9 +932,9 @@ contract credit.loan.book on entity fund.buyer {{
   terms {{ {terms}  payment_frequency = "{freq}" }}
 }}
 """
-    monthly = _pack_field(pool("monthly", 36, "month"), "credit_loan_balance_book")
-    daily = _pack_field(pool("daily", 1096, "month"), "credit_loan_balance_book")
-    # The same 36 payments, so the final balance must be identical.
+    monthly = _pack_closing_balance(pool("monthly", 36, "month"))
+    daily = _pack_closing_balance(pool("daily", 1096, "month"))
+    # The same 36 payments, so the final closing balance must be identical.
     return abs(daily[-1] - monthly[-1]), 0.0
 
 

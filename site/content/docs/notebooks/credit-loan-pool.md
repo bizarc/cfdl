@@ -90,7 +90,7 @@ print("streams:", len(model.ir["streams"]))
 ```
 
 ```
-streams: 7
+streams: 8
 ```
 
 ## Run
@@ -120,17 +120,17 @@ cf.head()
 ```
 
 ```
-shape: (126, 21)
+shape: (126, 22)
 ```
 
 ```
-         asset.buyer.credit_loan_balance_auto_a  asset.buyer.credit_loan_balance_lag_auto_a  \
-period                                                                                        
-2026-01                            2.500000e+07                               25000000.0      
-2026-02                            2.463766e+07                               25000000.0      
-2026-03                            2.427892e+07                               25000000.0      
-2026-04                            2.392374e+07                               25000000.0      
-2026-05                            2.357208e+07                               25000000.0      
+         account.asset.buyer.balance  asset.buyer.credit_loan_balance_lag_auto_a  \
+period                                                                             
+2026-01                 2.463766e+07                               25000000.0      
+2026-02                 2.427892e+07                               25000000.0      
+2026-03                 2.392374e+07                               25000000.0      
+2026-04                 2.357208e+07                               25000000.0      
+2026-05                 2.322393e+07                               25000000.0      
 
          domain.credit.balance_outstanding  domain.credit.gross_collections  \
 period                                                                        
@@ -156,21 +156,21 @@ period
 2026-04                        311408.337988                         -1.263334e+06   
 2026-05                        308501.648088                         -1.571836e+06   
 
-         domain.credit.principal_paid_to_date  ...  domain.credit.total_investment_income  \
-period                                         ...                                          
-2026-01                          3.202852e+05  ...                          136909.692714   
-2026-02                          6.375850e+05  ...                          134925.269580   
-2026-03                          9.519261e+05  ...                          132960.534379   
-2026-04                          1.263334e+06  ...                          131015.309222   
-2026-05                          1.571836e+06  ...                          129089.417780   
+         domain.credit.principal_paid_to_date  ...  entity.asset.buyer.net_cash_flow  \
+period                                         ...                                     
+2026-01                          3.202852e+05  ...                     -2.430320e+07   
+2026-02                          6.375850e+05  ...                      4.419767e+05   
+2026-03                          9.519261e+05  ...                      4.372023e+05   
+2026-04                          1.263334e+06  ...                      4.324722e+05   
+2026-05                          1.571836e+06  ...                      4.277859e+05   
 
-         entity.asset.buyer.net_cash_flow  model.net_cash_flow  \
-period                                                           
-2026-01                     -2.430320e+07        -2.430320e+07   
-2026-02                      4.419767e+05         4.419767e+05   
-2026-03                      4.372023e+05         4.372023e+05   
-2026-04                      4.324722e+05         4.324722e+05   
-2026-05                      4.277859e+05         4.277859e+05   
+         model.net_cash_flow  stream.credit.loan.defaults.auto_a  \
+period                                                             
+2026-01        -2.430320e+07                       -42053.563818   
+2026-02         4.419767e+05                       -41444.058407   
+2026-03         4.372023e+05                       -40840.599975   
+2026-04         4.324722e+05                       -40243.133886   
+2026-05         4.277859e+05                       -39651.605981   
 
          stream.credit.loan.interest.auto_a  stream.credit.loan.penalty.auto_a  \
 period                                                                           
@@ -204,7 +204,7 @@ period
 2026-04                                  0.0  
 2026-05                                  0.0  
 
-[5 rows x 21 columns]
+[5 rows x 22 columns]
 ```
 
 ```python
@@ -247,13 +247,14 @@ results.metrics_frame()
 16                          model.wal_years  3.843940e+00                    core
 17                 run.annual_discount_rate  6.000000e-02                    core
 18                     run.periods_per_year  1.200000e+01                    core
-19  stream.credit.loan.interest.auto_a.t...  6.499895e+06      USD           core
-20  stream.credit.loan.penalty.auto_a.total  8.220768e+04      USD           core
-21   stream.credit.loan.prepay.auto_a.total  8.220768e+06      USD           core
-22  stream.credit.loan.recoveries.auto_a...  1.167320e+06      USD           core
-23  stream.credit.loan.sched_principal.a...  1.475729e+07      USD           core
-24  stream.credit.loan.servicing.auto_a.... -4.999919e+05      USD           core
-25  stream.credit.purchase.price.auto_a.... -2.475000e+07      USD           core
+19  stream.credit.loan.defaults.auto_a.t... -2.021940e+06      USD           core
+20  stream.credit.loan.interest.auto_a.t...  6.499895e+06      USD           core
+21  stream.credit.loan.penalty.auto_a.total  8.220768e+04      USD           core
+22   stream.credit.loan.prepay.auto_a.total  8.220768e+06      USD           core
+23  stream.credit.loan.recoveries.auto_a...  1.167320e+06      USD           core
+24  stream.credit.loan.sched_principal.a...  1.475729e+07      USD           core
+25  stream.credit.loan.servicing.auto_a.... -4.999919e+05      USD           core
+26  stream.credit.purchase.price.auto_a.... -2.475000e+07      USD           core
 ```
 
 ## What-if

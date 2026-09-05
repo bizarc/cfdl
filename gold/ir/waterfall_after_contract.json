@@ -34,27 +34,10 @@
             "from": "2018-10-01",
             "to": "2019-03-01"
           }
-        },
-        "credit_loan_balance_pool": {
-          "init": {
-            "lang": "cfdl",
-            "src": "1200000.0"
-          },
-          "next": {
-            "lang": "cfdl",
-            "src": "if(months_between(parse_date(\"2018-10-01\"), time.date) <= 6, prev * (1 - ((-pmt(0.06 / 12, 6 - (months_between(parse_date(\"2018-10-01\"), time.date) - 1), 1)) - (0.06 / 12))) * ((1 - cpr_to_periodic(if(0 == 0, 0, 0 * (min(0.0002 * min(max(1, (0 + (months_between(parse_date(\"2018-10-01\"), time.date) - 1)) + 1), 30), 0.006) - 0.000095 * max(0, min(max(1, (0 + (months_between(parse_date(\"2018-10-01\"), time.date) - 1)) + 1), 120) - 60))), 12)) - if(0 == 0, cpr_to_periodic(if(0 == 0, 0, min(0 * 0.002 * max(1, min((0 + (months_between(parse_date(\"2018-10-01\"), time.date) - 1)) + 1, 30)), 1)), 12), min(0 / max(1 - 0 * (0 + (months_between(parse_date(\"2018-10-01\"), time.date) - 1)), 0.000001), 1))), 0)"
-          },
-          "schedule": {
-            "kind": "Every",
-            "every": "monthly",
-            "from": "2018-10-01",
-            "to": "2019-03-01"
-          }
         }
       },
       "field_roles": {
         "balance": [
-          "credit_loan_balance_pool",
           "credit_loan_balance_lag_pool"
         ]
       },
@@ -95,6 +78,22 @@
     },
     "random": {}
   },
+  "accounts": [
+    {
+      "name": "asset.pool.balance",
+      "owner_entity": "asset.pool",
+      "side": "due",
+      "init": {
+        "lang": "cfdl",
+        "src": "1200000.0"
+      }
+    },
+    {
+      "name": "asset.trust.balance",
+      "owner_entity": "asset.trust",
+      "fold": true
+    }
+  ],
   "lifecycles": [
     {
       "id": "credit.loan",
@@ -362,6 +361,48 @@
   ],
   "streams": [
     {
+      "id": "e9b8c4866ed69e2f81661ebabddd7f77",
+      "name": "credit.loan.defaults.pool",
+      "owner": {
+        "symbol": "asset.pool"
+      },
+      "direction": "writeoff",
+      "currency": "USD",
+      "moves": "asset.pool.balance",
+      "schedule": {
+        "kind": "Every",
+        "every": "monthly",
+        "from": "2018-10-01",
+        "to": "2019-03-01"
+      },
+      "amount": {
+        "lang": "cfdl",
+        "src": "if(months_between(parse_date(\"2018-10-01\"), time.date) < 6.0, prev.asset.pool.balance * cpr_to_periodic(if(0.0 == 0.0, 0.0, 0.0 * (min(0.0002 * min(max(1.0, (0.0 + (months_between(parse_date(\"2018-10-01\"), time.date))) + 1.0), 30.0), 0.006) - 0.000095 * max(0.0, min(max(1.0, (0.0 + (months_between(parse_date(\"2018-10-01\"), time.date))) + 1.0), 120.0) - 60.0))), 12.0), 0.0)"
+      },
+      "active_when": {
+        "lang": "cfdl",
+        "src": "true"
+      },
+      "provenance": {
+        "source_file": "model.cfdl",
+        "source_span": {
+          "start_line": 27,
+          "start_col": 1,
+          "end_line": 36,
+          "end_col": 1
+        },
+        "generated_by": {
+          "pack": {
+            "name": "credit",
+            "version": "0.1.0"
+          },
+          "rule_id": "credit_loan_level_pay_defaults",
+          "line": "default",
+          "contract": "credit.loan.pool"
+        }
+      }
+    },
+    {
       "id": "3768d0eaf081992c3fbec518ae334060",
       "name": "credit.loan.interest.pool",
       "owner": {
@@ -378,7 +419,7 @@
       },
       "amount": {
         "lang": "cfdl",
-        "src": "if(months_between(parse_date(\"2018-10-01\"), time.date) < 6.0, entity.asset.pool.credit_loan_balance_pool * (1.0 - cpr_to_periodic(if(0.0 == 0.0, 0.0, 0.0 * (min(0.0002 * min(max(1.0, (0.0 + (months_between(parse_date(\"2018-10-01\"), time.date))) + 1.0), 30.0), 0.006) - 0.000095 * max(0.0, min(max(1.0, (0.0 + (months_between(parse_date(\"2018-10-01\"), time.date))) + 1.0), 120.0) - 60.0))), 12.0)) * (0.06 / 12.0), 0.0)"
+        "src": "if(months_between(parse_date(\"2018-10-01\"), time.date) < 6.0, prev.asset.pool.balance * (1.0 - cpr_to_periodic(if(0.0 == 0.0, 0.0, 0.0 * (min(0.0002 * min(max(1.0, (0.0 + (months_between(parse_date(\"2018-10-01\"), time.date))) + 1.0), 30.0), 0.006) - 0.000095 * max(0.0, min(max(1.0, (0.0 + (months_between(parse_date(\"2018-10-01\"), time.date))) + 1.0), 120.0) - 60.0))), 12.0)) * (0.06 / 12.0), 0.0)"
       },
       "active_when": {
         "lang": "cfdl",
@@ -420,7 +461,7 @@
       },
       "amount": {
         "lang": "cfdl",
-        "src": "if(months_between(parse_date(\"2018-10-01\"), time.date) < 6.0, entity.asset.pool.credit_loan_balance_pool * (1.0 - ((-pmt(0.06 / 12.0, 6.0 - months_between(parse_date(\"2018-10-01\"), time.date), 1.0)) - (0.06 / 12.0))) * if(0.0 == 0.0, cpr_to_periodic(if(0.0 == 0.0, 0.0, min(0.0 * 0.002 * max(1.0, min((0.0 + (months_between(parse_date(\"2018-10-01\"), time.date))) + 1.0, 30.0)), 1.0)), 12.0), min(0.0 / max(1.0 - 0.0 * (0.0 + (months_between(parse_date(\"2018-10-01\"), time.date))), 0.000001), 1.0)) * 0.0, 0.0)"
+        "src": "if(months_between(parse_date(\"2018-10-01\"), time.date) < 6.0, prev.asset.pool.balance * (1.0 - ((-pmt(0.06 / 12.0, 6.0 - months_between(parse_date(\"2018-10-01\"), time.date), 1.0)) - (0.06 / 12.0))) * if(0.0 == 0.0, cpr_to_periodic(if(0.0 == 0.0, 0.0, min(0.0 * 0.002 * max(1.0, min((0.0 + (months_between(parse_date(\"2018-10-01\"), time.date))) + 1.0, 30.0)), 1.0)), 12.0), min(0.0 / max(1.0 - 0.0 * (0.0 + (months_between(parse_date(\"2018-10-01\"), time.date))), 0.000001), 1.0)) * 0.0, 0.0)"
       },
       "active_when": {
         "lang": "cfdl",
@@ -454,6 +495,7 @@
       "direction": "inflow",
       "currency": "USD",
       "category": "operating.collection.prepayment",
+      "moves": "asset.pool.balance",
       "schedule": {
         "kind": "Every",
         "every": "monthly",
@@ -462,7 +504,7 @@
       },
       "amount": {
         "lang": "cfdl",
-        "src": "if(months_between(parse_date(\"2018-10-01\"), time.date) < 6.0, entity.asset.pool.credit_loan_balance_pool * (1.0 - ((-pmt(0.06 / 12.0, 6.0 - months_between(parse_date(\"2018-10-01\"), time.date), 1.0)) - (0.06 / 12.0))) * if(0.0 == 0.0, cpr_to_periodic(if(0.0 == 0.0, 0.0, min(0.0 * 0.002 * max(1.0, min((0.0 + (months_between(parse_date(\"2018-10-01\"), time.date))) + 1.0, 30.0)), 1.0)), 12.0), min(0.0 / max(1.0 - 0.0 * (0.0 + (months_between(parse_date(\"2018-10-01\"), time.date))), 0.000001), 1.0)), 0.0)"
+        "src": "if(months_between(parse_date(\"2018-10-01\"), time.date) < 6.0, prev.asset.pool.balance * (1.0 - ((-pmt(0.06 / 12.0, 6.0 - months_between(parse_date(\"2018-10-01\"), time.date), 1.0)) - (0.06 / 12.0))) * if(0.0 == 0.0, cpr_to_periodic(if(0.0 == 0.0, 0.0, min(0.0 * 0.002 * max(1.0, min((0.0 + (months_between(parse_date(\"2018-10-01\"), time.date))) + 1.0, 30.0)), 1.0)), 12.0), min(0.0 / max(1.0 - 0.0 * (0.0 + (months_between(parse_date(\"2018-10-01\"), time.date))), 0.000001), 1.0)), 0.0)"
       },
       "active_when": {
         "lang": "cfdl",
@@ -538,6 +580,7 @@
       "direction": "inflow",
       "currency": "USD",
       "category": "operating.collection.principal",
+      "moves": "asset.pool.balance",
       "schedule": {
         "kind": "Every",
         "every": "monthly",
@@ -546,7 +589,7 @@
       },
       "amount": {
         "lang": "cfdl",
-        "src": "if(months_between(parse_date(\"2018-10-01\"), time.date) < 6.0, entity.asset.pool.credit_loan_balance_pool * (1.0 - cpr_to_periodic(if(0.0 == 0.0, 0.0, 0.0 * (min(0.0002 * min(max(1.0, (0.0 + (months_between(parse_date(\"2018-10-01\"), time.date))) + 1.0), 30.0), 0.006) - 0.000095 * max(0.0, min(max(1.0, (0.0 + (months_between(parse_date(\"2018-10-01\"), time.date))) + 1.0), 120.0) - 60.0))), 12.0)) * ((-pmt(0.06 / 12.0, 6.0 - months_between(parse_date(\"2018-10-01\"), time.date), 1.0)) - (0.06 / 12.0)), 0.0)"
+        "src": "if(months_between(parse_date(\"2018-10-01\"), time.date) < 6.0, prev.asset.pool.balance * (1.0 - cpr_to_periodic(if(0.0 == 0.0, 0.0, 0.0 * (min(0.0002 * min(max(1.0, (0.0 + (months_between(parse_date(\"2018-10-01\"), time.date))) + 1.0), 30.0), 0.006) - 0.000095 * max(0.0, min(max(1.0, (0.0 + (months_between(parse_date(\"2018-10-01\"), time.date))) + 1.0), 120.0) - 60.0))), 12.0)) * ((-pmt(0.06 / 12.0, 6.0 - months_between(parse_date(\"2018-10-01\"), time.date), 1.0)) - (0.06 / 12.0)), 0.0)"
       },
       "active_when": {
         "lang": "cfdl",
@@ -588,7 +631,7 @@
       },
       "amount": {
         "lang": "cfdl",
-        "src": "if(months_between(parse_date(\"2018-10-01\"), time.date) < 6.0, entity.asset.pool.credit_loan_balance_pool * (1.0 - cpr_to_periodic(if(0.0 == 0.0, 0.0, 0.0 * (min(0.0002 * min(max(1.0, (0.0 + (months_between(parse_date(\"2018-10-01\"), time.date))) + 1.0), 30.0), 0.006) - 0.000095 * max(0.0, min(max(1.0, (0.0 + (months_between(parse_date(\"2018-10-01\"), time.date))) + 1.0), 120.0) - 60.0))), 12.0)) * (0.0 / 12.0), 0.0)"
+        "src": "if(months_between(parse_date(\"2018-10-01\"), time.date) < 6.0, prev.asset.pool.balance * (1.0 - cpr_to_periodic(if(0.0 == 0.0, 0.0, 0.0 * (min(0.0002 * min(max(1.0, (0.0 + (months_between(parse_date(\"2018-10-01\"), time.date))) + 1.0), 30.0), 0.006) - 0.000095 * max(0.0, min(max(1.0, (0.0 + (months_between(parse_date(\"2018-10-01\"), time.date))) + 1.0), 120.0) - 60.0))), 12.0)) * (0.0 / 12.0), 0.0)"
       },
       "active_when": {
         "lang": "cfdl",
@@ -615,6 +658,21 @@
     }
   ],
   "stream_inputs": [
+    {
+      "stream": "credit.loan.defaults.pool",
+      "contract": "credit.loan.pool",
+      "terms": {
+        "age_months": "0",
+        "cdr": "0",
+        "payment_frequency": "",
+        "sda_speed": "0"
+      },
+      "defaults_applied": [
+        "age_months",
+        "payment_frequency",
+        "sda_speed"
+      ]
+    },
     {
       "stream": "credit.loan.interest.pool",
       "contract": "credit.loan.pool",

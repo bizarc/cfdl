@@ -8,6 +8,21 @@ This project follows Semantic Versioning: https://semver.org/
 
 ## [Unreleased]
 
+**The loan's balance is the account (`docs/42` §3.5, third PR).**
+`Contract.Debt` declares the `balance` account, owed by the borrower. A
+refinement opens it — `[[accounts]] contract_name = "credit.loan" name =
+"balance" init = "{{contract.principal}}"` in its lowering file — and its
+rows move it with `account = "balance"`: scheduled principal, prepayments
+and the bullet as cash, the default as a `writeoff` row (gross loss, with
+recoveries the cash against it). Every row reads the opening balance as
+`prev.balance`. The side follows from the type's `side` (`credit.loan`
+receives, so the balance is due). A machine's `set balance = 0` on
+`repurchased` or `prepaid` is a write-off of the opening balance,
+journaled as a `move` from the machine, and the fields that play the role
+are still ended. The survival factors and the stopgap balance field are
+gone; the lagged twin recoveries read stays private. Every stream in every
+credit fixture and benchmark is unchanged to the digit (46/46).
+
 **One `credit.loan`.** The credit pack's three pool types collapse into one
 loan type, `credit.loan` (`Credit.Contract.Loan`, refining `Contract.Debt`):
 the repayment pattern is the master's `amortization` term (`level_pay`, the

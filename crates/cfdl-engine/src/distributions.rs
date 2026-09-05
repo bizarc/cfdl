@@ -477,7 +477,7 @@ impl WaterfallStage {
                 // cause: this scheduled principal, from this loan, lowered
                 // this balance by this much.
                 if let Some(moved) = moves.get(&account.name) {
-                    for (stream, delta) in moved {
+                    for (actor, delta) in moved {
                         if *delta == 0.0 {
                             continue;
                         }
@@ -486,7 +486,7 @@ impl WaterfallStage {
                         let mut entry = JournalEntry::new(
                             t,
                             &date_str,
-                            format!("stream:{stream}"),
+                            actor.clone(),
                             "move",
                             account.name.clone(),
                             "applied",

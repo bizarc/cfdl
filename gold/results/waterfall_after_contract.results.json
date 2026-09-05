@@ -1,7 +1,7 @@
 {
   "results_version": "0.13",
-  "model_hash": "85ee032cac3d19be8185d64351ee4f2b252d73f7b5d4fce23e6c2d9241e4b8a4",
-  "ledger_hash": "92c5fd8b4f040c1b824cb7c868130d8b832be929391d779a3ff41461a715fdb3",
+  "model_hash": "28ea50a74b888a3d2411dee09f1cece8298297cb64f4ba31c74c04fb3ddc9b1d",
+  "ledger_hash": "913b9be9f8b0b148734f222d5cb321bc76f084b1c4e721488c5688ba52cb1558",
   "engine": {
     "name": "cfdl-engine",
     "version": "0.9.0"
@@ -12,6 +12,21 @@
       "note_balance": 500000.0
     },
     "streams": [
+      {
+        "contract": "credit.loan.pool",
+        "defaults_applied": [
+          "age_months",
+          "payment_frequency",
+          "sda_speed"
+        ],
+        "stream": "credit.loan.defaults.pool",
+        "terms": {
+          "age_months": "0",
+          "cdr": "0",
+          "payment_frequency": "",
+          "sda_speed": "0"
+        }
+      },
       {
         "contract": "credit.loan.pool",
         "defaults_applied": [
@@ -145,6 +160,10 @@
       "model.wal_years": 0.291667,
       "run.annual_discount_rate": 0.03,
       "run.periods_per_year": 12.0,
+      "stream.credit.loan.defaults.pool.total": {
+        "amount": 0.0,
+        "currency": "USD"
+      },
       "stream.credit.loan.interest.pool.total": {
         "amount": 21087.280638,
         "currency": "USD"
@@ -171,22 +190,37 @@
       }
     },
     "series": {
-      "asset.pool.credit_loan_balance_lag_pool": {
+      "account.asset.pool.balance": {
         "index": {
           "calendar": "monthly",
           "start": "2018-10-01",
           "periods": 6
         },
         "values": [
-          1200000.0,
           1002485.4532270713,
-          803983.3337202778,
-          604488.7036159508,
-          403996.600361102,
-          202502.03658997882
+          803983.3337202781,
+          604488.7036159509,
+          403996.6003611019,
+          202502.03658997876,
+          -2.9103830456733704e-11
         ]
       },
-      "asset.pool.credit_loan_balance_pool": {
+      "account.asset.trust.balance": {
+        "index": {
+          "calendar": "monthly",
+          "start": "2018-10-01",
+          "periods": 6
+        },
+        "values": [
+          1002485.4532270713,
+          803983.3337202781,
+          604488.7036159509,
+          403996.6003611019,
+          202502.03658997876,
+          -2.9103830456733704e-11
+        ]
+      },
+      "asset.pool.credit_loan_balance_lag_pool": {
         "index": {
           "calendar": "monthly",
           "start": "2018-10-01",
@@ -645,6 +679,43 @@
           }
         ]
       },
+      "stream.credit.loan.defaults.pool": {
+        "index": {
+          "calendar": "monthly",
+          "start": "2018-10-01",
+          "periods": 6
+        },
+        "offset": 1.0,
+        "entity": "asset.pool",
+        "contract": "credit.loan.pool",
+        "line": "default",
+        "values": [
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          }
+        ]
+      },
       "stream.credit.loan.interest.pool": {
         "index": {
           "calendar": "monthly",
@@ -911,6 +982,17 @@
       {
         "period": 0,
         "date": "2018-10-01",
+        "actor": "stream:credit.loan.sched_principal.pool",
+        "action": "move",
+        "target": "asset.pool.balance",
+        "outcome": "applied",
+        "amount": -197514.546773,
+        "pot_before": 1200000.0,
+        "pot_after": 1002485.453227
+      },
+      {
+        "period": 0,
+        "date": "2018-10-01",
         "actor": "waterfall:notes.principal",
         "action": "pay",
         "target": "note_principal -> party.holders",
@@ -918,6 +1000,17 @@
         "amount": 197514.546773,
         "pot_before": 197514.546773,
         "pot_after": 0.0
+      },
+      {
+        "period": 1,
+        "date": "2018-11-01",
+        "actor": "stream:credit.loan.sched_principal.pool",
+        "action": "move",
+        "target": "asset.pool.balance",
+        "outcome": "applied",
+        "amount": -198502.119507,
+        "pot_before": 1002485.453227,
+        "pot_after": 803983.33372
       },
       {
         "period": 1,
@@ -933,6 +1026,17 @@
       {
         "period": 2,
         "date": "2018-12-01",
+        "actor": "stream:credit.loan.sched_principal.pool",
+        "action": "move",
+        "target": "asset.pool.balance",
+        "outcome": "applied",
+        "amount": -199494.630104,
+        "pot_before": 803983.33372,
+        "pot_after": 604488.703616
+      },
+      {
+        "period": 2,
+        "date": "2018-12-01",
         "actor": "waterfall:notes.principal",
         "action": "pay",
         "target": "note_principal -> party.holders",
@@ -940,6 +1044,17 @@
         "amount": 199494.630104,
         "pot_before": 199494.630104,
         "pot_after": 0.0
+      },
+      {
+        "period": 3,
+        "date": "2019-01-01",
+        "actor": "stream:credit.loan.sched_principal.pool",
+        "action": "move",
+        "target": "asset.pool.balance",
+        "outcome": "applied",
+        "amount": -200492.103255,
+        "pot_before": 604488.703616,
+        "pot_after": 403996.600361
       },
       {
         "period": 3,
@@ -955,6 +1070,17 @@
       {
         "period": 4,
         "date": "2019-02-01",
+        "actor": "stream:credit.loan.sched_principal.pool",
+        "action": "move",
+        "target": "asset.pool.balance",
+        "outcome": "applied",
+        "amount": -201494.563771,
+        "pot_before": 403996.600361,
+        "pot_after": 202502.03659
+      },
+      {
+        "period": 4,
+        "date": "2019-02-01",
         "actor": "waterfall:notes.principal",
         "action": "pay",
         "target": "note_principal -> party.holders",
@@ -962,6 +1088,17 @@
         "amount": 201494.563771,
         "pot_before": 201494.563771,
         "pot_after": 0.0
+      },
+      {
+        "period": 5,
+        "date": "2019-03-01",
+        "actor": "stream:credit.loan.sched_principal.pool",
+        "action": "move",
+        "target": "asset.pool.balance",
+        "outcome": "applied",
+        "amount": -202502.03659,
+        "pot_before": 202502.03659,
+        "pot_after": -0.0
       },
       {
         "period": 5,
@@ -1154,6 +1291,23 @@
             },
             {
               "amount": 610543.640319,
+              "currency": "USD"
+            }
+          ]
+        },
+        "stream.credit.loan.defaults.pool": {
+          "index": {
+            "calendar": "annual",
+            "start": "2018-01-01",
+            "periods": 2
+          },
+          "values": [
+            {
+              "amount": 0.0,
+              "currency": "USD"
+            },
+            {
+              "amount": 0.0,
               "currency": "USD"
             }
           ]
@@ -1359,6 +1513,7 @@
             ],
             "total": 1221087.280638,
             "streams": [
+              "credit.loan.defaults.pool",
               "credit.loan.interest.pool",
               "credit.loan.penalty.pool",
               "credit.loan.prepay.pool",
@@ -1437,6 +1592,7 @@
         "instance": "pool",
         "subject": "asset.pool",
         "streams": [
+          "credit.loan.defaults.pool",
           "credit.loan.interest.pool",
           "credit.loan.penalty.pool",
           "credit.loan.prepay.pool",

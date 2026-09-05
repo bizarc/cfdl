@@ -17,22 +17,6 @@
       "type": "Credit.Asset.Loan",
       "fields": {},
       "rules": {
-        "credit_loan_balance": {
-          "init": {
-            "lang": "cfdl",
-            "src": "1200000"
-          },
-          "next": {
-            "lang": "cfdl",
-            "src": "if(months_between(parse_date(\"2026-01-01\"), time.date) <= 12, prev * (1 - ((-pmt(0 / 12, 12 - (months_between(parse_date(\"2026-01-01\"), time.date) - 1), 1)) - (0 / 12))) * ((1 - cpr_to_periodic(if(0 == 0, 0, 0 * (min(0.0002 * min(max(1, (0 + (months_between(parse_date(\"2026-01-01\"), time.date) - 1)) + 1), 30), 0.006) - 0.000095 * max(0, min(max(1, (0 + (months_between(parse_date(\"2026-01-01\"), time.date) - 1)) + 1), 120) - 60))), 12)) - if(0 == 0, cpr_to_periodic(if(0 == 0, 0, min(0 * 0.002 * max(1, min((0 + (months_between(parse_date(\"2026-01-01\"), time.date) - 1)) + 1, 30)), 1)), 12), min(0 / max(1 - 0 * (0 + (months_between(parse_date(\"2026-01-01\"), time.date) - 1)), 0.000001), 1))), 0)"
-          },
-          "schedule": {
-            "kind": "Every",
-            "every": "monthly",
-            "from": "2026-01-01",
-            "to": "2026-12-01"
-          }
-        },
         "credit_loan_balance_lag": {
           "init": {
             "lang": "cfdl",
@@ -52,7 +36,6 @@
       },
       "field_roles": {
         "balance": [
-          "credit_loan_balance",
           "credit_loan_balance_lag"
         ]
       },
@@ -64,6 +47,17 @@
     "constants": {},
     "random": {}
   },
+  "accounts": [
+    {
+      "name": "asset.lender.balance",
+      "owner_entity": "asset.lender",
+      "side": "due",
+      "init": {
+        "lang": "cfdl",
+        "src": "1200000"
+      }
+    }
+  ],
   "lifecycles": [
     {
       "id": "credit.loan",
@@ -304,6 +298,48 @@
   ],
   "streams": [
     {
+      "id": "ce05857fcef0c8e55afbdfc5f8078182",
+      "name": "credit.loan.defaults",
+      "owner": {
+        "symbol": "asset.lender"
+      },
+      "direction": "writeoff",
+      "currency": "USD",
+      "moves": "asset.lender.balance",
+      "schedule": {
+        "kind": "Every",
+        "every": "monthly",
+        "from": "2026-01-01",
+        "to": "2026-12-01"
+      },
+      "amount": {
+        "lang": "cfdl",
+        "src": "if(months_between(parse_date(\"2026-01-01\"), time.date) < 12.0, prev.asset.lender.balance * cpr_to_periodic(if(0.0 == 0.0, 0.0, 0.0 * (min(0.0002 * min(max(1.0, (0.0 + (months_between(parse_date(\"2026-01-01\"), time.date))) + 1.0), 30.0), 0.006) - 0.000095 * max(0.0, min(max(1.0, (0.0 + (months_between(parse_date(\"2026-01-01\"), time.date))) + 1.0), 120.0) - 60.0))), 12.0), 0.0)"
+      },
+      "active_when": {
+        "lang": "cfdl",
+        "src": "true"
+      },
+      "provenance": {
+        "source_file": "model.cfdl",
+        "source_span": {
+          "start_line": 22,
+          "start_col": 1,
+          "end_line": 31,
+          "end_col": 1
+        },
+        "generated_by": {
+          "pack": {
+            "name": "credit",
+            "version": "0.1.0"
+          },
+          "rule_id": "credit_loan_level_pay_defaults",
+          "line": "default",
+          "contract": "credit.loan"
+        }
+      }
+    },
+    {
       "id": "ed749220b19f59e0f5b3aa0dd2ccfb0f",
       "name": "credit.loan.interest",
       "owner": {
@@ -320,7 +356,7 @@
       },
       "amount": {
         "lang": "cfdl",
-        "src": "if(months_between(parse_date(\"2026-01-01\"), time.date) < 12.0, entity.asset.lender.credit_loan_balance * (1.0 - cpr_to_periodic(if(0.0 == 0.0, 0.0, 0.0 * (min(0.0002 * min(max(1.0, (0.0 + (months_between(parse_date(\"2026-01-01\"), time.date))) + 1.0), 30.0), 0.006) - 0.000095 * max(0.0, min(max(1.0, (0.0 + (months_between(parse_date(\"2026-01-01\"), time.date))) + 1.0), 120.0) - 60.0))), 12.0)) * (0.0 / 12.0), 0.0)"
+        "src": "if(months_between(parse_date(\"2026-01-01\"), time.date) < 12.0, prev.asset.lender.balance * (1.0 - cpr_to_periodic(if(0.0 == 0.0, 0.0, 0.0 * (min(0.0002 * min(max(1.0, (0.0 + (months_between(parse_date(\"2026-01-01\"), time.date))) + 1.0), 30.0), 0.006) - 0.000095 * max(0.0, min(max(1.0, (0.0 + (months_between(parse_date(\"2026-01-01\"), time.date))) + 1.0), 120.0) - 60.0))), 12.0)) * (0.0 / 12.0), 0.0)"
       },
       "active_when": {
         "lang": "cfdl",
@@ -362,7 +398,7 @@
       },
       "amount": {
         "lang": "cfdl",
-        "src": "if(months_between(parse_date(\"2026-01-01\"), time.date) < 12.0, entity.asset.lender.credit_loan_balance * (1.0 - ((-pmt(0.0 / 12.0, 12.0 - months_between(parse_date(\"2026-01-01\"), time.date), 1.0)) - (0.0 / 12.0))) * if(0.0 == 0.0, cpr_to_periodic(if(0.0 == 0.0, 0.0, min(0.0 * 0.002 * max(1.0, min((0.0 + (months_between(parse_date(\"2026-01-01\"), time.date))) + 1.0, 30.0)), 1.0)), 12.0), min(0.0 / max(1.0 - 0.0 * (0.0 + (months_between(parse_date(\"2026-01-01\"), time.date))), 0.000001), 1.0)) * 0.0, 0.0)"
+        "src": "if(months_between(parse_date(\"2026-01-01\"), time.date) < 12.0, prev.asset.lender.balance * (1.0 - ((-pmt(0.0 / 12.0, 12.0 - months_between(parse_date(\"2026-01-01\"), time.date), 1.0)) - (0.0 / 12.0))) * if(0.0 == 0.0, cpr_to_periodic(if(0.0 == 0.0, 0.0, min(0.0 * 0.002 * max(1.0, min((0.0 + (months_between(parse_date(\"2026-01-01\"), time.date))) + 1.0, 30.0)), 1.0)), 12.0), min(0.0 / max(1.0 - 0.0 * (0.0 + (months_between(parse_date(\"2026-01-01\"), time.date))), 0.000001), 1.0)) * 0.0, 0.0)"
       },
       "active_when": {
         "lang": "cfdl",
@@ -396,6 +432,7 @@
       "direction": "inflow",
       "currency": "USD",
       "category": "operating.collection.prepayment",
+      "moves": "asset.lender.balance",
       "schedule": {
         "kind": "Every",
         "every": "monthly",
@@ -404,7 +441,7 @@
       },
       "amount": {
         "lang": "cfdl",
-        "src": "if(months_between(parse_date(\"2026-01-01\"), time.date) < 12.0, entity.asset.lender.credit_loan_balance * (1.0 - ((-pmt(0.0 / 12.0, 12.0 - months_between(parse_date(\"2026-01-01\"), time.date), 1.0)) - (0.0 / 12.0))) * if(0.0 == 0.0, cpr_to_periodic(if(0.0 == 0.0, 0.0, min(0.0 * 0.002 * max(1.0, min((0.0 + (months_between(parse_date(\"2026-01-01\"), time.date))) + 1.0, 30.0)), 1.0)), 12.0), min(0.0 / max(1.0 - 0.0 * (0.0 + (months_between(parse_date(\"2026-01-01\"), time.date))), 0.000001), 1.0)), 0.0)"
+        "src": "if(months_between(parse_date(\"2026-01-01\"), time.date) < 12.0, prev.asset.lender.balance * (1.0 - ((-pmt(0.0 / 12.0, 12.0 - months_between(parse_date(\"2026-01-01\"), time.date), 1.0)) - (0.0 / 12.0))) * if(0.0 == 0.0, cpr_to_periodic(if(0.0 == 0.0, 0.0, min(0.0 * 0.002 * max(1.0, min((0.0 + (months_between(parse_date(\"2026-01-01\"), time.date))) + 1.0, 30.0)), 1.0)), 12.0), min(0.0 / max(1.0 - 0.0 * (0.0 + (months_between(parse_date(\"2026-01-01\"), time.date))), 0.000001), 1.0)), 0.0)"
       },
       "active_when": {
         "lang": "cfdl",
@@ -480,6 +517,7 @@
       "direction": "inflow",
       "currency": "USD",
       "category": "operating.collection.principal",
+      "moves": "asset.lender.balance",
       "schedule": {
         "kind": "Every",
         "every": "monthly",
@@ -488,7 +526,7 @@
       },
       "amount": {
         "lang": "cfdl",
-        "src": "if(months_between(parse_date(\"2026-01-01\"), time.date) < 12.0, entity.asset.lender.credit_loan_balance * (1.0 - cpr_to_periodic(if(0.0 == 0.0, 0.0, 0.0 * (min(0.0002 * min(max(1.0, (0.0 + (months_between(parse_date(\"2026-01-01\"), time.date))) + 1.0), 30.0), 0.006) - 0.000095 * max(0.0, min(max(1.0, (0.0 + (months_between(parse_date(\"2026-01-01\"), time.date))) + 1.0), 120.0) - 60.0))), 12.0)) * ((-pmt(0.0 / 12.0, 12.0 - months_between(parse_date(\"2026-01-01\"), time.date), 1.0)) - (0.0 / 12.0)), 0.0)"
+        "src": "if(months_between(parse_date(\"2026-01-01\"), time.date) < 12.0, prev.asset.lender.balance * (1.0 - cpr_to_periodic(if(0.0 == 0.0, 0.0, 0.0 * (min(0.0002 * min(max(1.0, (0.0 + (months_between(parse_date(\"2026-01-01\"), time.date))) + 1.0), 30.0), 0.006) - 0.000095 * max(0.0, min(max(1.0, (0.0 + (months_between(parse_date(\"2026-01-01\"), time.date))) + 1.0), 120.0) - 60.0))), 12.0)) * ((-pmt(0.0 / 12.0, 12.0 - months_between(parse_date(\"2026-01-01\"), time.date), 1.0)) - (0.0 / 12.0)), 0.0)"
       },
       "active_when": {
         "lang": "cfdl",
@@ -530,7 +568,7 @@
       },
       "amount": {
         "lang": "cfdl",
-        "src": "if(months_between(parse_date(\"2026-01-01\"), time.date) < 12.0, entity.asset.lender.credit_loan_balance * (1.0 - cpr_to_periodic(if(0.0 == 0.0, 0.0, 0.0 * (min(0.0002 * min(max(1.0, (0.0 + (months_between(parse_date(\"2026-01-01\"), time.date))) + 1.0), 30.0), 0.006) - 0.000095 * max(0.0, min(max(1.0, (0.0 + (months_between(parse_date(\"2026-01-01\"), time.date))) + 1.0), 120.0) - 60.0))), 12.0)) * (0.0 / 12.0), 0.0)"
+        "src": "if(months_between(parse_date(\"2026-01-01\"), time.date) < 12.0, prev.asset.lender.balance * (1.0 - cpr_to_periodic(if(0.0 == 0.0, 0.0, 0.0 * (min(0.0002 * min(max(1.0, (0.0 + (months_between(parse_date(\"2026-01-01\"), time.date))) + 1.0), 30.0), 0.006) - 0.000095 * max(0.0, min(max(1.0, (0.0 + (months_between(parse_date(\"2026-01-01\"), time.date))) + 1.0), 120.0) - 60.0))), 12.0)) * (0.0 / 12.0), 0.0)"
       },
       "active_when": {
         "lang": "cfdl",
@@ -557,6 +595,21 @@
     }
   ],
   "stream_inputs": [
+    {
+      "stream": "credit.loan.defaults",
+      "contract": "credit.loan",
+      "terms": {
+        "age_months": "0",
+        "cdr": "0",
+        "payment_frequency": "",
+        "sda_speed": "0"
+      },
+      "defaults_applied": [
+        "age_months",
+        "payment_frequency",
+        "sda_speed"
+      ]
+    },
     {
       "stream": "credit.loan.interest",
       "contract": "credit.loan",

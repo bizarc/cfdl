@@ -691,6 +691,55 @@ amortization = ["interest_only", "bullet"]
   contract's terms — `E1385_LINE_HAS_NO_RULE_FOR_TERMS` names the line and
   the combination the pack has no row for (a floating level-pay loan).
 
+### The account a contract opens, and the rows that move it
+
+A master may declare an ACCOUNT (`docs/42` §3.5) — `Contract.Debt` declares
+`balance`, owed by the borrower. A refinement OPENS it in its lowering file
+and MOVES it from its rows:
+
+```toml
+[[accounts]]
+contract_name = "credit.loan"
+name = "balance"
+init = "{{contract.principal}}"
+
+[[rules]]
+id = "credit_loan_level_pay_sched_principal"
+line = "principal"
+account = "balance"
+direction = "inflow"
+amount_expr = "prev.balance * ..."
+
+[[rules]]
+id = "credit_loan_level_pay_defaults"
+line = "default"
+account = "balance"
+direction = "writeoff"
+category = ""
+amount_expr = "prev.balance * ..."
+```
+
+- `[[accounts]]` creates `<subject>.<name>` on the contract's subject. Its
+  side follows from the type's `side`: a subject that `pays` owes the
+  balance, one that `receives` is due it, and a type opening an account
+  must declare one. `init` is the balance at the timeline's first period,
+  expanded from the contract's terms; omitted, it opens at zero and the
+  proceeds row raises it. `when` / `when_stated` / `when_unstated` select
+  as on a rule.
+- `account` on a row names the account it moves, by the master's name. An
+  `inflow` or `outflow` moves it by the account's side; `accrual` raises
+  and `writeoff` lowers it, and those two must name one. A non-cash row
+  carries no category.
+- Every row reads the OPENING balance as `prev.<name>` — `prev.balance` —
+  which the compiler spells out as `prev.<subject>.<name>`.
+- Load refuses a row that moves an account its type does not carry, and a
+  non-cash row that moves nothing.
+- A machine's `set <name> = <expr>` where the entity carries the account is
+  a MOVEMENT of the opening balance to that value, journaled as a `move`
+  from the machine: `on enter repurchased { set balance = 0 }` writes the
+  whole opening off, and every row reading `prev.balance` that period reads
+  zero. Fields that play the same name as a role are written too.
+
 ### Currency
 
 Omit `currency` from a lowering rule. An empty value inherits the model's

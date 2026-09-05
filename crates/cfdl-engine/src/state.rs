@@ -240,12 +240,31 @@ pub(crate) struct StateWalk {
     /// Each account's `init` — its opening in the first period, where there
     /// is no prior close to read (`docs/42` §7).
     account_inits: Arc<BTreeMap<String, f64>>,
+    /// The accounts entities carry (`<entity>.<name>`, declared or opened by
+    /// a contract). A machine's `set <name> = <expr>` on one of them is a
+    /// MOVEMENT of the balance to that value, not a write into a field
+    /// store (`docs/42` §3.5): the walk applies it to the period's opening
+    /// and the stage journals it as a `move`.
+    entity_accounts: BTreeSet<String>,
+    /// What this period's machines set an account to: (account, value,
+    /// actor). Drained by the walk after each state step.
+    account_writes: Vec<(String, f64, String)>,
 }
 
 impl StateWalk {
     /// Hand the walk each account's initial balance, once.
     pub(crate) fn observe_account_inits(&mut self, inits: Arc<BTreeMap<String, f64>>) {
         self.account_inits = inits;
+    }
+
+    /// Tell the walk which accounts entities carry, once.
+    pub(crate) fn observe_entity_accounts(&mut self, accounts: BTreeSet<String>) {
+        self.entity_accounts = accounts;
+    }
+
+    /// What this period's machines set an account to, drained.
+    pub(crate) fn take_account_writes(&mut self) -> Vec<(String, f64, String)> {
+        std::mem::take(&mut self.account_writes)
     }
 
     /// Hand the walk the cash settled so far, before stepping the next period.
@@ -318,10 +337,23 @@ impl StateWalk {
                 // balance = 0` on a pool writes the survival factor and its
                 // lagged twin, one journal line each.
                 let targets: Vec<String> = if action.role {
-                    roles
+                    let mut targets: Vec<String> = roles
                         .and_then(|r| r.get(&action.field))
                         .cloned()
-                        .unwrap_or_default()
+                        .unwrap_or_default();
+                    // AND THE ACCOUNT OF THAT NAME, where the entity carries
+                    // one (docs/42 §3.5): `set balance = 0` on a loan whose
+                    // balance is an account moves the account, and still ends
+                    // the private fields that play the role — the lagged twin
+                    // recoveries read, so a repurchased loan recovers nothing
+                    // for the seller.
+                    if self
+                        .entity_accounts
+                        .contains(&format!("{symbol}.{}", action.field))
+                    {
+                        targets.push(action.field.clone());
+                    }
+                    targets
                 } else {
                     vec![action.field.clone()]
                 };
@@ -361,6 +393,37 @@ impl StateWalk {
             // period. It does not enter the entity-state record — that would be
             // a second copy, free to go stale.
             let rule_key = format!("{symbol}.{field}");
+            // AN ACCOUNT IS MOVED, NOT WRITTEN (docs/42 §3.5). The value is
+            // what the balance becomes at this period's open; the walk turns
+            // it into a movement and the stage journals the `move`.
+            if self.entity_accounts.contains(&rule_key) {
+                let amount = match &value {
+                    ExprValue::Decimal(d) => *d,
+                    ExprValue::Int(i) => *i as f64,
+                    other => {
+                        warnings.push(format!(
+                            "Lifecycle '{lifecycle_id}' {grain} action `set {field}` produced {other:?}, which is not a number; skipped."
+                        ));
+                        continue;
+                    }
+                };
+                self.account_writes
+                    .push((rule_key.clone(), amount, actor(&author)));
+                children.push(
+                    JournalEntry::new(
+                        t,
+                        &date.to_string(),
+                        actor(&author),
+                        "set",
+                        rule_key.clone(),
+                        "applied",
+                    )
+                    .with_note(format!(
+                        "an account: its opening becomes {amount}, applied as a movement — see the `move` line"
+                    )),
+                );
+                continue;
+            }
             let Some(series) = self.values.get_mut(&rule_key) else {
                 warnings.push(format!(
                     "Lifecycle '{lifecycle_id}' {grain} action `set {field}` names no field store; skipped."
@@ -1363,6 +1426,8 @@ pub(crate) fn prepare_state_walk(
         settled_cash: Arc::default(),
         settled_accounts: Arc::default(),
         account_inits: Arc::default(),
+        entity_accounts: BTreeSet::new(),
+        account_writes: Vec::new(),
     }
 }
 

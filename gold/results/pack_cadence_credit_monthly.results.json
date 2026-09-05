@@ -1,7 +1,7 @@
 {
   "results_version": "0.13",
-  "model_hash": "f4278766ebf541db79b81c7ec05dfa32a07fe835dc59d8b177a27c32725cffd0",
-  "ledger_hash": "cafc5c03568810059d8ef06f3a7385898ff7407a6a69094e91c5354b8a729243",
+  "model_hash": "164dbfc237c32017049600da7f7bf3f141602025e4944e3d78bd72f5f0067997",
+  "ledger_hash": "384c17964704cbdfb9122d2afd09294e4dc5d7a904d12917e17a9925286cfe2e",
   "engine": {
     "name": "cfdl-engine",
     "version": "0.9.0"
@@ -9,6 +9,21 @@
   "warnings": [],
   "inputs": {
     "streams": [
+      {
+        "contract": "credit.loan.book",
+        "defaults_applied": [
+          "age_months",
+          "payment_frequency",
+          "sda_speed"
+        ],
+        "stream": "credit.loan.defaults.book",
+        "terms": {
+          "age_months": "0",
+          "cdr": "0.03",
+          "payment_frequency": "",
+          "sda_speed": "0"
+        }
+      },
       {
         "contract": "credit.loan.book",
         "defaults_applied": [
@@ -133,6 +148,10 @@
       "model.wal_years": 1.374159,
       "run.annual_discount_rate": 0.1,
       "run.periods_per_year": 12.0,
+      "stream.credit.loan.defaults.book.total": {
+        "amount": -50872.196247,
+        "currency": "USD"
+      },
       "stream.credit.loan.interest.book.total": {
         "amount": 100083.352406,
         "currency": "USD"
@@ -159,49 +178,49 @@
       }
     },
     "series": {
-      "asset.buyer.credit_loan_balance_book": {
+      "account.asset.buyer.balance": {
         "index": {
           "calendar": "monthly",
           "start": "2025-01-01",
           "periods": 39
         },
         "values": [
-          1200000.0,
           1156305.6930169503,
-          1113295.1310958469,
+          1113295.131095847,
           1070959.394143379,
-          1029289.6703163811,
-          988277.2547526157,
+          1029289.6703163813,
+          988277.2547526159,
           947913.5483161734,
-          908190.0563573246,
-          869098.3874866653,
-          830630.252363378,
-          792777.4624974679,
+          908190.0563573249,
+          869098.3874866652,
+          830630.2523633782,
+          792777.462497468,
           755531.9290657941,
-          718885.661741753,
-          682830.7675384519,
+          718885.6617417531,
+          682830.767538452,
           647359.4496652187,
-          612464.0063972974,
+          612464.006397297,
           578136.8299585768,
-          544370.4054172091,
+          544370.405417209,
           511157.30959395965,
-          478490.209983157,
-          446361.8636860864,
-          414765.1163566954,
-          383692.9011594622,
-          353138.2377392933,
-          323094.23120331083,
-          293554.07111439446,
-          264511.03049634345,
-          235958.46485052566,
-          207889.81118388314,
-          180298.58704816384,
-          153178.38959025146,
-          126522.89461346655,
-          100325.8556497132,
-          74581.10304234808,
-          49282.54303964889,
-          24424.156898760488,
+          478490.20998315664,
+          446361.863686086,
+          414765.11635669507,
+          383692.90115946194,
+          353138.2377392931,
+          323094.2312033106,
+          293554.07111439423,
+          264511.03049634316,
+          235958.46485052534,
+          207889.81118388282,
+          180298.58704816358,
+          153178.3895902513,
+          126522.89461346637,
+          100325.855649713,
+          74581.10304234794,
+          49282.54303964879,
+          24424.156898760433,
+          0.0,
           0.0,
           0.0,
           0.0
@@ -2118,6 +2137,175 @@
           }
         ]
       },
+      "stream.credit.loan.defaults.book": {
+        "index": {
+          "calendar": "monthly",
+          "start": "2025-01-01",
+          "periods": 39
+        },
+        "offset": 1.0,
+        "entity": "asset.buyer",
+        "contract": "credit.loan.book",
+        "line": "default",
+        "values": [
+          {
+            "amount": -3042.058337,
+            "currency": "USD"
+          },
+          {
+            "amount": -2931.291144,
+            "currency": "USD"
+          },
+          {
+            "amount": -2822.257279,
+            "currency": "USD"
+          },
+          {
+            "amount": -2714.934128,
+            "currency": "USD"
+          },
+          {
+            "amount": -2609.299352,
+            "currency": "USD"
+          },
+          {
+            "amount": -2505.330885,
+            "currency": "USD"
+          },
+          {
+            "amount": -2403.006927,
+            "currency": "USD"
+          },
+          {
+            "amount": -2302.305943,
+            "currency": "USD"
+          },
+          {
+            "amount": -2203.206662,
+            "currency": "USD"
+          },
+          {
+            "amount": -2105.68807,
+            "currency": "USD"
+          },
+          {
+            "amount": -2009.729407,
+            "currency": "USD"
+          },
+          {
+            "amount": -1915.310169,
+            "currency": "USD"
+          },
+          {
+            "amount": -1822.4101,
+            "currency": "USD"
+          },
+          {
+            "amount": -1731.009191,
+            "currency": "USD"
+          },
+          {
+            "amount": -1641.087676,
+            "currency": "USD"
+          },
+          {
+            "amount": -1552.62603,
+            "currency": "USD"
+          },
+          {
+            "amount": -1465.604969,
+            "currency": "USD"
+          },
+          {
+            "amount": -1380.005442,
+            "currency": "USD"
+          },
+          {
+            "amount": -1295.808629,
+            "currency": "USD"
+          },
+          {
+            "amount": -1212.995944,
+            "currency": "USD"
+          },
+          {
+            "amount": -1131.549024,
+            "currency": "USD"
+          },
+          {
+            "amount": -1051.449733,
+            "currency": "USD"
+          },
+          {
+            "amount": -972.680157,
+            "currency": "USD"
+          },
+          {
+            "amount": -895.2226,
+            "currency": "USD"
+          },
+          {
+            "amount": -819.059583,
+            "currency": "USD"
+          },
+          {
+            "amount": -744.173841,
+            "currency": "USD"
+          },
+          {
+            "amount": -670.548321,
+            "currency": "USD"
+          },
+          {
+            "amount": -598.166179,
+            "currency": "USD"
+          },
+          {
+            "amount": -527.010778,
+            "currency": "USD"
+          },
+          {
+            "amount": -457.065683,
+            "currency": "USD"
+          },
+          {
+            "amount": -388.314664,
+            "currency": "USD"
+          },
+          {
+            "amount": -320.741689,
+            "currency": "USD"
+          },
+          {
+            "amount": -254.330921,
+            "currency": "USD"
+          },
+          {
+            "amount": -189.066722,
+            "currency": "USD"
+          },
+          {
+            "amount": -124.933642,
+            "currency": "USD"
+          },
+          {
+            "amount": -61.916425,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          }
+        ]
+      },
       "stream.credit.loan.interest.book": {
         "index": {
           "calendar": "monthly",
@@ -3139,6 +3327,1185 @@
         ]
       }
     },
+    "journal": [
+      {
+        "period": 0,
+        "date": "2025-01-01",
+        "actor": "stream:credit.loan.defaults.book",
+        "action": "move",
+        "target": "asset.buyer.balance",
+        "outcome": "applied",
+        "amount": -3042.058337,
+        "pot_before": 1200000.0,
+        "pot_after": 1196957.941663
+      },
+      {
+        "period": 0,
+        "date": "2025-01-01",
+        "actor": "stream:credit.loan.prepay.book",
+        "action": "move",
+        "target": "asset.buyer.balance",
+        "outcome": "applied",
+        "amount": -10223.258721,
+        "pot_before": 1196957.941663,
+        "pot_after": 1186734.682942
+      },
+      {
+        "period": 0,
+        "date": "2025-01-01",
+        "actor": "stream:credit.loan.sched_principal.book",
+        "action": "move",
+        "target": "asset.buyer.balance",
+        "outcome": "applied",
+        "amount": -30428.989925,
+        "pot_before": 1186734.682942,
+        "pot_after": 1156305.693017
+      },
+      {
+        "period": 1,
+        "date": "2025-02-01",
+        "actor": "stream:credit.loan.defaults.book",
+        "action": "move",
+        "target": "asset.buyer.balance",
+        "outcome": "applied",
+        "amount": -2931.291144,
+        "pot_before": 1156305.693017,
+        "pot_after": 1153374.401873
+      },
+      {
+        "period": 1,
+        "date": "2025-02-01",
+        "actor": "stream:credit.loan.prepay.book",
+        "action": "move",
+        "target": "asset.buyer.balance",
+        "outcome": "applied",
+        "amount": -9842.988949,
+        "pot_before": 1153374.401873,
+        "pot_after": 1143531.412923
+      },
+      {
+        "period": 1,
+        "date": "2025-02-01",
+        "actor": "stream:credit.loan.sched_principal.book",
+        "action": "move",
+        "target": "asset.buyer.balance",
+        "outcome": "applied",
+        "amount": -30236.281828,
+        "pot_before": 1143531.412923,
+        "pot_after": 1113295.131096
+      },
+      {
+        "period": 2,
+        "date": "2025-03-01",
+        "actor": "stream:credit.loan.defaults.book",
+        "action": "move",
+        "target": "asset.buyer.balance",
+        "outcome": "applied",
+        "amount": -2822.257279,
+        "pot_before": 1113295.131096,
+        "pot_after": 1110472.873817
+      },
+      {
+        "period": 2,
+        "date": "2025-03-01",
+        "actor": "stream:credit.loan.prepay.book",
+        "action": "move",
+        "target": "asset.buyer.balance",
+        "outcome": "applied",
+        "amount": -9468.685515,
+        "pot_before": 1110472.873817,
+        "pot_after": 1101004.188302
+      },
+      {
+        "period": 2,
+        "date": "2025-03-01",
+        "actor": "stream:credit.loan.sched_principal.book",
+        "action": "move",
+        "target": "asset.buyer.balance",
+        "outcome": "applied",
+        "amount": -30044.794159,
+        "pot_before": 1101004.188302,
+        "pot_after": 1070959.394143
+      },
+      {
+        "period": 3,
+        "date": "2025-04-01",
+        "actor": "stream:credit.loan.defaults.book",
+        "action": "move",
+        "target": "asset.buyer.balance",
+        "outcome": "applied",
+        "amount": -2714.934128,
+        "pot_before": 1070959.394143,
+        "pot_after": 1068244.460016
+      },
+      {
+        "period": 3,
+        "date": "2025-04-01",
+        "actor": "stream:credit.loan.prepay.book",
+        "action": "move",
+        "target": "asset.buyer.balance",
+        "outcome": "applied",
+        "amount": -9100.27051,
+        "pot_before": 1068244.460016,
+        "pot_after": 1059144.189506
+      },
+      {
+        "period": 3,
+        "date": "2025-04-01",
+        "actor": "stream:credit.loan.sched_principal.book",
+        "action": "move",
+        "target": "asset.buyer.balance",
+        "outcome": "applied",
+        "amount": -29854.519189,
+        "pot_before": 1059144.189506,
+        "pot_after": 1029289.670316
+      },
+      {
+        "period": 4,
+        "date": "2025-05-01",
+        "actor": "stream:credit.loan.defaults.book",
+        "action": "move",
+        "target": "asset.buyer.balance",
+        "outcome": "applied",
+        "amount": -2609.299352,
+        "pot_before": 1029289.670316,
+        "pot_after": 1026680.370964
+      },
+      {
+        "period": 4,
+        "date": "2025-05-01",
+        "actor": "stream:credit.loan.prepay.book",
+        "action": "move",
+        "target": "asset.buyer.balance",
+        "outcome": "applied",
+        "amount": -8737.666972,
+        "pot_before": 1026680.370964,
+        "pot_after": 1017942.703992
+      },
+      {
+        "period": 4,
+        "date": "2025-05-01",
+        "actor": "stream:credit.loan.sched_principal.book",
+        "action": "move",
+        "target": "asset.buyer.balance",
+        "outcome": "applied",
+        "amount": -29665.44924,
+        "pot_before": 1017942.703992,
+        "pot_after": 988277.254753
+      },
+      {
+        "period": 5,
+        "date": "2025-06-01",
+        "actor": "stream:credit.loan.defaults.book",
+        "action": "move",
+        "target": "asset.buyer.balance",
+        "outcome": "applied",
+        "amount": -2505.330885,
+        "pot_before": 988277.254753,
+        "pot_after": 985771.923868
+      },
+      {
+        "period": 5,
+        "date": "2025-06-01",
+        "actor": "stream:credit.loan.prepay.book",
+        "action": "move",
+        "target": "asset.buyer.balance",
+        "outcome": "applied",
+        "amount": -8380.798874,
+        "pot_before": 985771.923868,
+        "pot_after": 977391.124994
+      },
+      {
+        "period": 5,
+        "date": "2025-06-01",
+        "actor": "stream:credit.loan.sched_principal.book",
+        "action": "move",
+        "target": "asset.buyer.balance",
+        "outcome": "applied",
+        "amount": -29477.576678,
+        "pot_before": 977391.124994,
+        "pot_after": 947913.548316
+      },
+      {
+        "period": 6,
+        "date": "2025-07-01",
+        "actor": "stream:credit.loan.defaults.book",
+        "action": "move",
+        "target": "asset.buyer.balance",
+        "outcome": "applied",
+        "amount": -2403.006927,
+        "pot_before": 947913.548316,
+        "pot_after": 945510.541389
+      },
+      {
+        "period": 6,
+        "date": "2025-07-01",
+        "actor": "stream:credit.loan.prepay.book",
+        "action": "move",
+        "target": "asset.buyer.balance",
+        "outcome": "applied",
+        "amount": -8029.591111,
+        "pot_before": 945510.541389,
+        "pot_after": 937480.950278
+      },
+      {
+        "period": 6,
+        "date": "2025-07-01",
+        "actor": "stream:credit.loan.sched_principal.book",
+        "action": "move",
+        "target": "asset.buyer.balance",
+        "outcome": "applied",
+        "amount": -29290.893921,
+        "pot_before": 937480.950278,
+        "pot_after": 908190.056357
+      },
+      {
+        "period": 7,
+        "date": "2025-08-01",
+        "actor": "stream:credit.loan.defaults.book",
+        "action": "move",
+        "target": "asset.buyer.balance",
+        "outcome": "applied",
+        "amount": -2302.305943,
+        "pot_before": 908190.056357,
+        "pot_after": 905887.750414
+      },
+      {
+        "period": 7,
+        "date": "2025-08-01",
+        "actor": "stream:credit.loan.prepay.book",
+        "action": "move",
+        "target": "asset.buyer.balance",
+        "outcome": "applied",
+        "amount": -7683.969493,
+        "pot_before": 905887.750414,
+        "pot_after": 898203.780921
+      },
+      {
+        "period": 7,
+        "date": "2025-08-01",
+        "actor": "stream:credit.loan.sched_principal.book",
+        "action": "move",
+        "target": "asset.buyer.balance",
+        "outcome": "applied",
+        "amount": -29105.393434,
+        "pot_before": 898203.780921,
+        "pot_after": 869098.387487
+      },
+      {
+        "period": 8,
+        "date": "2025-09-01",
+        "actor": "stream:credit.loan.defaults.book",
+        "action": "move",
+        "target": "asset.buyer.balance",
+        "outcome": "applied",
+        "amount": -2203.206662,
+        "pot_before": 869098.387487,
+        "pot_after": 866895.180824
+      },
+      {
+        "period": 8,
+        "date": "2025-09-01",
+        "actor": "stream:credit.loan.prepay.book",
+        "action": "move",
+        "target": "asset.buyer.balance",
+        "outcome": "applied",
+        "amount": -7343.860731,
+        "pot_before": 866895.180824,
+        "pot_after": 859551.320093
+      },
+      {
+        "period": 8,
+        "date": "2025-09-01",
+        "actor": "stream:credit.loan.sched_principal.book",
+        "action": "move",
+        "target": "asset.buyer.balance",
+        "outcome": "applied",
+        "amount": -28921.06773,
+        "pot_before": 859551.320093,
+        "pot_after": 830630.252363
+      },
+      {
+        "period": 9,
+        "date": "2025-10-01",
+        "actor": "stream:credit.loan.defaults.book",
+        "action": "move",
+        "target": "asset.buyer.balance",
+        "outcome": "applied",
+        "amount": -2105.68807,
+        "pot_before": 830630.252363,
+        "pot_after": 828524.564294
+      },
+      {
+        "period": 9,
+        "date": "2025-10-01",
+        "actor": "stream:credit.loan.prepay.book",
+        "action": "move",
+        "target": "asset.buyer.balance",
+        "outcome": "applied",
+        "amount": -7009.192428,
+        "pot_before": 828524.564294,
+        "pot_after": 821515.371866
+      },
+      {
+        "period": 9,
+        "date": "2025-10-01",
+        "actor": "stream:credit.loan.sched_principal.book",
+        "action": "move",
+        "target": "asset.buyer.balance",
+        "outcome": "applied",
+        "amount": -28737.909368,
+        "pot_before": 821515.371866,
+        "pot_after": 792777.462497
+      },
+      {
+        "period": 10,
+        "date": "2025-11-01",
+        "actor": "stream:credit.loan.defaults.book",
+        "action": "move",
+        "target": "asset.buyer.balance",
+        "outcome": "applied",
+        "amount": -2009.729407,
+        "pot_before": 792777.462497,
+        "pot_after": 790767.73309
+      },
+      {
+        "period": 10,
+        "date": "2025-11-01",
+        "actor": "stream:credit.loan.prepay.book",
+        "action": "move",
+        "target": "asset.buyer.balance",
+        "outcome": "applied",
+        "amount": -6679.893068,
+        "pot_before": 790767.73309,
+        "pot_after": 784087.840022
+      },
+      {
+        "period": 10,
+        "date": "2025-11-01",
+        "actor": "stream:credit.loan.sched_principal.book",
+        "action": "move",
+        "target": "asset.buyer.balance",
+        "outcome": "applied",
+        "amount": -28555.910956,
+        "pot_before": 784087.840022,
+        "pot_after": 755531.929066
+      },
+      {
+        "period": 11,
+        "date": "2025-12-01",
+        "actor": "stream:credit.loan.defaults.book",
+        "action": "move",
+        "target": "asset.buyer.balance",
+        "outcome": "applied",
+        "amount": -1915.310169,
+        "pot_before": 755531.929066,
+        "pot_after": 753616.618896
+      },
+      {
+        "period": 11,
+        "date": "2025-12-01",
+        "actor": "stream:credit.loan.prepay.book",
+        "action": "move",
+        "target": "asset.buyer.balance",
+        "outcome": "applied",
+        "amount": -6355.892006,
+        "pot_before": 753616.618896,
+        "pot_after": 747260.72689
+      },
+      {
+        "period": 11,
+        "date": "2025-12-01",
+        "actor": "stream:credit.loan.sched_principal.book",
+        "action": "move",
+        "target": "asset.buyer.balance",
+        "outcome": "applied",
+        "amount": -28375.065148,
+        "pot_before": 747260.72689,
+        "pot_after": 718885.661742
+      },
+      {
+        "period": 12,
+        "date": "2026-01-01",
+        "actor": "stream:credit.loan.defaults.book",
+        "action": "move",
+        "target": "asset.buyer.balance",
+        "outcome": "applied",
+        "amount": -1822.4101,
+        "pot_before": 718885.661742,
+        "pot_after": 717063.251641
+      },
+      {
+        "period": 12,
+        "date": "2026-01-01",
+        "actor": "stream:credit.loan.prepay.book",
+        "action": "move",
+        "target": "asset.buyer.balance",
+        "outcome": "applied",
+        "amount": -6037.119459,
+        "pot_before": 717063.251641,
+        "pot_after": 711026.132183
+      },
+      {
+        "period": 12,
+        "date": "2026-01-01",
+        "actor": "stream:credit.loan.sched_principal.book",
+        "action": "move",
+        "target": "asset.buyer.balance",
+        "outcome": "applied",
+        "amount": -28195.364644,
+        "pot_before": 711026.132183,
+        "pot_after": 682830.767538
+      },
+      {
+        "period": 13,
+        "date": "2026-02-01",
+        "actor": "stream:credit.loan.defaults.book",
+        "action": "move",
+        "target": "asset.buyer.balance",
+        "outcome": "applied",
+        "amount": -1731.009191,
+        "pot_before": 682830.767538,
+        "pot_after": 681099.758348
+      },
+      {
+        "period": 13,
+        "date": "2026-02-01",
+        "actor": "stream:credit.loan.prepay.book",
+        "action": "move",
+        "target": "asset.buyer.balance",
+        "outcome": "applied",
+        "amount": -5723.506491,
+        "pot_before": 681099.758348,
+        "pot_after": 675376.251857
+      },
+      {
+        "period": 13,
+        "date": "2026-02-01",
+        "actor": "stream:credit.loan.sched_principal.book",
+        "action": "move",
+        "target": "asset.buyer.balance",
+        "outcome": "applied",
+        "amount": -28016.802191,
+        "pot_before": 675376.251857,
+        "pot_after": 647359.449665
+      },
+      {
+        "period": 14,
+        "date": "2026-03-01",
+        "actor": "stream:credit.loan.defaults.book",
+        "action": "move",
+        "target": "asset.buyer.balance",
+        "outcome": "applied",
+        "amount": -1641.087676,
+        "pot_before": 647359.449665,
+        "pot_after": 645718.36199
+      },
+      {
+        "period": 14,
+        "date": "2026-03-01",
+        "actor": "stream:credit.loan.prepay.book",
+        "action": "move",
+        "target": "asset.buyer.balance",
+        "outcome": "applied",
+        "amount": -5414.98501,
+        "pot_before": 645718.36199,
+        "pot_after": 640303.376979
+      },
+      {
+        "period": 14,
+        "date": "2026-03-01",
+        "actor": "stream:credit.loan.sched_principal.book",
+        "action": "move",
+        "target": "asset.buyer.balance",
+        "outcome": "applied",
+        "amount": -27839.370582,
+        "pot_before": 640303.376979,
+        "pot_after": 612464.006397
+      },
+      {
+        "period": 15,
+        "date": "2026-04-01",
+        "actor": "stream:credit.loan.defaults.book",
+        "action": "move",
+        "target": "asset.buyer.balance",
+        "outcome": "applied",
+        "amount": -1552.62603,
+        "pot_before": 612464.006397,
+        "pot_after": 610911.380367
+      },
+      {
+        "period": 15,
+        "date": "2026-04-01",
+        "actor": "stream:credit.loan.prepay.book",
+        "action": "move",
+        "target": "asset.buyer.balance",
+        "outcome": "applied",
+        "amount": -5111.487753,
+        "pot_before": 610911.380367,
+        "pot_after": 605799.892613
+      },
+      {
+        "period": 15,
+        "date": "2026-04-01",
+        "actor": "stream:credit.loan.sched_principal.book",
+        "action": "move",
+        "target": "asset.buyer.balance",
+        "outcome": "applied",
+        "amount": -27663.062655,
+        "pot_before": 605799.892613,
+        "pot_after": 578136.829959
+      },
+      {
+        "period": 16,
+        "date": "2026-05-01",
+        "actor": "stream:credit.loan.defaults.book",
+        "action": "move",
+        "target": "asset.buyer.balance",
+        "outcome": "applied",
+        "amount": -1465.604969,
+        "pot_before": 578136.829959,
+        "pot_after": 576671.224989
+      },
+      {
+        "period": 16,
+        "date": "2026-05-01",
+        "actor": "stream:credit.loan.prepay.book",
+        "action": "move",
+        "target": "asset.buyer.balance",
+        "outcome": "applied",
+        "amount": -4812.948279,
+        "pot_before": 576671.224989,
+        "pot_after": 571858.276711
+      },
+      {
+        "period": 16,
+        "date": "2026-05-01",
+        "actor": "stream:credit.loan.sched_principal.book",
+        "action": "move",
+        "target": "asset.buyer.balance",
+        "outcome": "applied",
+        "amount": -27487.871293,
+        "pot_before": 571858.276711,
+        "pot_after": 544370.405417
+      },
+      {
+        "period": 17,
+        "date": "2026-06-01",
+        "actor": "stream:credit.loan.defaults.book",
+        "action": "move",
+        "target": "asset.buyer.balance",
+        "outcome": "applied",
+        "amount": -1380.005442,
+        "pot_before": 544370.405417,
+        "pot_after": 542990.399976
+      },
+      {
+        "period": 17,
+        "date": "2026-06-01",
+        "actor": "stream:credit.loan.prepay.book",
+        "action": "move",
+        "target": "asset.buyer.balance",
+        "outcome": "applied",
+        "amount": -4519.300955,
+        "pot_before": 542990.399976,
+        "pot_after": 538471.09902
+      },
+      {
+        "period": 17,
+        "date": "2026-06-01",
+        "actor": "stream:credit.loan.sched_principal.book",
+        "action": "move",
+        "target": "asset.buyer.balance",
+        "outcome": "applied",
+        "amount": -27313.789426,
+        "pot_before": 538471.09902,
+        "pot_after": 511157.309594
+      },
+      {
+        "period": 18,
+        "date": "2026-07-01",
+        "actor": "stream:credit.loan.defaults.book",
+        "action": "move",
+        "target": "asset.buyer.balance",
+        "outcome": "applied",
+        "amount": -1295.808629,
+        "pot_before": 511157.309594,
+        "pot_after": 509861.500965
+      },
+      {
+        "period": 18,
+        "date": "2026-07-01",
+        "actor": "stream:credit.loan.prepay.book",
+        "action": "move",
+        "target": "asset.buyer.balance",
+        "outcome": "applied",
+        "amount": -4230.480955,
+        "pot_before": 509861.500965,
+        "pot_after": 505631.02001
+      },
+      {
+        "period": 18,
+        "date": "2026-07-01",
+        "actor": "stream:credit.loan.sched_principal.book",
+        "action": "move",
+        "target": "asset.buyer.balance",
+        "outcome": "applied",
+        "amount": -27140.810027,
+        "pot_before": 505631.02001,
+        "pot_after": 478490.209983
+      },
+      {
+        "period": 19,
+        "date": "2026-08-01",
+        "actor": "stream:credit.loan.defaults.book",
+        "action": "move",
+        "target": "asset.buyer.balance",
+        "outcome": "applied",
+        "amount": -1212.995944,
+        "pot_before": 478490.209983,
+        "pot_after": 477277.21404
+      },
+      {
+        "period": 19,
+        "date": "2026-08-01",
+        "actor": "stream:credit.loan.prepay.book",
+        "action": "move",
+        "target": "asset.buyer.balance",
+        "outcome": "applied",
+        "amount": -3946.42424,
+        "pot_before": 477277.21404,
+        "pot_after": 473330.7898
+      },
+      {
+        "period": 19,
+        "date": "2026-08-01",
+        "actor": "stream:credit.loan.sched_principal.book",
+        "action": "move",
+        "target": "asset.buyer.balance",
+        "outcome": "applied",
+        "amount": -26968.926113,
+        "pot_before": 473330.7898,
+        "pot_after": 446361.863686
+      },
+      {
+        "period": 20,
+        "date": "2026-09-01",
+        "actor": "stream:credit.loan.defaults.book",
+        "action": "move",
+        "target": "asset.buyer.balance",
+        "outcome": "applied",
+        "amount": -1131.549024,
+        "pot_before": 446361.863686,
+        "pot_after": 445230.314662
+      },
+      {
+        "period": 20,
+        "date": "2026-09-01",
+        "actor": "stream:credit.loan.prepay.book",
+        "action": "move",
+        "target": "asset.buyer.balance",
+        "outcome": "applied",
+        "amount": -3667.067557,
+        "pot_before": 445230.314662,
+        "pot_after": 441563.247105
+      },
+      {
+        "period": 20,
+        "date": "2026-09-01",
+        "actor": "stream:credit.loan.sched_principal.book",
+        "action": "move",
+        "target": "asset.buyer.balance",
+        "outcome": "applied",
+        "amount": -26798.130748,
+        "pot_before": 441563.247105,
+        "pot_after": 414765.116357
+      },
+      {
+        "period": 21,
+        "date": "2026-10-01",
+        "actor": "stream:credit.loan.defaults.book",
+        "action": "move",
+        "target": "asset.buyer.balance",
+        "outcome": "applied",
+        "amount": -1051.449733,
+        "pot_before": 414765.116357,
+        "pot_after": 413713.666623
+      },
+      {
+        "period": 21,
+        "date": "2026-10-01",
+        "actor": "stream:credit.loan.prepay.book",
+        "action": "move",
+        "target": "asset.buyer.balance",
+        "outcome": "applied",
+        "amount": -3392.348426,
+        "pot_before": 413713.666623,
+        "pot_after": 410321.318197
+      },
+      {
+        "period": 21,
+        "date": "2026-10-01",
+        "actor": "stream:credit.loan.sched_principal.book",
+        "action": "move",
+        "target": "asset.buyer.balance",
+        "outcome": "applied",
+        "amount": -26628.417038,
+        "pot_before": 410321.318197,
+        "pot_after": 383692.901159
+      },
+      {
+        "period": 22,
+        "date": "2026-11-01",
+        "actor": "stream:credit.loan.defaults.book",
+        "action": "move",
+        "target": "asset.buyer.balance",
+        "outcome": "applied",
+        "amount": -972.680157,
+        "pot_before": 383692.901159,
+        "pot_after": 382720.221002
+      },
+      {
+        "period": 22,
+        "date": "2026-11-01",
+        "actor": "stream:credit.loan.prepay.book",
+        "action": "move",
+        "target": "asset.buyer.balance",
+        "outcome": "applied",
+        "amount": -3122.205132,
+        "pot_before": 382720.221002,
+        "pot_after": 379598.01587
+      },
+      {
+        "period": 22,
+        "date": "2026-11-01",
+        "actor": "stream:credit.loan.sched_principal.book",
+        "action": "move",
+        "target": "asset.buyer.balance",
+        "outcome": "applied",
+        "amount": -26459.778131,
+        "pot_before": 379598.01587,
+        "pot_after": 353138.237739
+      },
+      {
+        "period": 23,
+        "date": "2026-12-01",
+        "actor": "stream:credit.loan.defaults.book",
+        "action": "move",
+        "target": "asset.buyer.balance",
+        "outcome": "applied",
+        "amount": -895.2226,
+        "pot_before": 353138.237739,
+        "pot_after": 352243.015139
+      },
+      {
+        "period": 23,
+        "date": "2026-12-01",
+        "actor": "stream:credit.loan.prepay.book",
+        "action": "move",
+        "target": "asset.buyer.balance",
+        "outcome": "applied",
+        "amount": -2856.576714,
+        "pot_before": 352243.015139,
+        "pot_after": 349386.438425
+      },
+      {
+        "period": 23,
+        "date": "2026-12-01",
+        "actor": "stream:credit.loan.sched_principal.book",
+        "action": "move",
+        "target": "asset.buyer.balance",
+        "outcome": "applied",
+        "amount": -26292.207222,
+        "pot_before": 349386.438425,
+        "pot_after": 323094.231203
+      },
+      {
+        "period": 24,
+        "date": "2027-01-01",
+        "actor": "stream:credit.loan.defaults.book",
+        "action": "move",
+        "target": "asset.buyer.balance",
+        "outcome": "applied",
+        "amount": -819.059583,
+        "pot_before": 323094.231203,
+        "pot_after": 322275.17162
+      },
+      {
+        "period": 24,
+        "date": "2027-01-01",
+        "actor": "stream:credit.loan.prepay.book",
+        "action": "move",
+        "target": "asset.buyer.balance",
+        "outcome": "applied",
+        "amount": -2595.402959,
+        "pot_before": 322275.17162,
+        "pot_after": 319679.768661
+      },
+      {
+        "period": 24,
+        "date": "2027-01-01",
+        "actor": "stream:credit.loan.sched_principal.book",
+        "action": "move",
+        "target": "asset.buyer.balance",
+        "outcome": "applied",
+        "amount": -26125.697546,
+        "pot_before": 319679.768661,
+        "pot_after": 293554.071114
+      },
+      {
+        "period": 25,
+        "date": "2027-02-01",
+        "actor": "stream:credit.loan.defaults.book",
+        "action": "move",
+        "target": "asset.buyer.balance",
+        "outcome": "applied",
+        "amount": -744.173841,
+        "pot_before": 293554.071114,
+        "pot_after": 292809.897273
+      },
+      {
+        "period": 25,
+        "date": "2027-02-01",
+        "actor": "stream:credit.loan.prepay.book",
+        "action": "move",
+        "target": "asset.buyer.balance",
+        "outcome": "applied",
+        "amount": -2338.624393,
+        "pot_before": 292809.897273,
+        "pot_after": 290471.27288
+      },
+      {
+        "period": 25,
+        "date": "2027-02-01",
+        "actor": "stream:credit.loan.sched_principal.book",
+        "action": "move",
+        "target": "asset.buyer.balance",
+        "outcome": "applied",
+        "amount": -25960.242384,
+        "pot_before": 290471.27288,
+        "pot_after": 264511.030496
+      },
+      {
+        "period": 26,
+        "date": "2027-03-01",
+        "actor": "stream:credit.loan.defaults.book",
+        "action": "move",
+        "target": "asset.buyer.balance",
+        "outcome": "applied",
+        "amount": -670.548321,
+        "pot_before": 264511.030496,
+        "pot_after": 263840.482175
+      },
+      {
+        "period": 26,
+        "date": "2027-03-01",
+        "actor": "stream:credit.loan.prepay.book",
+        "action": "move",
+        "target": "asset.buyer.balance",
+        "outcome": "applied",
+        "amount": -2086.182268,
+        "pot_before": 263840.482175,
+        "pot_after": 261754.299907
+      },
+      {
+        "period": 26,
+        "date": "2027-03-01",
+        "actor": "stream:credit.loan.sched_principal.book",
+        "action": "move",
+        "target": "asset.buyer.balance",
+        "outcome": "applied",
+        "amount": -25795.835056,
+        "pot_before": 261754.299907,
+        "pot_after": 235958.464851
+      },
+      {
+        "period": 27,
+        "date": "2027-04-01",
+        "actor": "stream:credit.loan.defaults.book",
+        "action": "move",
+        "target": "asset.buyer.balance",
+        "outcome": "applied",
+        "amount": -598.166179,
+        "pot_before": 235958.464851,
+        "pot_after": 235360.298671
+      },
+      {
+        "period": 27,
+        "date": "2027-04-01",
+        "actor": "stream:credit.loan.prepay.book",
+        "action": "move",
+        "target": "asset.buyer.balance",
+        "outcome": "applied",
+        "amount": -1838.01856,
+        "pot_before": 235360.298671,
+        "pot_after": 233522.280111
+      },
+      {
+        "period": 27,
+        "date": "2027-04-01",
+        "actor": "stream:credit.loan.sched_principal.book",
+        "action": "move",
+        "target": "asset.buyer.balance",
+        "outcome": "applied",
+        "amount": -25632.468927,
+        "pot_before": 233522.280111,
+        "pot_after": 207889.811184
+      },
+      {
+        "period": 28,
+        "date": "2027-05-01",
+        "actor": "stream:credit.loan.defaults.book",
+        "action": "move",
+        "target": "asset.buyer.balance",
+        "outcome": "applied",
+        "amount": -527.010778,
+        "pot_before": 207889.811184,
+        "pot_after": 207362.800406
+      },
+      {
+        "period": 28,
+        "date": "2027-05-01",
+        "actor": "stream:credit.loan.prepay.book",
+        "action": "move",
+        "target": "asset.buyer.balance",
+        "outcome": "applied",
+        "amount": -1594.075956,
+        "pot_before": 207362.800406,
+        "pot_after": 205768.724451
+      },
+      {
+        "period": 28,
+        "date": "2027-05-01",
+        "actor": "stream:credit.loan.sched_principal.book",
+        "action": "move",
+        "target": "asset.buyer.balance",
+        "outcome": "applied",
+        "amount": -25470.137403,
+        "pot_before": 205768.724451,
+        "pot_after": 180298.587048
+      },
+      {
+        "period": 29,
+        "date": "2027-06-01",
+        "actor": "stream:credit.loan.defaults.book",
+        "action": "move",
+        "target": "asset.buyer.balance",
+        "outcome": "applied",
+        "amount": -457.065683,
+        "pot_before": 180298.587048,
+        "pot_after": 179841.521365
+      },
+      {
+        "period": 29,
+        "date": "2027-06-01",
+        "actor": "stream:credit.loan.prepay.book",
+        "action": "move",
+        "target": "asset.buyer.balance",
+        "outcome": "applied",
+        "amount": -1354.297844,
+        "pot_before": 179841.521365,
+        "pot_after": 178487.223521
+      },
+      {
+        "period": 29,
+        "date": "2027-06-01",
+        "actor": "stream:credit.loan.sched_principal.book",
+        "action": "move",
+        "target": "asset.buyer.balance",
+        "outcome": "applied",
+        "amount": -25308.833931,
+        "pot_before": 178487.223521,
+        "pot_after": 153178.38959
+      },
+      {
+        "period": 30,
+        "date": "2027-07-01",
+        "actor": "stream:credit.loan.defaults.book",
+        "action": "move",
+        "target": "asset.buyer.balance",
+        "outcome": "applied",
+        "amount": -388.314664,
+        "pot_before": 153178.38959,
+        "pot_after": 152790.074926
+      },
+      {
+        "period": 30,
+        "date": "2027-07-01",
+        "actor": "stream:credit.loan.prepay.book",
+        "action": "move",
+        "target": "asset.buyer.balance",
+        "outcome": "applied",
+        "amount": -1118.628312,
+        "pot_before": 152790.074926,
+        "pot_after": 151671.446614
+      },
+      {
+        "period": 30,
+        "date": "2027-07-01",
+        "actor": "stream:credit.loan.sched_principal.book",
+        "action": "move",
+        "target": "asset.buyer.balance",
+        "outcome": "applied",
+        "amount": -25148.552,
+        "pot_before": 151671.446614,
+        "pot_after": 126522.894613
+      },
+      {
+        "period": 31,
+        "date": "2027-08-01",
+        "actor": "stream:credit.loan.defaults.book",
+        "action": "move",
+        "target": "asset.buyer.balance",
+        "outcome": "applied",
+        "amount": -320.741689,
+        "pot_before": 126522.894613,
+        "pot_after": 126202.152925
+      },
+      {
+        "period": 31,
+        "date": "2027-08-01",
+        "actor": "stream:credit.loan.prepay.book",
+        "action": "move",
+        "target": "asset.buyer.balance",
+        "outcome": "applied",
+        "amount": -887.012133,
+        "pot_before": 126202.152925,
+        "pot_after": 125315.140792
+      },
+      {
+        "period": 31,
+        "date": "2027-08-01",
+        "actor": "stream:credit.loan.sched_principal.book",
+        "action": "move",
+        "target": "asset.buyer.balance",
+        "outcome": "applied",
+        "amount": -24989.285143,
+        "pot_before": 125315.140792,
+        "pot_after": 100325.85565
+      },
+      {
+        "period": 32,
+        "date": "2027-09-01",
+        "actor": "stream:credit.loan.defaults.book",
+        "action": "move",
+        "target": "asset.buyer.balance",
+        "outcome": "applied",
+        "amount": -254.330921,
+        "pot_before": 100325.85565,
+        "pot_after": 100071.524728
+      },
+      {
+        "period": 32,
+        "date": "2027-09-01",
+        "actor": "stream:credit.loan.prepay.book",
+        "action": "move",
+        "target": "asset.buyer.balance",
+        "outcome": "applied",
+        "amount": -659.394758,
+        "pot_before": 100071.524728,
+        "pot_after": 99412.129971
+      },
+      {
+        "period": 32,
+        "date": "2027-09-01",
+        "actor": "stream:credit.loan.sched_principal.book",
+        "action": "move",
+        "target": "asset.buyer.balance",
+        "outcome": "applied",
+        "amount": -24831.026928,
+        "pot_before": 99412.129971,
+        "pot_after": 74581.103042
+      },
+      {
+        "period": 33,
+        "date": "2027-10-01",
+        "actor": "stream:credit.loan.defaults.book",
+        "action": "move",
+        "target": "asset.buyer.balance",
+        "outcome": "applied",
+        "amount": -189.066722,
+        "pot_before": 74581.103042,
+        "pot_after": 74392.03632
+      },
+      {
+        "period": 33,
+        "date": "2027-10-01",
+        "actor": "stream:credit.loan.prepay.book",
+        "action": "move",
+        "target": "asset.buyer.balance",
+        "outcome": "applied",
+        "amount": -435.72231,
+        "pot_before": 74392.03632,
+        "pot_after": 73956.31401
+      },
+      {
+        "period": 33,
+        "date": "2027-10-01",
+        "actor": "stream:credit.loan.sched_principal.book",
+        "action": "move",
+        "target": "asset.buyer.balance",
+        "outcome": "applied",
+        "amount": -24673.770971,
+        "pot_before": 73956.31401,
+        "pot_after": 49282.54304
+      },
+      {
+        "period": 34,
+        "date": "2027-11-01",
+        "actor": "stream:credit.loan.defaults.book",
+        "action": "move",
+        "target": "asset.buyer.balance",
+        "outcome": "applied",
+        "amount": -124.933642,
+        "pot_before": 49282.54304,
+        "pot_after": 49157.609397
+      },
+      {
+        "period": 34,
+        "date": "2027-11-01",
+        "actor": "stream:credit.loan.prepay.book",
+        "action": "move",
+        "target": "asset.buyer.balance",
+        "outcome": "applied",
+        "amount": -215.941577,
+        "pot_before": 49157.609397,
+        "pot_after": 48941.66782
+      },
+      {
+        "period": 34,
+        "date": "2027-11-01",
+        "actor": "stream:credit.loan.sched_principal.book",
+        "action": "move",
+        "target": "asset.buyer.balance",
+        "outcome": "applied",
+        "amount": -24517.510921,
+        "pot_before": 48941.66782,
+        "pot_after": 24424.156899
+      },
+      {
+        "period": 35,
+        "date": "2027-12-01",
+        "actor": "stream:credit.loan.defaults.book",
+        "action": "move",
+        "target": "asset.buyer.balance",
+        "outcome": "applied",
+        "amount": -61.916425,
+        "pot_before": 24424.156899,
+        "pot_after": 24362.240474
+      },
+      {
+        "period": 35,
+        "date": "2027-12-01",
+        "actor": "stream:credit.loan.sched_principal.book",
+        "action": "move",
+        "target": "asset.buyer.balance",
+        "outcome": "applied",
+        "amount": -24362.240474,
+        "pot_before": 24362.240474,
+        "pot_after": 0.0
+      }
+    ],
     "annual_rollup": {
       "series": {
         "domain.credit.balance_outstanding": {
@@ -3404,6 +4771,31 @@
             }
           ]
         },
+        "stream.credit.loan.defaults.book": {
+          "index": {
+            "calendar": "annual",
+            "start": "2025-01-01",
+            "periods": 4
+          },
+          "values": [
+            {
+              "amount": -29564.418303,
+              "currency": "USD"
+            },
+            {
+              "amount": -16152.449495,
+              "currency": "USD"
+            },
+            {
+              "amount": -5155.328449,
+              "currency": "USD"
+            },
+            {
+              "amount": 0.0,
+              "currency": "USD"
+            }
+          ]
+        },
         "stream.credit.loan.interest.book": {
           "index": {
             "calendar": "annual",
@@ -3627,147 +5019,147 @@
             "display_sign": 1.0,
             "values": [
               {
-                "amount": 46637.038354,
+                "amount": 43594.980017,
                 "currency": "USD"
               },
               {
-                "amount": 45846.142786,
+                "amount": 42914.851642,
                 "currency": "USD"
               },
               {
-                "amount": 45065.844043,
+                "amount": 42243.586764,
                 "currency": "USD"
               },
               {
-                "amount": 45583.874158,
+                "amount": 42868.94003,
                 "currency": "USD"
               },
               {
-                "amount": 44770.473287,
+                "amount": 42161.173935,
                 "currency": "USD"
               },
               {
-                "amount": 43968.140763,
+                "amount": 41462.809878,
                 "currency": "USD"
               },
               {
-                "amount": 43176.739768,
+                "amount": 40773.732841,
                 "currency": "USD"
               },
               {
-                "amount": 42396.135099,
+                "amount": 40093.829156,
                 "currency": "USD"
               },
               {
-                "amount": 41626.193155,
+                "amount": 39422.986493,
                 "currency": "USD"
               },
               {
-                "amount": 40866.781914,
+                "amount": 38761.093844,
                 "currency": "USD"
               },
               {
-                "amount": 40117.770922,
+                "amount": 38108.041515,
                 "currency": "USD"
               },
               {
-                "amount": 39379.031266,
+                "amount": 37463.721097,
                 "currency": "USD"
               },
               {
-                "amount": 38650.435563,
+                "amount": 36828.025463,
                 "currency": "USD"
               },
               {
-                "amount": 37931.857936,
+                "amount": 36200.848745,
                 "currency": "USD"
               },
               {
-                "amount": 37223.174005,
+                "amount": 35582.086329,
                 "currency": "USD"
               },
               {
-                "amount": 36524.260863,
+                "amount": 34971.634833,
                 "currency": "USD"
               },
               {
-                "amount": 35834.997058,
+                "amount": 34369.392089,
                 "currency": "USD"
               },
               {
-                "amount": 35155.262583,
+                "amount": 33775.257141,
                 "currency": "USD"
               },
               {
-                "amount": 34484.938854,
+                "amount": 33189.130225,
                 "currency": "USD"
               },
               {
-                "amount": 33823.908691,
+                "amount": 32610.912747,
                 "currency": "USD"
               },
               {
-                "amount": 33172.056313,
+                "amount": 32040.507289,
                 "currency": "USD"
               },
               {
-                "amount": 32529.267308,
+                "amount": 31477.817575,
                 "currency": "USD"
               },
               {
-                "amount": 31895.428624,
+                "amount": 30922.748467,
                 "currency": "USD"
               },
               {
-                "amount": 31270.428555,
+                "amount": 30375.205955,
                 "currency": "USD"
               },
               {
-                "amount": 30654.156719,
+                "amount": 29835.097136,
                 "currency": "USD"
               },
               {
-                "amount": 30046.504054,
+                "amount": 29302.330213,
                 "currency": "USD"
               },
               {
-                "amount": 29447.362786,
+                "amount": 28776.814465,
                 "currency": "USD"
               },
               {
-                "amount": 28856.62643,
+                "amount": 28258.460251,
                 "currency": "USD"
               },
               {
-                "amount": 28274.189766,
+                "amount": 27747.178988,
                 "currency": "USD"
               },
               {
-                "amount": 27699.948825,
+                "amount": 27242.883142,
                 "currency": "USD"
               },
               {
-                "amount": 27133.800878,
+                "amount": 26745.486214,
                 "currency": "USD"
               },
               {
-                "amount": 26575.644423,
+                "amount": 26254.902734,
                 "currency": "USD"
               },
               {
-                "amount": 26025.379158,
+                "amount": 25771.048237,
                 "currency": "USD"
               },
               {
-                "amount": 25482.905988,
+                "amount": 25293.839266,
                 "currency": "USD"
               },
               {
-                "amount": 24979.240545,
+                "amount": 24854.306903,
                 "currency": "USD"
               },
               {
-                "amount": 24484.051676,
+                "amount": 24422.135251,
                 "currency": "USD"
               },
               {
@@ -3783,8 +5175,9 @@
                 "currency": "USD"
               }
             ],
-            "total": 1267589.993116,
+            "total": 1216717.79687,
             "streams": [
+              "credit.loan.defaults.book",
               "credit.loan.interest.book",
               "credit.loan.penalty.book",
               "credit.loan.prepay.book",
@@ -3795,10 +5188,16 @@
           }
         ],
         "reconciliation": {
-          "bottom_line": 1267589.993116,
+          "bottom_line": 1216717.79687,
           "model_total": 1267589.993121,
-          "residual": -5e-6
-        }
+          "residual": -50872.196251
+        },
+        "diagnostics": [
+          {
+            "code": "W3502_STATEMENT_BOTTOM_LINE_RESIDUAL",
+            "message": "Statement 'by_entity' totals 1216717.796870 against model.total 1267589.993121, a residual of -50872.196251."
+          }
+        ]
       }
     ]
   },
@@ -3819,6 +5218,7 @@
         "instance": "book",
         "subject": "asset.buyer",
         "streams": [
+          "credit.loan.defaults.book",
           "credit.loan.interest.book",
           "credit.loan.penalty.book",
           "credit.loan.prepay.book",

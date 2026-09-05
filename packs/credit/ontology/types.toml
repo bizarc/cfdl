@@ -336,6 +336,7 @@ type_id = "Credit.Contract.Loan"
 refines = "Contract.Debt"
 contract_name = "credit.loan"
 subject_family = "asset"
+side = "receives"
 description = "A loan, or a representative loan standing for a pool of them: balance, coupon, term and repayment pattern, with the prepayment, default, severity and servicing assumptions its cash follows."
 
 # The subject is the asset the holder owns; the borrower is the pool's many
@@ -464,6 +465,11 @@ name = "servicing"
 
 [[contracts.lines]]
 name = "penalty"
+
+# The defaulted principal, written off in the period of default (docs/42
+# §4.1). Not cash: a `writeoff` row that moves the balance.
+[[contracts.lines]]
+name = "default"
 
 [[contracts]]
 type_id = "Credit.Contract.Purchase"

@@ -23,7 +23,7 @@ each classified so it lands on the right line of a
 <!-- cfdl:generated contracts-credit -->
 | Contract | Terms it reads | Streams it emits |
 |---|---|---|
-| `credit.loan` | `abs_speed`, `age_months`, `cdr`, `cpr`, `index_curve`, `interest_rate`, `margin`, `payment_frequency`, `prepay_penalty_rate`, `principal`, `psa_speed`, `rate_cap`, `rate_floor`, `sda_speed`, `servicing_fee`, `severity` | `credit.loan.interest[.suffix]`, `credit.loan.sched_principal[.suffix]`, `credit.loan.prepay[.suffix]`, `credit.loan.recoveries[.suffix]`, `credit.loan.servicing[.suffix]`, `credit.loan.penalty[.suffix]`, `credit.loan.bullet[.suffix]` |
+| `credit.loan` | `abs_speed`, `age_months`, `cdr`, `cpr`, `index_curve`, `interest_rate`, `margin`, `payment_frequency`, `prepay_penalty_rate`, `principal`, `psa_speed`, `rate_cap`, `rate_floor`, `sda_speed`, `servicing_fee`, `severity` | `credit.loan.interest[.suffix]`, `credit.loan.defaults[.suffix]`, `credit.loan.sched_principal[.suffix]`, `credit.loan.prepay[.suffix]`, `credit.loan.recoveries[.suffix]`, `credit.loan.servicing[.suffix]`, `credit.loan.penalty[.suffix]`, `credit.loan.bullet[.suffix]` |
 | `credit.purchase` | `price` | `credit.purchase.price[.suffix]` |
 | `credit.participation` | `share` | `credit.participation.interest[.suffix]`, `credit.participation.principal[.suffix]` |
 | `credit.note` | `coupon`, `face`, `payment_frequency`, `principal_account` |  |

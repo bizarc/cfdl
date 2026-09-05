@@ -19,6 +19,8 @@ pub struct LoadedPack {
     pub aliases: BTreeMap<String, String>,
     pub templates: Vec<PackTemplate>,
     pub lowering_rules: Vec<LoweringRule>,
+    /// The accounts the pack's refinements open (`docs/42` §3.5).
+    pub account_decls: Vec<AccountDecl>,
     pub metric_specs: Vec<MetricSpec>,
     pub subtotal_specs: Vec<SubtotalSpec>,
     pub statement_specs: Vec<StatementSpec>,
@@ -171,7 +173,15 @@ impl PackOntology {
         {
             debt.field_roles.push(OntologyFieldRole {
                 name: "balance".to_string(),
-                description: Some("The lowered fields that carry the debt's outstanding position, or the factor every stream reads; set to zero, they end the cash. A refinement whose balance is closed-form fills none.".to_string()),
+                description: Some("The lowered fields that carry the debt's outstanding position, or the factor every stream reads; set to zero, they end the cash. A refinement whose balance is closed-form fills none. Superseded by the `balance` ACCOUNT where a refinement provides one (docs/42).".to_string()),
+            });
+            // THE BALANCE IS AN ACCOUNT (docs/42 §3.5): what the borrower owes
+            // at the open of the period, rolled by the engine from the streams
+            // that move it. A refinement opens it and its rules move it.
+            debt.accounts.push(OntologyAccount {
+                name: "balance".to_string(),
+                owed_by: "borrower".to_string(),
+                description: Some("Outstanding principal at the open of the period — the account the debt's principal, draws, accruals and write-offs move, read by its streams as `prev.balance`.".to_string()),
             });
         }
         base
@@ -260,6 +270,7 @@ impl PackOntology {
                 fields,
                 lines,
                 field_roles: Vec::new(),
+                accounts: Vec::new(),
                 side: side.map(|s| s.to_string()),
                 description: Some(d.to_string()),
             }
@@ -283,6 +294,7 @@ impl PackOntology {
                 fields,
                 lines,
                 field_roles: Vec::new(),
+                accounts: Vec::new(),
                 side: side.map(|s| s.to_string()),
                 description: Some(d.to_string()),
             }
@@ -302,6 +314,7 @@ impl PackOntology {
                 fields: Vec::new(),
                 lines: Vec::new(),
                 field_roles: Vec::new(),
+                accounts: Vec::new(),
                 side: None,
                 description: Some(d.to_string()),
             }
@@ -781,6 +794,21 @@ impl PackOntology {
     }
 
     /// The lines `type_id` produces, its masters' included (docs/40 §6).
+    /// Every account a type carries: its own and its masters' (`docs/42` §3.5).
+    pub fn effective_accounts(&self, type_id: &str) -> Vec<OntologyAccount> {
+        let mut accounts: Vec<OntologyAccount> = Vec::new();
+        for contract in self.contract_chain(type_id).iter().rev() {
+            for account in &contract.accounts {
+                if let Some(existing) = accounts.iter_mut().find(|a| a.name == account.name) {
+                    *existing = account.clone();
+                } else {
+                    accounts.push(account.clone());
+                }
+            }
+        }
+        accounts
+    }
+
     pub fn effective_lines(&self, type_id: &str) -> Vec<OntologyLine> {
         let mut lines: Vec<OntologyLine> = Vec::new();
         for contract in self.contract_chain(type_id).iter().rev() {
@@ -969,6 +997,22 @@ pub struct OntologyFieldRole {
     pub description: Option<String>,
 }
 
+/// An ACCOUNT a master declares (`docs/42` §3.5): the balance an agreement
+/// owes or is due, rolled by the engine from the streams that move it. The
+/// master names it and says which role owes it; a refinement opens it
+/// (`[[accounts]]` in its lowering file) and its rules move it (`account`
+/// on a rule). Whether the refinement's subject owes it or is due it follows
+/// from the type's `side`: a subject that `pays` owes, one that `receives`
+/// is due.
+#[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
+pub struct OntologyAccount {
+    pub name: String,
+    /// The role that owes this balance — `borrower` on a debt.
+    pub owed_by: String,
+    #[serde(default)]
+    pub description: Option<String>,
+}
+
 /// An economically distinct line of cash an agreement produces (docs/40 §6):
 /// a debt produces `proceeds`, `interest` and `principal`. Lines are named
 /// on the master by ROLE; the pack's lowering rules each name the line they
@@ -1056,6 +1100,11 @@ pub struct OntologyContract {
     /// Field roles the master names (stage 6). Inherited down the chain.
     #[serde(default)]
     pub field_roles: Vec<OntologyFieldRole>,
+    /// The accounts the master declares (`docs/42` §3.5). Inherited by every
+    /// refinement; a refinement that provides one opens it in its lowering
+    /// file and moves it from its rules.
+    #[serde(default)]
+    pub accounts: Vec<OntologyAccount>,
     /// Which way cash runs for the SUBJECT entity: `pays` or `receives`.
     /// Absent on a master that serves both sides — a Debt is owed by a
     /// property and held by a trust — and fixed by the refinement.
@@ -1333,23 +1382,52 @@ impl WhenValue {
 /// value text)? Name matching is `matches_contract_name`; this is the
 /// selection by term value on top of it (`docs/07` §6.5).
 pub fn rule_applies_to_terms(rule: &LoweringRule, terms: &BTreeMap<String, String>) -> bool {
-    for (key, wanted) in &rule.when {
+    selection_applies(
+        &rule.when,
+        &rule.when_stated,
+        &rule.when_unstated,
+        &rule.defaults,
+        terms,
+    )
+}
+
+/// The selection shared by rules and account declarations (`docs/07` §6.4).
+pub fn selection_applies(
+    when: &BTreeMap<String, WhenValue>,
+    when_stated: &[String],
+    when_unstated: &[String],
+    defaults: &BTreeMap<String, String>,
+    terms: &BTreeMap<String, String>,
+) -> bool {
+    for (key, wanted) in when {
         let value = terms
             .get(key)
             .cloned()
-            .or_else(|| rule.defaults.get(key).cloned());
+            .or_else(|| defaults.get(key).cloned());
         match value {
             Some(v) if wanted.admits(v.trim().trim_matches('"')) => {}
             _ => return false,
         }
     }
-    if rule.when_stated.iter().any(|k| !terms.contains_key(k)) {
+    if when_stated.iter().any(|k| !terms.contains_key(k)) {
         return false;
     }
-    if rule.when_unstated.iter().any(|k| terms.contains_key(k)) {
+    if when_unstated.iter().any(|k| terms.contains_key(k)) {
         return false;
     }
     true
+}
+
+/// Does this account declaration open an account on a contract with these
+/// stated terms?
+pub fn account_decl_applies(decl: &AccountDecl, terms: &BTreeMap<String, String>) -> bool {
+    selection_applies(
+        &decl.when,
+        &decl.when_stated,
+        &decl.when_unstated,
+        &BTreeMap::new(),
+        terms,
+    )
 }
 
 pub fn matches_contract_name(declared: &str, contract_name: &str) -> bool {
@@ -1498,6 +1576,35 @@ impl PackValidation {
 pub struct LoweringFile {
     #[serde(default)]
     pub rules: Vec<LoweringRule>,
+    #[serde(default)]
+    pub accounts: Vec<AccountDecl>,
+}
+
+/// A refinement OPENS an account its master declares (`docs/42` §3.5):
+///
+/// ```toml
+/// [[accounts]]
+/// contract_name = "credit.loan"
+/// name = "balance"
+/// init = "{{contract.principal}}"
+/// ```
+///
+/// The compiler creates `<subject>.<name>` on the contract's subject with the
+/// side the type's `side` implies, opening at `init` — the balance at the
+/// timeline's first period, `0` when omitted. Selection (`when`,
+/// `when_stated`, `when_unstated`) works as on a rule.
+#[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
+pub struct AccountDecl {
+    pub contract_name: String,
+    pub name: String,
+    #[serde(default)]
+    pub init: String,
+    #[serde(default)]
+    pub when: BTreeMap<String, WhenValue>,
+    #[serde(default)]
+    pub when_stated: Vec<String>,
+    #[serde(default)]
+    pub when_unstated: Vec<String>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
@@ -1661,6 +1768,12 @@ pub struct LoweringRule {
     /// Terms that must NOT be stated — the fixed coupon's rules.
     #[serde(default)]
     pub when_unstated: Vec<String>,
+    /// THE ACCOUNT THIS STREAM MOVES (`docs/42` §3.2), by the name the master
+    /// declares: `account = "balance"` on the scheduled-principal row. An
+    /// `inflow`/`outflow` moves it by the account's side; an `accrual` raises
+    /// and a `writeoff` lowers it, and those two must name one.
+    #[serde(default)]
+    pub account: Option<String>,
     /// The unit each term is expressed in — `"credit_per_mwh" = "USD/MWh"`.
     ///
     /// A quantity without a stated dimension is a number that means whatever
@@ -1997,6 +2110,10 @@ impl PackRegistry {
                 Some(raw) => parse_lowering_rules(raw, &source)?,
                 None => Vec::new(),
             };
+            let account_decls = match lookup(manifest.entrypoints.lowering.as_deref()) {
+                Some(raw) => parse_account_decls(raw, &source)?,
+                None => Vec::new(),
+            };
             validate_category_vocabulary(&manifest.categories, &source)?;
             validate_rule_categories(&lowering_rules, &manifest.categories, &source)?;
             let metric_specs = match lookup(manifest.entrypoints.metrics.as_deref()) {
@@ -2041,6 +2158,7 @@ impl PackRegistry {
                     aliases,
                     templates,
                     lowering_rules,
+                    account_decls,
                     metric_specs,
                     subtotal_specs,
                     statement_specs,
@@ -2205,6 +2323,8 @@ impl PackRegistry {
             let templates = load_templates(&pack_dir, manifest.entrypoints.templates.as_deref())?;
             let lowering_rules =
                 load_lowering_rules(&pack_dir, manifest.entrypoints.lowering.as_deref())?;
+            let account_decls =
+                load_account_decls(&pack_dir, manifest.entrypoints.lowering.as_deref())?;
             validate_category_vocabulary(
                 &manifest.categories,
                 &manifest_path.display().to_string(),
@@ -2250,6 +2370,7 @@ impl PackRegistry {
                     aliases,
                     templates,
                     lowering_rules,
+                    account_decls,
                     metric_specs,
                     subtotal_specs,
                     statement_specs,
@@ -2328,6 +2449,14 @@ impl PackRegistry {
         self.packs
             .get(pack_name)
             .map(|pack| pack.lowering_rules.clone())
+            .unwrap_or_default()
+    }
+
+    /// The accounts the pack's refinements open (`docs/42` §3.5).
+    pub fn account_decls(&self, pack_name: &str) -> Vec<AccountDecl> {
+        self.packs
+            .get(pack_name)
+            .map(|pack| pack.account_decls.clone())
             .unwrap_or_default()
     }
 
@@ -3376,6 +3505,30 @@ fn validate_terms_against_ontology(
                     )));
                 }
             }
+            // THE ACCOUNT A RULE MOVES IS ONE THE TYPE CARRIES (docs/42 §3.5),
+            // and a non-cash row moves one: an accrual or a write-off of
+            // nothing is a movement of nothing.
+            let accounts = merged.effective_accounts(&contract.type_id);
+            if let Some(account) = rule.account.as_deref() {
+                if !accounts.iter().any(|a| a.name == account) {
+                    return Err(PackLoadError {
+                        message: format!(
+                            "Ontology '{source}': rule '{}' moves account '{account}', which contract type '{}' does not carry. Its accounts are: {}. A master declares an account and a refinement's rules move it (docs/42 §3.5).",
+                            rule.id,
+                            contract.type_id,
+                            accounts.iter().map(|a| a.name.as_str()).collect::<Vec<_>>().join(", ")
+                        ),
+                    });
+                }
+            }
+            if matches!(rule.direction.as_str(), "accrual" | "writeoff") && rule.account.is_none() {
+                return Err(PackLoadError {
+                    message: format!(
+                        "Ontology '{source}': rule '{}' is `{}` and moves no account; a non-cash row is a movement of a balance and nothing else (docs/42 §3.2).",
+                        rule.id, rule.direction
+                    ),
+                });
+            }
             for key in rule.defaults.keys().chain(rule.units.keys()) {
                 if !declared(key) && !DECLARATION_KEYS.contains(&key.as_str()) {
                     return Err(refuse(format!(
@@ -4015,7 +4168,10 @@ fn validate_rule_categories(
         // rather than cash — every pool in `credit` carries one for its balance
         // — and a field is not classified into a cash flow statement, so
         // demanding a category of it would be asking the wrong question.
-        if !rule.stream_name.is_empty() && rule.category.is_empty() {
+        // A NON-CASH ROW carries no category: the roots classify cash, and an
+        // accrual or a write-off enters no total (docs/42 §3.2).
+        let non_cash = matches!(rule.direction.as_str(), "accrual" | "writeoff");
+        if !rule.stream_name.is_empty() && rule.category.is_empty() && !non_cash {
             return Err(PackLoadError {
                 message: format!(
                     "Lowering rule '{}' in '{source}' declares no category, so the stream it                      emits would fold into no subtotal. A contract lowers one or more streams                      and the pack states what each one is.",
@@ -4023,8 +4179,10 @@ fn validate_rule_categories(
                 ),
             });
         }
-        // A field-only rule emits no stream, so it has no category to check.
-        if rule.stream_name.is_empty() {
+        // A field-only rule emits no stream, so it has no category to check;
+        // a non-cash row (an accrual, a write-off) enters no total and
+        // carries none (docs/42 §3.2).
+        if rule.stream_name.is_empty() || non_cash {
             continue;
         }
         if categories.iter().any(|c| c == &rule.category) {
@@ -4044,6 +4202,25 @@ fn validate_rule_categories(
         });
     }
     Ok(())
+}
+
+fn load_account_decls(
+    pack_dir: &Path,
+    lowering_path: Option<&str>,
+) -> Result<Vec<AccountDecl>, PackLoadError> {
+    let Some(relative) = lowering_path else {
+        return Ok(vec![]);
+    };
+    let path = pack_dir.join(relative);
+    let raw = fs::read_to_string(&path).map_err(io_err)?;
+    parse_account_decls(&raw, &path.display().to_string())
+}
+
+fn parse_account_decls(raw: &str, source: &str) -> Result<Vec<AccountDecl>, PackLoadError> {
+    let parsed: LoweringFile = toml::from_str(raw).map_err(|err| PackLoadError {
+        message: format!("Failed to parse lowering rules '{source}': {err}"),
+    })?;
+    Ok(parsed.accounts)
 }
 
 fn parse_lowering_rules(raw: &str, source: &str) -> Result<Vec<LoweringRule>, PackLoadError> {
@@ -5311,6 +5488,7 @@ allocated = true
             when: BTreeMap::new(),
             when_stated: Vec::new(),
             when_unstated: Vec::new(),
+            account: None,
             units: BTreeMap::new(),
         };
         // Interest lowered, principal allocated, proceeds optional: one
@@ -5485,6 +5663,7 @@ refines = "Contract.Lease"
             when: BTreeMap::new(),
             when_stated: Vec::new(),
             when_unstated: Vec::new(),
+            account: None,
             units: BTreeMap::new(),
         };
         // Every typed contract needs its rule, so each call carries both.
@@ -5556,6 +5735,7 @@ refines = "Contract.Debt"
             when: BTreeMap::new(),
             when_stated: Vec::new(),
             when_unstated: Vec::new(),
+            account: None,
             field_init: String::new(),
             field_next: String::new(),
             field_every: String::new(),

@@ -381,9 +381,17 @@ Separate from the engine restructure, and before it.
    cases. **The relation fold is built** (same day): every ancestor of an
    entity that declares a claim carries the sum of its members' claims of
    that name, opening and closing, declared nowhere and moved only through
-   a member (`E1383`, `E1384`). Not yet: the master-declared account and
-   the pack rule's `account` key (§3.5), the `set balance = 0` retirement
-   as a write-off, the non-cash category roots.
+   a member (`E1383`, `E1384`). **The pack side is built for
+   `credit.loan`** (5 September 2026): `Contract.Debt` declares the
+   `balance` account, the loan opens it (`[[accounts]]`, at principal),
+   its rows move it (`account = "balance"`; the default as a `writeoff`
+   row), every row reads `prev.balance`, and `set balance = 0` on
+   repurchase or payoff is a write-off of the opening balance journaled
+   as a `move`. The survival factors and the stopgap balance field are
+   gone; the lagged twin recoveries read stays a private field that the
+   machine also ends. Every stream unchanged to the digit. Not yet: the
+   other four `Contract.Debt` refinements, deletion of `field_role`, the
+   non-cash category roots.
 2. **The level-pay loan onto accounts**, replacing the stopgap field.
    Numbers unchanged: the lines are the same, only who sums them changes.
 3. **The clean-up call** on the auto ABS cases and AmeriCredit, reading the
