@@ -813,32 +813,6 @@ cash to the thing that owns it, and select by kind. The schema carries the
 descriptions; `docs/06` regenerated.
 ---
 
-### 7.44 The engine's stages are modules, not crates
-
-*Narrowed, reopened, and done as modules (5 September 2026). The
-orchestrator had grown back to 4,500 lines as the walk, the account plane
-and the fold layer landed in it. Five pure moves took it apart by stage —
-`occurrence` (events and options as one module, stepped inside the state
-walk after the machine), `prepare` (once-per-model: the grid, dependency
-waves, priced closure, walk eligibility, compiled plans and openings),
-`accounts` (the balance plane), `walk` (the period loop and the
-walk-or-column choice), `fold` (from what the evaluation settled to what
-the results carry), `runs` (the base, scenario and Monte Carlo loops) —
-each proven by byte-identical goldens. `lib.rs` is the public API, the
-error type, the module map and the deterministic run as its stage list:
-inputs, evaluate, fold.*
-
-What remains is the second step the original entry proposed: making the stages
-CRATES rather than modules, so the compiler enforces the layering that the
-module boundaries currently only suggest. A module can reach across a boundary
-and nothing objects; a crate cannot.
-
-Weigh it against the cost before doing it. The stages share the IR types and
-the expression environment, so crate boundaries mean either a shared types
-crate everything depends on, or a lot of re-export. The benefit is enforcement
-of an order that is already documented and already tested by
-`fixtures/valid/evaluation_order`, which is a real but modest gain.
-
 ### 7.46 A run with no discount rate still publishes an NPV
 
 A run that states no rate discounts at zero and reports the result as
