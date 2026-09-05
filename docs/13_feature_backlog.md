@@ -815,17 +815,18 @@ descriptions; `docs/06` regenerated.
 
 ### 7.44 The engine's stages are modules, not crates
 
-*Narrowed, then reopened. The file split shipped once, and the orchestrator
-grew back to 4,500 lines as the walk, the account plane and the fold layer
-landed in it. The restructure agreed 5 September 2026 takes it apart by
-stage — `prepare`, `state`, `occurrence`, `streams`, `accounts`,
-`distributions`, `walk`, `fold`, `runs`, the orchestrator a stage list —
-one or two modules per PR, each a pure move proven by byte-identical
-goldens. **Built so far: `occurrence`** — events and options as one module,
-stepped inside the state walk after the machine moves; **`prepare`** — the
-once-per-model work; **`accounts`** — the balance plane; **`walk`** — the
-period loop and the walk-or-column choice; **`fold`** — from what the
-evaluation settled to what the results carry.*
+*Narrowed, reopened, and done as modules (5 September 2026). The
+orchestrator had grown back to 4,500 lines as the walk, the account plane
+and the fold layer landed in it. Five pure moves took it apart by stage —
+`occurrence` (events and options as one module, stepped inside the state
+walk after the machine), `prepare` (once-per-model: the grid, dependency
+waves, priced closure, walk eligibility, compiled plans and openings),
+`accounts` (the balance plane), `walk` (the period loop and the
+walk-or-column choice), `fold` (from what the evaluation settled to what
+the results carry), `runs` (the base, scenario and Monte Carlo loops) —
+each proven by byte-identical goldens. `lib.rs` is the public API, the
+error type, the module map and the deterministic run as its stage list:
+inputs, evaluate, fold.*
 
 What remains is the second step the original entry proposed: making the stages
 CRATES rather than modules, so the compiler enforces the layering that the

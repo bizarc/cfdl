@@ -8,6 +8,17 @@ This project follows Semantic Versioning: https://semver.org/
 
 ## [Unreleased]
 
+**The engine restructure, `runs` — and the orchestrator is the stage list.**
+The loops around one deterministic evaluation — the base run, each
+scenario with its drivers and rate overridden, each Monte Carlo trial with
+its sampled inputs — and the results document they assemble are
+`crates/cfdl-engine/src/runs.rs`. `lib.rs` now holds the public API, the
+error type, the module map and the three-line deterministic run: resolve
+the inputs, evaluate, fold. Five pure moves in five PRs (`occurrence`,
+`prepare` + `accounts`, `walk`, `fold`, `runs`), each proven by 281
+byte-identical results goldens and 46/46 benchmarks; the orchestrator's
+non-test code is about 450 lines from 4,503 (`docs/13` §7.44).
+
 **The engine restructure, `fold`.** Everything the results carry, computed
 over what the evaluation settled — streams the walk did not run evaluated a
 column at a time, the subtotals, the account and entity roll-ups, every
