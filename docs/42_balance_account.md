@@ -157,9 +157,10 @@ the one balance. Intex's performing and defaulted buckets are the fold of
 - **A guard, a trigger, a threshold reads the opening balance.** A
   clean-up call fires when the trust's opening balance is below ten percent
   of the initial; an overcollateralization test compares opening balances.
-- **A term may read a balance at a date.** A permanent loan's principal is
-  the construction account's opening balance on the conversion date (§4.2).
-  A settled, backward read, like any other.
+- **An occurrence captures a balance at a date.** A permanent loan's
+  principal is the construction account's opening balance on the
+  conversion date, written once into a field by the conversion's action
+  from `prev.balance` (§4.2, §7). A term never reads an account directly.
 - **A statement reads the closing balance** as a fold over the period's
   lines, or the opening as the prior close — the reporting plane sees both.
 
@@ -337,8 +338,9 @@ permanent loan's proceeds are a cash line in and the construction loan's
 payoff is a cash line out; the construction `balance` closes to zero
 through that payoff. The permanent loan's `principal` is the construction
 account's **opening balance on the conversion date**, capitalized interest
-included, plus any fees rolled in — a term that reads another contract's
-account at a date (§3.3). The borrower's net cash at conversion is the
+included, plus any fees rolled in — a field the conversion occurrence
+captures from `prev.balance` (§7), which the permanent contract's term
+then reads. The borrower's net cash at conversion is the
 fees; the construction lender is repaid and the permanent lender funds.
 
 **Conversion of the same note.** One contract, one account, no line at
@@ -347,8 +349,8 @@ draws stop, accruals stop, the rate may switch from floating to fixed, and
 amortization begins on the account's opening balance at the conversion
 date — that balance is the amount financed for the level-pay schedule, so
 the payment is computed from it, not from the commitment. A lifecycle on
-the loan with the lines active by state, and the amortization rule reading
-the account at the transition.
+the loan with the lines active by state, and an entry action capturing the
+amount financed from `prev.balance` for the amortization rule to read.
 
 In both, the capitalized interest is repaid in cash through the permanent
 amortization, which is what makes it a claim and not a loss. Conversion
@@ -398,12 +400,35 @@ note adds nothing to it.
   shape: a stream, whose direction is one of `inflow`, `outflow`,
   `accrual`, `writeoff`. No `kind`, no `effect`, no `transfer`, no second
   account for defaults. An account's side comes from the master.
-- **Opening in expressions.** The spelling by which a stream reads the
-  opening balance — `asset.loan.balance` resolving to the opening because
-  that is the only value a stream may see, or an explicit `opening(…)`.
-- **Balance at a date.** The spelling of a term that reads another
-  contract's account on a date (§4.2), and whether it may only name a
-  date already past when the reading contract begins.
+- **Settled (4 September 2026): the opening is `prev.balance`.** Inside a
+  period the only balance anyone can read is the prior close, and it is
+  always spelled `prev` — the spelling fields already use; streams gain
+  it, and nothing gains a same-period close. Across entities,
+  `prev.asset.loan.balance`. A lowering rule reads `prev.balance` against
+  its subject, since the master names the account.
+- **Settled (4 September 2026): `init` is the balance at the timeline's
+  first period, defaults to zero, and `prev.balance` is never absent.**
+  A balance outstanding when the model opens states it (the pool at
+  cut-off, init `principal`); a balance created during the run does not,
+  and the cash that creates it — the permanent loan's proceeds, the
+  construction draws — is an inflow that raises it from zero. No
+  `prev.balance.init`: the initial amount is the declaration or the term.
+  This also removes the period-zero guard the ABS pilot wrote before
+  every step: a party account without `init` opens at zero.
+- **Settled (4 September 2026): a balance at a date is a field an
+  occurrence captures.** No new capability. The conversion is an event or
+  a lifecycle transition, and its action writes the field once from the
+  prior close: `on enter permanent { set amount_financed = prev.balance }`.
+  The same-note conversion amortizes from that field; the takeout's
+  permanent loan reads it as its `principal`. A term is an INPUT to the
+  lowering, not a stream: a term that is an expression is spliced into
+  the rules' per-period formulas, so `principal = prev.asset.tower.balance`
+  would re-read a balance the loan itself pays down — a pack term slot
+  that must be constant refuses an expression that reads an account, the
+  way `E5026` refuses an expression in a literal slot. The account is
+  never written by either path. The conversion date is therefore an
+  occurrence the model declares, journaled and movable by a scenario,
+  not a term on the loan.
 - **Cadence.** An account on a daily book with monthly lines rolls every
   model period, most with no lines; the opening the monthly interest stream
   reads is the close of the prior day, which is the prior payment's close.
