@@ -117,8 +117,10 @@ Every published weighted average life is reproduced, to call and to maturity.
   series or metric to check it against.
 - **Anything after the clean-up call.** The call retires the notes at period 47
   and there is no trust left to distribute from, so the cash columns end there.
-  The loans are repurchased at the next period — one event at the trust,
-  reading the balance it holds — and produce nothing more inside the model.
+  The loans are repurchased at the next period — the servicer's clean-up call,
+  an option written on the trust and exercised when the balance the trust
+  carries in falls to 10% of the cutoff balance — and produce nothing more
+  inside the model.
 - **Mutation testing.** `docs/20` §3.3 asks for it and it has not been run. The
   hole `docs/20` §3.2 warns about is present by construction here: the
   certificateholder's step-down release absorbs whatever the notes are not

@@ -809,8 +809,11 @@ contract names, and their accounts hold what they received (`docs/13`
    with the rollover as a renewal option on the lease, tested at expiry, both
    outcomes declared as leases, the lapse as a scenario), which found two
    gaps: an exercise cannot bring a contract into being (`docs/13`
-   §7.108) and an option's payoff carries no category (§7.109). Owed: the
-   AmeriCredit clean-up call as `Credit.Contract.CleanUpCall`.
+   §7.108) and an option's payoff carries no category (§7.109). The
+   AmeriCredit clean-up call is `Credit.Contract.CleanUpCall` held by the
+   servicer on the trust (terms `call_threshold`, `initial_balance`; election
+   on the trust's fold as `prev.balance`), every cell unchanged. Stage 7
+   COMPLETE.
 
 `docs/13` §7.58, §7.63, §7.67 and §7.92 closed with stage 3; §7.96–7.98
 close with the stages that answer them.

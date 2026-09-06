@@ -133,8 +133,10 @@ Every published weighted average life is reproduced, to call and to maturity.
   series or metric to check it against.
 - **Anything after the clean-up call.** The call retires the notes at period 47
   and there is no trust left to distribute from, so the cash columns end there.
-  The loans are repurchased at the next period — one event at the trust,
-  reading the balance it holds — and produce nothing more inside the model.
+  The loans are repurchased at the next period — the servicer's clean-up call,
+  an option written on the trust and exercised when the balance the trust
+  carries in falls to 10% of the cutoff balance — and produce nothing more
+  inside the model.
 - **Mutation testing.** `docs/20` §3.3 asks for it and it has not been run. The
   hole `docs/20` §3.2 warns about is present by construction here: the
   certificateholder's step-down release absorbs whatever the notes are not
@@ -614,13 +616,22 @@ contract credit.loan.p12 on entity asset.p12 {
   }
 }
 
-// THE CLEAN-UP CALL REPURCHASES THE COLLATERAL. The redemption price joins
-// the pot at the distribution where the pool first falls to 10% (the
-// waterfall's own test, below); from the next period the loans belong to the
-// servicer, so the trust collects nothing more. One event, at the trust,
-// reading the fold; each loan's machine writes the balance off on
-// `repurchased` (docs/42 §3.5).
-event clean_up_call when prev.container.trust.balance <= 101196992.93 {
+// THE CLEAN-UP CALL IS THE SERVICER'S RIGHT TO REPURCHASE THE COLLATERAL,
+// written on the trust: exercisable once the pool balance the trust carries
+// into a distribution is at or below 10% of the cutoff balance. The
+// redemption price joins the pot at that distribution (the waterfall's own
+// test, below); from the next period the loans belong to the servicer, so
+// the trust collects nothing more. The exercise reads the trust's fold as its
+// own claim, and each loan's machine writes the balance off on `repurchased`
+// (docs/42 §3.5).
+option clean_up_call on entity container.trust type Credit.Contract.CleanUpCall {
+  parties { issuer = party.trustee, holder = party.servicer }
+  terms {
+    call_threshold = 0.10
+    initial_balance = inputs.initial_pool
+  }
+  exercise when prev.balance <= contract.call_threshold * contract.initial_balance
+  payoff 0
   set entity asset.p01.status = "repurchased"
   set entity asset.p02.status = "repurchased"
   set entity asset.p03.status = "repurchased"

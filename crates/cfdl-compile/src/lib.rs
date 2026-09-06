@@ -5249,18 +5249,57 @@ fn build_ir(
         return Err(diagnostics);
     }
 
-    let option_accounts: BTreeMap<String, DeclaredAccount> = declared_accounts_of(resolve_output)
-        .into_iter()
-        .chain(lowered.accounts.iter().map(|a| {
-            (
-                a.name.clone(),
-                DeclaredAccount {
-                    side: a.side.clone(),
-                    fold: a.fold,
-                },
-            )
-        }))
-        .collect();
+    // Every claim an option's `prev.<account>` may name: declared, opened by
+    // a pack's contracts, and the relation folds of both (`docs/42` §3.4) —
+    // a clean-up call on a trust reads the fold of its loans' balances as the
+    // trust's own claim.
+    let mut option_accounts: BTreeMap<String, DeclaredAccount> =
+        declared_accounts_of(resolve_output)
+            .into_iter()
+            .chain(lowered.accounts.iter().map(|a| {
+                (
+                    a.name.clone(),
+                    DeclaredAccount {
+                        side: a.side.clone(),
+                        fold: a.fold,
+                    },
+                )
+            }))
+            .collect();
+    {
+        let parent_of: BTreeMap<String, String> = resolve_output
+            .source_statements
+            .iter()
+            .filter_map(|s| match &s.statement {
+                Stmt::Entity(e) => e.parent.clone().map(|p| (e.symbol(), p)),
+                _ => None,
+            })
+            .collect();
+        let mut folds: Vec<String> = Vec::new();
+        for account in lowered.accounts.iter().filter(|a| !a.fold) {
+            let Some(owner) = account.owner_entity.as_deref() else {
+                continue;
+            };
+            let Some((_, short)) = account.name.rsplit_once('.') else {
+                continue;
+            };
+            let mut cursor = parent_of.get(owner);
+            let mut seen: BTreeSet<&str> = BTreeSet::new();
+            while let Some(ancestor) = cursor {
+                if !seen.insert(ancestor.as_str()) {
+                    break;
+                }
+                folds.push(format!("{ancestor}.{short}"));
+                cursor = parent_of.get(ancestor);
+            }
+        }
+        for full in folds {
+            option_accounts.entry(full).or_insert(DeclaredAccount {
+                side: None,
+                fold: true,
+            });
+        }
+    }
     let (ir_events, ir_options, event_diags) = lower_events_options(
         resolve_output,
         &id_seed,

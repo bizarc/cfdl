@@ -9671,7 +9671,7 @@ Contract types (a `contract <name>` declaration lowers to streams through the pa
 | `Credit.Contract.Purchase` | `credit.purchase` | buyer, seller |  |
 | `Credit.Contract.Participation` | `credit.participation` | issuer, holder | A pro rata interest in a pool's cash, passed through to the holder each period — a pass-through certificate or a loan participation. Instanced with the suffix of the pool it participates in. |
 | `Credit.Contract.Note` | `credit.note` | issuer, holder | A class of notes in a securitisation: a face and a coupon, paid interest and principal by the trust's priority of payments. The steps that pay it name it; its claim is face less what the holder's principal account has received. |
-| `Credit.Contract.CleanUpCall` | (election) | holder | The issuer's right to retire the pool once it falls below a stated size. |
+| `Credit.Contract.CleanUpCall` | (election) | holder | The right to purchase the remaining collateral and retire the notes once the pool falls to a stated fraction of its initial balance. Written on the trust; the servicer or sponsor usually holds it. |
 
 Metrics: `domain.credit.interest`, `domain.credit.principal`, `domain.credit.recoveries`, `domain.credit.penalties`, `domain.credit.servicing`, `domain.credit.wal_years`, `domain.credit.collections`, `domain.credit.purchase`, `domain.credit.collections_multiple`
 

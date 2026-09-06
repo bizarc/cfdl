@@ -8,6 +8,18 @@ This project follows Semantic Versioning: https://semver.org/
 
 ## [Unreleased]
 
+**The AmeriCredit clean-up call is the servicer's election.** The event
+with the literal 101,196,992.93 is `option clean_up_call on entity
+container.trust type Credit.Contract.CleanUpCall`: the trustee grants, the
+servicer holds, the terms are the 10% threshold and the cutoff balance
+(`Credit.Contract.CleanUpCall` gains `call_threshold` and
+`initial_balance`), and the election reads the trust's fold as its own
+claim — `prev.balance <= contract.call_threshold * contract.initial_balance`.
+Its actions repurchase the twelve loans as the event did; the payoff is
+zero because the redemption price is already in the waterfall's pot. Every
+asserted cell and the anchor are unchanged. Stage 7 (`docs/40` §10) is
+complete.
+
 **Benchmark: a renewal option on a lease (`cre/office_renewal_option`).**
 Stage 7's demonstration: `office_two_tenant` with Tenant A's expiry as the
 renewal option the lease grants rather than a probability-weighted

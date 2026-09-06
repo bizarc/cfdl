@@ -175,13 +175,20 @@ the pool "carried in" is the cutoff balance, because the January loans have
 paid once in period 0 and that payment belongs to the first distribution, not
 to the balance the classes are measured against.
 
-The clean-up call is one event at the trust. When the opening balance first
-falls to 10% of the cutoff balance the twelve loans are repurchased, each
-loan's machine writes its balance off, and the trust collects nothing more —
-the redemption price having joined the pot at the prior distribution, where
-the waterfall's own test fires. Every asserted cell is unchanged; what changed
-is that the post-call periods now show a trust with nothing in it rather than
-loans amortizing for a servicer who already owns them.
+The clean-up call is the servicer's option, `Credit.Contract.CleanUpCall`,
+written on the trust with the trustee as grantor: its terms are the 10%
+threshold and the cutoff balance, and its election reads the trust's fold as
+its own claim — `prev.balance <= contract.call_threshold *
+contract.initial_balance`. When the opening balance first satisfies it the
+twelve loans are repurchased by the option's actions, each loan's machine
+writes its balance off, and the trust collects nothing more — the redemption
+price having joined the pot at the prior distribution, where the waterfall's
+own test fires. It was an event with the literal 101,196,992.93 before; the
+option states the rule and the two numbers it is made of, and every asserted
+cell is unchanged. The payoff is zero because the redemption price is already
+in the waterfall's pot (`docs/13` §7.109 is why it is not the payoff). The
+post-call periods show a trust with nothing in it rather than loans amortizing
+for a servicer who already owns them.
 
 ## The distribution, in four lines instead of forty
 
@@ -332,9 +339,10 @@ certificateholder and which belong to the servicer who bought them.
 
 The same shape remains in two other places and is deliberately left alone:
 5,059,849.65 is 0.50% of the initial pool (the step-down floor) and
-101,196,992.93 is 10% of it (the clean-up call), each still written out
-twenty-eight times. `assume initial_pool` now exists, so both are one edit
-away; this change was the reserve.
+101,196,992.93 is 10% of it (the clean-up call test inside the waterfall and
+the class recurrences), each still written out many times. `assume
+initial_pool` now exists and the option itself states the rule, so both are
+one edit away; this change was the reserve.
 
 ## What the model does not carry
 
