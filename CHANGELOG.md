@@ -8,6 +8,13 @@ This project follows Semantic Versioning: https://semver.org/
 
 ## [Unreleased]
 
+**Backlog housekeeping.** Three entries that owned no work are removed:
+§7.78, the M2 umbrella (the roadmap's own M2 section carries the remaining
+rows); §7.79, closed by `docs/34` and marked closed in its own text; and the
+first of two entries numbered 7.84, the pack-lifecycle review closed by
+`docs/36`. `model.moic` keeps 7.84. Roadmap citations in the surviving
+entries point at `docs/37` M2. Backlog: 58 items.
+
 **The AmeriCredit clean-up call is the servicer's election.** The event
 with the literal 101,196,992.93 is `option clean_up_call on entity
 container.trust type Credit.Contract.CleanUpCall`: the trustee grants, the
