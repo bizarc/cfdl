@@ -35,6 +35,7 @@ pub(crate) fn compute_results(
     config: RunConfig,
 ) -> Result<Results, EngineError> {
     refuse_series_reads_in_logic(ir)?;
+    refuse_unresolved_overrides(ir, &config)?;
 
     // A model may declare its own run modes. Honour a declared Monte Carlo run
     // when the run config does not ask for one, so `run monte_carlo trials N

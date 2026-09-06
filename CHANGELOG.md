@@ -8,6 +8,23 @@ This project follows Semantic Versioning: https://semver.org/
 
 ## [Unreleased]
 
+**An override that matches nothing is refused.** A run-configuration key —
+in the deterministic block, a scenario or the Monte Carlo distributions —
+that names no assumption the model declares or reads, no declared stream,
+and no `cfg.` or `obs.` path any expression reads, refuses the run
+(`E5033`) naming the block and the nearest name it could have meant, so a
+scenario that sets `cpr` for `inputs.cpr` is no longer silently the base
+run. The run schema now says so where it said "anything else is ignored".
+Closes backlog 7.51 and 7.116; 7.43 closes as shipped (results 0.7 owns
+every stream, and a model without a statement gets one by entity) —
+backlog 32. The refusal found nine shipped configurations whose overrides
+had never matched anything: the scenario-compare and Monte Carlo fixtures
+named `legal.rent` for a model whose stream is `lease.rent`, and seven
+example configurations named `real_estate.ops_expense` and
+`operating.revenue` for streams a pack lowers as `cre.opex.line` and
+`opco.revenue.recurring`. Each now names its stream; the two fixtures'
+scenarios and trials finally differ from their base run.
+
 **Highlands' equity is cash (D13).** The partners' contributions are streams
 in `financing.equity.contribution` on the dates the facility draws equity,
 each moving its partner's capital account; the three restated copies of the

@@ -219,94 +219,6 @@ the FNMA classes are entity fields today, so the REMIC tranches as notes
 Found asserting the seven published WALs of FNMA 2019-2, where the 400% PSA
 column refused the naive floor and the refusal was the convention speaking.
 
-### 7.43 Results do not say which entity owns a stream
-
-This is a request rather than a defect, and the part of it that is a defect is
-smaller and different from the part first written down.
-
-**The axis exists and is correct.** Without a pack, a model's structured view of
-its own cash is `entity.<symbol>.net_cash_flow`, one series per entity,
-aggregated through `part of` — twelve pools rolled into a trust to within 2e-06
-in the pack-free AmeriCredit model, identical to the packed one.
-
-**A model without a pack publishes no `domain.*` series, and that is by
-design.** `docs/01` §15.2 states that CFDL models do not declare output metrics
-and points at the pack interface for how a pack defines output categories,
-aggregations and metrics. A statement is a pack's job. The request below is for
-a DEFAULT presentation, not for a model-declared one, and it should not be read
-as a gap in the language.
-
-**The original claim about a parent's own cash was wrong.** A trust with pools
-and a fee of its own does not show one number: the fee is published in its own
-right, and the arithmetic closes.
-
-```
-entity.asset.trust.net_cash_flow   550        rollup
-entity.asset.pool1.net_cash_flow   300
-entity.asset.pool2.net_cash_flow   200
-stream.trust.fee                    50        the parent's own cash
-                                              550 - 300 - 200 = 50
-```
-
-**What is actually missing is the ownership.** A series entry in results carries
-`index`, `offset` and `values`, and nothing else; `docs/06` never names an
-owner. So the derivation above needs the parent-child tree, which lives in the
-IR rather than in results, and a consumer holding `results.json` alone cannot
-attribute a stream to an entity at all. Name inspection is not a substitute: a
-pack-lowered `cre.unit.base_rent.anchor` does not contain the symbol of the
-entity that owns it.
-
-Publishing stream ownership is the smaller change and the more useful one. It is
-a structural fact the engine already holds, it lets any consumer build a
-hierarchy view without the engine shipping one, and it makes an entity's own
-cash derivable from results alone. Publishing `entity_own` beside the rollup is
-the narrower version of the same idea and would serve the default statement
-directly.
-
-**The presentation request stands on its own merits.** A default statement
-organized by the entity tree — each node's cash with its children beneath it,
-no declarations and no pack — would give every model a readable cash flow rather
-than a flat list of series keyed by symbol. Nothing in the language prevents it
-and nothing forces it; it is a product decision about what a pack-free run
-should look like. A declarable statement structure, the pack's fold available to
-a model that wants to name its own lines, is the larger job and a separate one.
-
-Provenance: found sectioning `benchmarks/credit/americredit_2017_1` into a
-pack-free model, August 2026. Rewritten August 2026 after probing the own-cash
-claim, which does not hold — the parent's streams are published individually and
-the rollup arithmetic closes — and finding the ownership gap underneath it.
-
-**Status, 31 August 2026 — shipped, and wider than the entry asked.**
-results_version 0.7 publishes a `graph` section — every entity's symbol,
-family, type, `part of` parent, and stable id — and attributes each stream
-series to its owning entity AND its category. A consumer holding
-results.json alone can now build the hierarchy view, attribute any stream's
-cash to the thing that owns it, and select by kind. The schema carries the
-descriptions; `docs/06` regenerated.
----
-
-### 7.51 A parameter override is never checked against the model
-
-*Narrowed. The schema half shipped — `tools/check-run-schema.py`, wired at
-`run-schema` in the makefile, validates every committed run configuration
-against `run.schema.json`.*
-
-What remains is resolution, which the schema cannot do. `parameter_overrides`
-are applied by key with no check that the key names anything the model
-declares, so `inputs.captial_cost` for `inputs.capital_cost` overrides nothing
-and the run reports ok. The schema knows the SHAPE of an override key; only the
-IR knows whether it resolves.
-
-This is the same family as the unresolved-name work: a name that resolves to
-nothing must not read as silence. The engine already refuses an unresolved
-`inputs.` read inside an expression; an override naming a non-existent input is
-the same mistake one layer out, and should be the same kind of error.
-
-`run.schema.json` also contradicts itself on the point — its header says
-"Unknown properties are rejected", and the `parameter_overrides` description
-says "Four key shapes are recognized and anything else is ignored". Both cannot
-be true, and the second is what the engine does.
-
 ### 7.54 The HUD case cannot move onto `cre.permanent_debt`
 
 *Belongs with the CRE pack (section 1). Split from the closed 7.14.*
@@ -1927,31 +1839,6 @@ it can ship. That is a feature: a member that fires on a benchmark is either a
 finding or a badly drawn rule, and both are worth knowing before release.
 
 Related: §7.111, W-code parity gate, `docs/22` (how a diagnostic should read).
-
-### 7.116 A run-config override that matches nothing is ignored without a word
-
-Belongs with §5, language and engine. Found the same day, building the grid of
-speeds — and it cost more time than every other finding here combined.
-
-A base run and two scenarios came back with three identical numbers. The
-scenarios each set `parameters: { "cpr": ... }`, and the key an override is
-addressed by carries a prefix the engine reads to decide WHAT is being moved:
-`inputs.` an assumption, `cfg.` and `obs.` their namespaces,
-`stream.<name>:amount` one stream's figure (`env.rs`). A key with no known
-prefix matches nothing, and nothing says so — the run reports ok, every metric
-is a real number, and the scenario is silently the base run again.
-
-The same applies to `monte_carlo.distributions`, which are keyed the same way:
-a distribution on `cpr` rather than `inputs.cpr` produces a Monte Carlo whose
-trials are all identical, reported as a distribution with zero variance.
-
-The engine already holds both halves. `fold.rs` collects the declared
-`inputs.*` set for its unbound check, and the override keys are in the config
-beside it. So an unmatched key can be reported with the near-miss the
-`E1371`/`E1372` hints already establish the shape for: "scenario 'stress' sets
-'cpr', which nothing declares; did you mean 'inputs.cpr'?".
-
-Related: §7.115 (the family this belongs to), §7.117, `docs/09` §5.
 
 ### 7.117 `lookup` cannot reach the entity types, the published fields, or the categories
 

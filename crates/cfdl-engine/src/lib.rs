@@ -1046,6 +1046,125 @@ mod tests {
         assert_eq!(config.scenarios["up"].discount_rate, Some(0.12));
     }
 
+    /// AN OVERRIDE THAT MATCHES NOTHING IS REFUSED (`docs/13` §7.51, §7.116):
+    /// a key with no prefix, a misspelled input, a stream nobody declared, in
+    /// the deterministic block, a scenario or the Monte Carlo distributions.
+    /// A key that resolves — a declared assumption, an input the model reads
+    /// without declaring, a `cfg.` path some expression reads — is accepted.
+    #[test]
+    fn an_override_that_matches_nothing_is_refused_naming_the_nearest_input() {
+        let ir = r#"{
+            "model": { "name": "overrides", "currency": "USD" },
+            "time": { "calendar": "monthly", "start": "2026-01-01", "periods": 2 },
+            "entities": [ { "symbol": "asset.a", "rules": {} } ],
+            "assumptions": { "constants": { "cpr": { "expr": { "lang": "cfdl", "src": "0.1" } } } },
+            "streams": [
+                {
+                    "name": "ops.revenue",
+                    "owner": { "symbol": "asset.a" },
+                    "direction": "inflow",
+                    "schedule": { "kind": "Every", "every": "monthly", "from": "2026-01-01", "to": "2026-02-01" },
+                    "amount": { "lang": "cfdl", "src": "100.0 * inputs.cpr * cfg.stress.factor + inputs.undeclared" },
+                    "active_when": { "lang": "cfdl", "src": "true" }
+                }
+            ]
+        }"#;
+        let run = |keys: &[(&str, f64)]| {
+            let mut overrides = BTreeMap::new();
+            for (k, v) in keys {
+                overrides.insert(k.to_string(), *v);
+            }
+            run_from_json_str(
+                ir,
+                RunConfig {
+                    parameter_overrides: overrides,
+                    ..Default::default()
+                },
+            )
+        };
+        // Resolving keys: a declared assumption, an input only the model reads,
+        // a cfg path an expression reads, a declared stream.
+        run(&[
+            ("inputs.cpr", 0.2),
+            ("inputs.undeclared", 1.0),
+            ("cfg.stress.factor", 2.0),
+            ("stream.ops.revenue:amount", 5.0),
+        ])
+        .expect("every key resolves");
+        // A bare key: refused, with the prefix it wanted.
+        let err = run(&[
+            ("cpr", 0.2),
+            ("inputs.undeclared", 1.0),
+            ("cfg.stress.factor", 1.0),
+        ])
+        .expect_err("bare key");
+        assert_eq!(err.code(), "E5033_INVALID_RUN_CONFIG");
+        let msg = err.to_string();
+        assert!(
+            msg.contains("deterministic block sets `cpr`")
+                && msg.contains("did you mean `inputs.cpr`"),
+            "{msg}"
+        );
+        // A misspelled input: refused, with the nearest declared name.
+        let err = run(&[
+            ("inputs.cprr", 0.2),
+            ("inputs.undeclared", 1.0),
+            ("cfg.stress.factor", 1.0),
+        ])
+        .expect_err("misspelled input");
+        assert!(
+            err.to_string().contains("did you mean `inputs.cpr`"),
+            "{err}"
+        );
+        // A stream nobody declared, and a cfg path nothing reads.
+        let err = run(&[
+            ("stream.ops.cost:amount", 1.0),
+            ("inputs.undeclared", 1.0),
+            ("cfg.stress.factor", 1.0),
+        ])
+        .expect_err("unknown stream");
+        assert!(
+            err.to_string().contains("`stream.ops.cost:amount`"),
+            "{err}"
+        );
+        let err = run(&[
+            ("cfg.other", 1.0),
+            ("inputs.undeclared", 1.0),
+            ("cfg.stress.factor", 1.0),
+        ])
+        .expect_err("unread cfg path");
+        assert!(err.to_string().contains("`cfg.other`"), "{err}");
+        // A scenario's key is checked too, and named by the scenario.
+        let mut scenarios = BTreeMap::new();
+        let mut bad = BTreeMap::new();
+        bad.insert("cpr".to_string(), 0.3);
+        scenarios.insert(
+            "stress".to_string(),
+            super::ScenarioRunConfig {
+                discount_rate: None,
+                discount_curve: None,
+                as_of: None,
+                parameter_overrides: bad,
+            },
+        );
+        let mut base = BTreeMap::new();
+        base.insert("inputs.undeclared".to_string(), 1.0);
+        base.insert("cfg.stress.factor".to_string(), 1.0);
+        let err = run_from_json_str(
+            ir,
+            RunConfig {
+                parameter_overrides: base,
+                scenarios,
+                ..Default::default()
+            },
+        )
+        .expect_err("scenario key");
+        assert!(
+            err.to_string().contains("scenario 'stress' sets `cpr`"),
+            "{err}"
+        );
+    }
+
     /// NO RATE, NO NPV (`docs/13` §7.46): a run nobody gave a discount rate
     /// publishes neither `model.npv` nor `run.annual_discount_rate`, and says
     /// why; a run that states one, even zero, publishes both.
@@ -1428,69 +1547,31 @@ mod tests {
         // Override 25 per period, 2 periods => total 50
         assert!((total - 50.0).abs() < 1e-9);
 
-        // Legacy and bracket key forms must not be accepted
-        let mut legacy = BTreeMap::new();
-        legacy.insert("stream.cre.lease.base_rent.amount".to_string(), 99.0);
-        let legacy_results = run_from_json_str(
-            ir,
-            RunConfig {
-                arithmetic: cfdl_expr::Mode::Decimal,
-                discount_rate: 0.0,
-                rate_stated: true,
-                discount_curve: None,
-                as_of: None,
-                parameter_overrides: legacy,
-                scenarios: BTreeMap::new(),
-                monte_carlo: None,
-                valuation_grain: None,
-            },
-        )
-        .expect("run with legacy key");
-        let legacy_total = legacy_results
-            .deterministic
-            .metrics
-            .get("stream.cre.lease.base_rent.total")
-            .and_then(|s| match s {
-                super::Scalar::Money(m) => Some(m.amount),
-                _ => None,
-            })
-            .unwrap_or(0.0);
-        // Default amount 10 per period, 2 periods => 20 when legacy key is ignored
-        assert!(
-            (legacy_total - 20.0).abs() < 1e-9,
-            "legacy key must be ignored"
-        );
-
-        let mut bracket = BTreeMap::new();
-        bracket.insert("stream[\"cre.lease.base_rent\"].amount".to_string(), 99.0);
-        let bracket_results = run_from_json_str(
-            ir,
-            RunConfig {
-                arithmetic: cfdl_expr::Mode::Decimal,
-                discount_rate: 0.0,
-                rate_stated: true,
-                discount_curve: None,
-                as_of: None,
-                parameter_overrides: bracket,
-                scenarios: BTreeMap::new(),
-                monte_carlo: None,
-                valuation_grain: None,
-            },
-        )
-        .expect("run with bracket key");
-        let bracket_total = bracket_results
-            .deterministic
-            .metrics
-            .get("stream.cre.lease.base_rent.total")
-            .and_then(|s| match s {
-                super::Scalar::Money(m) => Some(m.amount),
-                _ => None,
-            })
-            .unwrap_or(0.0);
-        assert!(
-            (bracket_total - 20.0).abs() < 1e-9,
-            "bracket key must be ignored"
-        );
+        // Legacy and bracket key forms are REFUSED, not ignored (`docs/13`
+        // §7.51): a key that matches nothing would leave the run unchanged and
+        // reported as ok, and the refusal names the spelling it wanted.
+        for legacy_key in [
+            "stream.cre.lease.base_rent.amount",
+            "stream[\"cre.lease.base_rent\"].amount",
+        ] {
+            let mut legacy = BTreeMap::new();
+            legacy.insert(legacy_key.to_string(), 99.0);
+            let err = run_from_json_str(
+                ir,
+                RunConfig {
+                    parameter_overrides: legacy,
+                    rate_stated: true,
+                    ..Default::default()
+                },
+            )
+            .expect_err("a key that matches nothing is refused");
+            assert_eq!(err.code(), "E5033_INVALID_RUN_CONFIG");
+            assert!(
+                err.to_string()
+                    .contains("stream.cre.lease.base_rent:amount"),
+                "{err}"
+            );
+        }
     }
 
     #[test]

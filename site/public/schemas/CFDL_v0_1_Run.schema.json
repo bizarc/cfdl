@@ -75,7 +75,7 @@
       }
     },
     "Parameters": {
-      "description": "Value overrides, keyed by target. Four key shapes are recognized and anything else is ignored:\n  inputs.<name>          — an assumption, also the channel Monte Carlo samples into\n  stream.<name>:amount   — replaces a stream's amount for every period, bypassing its expression\n  cfg.<path>             — a config value read as cfg.<path> in expressions\n  obs.<path>             — an observable read as obs.<path> in expressions\nPrefer inputs.<name>: a contract term declared as `inputs.<name>` is then drivable by both scenarios and Monte Carlo without touching the model.",
+      "description": "Value overrides, keyed by target. Four key shapes are recognized:\n  inputs.<name>          — an assumption, also the channel Monte Carlo samples into\n  stream.<name>:amount   — replaces a stream's amount for every period, bypassing its expression\n  cfg.<path>             — a config value read as cfg.<path> in expressions\n  obs.<path>             — an observable read as obs.<path> in expressions\nA key that matches nothing the model declares or reads — any other shape, a misspelled input, a stream nobody declared, a cfg. or obs. path no expression reads — is refused (E5033) with the nearest name it could have meant. Prefer inputs.<name>: a contract term declared as `inputs.<name>` is then drivable by both scenarios and Monte Carlo without touching the model.",
       "type": "object",
       "additionalProperties": {
         "type": "number"
