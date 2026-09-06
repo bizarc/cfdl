@@ -1,0 +1,27 @@
+version 0.1
+model "field-reads-waterfall-step"
+time calendar annual from 2020-01 for 5
+
+// THE CAUSAL PLANE CANNOT READ A WATERFALL STEP. A balance a field carries
+// down by what the waterfall paid reads as a dependency and cannot be one:
+// every waterfall runs after every field, so the step's series is never there
+// when the recurrence evaluates, and the read aggregated to zero in silence —
+// the balance never moved and a step capped on it paid more than it was owed.
+// A waterfall never writes a balance in the causal plane: what a party has
+// been paid is its account, read as `prev.<account>`.
+
+entity asset trust : Asset.Financial {
+  bal init 1000.0 next prev - series_sum("dist.principal", time.t - 1, time.t - 1)
+}
+entity party holders : Party { name = "Holders" }
+
+stream trust.collections on entity asset.trust inflow currency USD {
+  schedule every year from 2020-01 to 2024-01
+  amount = 400
+}
+
+waterfall dist on entity asset.trust {
+  schedule every year from 2020-01 to 2024-01
+  from available
+  pay principal to party.holders = remaining
+}

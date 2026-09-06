@@ -2989,6 +2989,92 @@ fn rewrite_prev_accounts(
 /// non-cash stream moves something and carries no cash category; a cash
 /// stream moves only an account whose side is declared; and a balance is
 /// read only as `prev.` — the opening — never as a current value.
+/// A STREAM CANNOT FOLD A FIELD OR AN ACCOUNT. `series_sum` from a stream
+/// selects streams; a field's series and an account's series are state, read
+/// strictly backward (`docs/28` §4), and a selector naming one matches nothing
+/// — the stream evaluated, produced zero, and nothing said so (`docs/13`
+/// §7.101). The same text in a metric folds the real value, which is what
+/// made the zero plausible. Refused here, with the read that works named.
+fn check_stream_folds_state(
+    resolve_output: &cfdl_resolver::ResolveOutput,
+) -> Result<(), Vec<Diagnostic>> {
+    let mut field_paths: BTreeSet<String> = BTreeSet::new();
+    let mut account_names: BTreeSet<String> = BTreeSet::new();
+    for source_stmt in &resolve_output.source_statements {
+        match &source_stmt.statement {
+            Stmt::Entity(entity) => {
+                for field in &entity.fields {
+                    field_paths.insert(format!("{}.{}", entity.symbol(), field.name));
+                }
+                for field in &entity.literal_fields {
+                    field_paths.insert(format!("{}.{}", entity.symbol(), field.name));
+                }
+                for account in &entity.accounts {
+                    account_names.insert(format!("{}.{}", entity.symbol(), account.name));
+                }
+            }
+            Stmt::Account(account) => {
+                account_names.insert(account.name.clone());
+            }
+            _ => {}
+        }
+    }
+    let mut diagnostics: Vec<Diagnostic> = Vec::new();
+    for source_stmt in &resolve_output.source_statements {
+        let Stmt::Stream(stream) = &source_stmt.statement else {
+            continue;
+        };
+        for slot in stream.amount.iter().chain(stream.active_when.iter()) {
+            for referenced in cfdl_expr::series_references(&slot.src) {
+                let (kind, hint) = if field_paths.contains(&referenced) {
+                    (
+                        "an entity field",
+                        format!(
+                            "A field's value is read directly — `{referenced}` for this period's \
+                             value as the period closed, `prev.{referenced}` for the prior one — \
+                             never folded from a stream: a field is state, and state reads \
+                             strictly backward. A metric may fold it."
+                        ),
+                    )
+                } else if let Some(name) = referenced
+                    .strip_prefix("account.")
+                    .filter(|name| account_names.contains(*name))
+                {
+                    (
+                        "an account",
+                        format!(
+                            "An account's balance is read as `prev.{name}`, the opening balance, \
+                             never folded from a stream. A metric may fold `account.{name}`."
+                        ),
+                    )
+                } else {
+                    continue;
+                };
+                diagnostics.push(Diagnostic {
+                    code: "E1386_STREAM_FOLDS_STATE".to_string(),
+                    severity: "error".to_string(),
+                    message: format!(
+                        "Stream '{}' folds series '{referenced}', which is {kind}. A stream's \
+                         reduction selects streams; this selector matches nothing and would \
+                         aggregate to zero in silence.",
+                        stream.name
+                    ),
+                    file: Some(source_stmt.file.clone()),
+                    span: Some(map_span(slot.span)),
+                    path: None,
+                    hint: Some(hint),
+                    notes: Vec::new(),
+                });
+            }
+        }
+    }
+    if diagnostics.is_empty() {
+        Ok(())
+    } else {
+        Err(diagnostics)
+    }
+}
+
 fn check_stream_moves(
     resolve_output: &cfdl_resolver::ResolveOutput,
 ) -> Result<(), Vec<Diagnostic>> {
@@ -3222,49 +3308,130 @@ fn check_waterfalls(resolve_output: &cfdl_resolver::ResolveOutput) -> Result<(),
 
     let mut diagnostics: Vec<Diagnostic> = Vec::new();
 
-    // A STREAM CANNOT READ A WATERFALL STEP. docs/03 §3.2: a step's series is
-    // visible to a later waterfall's `from` and to nothing else — steps
-    // publish when their waterfall finishes, and every waterfall runs after
-    // every stream. The engine's series store never holds a step, so this
-    // read aggregated to zero in silence: `check_series_names` counted the
-    // step as a known producer and stayed quiet, and no other check looked.
-    for source_stmt in &resolve_output.source_statements {
-        let Stmt::Stream(stream) = &source_stmt.statement else {
-            continue;
-        };
-        for slot in stream.amount.iter().chain(stream.active_when.iter()) {
-            for referenced in cfdl_expr::series_references(&slot.src) {
-                // A selector states that matching nothing is intended, and the
-                // packs read whole families with them — same allowance E1342
-                // makes.
-                if referenced.ends_with(".*") {
-                    continue;
-                }
-                if !step_owner.contains_key(&referenced) {
-                    continue;
-                }
-                diagnostics.push(Diagnostic {
+    // THE CAUSAL PLANE CANNOT READ A WATERFALL STEP. docs/03 §3.2: a step's
+    // series is visible to a later waterfall's `from` and to nothing else —
+    // steps publish when their waterfall finishes, and every waterfall runs
+    // after every stream, every field, every event and every option. The
+    // engine's series store never holds a step, so such a read aggregated to
+    // zero in silence. First refused for streams (`E1346`); a field's rule, an
+    // event's guard or action value, an option's election, payoff or action
+    // value, and an account's inflow have the same relationship to a
+    // waterfall (`docs/13` §7.97 — a waterfall never writes a balance in the
+    // causal plane; a class's claim is its holder's account), so the same
+    // refusal covers every reader here.
+    //
+    // A `.*` selector states that matching nothing is intended, and the packs
+    // read whole families with them. It does NOT state an intent to read
+    // steps: a glob whose prefix is a waterfall's name — `fund.distribution.*`
+    // — names things that exist and are unreadable from here, and it paid
+    // zero every period while the exact spelling was refused. Such a glob is
+    // refused too; a glob over a stream family is left alone.
+    let waterfall_names: BTreeSet<String> = resolve_output
+        .source_statements
+        .iter()
+        .filter_map(|s| match &s.statement {
+            Stmt::Waterfall(w) => Some(w.name.clone()),
+            _ => None,
+        })
+        .collect();
+    let names_a_step = |referenced: &str| -> bool {
+        if let Some(prefix) = referenced.strip_suffix(".*") {
+            return waterfall_names.contains(prefix)
+                || waterfall_names
+                    .iter()
+                    .any(|w| prefix.starts_with(&format!("{w}.")));
+        }
+        step_owner.contains_key(referenced)
+    };
+    let refuse_step_reads = |what: &str,
+                             src: &str,
+                             file: &str,
+                             span: cfdl_parser::Span,
+                             diagnostics: &mut Vec<Diagnostic>| {
+        for referenced in cfdl_expr::series_references(src) {
+            if !names_a_step(&referenced) {
+                continue;
+            }
+            diagnostics.push(Diagnostic {
                     code: "E1346_STREAM_READS_WATERFALL_STEP".to_string(),
                     severity: "error".to_string(),
                     message: format!(
-                        "Stream '{}' reads series '{referenced}', which is a waterfall \
-                         step. Steps publish when their waterfall finishes, and every \
-                         waterfall runs after every stream — so this read could only \
-                         ever aggregate to zero.",
-                        stream.name
+                        "{what} reads series '{referenced}', which is a waterfall step. Steps publish when their waterfall finishes, and every waterfall runs after the causal plane — so this read could only ever aggregate to zero."
                     ),
-                    file: Some(source_stmt.file.clone()),
-                    span: Some(map_span(slot.span)),
+                    file: Some(file.to_string()),
+                    span: Some(map_span(span)),
                     path: None,
                     hint: Some(
-                        "A step's series is visible to a later waterfall's `from` and to \
-                         nothing else. Model the quantity the step pays as a stream or a \
-                         field if a stream needs to read it."
+                        "A step's series is visible to a later waterfall's `from` and to nothing else. A waterfall allocates cash to parties, whose accounts hold what they were paid: read `prev.<account>` for a claim, or carry the quantity the step pays as a stream or a field."
                             .to_string(),
                     ),
                     notes: Vec::new(),
                 });
+        }
+    };
+    for source_stmt in &resolve_output.source_statements {
+        let file = source_stmt.file.as_str();
+        match &source_stmt.statement {
+            Stmt::Stream(stream) => {
+                for slot in stream.amount.iter().chain(stream.active_when.iter()) {
+                    refuse_step_reads(
+                        &format!("Stream '{}'", stream.name),
+                        &slot.src,
+                        file,
+                        slot.span,
+                        &mut diagnostics,
+                    );
+                }
             }
+            Stmt::Entity(entity) => {
+                for field in &entity.fields {
+                    let what = format!("Field '{}.{}'", entity.symbol(), field.name);
+                    refuse_step_reads(
+                        &what,
+                        &field.init.src,
+                        file,
+                        field.init.span,
+                        &mut diagnostics,
+                    );
+                    if let Some(next) = &field.next {
+                        refuse_step_reads(&what, &next.src, file, next.span, &mut diagnostics);
+                    }
+                }
+            }
+            Stmt::Account(account) => {
+                if let Some(inflow) = &account.inflow {
+                    refuse_step_reads(
+                        &format!("Account '{}'", account.name),
+                        &inflow.src,
+                        file,
+                        inflow.span,
+                        &mut diagnostics,
+                    );
+                }
+            }
+            Stmt::Event(event) => {
+                let what = format!("Event '{}'", event.name);
+                if let Some(when) = &event.when {
+                    refuse_step_reads(&what, when, file, event.span, &mut diagnostics);
+                }
+                for action in &event.actions {
+                    if let cfdl_parser::EventAction::SetEntityField { value, .. } = action {
+                        refuse_step_reads(&what, value, file, event.span, &mut diagnostics);
+                    }
+                }
+            }
+            Stmt::Option(option) => {
+                let what = format!("Option '{}'", option.name);
+                for src in option.exercise_when.iter().chain(option.payoff.iter()) {
+                    refuse_step_reads(&what, src, file, option.span, &mut diagnostics);
+                }
+                for action in &option.actions {
+                    if let cfdl_parser::EventAction::SetEntityField { value, .. } = action {
+                        refuse_step_reads(&what, value, file, option.span, &mut diagnostics);
+                    }
+                }
+            }
+            _ => {}
         }
     }
 
@@ -4732,6 +4899,7 @@ fn build_ir(
     check_exercise_targets(resolve_output)?;
     check_waterfalls(resolve_output)?;
     check_stream_moves(resolve_output)?;
+    check_stream_folds_state(resolve_output)?;
     check_state_guards(resolve_output, &ontology)?;
     check_prev_first_period(resolve_output, &time_start)?;
     check_constant_expressions(resolve_output)?;

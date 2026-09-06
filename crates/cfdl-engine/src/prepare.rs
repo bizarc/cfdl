@@ -24,6 +24,45 @@ use super::*;
 /// prohibition: under the period walk a guard may read a stream's settled
 /// history, at or before the previous period. Same-period and forward reads
 /// stay refused, so this narrows rather than disappears.
+/// AN ACTION KIND THE ENGINE DOES NOT EXECUTE IS REFUSED, not journaled as
+/// `ignored` under a run that reports ok (`docs/13` §7.83). Only hand-written
+/// IR can carry one — every kind a model can write is known to the compiler —
+/// so the IR asked for something this engine cannot do, and the answer is no.
+pub(crate) fn refuse_unknown_action_kinds(ir: &Ir) -> Result<(), EngineError> {
+    const KNOWN: [&str; 4] = [
+        "SetEntityField",
+        "ActivateStream",
+        "DeactivateStream",
+        "ExerciseOption",
+    ];
+    let mut offences: Vec<String> = Vec::new();
+    let hosts = ir
+        .events
+        .iter()
+        .map(|e| (format!("event '{}'", e.name), &e.actions))
+        .chain(
+            ir.options
+                .iter()
+                .map(|o| (format!("option '{}'", o.name), &o.actions)),
+        );
+    for (host, actions) in hosts {
+        for action in actions {
+            if !KNOWN.contains(&action.kind.as_str()) {
+                offences.push(format!("{host} carries action kind '{}'", action.kind));
+            }
+        }
+    }
+    if offences.is_empty() {
+        return Ok(());
+    }
+    Err(EngineError::UnknownActionKind(format!(
+        "{}; this engine executes {}. The IR asks for something it cannot do, so the run is \
+         refused rather than reported as ok with the action ignored.",
+        offences.join("; "),
+        KNOWN.join(", ")
+    )))
+}
+
 pub(crate) fn refuse_series_reads_in_logic(ir: &Ir) -> Result<(), EngineError> {
     let mut offences: Vec<String> = Vec::new();
 
@@ -484,6 +523,7 @@ pub(crate) fn prepare_model<'a>(
 ) -> Result<ModelPrep<'a>, EngineError> {
     let total_periods = ir.time.periods as usize + ir.time.projection as usize;
     let timeline = timeline_dates(&ir.time.start, &ir.time.calendar, total_periods)?;
+    refuse_unknown_action_kinds(ir)?;
     let deps = stream_deps(ir);
     if let Some(path) = priced_refusal(ir, &deps) {
         return Err(EngineError::SeriesCycle(path));

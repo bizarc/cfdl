@@ -326,7 +326,7 @@ mod tests {
             );
         }
         Results {
-            results_version: "0.13".to_string(),
+            results_version: "0.14".to_string(),
             model_hash: "test".to_string(),
             ledger_hash: "test".to_string(),
             engine: EngineInfo {

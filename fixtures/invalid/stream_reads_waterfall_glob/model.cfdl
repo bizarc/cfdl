@@ -1,0 +1,29 @@
+version 0.1
+model "stream-reads-waterfall-glob"
+time calendar annual from 2020-01 for 5
+
+// A `.*` SELECTOR OVER A WATERFALL'S STEPS IS STILL A READ OF STEPS. The
+// exact spelling `dist.principal` is refused; the glob `dist.*` names the same
+// series and compiled, ran, and paid zero every period. A glob states that
+// matching nothing is intended — over a stream family, where a model may
+// declare none of the members. A glob whose prefix is a waterfall's name
+// matches only steps, which exist and are unreadable from here.
+
+entity asset fund : Asset.Financial
+entity party lp : Party { name = "Limited Partners" }
+
+stream fund.proceeds on entity asset.fund inflow currency USD {
+  schedule every year from 2020-01 to 2024-01
+  amount = 1000
+}
+
+stream fund.fee on entity asset.fund outflow currency USD {
+  schedule every year from 2020-01 to 2024-01
+  amount = 0.02 * series_sum("dist.*", time.t, time.t)
+}
+
+waterfall dist on entity asset.fund {
+  schedule every year from 2020-01 to 2024-01
+  from available
+  pay to_lp to party.lp = remaining
+}

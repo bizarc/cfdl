@@ -4,6 +4,11 @@ use super::*;
 #[derive(Debug, Clone)]
 pub struct RunConfig {
     pub discount_rate: f64,
+    /// Whether anyone STATED the rate — the run configuration or a caller —
+    /// or `discount_rate` is the zero nothing asked for. No rate, no NPV
+    /// (`docs/13` §7.46): a valuation whose rate nobody stated is a missing
+    /// term, not a shortcut, so `model.npv` is not published without one.
+    pub rate_stated: bool,
     pub as_of: Option<Date>,
     pub parameter_overrides: BTreeMap<String, f64>,
     pub scenarios: BTreeMap<String, ScenarioRunConfig>,
@@ -161,7 +166,7 @@ pub(crate) enum DistributionConfigFile {
 
 pub fn run_config_from_json_file(
     path: &Path,
-    fallback_rate: f64,
+    fallback_rate: Option<f64>,
     fallback_as_of: Option<Date>,
 ) -> Result<RunConfig, EngineError> {
     let raw = std::fs::read_to_string(path)?;
@@ -170,7 +175,7 @@ pub fn run_config_from_json_file(
 
 pub fn run_config_from_json_str(
     raw: &str,
-    fallback_rate: f64,
+    fallback_rate: Option<f64>,
     fallback_as_of: Option<Date>,
 ) -> Result<RunConfig, EngineError> {
     let config_file: RunConfigFile = serde_json::from_str(raw)?;
@@ -179,14 +184,13 @@ pub fn run_config_from_json_str(
 
 pub(crate) fn run_config_from_value(
     config_file: RunConfigFile,
-    fallback_rate: f64,
+    fallback_rate: Option<f64>,
     fallback_as_of: Option<Date>,
 ) -> Result<RunConfig, EngineError> {
+    let stated = config_file.deterministic.discount_rate.or(fallback_rate);
     let mut config = RunConfig {
-        discount_rate: config_file
-            .deterministic
-            .discount_rate
-            .unwrap_or(fallback_rate),
+        discount_rate: stated.unwrap_or(0.0),
+        rate_stated: stated.is_some(),
         as_of: fallback_as_of,
         parameter_overrides: config_file.deterministic.parameters,
         scenarios: BTreeMap::new(),

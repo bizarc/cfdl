@@ -615,20 +615,9 @@ impl Occurrences {
                         ));
                     }
                 }
-                other => {
-                    warnings.push(format!("{label}: unknown action kind '{other}'; ignored."));
-                    walk.journal.push(
-                        JournalEntry::new(
-                            t,
-                            &date.to_string(),
-                            source.to_string(),
-                            other,
-                            String::new(),
-                            "ignored",
-                        )
-                        .with_note("unknown action kind"),
-                    );
-                }
+                // Refused before the walk (`refuse_unknown_action_kinds`);
+                // nothing reaches here with a kind the engine does not know.
+                _ => {}
             }
         }
     }

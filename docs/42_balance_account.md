@@ -461,13 +461,20 @@ note adds nothing to it.
   never written by either path. The conversion date is therefore an
   occurrence the model declares, journaled and movable by a scenario,
   not a term on the loan.
-- **Cadence.** An account on a daily book with monthly lines rolls every
-  model period, most with no lines; the opening the monthly interest stream
-  reads is the close of the prior day, which is the prior payment's close.
-  Confirm this dissolves §7.102 for the balance.
-- **A claim moving between entities.** A sale of a loan moves its balance
-  from one owner to another. Out of scope here; note it.
-- **Rounding.** A `round_step` on an account, or on the lines only.
+- **Settled (5 September 2026): cadence.** An account on a daily book with
+  monthly lines rolls every model period, most with no lines; the opening
+  the monthly interest stream reads is the close of the prior day, which is
+  the prior payment's close. This dissolves `docs/13` §7.102 for balances;
+  the entry narrows to a field that folds a stream since its own last step.
+- **Settled (5 September 2026): a claim leaving an entity.** A sale of a
+  loan removes the asset: the seller's balance is written off (a `writeoff`
+  line) and the proceeds arrive as an `inflow`. Where the claim goes is
+  outside the model unless a case models the buyer too, and none does.
+- **Settled (5 September 2026): rounding.** Never on a balance, and never
+  inside a calculation. A `round_step` a contract states is the deal's
+  economics — a statutory credit quoted to a tick — and stays on that line;
+  everything else keeps full fidelity through every step and rounds at
+  presentation, in a statement.
 - **The construction loan's within-period compounding.** Its interest row
   accrues on a base that already includes the period's own capitalized
   interest, which the funded field's evaluation order produced and the

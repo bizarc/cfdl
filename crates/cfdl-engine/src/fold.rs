@@ -750,13 +750,27 @@ pub(crate) fn fold_results(
             currency: ir.model.currency.clone(),
         }),
     );
-    metrics.insert(
-        "model.npv".to_string(),
-        Scalar::Money(Money {
-            amount: round_amount(npv),
-            currency: ir.model.currency.clone(),
-        }),
-    );
+    // NO RATE, NO NPV (`docs/13` §7.46). A discounted figure whose rate nobody
+    // stated is a missing term, not a shortcut: the zero it would discount at
+    // is a real arithmetic answer to a question nobody asked, and a reader
+    // scanning for a present value would take it for one. The rate is
+    // published only when it was stated, for the same reason.
+    if config.rate_stated {
+        metrics.insert(
+            "model.npv".to_string(),
+            Scalar::Money(Money {
+                amount: round_amount(npv),
+                currency: ir.model.currency.clone(),
+            }),
+        );
+    } else {
+        warnings.push(
+            "No discount rate was stated, so `model.npv` and `run.annual_discount_rate` are not \
+             published: a present value needs a rate. State `annual_discount_rate` in the run \
+             configuration, or pass `--rate`."
+                .to_string(),
+        );
+    }
     if let Some(pp_irr) = irr_with_offsets(&valued_streams) {
         let annual_irr = (1.0 + pp_irr).powf(ppy) - 1.0;
         metrics.insert(
@@ -860,10 +874,12 @@ pub(crate) fn fold_results(
             Scalar::Number(round_amount(wal_weighted / wal_inflows)),
         );
     }
-    metrics.insert(
-        "run.annual_discount_rate".to_string(),
-        Scalar::Number(round_amount(config.discount_rate)),
-    );
+    if config.rate_stated {
+        metrics.insert(
+            "run.annual_discount_rate".to_string(),
+            Scalar::Number(round_amount(config.discount_rate)),
+        );
+    }
     // Published for downstream metric evaluation (e.g. cfdl-metrics
     // `wal_years`, which needs to convert period indices to years).
     metrics.insert("run.periods_per_year".to_string(), Scalar::Number(ppy));
@@ -1401,11 +1417,62 @@ pub(crate) fn fold_results(
         }
     }
 
+    // A FIELD WHOSE RULE FAILED IS FATAL (`docs/13` §7.103). The walk marks
+    // each failure with the field, the clause and the period; the run refuses
+    // here, once, naming every distinct failure rather than substituting zero
+    // under a warning.
+    let field_failures: Vec<String> = {
+        let mut seen: BTreeSet<String> = BTreeSet::new();
+        warnings
+            .iter()
+            .filter_map(|w| w.strip_prefix("FIELD_EVALUATION_FAILED: "))
+            .filter(|w| seen.insert(w.to_string()))
+            .map(|w| w.to_string())
+            .collect()
+    };
+    if !field_failures.is_empty() {
+        return Err(EngineError::FieldEvaluationFailed(format!(
+            "{} — a value that was never computed is not a number. Guard the expression \
+             for the period it fails in, or correct it.",
+            field_failures.join("; ")
+        )));
+    }
+
     let unresolved = unresolved_names(&warnings, &declared);
     if !unresolved.is_empty() {
+        // DECLARED BUT UNRESOLVED IS NOT "NOT DECLARED" (`docs/13` §7.68). An
+        // assumption the model states in plain sight may have failed to
+        // produce a number; the warning that says why is already in the
+        // array, and the refusal should point at it rather than at a
+        // declaration the author will look for and find.
+        let mut described: Vec<String> = Vec::new();
+        for name in &unresolved {
+            let assumed = name
+                .strip_prefix("inputs.")
+                .filter(|n| {
+                    ir.assumptions.constants.contains_key(*n)
+                        || ir.assumptions.random.contains_key(*n)
+                })
+                .map(|n| n.to_string());
+            match assumed {
+                Some(short) => {
+                    let why = warnings
+                        .iter()
+                        .find(|w| w.starts_with(&format!("Assumption '{short}' ")))
+                        .cloned()
+                        .unwrap_or_else(|| "it produced no number".to_string());
+                    described.push(format!(
+                        "`{name}` is declared as `assume {short}` but did not produce a number ({why})"
+                    ));
+                }
+                None => described.push(format!(
+                    "`{name}` is not declared — declare it, supply it in the run configuration, or correct the name"
+                )),
+            }
+        }
         return Err(EngineError::UnknownName(format!(
-            "{} — each read as zero. Declare it, supply it in the run configuration, or correct the name.",
-            unresolved.join("; ")
+            "{} — each read as zero.",
+            described.join("; ")
         )));
     }
 

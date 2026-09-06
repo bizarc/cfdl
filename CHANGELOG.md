@@ -8,6 +8,35 @@ This project follows Semantic Versioning: https://semver.org/
 
 ## [Unreleased]
 
+**The silent-zero family: nine reads that produced a plausible number and
+said nothing now refuse or warn.** A step read from anywhere in the causal
+plane — a field's rule, an event's guard or action, an option's election,
+payoff or action, an account's inflow — is `E1346`, as a stream's was; a
+`.*` glob whose prefix is a waterfall's name is refused too, since it names
+steps that exist and are unreadable. A stream that folds an entity field or
+an account is `E1386`: the selector matched nothing while the same text in
+a metric folded the real value. A field's rule that fails — a division by
+zero, `pmt` with no payments left — is fatal (`E5032`), naming the field,
+the clause and the period, where it was a panic and then a zero under a
+warning; the annuity functions report a zero denominator instead of
+panicking. An unresolved `inputs.` name that the model DECLARES as an
+assumption is reported as "declared but did not produce a number", with the
+failure that explains it. An action kind the engine does not execute
+refuses the run (`E5039`) instead of journaling `ignored` under a run that
+reports ok; the outcome is gone from the results schema (`results_version`
+0.14). No discount rate, no NPV: a run nobody gave a rate publishes neither
+`model.npv` nor `run.annual_discount_rate` and says why; the rate is
+optional in the CLI (`--rate`), MCP, Python and server. A curve read past
+its last point still holds its value silently; the warning waits for the
+curve's own effective dates, the construct §7.100 now asks for, so that a
+model can answer it. Every engine failure reports under its own code (`E5031`–`E5039`) rather than as
+an IR schema violation, and the evaluator's run-time codes `EXPR_EVAL` and
+`EXPR_UNKNOWN_NAME` are registered. Closes backlog 7.38, 7.46, 7.68, 7.81,
+7.83, 7.93, 7.97, 7.101 and 7.103; 7.55 (the model-declared statement,
+shipped 1 September) removed as closed; 7.102 narrowed to fields. Six open
+questions in `docs/35` §6 and `docs/42` §7 decided the same day. Backlog:
+48 items.
+
 **Backlog housekeeping.** Three entries that owned no work are removed:
 §7.78, the M2 umbrella (the roadmap's own M2 section carries the remaining
 rows); §7.79, closed by `docs/34` and marked closed in its own text; and the

@@ -63,7 +63,8 @@ work. `excel_compat` arithmetic and act/act (ISDA) shipped earlier despite
 being listed deferred. Stream ownership in results (§7.43) shipped as the
 graph the valuation plane publishes (`results_version` 0.7, #242); what survives of
 that entry is a default-presentation request, which is a statement's job
-(§7.55) and not a gate on release.
+and not a gate on release; the model-declared statement itself shipped
+2026-09-01.
 
 ## M5 — release mechanics. **Open, and human-gated.**
 

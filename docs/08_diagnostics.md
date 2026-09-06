@@ -252,11 +252,22 @@ Fields that move:
   different deals rather than two spellings of one. The omission used to lower
   to a one-shot in the first period, distributing whatever that period happened
   to produce; there is no default right often enough to be silent.
-- `E1346_STREAM_READS_WATERFALL_STEP` — a STREAM's series reduction
-  names a waterfall step. Every waterfall runs after every stream and a step's
-  series is visible to a later waterfall's `from` and to nothing else, so the
-  read could only ever aggregate to zero. Model the quantity the step pays as a
-  stream or a field if a stream must read it.
+- `E1346_STREAM_READS_WATERFALL_STEP` — a series reduction in the causal
+  plane — a stream's amount or guard, a field's rule, an event's guard or
+  action value, an option's election, payoff or action value, an account's
+  inflow — names a waterfall step. Every waterfall runs after the causal
+  plane and a step's series is visible to a later waterfall's `from` and to
+  nothing else, so the read could only ever aggregate to zero. A `.*`
+  selector whose prefix is a waterfall's name is refused too: it names steps
+  that exist and are unreadable, not a family that may be empty. A waterfall
+  never writes a balance in the causal plane; what a party was paid is its
+  account, read as `prev.<account>`.
+- `E1386_STREAM_FOLDS_STATE` — a stream's series reduction names an entity
+  field or an account. A stream's reduction selects streams; a field's and an
+  account's series are state, read strictly backward, so the selector matched
+  nothing and would aggregate to zero in silence while the same text in a
+  metric folds the real value. Read the field directly, or the account as
+  `prev.<account>`; a metric may fold either.
 - `E1302_UNRESOLVED_STREAM_REF` — an event activates or deactivates a stream the model does not run. Event action targets were never resolved, so a misspelling matched nothing and the action was silently inert: the stream it was meant to stop kept paying, with no diagnostic and no warning. Checked after lowering rather than in the resolver, so a name a CONTRACT produced resolves as readily as one the model declared — the symbol table is built before the pack is chosen, and a check running there reported an unlowered name and a typo alike. The hint lists every stream in the model, both kinds.
 - `E1357_LIFECYCLE_AUGMENT_TOPOLOGY` — a `lifecycle` block names a machine the PACK declared and also states `initial`, `state`, or an edge. A model may add arrival actions to a pack's machine and nothing else (`docs/34` D2a): the pack's machine is the checkable contract, and a model needing different topology declares a separate machine under its own name. The states and edges are refused rather than ignored — silently dropping them would leave the model saying one thing and the machine doing another.
 - `E1358_ARRIVAL_ACTION_SETS_STATUS` — an `on enter` or edge action writes `status`. An arrival action sets FIELDS on the entity that transitioned; a status write would fire a second transition inside the same period, breaking one-transition-per-entity-per-period. A transition that should cause another transition is topology — an edge out of the target state, taken next period — and status writes remain the named event's privilege (`docs/34` D4).
@@ -348,12 +359,23 @@ Fields that move:
 - `E3003_EXPR_TYPE_ERROR` — an expression combines types that cannot combine, such as a date and a number.
 - `E3004_EXPR_ILLEGAL_OP` — an operator is not defined for these operands.
 Warnings:
+- `EXPR_EVAL` — a run-time expression failure inside a stream's amount or guard, a metric or an action value, reported in `results.warnings` with the site and the period; the engine substitutes 0 or `false` there and says so. A field's rule does not get the substitution: its failure is `E5032`.
+- `EXPR_UNKNOWN_NAME` — the run-time form of an unresolved name, emitted per read and folded by the run into `E5031`, which is what a consumer should route on. Both are the expression evaluator's own codes (`docs/03` §5), registered here because results carry them.
 - `W3001_EXPR_TYPE_UNKNOWN` — an expression's type could not be determined ahead of evaluation. It still runs; the warning notes the check was skipped.
 - `W3002_OBS_REF_EXTRACTION_FAILED` — an observation reference could not be read out of an expression, so the run may not know it needs that input.
 ### 7.8 Pack errors (E4xxx)
 - `E4004_MISSING_PACK` — the named pack could not be loaded — not found, or found and rejected.
 ### 7.9 Lowering/emission (E5xxx)
-- `E5002_IR_SCHEMA_VALIDATION_FAILED` — the IR the compiler produced does not satisfy the published IR schema, or the IR being read does not.
+- `E5002_IR_SCHEMA_VALIDATION_FAILED` — the IR the compiler produced does not satisfy the published IR schema, or the IR being read does not. Only that: every other way a run can fail has a code of its own below, so a reader who trusts the code is not sent to the schema for a failure the schema would have passed.
+- `E5031_UNRESOLVED_NAME` — a run read a name nothing binds — a mistyped `inputs.` or an assumption the run configuration never supplied — and would have read it as zero. Fatal, naming every distinct unresolved name. An assumption the model DECLARES that failed to produce a number is reported as that, with the failure that explains it, rather than as "not declared".
+- `E5032_FIELD_EVALUATION_FAILED` — a field's rule failed to evaluate in some period — a division by zero, a function argument out of range such as `pmt` with no payments left — or produced something that is not a number. Named with the field, the clause and the period; a value that was never computed is not a number and is not substituted with one.
+- `E5033_INVALID_RUN_CONFIG` — the run configuration or a run flag is malformed: an unknown `valuation_grain` or `arithmetic`, an `as_of` that is not a date.
+- `E5034_SCHEDULE_FAILED` — a schedule could not be placed on the timeline at run time.
+- `E5035_SERIES_CYCLE` — a circular series read, or a read into a stream whose series names are computed at run time; no evaluation order satisfies it.
+- `E5036_ASSUMPTION_CYCLE` — a circular derivation among `assume` values.
+- `E5037_SERIES_READ_IN_LOGIC` — the engine's own check for `E1134`, for IR the compiler never saw.
+- `E5038_ACCOUNTS_NEED_THE_WALK` — a stream moves or reads an account while a forward-reaching read keeps the model on the column order, where no balance is carried.
+- `E5039_UNKNOWN_ACTION_KIND` — an event's or option's action names a kind the engine does not execute. Only hand-written IR can carry one; the run is refused rather than reported as ok with the action journaled as ignored, which is what it did before results 0.14.
 - `E5003_IR_EMIT_FAILED` — the IR could not be written.
 - `E5004_INVALID_LOWERING_RULE` — a pack's lowering rule is malformed.
 - `E5005_PHASE_NOT_FOUND` — a lowering rule anchors to a phase the model does not declare.
@@ -398,7 +420,6 @@ see what is wrong with it.
   nothing to show for it. Name the stream — `category <stream> = <path>` — once
   per stream. The bare form stays legal where the contract lowers exactly one,
   because there is then nothing to disambiguate.
-
 - `W5022_UNKNOWN_SERIES_REFERENCE` — a series reduction (`series_sum`,
   `series_avg`, `series_min`, `series_max`, `series_prod`, `series_count`)
   names a series no stream, contract or waterfall step produces, so it reduces
@@ -423,6 +444,7 @@ see what is wrong with it.
   scoped to a slice: reconciling a filtered statement against the model would
   report the filter as a shortfall, and a warning that fires on a correct model
   is noise. Asserted, never corrected.
+
 
 - `W3503_STATEMENT_UNKNOWN_STRUCTURE` — a model-declared statement asks for a
   hierarchy the evaluator does not build. A compiled model cannot reach this:
