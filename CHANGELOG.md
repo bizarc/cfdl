@@ -8,6 +8,10 @@ This project follows Semantic Versioning: https://semver.org/
 
 ## [Unreleased]
 
+**Backlog: §7.35 closes into the roadmap.** The human accessibility pass is
+one item in one place, `docs/37` M5·4, with `docs/23`'s method note beside
+it (backlog 36).
+
 **A scenario asserts its own column.** `expected_<scenario>.csv` beside a
 case's `expected.csv` is checked against a run with that scenario's
 overrides applied, under the case's tolerances — the per-period column that
