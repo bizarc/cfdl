@@ -77,11 +77,15 @@ and not a gate on release; the model-declared statement itself shipped
    widens.
 3. **Distribution: a Homebrew tap and Open VSX** for the CLI and the
    editor extension.
-4. **The WCAG human pass (§7.35).** axe is clean everywhere; what remains
+4. **The WCAG human pass** (`docs/23`; the backlog entry §7.35 closed into
+   this row on 6 September 2026). axe is clean everywhere; what remains
    is what a rule cannot check — the screen-reader session, 2.2's judgment
    criteria, content order at 200/400% zoom, and a skip link. Until it
    runs, the public statement stays "built to WCAG 2.2 AA; formal
    conformance assessment in progress", never a claim of conformance.
+   Method note for whoever runs it: test themes through the stored-preference-
+   plus-reload path; stamping `data-theme` on a live page produces mixed-token
+   states unreachable in production that read as contrast failures.
 
 Items 2–4 are decisions and sessions a maintainer must drive; no code in
 this repository closes them.

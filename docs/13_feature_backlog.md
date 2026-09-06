@@ -219,27 +219,6 @@ the FNMA classes are entity fields today, so the REMIC tranches as notes
 Found asserting the seven published WALs of FNMA 2019-2, where the 400% PSA
 column refused the naive floor and the refusal was the convention speaking.
 
-### 7.35 Accessibility: the automated findings are fixed; the human pass has not run
-
-The WCAG 2.2 AA assessment (`docs/23`) fixed everything automation found — the
-muted-text token failed 4.5:1 in both themes, the playground splitter could not
-report its value to a screen reader, and scrollable tables, code blocks and the
-results panel were unreachable by keyboard. axe now reports zero violations on
-every swept page of both apps, and the deployed sites matched local builds.
-
-What remains is what a rule cannot check: a screen-reader session over the docs
-reading flow, the playground round trip and a learn exercise; 2.2's judgment
-criteria (focus appearance, dragging alternatives, consistent help); content
-order at 200/400% zoom; and a skip link, which landmarks currently stand in
-for. Until that pass runs, the public statement is "built to WCAG 2.2 AA;
-formal conformance assessment in progress" — not a claim of conformance.
-
-Method note for whoever runs it: test themes through the stored-preference-plus-
-reload path. Stamping `data-theme` on a live page produces mixed-token states
-that are unreachable in production and read as catastrophic contrast bugs; two
-false findings died that way during the assessment.
-
-
 ### 7.41 A freeform pot expression is still unchecked
 
 *Roadmap: M2 (`docs/37`). Narrowed by M1's account (`docs/28` §5.1).* The checked forms now exist:
