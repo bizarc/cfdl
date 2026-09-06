@@ -1,0 +1,431 @@
+{
+  "results_version": "0.14",
+  "model_hash": "68e6e9e20a8ae9932b179cdece8e9ddc3b264540b7b7311abfa6f2f8f5d925d9",
+  "ledger_hash": "c0eeaa0b65796d939238747df9361f3771e0ffa6a44f890971664f2d7bedb42d",
+  "engine": {
+    "name": "cfdl-engine",
+    "version": "0.9.0"
+  },
+  "warnings": [
+    "W5024_CURVE_READ_PAST_END: stream 'plant.interest' reads curve 'sofr' through 2026-12-01, past its last point at 2026-07-01; the curve holds its last value there. Right for a rate deck, wrong for a schedule — declare the curve's effective dates (`curve sofr to <date>`) to state where it stops."
+  ],
+  "deterministic": {
+    "status": "ok",
+    "metrics": {
+      "entity.asset.plant.total": {
+        "amount": -75500.0,
+        "currency": "USD"
+      },
+      "model.npv": {
+        "amount": -71829.917099,
+        "currency": "USD"
+      },
+      "model.total": {
+        "amount": -75500.0,
+        "currency": "USD"
+      },
+      "run.annual_discount_rate": 0.1,
+      "run.periods_per_year": 12.0,
+      "stream.plant.allowance.total": {
+        "amount": -9000.0,
+        "currency": "USD"
+      },
+      "stream.plant.interest.total": {
+        "amount": -66500.0,
+        "currency": "USD"
+      }
+    },
+    "series": {
+      "entity.asset.plant.net_cash_flow": {
+        "index": {
+          "calendar": "monthly",
+          "start": "2026-01-01",
+          "periods": 12
+        },
+        "values": [
+          {
+            "amount": -6666.666667,
+            "currency": "USD"
+          },
+          {
+            "amount": -6666.666667,
+            "currency": "USD"
+          },
+          {
+            "amount": -6666.666667,
+            "currency": "USD"
+          },
+          {
+            "amount": -6666.666667,
+            "currency": "USD"
+          },
+          {
+            "amount": -6666.666667,
+            "currency": "USD"
+          },
+          {
+            "amount": -6666.666667,
+            "currency": "USD"
+          },
+          {
+            "amount": -5916.666667,
+            "currency": "USD"
+          },
+          {
+            "amount": -5916.666667,
+            "currency": "USD"
+          },
+          {
+            "amount": -5916.666667,
+            "currency": "USD"
+          },
+          {
+            "amount": -5916.666667,
+            "currency": "USD"
+          },
+          {
+            "amount": -5916.666667,
+            "currency": "USD"
+          },
+          {
+            "amount": -5916.666667,
+            "currency": "USD"
+          }
+        ]
+      },
+      "model.net_cash_flow": {
+        "index": {
+          "calendar": "monthly",
+          "start": "2026-01-01",
+          "periods": 12
+        },
+        "values": [
+          {
+            "amount": -6666.666667,
+            "currency": "USD"
+          },
+          {
+            "amount": -6666.666667,
+            "currency": "USD"
+          },
+          {
+            "amount": -6666.666667,
+            "currency": "USD"
+          },
+          {
+            "amount": -6666.666667,
+            "currency": "USD"
+          },
+          {
+            "amount": -6666.666667,
+            "currency": "USD"
+          },
+          {
+            "amount": -6666.666667,
+            "currency": "USD"
+          },
+          {
+            "amount": -5916.666667,
+            "currency": "USD"
+          },
+          {
+            "amount": -5916.666667,
+            "currency": "USD"
+          },
+          {
+            "amount": -5916.666667,
+            "currency": "USD"
+          },
+          {
+            "amount": -5916.666667,
+            "currency": "USD"
+          },
+          {
+            "amount": -5916.666667,
+            "currency": "USD"
+          },
+          {
+            "amount": -5916.666667,
+            "currency": "USD"
+          }
+        ]
+      },
+      "stream.plant.allowance": {
+        "index": {
+          "calendar": "monthly",
+          "start": "2026-01-01",
+          "periods": 12
+        },
+        "offset": 1.0,
+        "entity": "asset.plant",
+        "values": [
+          {
+            "amount": -1000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": -1000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": -1000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": -1000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": -1000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": -1000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": -500.0,
+            "currency": "USD"
+          },
+          {
+            "amount": -500.0,
+            "currency": "USD"
+          },
+          {
+            "amount": -500.0,
+            "currency": "USD"
+          },
+          {
+            "amount": -500.0,
+            "currency": "USD"
+          },
+          {
+            "amount": -500.0,
+            "currency": "USD"
+          },
+          {
+            "amount": -500.0,
+            "currency": "USD"
+          }
+        ]
+      },
+      "stream.plant.interest": {
+        "index": {
+          "calendar": "monthly",
+          "start": "2026-01-01",
+          "periods": 12
+        },
+        "offset": 1.0,
+        "entity": "asset.plant",
+        "values": [
+          {
+            "amount": -5666.666667,
+            "currency": "USD"
+          },
+          {
+            "amount": -5666.666667,
+            "currency": "USD"
+          },
+          {
+            "amount": -5666.666667,
+            "currency": "USD"
+          },
+          {
+            "amount": -5666.666667,
+            "currency": "USD"
+          },
+          {
+            "amount": -5666.666667,
+            "currency": "USD"
+          },
+          {
+            "amount": -5666.666667,
+            "currency": "USD"
+          },
+          {
+            "amount": -5416.666667,
+            "currency": "USD"
+          },
+          {
+            "amount": -5416.666667,
+            "currency": "USD"
+          },
+          {
+            "amount": -5416.666667,
+            "currency": "USD"
+          },
+          {
+            "amount": -5416.666667,
+            "currency": "USD"
+          },
+          {
+            "amount": -5416.666667,
+            "currency": "USD"
+          },
+          {
+            "amount": -5416.666667,
+            "currency": "USD"
+          }
+        ]
+      }
+    },
+    "annual_rollup": {
+      "series": {
+        "model.net_cash_flow": {
+          "index": {
+            "calendar": "annual",
+            "start": "2026-01-01",
+            "periods": 1
+          },
+          "values": [
+            {
+              "amount": -75500.0,
+              "currency": "USD"
+            }
+          ]
+        },
+        "stream.plant.allowance": {
+          "index": {
+            "calendar": "annual",
+            "start": "2026-01-01",
+            "periods": 1
+          },
+          "values": [
+            {
+              "amount": -9000.0,
+              "currency": "USD"
+            }
+          ]
+        },
+        "stream.plant.interest": {
+          "index": {
+            "calendar": "annual",
+            "start": "2026-01-01",
+            "periods": 1
+          },
+          "values": [
+            {
+              "amount": -66500.0,
+              "currency": "USD"
+            }
+          ]
+        }
+      }
+    }
+  },
+  "scenarios": {
+    "status": "not_run",
+    "summaries": []
+  },
+  "monte_carlo": {
+    "status": "not_run",
+    "trials": 1,
+    "seed": 0,
+    "metrics": {},
+    "trial_summaries": []
+  },
+  "statements": {
+    "statements": [
+      {
+        "id": "by_entity",
+        "label": "Cash by entity",
+        "default": true,
+        "grain": {
+          "calendar": "monthly",
+          "start": "2026-01-01",
+          "labels": [
+            "2026-01",
+            "2026-02",
+            "2026-03",
+            "2026-04",
+            "2026-05",
+            "2026-06",
+            "2026-07",
+            "2026-08",
+            "2026-09",
+            "2026-10",
+            "2026-11",
+            "2026-12"
+          ]
+        },
+        "rows": [
+          {
+            "kind": "line",
+            "label": "Plant",
+            "depth": 0,
+            "display_sign": 1.0,
+            "values": [
+              {
+                "amount": -6666.666667,
+                "currency": "USD"
+              },
+              {
+                "amount": -6666.666667,
+                "currency": "USD"
+              },
+              {
+                "amount": -6666.666667,
+                "currency": "USD"
+              },
+              {
+                "amount": -6666.666667,
+                "currency": "USD"
+              },
+              {
+                "amount": -6666.666667,
+                "currency": "USD"
+              },
+              {
+                "amount": -6666.666667,
+                "currency": "USD"
+              },
+              {
+                "amount": -5916.666667,
+                "currency": "USD"
+              },
+              {
+                "amount": -5916.666667,
+                "currency": "USD"
+              },
+              {
+                "amount": -5916.666667,
+                "currency": "USD"
+              },
+              {
+                "amount": -5916.666667,
+                "currency": "USD"
+              },
+              {
+                "amount": -5916.666667,
+                "currency": "USD"
+              },
+              {
+                "amount": -5916.666667,
+                "currency": "USD"
+              }
+            ],
+            "total": -75500.000004,
+            "streams": [
+              "plant.allowance",
+              "plant.interest"
+            ]
+          }
+        ],
+        "reconciliation": {
+          "bottom_line": -75500.000004,
+          "model_total": -75500.0,
+          "residual": -4e-6
+        }
+      }
+    ]
+  },
+  "graph": {
+    "entities": [
+      {
+        "symbol": "asset.plant",
+        "family": "asset",
+        "type": "core.Entity"
+      }
+    ]
+  }
+}

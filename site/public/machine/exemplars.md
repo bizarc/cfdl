@@ -129,7 +129,7 @@ assume tax_rate  = 0.30
 
 // The mine's own head-grade instruction, Table 12.5. After 2027 the balance
 // of the reserve carries the grade, which is what conserves contained metal.
-curve grade_policy_cu {
+curve grade_policy_cu to 2065-01 {
   2025-01: 0.50
   2026-01: 0.48
   2027-01: 0.43
@@ -138,7 +138,7 @@ curve grade_policy_cu {
 
 // The same policy on lagged dates. A field's `next` computes period t from
 // t-1, so a rule that must know period t-1's grade reads it here.
-curve grade_policy_lagged {
+curve grade_policy_lagged to 2065-01 {
   2025-01: 0.50
   2026-01: 0.50
   2027-01: 0.48
@@ -2443,8 +2443,10 @@ use pack "credit" version "0.1.0"
 time calendar monthly from 2026-01 for 41
 
 // Forward index curve (flat-forward / step interpolation): the coupon for a
-// period uses the last curve point at or before the period date.
-curve sofr {
+// period uses the last curve point at or before the period date. The deck is
+// quoted to 2028-01 and held flat to the loan's last payment, which the
+// effective date states.
+curve sofr to 2029-05 {
   2026-01: 0.048
   2026-07: 0.045
   2027-01: 0.042

@@ -1417,6 +1417,31 @@ pub(crate) fn fold_results(
         }
     }
 
+    // A CURVE READ OUTSIDE ITS EFFECTIVE DATES IS FATAL (`docs/13` §7.100).
+    // The curve declared where it stops; a read past that has no value, and
+    // the reader that made it is named rather than paid its end value.
+    let curve_reads: Vec<String> = {
+        // One line per (reader, curve): the walk is chronological, so the
+        // first marker names the first date the read ran off the end.
+        let mut seen: BTreeSet<String> = BTreeSet::new();
+        warnings
+            .iter()
+            .filter_map(|w| w.strip_prefix(env::CURVE_OUTSIDE_RANGE_MARKER))
+            .filter(|w| {
+                let key = w.split(" has no value at ").next().unwrap_or(w);
+                seen.insert(key.to_string())
+            })
+            .map(|w| w.to_string())
+            .collect()
+    };
+    if !curve_reads.is_empty() {
+        return Err(EngineError::CurveReadOutsideRange(format!(
+            "{} — outside its effective dates a curve has no value. End the reader's \
+             schedule where the curve ends, or extend the curve's dates.",
+            curve_reads.join("; ")
+        )));
+    }
+
     // A FIELD WHOSE RULE FAILED IS FATAL (`docs/13` §7.103). The walk marks
     // each failure with the field, the clause and the period; the run refuses
     // here, once, naming every distinct failure rather than substituting zero

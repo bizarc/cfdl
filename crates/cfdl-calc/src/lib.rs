@@ -22,9 +22,10 @@ mod token;
 mod value;
 
 pub use date::{CalcDate, DayCount, HolidayCalendar, RollConvention};
-pub use eval::{decimal_to_f64, eval, Env, MapEnv, Mode, SeriesFold, SeriesReduction};
+pub use eval::{decimal_to_f64, eval, CurveLookup, Env, MapEnv, Mode, SeriesFold, SeriesReduction};
 pub use funcs::{
     call_nonreference_count, call_reference_args, expr_calls_any, has_computed_call_name,
+    CURVE_OUTSIDE_RANGE_PREFIX,
 };
 pub use parser::{parse, BinOp, Expr, ExprKind, UnOp};
 pub use token::Span;

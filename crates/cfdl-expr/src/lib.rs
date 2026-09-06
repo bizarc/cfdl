@@ -152,6 +152,11 @@ pub struct CurveDef {
     pub interpolation: String,
     /// Points sorted ascending by date.
     pub points: Vec<(Date, f64)>,
+    /// The curve's effective dates. Inside them the points and interpolation
+    /// apply; a read outside them has no value (`docs/13` §7.100). An absent
+    /// end holds its end value flat — the market convention for a rate deck.
+    pub effective_from: Option<Date>,
+    pub effective_to: Option<Date>,
 }
 
 /// A named quantile: (share, value) points plus interpolation policy.
@@ -253,9 +258,16 @@ fn parse_error(e: cfdl_calc::CalcError) -> ExprError {
 /// which caught the error and substituted zero.
 pub const EXPR_UNKNOWN_NAME: &str = "EXPR_UNKNOWN_NAME";
 
+/// A curve read outside the effective dates it declares (`docs/13` §7.100).
+/// Its own code so the engine can refuse the run where it would tolerate
+/// arithmetic that failed.
+pub const EXPR_CURVE_OUTSIDE_RANGE: &str = "EXPR_CURVE_OUTSIDE_RANGE";
+
 fn eval_error(e: cfdl_calc::CalcError) -> ExprError {
     let code = if e.message.starts_with("unknown variable") {
         EXPR_UNKNOWN_NAME
+    } else if e.message.starts_with(cfdl_calc::CURVE_OUTSIDE_RANGE_PREFIX) {
+        EXPR_CURVE_OUTSIDE_RANGE
     } else {
         "EXPR_EVAL"
     };
@@ -489,6 +501,33 @@ pub fn series_references(src: &str) -> Vec<String> {
             }
             if i <= bytes.len() {
                 out.push(src[start..i].to_string());
+            }
+        }
+    }
+    out
+}
+
+/// The curve names an expression reads through `curve_value("<name>", …)`,
+/// by a literal scan of the source: a curve name is always a string literal,
+/// so the scan is exact where the name is written and finds nothing where it
+/// is computed (which the compiler refuses anyway).
+pub fn curve_references(src: &str) -> Vec<String> {
+    let mut out = Vec::new();
+    let mut rest = src;
+    while let Some(idx) = rest.find("curve_value") {
+        rest = &rest[idx + "curve_value".len()..];
+        let after = rest.trim_start();
+        let Some(args) = after.strip_prefix('(') else {
+            continue;
+        };
+        let args = args.trim_start();
+        let Some(quoted) = args.strip_prefix('"') else {
+            continue;
+        };
+        if let Some(end) = quoted.find('"') {
+            let name = &quoted[..end];
+            if !name.is_empty() && !out.iter().any(|n| n == name) {
+                out.push(name.to_string());
             }
         }
     }
@@ -870,8 +909,38 @@ impl cfdl_calc::Env for EnvAdapter<'_> {
         fold_or_no_answer(Some(folded))
     }
 
-    fn curve_value(&self, name: &str, date: cfdl_calc::CalcDate) -> Option<Decimal> {
-        self.curve_lookup(name, date).and_then(Decimal::from_f64)
+    fn curve_value(&self, name: &str, date: cfdl_calc::CalcDate) -> cfdl_calc::CurveLookup {
+        use cfdl_calc::CurveLookup;
+        let Some(curve) = self.env.curves.get(name) else {
+            return CurveLookup::Unknown;
+        };
+        // THE EFFECTIVE DATES ARE CHECKED FIRST. Outside them the curve has
+        // no value — not its end value held flat, which is what an undeclared
+        // end means and what the points alone would give.
+        let epoch =
+            |d: &Date| cfdl_calc::CalcDate::new(d.year, d.month, d.day).map(|c| c.to_epoch_days());
+        let query = date.to_epoch_days();
+        let before = curve
+            .effective_from
+            .as_ref()
+            .and_then(epoch)
+            .is_some_and(|f| query < f);
+        let after = curve
+            .effective_to
+            .as_ref()
+            .and_then(epoch)
+            .is_some_and(|t| query > t);
+        if before || after {
+            let text = |d: &Date| format!("{:04}-{:02}-{:02}", d.year, d.month, d.day);
+            return CurveLookup::OutsideRange {
+                from: curve.effective_from.as_ref().map(text),
+                to: curve.effective_to.as_ref().map(text),
+            };
+        }
+        match self.curve_lookup(name, date).and_then(Decimal::from_f64) {
+            Some(v) => CurveLookup::Value(v),
+            None => CurveLookup::Unknown,
+        }
     }
 
     fn quantile_at(&self, name: &str, share: Decimal) -> Option<Decimal> {
@@ -1465,6 +1534,8 @@ mod tests {
             "sofr".to_string(),
             CurveDef {
                 interpolation: "step".to_string(),
+                effective_from: None,
+                effective_to: None,
                 points: vec![],
             },
         );
@@ -1484,6 +1555,8 @@ mod tests {
             "sofr".to_string(),
             CurveDef {
                 interpolation: "step".to_string(),
+                effective_from: None,
+                effective_to: None,
                 points: vec![
                     (
                         Date {
@@ -1508,6 +1581,8 @@ mod tests {
             "ramp".to_string(),
             CurveDef {
                 interpolation: "linear".to_string(),
+                effective_from: None,
+                effective_to: None,
                 // 2026-01-01 -> 2026-01-11: 10 days, 0.0 -> 1.0
                 points: vec![
                     (
@@ -1549,6 +1624,63 @@ mod tests {
             };
             assert!((got - expected).abs() < 1e-12, "{src}: got {got}");
         }
+    }
+
+    #[test]
+    fn curve_value_outside_effective_dates_carries_its_own_code() {
+        let mut env = ExprEnv::empty();
+        env.curves.insert(
+            "allowance".to_string(),
+            CurveDef {
+                interpolation: "step".to_string(),
+                effective_from: Some(Date {
+                    year: 2026,
+                    month: 1,
+                    day: 1,
+                }),
+                effective_to: Some(Date {
+                    year: 2026,
+                    month: 6,
+                    day: 1,
+                }),
+                points: vec![(
+                    Date {
+                        year: 2026,
+                        month: 1,
+                        day: 1,
+                    },
+                    1000.0,
+                )],
+            },
+        );
+        let inside = compile_expr("curve_value(\"allowance\", date(2026, 6, 1))").expect("compile");
+        let Value::Decimal(got) = eval(&inside, &env).expect("inside the dates") else {
+            panic!("a number");
+        };
+        assert!((got - 1000.0).abs() < 1e-12);
+        let after = compile_expr("curve_value(\"allowance\", date(2026, 7, 1))").expect("compile");
+        let err = eval(&after, &env).expect_err("outside the dates has no value");
+        assert_eq!(err.code, EXPR_CURVE_OUTSIDE_RANGE);
+        assert!(
+            err.message.contains("2026-07-01") && err.message.contains("to 2026-06-01"),
+            "{}",
+            err.message
+        );
+        let before =
+            compile_expr("curve_value(\"allowance\", date(2025, 12, 1))").expect("compile");
+        assert_eq!(
+            eval(&before, &env).expect_err("before").code,
+            EXPR_CURVE_OUTSIDE_RANGE
+        );
+    }
+
+    #[test]
+    fn curve_references_scans_literal_names() {
+        assert_eq!(
+            curve_references("a * curve_value(\"sofr\", time.date) + curve_value( \"cpi\" , d) + curve_value(\"sofr\", d)"),
+            vec!["sofr".to_string(), "cpi".to_string()]
+        );
+        assert!(curve_references("curve_value(name, time.date)").is_empty());
     }
 
     #[test]

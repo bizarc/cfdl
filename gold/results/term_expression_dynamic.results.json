@@ -6,7 +6,9 @@
     "name": "cfdl-engine",
     "version": "0.9.0"
   },
-  "warnings": [],
+  "warnings": [
+    "W5024_CURVE_READ_PAST_END: stream 'energy.ppa.revenue.plant_a' reads curve 'production' through 2026-12-01, past its last point at 2026-10-01; the curve holds its last value there. Right for a rate deck, wrong for a schedule — declare the curve's effective dates (`curve production to <date>`) to state where it stops."
+  ],
   "inputs": {
     "resolved": {
       "esc_base": 0.02

@@ -99,6 +99,11 @@ pub(crate) struct IrCurve {
     /// "step" (flat-forward) or "linear".
     #[serde(default = "default_interpolation")]
     pub(crate) interpolation: String,
+    /// Effective dates (`docs/13` §7.100); absent means the end holds flat.
+    #[serde(default)]
+    pub(crate) effective_from: Option<String>,
+    #[serde(default)]
+    pub(crate) effective_to: Option<String>,
     pub(crate) points: Vec<IrCurvePoint>,
 }
 

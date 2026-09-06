@@ -340,9 +340,10 @@ impl Occurrences {
                     "Option '{}' payoff returned non-numeric {other:?}; using 0.",
                     option.name
                 )),
-                Err(err) => warnings.push(format!(
-                    "Option '{}' payoff failed [{}]: {}; using 0.",
-                    option.name, err.code, err.message
+                Err(err) => warnings.push(env::eval_failure_warning(
+                    &format!("Option '{}' payoff", option.name),
+                    &err,
+                    "using 0",
                 )),
             }
             // WHAT THE EXERCISE DOES beyond paying — a prepayment ends the

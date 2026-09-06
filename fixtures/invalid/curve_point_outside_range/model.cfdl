@@ -1,0 +1,17 @@
+version 0.1
+model "curve-point-outside-range"
+time calendar monthly from 2026-01 for 12
+
+// The curve says it stops in June and then declares a point in July: a
+// contradiction in the declaration, refused (E5008) rather than dropped.
+curve allowance from 2026-01 to 2026-06 {
+  2026-01: 1000.0
+  2026-07: 500.0
+}
+
+entity asset plant { name = "Plant" }
+
+stream plant.allowance on entity asset.plant outflow currency USD {
+  schedule every month from 2026-01 to 2026-06
+  amount = curve_value("allowance", time.date)
+}

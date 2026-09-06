@@ -6,7 +6,7 @@ entity asset solar : Asset.Real
 
 // The deck as quoted, at the dates it was quoted — a document within the
 // document, checkable against the desk's own screen.
-curve power_price linear {
+curve power_price linear to 2028-12 {
   2026-01: 42.10
   2027-01: 44.75
   2028-01: 46.20

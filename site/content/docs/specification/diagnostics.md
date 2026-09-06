@@ -384,13 +384,15 @@ Warnings:
 - `E5037_SERIES_READ_IN_LOGIC` — the engine's own check for `E1134`, for IR the compiler never saw.
 - `E5038_ACCOUNTS_NEED_THE_WALK` — a stream moves or reads an account while a forward-reaching read keeps the model on the column order, where no balance is carried.
 - `E5039_UNKNOWN_ACTION_KIND` — an event's or option's action names a kind the engine does not execute. Only hand-written IR can carry one; the run is refused rather than reported as ok with the action journaled as ignored, which is what it did before results 0.14.
+- `E5040_CURVE_READ_OUTSIDE_RANGE` — a stream, guard, account inflow or option payoff read a curve at a date outside the effective dates the curve declares (`from`/`to` on its header). Outside them the curve has no value — not its end value held flat, which is what an undeclared end means — so the run is refused, naming the curve, the first offending date and the reader. End the reader's schedule where the curve ends, or extend the curve's dates. A field's rule that makes the same read refuses under `E5032`.
 - `E5003_IR_EMIT_FAILED` — the IR could not be written.
 - `E5004_INVALID_LOWERING_RULE` — a pack's lowering rule is malformed.
 - `E5005_PHASE_NOT_FOUND` — a lowering rule anchors to a phase the model does not declare.
 - `E5006_MISSING_CONTRACT_TERM` — a lowering rule reads a contract term the contract does not supply.
 - `E5007_DUPLICATE_LOWERED_STREAM` — two contracts lower to the same stream name. Give one a suffix.
 - `E5008_INVALID_CURVE` — duplicate curve name, duplicate point date, or
-  malformed point in a `curve` statement
+  malformed point in a `curve` statement; effective dates that end before
+  they start, or a point declared outside them
 - `E5028_INVALID_QUANTILE` — duplicate quantile name, a malformed point, a
   share outside `0..1`, shares out of order or repeated, or values that fall as
   share rises. The last is the one worth stating plainly: a quantile function
@@ -436,6 +438,14 @@ see what is wrong with it.
   components by name whether or not the property declared each one. Selectors
   ending in `.*` are exempt, and are how a model states that matching nothing is
   intended.
+- `W5024_CURVE_READ_PAST_END` — a stream or a field reads a curve past its
+  last declared point, and the curve states no `to` date, so it holds its
+  last value there. Right for a rate deck quoted shorter than the deal; wrong
+  for a schedule declared as a curve — a depreciation table read for twenty
+  years past its end. Warned once per reader and curve, naming the curve's
+  last date and the last date read. Stating the curve's effective dates
+  (`curve <name> to <date>`) answers it: inside them the hold is meant,
+  outside them the run refuses (`E5040`).
 - `W3500_STATEMENT_UNCLASSIFIED_STREAM` — cash that no row of the statement
   claims, usually a hand-written stream carrying no `category`. It is collected
   into a visible `residual` row rather than dropped, so the bottom line still

@@ -1,0 +1,19 @@
+[
+  {
+    "code": "E5008_INVALID_CURVE",
+    "severity": "error",
+    "message": "Curve 'allowance' declares a point at 2026-07-01 outside its effective dates from 2026-01 to 2026-06.",
+    "file": "model.cfdl",
+    "span": {
+      "start_line": 7,
+      "start_col": 1,
+      "end_line": 10,
+      "end_col": 1
+    },
+    "path": null,
+    "hint": null,
+    "notes": [
+      "curve 'allowance'"
+    ]
+  }
+]

@@ -1089,6 +1089,38 @@ curve power_price linear {
 - Curve names MUST be unique; a curve MUST declare at least one point and
   at most one value per date.
 
+**Effective dates.** A curve MAY state the dates it is good for on its
+header, `from <date>` and/or `to <date>`, the way a phase states its span:
+
+```cfdl
+curve macrs_5 from 2026-01 to 2031-12 {
+  2026-01: 0.20
+  2027-01: 0.32
+  2028-01: 0.192
+  2029-01: 0.1152
+  2030-01: 0.1152
+  2031-01: 0.0576
+}
+
+curve sofr to 2029-05 {
+  2026-01: 0.048
+  2028-01: 0.0385
+}
+```
+
+- Inside the effective dates the points and interpolation apply as above,
+  including the flat hold between the last point and `to`.
+- A read outside them has no value: the run is refused
+  (`E5040_CURVE_READ_OUTSIDE_RANGE`), naming the curve, the date and the
+  reader. A curve's value is not its end value held forever; the header
+  says where the claim stops.
+- Every point MUST lie inside the effective dates (`E5008`).
+- A curve that states no `to` keeps the flat-forward convention past its
+  last point — the market's reading of a rate deck quoted shorter than the
+  deal — and a stream or field whose periods run past that point is warned
+  once (`W5024_CURVE_READ_PAST_END`). Stating `to` answers the warning
+  either way: the hold is meant, or the reader ends where the curve does.
+
 ### 12.6 Quantiles (share-indexed inputs)
 
 A `curve` is indexed by **when**. A `quantile` is indexed by **how much** — a

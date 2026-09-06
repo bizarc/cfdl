@@ -49,7 +49,7 @@ Between stated points, the mode decides the value, and the two modes are two dif
 
 Choose per curve, deliberately. A stepped price deck understates every mid-year sale in a rising market; a linear policy rate invents fifty basis points of drift no committee ever voted. Same five points, different economics — the mode is part of the claim, which is why the language makes you write it.
 
-Outside the stated range, a curve **clamps**: before the first point it returns the first value, after the last it returns the last. No extrapolation — a curve asserts nothing beyond what was stated, so a model that runs past its deck holds the last stated value rather than inventing a trend. If flat-forever is the wrong claim for your deal's tail, the fix is to make a claim: state more points.
+Outside its points, a curve **clamps**: before the first point it returns the first value, after the last it returns the last. No extrapolation — a curve asserts nothing beyond what was stated, so a model that runs past its deck holds the last stated value rather than inventing a trend. A curve can also say where its claim stops: `curve power_price linear to 2028-12 { … }` states the dates the curve is good for, and a read past them is not a clamp but a refused run. Without a `to`, a reader that runs past the last point is warned once, because a held value is right for a rate deck and wrong for a depreciation table, and only you know which this is. If flat-forever is the wrong claim for your deal's tail, the fix is to make a claim: state more points, or state the end.
 
 ## Curve, assumption, or observation?
 
@@ -69,7 +69,7 @@ One thing curves are *not*: stochastic. A curve is a deterministic input — the
 
 **A missing interpolation mode** — refused. The mode is part of the claim; there is no default to inherit silently.
 
-**The silent clamp at the tail.** The one that bites: a 10-year model over a 3-year deck runs seven years flat at the last stated price, *by design*. Nothing warns you, because the behavior is correct — the curve is doing exactly what it asserts. The habit that catches it is chapter 3's: open the series, look at the shape, and ask whether the flat tail is a claim you are prepared to defend.
+**The clamp at the tail.** The one that bites: a 10-year model over a 3-year deck runs seven years flat at the last stated price, *by design*. The run warns once per reader that ran past the deck (`W5024`), and the warning goes away when the curve states its `to` date — which is the moment to ask whether the flat tail is a claim you are prepared to defend, or whether the reader should stop where the deck does. The habit that catches it is chapter 3's: open the series, look at the shape.
 
 ## Exercises
 

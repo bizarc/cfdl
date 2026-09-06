@@ -86,6 +86,28 @@ pub(crate) struct StreamPlan<'a> {
 }
 
 impl<'a> StreamPlan<'a> {
+    /// The last period this stream settles in, once its schedule is placed.
+    /// `None` for a state-anchored stream, whose membership resolves in the
+    /// walk. Read by the curve-past-its-end warning (`docs/13` §7.100).
+    pub(crate) fn last_settled_period(&self) -> Option<usize> {
+        if self.is_state_anchored() {
+            return None;
+        }
+        self.accruals.iter().rposition(|a| !a.is_empty())
+    }
+
+    pub(crate) fn amount_src(&self) -> &str {
+        &self.stream.amount.src
+    }
+
+    pub(crate) fn active_when_src(&self) -> Option<&str> {
+        self.stream.active_when.as_ref().map(|e| e.src.as_str())
+    }
+
+    pub(crate) fn stream_name(&self) -> &str {
+        &self.stream.name
+    }
+
     /// Whether this stream's schedule anchors to a state entry — the one
     /// schedule whose membership resolves during the walk (`docs/28` §6.2).
     pub(crate) fn is_state_anchored(&self) -> bool {
