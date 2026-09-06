@@ -14,6 +14,7 @@ contract cre.lease_unit tenant_a on entity asset.tower {
 // declares is refused with the near miss rather than read as an option on
 // nothing.
 option renewal on contract cre.lease_unit.tenant_b type CRE.Contract.RenewalOption {
+  terms { renewal_rent_year = 528000 }
   exercise when time.t >= 2
   payoff contract.rent_year * 0.10
 }

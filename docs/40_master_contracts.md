@@ -804,8 +804,12 @@ contract names, and their accounts hold what they received (`docs/13`
    type's roster and read as `contract.<term>`; `on contract <name>` as the
    subject; the four base election names STAY (§4.8). Second part BUILT the
    same day: a schedule on an election, an exercise count, actions on
-   exercise, and an option's `prev.<account>` reads its owner's claim. What
-   remains of stage 7 is demonstration: a CRE renewal on a lease, and the
+   exercise, and an option's `prev.<account>` reads its owner's claim.
+   Demonstrated by `benchmarks/cre/office_renewal_option` (`office_two_tenant`
+   with the rollover as a renewal option on the lease, tested at expiry, both
+   outcomes declared as leases, the lapse as a scenario), which found two
+   gaps: an exercise cannot bring a contract into being (`docs/13`
+   §7.108) and an option's payoff carries no category (§7.109). Owed: the
    AmeriCredit clean-up call as `Credit.Contract.CleanUpCall`.
 
 `docs/13` §7.58, §7.63, §7.67 and §7.92 closed with stage 3; §7.96–7.98

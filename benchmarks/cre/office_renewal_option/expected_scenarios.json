@@ -1,0 +1,12 @@
+{
+  "soft_market": {
+    "model.npv": {
+      "value": 595382.95,
+      "tolerance": 1.0
+    },
+    "model.total": {
+      "value": 1495550.5,
+      "tolerance": 1.0
+    }
+  }
+}

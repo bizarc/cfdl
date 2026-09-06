@@ -1,0 +1,12 @@
+{
+  "deterministic": {
+    "annual_discount_rate": 0.0725
+  },
+  "scenarios": {
+    "soft_market": {
+      "parameters": {
+        "inputs.market_rent_year": 480000.0
+      }
+    }
+  }
+}

@@ -714,7 +714,7 @@ name = "selling_costs"
 type_id = "CRE.Contract.RenewalOption"
 refines = "Contract.Option"
 subject_family = "asset"
-description = "A tenant's right to extend at stated terms."
+description = "A tenant's right to extend at stated terms. Written on the lease it extends (`on contract`); the stated terms are the renewal rent and the landlord's leasing cost on renewal."
 
 [[contracts.roles]]
 name = "landlord"
@@ -723,6 +723,25 @@ refines = "grantor"
 [[contracts.roles]]
 name = "tenant"
 refines = "holder"
+
+[[contracts.fields]]
+name = "renewal_rent_year"
+field_type = "decimal"
+required = true
+unit = "USD/yr"
+description = "Rent per year on the renewal term — the price of exercising, which is what the master's `strike` is for a lease."
+
+[[contracts.fields]]
+name = "renewal_term_months"
+field_type = "decimal"
+unit = "months"
+description = "Length of the renewal term."
+
+[[contracts.fields]]
+name = "renewal_ti_lc"
+field_type = "decimal"
+unit = "USD"
+description = "Tenant improvements and leasing commissions the landlord pays on renewal — the cash the exercise costs."
 
 [[contracts]]
 type_id = "CRE.Contract.PurchaseOption"

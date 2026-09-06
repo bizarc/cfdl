@@ -3700,6 +3700,7 @@ contract cre.lease_unit tenant_a on entity asset.tower {
 // stated terms where the option states none of its own. The renewal fee is a
 // tenth of the base rent the lease states — one number, stated once.
 option renewal on contract cre.lease_unit.tenant_a type CRE.Contract.RenewalOption {
+  terms { renewal_rent_year = 528000 }
   parties { landlord = party.landlord_co, tenant = party.acme }
   exercise when time.t >= 2
   payoff contract.rent_year * 0.10
