@@ -4,7 +4,7 @@
 
 CFDL 0.9.0. Every model below compiles, and its IR and
 results are byte-asserted against goldens in CI (`fixtures/valid/`,
-165 models.
+166 models.
 
 `gold/ir/`, `gold/results/`). Each is single-purpose: the directory name
 says what it exercises. This is what right looks like — positive few-shot
@@ -2947,6 +2947,48 @@ stream ops.baseline on entity asset.bldg inflow currency USD {
 option renewal on entity asset.bldg type Option.Renewal exercisable in early {
   exercise when 0 > 1
   payoff 250
+}
+```
+
+## keyword_names
+
+```cfdl
+version 0.1
+model "keyword-names"
+time calendar monthly from 2026-01 for 6
+
+// A RESERVED WORD IS A NAME WHERE THE GRAMMAR ADMITS ONE (docs/13 §7.19).
+// The lexer reserves before it knows the position; in a naming position a
+// keyword has no other reading, so `use = "office"` — the grammar file's
+// own example of a field — compiles, and so do an assumption, a phase, a
+// curve and an entity named by reserved words. Expression position keeps
+// its own rules.
+
+assume term = 12
+assume year = 2026
+
+phase active from 2026-01 to 2026-06
+
+curve net to 2026-12 {
+  2026-01: 30
+}
+
+entity asset tower : Asset.Real {
+  use = "office"
+  net init curve_value("net", time.date) next prev
+  state init 1.0 next prev + 1.0
+}
+
+entity party owner { name = "Owner" }
+
+stream tower.rent on entity asset.tower inflow currency USD {
+  schedule every month from 2026-01 to 2026-06
+  amount = if(asset.tower.use == "office", 1000.0, 500.0) * inputs.term / 12.0
+    + asset.tower.net + asset.tower.state
+}
+
+event tower.restate schedule on 2026-04 {
+  set entity asset.tower.use = "retail"
 }
 ```
 

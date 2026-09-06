@@ -1,0 +1,385 @@
+{
+  "results_version": "0.14",
+  "model_hash": "48784adfea76b9610edfadbed3cdef5aa39f57a1f2e417d44cad44f6079d5537",
+  "ledger_hash": "ea93cfdf48f54f62e89e54abc58c3ffe7c32f0b3faa91761505382ba53a41af1",
+  "engine": {
+    "name": "cfdl-engine",
+    "version": "0.9.0"
+  },
+  "warnings": [],
+  "inputs": {
+    "resolved": {
+      "term": 12.0,
+      "year": 2026.0
+    }
+  },
+  "deterministic": {
+    "status": "ok",
+    "metrics": {
+      "entity.asset.tower.total": {
+        "amount": 4701.0,
+        "currency": "USD"
+      },
+      "entity.party.owner.total": {
+        "amount": 0.0,
+        "currency": "USD"
+      },
+      "model.npv": {
+        "amount": 4589.784454,
+        "currency": "USD"
+      },
+      "model.total": {
+        "amount": 4701.0,
+        "currency": "USD"
+      },
+      "model.wal_years": 0.252092,
+      "run.annual_discount_rate": 0.1,
+      "run.periods_per_year": 12.0,
+      "stream.tower.rent.total": {
+        "amount": 4701.0,
+        "currency": "USD"
+      }
+    },
+    "series": {
+      "asset.tower.net": {
+        "index": {
+          "calendar": "monthly",
+          "start": "2026-01-01",
+          "periods": 6
+        },
+        "values": [
+          30.0,
+          30.0,
+          30.0,
+          30.0,
+          30.0,
+          30.0
+        ]
+      },
+      "asset.tower.state": {
+        "index": {
+          "calendar": "monthly",
+          "start": "2026-01-01",
+          "periods": 6
+        },
+        "values": [
+          1.0,
+          2.0,
+          3.0,
+          4.0,
+          5.0,
+          6.0
+        ]
+      },
+      "entity.asset.tower.net_cash_flow": {
+        "index": {
+          "calendar": "monthly",
+          "start": "2026-01-01",
+          "periods": 6
+        },
+        "values": [
+          {
+            "amount": 1031.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 1032.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 1033.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 534.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 535.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 536.0,
+            "currency": "USD"
+          }
+        ]
+      },
+      "entity.party.owner.net_cash_flow": {
+        "index": {
+          "calendar": "monthly",
+          "start": "2026-01-01",
+          "periods": 6
+        },
+        "values": [
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          }
+        ]
+      },
+      "model.net_cash_flow": {
+        "index": {
+          "calendar": "monthly",
+          "start": "2026-01-01",
+          "periods": 6
+        },
+        "values": [
+          {
+            "amount": 1031.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 1032.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 1033.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 534.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 535.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 536.0,
+            "currency": "USD"
+          }
+        ]
+      },
+      "stream.tower.rent": {
+        "index": {
+          "calendar": "monthly",
+          "start": "2026-01-01",
+          "periods": 6
+        },
+        "offset": 1.0,
+        "entity": "asset.tower",
+        "values": [
+          {
+            "amount": 1031.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 1032.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 1033.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 534.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 535.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 536.0,
+            "currency": "USD"
+          }
+        ]
+      }
+    },
+    "transitions": [
+      {
+        "period": 3,
+        "date": "2026-04-01",
+        "entity": "asset.tower",
+        "field": "use",
+        "from": "office",
+        "to": "retail",
+        "event": "tower.restate"
+      }
+    ],
+    "journal": [
+      {
+        "period": 3,
+        "date": "2026-04-01",
+        "actor": "event:tower.restate",
+        "action": "set",
+        "target": "asset.tower.use",
+        "outcome": "applied",
+        "from": "office",
+        "to": "retail"
+      }
+    ],
+    "annual_rollup": {
+      "series": {
+        "model.net_cash_flow": {
+          "index": {
+            "calendar": "annual",
+            "start": "2026-01-01",
+            "periods": 1
+          },
+          "values": [
+            {
+              "amount": 4701.0,
+              "currency": "USD"
+            }
+          ]
+        },
+        "stream.tower.rent": {
+          "index": {
+            "calendar": "annual",
+            "start": "2026-01-01",
+            "periods": 1
+          },
+          "values": [
+            {
+              "amount": 4701.0,
+              "currency": "USD"
+            }
+          ]
+        }
+      }
+    }
+  },
+  "scenarios": {
+    "status": "not_run",
+    "summaries": []
+  },
+  "monte_carlo": {
+    "status": "not_run",
+    "trials": 1,
+    "seed": 0,
+    "metrics": {},
+    "trial_summaries": []
+  },
+  "statements": {
+    "statements": [
+      {
+        "id": "by_entity",
+        "label": "Cash by entity",
+        "default": true,
+        "grain": {
+          "calendar": "monthly",
+          "start": "2026-01-01",
+          "labels": [
+            "2026-01",
+            "2026-02",
+            "2026-03",
+            "2026-04",
+            "2026-05",
+            "2026-06"
+          ]
+        },
+        "rows": [
+          {
+            "kind": "line",
+            "label": "Tower",
+            "depth": 0,
+            "display_sign": 1.0,
+            "values": [
+              {
+                "amount": 1031.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 1032.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 1033.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 534.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 535.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 536.0,
+                "currency": "USD"
+              }
+            ],
+            "total": 4701.0,
+            "streams": [
+              "tower.rent"
+            ]
+          },
+          {
+            "kind": "line",
+            "label": "Owner",
+            "depth": 0,
+            "display_sign": 1.0,
+            "values": [
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              }
+            ],
+            "total": 0.0
+          }
+        ],
+        "reconciliation": {
+          "bottom_line": 4701.0,
+          "model_total": 4701.0,
+          "residual": 0.0
+        }
+      }
+    ]
+  },
+  "graph": {
+    "entities": [
+      {
+        "symbol": "asset.tower",
+        "family": "asset",
+        "type": "Asset.Real"
+      },
+      {
+        "symbol": "party.owner",
+        "family": "party",
+        "type": "core.Entity"
+      }
+    ]
+  }
+}

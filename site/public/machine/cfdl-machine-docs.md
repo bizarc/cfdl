@@ -1802,8 +1802,16 @@ These MUST compile to typed values in IR.
 
 ## 18. Reserved keywords (v0.1)
 
-A reserved word cannot be used as an identifier. The list is exhaustive and is
-checked against the lexer, so a word added to one appears in the other.
+The lexer reads every word below as a keyword before it knows the position,
+and the list is exhaustive: it is checked against the lexer, so a word added
+to one appears in the other. A reserved word is nonetheless a NAME wherever
+the grammar admits `IDENT` — an entity, a field (`use = "office"`, `state
+init 1 next prev`), an assumption, a phase, a curve, a quantile, a slice, a
+statement, a metric, an account, or the target of `set` — because in a
+naming position a keyword has no other reading; the clause that follows
+tells a field from the `state` and `account` clauses of an entity block. In
+expression position the expression grammar governs, and there a reserved
+word is not a name.
 
 ### 18.1 In use (91)
 
@@ -2067,7 +2075,9 @@ assume_stmt     = "assume" IDENT ( "=" expr | "~" dist_expr ) ;
    `prev.asset.<name>.<field>` for the close before this one.
 
    `state <name>` inside an entity block is unrelated: it names the lifecycle
-   state the entity opens in. --- *)
+   state the entity opens in. IDENT here, as everywhere a name is declared,
+   admits a reserved word: `use = "office"` and `state init 1 next prev` are
+   fields, told from the clauses by the `=` or `init` that follows. --- *)
 entity_field    = IDENT ( "=" expr | "init" expr [ "next" expr ] ) ;
 
 (* A claim this entity owes or is due, rolled by the engine from the streams

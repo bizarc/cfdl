@@ -11,7 +11,7 @@ Diagnostics are the repair signal: read the `code`, `message`, `span`, and
 `hint`, change the model, recompile. The catalog is how an agent learns what
 each code looks like in the flesh before it meets one.
 
-**Coverage:** 242 codes in the docs/08 §7 register; 116 exemplified here; 70 of 132 examples carry a recorded fix.
+**Coverage:** 242 codes in the docs/08 §7 register; 116 exemplified here; 69 of 131 examples carry a recorded fix.
 
 ## account_read_without_prev — E1382_ACCOUNT_READ_WITHOUT_PREV
 
@@ -244,61 +244,6 @@ stream core.rent on entity asset.suite inflow currency USD {
   - hint: An arrival action names a field on the entity that transitioned, and one machine may be bound by several entities — every one of them needs the field. Declare it on the entity, or correct the name.
 
 Fix: not yet recorded.
-
-## assume_reserved_keyword — E0004_EXPECTED_TOKEN
-
-Failing example:
-
-```cfdl
-version 0.1
-model "assume-reserved-keyword"
-time calendar annual from 2026-01 for 2
-
-// A RESERVED WORD LOOKS LIKE A NAME.
-//
-// `term` is an ordinary English word for a quantity a model might well want to
-// assume, and section 18 of the language specification reserves it. Rejecting
-// the declaration is right; the question is whether the author can tell why.
-//
-// The message used to be "Expected identifier after 'assume'", said against a
-// word that reads as a perfectly good identifier, which left the reader to
-// guess. It now names the word and says where the list is.
-//
-// The same shape reaches an ontology field named after a keyword — `docs/13`
-// §7.19, where `Credit.Asset.Loan` declares a field `term` that no model can
-// write.
-
-entity asset a : Asset.Real
-
-assume term = 5.0
-
-stream a.s on entity asset.a inflow currency USD {
-  schedule every year from 2026-01 to 2027-01
-  amount = 10.0
-}
-```
-
-- `E0004_EXPECTED_TOKEN` (error): Expected identifier after 'assume', found the reserved word 'term'. Reserved words are listed in section 18 of the language specification; choose another name.
-
-Minimal fix (compiles):
-
-```cfdl
-version 0.1
-model "assume-reserved-keyword"
-time calendar annual from 2026-01 for 2
-
-// Fix: `term` is a reserved word (spec section 18), so the assumption is
-// renamed to `term_years`.
-
-entity asset a : Asset.Real
-
-assume term_years = 5.0
-
-stream a.s on entity asset.a inflow currency USD {
-  schedule every year from 2026-01 to 2027-01
-  amount = 10.0
-}
-```
 
 ## bad_missing_term — E1109_MISSING_ENTITY, E2001_CONTRACT_MISSING_TERM
 

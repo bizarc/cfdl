@@ -8,6 +8,17 @@ This project follows Semantic Versioning: https://semver.org/
 
 ## [Unreleased]
 
+**A reserved word is a name where the grammar admits one.** `use =
+"office"`, the grammar file's own example of a field, compiles: an entity,
+a field, an assumption, a phase, a curve, a quantile, a slice, a statement,
+a metric, an account and a `set` target may be named by any of the 93
+reserved words, told apart from an entity block's `state` and `account`
+clauses by the `=` or `init` that follows a field. Every spelling this
+admits was a compile error before, so no model changes meaning and every
+golden is byte-identical; the fixture that pinned "reserved word after
+assume" is replaced by one that uses six of them. Expression position is
+unchanged. Closes backlog 7.19 (backlog 40).
+
 **Backlog: §7.13 and §7.75 close.** District energy has no usable reference
 model; the measurement moves to `docs/20` §5.5 beside the other domains the
 suite does not cover, and `docs/20` §5's coverage sentence now cites the
