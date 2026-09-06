@@ -4734,9 +4734,9 @@ A free cash flow to firm valuation following Damodaran's published method, with 
 |---|---|
 | Pack | `opco` |
 | Contract types | `opco.revenue_line`, `opco.opex_line`, `opco.capex_line`, `opco.cash_taxes` |
-| Declared | two curves |
+| Declared | three curves, one of them the cost of capital the run discounts along |
 | Language features | pack contracts driven by curves; declared state inside the pack's growth rules |
-| Conventions | a declining growth path, margin-driven operating expense, cash taxes, capital expenditure as a share of revenue |
+| Conventions | a declining growth path, margin-driven operating expense, cash taxes, capital expenditure as a share of revenue, a cost of capital that converges over the forecast |
 
 The reference publishes the **drivers** rather than only the results, which is
 what a pack rule consumes, so the pack's lowering is checked and not only the
@@ -4772,10 +4772,12 @@ engine's arithmetic.
 // Reinvestment funds NEXT year's growth, so its exact window closes a year
 // earlier than revenue's. Also asserted only where it is exact.
 //
-// NOT ASSERTED AT ALL: value, NPV, per-share price. The cost of capital
-// converges 7.055% -> 8.81% and the engine takes a single scalar discount rate,
-// so a term structure is inexpressible. Discounting at a flat rate and calling
-// the result agreement would be worse than saying so.
+// NOT ASSERTED: value, NPV, per-share price. The run discounts along the
+// converging cost of capital (the curve below), but reinvestment is exact
+// only through year 4, so the ten-year PV is not the workbook's until the
+// capital line can be derived from revenue growth. Discounting at a rate the
+// source did not use and calling the result agreement would be worse than
+// saying so.
 
 version 0.1
 model "damodaran-fcff"
@@ -4811,6 +4813,17 @@ curve tax_rate linear {
   2033-01: 0.2200000000
   2034-01: 0.2350000000
   2035-01: 0.2500000000
+}
+
+// Cost of capital: 7.055% while the firm is growing, converging to 8.81% by
+// the terminal year. The run discounts along it.
+curve cost_of_capital to 2035-12 {
+  2026-01: 0.0705501574064654
+  2031-01: 0.07406012592517232
+  2032-01: 0.07757009444387923
+  2033-01: 0.08108006296258614
+  2034-01: 0.08459003148129306
+  2035-01: 0.0881
 }
 
 contract opco.revenue_line.core on entity asset.firm {

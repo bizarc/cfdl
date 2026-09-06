@@ -139,6 +139,7 @@ pub fn run(params: &RunParams, defaults: &Defaults) -> Result<RunResult, String>
         None => cfdl_engine::RunConfig {
             discount_rate: rate.unwrap_or(0.0),
             rate_stated: rate.is_some(),
+            discount_curve: None,
             ..Default::default()
         },
     };

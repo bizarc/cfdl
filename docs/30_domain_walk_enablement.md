@@ -30,7 +30,7 @@ gap list wants all four:
    `benchmarks/energy/utility_pv_singleowner/NOTES.md`,
    `crest_solar_cost_based/NOTES.md`, which also records ~$4,606 of year-one
    interest earned on funded reserves CFDL could not model), the replacement
-   reserve in CRE (`docs/13` §7.5), the FF&E reserve in hospitality
+   reserve in CRE (`docs/41` §5), the FF&E reserve in hospitality
    (`research/` Tier 1), the minimum-cash and facility balances of an opco
    revolver, the recoverable-advances balance of a mortgage servicer.
 3. **The declared machine** (`docs/28` §6, phase 5, unbuilt). The
@@ -108,7 +108,7 @@ Walk-enabled:
 - **The JV through accounts** — Highlands restated through an account is a
   named phase 4 gate; party-owned accounts are the input `docs/13` §7.72's
   participant-level IRR waits on.
-- **The replacement reserve** (`docs/13` §7.5) becomes the account's
+- **The replacement reserve** (`docs/41` §5) becomes the account's
   fund-to-target step form rather than a bespoke contract.
 - **Phase 6 owns the two forward reads** — `cre.exit_forward` under the
   priced exception, the expense stop's plane decided by `mit_rentleg_plaza`
@@ -121,7 +121,7 @@ Damodaran FCFF, Gordon growth against a published nine-point grid, three LBO
 cases including the affine circular-interest schedule and the option-pool exit
 waterfall, and the SBC convention fork.
 
-The walk reverses a recorded design gate: `docs/13` §7.5 parked
+The walk reverses a recorded design gate: `docs/41` §5 parked
 `opco.revolver`, `opco.cash_sweep` and `opco.nol_carryforward` with "all
 three need per-period state (5.2) and should be designed with it rather than
 before it." That condition is now met:
@@ -138,7 +138,7 @@ before it." That condition is now met:
 
 The cheapest coverage wins need no walk feature at all: `opco.depreciation`,
 `opco.equity_bridge`, `opco.share_count`, `opco.exit_forward_multiple`
-(`docs/13` §7.5) are pure contract-shape work, and are what moves opco off
+(`docs/41` §5) are pure contract-shape work, and are what moves opco off
 0/10 externally validated contract types (`docs/13` §7.3).
 
 ## 5. Credit
@@ -201,5 +201,5 @@ validated. The domain coverage ask now lives in `docs/20` §5. The discipline
 that travels with it, from the credit sections: assert the legs rather than
 the residual (§3.2), mutation-list every case (§3.3), count informative cells
 (§4), and build the contract twin beside every primitive-built case
-(`docs/13` §7.5 — `one_lincoln_street_contract` is the proof of the form, 48
+(`docs/41` §5 — `one_lincoln_street_contract` is the proof of the form, 48
 cells at zero difference).

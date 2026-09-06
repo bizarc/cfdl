@@ -106,7 +106,10 @@ assume base_rent = 4000
 
 Discounting is not an assumption. The valuation rate belongs to the run —
 `annual_discount_rate` in the run configuration below — so one set of cash flows
-can be valued at several rates without editing the model.
+can be valued at several rates without editing the model. A rate that changes
+over the horizon — a cost of capital that converges as a firm matures, one rate
+through construction and another in operation — is a `curve` the model
+declares and the run names as `annual_discount_curve` instead of the scalar.
 
 ### Stochastic assumption
 
@@ -284,7 +287,7 @@ cargo build -p cfdl-cli
   },
   "scenarios": {
     "stress": {
-      "annual_discount_rate": 0.12,
+      "annual_discount_curve": "stressed_wacc",
       "parameters": {
         "stream.cre.lease.base_rent:amount": 800.0
       }

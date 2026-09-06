@@ -1,0 +1,21 @@
+version 0.1
+model "discount-curve-flat"
+time calendar monthly from 2026-01 for 24
+
+// A flat curve and a scalar rate are the same valuation; this model is run
+// both ways and the present values agree to the last bit.
+curve wacc to 2027-12 {
+  2026-01: 0.10
+}
+
+entity asset plant { name = "Plant" }
+
+stream plant.rent on entity asset.plant inflow currency USD {
+  schedule every month from 2026-01 to 2027-12
+  amount = 1000 + 7 * time.t
+}
+
+stream plant.purchase on entity asset.plant outflow currency USD {
+  schedule on 2026-01
+  amount = 20000
+}

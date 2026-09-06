@@ -1036,6 +1036,16 @@ is `annual_discount_rate` in the run configuration; see
 `docs/09_user_guide.md`. An `assume` of that name is an ordinary assumption and
 does not move `model.npv`.
 
+A rate that varies over time is a `curve` the model declares (§12.5) and the
+run selects: `annual_discount_curve` names it, in place of the scalar rate and
+never beside it. The run reads the curve at each period's date for that
+period's annual rate and discounts each period by the product of the rates
+walked before it — the cumulated discount factor a valuation table prints —
+with a stream's placement offset taken at its own period's rate. A flat curve
+is the scalar rate exactly. `model.irr` is the single rate at which the
+present value is zero and is unaffected. The run publishes
+`run.annual_discount_curve` in place of `run.annual_discount_rate`.
+
 ### 12.2 Stochastic assumption (distribution)
 ```cfdl
 assume rent_growth ~ Normal(mean=0.03, stdev=0.01, clip=[-0.02, 0.08])

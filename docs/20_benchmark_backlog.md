@@ -290,14 +290,14 @@ fixture pinning a mechanism. Each is also a deal shape with published
 references — a servicer's delinquency roll, a credit agreement's cash-trap
 covenant (`docs/13` §7.77), a DSRA funding schedule — and a fixture asserted
 against its own engine is the suite marking its own homework, the same
-argument as `docs/13` §7.5's contract twin. The ask: one benchmark case per
+argument as `docs/41` §5's contract twin. The ask: one benchmark case per
 mechanism, each against an external reference, promoted as the phases land.
 
 **5.2 The contract-twin debt.** `one_lincoln_street_contract` proves the
 form: the pack contract asserted against the primitive-built original, zero
 difference in all 48 cells. No other primitive-built case has its twin. The
 cheapest coverage moves in the suite are twins for the cases that already
-exist, and the opco candidates of `docs/13` §7.5 (depreciation, equity
+exist, and the opco candidates of `docs/41` §5 (depreciation, equity
 bridge, share count, forward multiple) each arrive with a case or they are
 not validated.
 

@@ -226,7 +226,7 @@ against it by `make results-schema`.
     },
     "MetricMap": {
       "type": "object",
-      "description": "Named metric scalars. The prefix says who minted the number: `model.*` is the engine's (total, npv, irr, moic, payback, wal), `domain.<pack>.*` is the active pack's, and `metric.<name>` is one the MODEL declared (`docs/01` §15.3) — a figure this deal solved for, evaluated once at the horizon over the finished projection. `stream.<name>.total` is a stream's own sum. A declared metric appears in every scenario summary as well, since scenarios and the deterministic block publish the same map.",
+      "description": "Named metric scalars. The prefix says who minted the number: `model.*` is the engine's (total, npv, irr, moic, payback, wal), `domain.<pack>.*` is the active pack's, and `metric.<name>` is one the MODEL declared (`docs/01` §15.3) — a figure this deal solved for, evaluated once at the horizon over the finished projection. `stream.<name>.total` is a stream's own sum. `run.*` records what the run was asked: `run.annual_discount_rate` or `run.annual_discount_curve` (the curve's name) for what it discounted with, `run.periods_per_year`, and `run.as_of` when one was stated. A declared metric appears in every scenario summary as well, since scenarios and the deterministic block publish the same map.",
       "additionalProperties": {
         "$ref": "#/$defs/Scalar"
       }

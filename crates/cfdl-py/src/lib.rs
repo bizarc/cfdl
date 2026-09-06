@@ -71,6 +71,7 @@ fn run_ir(
         cfdl_engine::RunConfig {
             discount_rate: rate.unwrap_or(0.0),
             rate_stated: rate.is_some(),
+            discount_curve: None,
             as_of: parsed_as_of,
             ..Default::default()
         }

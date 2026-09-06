@@ -8,6 +8,21 @@ This project follows Semantic Versioning: https://semver.org/
 
 ## [Unreleased]
 
+**A discount rate that varies over time.** The run configuration may name a
+curve the model declares — `annual_discount_curve` in place of
+`annual_discount_rate`, never beside it (`E5033`) — and the run discounts
+each period by the product of the annual rates read at the dates walked
+before it, a stream's placement at its own period's rate; at the annual
+grain each year takes its first period's rate. A flat curve is the scalar
+rate to the last bit; the engine reproduces Damodaran's cumulated discount
+factors and ten-year PV from the workbook's own FCFF and cost-of-capital
+rows. `run.annual_discount_curve` is published in place of the rate.
+`benchmarks/opco/damodaran_fcff` runs along its converging cost of capital.
+Closes backlog 7.4 and Argus parity item 2. §7.5, the candidate-contract
+catalog, closes too: its shipped rows are struck, its open rows move to
+`docs/41` §5 as refinements owed per family, and two of them are recorded
+there as not contracts at all (backlog 44).
+
 **Backlog: two entries closed, one re-measured.** §2.2 (a pool that
 amortizes on an Actual basis) closes: the refusal `E5027` shipped, the
 30/360 strike with act/360 accrual is pinned, and a payment that genuinely

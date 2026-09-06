@@ -159,82 +159,6 @@ re-measured — by scanning `contract <pack>.<type>` and `option … type`
 declarations, not `<pack>.` prefixes, which also match namespaced stream
 names — whenever cases or rosters change.
 
-### 7.4 A discount rate cannot vary over time
-
-*Belongs with the language and engine (section 5).*
-
-`RunConfig.discount_rate` is a single `f64`, turned into one `per_period_rate`
-and handed to `npv_with_offsets`. Every discounted figure in a model uses it.
-
-Intrinsic valuation converges the cost of capital as a firm matures —
-Damodaran's model runs 7.055% for five years and 8.81% thereafter. Project
-finance uses one rate through construction and another in operation. Neither is
-exotic and neither is expressible.
-
-The consequence is not cosmetic: `benchmarks/opco/damodaran_fcff` asserts the
-entire cash-flow build and **no discounted figure at all** — not NPV, not
-enterprise value, not the per-share price the source exists to produce.
-Discounting at a flat rate would have produced a number and not a check.
-
-Shape: a discount *curve* alongside the scalar, read per period. Note the offset
-machinery in `npv_with_offsets` already handles per-STREAM variation; this is
-per-PERIOD variation, a different axis, and it touches IRR too — `irr_with_offsets`
-solves for a single rate by construction.
-
-### 7.5 Candidate contracts, and the packs that need them
-
-*Belongs with the CRE and OpCo packs (sections 1 and 3).*
-
-Every entry below was forced by a source, not proposed from taste. Listed
-together because the shape of the gap is the same in both packs: the contracts
-that exist model an operating business well and stop at the point where a deal
-gets financed or valued.
-
-**CRE — the pack cannot borrow money.**
-
-| candidate | forced by |
-|---|---|
-| ~~`cre.permanent_debt`~~ | **SHIPPED**, then decomposed per docs/07 §6.4: proceeds, interest and principal as their own streams, balloon opt-in, `funded_at_close` for post-financing reconciliations. DSCR-based sizing is a solve and stays out. |
-| ~~`cre.construction_loan`~~ | **SHIPPED.** Equity-first funding behind a commitment, the facility taking the balance once it depletes, interest on the drawn balance. The draw schedule stays a model `curve` and the contract names it, because a funding profile is per-deal data rather than a term. `benchmarks/cre/one_lincoln_street_contract` reproduces the primitive-built case in all 48 cells with zero difference — the pair is the assertion, and if they disagree the contract is wrong. Capitalised interest is a follow-on: affine in the closing balance, so it collects rather than needing a solver. |
-| `cre.restricted_rent` | HUD — rent capped for an affordability period and reverting to a market track. The defining mechanic of affordable housing, currently a hand-written conditional. |
-| `cre.abatement` | MIT — free rent as its own deduction from potential gross revenue. Today it can be reported as a line or counted in NOI, not both (1.3). |
-| `cre.replacement_reserve` | HUD — a capital reserve, separately published and semantically distinct from operating expense. Also One Lincoln Street, whose operating pro forma carries a Capital Reserve line. |
-
-With 1.5, 1.6 and 1.7, these are what would let a real CRE deal be expressed in
-pack contracts instead of native streams — which is the actual fix for 7.3 on
-the CRE side, and needs no new source.
-
-**A correction to how 7.3 originally framed this** (absorbed into its
-2026-08-27 re-measure, kept here for the argument). That entry treated a benchmark running
-on native streams as a coverage failure. It is not, or not only. A case built
-from primitives proves the LANGUAGE expresses the deal with no domain vocabulary
-— which is the stronger claim, and the one a reader evaluating CFDL as a
-language can check. A pack contract is an ergonomics layer for a practitioner
-who should not have to derive an equity-first waterfall from scratch.
-
-So the fix is not to CONVERT those cases. It is to add a contract twin beside
-each, asserted against the primitive-built original rather than only against the
-source: `one_lincoln_street` and `one_lincoln_street_contract` are the first
-pair. A contract validated solely against its own source is the pack marking its
-own homework.
-
-**OpCo — no terminal value a valuation practitioner would recognise.**
-
-| candidate | forced by |
-|---|---|
-| ~~`opco.exit_perpetuity`~~ | **SHIPPED**, and validated against a published nine-point growth sensitivity grid (`benchmarks/opco/gordon_growth_coned`). `discount_rate` is a contract term, which is faithful to the sources rather than a workaround: a terminal cost of capital is not the near-term one. A stream-derived variant is the follow-on. |
-| `opco.exit_forward_multiple` | The banker DCF — a forward (NTM) multiple struck at a point before model end. |
-| `opco.depreciation` | No D&A contract exists, yet `opco_cash_taxes` consumes `da_monthly` as a bare term with no rule producing it. |
-| `opco.equity_bridge` | Both opco sources — debt, cash, minority interests and non-operating assets between enterprise and equity value. Done outside the model today. |
-| `opco.share_count` | Both — a share count that dilutes over time, so per-share value is expressible at all. |
-| `opco.revolver`, `opco.cash_sweep`, `opco.nol_carryforward` | Every LBO source. All three need per-period state (5.2) and should be designed with it rather than before it. |
-
-**Elsewhere.** `energy.storage_dispatch`, a storage rule priced against a
-declared price distribution rather than a scalar spread (7.1). It consumes the
-`quantile` primitive designed in `docs/27_quantiles.md` and cannot be built
-before it — a `curve` is indexed by date and cannot express the integral.
-Credit's three uncovered contract types need a source, not a new contract.
-
 ### 7.9 `opco.capex_line` cannot express a derived line
 
 Found closing 5.1 against `benchmarks/opco/damodaran_fcff`, and worth separating
@@ -642,7 +566,7 @@ debt service.
 The case still hand-writes its mortgage rather than using `cre.permanent_debt`,
 because HUD's instrument carries mortgage insurance the contract does not model.
 A `cre.mortgage_insurance` contract is the shape that would close it, and it is
-not added on one case's evidence — the pack candidate list (§7.5) is where it
+not added on one case's evidence — the pack candidate list (`docs/41` §5) is where it
 belongs if a second source wants it.
 
 This is the coverage question §7.3 and §7.15 measure, in one instance: a case
@@ -1051,7 +975,7 @@ domain survey (`docs/30`) found the same absence recorded independently in
 every domain's references. `crest_solar_cost_based/NOTES.md`: the reference
 EBITDA "includes interest earned on funded reserve accounts (~$4,606 in year
 one), which CFDL does not model." `utility_pv_singleowner/NOTES.md` lists
-reserves among what the reference zeroed out to be comparable. §7.5 carries
+reserves among what the reference zeroed out to be comparable. `docs/41` §5 carries
 `cre.replacement_reserve` from two sources. The roadmap's hospitality entry
 is one accumulating FF&E reserve. Servicer advancing (§7.74) is a
 recoverable-advances balance.
@@ -1082,7 +1006,7 @@ original retires is left open deliberately, since it is the suite's tightest
 external reconciliation. Second, a
 reserve contract shape per pack where a document demands one — the DSRA
 funded to target with `dscr_periodic` gating the release, the replacement
-reserve of §7.5, the FF&E reserve — each as the `pay <step> to account`
+reserve of `docs/41` §5, the FF&E reserve — each as the `pay <step> to account`
 pattern rather than a bespoke contract. **The credit pack's is done**
 (2026-08-31, `benchmarks/credit/americredit_2017_1`): clause 19's reserve, 2.0%
 of the initial pool funded at closing, was a literal written out twenty-eight
@@ -1156,7 +1080,7 @@ keeps the reserve and the interest it earns from being mutually circular. The
 CREST reconciliation line is closed as a mechanism; the case that reconciles
 against CREST's own ~$4,606 still wants the reference.
 
-Related: §7.5, §7.41, §7.72 (shipped), §7.74, `docs/25`, `docs/28` §5.1, `docs/30` §1.
+Related: `docs/41` §5, §7.41, §7.72 (shipped), §7.74, `docs/25`, `docs/28` §5.1, `docs/30` §1.
 
 ### 7.77 A covenant that is published but powerless: the DSCR cash trap
 
@@ -2161,3 +2085,251 @@ clause and the period, and the fold does it once over the walk's markers
 to "the condition did not hold" than an amount is to "nothing was paid" —
 before building. Related: §7.103 (the field half, closed), §7.95 (undefined
 is not zero).
+
+### 7.111 A security named by one waterfall and not another is a valid model
+
+Belongs with §5, language and engine. Found 6 September 2026 building the
+securitization front door in the UI prototypes.
+
+A note class in a structured deal is five declarations: its holders, the
+account that IS its position, an account for its interest, the note itself,
+and a step in EACH of two waterfalls — interest at its coupon, principal by
+seniority. `benchmarks/credit/auto_abs_tranches` writes seven of those, which
+is thirty-five declarations and fourteen steps kept in agreement by hand.
+
+Omit one step and nothing says so. A class present in `notes.interest` and
+absent from `notes.principal` compiles, runs clean, and is never repaid
+principal; the trust simply keeps the money, the ledger balances, and every
+metric is a real number. The failure surfaces only as a class whose holder
+account ends at zero, which is indistinguishable from a class that was
+genuinely never reached.
+
+BOTH MODELS ARE VALID, which is why this is a warning rather than an error. A
+security paid interest and no principal is a legitimate thing to model — an
+interest-only strip is exactly that — so the check cannot refuse. What it can
+do is say that the deal declared a line the priority of payments never
+mentions.
+
+The ontology already knows enough. A `credit.note` is a `Contract.Security`
+whose master declares its lines; a waterfall step binds `for contract <c> line
+<l>`. So for each contract on a subject that some waterfall on that subject
+pays, the checker can ask which of its declared lines no step names, and warn
+once per unnamed line, naming the contract and the line. It should stay quiet
+when no waterfall pays that subject at all — a security in a deal with no
+priority of payments is a different and deliberate shape, not an omission.
+
+The same evidence supports the mirror check, which is cheaper and stricter: a
+step naming `line principal` on a contract whose master declares no such line
+is already an error, and this is the other half of that pair.
+
+Related: `docs/40` (Contract.Security and its lines), §7.96–7.98 (an account
+per party, from the same benchmark), `benchmarks/credit/auto_abs_tranches`.
+
+### 7.112 A statement row cannot repeat over the instances of a type
+
+Belongs with §5, language and engine. Found 6 September 2026 building the
+securitization front door in the UI prototypes.
+
+`packs/credit/statements.toml` ships the artifact this domain publishes — a
+servicer remittance report, folding categories rather than stream names, so it
+stays correct as the pack grows. It applies to a deal that declares no
+statement of its own, which is the right default and works.
+
+It reports `Paid to holders: interest` and `Paid to holders: principal` as ONE
+line each, across every class. An investor report is per class: what Class A
+was paid, then B, then C. The pack cannot write those rows, because the class
+names belong to a deal it has never seen.
+
+A model can declare its own `statement` with a row per class naming that
+class's stream — `streams = [...]` exists on a row for what a category cannot
+express. That is hand-written and has to be kept in agreement with the classes,
+which is §7.111's failure mode wearing different clothes: add a class, forget
+the row, and the statement quietly reports less than the deal paid.
+
+The shape to decide: a row that REPEATS over the instances of a contract type —
+one row per `credit.note`, its label built from the instance, its figure the
+line that instance was paid. Order is the declaration order of those contracts,
+which is safe here in a way it would not be in a waterfall: a statement is a
+VIEW, no cash depends on the order, and there is no seniority to get wrong.
+Related: §7.111 (the waterfall half), §7.113, `docs/40` (a master's lines).
+
+### 7.113 A pack template cannot extend a declaration it did not create
+
+Belongs with §6, cross-pack. Found the same day, in the same work.
+
+`packs/credit/templates.toml` already answers most of "add a note class". Its
+`credit.note` body emits FOUR declarations — the trust, the holders, the
+account that is the class's position, and the contract — which is more than a
+template is usually credited with doing.
+
+It cannot emit the other three quarters of the answer. A class is also a step
+in the interest waterfall and a step in the principal waterfall, and a template
+creates declarations; it cannot insert into one that already exists. So the
+template covers four of the seven parts, and the three it cannot reach are
+exactly the three whose omission nothing detects (§7.111).
+
+The shape to decide: a template clause that appends a step to a NAMED
+waterfall, with the position stated rather than implied — after a named step,
+or at the end. Position must be explicit precisely because order is the
+meaning: a template that silently appended would make the newest class the
+most junior, which is right about half the time and wrong silently the other
+half.
+
+What this buys is that "add a class" becomes a pack capability rather than an
+application's. Someone writing CFDL in an editor gets the same seven parts the
+prototype's tranche table writes, from the pack that knows what a class is.
+Related: §7.111, §7.112, `packs/credit/templates.toml`.
+
+### 7.114 WAL exists for the model and not for a claim
+
+Belongs with §5, language and engine. Found the same day, building the grid of
+speeds.
+
+`model.wal_years` is published for the model as a whole (`fold.rs`). Weighted
+average life PER CLASS is the number structured credit reads — a grid of
+prepayment speeds against class WAL is the output an investor report leads
+with — and it cannot be expressed.
+
+WAL needs the sum of `t * principal_t` over the sum of `principal_t`.
+`series_sum` sums a series over a range and does not weight by the period, so
+the numerator has no form. The grid can say what each class was PAID under
+each speed, which is what the prototype reports, and cannot say WHEN — so a
+0 CPR case and a 25 CPR case that both repay a class in full are
+indistinguishable in the summary, though they differ by years.
+
+The shape to decide: a `wal(series, from, to)` returning years on the same
+axis `model.wal_years` uses, or a weighted fold that `wal` is then written in
+terms of. Either way it must handle a claim that is never repaid the way §7.95
+requires — undefined, not zero, and not averaged into anything.
+
+Related: §7.95 (undefined is not zero), `benchmarks/credit/auto_abs_wal`.
+
+### 7.115 Conventions checks: the model is legal and almost certainly not meant
+
+Belongs with §5, language and engine. Found the same day; §7.111 is the first
+member and the reason to name the family.
+
+Some models compile, run clean, and are wrong in a way the language cannot
+call an error, because the same shape is legitimate elsewhere. A note paid
+interest and never principal is an interest-only strip or a forgotten
+waterfall step, and nothing in the text distinguishes them.
+
+A diagnostic is the right home for these, and not a document, because it is
+the ONE channel every consumer already reads: the CLI, the MCP `compile`, the
+wasm engine, and any application built on them, each getting the span with it.
+A convention recorded in prose reaches whoever read the prose.
+
+The family, as warnings — never fatal, allowlistable, and each naming what it
+saw and what it expected:
+
+- a security whose declared line no waterfall step on its subject names (§7.111)
+- an `assume` nothing reads
+- a note whose `principal_account` is not the account its holder owns
+- a waterfall step naming a contract that is not written on that waterfall's
+  subject
+- a party that owns no account in a deal whose waterfalls pay parties
+
+To decide before building: these are new W-codes, so they land against the
+W-code parity gate, and a warned run is already a suspect run to the benchmark
+harness — which means each member has to be quiet on every shipped case before
+it can ship. That is a feature: a member that fires on a benchmark is either a
+finding or a badly drawn rule, and both are worth knowing before release.
+
+Related: §7.111, W-code parity gate, `docs/22` (how a diagnostic should read).
+
+### 7.116 A run-config override that matches nothing is ignored without a word
+
+Belongs with §5, language and engine. Found the same day, building the grid of
+speeds — and it cost more time than every other finding here combined.
+
+A base run and two scenarios came back with three identical numbers. The
+scenarios each set `parameters: { "cpr": ... }`, and the key an override is
+addressed by carries a prefix the engine reads to decide WHAT is being moved:
+`inputs.` an assumption, `cfg.` and `obs.` their namespaces,
+`stream.<name>:amount` one stream's figure (`env.rs`). A key with no known
+prefix matches nothing, and nothing says so — the run reports ok, every metric
+is a real number, and the scenario is silently the base run again.
+
+The same applies to `monte_carlo.distributions`, which are keyed the same way:
+a distribution on `cpr` rather than `inputs.cpr` produces a Monte Carlo whose
+trials are all identical, reported as a distribution with zero variance.
+
+The engine already holds both halves. `fold.rs` collects the declared
+`inputs.*` set for its unbound check, and the override keys are in the config
+beside it. So an unmatched key can be reported with the near-miss the
+`E1371`/`E1372` hints already establish the shape for: "scenario 'stress' sets
+'cpr', which nothing declares; did you mean 'inputs.cpr'?".
+
+Related: §7.115 (the family this belongs to), §7.117, `docs/09` §5.
+
+### 7.117 `lookup` cannot reach the entity types, the published fields, or the categories
+
+Belongs with §5, language and engine (the tooling half). Found the same day,
+and over the preceding week building against the MCP tools.
+
+`lookup` resolves a pack's contract types through their master chains and
+returns effective roles, fields, lines, side and templates — the form-builder
+payload, and it is good. `PackInfo` carries `contracts`, `masters`,
+`templates`, `metrics`, `validations`. Three things a model needs are not
+reachable through it:
+
+ENTITY TYPES. A pack's entities are absent, so what a `contract ... on entity
+...` may be written on is unknown. Guessing produced `Energy.Asset.Project`
+and `OpCo.Asset.Business`, neither of which exists; the real names are
+`Energy.Asset.GenerationFacility` and `OpCo.Asset.Enterprise`. The fix is a
+field beside `contracts`:
+
+    entities: [ { type_id, family, class, refines, lifecycle,
+                  fields: [ { name, field_type, required, unit, description } ] } ]
+
+WHAT A LOWERING PUBLISHES. A `credit.note` publishes
+`credit_note_claim_<instance>` and `credit_note_interest_due_<instance>` on its
+subject, and a waterfall step is written in terms of them. Those names appear
+in no tool output; they are learned from a benchmark. Beside `lines` on
+`ContractInfo`:
+
+    publishes: [ { name: "credit_note_claim_<instance>", of: "money",
+                   description: "face less what the holder's account received" } ]
+
+THE CATEGORIES A RULE EMITS. An account, a statement row and a subtotal all
+fold categories, and which categories a type's lowering produces is not
+returned. Beside `lines`:
+
+    categories: [ "operating.collection.interest", ... ]
+
+Two smaller ones: a role whose name collides with a reserved word cannot be
+bound and the failure reads as a parse error (`owner`), so `RoleInfo` should
+say so; and the metric key shapes a run publishes (`entity.party.<x>.total`,
+`model.npv`) are discoverable only by running, which is a poor way to find out
+what a scenario grid can have columns of.
+
+The honest counterweight, recorded because it shapes the priority: `RoleInfo`
+ALREADY returns `unbound`, and a role that may not be bound was bound anyway,
+because nothing consumed the field. Exposure is necessary and not sufficient.
+This entry is worth doing and it is worth less than §7.115.
+
+Related: §7.115, §7.116, `crates/cfdl-mcp/src/tools/lookup.rs`.
+
+### 7.118 `skeleton` starts a valid model, not a valid structure
+
+Belongs with §5, language and engine (the tooling half). Found the same day.
+
+`skeleton` sets the right bar: it compiles AND runs its output before
+returning, so a starter that warns is not a starter. What it returns is a valid
+MODEL — the smallest thing that runs.
+
+Every mistake worth guarding here is STRUCTURAL. A securitization is a trust, a
+pool, two collection accounts, and per class a holder, two accounts, a note and
+a step in each of two waterfalls, in an order that IS the seniority. Assembling
+that from a menu is where a class ends up in one waterfall and not the other
+(§7.111); starting from a shape that already has three classes wired
+consistently is where that cannot happen.
+
+The shape to decide: named shapes per pack — `securitization`, `acquisition` —
+answered from a few values and returned already compiled and run, which is the
+bar `skeleton` already holds itself to. The shapes belong in the pack rather
+than in the tool, because what a deal of a kind consists of is domain knowledge
+and the pack is where domain knowledge lives; §7.113's template extension is
+most of the mechanism.
+
+Related: §7.111, §7.113, §7.117.

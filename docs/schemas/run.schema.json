@@ -6,13 +6,19 @@
   "type": "object",
   "additionalProperties": false,
   "properties": {
-    "deterministic": { "$ref": "#/$defs/DeterministicCase" },
+    "deterministic": {
+      "$ref": "#/$defs/DeterministicCase"
+    },
     "scenarios": {
       "description": "Named variants of the deterministic case. Each is a full re-run; scenario overrides win over the deterministic ones. Scenarios and Monte Carlo do not cross — a scenario never runs trials.",
       "type": "object",
-      "additionalProperties": { "$ref": "#/$defs/Scenario" }
+      "additionalProperties": {
+        "$ref": "#/$defs/Scenario"
+      }
     },
-    "monte_carlo": { "$ref": "#/$defs/MonteCarlo" }
+    "monte_carlo": {
+      "$ref": "#/$defs/MonteCarlo"
+    }
   },
   "$defs": {
     "DeterministicCase": {
@@ -20,39 +26,68 @@
       "additionalProperties": false,
       "properties": {
         "annual_discount_rate": {
-          "description": "Annual rate, converted to the model's period frequency.",
+          "description": "Annual rate, converted to the model's period frequency. Stated instead of annual_discount_curve, never beside it.",
           "type": "number"
+        },
+        "annual_discount_curve": {
+          "description": "The name of a curve the model declares, read at each period's date for that period's annual rate; the run discounts along it, each period by the product of the rates walked before it. Stated instead of annual_discount_rate, never beside it.",
+          "type": "string"
         },
         "valuation_grain": {
           "description": "The grain to value at. Omitted, each flow discounts at its own fractional year on the model grid; \"annual\" sums cash into calendar years and discounts each once, the convention published sources use.",
-          "enum": ["annual", "period"]
+          "enum": [
+            "annual",
+            "period"
+          ]
         },
         "arithmetic": {
           "description": "Which arithmetic expressions evaluate under. Omitted, decimal — what every published number uses. \"excel_compat\" reproduces a spreadsheet's float64 artifacts, for reconciling against a workbook rather than for producing an answer; it describes the comparison being made, not the deal.",
-          "enum": ["decimal", "excel_compat"]
+          "enum": [
+            "decimal",
+            "excel_compat"
+          ]
         },
-        "as_of": { "$ref": "#/$defs/Date" },
-        "parameters": { "$ref": "#/$defs/Parameters" }
+        "as_of": {
+          "$ref": "#/$defs/Date"
+        },
+        "parameters": {
+          "$ref": "#/$defs/Parameters"
+        }
       }
     },
     "Scenario": {
       "type": "object",
       "additionalProperties": false,
       "properties": {
-        "annual_discount_rate": { "type": "number" },
-        "as_of": { "$ref": "#/$defs/Date" },
-        "parameters": { "$ref": "#/$defs/Parameters" }
+        "annual_discount_rate": {
+          "type": "number"
+        },
+        "annual_discount_curve": {
+          "description": "The name of a curve the model declares, read at each period's date for that period's annual rate; the run discounts along it, each period by the product of the rates walked before it. Stated instead of annual_discount_rate, never beside it.",
+          "type": "string"
+        },
+        "as_of": {
+          "$ref": "#/$defs/Date"
+        },
+        "parameters": {
+          "$ref": "#/$defs/Parameters"
+        }
       }
     },
     "Parameters": {
       "description": "Value overrides, keyed by target. Four key shapes are recognized and anything else is ignored:\n  inputs.<name>          — an assumption, also the channel Monte Carlo samples into\n  stream.<name>:amount   — replaces a stream's amount for every period, bypassing its expression\n  cfg.<path>             — a config value read as cfg.<path> in expressions\n  obs.<path>             — an observable read as obs.<path> in expressions\nPrefer inputs.<name>: a contract term declared as `inputs.<name>` is then drivable by both scenarios and Monte Carlo without touching the model.",
       "type": "object",
-      "additionalProperties": { "type": "number" }
+      "additionalProperties": {
+        "type": "number"
+      }
     },
     "MonteCarlo": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["trial_count", "seed"],
+      "required": [
+        "trial_count",
+        "seed"
+      ],
       "properties": {
         "trial_count": {
           "description": "Number of trials. Results report mean, stdev, min, max and p50 per metric.",
@@ -67,76 +102,143 @@
         "distributions": {
           "description": "Distributions keyed by target, using the same key shapes as `parameters`. These override an in-language `assume x ~ Dist(...)` of the same name.",
           "type": "object",
-          "additionalProperties": { "$ref": "#/$defs/Distribution" }
+          "additionalProperties": {
+            "$ref": "#/$defs/Distribution"
+          }
         }
       }
     },
     "Distribution": {
       "description": "Matches the distributions available to `assume x ~ Dist(...)` in the language, including clip.",
       "type": "object",
-      "required": ["kind"],
+      "required": [
+        "kind"
+      ],
       "oneOf": [
         {
           "additionalProperties": false,
           "properties": {
-            "kind": { "const": "fixed" },
-            "value": { "type": "number" },
-            "clip": { "$ref": "#/$defs/Clip" }
+            "kind": {
+              "const": "fixed"
+            },
+            "value": {
+              "type": "number"
+            },
+            "clip": {
+              "$ref": "#/$defs/Clip"
+            }
           },
-          "required": ["kind", "value"]
+          "required": [
+            "kind",
+            "value"
+          ]
         },
         {
           "additionalProperties": false,
           "properties": {
-            "kind": { "const": "normal" },
-            "mean": { "type": "number" },
-            "stdev": { "type": "number", "minimum": 0 },
+            "kind": {
+              "const": "normal"
+            },
+            "mean": {
+              "type": "number"
+            },
+            "stdev": {
+              "type": "number",
+              "minimum": 0
+            },
             "stddev": {
               "description": "Deprecated spelling; `stdev` matches the language.",
               "type": "number",
               "minimum": 0
             },
-            "clip": { "$ref": "#/$defs/Clip" }
+            "clip": {
+              "$ref": "#/$defs/Clip"
+            }
           },
-          "required": ["kind", "mean"]
+          "required": [
+            "kind",
+            "mean"
+          ]
         },
         {
           "additionalProperties": false,
           "properties": {
-            "kind": { "const": "uniform" },
-            "min": { "type": "number" },
-            "max": { "type": "number" },
-            "clip": { "$ref": "#/$defs/Clip" }
+            "kind": {
+              "const": "uniform"
+            },
+            "min": {
+              "type": "number"
+            },
+            "max": {
+              "type": "number"
+            },
+            "clip": {
+              "$ref": "#/$defs/Clip"
+            }
           },
-          "required": ["kind", "min", "max"]
+          "required": [
+            "kind",
+            "min",
+            "max"
+          ]
         },
         {
           "additionalProperties": false,
           "properties": {
-            "kind": { "const": "log_normal" },
-            "mu": { "type": "number" },
-            "sigma": { "type": "number", "minimum": 0 },
-            "clip": { "$ref": "#/$defs/Clip" }
+            "kind": {
+              "const": "log_normal"
+            },
+            "mu": {
+              "type": "number"
+            },
+            "sigma": {
+              "type": "number",
+              "minimum": 0
+            },
+            "clip": {
+              "$ref": "#/$defs/Clip"
+            }
           },
-          "required": ["kind", "mu", "sigma"]
+          "required": [
+            "kind",
+            "mu",
+            "sigma"
+          ]
         },
         {
           "additionalProperties": false,
           "properties": {
-            "kind": { "const": "triangular" },
-            "min": { "type": "number" },
-            "mode": { "type": "number" },
-            "max": { "type": "number" },
-            "clip": { "$ref": "#/$defs/Clip" }
+            "kind": {
+              "const": "triangular"
+            },
+            "min": {
+              "type": "number"
+            },
+            "mode": {
+              "type": "number"
+            },
+            "max": {
+              "type": "number"
+            },
+            "clip": {
+              "$ref": "#/$defs/Clip"
+            }
           },
-          "required": ["kind", "min", "mode", "max"]
+          "required": [
+            "kind",
+            "min",
+            "mode",
+            "max"
+          ]
         }
       ]
     },
     "Clip": {
       "description": "Inclusive [lower, upper] bounds applied after sampling.",
       "type": "array",
-      "items": { "type": "number" },
+      "items": {
+        "type": "number"
+      },
       "minItems": 2,
       "maxItems": 2
     },

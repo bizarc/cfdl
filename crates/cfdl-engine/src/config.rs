@@ -4,6 +4,12 @@ use super::*;
 #[derive(Debug, Clone)]
 pub struct RunConfig {
     pub discount_rate: f64,
+    /// A curve the model declares, read at each period's date for that
+    /// period's annual rate (`docs/13` §7.4). Stated instead of a scalar
+    /// rate, never beside one: intrinsic valuation converges the cost of
+    /// capital as a firm matures, and project finance prices construction
+    /// and operation differently.
+    pub discount_curve: Option<String>,
     /// Whether anyone STATED the rate — the run configuration or a caller —
     /// or `discount_rate` is the zero nothing asked for. No rate, no NPV
     /// (`docs/13` §7.46): a valuation whose rate nobody stated is a missing
@@ -48,6 +54,7 @@ pub struct RunConfig {
 #[derive(Debug, Clone)]
 pub struct ScenarioRunConfig {
     pub discount_rate: Option<f64>,
+    pub discount_curve: Option<String>,
     pub as_of: Option<Date>,
     pub parameter_overrides: BTreeMap<String, f64>,
 }
@@ -93,6 +100,8 @@ pub(crate) struct RunConfigFile {
 pub(crate) struct DeterministicConfigFile {
     #[serde(rename = "annual_discount_rate")]
     pub(crate) discount_rate: Option<f64>,
+    #[serde(rename = "annual_discount_curve")]
+    pub(crate) discount_curve: Option<String>,
     pub(crate) as_of: Option<String>,
     /// How NPV groups cash before discounting. Omitted, the model's own grain:
     /// each cash flow discounts at the annual rate raised to its fractional
@@ -112,6 +121,8 @@ pub(crate) struct DeterministicConfigFile {
 pub(crate) struct ScenarioConfigFile {
     #[serde(rename = "annual_discount_rate")]
     pub(crate) discount_rate: Option<f64>,
+    #[serde(rename = "annual_discount_curve")]
+    pub(crate) discount_curve: Option<String>,
     pub(crate) as_of: Option<String>,
     #[serde(default)]
     pub(crate) parameters: BTreeMap<String, f64>,
@@ -187,10 +198,28 @@ pub(crate) fn run_config_from_value(
     fallback_rate: Option<f64>,
     fallback_as_of: Option<Date>,
 ) -> Result<RunConfig, EngineError> {
-    let stated = config_file.deterministic.discount_rate.or(fallback_rate);
+    // ONE OR THE OTHER. A scalar rate and a curve are two answers to the same
+    // question; a run that states both has not said which it means.
+    if config_file.deterministic.discount_rate.is_some()
+        && config_file.deterministic.discount_curve.is_some()
+    {
+        return Err(EngineError::InvalidRunConfig(
+            "annual_discount_rate and annual_discount_curve are both stated; a run is \
+             valued at one rate or along one curve, so state one of them"
+                .to_string(),
+        ));
+    }
+    let curve = config_file.deterministic.discount_curve.clone();
+    // A curve in the file is the run's answer; the fallback rate is for a run
+    // whose file states nothing.
+    let stated = match curve {
+        Some(_) => None,
+        None => config_file.deterministic.discount_rate.or(fallback_rate),
+    };
     let mut config = RunConfig {
         discount_rate: stated.unwrap_or(0.0),
-        rate_stated: stated.is_some(),
+        discount_curve: curve,
+        rate_stated: stated.is_some() || config_file.deterministic.discount_curve.is_some(),
         as_of: fallback_as_of,
         parameter_overrides: config_file.deterministic.parameters,
         scenarios: BTreeMap::new(),
@@ -222,6 +251,12 @@ pub(crate) fn run_config_from_value(
     }
 
     for (name, scenario) in config_file.scenarios {
+        if scenario.discount_rate.is_some() && scenario.discount_curve.is_some() {
+            return Err(EngineError::InvalidRunConfig(format!(
+                "scenario '{name}' states both annual_discount_rate and \
+                 annual_discount_curve; state one of them"
+            )));
+        }
         let scenario_as_of = match scenario.as_of {
             Some(raw) => Some(Date::parse(&raw)?),
             None => None,
@@ -230,6 +265,7 @@ pub(crate) fn run_config_from_value(
             name,
             ScenarioRunConfig {
                 discount_rate: scenario.discount_rate,
+                discount_curve: scenario.discount_curve,
                 as_of: scenario_as_of,
                 parameter_overrides: scenario.parameters,
             },

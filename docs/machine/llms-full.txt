@@ -1055,6 +1055,16 @@ is `annual_discount_rate` in the run configuration; see
 `docs/09_user_guide.md`. An `assume` of that name is an ordinary assumption and
 does not move `model.npv`.
 
+A rate that varies over time is a `curve` the model declares (§12.5) and the
+run selects: `annual_discount_curve` names it, in place of the scalar rate and
+never beside it. The run reads the curve at each period's date for that
+period's annual rate and discounts each period by the product of the rates
+walked before it — the cumulated discount factor a valuation table prints —
+with a stream's placement offset taken at its own period's rate. A flat curve
+is the scalar rate exactly. `model.irr` is the single rate at which the
+present value is zero and is unaffected. The run publishes
+`run.annual_discount_curve` in place of `run.annual_discount_rate`.
+
 ### 12.2 Stochastic assumption (distribution)
 ```cfdl
 assume rent_growth ~ Normal(mean=0.03, stdev=0.01, clip=[-0.02, 0.08])
@@ -5251,7 +5261,7 @@ against it by `make results-schema`.
     },
     "MetricMap": {
       "type": "object",
-      "description": "Named metric scalars. The prefix says who minted the number: `model.*` is the engine's (total, npv, irr, moic, payback, wal), `domain.<pack>.*` is the active pack's, and `metric.<name>` is one the MODEL declared (`docs/01` §15.3) — a figure this deal solved for, evaluated once at the horizon over the finished projection. `stream.<name>.total` is a stream's own sum. A declared metric appears in every scenario summary as well, since scenarios and the deterministic block publish the same map.",
+      "description": "Named metric scalars. The prefix says who minted the number: `model.*` is the engine's (total, npv, irr, moic, payback, wal), `domain.<pack>.*` is the active pack's, and `metric.<name>` is one the MODEL declared (`docs/01` §15.3) — a figure this deal solved for, evaluated once at the horizon over the finished projection. `stream.<name>.total` is a stream's own sum. `run.*` records what the run was asked: `run.annual_discount_rate` or `run.annual_discount_curve` (the curve's name) for what it discounted with, `run.periods_per_year`, and `run.as_of` when one was stated. A declared metric appears in every scenario summary as well, since scenarios and the deterministic block publish the same map.",
       "additionalProperties": {
         "$ref": "#/$defs/Scalar"
       }
@@ -8081,7 +8091,7 @@ Warnings:
 - `E5002_IR_SCHEMA_VALIDATION_FAILED` — the IR the compiler produced does not satisfy the published IR schema, or the IR being read does not. Only that: every other way a run can fail has a code of its own below, so a reader who trusts the code is not sent to the schema for a failure the schema would have passed.
 - `E5031_UNRESOLVED_NAME` — a run read a name nothing binds — a mistyped `inputs.` or an assumption the run configuration never supplied — and would have read it as zero. Fatal, naming every distinct unresolved name. An assumption the model DECLARES that failed to produce a number is reported as that, with the failure that explains it, rather than as "not declared".
 - `E5032_FIELD_EVALUATION_FAILED` — a field's rule failed to evaluate in some period — a division by zero, a function argument out of range such as `pmt` with no payments left — or produced something that is not a number. Named with the field, the clause and the period; a value that was never computed is not a number and is not substituted with one.
-- `E5033_INVALID_RUN_CONFIG` — the run configuration or a run flag is malformed: an unknown `valuation_grain` or `arithmetic`, an `as_of` that is not a date.
+- `E5033_INVALID_RUN_CONFIG` — the run configuration or a run flag is malformed: an unknown `valuation_grain` or `arithmetic`, an `as_of` that is not a date; a run that states both `annual_discount_rate` and `annual_discount_curve`, or a curve the model does not declare.
 - `E5034_SCHEDULE_FAILED` — a schedule could not be placed on the timeline at run time.
 - `E5035_SERIES_CYCLE` — a circular series read, or a read into a stream whose series names are computed at run time; no evaluation order satisfies it.
 - `E5036_ASSUMPTION_CYCLE` — a circular derivation among `assume` values.
@@ -9816,7 +9826,7 @@ Templates (starting points; the `skeleton` MCP tool assembles them into a compil
 
 CFDL 0.9.0. Every model below compiles, and its IR and
 results are byte-asserted against goldens in CI (`fixtures/valid/`,
-163 models.
+164 models.
 
 `gold/ir/`, `gold/results/`). Each is single-purpose: the directory name
 says what it exercises. This is what right looks like — positive few-shot
@@ -11652,6 +11662,32 @@ stream ops.cost on entity asset.co outflow currency USD {
 metric gross_revenue = series_sum("ops.revenue", 0, 4)
 metric total_cost    = series_sum("ops.cost", 0, 4)
 metric margin        = metric.gross_revenue + metric.total_cost
+```
+
+## discount_curve_flat
+
+```cfdl
+version 0.1
+model "discount-curve-flat"
+time calendar monthly from 2026-01 for 24
+
+// A flat curve and a scalar rate are the same valuation; this model is run
+// both ways and the present values agree to the last bit.
+curve wacc to 2027-12 {
+  2026-01: 0.10
+}
+
+entity asset plant { name = "Plant" }
+
+stream plant.rent on entity asset.plant inflow currency USD {
+  schedule every month from 2026-01 to 2027-12
+  amount = 1000 + 7 * time.t
+}
+
+stream plant.purchase on entity asset.plant outflow currency USD {
+  schedule on 2026-01
+  amount = 20000
+}
 ```
 
 ## dscr_cash_trap_cure_period
@@ -21924,9 +21960,9 @@ A free cash flow to firm valuation following Damodaran's published method, with 
 |---|---|
 | Pack | `opco` |
 | Contract types | `opco.revenue_line`, `opco.opex_line`, `opco.capex_line`, `opco.cash_taxes` |
-| Declared | two curves |
+| Declared | three curves, one of them the cost of capital the run discounts along |
 | Language features | pack contracts driven by curves; declared state inside the pack's growth rules |
-| Conventions | a declining growth path, margin-driven operating expense, cash taxes, capital expenditure as a share of revenue |
+| Conventions | a declining growth path, margin-driven operating expense, cash taxes, capital expenditure as a share of revenue, a cost of capital that converges over the forecast |
 
 The reference publishes the **drivers** rather than only the results, which is
 what a pack rule consumes, so the pack's lowering is checked and not only the
@@ -21962,10 +21998,12 @@ engine's arithmetic.
 // Reinvestment funds NEXT year's growth, so its exact window closes a year
 // earlier than revenue's. Also asserted only where it is exact.
 //
-// NOT ASSERTED AT ALL: value, NPV, per-share price. The cost of capital
-// converges 7.055% -> 8.81% and the engine takes a single scalar discount rate,
-// so a term structure is inexpressible. Discounting at a flat rate and calling
-// the result agreement would be worse than saying so.
+// NOT ASSERTED: value, NPV, per-share price. The run discounts along the
+// converging cost of capital (the curve below), but reinvestment is exact
+// only through year 4, so the ten-year PV is not the workbook's until the
+// capital line can be derived from revenue growth. Discounting at a rate the
+// source did not use and calling the result agreement would be worse than
+// saying so.
 
 version 0.1
 model "damodaran-fcff"
@@ -22001,6 +22039,17 @@ curve tax_rate linear {
   2033-01: 0.2200000000
   2034-01: 0.2350000000
   2035-01: 0.2500000000
+}
+
+// Cost of capital: 7.055% while the firm is growing, converging to 8.81% by
+// the terminal year. The run discounts along it.
+curve cost_of_capital to 2035-12 {
+  2026-01: 0.0705501574064654
+  2031-01: 0.07406012592517232
+  2032-01: 0.07757009444387923
+  2033-01: 0.08108006296258614
+  2034-01: 0.08459003148129306
+  2035-01: 0.0881
 }
 
 contract opco.revenue_line.core on entity asset.firm {
@@ -22371,7 +22420,7 @@ The run configuration is a small JSON document that travels beside the model. Th
 }
 ```
 
-Configurations can also name **scenarios**: base and downside, each with its own rate and parameter overrides, run in one pass and reported side by side. They carry simulation settings too, which Part II's uncertainty chapter takes up properly. What to internalize now is the division of labor: the *model* owns the claims, the *configuration* owns the question being asked of them. When you find yourself editing the model to ask a different question, stop — you are usually holding the wrong file.
+A rate that changes over the horizon is a curve the model declares and the configuration names instead — `"annual_discount_curve": "wacc"` — so a cost of capital that converges as a firm matures discounts each year at that year's rate. Configurations can also name **scenarios**: base and downside, each with its own rate and parameter overrides, run in one pass and reported side by side. They carry simulation settings too, which Part II's uncertainty chapter takes up properly. What to internalize now is the division of labor: the *model* owns the claims, the *configuration* owns the question being asked of them. When you find yourself editing the model to ask a different question, stop — you are usually holding the wrong file.
 
 ## What can go wrong
 

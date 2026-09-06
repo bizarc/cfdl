@@ -180,6 +180,7 @@ async fn run(Json(req): Json<RunRequest>) -> Response {
         None => Ok(cfdl_engine::RunConfig {
             discount_rate: req.rate.unwrap_or(0.0),
             rate_stated: req.rate.is_some(),
+            discount_curve: None,
             ..Default::default()
         }),
     };

@@ -1056,6 +1056,16 @@ is `annual_discount_rate` in the run configuration; see
 `docs/09_user_guide.md`. An `assume` of that name is an ordinary assumption and
 does not move `model.npv`.
 
+A rate that varies over time is a `curve` the model declares (§12.5) and the
+run selects: `annual_discount_curve` names it, in place of the scalar rate and
+never beside it. The run reads the curve at each period's date for that
+period's annual rate and discounts each period by the product of the rates
+walked before it — the cumulated discount factor a valuation table prints —
+with a stream's placement offset taken at its own period's rate. A flat curve
+is the scalar rate exactly. `model.irr` is the single rate at which the
+present value is zero and is unaffected. The run publishes
+`run.annual_discount_curve` in place of `run.annual_discount_rate`.
+
 ### 12.2 Stochastic assumption (distribution)
 ```cfdl
 assume rent_growth ~ Normal(mean=0.03, stdev=0.01, clip=[-0.02, 0.08])
@@ -5258,7 +5268,7 @@ against it by `make results-schema`.
     },
     "MetricMap": {
       "type": "object",
-      "description": "Named metric scalars. The prefix says who minted the number: `model.*` is the engine's (total, npv, irr, moic, payback, wal), `domain.<pack>.*` is the active pack's, and `metric.<name>` is one the MODEL declared (`docs/01` §15.3) — a figure this deal solved for, evaluated once at the horizon over the finished projection. `stream.<name>.total` is a stream's own sum. A declared metric appears in every scenario summary as well, since scenarios and the deterministic block publish the same map.",
+      "description": "Named metric scalars. The prefix says who minted the number: `model.*` is the engine's (total, npv, irr, moic, payback, wal), `domain.<pack>.*` is the active pack's, and `metric.<name>` is one the MODEL declared (`docs/01` §15.3) — a figure this deal solved for, evaluated once at the horizon over the finished projection. `stream.<name>.total` is a stream's own sum. `run.*` records what the run was asked: `run.annual_discount_rate` or `run.annual_discount_curve` (the curve's name) for what it discounted with, `run.periods_per_year`, and `run.as_of` when one was stated. A declared metric appears in every scenario summary as well, since scenarios and the deterministic block publish the same map.",
       "additionalProperties": {
         "$ref": "#/$defs/Scalar"
       }
@@ -8090,7 +8100,7 @@ Warnings:
 - `E5002_IR_SCHEMA_VALIDATION_FAILED` — the IR the compiler produced does not satisfy the published IR schema, or the IR being read does not. Only that: every other way a run can fail has a code of its own below, so a reader who trusts the code is not sent to the schema for a failure the schema would have passed.
 - `E5031_UNRESOLVED_NAME` — a run read a name nothing binds — a mistyped `inputs.` or an assumption the run configuration never supplied — and would have read it as zero. Fatal, naming every distinct unresolved name. An assumption the model DECLARES that failed to produce a number is reported as that, with the failure that explains it, rather than as "not declared".
 - `E5032_FIELD_EVALUATION_FAILED` — a field's rule failed to evaluate in some period — a division by zero, a function argument out of range such as `pmt` with no payments left — or produced something that is not a number. Named with the field, the clause and the period; a value that was never computed is not a number and is not substituted with one.
-- `E5033_INVALID_RUN_CONFIG` — the run configuration or a run flag is malformed: an unknown `valuation_grain` or `arithmetic`, an `as_of` that is not a date.
+- `E5033_INVALID_RUN_CONFIG` — the run configuration or a run flag is malformed: an unknown `valuation_grain` or `arithmetic`, an `as_of` that is not a date; a run that states both `annual_discount_rate` and `annual_discount_curve`, or a curve the model does not declare.
 - `E5034_SCHEDULE_FAILED` — a schedule could not be placed on the timeline at run time.
 - `E5035_SERIES_CYCLE` — a circular series read, or a read into a stream whose series names are computed at run time; no evaluation order satisfies it.
 - `E5036_ASSUMPTION_CYCLE` — a circular derivation among `assume` values.

@@ -910,36 +910,9 @@ impl cfdl_calc::Env for EnvAdapter<'_> {
     }
 
     fn curve_value(&self, name: &str, date: cfdl_calc::CalcDate) -> cfdl_calc::CurveLookup {
-        use cfdl_calc::CurveLookup;
-        let Some(curve) = self.env.curves.get(name) else {
-            return CurveLookup::Unknown;
-        };
-        // THE EFFECTIVE DATES ARE CHECKED FIRST. Outside them the curve has
-        // no value — not its end value held flat, which is what an undeclared
-        // end means and what the points alone would give.
-        let epoch =
-            |d: &Date| cfdl_calc::CalcDate::new(d.year, d.month, d.day).map(|c| c.to_epoch_days());
-        let query = date.to_epoch_days();
-        let before = curve
-            .effective_from
-            .as_ref()
-            .and_then(epoch)
-            .is_some_and(|f| query < f);
-        let after = curve
-            .effective_to
-            .as_ref()
-            .and_then(epoch)
-            .is_some_and(|t| query > t);
-        if before || after {
-            let text = |d: &Date| format!("{:04}-{:02}-{:02}", d.year, d.month, d.day);
-            return CurveLookup::OutsideRange {
-                from: curve.effective_from.as_ref().map(text),
-                to: curve.effective_to.as_ref().map(text),
-            };
-        }
-        match self.curve_lookup(name, date).and_then(Decimal::from_f64) {
-            Some(v) => CurveLookup::Value(v),
-            None => CurveLookup::Unknown,
+        match self.env.curves.get(name) {
+            Some(curve) => curve_value_at(curve, date),
+            None => cfdl_calc::CurveLookup::Unknown,
         }
     }
 
@@ -1083,40 +1056,74 @@ pub(crate) fn quantile_invert(q: &QuantileDef, value: f64) -> Option<f64> {
     }
 }
 
-impl EnvAdapter<'_> {
-    fn curve_lookup(&self, name: &str, date: cfdl_calc::CalcDate) -> Option<f64> {
-        let curve = self.env.curves.get(name)?;
-        let epoch =
-            |d: &Date| cfdl_calc::CalcDate::new(d.year, d.month, d.day).map(|c| c.to_epoch_days());
-        let query = date.to_epoch_days();
-        let mut points: Vec<(i64, f64)> = Vec::with_capacity(curve.points.len());
-        for (d, v) in &curve.points {
-            points.push((epoch(d)?, *v));
-        }
-        if points.is_empty() {
-            return None;
-        }
-        let first = points[0];
-        if query <= first.0 {
-            return Some(first.1);
-        }
-        let last = points[points.len() - 1];
-        if query >= last.0 {
-            return Some(last.1);
-        }
-        // points bracketing the query: prev.0 <= query < next.0
-        let idx = points.partition_point(|(d, _)| *d <= query);
-        let prev = points[idx - 1];
-        if curve.interpolation == "linear" {
-            let next = points[idx];
-            let frac = (query - prev.0) as f64 / (next.0 - prev.0) as f64;
-            Some(prev.1 + (next.1 - prev.1) * frac)
-        } else {
-            // step (flat-forward)
-            Some(prev.1)
-        }
+/// A curve's value at a date, per its declared interpolation and effective
+/// dates (`docs/13` §7.100): `OutsideRange` outside the dates it declares,
+/// the end value held flat past its points otherwise. One function so the
+/// expression host and the engine's own reads (the discount curve) agree.
+pub fn curve_value_at(curve: &CurveDef, date: cfdl_calc::CalcDate) -> cfdl_calc::CurveLookup {
+    use cfdl_calc::CurveLookup;
+    let epoch =
+        |d: &Date| cfdl_calc::CalcDate::new(d.year, d.month, d.day).map(|c| c.to_epoch_days());
+    let query = date.to_epoch_days();
+    // THE EFFECTIVE DATES ARE CHECKED FIRST. Outside them the curve has no
+    // value — not its end value held flat, which is what an undeclared end
+    // means and what the points alone would give.
+    let before = curve
+        .effective_from
+        .as_ref()
+        .and_then(epoch)
+        .is_some_and(|f| query < f);
+    let after = curve
+        .effective_to
+        .as_ref()
+        .and_then(epoch)
+        .is_some_and(|t| query > t);
+    if before || after {
+        let text = |d: &Date| format!("{:04}-{:02}-{:02}", d.year, d.month, d.day);
+        return CurveLookup::OutsideRange {
+            from: curve.effective_from.as_ref().map(text),
+            to: curve.effective_to.as_ref().map(text),
+        };
     }
+    let mut points: Vec<(i64, f64)> = Vec::with_capacity(curve.points.len());
+    for (d, v) in &curve.points {
+        let Some(e) = epoch(d) else {
+            return CurveLookup::Unknown;
+        };
+        points.push((e, *v));
+    }
+    if points.is_empty() {
+        return CurveLookup::Unknown;
+    }
+    let first = points[0];
+    if query <= first.0 {
+        return value(first.1);
+    }
+    let last = points[points.len() - 1];
+    if query >= last.0 {
+        return value(last.1);
+    }
+    // points bracketing the query: prev.0 <= query < next.0
+    let idx = points.partition_point(|(d, _)| *d <= query);
+    let prev = points[idx - 1];
+    if curve.interpolation == "linear" {
+        let next = points[idx];
+        let frac = (query - prev.0) as f64 / (next.0 - prev.0) as f64;
+        value(prev.1 + (next.1 - prev.1) * frac)
+    } else {
+        // step (flat-forward)
+        value(prev.1)
+    }
+}
 
+fn value(v: f64) -> cfdl_calc::CurveLookup {
+    match Decimal::from_f64(v) {
+        Some(d) => cfdl_calc::CurveLookup::Value(d),
+        None => cfdl_calc::CurveLookup::Unknown,
+    }
+}
+
+impl EnvAdapter<'_> {
     fn matching_series(&self, name: &str) -> Vec<&Vec<f64>> {
         // Exact lookups stay a map hit rather than a scan; the glob case
         // delegates so there is one dialect. See `selector_matches`.
