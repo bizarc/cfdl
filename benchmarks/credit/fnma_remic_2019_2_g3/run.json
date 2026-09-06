@@ -1,1 +1,32 @@
-{"deterministic":{"annual_discount_rate":0.03}}
+{
+  "deterministic": {
+    "annual_discount_rate": 0.03
+  },
+  "scenarios": {
+    "psa100": {
+      "parameters": {
+        "inputs.psa": 1.0
+      }
+    },
+    "psa300": {
+      "parameters": {
+        "inputs.psa": 3.0
+      }
+    },
+    "psa400": {
+      "parameters": {
+        "inputs.psa": 4.0
+      }
+    },
+    "psa700": {
+      "parameters": {
+        "inputs.psa": 7.0
+      }
+    },
+    "psa1000": {
+      "parameters": {
+        "inputs.psa": 10.0
+      }
+    }
+  }
+}

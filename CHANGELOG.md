@@ -8,6 +8,15 @@ This project follows Semantic Versioning: https://semver.org/
 
 ## [Unreleased]
 
+**A scenario asserts its own column.** `expected_<scenario>.csv` beside a
+case's `expected.csv` is checked against a run with that scenario's
+overrides applied, under the case's tolerances — the per-period column that
+is the published artefact of a decrement table, not only a summary metric.
+The five Fannie Mae 2019-2 speed cases collapse into the base case as
+scenarios of one term, `inputs.psa`, each asserting its decrement column and
+class life; the 0% PSA column stays its own case, prepared on different
+collateral. Closes backlog 7.23 (backlog 37).
+
 **A waterfall's steps sit where its schedule puts them.** A priority of
 payments that distributes `on day 25` pays every step on the 25th: each
 step's series now carries its waterfall's placement, so a class's life and

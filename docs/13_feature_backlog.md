@@ -85,8 +85,9 @@ item says which section it belongs with.
 
 *Belongs with no single pack — it is about the validation programme.*
 
-**Re-measured 2026-09-06** across all 47 registered cases (2 bespoke, 10 cre,
-18 credit, 8 energy, 9 opco), counting a pack contract type as *exercised*
+**Re-measured 2026-09-06** across all 42 registered cases (2 bespoke, 10 cre,
+13 credit, 8 energy, 9 opco — the five Fannie Mae 2019-2 speed cases are
+now scenarios of one, §7.23), counting a pack contract type as *exercised*
 when at least one case declares it with `contract <pack>.<type>`. When first
 measured (six cases, headline "the external cases route around the packs they
 should be validating") the counts were energy 9/10, credit 1/4, cre 1/12,
@@ -165,37 +166,6 @@ Recorded because coverage claims must cite this table, and the table must be
 re-measured — by scanning `contract <pack>.<type>` and `option … type`
 declarations, not `<pack>.` prefixes, which also match namespaced stream
 names — whenever cases or rosters change.
-
-### 7.23 A scenario asserts metrics, but not the per-period column that is the published artefact
-
-Belongs with section 5 (harness and tooling).
-
-`expected_scenarios.json` checks a scenario's **metrics**. `expected.csv` checks
-per-period series, but only for the deterministic run. So a case can vary an
-input across scenarios and assert what that does to a summary number, and cannot
-assert what it does to a schedule.
-
-For structured credit that is backwards. The published artefact *is* the
-per-period column, tabulated at several prepayment speeds — five to seven of
-them per class — and the summary number is the derived thing. Ginnie Mae
-2026-100 publishes 58 such tables; the model reconciles every one, and a case can
-assert one speed.
-
-The existing route is one case directory per speed, as `auto_abs_speed_050` and
-`auto_abs_speed_150` do. That works for two. It does not work for roughly 75
-directories differing in a single term, and the duplication is not free: each
-carries its own `CASE.md`, `SOURCE.md` and tolerances to keep in step, and the
-site publishes each as a separate page.
-
-Shape: let `expected.csv` carry a scenario column, or let a scenario name a CSV
-of its own. Either makes the speed grid one case with N columns instead of N
-cases with one, and neither changes what the engine computes — the scenario runs
-already happen and their series are already produced, they are simply not
-reachable from the harness.
-
-Found modelling Ginnie Mae 2026-100, whose decrement tables publish 21,570 cells
-across five to seven speeds per class, of which a single case can assert the
-0%-, 100%- or 259%-PSA column but not all three.
 
 ### 7.26 Time-weighted metrics measure from the model start, on period fractions; a published WAL measures from settlement to stated payment days
 

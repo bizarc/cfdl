@@ -15,6 +15,9 @@
 # original balance is the tightest bound a reader can hold this to. Worst
 # observed disagreement is 0.364 percentage points, inside that floor on all 60
 # published cells.
+# The supplement's 100%, 300%, 400%, 700% and 1000% PSA columns are scenarios
+# in run.json; each asserts its own decrement column (expected_<scenario>.csv)
+# and class life (expected_scenarios.json) under these same tolerances.
 summary = "Security Group 3 of a Fannie Mae REMIC: a seasoned mortgage pool passing through to a single class, with the coupon stripped between it and an interest-only class that carries no principal."
 pack = "credit"
 

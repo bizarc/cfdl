@@ -20116,6 +20116,11 @@ time calendar monthly from 2019-02 for 361
 // Reference: Prospectus Supplement dated 24 January 2019 to the REMIC
 // Prospectus dated 1 November 2018. See SOURCE.md.
 
+// The prepayment speed, as a multiple of the standard PSA curve. The pricing
+// speed is 198%; the supplement's other columns are scenarios in `run.json`,
+// each asserting its own decrement column and class life.
+assume psa = 1.98
+
 entity asset trust : Credit.Asset.Loan {
   collateral_type = "residential"
 }
@@ -20139,10 +20144,10 @@ entity asset pool : Credit.Asset.Loan {
 
   balance init 148372434.0
                * (1.0 - ((-pmt(0.0045425, 173.0, 1.0)) - 0.0045425))
-               * (1.0 - cpr_to_periodic(min(1.98 * 0.002 * max(1.0, min(176.0, 30.0)), 1.0), 12.0))
+               * (1.0 - cpr_to_periodic(min(inputs.psa * 0.002 * max(1.0, min(176.0, 30.0)), 1.0), 12.0))
           next if(time.t < 173.0,
                   prev * (1.0 - ((-pmt(0.0045425, 173.0 - time.t, 1.0)) - 0.0045425))
-                       * (1.0 - cpr_to_periodic(min(1.98 * 0.002 * max(1.0, min(time.t + 176.0, 30.0)), 1.0), 12.0)),
+                       * (1.0 - cpr_to_periodic(min(inputs.psa * 0.002 * max(1.0, min(time.t + 176.0, 30.0)), 1.0), 12.0)),
                   0.0)
 }
 
@@ -20187,7 +20192,7 @@ contract credit.loan.g3 on entity asset.pool {
     interest_rate = 0.05451
     term_months = 173
     age_months = 175
-    psa_speed = 1.98
+    psa_speed = inputs.psa
     servicing_fee = 0.00451
   }
 }

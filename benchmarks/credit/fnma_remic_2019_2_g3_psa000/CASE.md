@@ -4,7 +4,8 @@ No prepayments at all — and not the deal's own loans. For this column the supp
 
 The deal is Security Group 3 of Fannie Mae REMIC Trust 2019-2: a $148,372,434
 pass-through with the coupon stripped between a principal class and a notional
-interest-only class. `fnma_remic_2019_2_g3` ships the 198% pricing speed and
+interest-only class. `fnma_remic_2019_2_g3` ships the 198% pricing speed, with the 100% to 1000%
+columns as its scenarios, and
 carries the deal's full description; this case moves the prepayment assumption
 to 0% PSA and asserts the decrement column the supplement publishes for it.
 

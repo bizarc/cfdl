@@ -153,6 +153,15 @@ Scenarios already run a full deterministic pass under different parameters, but
 is the whole published artefact cannot be checked per scenario. Recorded as a
 capability gap at `13` §7.23.
 
+**Closed 6 September 2026.** A scenario may carry its own column:
+`expected_<scenario>.csv`, the shape of `expected.csv`, is checked against a
+run with that scenario's overrides applied, under the case's own tolerances.
+The five Fannie Mae 2019-2 speed directories collapsed into the base case as
+scenarios of one term, each asserting its decrement column and class life
+from its own file; the 0% PSA column stays its own case because the
+supplement prepares it on different collateral. The Ginnie Mae grid and
+AmeriCredit's four speeds can now be asserted the same way.
+
 Provenance: Ginnie Mae 2026-100 (58 tables) and Fannie Mae 2019-2 (7 speeds on
 one table), August 2026. Confirmed again by AmeriCredit 2017-1, which publishes
 four speeds across six classes and ships as a single case at 1.50% ABS —
@@ -281,7 +290,7 @@ count overstates the evidence.
 
 ## 5. Domains the suite does not cover
 
-Sections 1–4 are structured credit. The suite is not: 47 registered cases
+Sections 1–4 are structured credit. The suite is not: 42 registered cases
 across five directories, and `docs/13` §7.3 records the coverage the credit
 sections cannot see — on its 2026-09-06 re-measure energy 10/10, credit 3/4,
 cre 11/14 and opco 12/12 contract types exercised, with energy's last rule

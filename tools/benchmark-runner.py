@@ -8,6 +8,9 @@ Each case directory (benchmarks/<group>/<case>/) contains:
   expected.csv          per-period expectations from an independent reference
   expected_metrics.json  metric -> {value, tolerance}
   expected_scenarios.json  scenario -> metric -> {value, tolerance}   (optional)
+  expected_<scenario>.csv  per-period expectations for one named scenario (optional):
+                         the same shape as expected.csv, checked against a run
+                         with that scenario's overrides applied
   expected_monte_carlo.json  metric -> aggregate -> {value, tolerance}  (optional)
 
 The harness compiles and runs each case with the cfdl CLI and fails if any
@@ -99,6 +102,63 @@ def resolve_columns(fieldnames, series, failures):
     return index_col, columns
 
 
+def check_columns(csv_path, series, default_tolerance, per_column, failures, group_prefix):
+    """Check one expectations CSV against one run's series.
+
+    Returns False when the file could not be read against these series at
+    all (no index column, nothing to check), True otherwise; failures are
+    appended either way, grouped by column under `group_prefix`.
+    """
+    with open(csv_path, encoding="utf-8") as fh:
+        reader = csv.DictReader(fh)
+        resolved = resolve_columns(reader.fieldnames, series, failures)
+        if resolved is None:
+            return False
+        index_col, columns = resolved
+        values = {
+            key: [scalar(v) for v in series[key]["values"]] for _, key, _ in columns
+        }
+        for row_no, row in enumerate(reader):
+            t = int(row[index_col]) if index_col == "period" else row_no
+            for column, key, label in columns:
+                cell = (row.get(column) or "").strip()
+                if not cell:
+                    continue
+                actual = values[key]
+                if t >= len(actual):
+                    failures.append((
+                        group_prefix + column,
+                        f"{label} period {t}: beyond the {len(actual)}-period timeline",
+                    ))
+                    return True
+                got, expected = actual[t], float(cell)
+                if got is None:
+                    # The CSV states a value the results say is undefined. A
+                    # blank cell means "not asserted"; a stated one means the
+                    # case expected a number and did not get one.
+                    failures.append((
+                        group_prefix + column,
+                        f"{label} period {t}: series is null (undefined here) "
+                        f"but {expected:.6f} was expected",
+                    ))
+                    if len(failures) > 5:
+                        failures.append(("meta", "... (truncated)"))
+                        return True
+                    continue
+                tol = per_column.get(column, default_tolerance)
+                if abs(got - expected) > tol:
+                    failures.append((
+                        group_prefix + column,
+                        f"{label} period {t}: {got:.6f} vs expected {expected:.6f} "
+                        f"(|diff| {abs(got - expected):.6f} > {tol})",
+                    ))
+                    if len(failures) > 5:
+                        failures.append(("meta", "... (truncated)"))
+                        return True
+
+    return True
+
+
 def run_case(case_dir: pathlib.Path, structured: bool = False):
     """Grade one case. Default: the prose failure lines `make bench` prints.
 
@@ -169,52 +229,59 @@ def _run_case_structured(case_dir: pathlib.Path) -> list[tuple[str, str]]:
     # the default; `[tolerance]` overrides it per column.
     default_tolerance = float(case.get("period_tolerance", 0.01))
     per_column = {k: float(v) for k, v in (case.get("tolerance") or {}).items()}
-    with open(case_dir / "expected.csv", encoding="utf-8") as fh:
-        reader = csv.DictReader(fh)
-        resolved = resolve_columns(reader.fieldnames, series, failures)
-        if resolved is None:
-            return failures
-        index_col, columns = resolved
-        values = {
-            key: [scalar(v) for v in series[key]["values"]] for _, key, _ in columns
-        }
-        for row_no, row in enumerate(reader):
-            t = int(row[index_col]) if index_col == "period" else row_no
-            for column, key, label in columns:
-                cell = (row.get(column) or "").strip()
-                if not cell:
-                    continue
-                actual = values[key]
-                if t >= len(actual):
-                    failures.append((
-                        column,
-                        f"{label} period {t}: beyond the {len(actual)}-period timeline",
-                    ))
-                    return failures
-                got, expected = actual[t], float(cell)
-                if got is None:
-                    # The CSV states a value the results say is undefined. A
-                    # blank cell means "not asserted"; a stated one means the
-                    # case expected a number and did not get one.
-                    failures.append((
-                        column,
-                        f"{label} period {t}: series is null (undefined here) "
-                        f"but {expected:.6f} was expected",
-                    ))
-                    if len(failures) > 5:
-                        failures.append(("meta", "... (truncated)"))
-                        return failures
-                    continue
-                tol = per_column.get(column, default_tolerance)
-                if abs(got - expected) > tol:
-                    failures.append((
-                        column,
-                        f"{label} period {t}: {got:.6f} vs expected {expected:.6f} "
-                        f"(|diff| {abs(got - expected):.6f} > {tol})",
-                    ))
-                    if len(failures) > 5:
-                        failures.append(("meta", "... (truncated)"))
-                        return failures
+    if not check_columns(case_dir / "expected.csv", series, default_tolerance, per_column, failures, ""):
+        return failures
+
+    # A SCENARIO'S OWN COLUMN (`docs/13` §7.23). A published decrement table
+    # is five to seven speeds per class, and the per-period column is the
+    # artefact; a scenario is a full deterministic run under its overrides, so
+    # `expected_<scenario>.csv` is checked against exactly that run — the
+    # scenario's overrides applied as the deterministic configuration — with
+    # the case's own tolerances. Failure groups are `<scenario>.<column>`.
+    run_config = json.loads((case_dir / "run.json").read_text(encoding="utf-8"))
+    for name, scenario in (run_config.get("scenarios") or {}).items():
+        csv_path = case_dir / f"expected_{name}.csv"
+        if not csv_path.exists():
+            continue
+        deterministic = dict(run_config.get("deterministic") or {})
+        for key in ("annual_discount_rate", "annual_discount_curve", "as_of"):
+            if key in scenario:
+                deterministic[key] = scenario[key]
+                if key == "annual_discount_rate":
+                    deterministic.pop("annual_discount_curve", None)
+                if key == "annual_discount_curve":
+                    deterministic.pop("annual_discount_rate", None)
+        parameters = dict(deterministic.get("parameters") or {})
+        parameters.update(scenario.get("parameters") or {})
+        deterministic["parameters"] = parameters
+        with tempfile.TemporaryDirectory() as tmp:
+            ir = pathlib.Path(tmp) / "model.ir.json"
+            config_path = pathlib.Path(tmp) / "run.json"
+            results_path = pathlib.Path(tmp) / "results.json"
+            config_path.write_text(json.dumps({"deterministic": deterministic}), encoding="utf-8")
+            subprocess.run(
+                [CFDL, "compile", str(case_dir), "--out", str(ir), "--packs", str(ROOT / "packs")],
+                check=True,
+            )
+            run_cmd = [
+                CFDL, "run", str(ir),
+                "--out", str(results_path),
+                "--config", str(config_path),
+                "--packs", str(ROOT / "packs"),
+            ]
+            if case.get("pack"):
+                run_cmd += ["--pack", case["pack"]]
+            subprocess.run(run_cmd, check=True)
+            scenario_results = json.loads(results_path.read_text(encoding="utf-8"))
+        if scenario_results.get("warnings"):
+            failures.append((
+                f"{name}.engine.warnings",
+                f"scenario {name}: engine warnings: {scenario_results['warnings'][:3]}",
+            ))
+        check_columns(
+            csv_path, scenario_results["deterministic"]["series"],
+            default_tolerance, per_column, failures, f"{name}.",
+        )
 
     # Scenario metrics, when the case declares them. A scenario is a full
     # deterministic run under different parameters, so a case whose subject is

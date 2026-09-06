@@ -1,0 +1,52 @@
+{
+  "psa100": {
+    "model.total": {
+      "value": 193718881.03,
+      "tolerance": 1.0
+    },
+    "metric.ab_wal": {
+      "value": 6.1,
+      "tolerance": 0.05
+    }
+  },
+  "psa300": {
+    "model.total": {
+      "value": 175695352.45,
+      "tolerance": 1.0
+    },
+    "metric.ab_wal": {
+      "value": 3.7,
+      "tolerance": 0.05
+    }
+  },
+  "psa400": {
+    "model.total": {
+      "value": 170337628.95,
+      "tolerance": 1.0
+    },
+    "metric.ab_wal": {
+      "value": 2.9,
+      "tolerance": 0.05
+    }
+  },
+  "psa700": {
+    "model.total": {
+      "value": 161035147.51,
+      "tolerance": 1.0
+    },
+    "metric.ab_wal": {
+      "value": 1.7,
+      "tolerance": 0.05
+    }
+  },
+  "psa1000": {
+    "model.total": {
+      "value": 156352857.6,
+      "tolerance": 1.0
+    },
+    "metric.ab_wal": {
+      "value": 1.1,
+      "tolerance": 0.05
+    }
+  }
+}

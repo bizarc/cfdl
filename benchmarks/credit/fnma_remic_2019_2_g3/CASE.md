@@ -94,11 +94,23 @@ pays it (`wal`) and asserted at ±0.05, the print floor of a figure published
 to one decimal. The deal distributes on the 25th, and the waterfalls say so,
 so each payment sits on the day the supplement measures to.
 
-The other six published speeds — 0%, 100%, 300%, 400%, 700% and 1000% — each
-ship as their own case (`fnma_remic_2019_2_g3_psa000` through `_psa1000`),
-asserting their own decrement columns and weighted average lives, including
-0% PSA, which the supplement prepares on its own alternative assumption of a
-360-month original and remaining term at 7.50%.
+The supplement's other columns are scenarios of this case, each varying the
+one term that differs — the prepayment speed — and asserting its own
+decrement column and class life from its own file:
+
+| speed | asserted cells | worst balance, pp | Class AB life | published |
+|---|---:|---:|---:|---:|
+| 100% PSA | 180 | 0.414 | 6.0977 | 6.1 |
+| 300% PSA | 175 | 0.483 | 3.6682 | 3.7 |
+| 400% PSA | 170 | 0.475 | 2.9460 | 2.9 |
+| 700% PSA | 150 | 0.427 | 1.6920 | 1.7 |
+| 1000% PSA | 135 | 0.455 | 1.0609 | 1.1 |
+
+Every balance sits inside the half-percent floor and every life inside the
+print floor of 0.05. The 0% PSA column ships as its own case
+(`fnma_remic_2019_2_g3_psa000`): the supplement prepares it on a different
+collateral assumption, a 360-month original and remaining term at 7.50%, so
+it is a different pool rather than a different speed.
 
 ## The delta
 
@@ -110,9 +122,11 @@ reproducing the published tables would need those seventeen deals' own
 collateral. That is a compositional boundary, not a gap in this document, and it
 is why only Group 3 is here.
 
-**One speed here, seven in all.** This case ships the pricing speed; the other
-six columns are sibling cases, so a convention error that hides under the
-rounding floor at one speed has to hide at all seven simultaneously.
+**Seven speeds, one model.** What the seven columns prove together is stronger
+than any one alone: a convention error in the prepayment curve, the seasoning
+ramp or the payment timing that hides under one column's whole-percent
+rounding has to hide under all seven columns and seven published lives
+simultaneously.
 
 **No losses.** Fannie Mae guarantees timely payment of principal and interest,
 so the collateral cannot default in a way the classes would see.
