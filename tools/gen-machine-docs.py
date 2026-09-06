@@ -380,6 +380,7 @@ EXEMPLARS = [
     "bespoke/buenavista_del_cobre",
     "bespoke/ppiaf_toll_highway",
     "cre/office_two_tenant",
+    "cre/office_renewal_option",
     "cre/retail_strip",
     "cre/one_lincoln_street_contract",
     "cre/penzance_highlands",

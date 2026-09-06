@@ -8,6 +8,23 @@ This project follows Semantic Versioning: https://semver.org/
 
 ## [Unreleased]
 
+**Benchmark: a renewal option on a lease (`cre/office_renewal_option`).**
+Stage 7's demonstration: `office_two_tenant` with Tenant A's expiry as the
+renewal option the lease grants rather than a probability-weighted
+rollover. The option is written `on contract` the lease, states its own
+terms (`CRE.Contract.RenewalOption` gains `renewal_rent_year`,
+`renewal_term_months`, `renewal_ti_lc`), is tested once by `schedule on
+2031-01`, and is exercised when the market rent exceeds the option rent.
+Both outcomes are `cre.lease_unit` contracts: the exercise switches off the
+market lease's streams and records the renewal on the building, and a
+scheduled event with the opposite test switches off the renewal lease when
+the option lapses — so the forward-NOI exit values the lease left standing.
+The lapse is a run scenario. The reference is the original case's
+recreation with the rollover replaced; seven per-period series, five
+lifetime figures and two scenario figures agree to the cent. Two gaps
+filed: an exercise cannot bring a contract into being (`docs/13` §7.108),
+and an option's payoff carries no category (§7.109). Backlog: 61 items.
+
 **An election has a schedule, a count, and does something (stage 7,
 second part).** An exercise is now an OCCURRENCE in the event's sense
 (`docs/34` D1). A `schedule` in the option body supplies the occasions the

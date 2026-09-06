@@ -455,10 +455,13 @@
         "source_file": "model.cfdl",
         "source_span": {
           "end_col": 1,
-          "end_line": 31,
+          "end_line": 32,
           "start_col": 1,
           "start_line": 27
         }
+      },
+      "terms": {
+        "renewal_rent_year": 528000
       },
       "type": "CRE.Contract.RenewalOption"
     }

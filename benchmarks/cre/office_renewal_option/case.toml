@@ -1,0 +1,13 @@
+# Benchmark case: the two-tenant office with Tenant A's expiry as a renewal
+# option on the lease, tested at expiry against the market. The outcome the
+# election does not take is the scenario.
+summary = "The two-tenant office DCF with Tenant A's expiry as a renewal option on the lease: exercised at expiry when the market rent exceeds the option rent, and a re-let at market when it does not."
+pack = "cre"
+period_tolerance = 0.01
+
+# Money and a ratio cannot share one tolerance.
+[tolerance]
+"domain.cre.egi" = 0.01
+"domain.cre.noi" = 0.01
+"domain.cre.debt_service" = 0.01
+"domain.cre.dscr" = 1.0e-6

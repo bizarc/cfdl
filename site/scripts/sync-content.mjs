@@ -617,6 +617,7 @@ const benchmarkTitles = {
   "cre/basic_acquisition_exit_cap": "CRE: a stabilized acquisition and a terminal cap rate",
   "cre/hud_home_multifamily": "CRE: HOME-funded affordable multifamily",
   "cre/mit_rentleg_plaza": "CRE: rent-regulated plaza",
+  "cre/office_renewal_option": "CRE: a renewal option on a lease",
   "cre/office_two_tenant": "CRE: two-tenant office",
   "cre/one_lincoln_street": "CRE: office development joint venture",
   "cre/one_lincoln_street_contract":

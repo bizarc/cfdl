@@ -9629,7 +9629,7 @@ Contract types (a `contract <name>` declaration lowers to streams through the pa
 | `CRE.Contract.Disposition` | `cre.exit` | seller |  |
 | `CRE.Contract.DispositionAtCap` | `cre.exit_cap` | seller |  |
 | `CRE.Contract.DispositionAtForwardCap` | `cre.exit_forward` | seller |  |
-| `CRE.Contract.RenewalOption` | (election) |  | A tenant's right to extend at stated terms. |
+| `CRE.Contract.RenewalOption` | (election) |  | A tenant's right to extend at stated terms. Written on the lease it extends (`on contract`); the stated terms are the renewal rent and the landlord's leasing cost on renewal. |
 | `CRE.Contract.PurchaseOption` | (election) | grantor, holder | A right to buy the asset at a stated price. |
 
 Metrics: `domain.cre.noi`, `domain.cre.debt_service`, `domain.cre.dscr`, `domain.cre.leasing_costs`

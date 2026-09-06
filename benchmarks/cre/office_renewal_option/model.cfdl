@@ -1,0 +1,167 @@
+version 0.1
+model "office-renewal-option"
+use pack "cre" version "0.1.0"
+time calendar monthly from 2026-01 for 120 project 12
+
+// The two-tenant office of `office_two_tenant`, with one change: Tenant A's
+// expiry is not a probability-weighted rollover but the renewal option the
+// lease grants. Five more years at a stated rent, exercised at expiry if the
+// market rent then exceeds the option rent; if the option lapses, the space is
+// re-let at market after three months of downtime. The election decides which
+// branch pays, and the branch it does not take is the scenario.
+
+entity asset tower : CRE.Asset.RealProperty {
+  // Written by the option's exercise: the renewal, on the record.
+  tenant_a_renewed init 0 next prev
+}
+entity party landlord_co : Party { name = "Landlord" }
+entity party acme : Party { name = "Tenant A" }
+
+// The market at expiry. The base run renews; the scenario re-lets.
+assume market_rent_year = 560000
+// The stated terms of the right, read by the option and by the renewal lease.
+assume renewal_rent_year = 520000
+
+// Tenant A: 5-year lease, 3 months free, 3% anniversary escalations,
+// recoveries above a full stop at 40% pro-rata, $200k TI/LC.
+contract cre.lease_unit tenant_a on entity asset.tower {
+  term 2026-01..2030-12
+  terms {
+    rent_year = 480000
+    free_rent_months = 3
+    escalation = 0.03
+    opex_year = 300000
+    opex_escalation = 0.025
+    expense_stop_year = 300000
+    pro_rata_share = 0.40
+    ti_total = 120000
+    lc_total = 80000
+  }
+  parties {
+    landlord = party.landlord_co
+    tenant = party.acme
+  }
+}
+
+// THE RENEWAL OPTION, WRITTEN ON THE LEASE. Tested once, the month after
+// expiry: the tenant renews if the market rent exceeds the option rent. Both
+// outcomes are leases, declared below; the exercise forecloses the re-let by
+// switching its streams off, and the lapse event forecloses the renewal.
+option renewal on contract cre.lease_unit.tenant_a type CRE.Contract.RenewalOption {
+  parties { landlord = party.landlord_co, tenant = party.acme }
+  terms {
+    renewal_rent_year = inputs.renewal_rent_year
+    renewal_term_months = 60
+    renewal_ti_lc = 100000
+  }
+  schedule on 2031-01
+  exercise when inputs.market_rent_year > contract.renewal_rent_year
+  payoff 0
+  set entity asset.tower.tenant_a_renewed = 1
+  deactivate stream cre.unit.base_rent.tenant_a_market
+  deactivate stream cre.unit.abatement.tenant_a_market
+  deactivate stream cre.unit.recoveries.tenant_a_market
+  deactivate stream cre.unit.ti_lc.tenant_a_market
+}
+
+// The lapse: the same test, the other way. When the option is not exercised
+// the renewal lease never begins.
+event tenant_a.lapse schedule on 2031-01 when inputs.market_rent_year <= inputs.renewal_rent_year {
+  deactivate stream cre.unit.base_rent.tenant_a_renewal
+  deactivate stream cre.unit.abatement.tenant_a_renewal
+  deactivate stream cre.unit.recoveries.tenant_a_renewal
+  deactivate stream cre.unit.ti_lc.tenant_a_renewal
+}
+
+// The renewal lease: the option rent for five years, escalating 3% on its
+// anniversaries, $100k of leasing costs at commencement. Runs through the
+// projection tail so the exit sees a full forward year.
+contract cre.lease_unit tenant_a_renewal on entity asset.tower {
+  term 2031-01..2036-12
+  terms {
+    rent_year = inputs.renewal_rent_year
+    escalation = 0.03
+    ti_total = 60000
+    lc_total = 40000
+  }
+  parties {
+    landlord = party.landlord_co
+    tenant = party.acme
+  }
+}
+
+// The re-let: market rent after three months of downtime, escalating 3% on
+// the new lease's anniversaries, $350k of new leasing costs.
+contract cre.lease_unit tenant_a_market on entity asset.tower {
+  term 2031-04..2036-12
+  terms {
+    rent_year = inputs.market_rent_year
+    escalation = 0.03
+    ti_total = 250000
+    lc_total = 100000
+  }
+}
+
+// Tenant B: 7-year lease from mid-2026, 2.5% escalations, $180k stop at 30%.
+contract cre.lease_unit.tenant_b on entity asset.tower {
+  term 2026-07..2033-06
+  terms {
+    rent_year = 360000
+    escalation = 0.025
+    opex_year = 300000
+    opex_escalation = 0.025
+    expense_stop_year = 180000
+    pro_rata_share = 0.30
+    ti_total = 100000
+    lc_total = 50000
+  }
+}
+
+contract cre.vacancy_loss on entity asset.tower {
+  term 2026-01..2036-12
+  terms {
+    rate = 0.02
+    potential_gross_year = 900000
+  }
+}
+
+contract cre.opex_line on entity asset.tower {
+  term 2026-01..2036-12
+  terms {
+    amount_year = 300000
+    growth_rate = 0.025
+  }
+}
+
+// Sale at the end of the hold; NOI for the valuation year is DERIVED from
+// the modeled streams over the 12 projection months after the sale date.
+contract cre.exit_forward on entity asset.tower {
+  term 2035-12..2035-12
+  terms {
+    cap_rate = 0.065
+    selling_costs = 0.02
+  }
+}
+
+// Permanent debt: $6m at 5.50%, 25-year amortization, 10-year hold. The
+// balloon stays off: the unamortized balance is repaid out of the sale.
+// `funded_at_close = 0`: the reference's cash flow starts post-financing.
+contract cre.permanent_debt on entity asset.tower {
+  term 2026-01..2035-12
+  terms {
+    principal = 6000000
+    interest_rate = 0.055
+    amortization_months = 300
+    funded_at_close = 0
+  }
+}
+
+slice leases {
+  type Contract.Lease
+}
+
+slice debt_service {
+  type Contract.Debt
+}
+
+run deterministic

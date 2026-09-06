@@ -3038,3 +3038,42 @@ period's draw at its accrual fraction, which is what `prev.balance` would
 give. Decide with the pack, and re-bless `one_lincoln_street_contract`
 when it changes. Related: §7.104.
 
+### 7.108 An exercise cannot bring a contract into being
+
+Belongs with §5, language and engine. Found 5 September 2026 building
+`benchmarks/cre/office_renewal_option`.
+
+A renewal option, exercised, produces a lease: five more years at the stated
+rent, with the pack's own lowering — escalation, recoveries, the leasing cost
+as a dated one-shot. The language cannot say that. A contract takes no
+activation guard (`docs/01` §13.4), `activate`/`deactivate contract` was
+removed (§7.73), and an option's actions reach entity fields and streams,
+never a contract. So the case declares BOTH outcomes as leases and the
+election switches one off: the option's actions deactivate the market
+lease's four lowered streams, and a scheduled event with the opposite test
+deactivates the renewal lease's — two declarations of one decision, and
+eight `deactivate` lines for what is one sentence in the lease.
+
+The shape to decide: an option's action that activates a declared contract
+(`activate contract cre.lease_unit.tenant_a_renewal`, the contract's streams
+inactive until then), or a contract whose `term` starts at an occurrence
+(`term from exercise(renewal) for 60 months`). The second reads as the
+agreement it is — the renewal term begins when the right is exercised — and
+keeps the contract free of guards. Either way the renewal case's lapse
+event and its `deactivate` lines go away. Related: §7.73, `docs/40` §10.
+
+### 7.109 An option's payoff carries no category
+
+Belongs with §5, language and engine. Found the same day, in the same case.
+
+A stream states a category and the pack's subtotals fold it (`docs/35`). An
+option's payoff publishes as `option.<name>` with an owner and no category,
+so a renewal's leasing cost, paid as the exercise's payoff, would be in
+`model.total` and absent from `domain.cre.leasing_costs`. The option should
+take the stream's `category` clause, or the election type should fix one
+the way a lowering rule does for its line — `Contract.Option` declares the
+line `payoff`, and a pack refinement knows what its payoff IS. Until then a
+case that needs the subtotal writes the exercise cash as a gated stream and
+leaves the payoff at zero, which puts the exercise's cash outside the option
+— what `benchmarks/cre/office_renewal_option` does, with the renewal
+lease's own leasing cost as the exercise's cash.
