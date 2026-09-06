@@ -2,7 +2,7 @@
   {
     "code": "E1346_STREAM_READS_WATERFALL_STEP",
     "severity": "error",
-    "message": "Stream 'fund.fee_on_distributions' reads series 'fund.distribution.residual', which is a waterfall step. Steps publish when their waterfall finishes, and every waterfall runs after every stream — so this read could only ever aggregate to zero.",
+    "message": "Stream 'fund.fee_on_distributions' reads series 'fund.distribution.residual', which is a waterfall step. Steps publish when their waterfall finishes, and every waterfall runs after the causal plane — so this read could only ever aggregate to zero.",
     "file": "model.cfdl",
     "span": {
       "start_line": 32,
@@ -11,7 +11,7 @@
       "end_col": 69
     },
     "path": null,
-    "hint": "A step's series is visible to a later waterfall's `from` and to nothing else. Model the quantity the step pays as a stream or a field if a stream needs to read it.",
+    "hint": "A step's series is visible to a later waterfall's `from` and to nothing else. A waterfall allocates cash to parties, whose accounts hold what they were paid: read `prev.<account>` for a claim, or carry the quantity the step pays as a stream or a field.",
     "notes": []
   }
 ]

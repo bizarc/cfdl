@@ -52,9 +52,10 @@ pub struct RunRequest {
     /// Run configuration (same shape as a `run.json`).
     #[serde(default)]
     pub config: Option<serde_json::Value>,
-    /// Fallback annual discount rate when the config omits one.
+    /// Fallback annual discount rate when the config omits one. Without
+    /// either, the run publishes no `model.npv`.
     #[serde(default)]
-    pub rate: f64,
+    pub rate: Option<f64>,
     /// Domain pack for post-engine metrics (e.g. `"cre"`).
     #[serde(default)]
     pub pack: Option<String>,
@@ -177,7 +178,8 @@ async fn run(Json(req): Json<RunRequest>) -> Response {
             cfdl_engine::run_config_from_json_str(&raw, req.rate, None)
         }
         None => Ok(cfdl_engine::RunConfig {
-            discount_rate: req.rate,
+            discount_rate: req.rate.unwrap_or(0.0),
+            rate_stated: req.rate.is_some(),
             ..Default::default()
         }),
     };

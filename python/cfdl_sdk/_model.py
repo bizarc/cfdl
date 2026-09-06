@@ -61,7 +61,7 @@ class Model:
         self,
         *,
         config=None,
-        rate: float = 0.0,
+        rate: float | None = None,
         as_of: str | None = None,
         pack: str | None = None,
         packs_dir=None,
@@ -102,7 +102,7 @@ def run(
     *,
     packs_dir=None,
     config=None,
-    rate: float = 0.0,
+    rate: float | None = None,
     as_of: str | None = None,
     pack: str | None = None,
 ) -> Results:

@@ -116,7 +116,7 @@ pub fn run(params: &RunParams, defaults: &Defaults) -> Result<RunResult, String>
     };
 
     // Run configuration: a file, an inline value, or the fallback rate alone.
-    let rate = params.rate.unwrap_or(0.0);
+    let rate = params.rate;
     let raw_config = match (&params.config, &params.config_path) {
         (Some(_), Some(_)) => return Err("pass `config` or `config_path`, not both".to_string()),
         (Some(value), None) => Some(value.to_string()),
@@ -137,7 +137,8 @@ pub fn run(params: &RunParams, defaults: &Defaults) -> Result<RunResult, String>
             }
         },
         None => cfdl_engine::RunConfig {
-            discount_rate: rate,
+            discount_rate: rate.unwrap_or(0.0),
+            rate_stated: rate.is_some(),
             ..Default::default()
         },
     };

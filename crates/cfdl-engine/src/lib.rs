@@ -102,6 +102,38 @@ pub enum EngineError {
     /// the model on the column order, where no balance is carried. Refused
     /// rather than published as zeros (`docs/42` §3).
     AccountsNeedTheWalk(String),
+    /// A field's rule failed to evaluate — a division by zero inside a
+    /// recurrence, a call on an argument out of range. The value used to be
+    /// substituted with zero under a warning nobody reads; a number that was
+    /// never computed is not a number (`docs/13` §7.103).
+    FieldEvaluationFailed(String),
+    /// An event's or option's action names a kind the engine does not
+    /// execute. Only hand-written IR can carry one, and running on while the
+    /// journal says `ignored` reported success for a run that did not do what
+    /// it was asked (`docs/13` §7.83).
+    UnknownActionKind(String),
+}
+
+impl EngineError {
+    /// The diagnostic code a run failure reports under. `E5002` is kept for
+    /// what it names — an IR that fails the schema — and every other failure
+    /// has a code of its own, registered in `docs/08` (`docs/13` §7.93).
+    pub fn code(&self) -> &'static str {
+        match self {
+            EngineError::Io(_) => "E5002_IR_SCHEMA_VALIDATION_FAILED",
+            EngineError::Json(_) => "E5002_IR_SCHEMA_VALIDATION_FAILED",
+            EngineError::InvalidDate(_) => "E5033_INVALID_RUN_CONFIG",
+            EngineError::InvalidRunConfig(_) => "E5033_INVALID_RUN_CONFIG",
+            EngineError::Schedule(_) => "E5034_SCHEDULE_FAILED",
+            EngineError::SeriesCycle(_) => "E5035_SERIES_CYCLE",
+            EngineError::AssumptionCycle(_) => "E5036_ASSUMPTION_CYCLE",
+            EngineError::UnknownName(_) => "E5031_UNRESOLVED_NAME",
+            EngineError::SeriesReadInLogic(_) => "E5037_SERIES_READ_IN_LOGIC",
+            EngineError::AccountsNeedTheWalk(_) => "E5038_ACCOUNTS_NEED_THE_WALK",
+            EngineError::FieldEvaluationFailed(_) => "E5032_FIELD_EVALUATION_FAILED",
+            EngineError::UnknownActionKind(_) => "E5039_UNKNOWN_ACTION_KIND",
+        }
+    }
 }
 
 impl std::fmt::Display for EngineError {
@@ -113,6 +145,8 @@ impl std::fmt::Display for EngineError {
             EngineError::AssumptionCycle(msg) => write!(f, "{msg}"),
             EngineError::UnknownName(msg) => write!(f, "unresolved name: {msg}"),
             EngineError::SeriesReadInLogic(msg) => write!(f, "{msg}"),
+            EngineError::FieldEvaluationFailed(msg) => write!(f, "{msg}"),
+            EngineError::UnknownActionKind(msg) => write!(f, "{msg}"),
             EngineError::AccountsNeedTheWalk(msg) => write!(f, "{msg}"),
             EngineError::InvalidDate(value) => write!(f, "invalid ISO date: {value}"),
             EngineError::InvalidRunConfig(message) => write!(f, "invalid run config: {message}"),
@@ -140,6 +174,7 @@ impl Default for RunConfig {
         Self {
             arithmetic: cfdl_expr::Mode::Decimal,
             discount_rate: 0.0,
+            rate_stated: false,
             as_of: None,
             parameter_overrides: BTreeMap::new(),
             scenarios: BTreeMap::new(),
@@ -459,6 +494,7 @@ mod tests {
         let run = |src: &str, rate: f64| -> (String, String, f64) {
             let config = RunConfig {
                 discount_rate: rate,
+                rate_stated: true,
                 ..RunConfig::default()
             };
             let results = run_from_json_str(src, config).expect("run");
@@ -702,6 +738,7 @@ mod tests {
             RunConfig {
                 arithmetic: cfdl_expr::Mode::Decimal,
                 discount_rate: 0.05,
+                rate_stated: true,
                 as_of: None,
                 parameter_overrides: overrides.clone(),
                 scenarios: BTreeMap::new(),
@@ -715,6 +752,7 @@ mod tests {
             RunConfig {
                 arithmetic: cfdl_expr::Mode::Decimal,
                 discount_rate: 0.05,
+                rate_stated: true,
                 as_of: None,
                 parameter_overrides: overrides,
                 scenarios: BTreeMap::new(),
@@ -753,6 +791,7 @@ mod tests {
             RunConfig {
                 arithmetic: cfdl_expr::Mode::Decimal,
                 discount_rate: 0.0,
+                rate_stated: true,
                 as_of: None,
                 parameter_overrides: overrides,
                 scenarios: BTreeMap::new(),
@@ -792,17 +831,14 @@ mod tests {
         );
     }
 
-    /// AN ACTION KIND THE ENGINE DOES NOT KNOW IS JOURNALED AS `ignored`.
-    ///
-    /// `DeactivateContract` is the case in hand: the action was retired from
-    /// the language (`docs/13` §7.73 — a contract is a collection of streams,
-    /// and one switch cannot say what forbearance says), so no compiler emits
-    /// this kind any more. IR that still carries it must not run silently
-    /// wrong; the engine names it in `warnings` and journals it, which is what
-    /// this pins. Hand-written IR is the only way in, and the only way to test
-    /// that the results say what happened rather than staying silent.
+    /// AN ACTION KIND THE ENGINE DOES NOT KNOW REFUSES THE RUN (`docs/13`
+    /// §7.83). `DeactivateContract` is the case in hand: retired from the
+    /// language (§7.73), so no compiler emits it, and IR that still carries
+    /// it asks for something this engine cannot do. It used to be journaled
+    /// as `ignored` under a run reporting ok; the run now says no, and names
+    /// the host and the kind.
     #[test]
-    fn an_unknown_action_kind_is_journaled_as_ignored() {
+    fn an_unknown_action_kind_refuses_the_run() {
         let ir = r#"{
             "model": { "name": "contract_action", "currency": "USD" },
             "time": { "calendar": "monthly", "start": "2026-01-01", "periods": 2 },
@@ -825,26 +861,98 @@ mod tests {
                 }
             ]
         }"#;
-
-        let results =
-            run_from_json_str(ir, RunConfig::default()).expect("an ignored action is not an error");
-        let row = results
-            .deterministic
-            .journal
-            .iter()
-            // The catch-all journals the kind as the IR spelled it, since it
-            // has no vocabulary of its own for a kind it does not know.
-            .find(|entry| entry.action == "DeactivateContract")
-            .expect("the action must appear in the journal even though it did nothing");
-        assert_eq!(row.outcome, "ignored");
-        assert_eq!(row.target, "");
+        let err = run_from_json_str(ir, RunConfig::default())
+            .expect_err("an action kind the engine cannot execute must refuse the run");
         assert!(
-            row.note
-                .as_deref()
-                .is_some_and(|n| n.contains("unknown action kind")),
-            "the row must say why it did nothing: {:?}",
-            row.note
+            matches!(err, super::EngineError::UnknownActionKind(_)),
+            "{err}"
         );
+        assert_eq!(err.code(), "E5039_UNKNOWN_ACTION_KIND");
+        let msg = err.to_string();
+        assert!(
+            msg.contains("event 'terminate'") && msg.contains("DeactivateContract"),
+            "{msg}"
+        );
+    }
+
+    /// A FIELD WHOSE RULE FAILS IS FATAL, NAMED WITH ITS PERIOD (`docs/13`
+    /// §7.103). `pmt` with no payments left is the case that found it — a
+    /// recurrence stepping past its own maturity — and it used to be a panic
+    /// out of the decimal library, then a zero under a warning.
+    #[test]
+    fn a_failed_field_rule_refuses_the_run_naming_the_period() {
+        let ir = r#"{
+            "model": { "name": "field_failure", "currency": "USD" },
+            "time": { "calendar": "monthly", "start": "2026-01-01", "periods": 3 },
+            "entities": [ { "symbol": "asset.a", "rules": {
+                "left": { "init": { "lang": "cfdl", "src": "1.0" },
+                          "next": { "lang": "cfdl", "src": "pmt(0.05, 2.0 - time.t, 1.0)" } }
+            } } ],
+            "streams": [
+                {
+                    "name": "ops.revenue",
+                    "owner": { "symbol": "asset.a" },
+                    "direction": "inflow",
+                    "schedule": { "kind": "Every", "from": "2026-01-01", "to": "2026-03-01" },
+                    "amount": { "lang": "cfdl", "src": "100.0" },
+                    "active_when": { "lang": "cfdl", "src": "true" }
+                }
+            ]
+        }"#;
+        let err = run_from_json_str(ir, RunConfig::default())
+            .expect_err("a division by zero inside a recurrence is not a zero");
+        assert!(
+            matches!(err, super::EngineError::FieldEvaluationFailed(_)),
+            "{err}"
+        );
+        let msg = err.to_string();
+        assert!(
+            msg.contains("asset.a.left") && msg.contains("period 2"),
+            "{msg}"
+        );
+    }
+
+    /// NO RATE, NO NPV (`docs/13` §7.46): a run nobody gave a discount rate
+    /// publishes neither `model.npv` nor `run.annual_discount_rate`, and says
+    /// why; a run that states one, even zero, publishes both.
+    #[test]
+    fn a_run_without_a_stated_rate_publishes_no_npv() {
+        let ir = r#"{
+            "model": { "name": "no_rate", "currency": "USD" },
+            "time": { "calendar": "monthly", "start": "2026-01-01", "periods": 2 },
+            "entities": [ { "symbol": "asset.a", "rules": {} } ],
+            "streams": [
+                {
+                    "name": "ops.revenue",
+                    "owner": { "symbol": "asset.a" },
+                    "direction": "inflow",
+                    "schedule": { "kind": "Every", "from": "2026-01-01", "to": "2026-02-01" },
+                    "amount": { "lang": "cfdl", "src": "100.0" },
+                    "active_when": { "lang": "cfdl", "src": "true" }
+                }
+            ]
+        }"#;
+        let unstated = run_from_json_str(ir, RunConfig::default()).expect("run");
+        assert!(!unstated.deterministic.metrics.contains_key("model.npv"));
+        assert!(!unstated
+            .deterministic
+            .metrics
+            .contains_key("run.annual_discount_rate"));
+        assert!(unstated.deterministic.metrics.contains_key("model.total"));
+        assert!(unstated
+            .warnings
+            .iter()
+            .any(|w| w.contains("No discount rate was stated")));
+        let stated = run_from_json_str(
+            ir,
+            RunConfig {
+                discount_rate: 0.0,
+                rate_stated: true,
+                ..RunConfig::default()
+            },
+        )
+        .expect("run");
+        assert!(stated.deterministic.metrics.contains_key("model.npv"));
     }
 
     /// A DECLARED RUN MODE IS PICKED UP ONLY WHEN IT IS A USABLE ONE.
@@ -1080,6 +1188,7 @@ mod tests {
             RunConfig {
                 arithmetic: cfdl_expr::Mode::Decimal,
                 discount_rate: 0.0,
+                rate_stated: true,
                 as_of: None,
                 parameter_overrides: BTreeMap::new(),
                 scenarios: BTreeMap::new(),
@@ -1160,6 +1269,7 @@ mod tests {
             RunConfig {
                 arithmetic: cfdl_expr::Mode::Decimal,
                 discount_rate: 0.0,
+                rate_stated: true,
                 as_of: None,
                 parameter_overrides: overrides,
                 scenarios: BTreeMap::new(),
@@ -1189,6 +1299,7 @@ mod tests {
             RunConfig {
                 arithmetic: cfdl_expr::Mode::Decimal,
                 discount_rate: 0.0,
+                rate_stated: true,
                 as_of: None,
                 parameter_overrides: legacy,
                 scenarios: BTreeMap::new(),
@@ -1219,6 +1330,7 @@ mod tests {
             RunConfig {
                 arithmetic: cfdl_expr::Mode::Decimal,
                 discount_rate: 0.0,
+                rate_stated: true,
                 as_of: None,
                 parameter_overrides: bracket,
                 scenarios: BTreeMap::new(),
@@ -1303,7 +1415,10 @@ mod assumption_order_tests {
         ]);
         let out = run_deterministic(
             &ir,
-            &RunConfig::default(),
+            &RunConfig {
+                rate_stated: true,
+                ..RunConfig::default()
+            },
             &prepare_model(&ir, &mut Vec::new()).expect("prepares"),
         )
         .expect("resolves");
@@ -1506,7 +1621,10 @@ mod series_wave_tests {
         let ir = chain_ir("derived.a");
         let out = run_deterministic(
             &ir,
-            &RunConfig::default(),
+            &RunConfig {
+                rate_stated: true,
+                ..RunConfig::default()
+            },
             &prepare_model(&ir, &mut Vec::new()).expect("prepares"),
         )
         .expect("chain evaluates");

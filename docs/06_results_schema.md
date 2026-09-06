@@ -30,8 +30,8 @@ against it by `make results-schema`.
   "properties": {
     "results_version": {
       "type": "string",
-      "const": "0.13",
-      "description": "Schema version of this document. 0.13 publishes the model's contracts in `graph.contracts` — each with its type, master, instance, subject, parties and the streams lowered from it — and attributes each lowered stream series to its contract and its line by role (`contract` and `line` on the series); a slice's selection records its `lines`. 0.12 separates the model from its views: `model_hash` covers the IR without `views` (slices and statements), and `ledger_hash` now covers the journal and transitions beside the series. 0.11 adds model-declared statements: `pack` on the statements section is optional, and a statement may carry `metrics`. 0.10 adds `window` to a slice's selection — a reporting bound whose periods are the only ones the slice folds. 0.9 carries every metric a Monte Carlo trial computed into its trial summary, summarises each of them across the trials with the full set of percentiles, and adds `trials` to a metric summary — the count of trials that published that name. 0.8 adds `slices` — declared partial selections with their matched streams, net series and figures, and no reconciliation block by design. 0.7 publishes the model's entity graph (`graph`) and attributes each stream series to its owning entity and category. 0.6 nests an act's own acts under it as `children`. 0.5 added the machine's `transition` journal action. 0.4 added the account journal actions. 0.3 added `ledger_hash`, the optional `inputs` section, and `category` on IR streams."
+      "const": "0.14",
+      "description": "Schema version of this document. 0.14 removes the `ignored` journal outcome — an action kind the engine does not execute refuses the run — and publishes `model.npv` and `run.annual_discount_rate` only when a discount rate was stated. 0.13 publishes the model's contracts in `graph.contracts` — each with its type, master, instance, subject, parties and the streams lowered from it — and attributes each lowered stream series to its contract and its line by role (`contract` and `line` on the series); a slice's selection records its `lines`. 0.12 separates the model from its views: `model_hash` covers the IR without `views` (slices and statements), and `ledger_hash` now covers the journal and transitions beside the series. 0.11 adds model-declared statements: `pack` on the statements section is optional, and a statement may carry `metrics`. 0.10 adds `window` to a slice's selection — a reporting bound whose periods are the only ones the slice folds. 0.9 carries every metric a Monte Carlo trial computed into its trial summary, summarises each of them across the trials with the full set of percentiles, and adds `trials` to a metric summary — the count of trials that published that name. 0.8 adds `slices` — declared partial selections with their matched streams, net series and figures, and no reconciliation block by design. 0.7 publishes the model's entity graph (`graph`) and attributes each stream series to its owning entity and category. 0.6 nests an act's own acts under it as `children`. 0.5 added the machine's `transition` journal action. 0.4 added the account journal actions. 0.3 added `ledger_hash`, the optional `inputs` section, and `category` on IR streams."
     },
     "model_hash": {
       "type": "string",
@@ -1004,10 +1004,9 @@ against it by `make results-schema`.
             "applied",
             "declined",
             "overridden",
-            "ignored",
             "failed"
           ],
-          "description": "`applied` is the only one that changed anything. `declined` was refused for a stated reason. `overridden` was done and then lost to a stronger declaration — a stream activation against a false `active when`, or a waterfall step against a short pot. `ignored` is an action the engine does not execute yet. `failed` means the action's own expression did not evaluate."
+          "description": "`applied` is the only one that changed anything. `declined` was refused for a stated reason. `overridden` was done and then lost to a stronger declaration — a stream activation against a false `active when`, or a waterfall step against a short pot. `failed` means the action's own expression did not evaluate. There is no `ignored`: an action kind the engine does not execute refuses the run before it starts (0.14)."
         },
         "from": {
           "type": "string"

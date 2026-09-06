@@ -401,6 +401,21 @@ fn annuity(
     };
     let due_factor = Decimal::ONE + rate * due;
     let annuity_factor = due_factor * (f - Decimal::ONE) / rate;
+    // A ZERO DENOMINATOR IS AN ERROR THE CALLER CAN NAME, not a panic out of
+    // the decimal library with no field, period or expression attached
+    // (`docs/13` §7.103): `pmt(r, 0, pv)` when a recurrence runs past its own
+    // maturity is the case that found it.
+    let divides_by_zero = match which {
+        Annuity::Pmt => annuity_factor.is_zero(),
+        Annuity::Pv => f.is_zero(),
+        Annuity::Fv => false,
+    };
+    if divides_by_zero {
+        return Err(CalcError::new(
+            format!("{name}: nper must not be zero (the annuity factor is zero)"),
+            Some(span),
+        ));
+    }
 
     let result = match which {
         // third=pv, fourth=fv

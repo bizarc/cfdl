@@ -11,7 +11,7 @@ Diagnostics are the repair signal: read the `code`, `message`, `span`, and
 `hint`, change the model, recompile. The catalog is how an agent learns what
 each code looks like in the flesh before it meets one.
 
-**Coverage:** 230 codes in the docs/08 §7 register; 115 exemplified here; 70 of 128 examples carry a recorded fix.
+**Coverage:** 240 codes in the docs/08 §7 register; 116 exemplified here; 70 of 131 examples carry a recorded fix.
 
 ## account_read_without_prev — E1382_ACCOUNT_READ_WITHOUT_PREV
 
@@ -1623,6 +1623,45 @@ entity asset tranche : Credit.Asset.Tranche {
   original_balance init 275.0 next prev - 25.0
 }
 ```
+
+## field_reads_waterfall_step — E1346_STREAM_READS_WATERFALL_STEP
+
+Failing example:
+
+```cfdl
+version 0.1
+model "field-reads-waterfall-step"
+time calendar annual from 2020-01 for 5
+
+// THE CAUSAL PLANE CANNOT READ A WATERFALL STEP. A balance a field carries
+// down by what the waterfall paid reads as a dependency and cannot be one:
+// every waterfall runs after every field, so the step's series is never there
+// when the recurrence evaluates, and the read aggregated to zero in silence —
+// the balance never moved and a step capped on it paid more than it was owed.
+// A waterfall never writes a balance in the causal plane: what a party has
+// been paid is its account, read as `prev.<account>`.
+
+entity asset trust : Asset.Financial {
+  bal init 1000.0 next prev - series_sum("dist.principal", time.t - 1, time.t - 1)
+}
+entity party holders : Party { name = "Holders" }
+
+stream trust.collections on entity asset.trust inflow currency USD {
+  schedule every year from 2020-01 to 2024-01
+  amount = 400
+}
+
+waterfall dist on entity asset.trust {
+  schedule every year from 2020-01 to 2024-01
+  from available
+  pay principal to party.holders = remaining
+}
+```
+
+- `E1346_STREAM_READS_WATERFALL_STEP` (error): Field 'asset.trust.bal' reads series 'dist.principal', which is a waterfall step. Steps publish when their waterfall finishes, and every waterfall runs after the causal plane — so this read could only ever aggregate to zero.
+  - hint: A step's series is visible to a later waterfall's `from` and to nothing else. A waterfall allocates cash to parties, whose accounts hold what they were paid: read `prev.<account>` for a claim, or carry the quantity the step pays as a stream or a field.
+
+Fix: not yet recorded.
 
 ## field_rule_reads_field — E1127_FIELD_RULE_READS_FIELD
 
@@ -4244,6 +4283,47 @@ stream a.rent on entity asset.co inflow currency USD {
 
 Fix: not yet recorded.
 
+## stream_folds_field — E1386_STREAM_FOLDS_STATE
+
+Failing example:
+
+```cfdl
+version 0.1
+model "stream-folds-field"
+time calendar annual from 2020-01 for 5
+
+// A STREAM CANNOT FOLD A FIELD. `series_sum` from a stream selects streams; a
+// field's series is state, read strictly backward, and the selector matched
+// nothing — the stream produced zero and the model ran to completion. The
+// same text in a metric folds the real value, which is what made the zero
+// plausible. The read that works is the field itself: `asset.plant.book_value`
+// this period, `prev.asset.plant.book_value` the prior one.
+
+entity asset plant : Asset.Real {
+  book_value init 100.0 next prev * 0.9
+}
+entity party holder : Party { name = "Holder" }
+
+account reserve { owner party.holder }
+
+stream plant.impairment on entity asset.plant outflow currency USD {
+  schedule every year from 2020-01 to 2024-01
+  amount = 0.1 * series_sum("asset.plant.book_value", time.t, time.t)
+}
+
+stream plant.fee on entity asset.plant outflow currency USD {
+  schedule every year from 2020-01 to 2024-01
+  amount = 0.01 * series_sum("account.reserve", 0, time.t)
+}
+```
+
+- `E1386_STREAM_FOLDS_STATE` (error): Stream 'plant.impairment' folds series 'asset.plant.book_value', which is an entity field. A stream's reduction selects streams; this selector matches nothing and would aggregate to zero in silence.
+  - hint: A field's value is read directly — `asset.plant.book_value` for this period's value as the period closed, `prev.asset.plant.book_value` for the prior one — never folded from a stream: a field is state, and state reads strictly backward. A metric may fold it.
+- `E1386_STREAM_FOLDS_STATE` (error): Stream 'plant.fee' folds series 'account.reserve', which is an account. A stream's reduction selects streams; this selector matches nothing and would aggregate to zero in silence.
+  - hint: An account's balance is read as `prev.reserve`, the opening balance, never folded from a stream. A metric may fold `account.reserve`.
+
+Fix: not yet recorded.
+
 ## stream_missing_category — E5029_STREAM_MISSING_CATEGORY
 
 Failing example:
@@ -4296,6 +4376,47 @@ stream loan.principal on entity asset.loan outflow currency USD {
 
 Fix: not yet recorded.
 
+## stream_reads_waterfall_glob — E1346_STREAM_READS_WATERFALL_STEP
+
+Failing example:
+
+```cfdl
+version 0.1
+model "stream-reads-waterfall-glob"
+time calendar annual from 2020-01 for 5
+
+// A `.*` SELECTOR OVER A WATERFALL'S STEPS IS STILL A READ OF STEPS. The
+// exact spelling `dist.principal` is refused; the glob `dist.*` names the same
+// series and compiled, ran, and paid zero every period. A glob states that
+// matching nothing is intended — over a stream family, where a model may
+// declare none of the members. A glob whose prefix is a waterfall's name
+// matches only steps, which exist and are unreadable from here.
+
+entity asset fund : Asset.Financial
+entity party lp : Party { name = "Limited Partners" }
+
+stream fund.proceeds on entity asset.fund inflow currency USD {
+  schedule every year from 2020-01 to 2024-01
+  amount = 1000
+}
+
+stream fund.fee on entity asset.fund outflow currency USD {
+  schedule every year from 2020-01 to 2024-01
+  amount = 0.02 * series_sum("dist.*", time.t, time.t)
+}
+
+waterfall dist on entity asset.fund {
+  schedule every year from 2020-01 to 2024-01
+  from available
+  pay to_lp to party.lp = remaining
+}
+```
+
+- `E1346_STREAM_READS_WATERFALL_STEP` (error): Stream 'fund.fee' reads series 'dist.*', which is a waterfall step. Steps publish when their waterfall finishes, and every waterfall runs after the causal plane — so this read could only ever aggregate to zero.
+  - hint: A step's series is visible to a later waterfall's `from` and to nothing else. A waterfall allocates cash to parties, whose accounts hold what they were paid: read `prev.<account>` for a claim, or carry the quantity the step pays as a stream or a field.
+
+Fix: not yet recorded.
+
 ## stream_reads_waterfall_step — E1346_STREAM_READS_WATERFALL_STEP
 
 Failing example:
@@ -4343,8 +4464,8 @@ waterfall fund.distribution on entity asset.fund {
 }
 ```
 
-- `E1346_STREAM_READS_WATERFALL_STEP` (error): Stream 'fund.fee_on_distributions' reads series 'fund.distribution.residual', which is a waterfall step. Steps publish when their waterfall finishes, and every waterfall runs after every stream — so this read could only ever aggregate to zero.
-  - hint: A step's series is visible to a later waterfall's `from` and to nothing else. Model the quantity the step pays as a stream or a field if a stream needs to read it.
+- `E1346_STREAM_READS_WATERFALL_STEP` (error): Stream 'fund.fee_on_distributions' reads series 'fund.distribution.residual', which is a waterfall step. Steps publish when their waterfall finishes, and every waterfall runs after the causal plane — so this read could only ever aggregate to zero.
+  - hint: A step's series is visible to a later waterfall's `from` and to nothing else. A waterfall allocates cash to parties, whose accounts hold what they were paid: read `prev.<account>` for a claim, or carry the quantity the step pays as a stream or a field.
 
 Minimal fix (compiles):
 
@@ -5131,7 +5252,7 @@ Documented in docs/08 §7, awaiting a minimal failing fixture:
 - `E2401_OPTION_MISSING_EXERCISE` — an option declares no `exercise when`, so
 - `E2402_OPTION_MISSING_PAYOFF` — an option declares no `payoff`, so exercising
 - `E4004_MISSING_PACK` — the named pack could not be loaded — not found, or found and rejected.
-- `E5002_IR_SCHEMA_VALIDATION_FAILED` — the IR the compiler produced does not satisfy the published IR schema, or the IR being read does not.
+- `E5002_IR_SCHEMA_VALIDATION_FAILED` — the IR the compiler produced does not satisfy the published IR schema, or the IR being read does not. Only that: every other way a run can fail has a code of its own below, so a reader who trusts the code is not sent to the schema for a failure the schema would have passed.
 - `E5003_IR_EMIT_FAILED` — the IR could not be written.
 - `E5004_INVALID_LOWERING_RULE` — a pack's lowering rule is malformed.
 - `E5005_PHASE_NOT_FOUND` — a lowering rule anchors to a phase the model does not declare.
@@ -5142,6 +5263,15 @@ Documented in docs/08 §7, awaiting a minimal failing fixture:
 - `E5020_LOWERED_FIELD_INVALID` — a pack lowering rule expanded to a field
 - `E5021_DUPLICATE_LOWERED_FIELD` — two contracts lower to one field name with
 - `E5023_SUBTOTAL_UNKNOWN_CATEGORY` — a pack subtotal folds a category no rule
+- `E5031_UNRESOLVED_NAME` — a run read a name nothing binds — a mistyped `inputs.` or an assumption the run configuration never supplied — and would have read it as zero. Fatal, naming every distinct unresolved name. An assumption the model DECLARES that failed to produce a number is reported as that, with the failure that explains it, rather than as "not declared".
+- `E5032_FIELD_EVALUATION_FAILED` — a field's rule failed to evaluate in some period — a division by zero, a function argument out of range such as `pmt` with no payments left — or produced something that is not a number. Named with the field, the clause and the period; a value that was never computed is not a number and is not substituted with one.
+- `E5033_INVALID_RUN_CONFIG` — the run configuration or a run flag is malformed: an unknown `valuation_grain` or `arithmetic`, an `as_of` that is not a date.
+- `E5034_SCHEDULE_FAILED` — a schedule could not be placed on the timeline at run time.
+- `E5035_SERIES_CYCLE` — a circular series read, or a read into a stream whose series names are computed at run time; no evaluation order satisfies it.
+- `E5036_ASSUMPTION_CYCLE` — a circular derivation among `assume` values.
+- `E5037_SERIES_READ_IN_LOGIC` — the engine's own check for `E1134`, for IR the compiler never saw.
+- `E5038_ACCOUNTS_NEED_THE_WALK` — a stream moves or reads an account while a forward-reaching read keeps the model on the column order, where no balance is carried.
+- `E5039_UNKNOWN_ACTION_KIND` — an event's or option's action names a kind the engine does not execute. Only hand-written IR can carry one; the run is refused rather than reported as ok with the action journaled as ignored, which is what it did before results 0.14.
 - `E6002_CRE_LEASE_INVALID_TERM_RANGE` — 
 - `E6003_CRE_LEASE_UP_MISSING_MONTHS` — 
 - `E6010_CRE_EXIT_MISSING_EXIT_CAP` — 

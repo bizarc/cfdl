@@ -672,71 +672,6 @@ that are unreachable in production and read as catastrophic contrast bugs; two
 false findings died that way during the assessment.
 
 
-### 7.38 A misspelled series reads as zero, in silence
-
-`series_sum("no.such.series", 0, time.t)` in a stream returns 0.0 for every
-period and emits nothing — no diagnostic at compile time, no warning at run
-time. The same read inside a field's `next` does warn: *"series `w.step_a` is
-not available in this context; using 0"*. One of the two is wrong, and it is
-not the field.
-
-A stream that reads a series which does not exist has almost certainly been
-mistyped, or names something the model no longer produces. Reading it as zero
-is the worst available answer: a benchmark case can go green while asserting a
-line it never computed, and `expected.csv` will agree with it, because zero is
-a number.
-
-Cheapest fix: resolve series names at compile time against what the model
-lowers to, and refuse the unknown ones. If a late-bound name is genuinely
-needed, the run-time path should at minimum warn as the recurrence already
-does.
-
-Provenance: found probing 7.37, August 2026, when a waterfall step's series
-read as zero and the only reason that was visible at all was a field warning
-about a different read.
-
-**A third failure mode is now closed, and it was not the one this entry
-describes.** A pack expression could read an INSTANCEABLE stream family by its
-bare name. `.*` matches the bare name and its children; a bare pattern matches
-only the bare name, so every suffixed instance is skipped — and nothing warns,
-because the pattern did match something. That is worse than the case below: the
-warning that would fire on a name matching nothing never fires at all.
-
-It reached main twice, in the same expression, both times in forward NOI:
-`cre.pct_rent` double-counted an unsuffixed contract, and `cre.property.opex`
-made an instanced expense line invisible, overstating NOI and the exit price
-struck off it. Both were found by hand, months apart. `tools/check-pack-series.py`
-is now a gate over three surfaces — lowering expressions, metric selectors, and
-statement row selectors — because the same mistake was made independently on
-two of them.
-
-**Of what this entry actually describes, half is closed, and it is worth being
-exact about which half.**
-A name the model does not produce ANYWHERE warns — `W5022_UNKNOWN_SERIES_REFERENCE`
-— rather than failing, because a literal naming nothing is a pack idiom as well
-as a typo (`cre.exit` names nine NOI components and a given property declares
-some of them), and refusing it outright broke four goldens. A name the model
-DOES produce but which cannot be seen from where it is read now fails:
-`E1342_WATERFALL_SERIES_NOT_VISIBLE`, §7.41 item 3. What remains here is the
-first case, and it stays open until the convention is settled — the question is
-whether a pack's own expression should be able to name a component the model
-lacks, not whether a typo should be caught.
-
-*(Update: the unsettled convention has a measurable cost, probed while writing
-`E1346`. Both step-visibility checks skip any reference ending `.*`, on the
-reading that a selector states matching nothing is intended. So a stream
-reading `series_sum("fund.distribution.*", ...)` — a glob over a WATERFALL's
-steps — compiles, runs, and pays 0.00 every period with no diagnostic, while
-the same read spelled exactly is `E1346`. The distinction the allowance rests
-on does not hold: a selector matching nothing is a pack idiom, but a selector
-whose matches are all step names is naming things that DO exist and are simply
-unreadable from a stream at any time. Settling the convention should
-distinguish those two, rather than treating every `.*` as an intent to match
-nothing. A few lines in the existing checks — the step set and
-`selector_matches` are both already there.)*
-
----
-
 ### 7.41 A freeform pot expression is still unchecked
 
 *Roadmap: M2 (`docs/37`). Narrowed by M1's account (`docs/28` §5.1).* The checked forms now exist:
@@ -813,54 +748,6 @@ cash to the thing that owns it, and select by kind. The schema carries the
 descriptions; `docs/06` regenerated.
 ---
 
-### 7.46 A run with no discount rate still publishes an NPV
-
-A run that states no rate discounts at zero and reports the result as
-`model.npv`:
-
-```
-cfdl run <ir> --out results.json          (no --config, no --rate)
-
-  model.npv                = 3750.0
-  run.annual_discount_rate = 0.0
-```
-
-3,750 is the undiscounted total. The rate is published beside it, so the run is
-not lying, but a metric named `model.npv` is being reported for a valuation
-whose rate nobody stated, and a reader scanning results for a present value sees
-a figure that reads as valued and is not.
-
-**No rate, no NPV.** A discounted metric with no discount rate is a missing
-term, not a shortcut, and the repository already applies that standard where it
-matters most: `cre.permanent_debt` deliberately defaults neither `principal` nor
-`rate`, because "a mortgage with an unstated balance or an unstated rate is not
-a modeling shortcut, it is a missing term, and E5006 should say so rather than
-the pack inventing a zero." A valuation with an unstated discount rate is the
-same shape. Omit `model.npv` and the metrics derived from it when no rate is
-supplied, and say why.
-
-The zero default is what makes the current behavior defensible-looking: it is a
-real arithmetic answer to a question nobody asked. Removing it costs nothing a
-model wanted, because a model that means zero can state zero.
-
-**Scope to settle when implementing.** Which metrics travel with the rate —
-`model.npv` certainly; whether `model.irr`, `model.payback_years` and
-`model.wal_years` do is a separate question, since a time-weighted life needs an
-axis rather than a rate. And whether omission or an explicit null is the better
-shape in `results.json`, which `docs/06` should state either way.
-
-**Not the same as letting a model set the rate.** Discounting belongs to the
-run: one set of cash flows is valued at several rates by different readers, and
-neither rate is a fact about the asset (§7.42). A model default with a run
-override, or a run that falls back to `inputs`, would put the resolution order
-out of sight and let one model value differently depending on which channel won.
-The fix here is to require the rate, not to relocate it.
-
-Provenance: found August 2026 while correcting §7.42, when a probe run without a
-config produced an NPV equal to its own total.
-
----
-
 ### 7.51 A parameter override is never checked against the model
 
 *Narrowed. The schema half shipped — `tools/check-run-schema.py`, wired at
@@ -899,230 +786,6 @@ belongs if a second source wants it.
 
 This is the coverage question §7.3 and §7.15 measure, in one instance: a case
 that reconciles externally while routing around the pack it should validate.
-
----
-
-### 7.55 A model cannot declare a subtotal or a statement
-
-*Belongs with the language and engine (section 5). Split from the closed 7.17.*
-
-Reporting is a language capability in its design — the category roots are the
-language's, a stream states its own `category`, and a pack-less model classifies
-its streams correctly. The DECLARATIONS still live only in pack TOML, so a model
-with no pack cannot declare a subtotal or a statement of its own.
-
-That needs a surface in the language and the syntax is undecided; `docs/16`
-records the question. It is the half this item's original title was about, and
-the larger of the two — the pack-side fold, the classification, the grain
-folding and the display sign all shipped.
-
-Related: §7.43, where the same absence shows up as results carrying no statement
-for a pack-less model. §7.25, where a model could not declare a metric either, is closed.
-The three are one surface question asked from three directions.
-
-**Rewritten 2026-09-01, after the design discussion this entry was blocking.**
-Both of the original nouns are wrong, and the entry had been asking for the
-wrong construct.
-
-- A **slice** is a FILTER — focus on one product line, region or period. It
-  narrows what is included.
-- A **statement** is the ORGANISING STRUCTURE — whether a presentation is an
-  entity hierarchy, a category hierarchy, or something else. Independent of any
-  filter. This is the actual gap.
-- A **subtotal** is not a declaration at all. It is what an interior node of a
-  hierarchy looks like at a chosen level of aggregation: show an entity
-  hierarchy two levels deep and the interior nodes ARE the subtotals, and
-  aggregating coarser changes them. Nobody enumerates them, which is how a
-  statement carries dozens of rows without dozens of declarations. A model
-  needs no subtotal construct.
-
-What makes this buildable now is what shipped since: the entity hierarchy is
-published in `graph` (§7.43, §7.91) and rolled up as
-`entity.<symbol>.net_cash_flow`; a category is a dotted path, so its levels are
-structural; and a metric can be declared (§7.25) and now fold the published
-surface (§7.85, §7.86), so figures can sit beside a statement.
-
-**Shipped 2026-09-01, part one: the slice window.** A slice selected streams and
-all of their periods, so "the 2027 to 2028 result for this asset" was not
-expressible. `window from <date> to <date>` bounds the periods; a period outside
-it contributes nothing, so `total`, `npv` and `irr` are folds over the window,
-and the window publishes in the slice's own selection because it is the one part
-of a selection that removes cash a reader can still see in the series beside it.
-
-Not a phase, deliberately: a phase is a lifecycle anchor that drives schedules
-(`phase_start()`, `phase_end()`), a window is a reporting bound on a finished
-projection, and one construct with both jobs would mean neither could change
-without the other. Dates rather than period indices, because an index is a fact
-about one grid. `window` is a CONTEXTUAL word, like `category` beside it, so the
-reserved-word list is unchanged at 100.
-
-`ledger_hash` is unmoved by adding slices, verified rather than assumed — a
-presentation is not a change to the underlying values.
-
-**Shipped 2026-09-01, part two: the statement.** `statement <name> { structure
-entity | category, depth N, grain, slice, metrics }`. It enumerates no rows.
-
-The rows come from the tree — `part of` for an entity structure, the dotted
-path for a category one — and `depth` decides which are shown. **A node whose
-children are shown is a `subtotal`; a node whose children are cut off is a
-`line`, carrying all of its descendants' cash.** That one rule is what keeps
-the bottom line reconciling at every depth, because the lines always partition
-the cash whichever level the tree is cut at. Measured on the fixture: the same
-model reconciles at 480 as a two-level entity tree, as a one-line summary, and
-as a three-level category tree.
-
-An entity row FOLDS ITS SUBTREE rather than reading the published
-`entity.<symbol>.net_cash_flow` rollup. The rollup is the same number and
-cheaper, and it is computed over all of the entity's cash — so a statement
-scoped to a slice would have silently ignored the filter.
-
-**A filtered statement reconciles against its SLICE**, not against the model.
-Reconciling it against the model reported the filter as a shortfall and raised
-`W3502` on a correct model, which is the noise standard this codebase already
-holds ratios to.
-
-`ledger_hash` is unmoved by adding statements, verified: the same model with
-none and with four hashes identically.
-
-Packs converge on the evaluator rather than the surface: `cfdl-run::enrich`
-renders model statements beside the pack's, `StatementsSection.pack` is now
-optional because a model-declared statement has no pack, and all 45 benchmark
-cases render byte-identically — including the HUD pack statement.
-
-Fixtures: `valid/statement_by_entity` (four statements over one model: two
-depths of the entity tree, the category tree, and a sliced one with a metrics
-block) and `invalid/statement_unknown_structure` (`E1367`). New codes: `E1366`
-(duplicate), `E1367` (unknown structure, or a category structure over
-uncategorized streams), `E1368` (unknown slice or metric).
-
-**Shipped 2026-09-01, part three: authored rows.** A statement may state its
-own rows instead of generating them. A generated statement is right when the
-tree IS the presentation; a pro forma is not that, because its rows carry
-curated labels, its expenses show positive under "Less:", and it ends in a
-coverage ratio that is a node of no hierarchy.
-
-```cfdl
-line     "Less: operating costs" { category "operating.expense.*" display positive }
-subtotal "Net operating income"  { category "operating.*" }
-ratio    "DSCR"                  { of noi to debt_service display positive }
-```
-
-This closes three gaps at once, which is why it was the first thing to build:
-labels, the display sign, and the per-period ratio — which needed no entry of
-its own after all, because `ratio` is a row kind the packs already use.
-
-**A ratio divides two declared SLICES.** A slice is already a named selection
-with a per-period net, so a ratio needs no row identifiers. A zero denominator
-publishes `null` rather than zero, the rule a pack ratio already follows.
-
-**Authored or generated, never both, and never neither** (`E1369`). A generated
-statement partitions the cash by construction, because a hierarchy covers its
-own tree; an authored one partitions it by the author's care. Mixed, neither
-holds — an authored row claims streams the generated rows already claimed, and
-the bottom line double-counts. The published IR schema states the rule as a
-`oneOf` rather than leaving it to the compiler alone.
-
-**The display sign never changes what is summed.** Debt service is stored
-negative because an outflow is negative cash, so NOI over it is arithmetically
--1.75; `display positive` renders the conventional 1.75 and leaves `values`
-signed, so a consumer that ignores the sign still adds up.
-
-Found by the gate rather than by review: an authored statement first emitted
-`structure: ""`, an empty string meaning "no value", which `check-ir-schema`
-refused. It is omitted now.
-
-Fixtures: `valid/statement_authored_rows` (curated labels, a flipped expense, a
-claiming-nothing subtotal, a spacer, and the ratio) and
-`invalid/statement_authored_and_generated` (`E1369`). No existing golden moved.
-
-**Shipped 2026-09-01, part four: a generated statement reads as one.** Three
-presentation defects, two of which a single-root single-category fixture could
-not show.
-
-**Depth first.** Rows were sorted by (depth, symbol), which is BREADTH first:
-two funds holding two properties each came out as both funds followed by all
-the properties in one flat block, with nothing saying which belonged to which.
-A parent is now followed by its own subtree. Siblings sort by symbol —
-declaration order would read better and is not available, because the IR sorts
-entities by their stable key so its bytes do not depend on where a declaration
-sits in a file. (The earlier note here claiming the IR preserves declaration
-order was wrong.)
-
-**The category roots have a canonical order.** `cfdl_pack::CATEGORY_ROOTS` is
-operating, investing, financing — the order a cash flow statement is read in —
-and generation iterated a `BTreeSet`, putting financing first. Below a root
-there is no canonical order, so siblings sort alphabetically: arbitrary, but
-stated in the spec rather than emergent.
-
-**Labels are derived.** The last path segment, underscores opened out, first
-letter capitalized, so `operating.revenue.base_rent` reads "Base rent" and
-`asset.north` reads "North". A generated statement is meant to need no
-declarations, and a row reading its own selector is a presentation that has not
-been presented. An authored row states its own label.
-
-Fixture: `valid/statement_generated_order` — two funds and three properties
-across three category roots, which is the smallest model that shows either
-ordering defect. Of the existing goldens only labels moved: no value, no
-ordering, no hash.
-
-**Shipped 2026-09-01, part five: the default statement.** A model that declares
-no statement, with no pack providing one, is rendered as its entity hierarchy
-and marked `default`. §7.43 asked for exactly this — "each node's cash with its
-children beneath it, no declarations and no pack" — and called it a product
-decision, which it was until the generator existed.
-
-**A fallback, not a declaration.** It is assembled when results are rendered and
-never enters the compiled document, so it moves neither `model_hash` nor
-`ledger_hash` — verified: no IR golden changed and no hash moved. It yields to
-any declared statement, a pack's included, because a declaration means the
-presentation question is already answered.
-
-The measurement that settled the size objection: a median of twelve values
-added per document, and the largest addition is about 1,200 cells on a file
-already 1.7MB. 130 result goldens gained a section; 36,694 insertions and zero
-deletions, so nothing existing moved.
-
-**Shipped 2026-09-01, part six: one evaluator. §7.55 is closed.** A pack's
-`statements.toml` lowers into the same shape a model's statements use, and the
-second renderer — 407 lines — is deleted. One evaluator, two producers.
-
-The convergence was worth doing because the divergence was already costing:
-while there were two renderers they drifted, and the model path was the one
-that had drifted. Reading them side by side found three defects in shipped
-code, none of which any golden caught:
-
-- rows were never bucketed to the statement's grain, so an annual statement
-  published two labels against twenty-four monthly values (fixed in part five's
-  follow-up, `#264`);
-- a ratio would have been re-bucketed rather than recomputed, giving -3.6 where
-  the answer is -2.0;
-- an authored statement that omitted cash emitted a silent residual row, where
-  a pack statement named the streams with `W3500`.
-
-**What the byte-identical test found.** The acceptance test — 45 benchmark
-cases and every pack golden rendering unchanged — caught four more differences
-that a reading would not have:
-
-- a pack row publishes the BARE stream name (`cre.unit.base_rent.anchor`), as a
-  slice does; the model path published the prefixed results key. Three
-  publishers, one spelling, and mine was the newcomer.
-- an UNCLASSIFIED stream is never claimed by name, because a stream row refines
-  within a category. Dropping that condition put an "Operating expenses" line
-  of -240,000 above a net operating income that excluded it. `dscr_smoke` is
-  the model whose comment predicted exactly this.
-- a named series must be PRESENT, not merely declared: `Grain::sum` of an
-  absent series is one zero per bucket, not an empty vector, so a row must
-  publish no values rather than a column of manufactured zeros.
-- a ratio whose inputs were never published still emits its row, falling back
-  to its own series. Dropping the row silently shortened a statement the pack
-  declared.
-
-`W3501_STATEMENT_STREAM_DOUBLE_COUNTED` was lost in the deletion and restored:
-the converged path tracked claims in a set rather than a count, so a stream
-claimed by two rows — "wrong in a direction that looks plausible" — became
-invisible. Found by auditing the codes the deleted renderer emitted against
-the codes the new one does, which is the check worth running whenever four
-hundred lines go.
 
 ---
 
@@ -1299,37 +962,6 @@ claims gate is possible at all, or whether the reference layer should stop
 restating what the specification states and link to it instead — the same
 single-source-of-truth question the gate list and the keyword register both
 answered by making one place authoritative.
-
----
-
-### 7.68 An assumption that fails to evaluate is reported as "not declared"
-
-*Belongs with the language and engine (section 5). Found while giving
-assumptions dependency ordering.*
-
-When an `assume` fails to evaluate, the engine warns and skips it. Every later
-read of that name then hits the unresolved-name gate, which says:
-
-```
-`inputs.net_sf` is not declared — each read as zero. Declare it, supply it in
-the run configuration, or correct the name.
-```
-
-All three remedies are wrong, because the name **is** declared. The model says
-`assume net_sf = ...` in plain sight; the assumption simply did not produce a
-number. A modeller reading that message goes looking for a missing declaration
-or a typo and finds neither.
-
-Dependency ordering removed the common cause (an assume reading another
-assume), so the message is now reachable only when an assumption fails for its
-own reasons — a non-numeric result, a division by zero, a call the empty
-assumption environment cannot serve. Rarer, and the diagnosis is still wrong
-when it happens.
-
-Shape: the gate knows the declared names, so it can distinguish "no such
-assumption" from "declared but unresolved" and say which. The second case
-should also name the ORIGINAL failure — the warning that explains why is
-already in the warnings array, one entry above.
 
 ---
 
@@ -1711,19 +1343,6 @@ item is one minimal failing fixture, its blessed golden, and a
 compile-verified repair in `fixtures/repairs/`. Retired codes (§8) are
 exempt. The catalog's coverage line is the progress meter.
 
-### 7.81 Runtime expression codes are unregistered and load-bearing
-
-`EXPR_EVAL` and `EXPR_UNKNOWN_NAME` are runtime warning codes emitted by
-`cfdl-expr`, documented in docs/03 §5, present in results goldens — and
-absent from the docs/08 register, whose `E3002`–`E3004` are registered but
-never emitted. The engine string-matches `EXPR_UNKNOWN_NAME` in warnings
-(`crates/cfdl-engine/src/lib.rs`), so renaming is not a find-replace: it
-needs a deliberate pass that reconciles the register with the emitters,
-re-blesses the results goldens, and decides whether run-time warning codes
-belong in docs/08 at all or in docs/06 beside the results contract.
-(`EXPR_PARSE` was the compile-time member of this family and is fixed:
-it now emits its registered name `E3001_EXPR_PARSE_ERROR`.)
-
 ### 7.82 CFDL-CE tiers are prose; nothing asserts the estate maps to them
 
 docs/22 §2 assigns every published surface to a tier (A–D) with path
@@ -1735,38 +1354,6 @@ asserting every published path matches exactly one tier would close the
 loop the authoring contract needs. (`ste-allow:` rule ids are now
 validated against §3's rule tables; the tier mapping is the remaining
 unenforced half.)
-
-### 7.83 An action kind the engine does not know is journaled, not refused
-
-*Recorded 2026-08-29, while retiring `activate contract` (§7.73).*
-
-The engine's action dispatch ends in a catch-all: a kind it does not recognise
-is journaled with outcome `ignored`, noted "unknown action kind", warned into
-`deterministic.warnings`, and the run continues with `status: ok`. Only
-hand-written IR can carry one, since every kind a model can write is known to
-the compiler that wrote it.
-
-**Why it was left alone.** Retiring the contract action was expected to retire
-`ignored` with it. It does not: this arm still produces it. Removing the
-outcome would have meant a `results_version` bump and 119 results goldens
-moving for a change in nothing anyone can observe, so the outcome stayed and
-the question was separated from the retirement.
-
-**The question.** `docs/13` §7.71 settled that a defect must not hide behind a
-substituted value and a warning nobody reads, and M1's pre-work turned three
-such spellings into compile-time refusals. An unrecognised action kind is the
-same shape one layer down: the IR asked for something the engine cannot do, and
-the run reports success. The alternative is to refuse the IR outright, which
-deletes `ignored` from the results schema (`results_version` bumps; every
-results golden re-blesses for the version string alone).
-
-What would settle it: whether IR is a surface a third party writes. If it is
-only ever compiler output, an unknown kind is a bug and refusing it is right.
-If hand-written IR is a supported entry point — the engine's own unit tests use
-it, and `docs/32`'s agents may — then tolerating an unknown kind loudly may be
-the better contract. `docs/05` does not say which.
-
-Related: §7.71, §7.73 (closed), `docs/28` §8, `docs/06`.
 
 ### 7.84 `model.moic` does not compute what its own comment says
 
@@ -1880,7 +1467,7 @@ accessor for the published keys keeps the dialect explicit at the call site
 and leaves every existing metric meaning what it meant.
 
 Related: §7.43 (ownership is the other half of reaching results from an
-expression), §7.55 (the declaration surface these reads would serve), §7.84
+expression), the model-declared statement (`docs/01` §16) (the declaration surface these reads would serve), §7.84
 (another figure the valuation plane computes that the engine got wrong first).
 
 Provenance: found probing the metric environment against `docs/01` §15.3,
@@ -2234,7 +1821,7 @@ entries are one change wearing two numbers, and should land together.
 
 ### 7.90 A slice: selection with a name, and no pretence of completeness
 
-*Belongs with the language and engine (section 5). Related: §7.55, §7.43.*
+*Belongs with the language and engine (section 5). Related: the model-declared statement (`docs/01` §16), §7.43.*
 
 A statement's defining property is completeness — every category in exactly
 one line row, a reconciliation block, a `residual` row for cash nothing
@@ -2330,44 +1917,6 @@ results graph. `fixtures/valid/stable_identity` pins the round trip;
 
 ---
 
-### 7.93 Every engine run failure reports as an IR schema violation
-
-*Belongs with the CLI and diagnostics (section 5). Found shipping §7.85.*
-
-`EngineError` has variants for genuinely different failures — an unresolved
-name, a metric that does not compile, a metric folding a series nothing
-publishes — and `crates/cfdl-cli/src/main.rs` maps every one of them to
-`E5002_IR_SCHEMA_VALIDATION_FAILED` at three call sites. So a run that failed
-because a metric named a series wrongly told the author its IR violated the
-published schema, which it did not: the IR was valid, the compiler wrote it,
-and `check-ir-schema` would have passed it.
-
-Measured while building §7.85's refusal:
-
-```
-ERROR[E5002_IR_SCHEMA_VALIDATION_FAILED] Run failed while reading IR
-'ir.json': unresolved name: Metric 'nonsense' names series
-'total.nonsense.xyz', which this run does not publish.
-```
-
-The message underneath is precise and the code above it is false, which is the
-worst arrangement: a reader who trusts codes over prose goes looking at the
-schema, and a tool that routes on the code routes wrongly. §7.85's own check
-moved to compile time and got a real code (`E1365`), so the example above no
-longer reproduces from that path — the mis-mapping is untouched and every
-other engine failure still goes through it.
-
-Shape: `EngineError` variants map to distinct runtime codes, registered in
-`docs/08` the way the compiler's are, with `E5002` kept for what it names —
-an IR that genuinely fails the schema. The register already carries runtime
-codes (§7.81 is the sibling entry: `EXPR_EVAL` and `EXPR_UNKNOWN_NAME` are
-emitted and unregistered), so the two should be settled in one pass.
-
-Provenance: found reading the CLI's error mapping while checking that
-§7.85's new refusal surfaced legibly, 31 August 2026.
-
----
-
 ### 7.94 A reduction reads a series, never a transformed one — and cannot say WHERE
 
 *Belongs with the language and engine (section 5). Split from §7.86 when its
@@ -2391,15 +1940,15 @@ Three shapes, in rising order of language cost:
   anything else in the language.
 - **A predicate expression**, which means lambdas or first-class expressions.
   Out of scope; the language has no construct that takes one.
-- **A DECLARED per-period line**, which is §7.55 — a model cannot declare a
+- **A DECLARED per-period line**, which is the model-declared statement (`docs/01` §16) — a model cannot declare a
   subtotal, and a field's `next` reads no stream series (`docs/14` §3.1), so
-  there is no legal place to compute an indicator. If §7.55 shipped, an
+  there is no legal place to compute an indicator. If the model-declared statement (`docs/01` §16) shipped, an
   indicator line declared once and `series_count` over it answers the covenant
   question WITH NO NEW SYNTAX AT ALL.
 
 That last is the reason this entry exists rather than a `series_count_if`: the
 missing thing is not a reduction, it is the line to reduce. **Do not build the
-predicate argument before §7.55 is decided.**
+predicate argument before the model-declared statement (`docs/01` §16) is decided.**
 
 **2. WHERE, not what.** `series_argmax`, and "the first period DSCR crossed
 1.20". Three decisions, which is why it did not ride along with §7.86:
@@ -2415,7 +1964,7 @@ predicate argument before §7.55 is decided.**
   argument that makes `series_max` refuse it — so these inherit that refusal.
 
 A first-crossing form additionally needs the predicate of part 1, so the two
-halves of this entry are not independent: settle §7.55, and both get simpler.
+halves of this entry are not independent: settle the model-declared statement (`docs/01` §16), and both get simpler.
 
 **Why the position-returning forms are not urgent.** Results publish the full
 per-period series in `deterministic.series`, so an analyst holding results has
@@ -2434,7 +1983,7 @@ series out), not a reduction, and it is the same missing capability as part 1
 seen from another side.
 
 Provenance: split out of §7.86 on 31 August 2026, when its four reductions
-shipped and these did not. The `period -> date` gap and the §7.55 dependency
+shipped and these did not. The `period -> date` gap and the the model-declared statement (`docs/01` §16) dependency
 were both found while scoping that work, not before it.
 
 ---
@@ -2542,59 +2091,6 @@ Related: §7.76 (the account adoption pass, whose reserve was the first
 account), `docs/28` §5.1 (where the one-account rule is stated as a
 resolution convenience), `docs/17` §13.
 
-### 7.97 A field that reads a waterfall step reads zero, in silence
-
-*Belongs with the language and engine (section 5). Found by a probe during
-the benchmark review, 2 September 2026, and the reason the review's
-"balance a waterfall reduces by paying it" framing was withdrawn.*
-
-**What happens.** A field recurrence reading a waterfall step's series at the
-previous period —
-
-```cfdl
-entity asset trust : Asset.Financial {
-  bal init 1000.0 next prev - series_sum("dist.principal", time.t - 1, time.t - 1)
-}
-```
-
-— compiles clean, runs with no warning, and reads zero every period. In the
-probe the balance never moved and a step capped at `min(remaining,
-asset.trust.bal)` paid 1,800 of collections against a 1,000 balance. The
-walk's read table (`docs/28` §4) makes a field's read of series at `t − 1`
-legal, and `fixtures/valid/recurrence_reads_settled_cash` pins it for a
-STREAM's series; a waterfall step's series is not available to the causal
-plane at all, and nothing says so.
-
-**Why this is a capability entry and not only a defect.** The silence is the
-same class as §7.38 and §7.95, and the refusal that closes it exists for the
-neighbouring reader: `E1346_STREAM_READS_WATERFALL_STEP` refuses a STREAM
-that names a step, on the stated ground that every waterfall runs after every
-stream. A field's rule has the same relationship to a waterfall and no such
-check. What the probe settled beyond the diagnostic is the modeling rule the
-benchmark programme now carries: **a waterfall never influences or updates a
-balance in the causal plane.** What a waterfall does is allocate cash to
-parties, whose ACCOUNTS hold their claims; a class's remaining claim is
-`face − principal in its holder's account`, read as `prev.<account>`, and
-every structural test — an overcollateralization target, a step-down, a
-turbo — is an expression over accounts and pool state. Under that rule there
-is no reason for a field to read a step, and the read should be refused the
-way `E1346` refuses it for a stream.
-
-**The shape.** Extend `E1346` (or a sibling) to field rules, event guards and
-account inflows: a `series_sum`/`series_avg` naming a waterfall step in any
-causal-plane reader is refused at compile with the step named. Then retire
-the framing this entry replaces: `docs/17` §5's "a balance a waterfall
-reduces by paying it", `docs/26` "A liability stack" (the paragraph that
-says a diverging distribution forces a balance field), and
-`benchmarks/credit/americredit_2017_1/NOTES.md` "Why the waterfall reads a
-field" — each of which asks for a balance the waterfall writes, and each of
-which is answered by the holder's account.
-
-Related: §7.38, §7.95, §7.74, `docs/28` §4 and §5.1, `docs/17` §5 and §13.
-`benchmarks/credit/auto_abs_tranches` is the first case written under the
-rule: no class carries a balance, and the published grid is asserted as the
-holders' account balances.
-
 ### 7.99 A `reference` names an external series and cannot reach one
 
 *Belongs with the language and engine (section 5), and with the ontology.*
@@ -2661,117 +2157,44 @@ Provenance: found writing `merchant_storage_arbitrage`, whose market input is
 then read from `evs-platform/docs/03_registries_specification.md` rather than
 inferred. Related: §7.1, `docs/27` §4.4 (what `ref` buys), and EVS question 26.
 
-### 7.100 A curve extrapolates flat past both ends, in silence
+### 7.100 A curve has no effective dates of its own
 
-*To investigate. The behavior is defensible for the construct's original use and
-wrong for another it has acquired; what follows is the evidence, not a proposed
-fix.*
-
-Belongs with §5, language and engine.
-
-`curve_value` outside a curve's declared range returns the nearest endpoint.
-Probed directly against a three-point table:
-
-```
-curve tbl { 2026-01: 10.0, 2027-01: 20.0, 2028-01: 30.0 }
-```
-
-| read over | values returned |
-|---|---|
-| 2026–2031 | 10, 20, 30, **30, 30, 30** |
-| 2024–2029 | **10, 10,** 10, 20, 30, **30** |
-
-Flat both directions, with no diagnostic at compile time or run time.
-
-**The deal outruns the curve; the curve never outruns the deal.** Nothing is
-evaluated outside the model timeline — `E2103_SCHEDULE_OUT_OF_BOUNDS` refuses a
-stream whose schedule extends past it — and a curve with more points than the
-horizon simply leaves them unread (a six-point table on a three-period deal
-returns `[10, 20, 30]`). So every read above is *inside* the deal timeline, and
-the only way to reach the flat tail is to declare a curve shorter than the
-horizon that reads it. That is the whole of the exposure, and it is worth
-stating because it names the check that is missing: the engine already
-bounds-checks a schedule against the timeline, and does not bounds-check a
-curve read against the curve.
-
-**Why the behavior is right, and why it is also wrong.** A curve is the construct market
-data arrives in, and flat-forward extrapolation is the standard convention for a
-price curve — nobody wants a forward rate to fall off a cliff at the last quoted
-tenor. But a curve is also the natural home for a *schedule*: a depreciation
-table, a step-down fee, any finite series of stated allowances. A schedule that
-silently repeats its final entry forever is not a convention, it is a wrong
-answer, and the two uses want opposite behavior from the same call.
-
-**How it was found, which is the part worth keeping.** Writing a closed-form
-after-tax solve, the MACRS five-year table was declared as a curve and read by a
-tax stream running the full 25-year horizon. The allowance continued at 5.76%
-for nineteen years past the schedule's end, and the run reported a confident
-`model.npv` of 260,805.84. Nothing flagged it. It was caught only because the
-closed form independently predicted what net present value should be, and the
-discrepancy was exactly the extra depreciation — without that second computation
-the number would have looked entirely reasonable.
-
-The fix used in that model was to let the stream's `schedule` end the deduction,
-which works and is arguably the better spelling anyway. That is a workaround
-available to a modeler who already knows the behavior.
-
-**What this is not.** Not a request to make extrapolation an error — that would
-break every price curve in the suite. The narrow questions are whether a curve
-should be able to *declare* that it ends (so a read past it is a diagnostic
-rather than a repeat), and whether the two uses are actually one construct.
-
-Provenance: found 2026-09-03 building a closed-form tariff solve against
-`benchmarks/energy/crest_solar_cost_based`. Related: §7.99 (a curve cannot cite
-its source), §7.95 (undefined is not zero) — the same shape of silence.
-
-### 7.101 A stream that folds a field reads zero, in silence
-
-*To investigate, and the block may well be correct. The silence is the part that
-is not.*
+*Shape decided 5 September 2026. The warning that was to come first
+(`W5024`) was held back: until a curve can declare where it stops, a
+modeller has no way to answer it, and four benchmarks that hold a rate or
+an occupancy flat on purpose would carry it for nothing. Warning and
+construct land together.*
 
 Belongs with §5, language and engine.
 
-A field is CFDL's non-cash computed series: its values publish as a series and
-stay out of `model.net_cash_flow`. Confirmed on a two-field probe, where
-`asset.p.disc_cost` published `[12000.0, 11111.1, 10288.1, 9526.0, 8820.4]`
-while net cash flow carried only the model's actual outflow.
+`curve_value` outside a curve's declared points returns the nearest endpoint.
+For a price curve that is the market convention — a rate quoted to five years
+is meant to be read at year seven. For a schedule declared as a curve — a
+depreciation table, a step-down fee — it is a wrong answer: a five-year MACRS
+table read by a twenty-five-year tax stream paid its last allowance for
+nineteen years, and the run reported a confident NPV. A curve's range is
+implied by its points and nothing lets it say where it stops.
 
-The same fold, from two readers:
+**The shape, decided with Matthew.** A curve MAY declare its effective dates,
+as a contract declares its term:
 
-| reader | `series_sum("asset.p.disc_cost", 0, 4)` |
-|---|---|
-| a metric | **51745.52** |
-| a stream | **0.0** |
+```cfdl
+curve macrs_5 from 2026-01 to 2031-12 { 2026-01: 0.20, 2027-01: 0.32, … }
+```
 
-`series_sum` from a stream selects streams. A field pattern matches nothing, and
-nothing is reported — the stream evaluated, produced zero, and the model ran to
-completion.
+Inside the range the points and interpolation apply as today. A read outside
+the range has no value: a stream or field that reads it there fails the run,
+naming the curve, the date and the reader — the rule `E5032` applies to a
+failed field, that a number never computed is not a number. A curve that
+declares no effective dates keeps the flat-forward convention, with a warning
+(`W5024`) where a reader runs past it — emitted only once this construct
+exists, so that the warning can be answered. The reader's own schedule remains the right way
+to end an allowance; the effective dates are the safety net.
 
-**Why the block is probably right.** A stream folding other streams over a whole
-horizon is already supported and correct: dependency-ordered waves (#144) settle
-an acyclic fold target first, and a stream is not state. A *field* is state, and
-`docs/28` §4 makes state reads strictly backward. Folding a field forward from
-period 0 would read state that has not settled. So this is not the causal plane
-failing to reach something it should — it is very likely the backward-only rule
-holding exactly as designed, and any entry framed as "let a stream see a field's
-future" would be wrong at the premise in the way §7.100 (closed) was.
-
-**What is left after conceding that.** The diagnosis costs nothing and the
-silence costs a wrong number. A selector that matches no series is the same
-defect as §7.38: a pattern that resolves to nothing should say so, particularly
-when the identical text in a neighboring construct resolves to a real value.
-A modeler who writes this has made a plane error and gets a plausible zero.
-
-**What this is not.** Not a request for a new construct, and not urgent. Where
-the target is linear in the unknown, the whole need disappears — a rate solve
-can be written in closed form with no helper series at all, which is how the
-CREST tariff solve was ultimately expressed. See the note on that below.
-
-Provenance: found 2026-09-03 probing whether a model can carry a computed series
-that is not cash, chasing a discounted helper for a tariff solve. The
-investigation also refuted an earlier claim of mine that horizon-wide folds are
-unreachable from streams; they are reachable over streams, and the probe pair
-above is what distinguishes the two cases. Related: §7.38, §7.94, §7.95.
+Open only on spelling: whether `from … to …` on the curve header, or a
+`term` clause inside the block, and whether the grammar's date-range
+production is shared with the contract's. Related: §7.99 (a curve cannot cite
+its source), §7.95 (undefined is not zero).
 
 ### 7.102 A field cannot fold a stream "since my last step"
 
@@ -2792,24 +2215,15 @@ in terms of the schedule rather than the cells — which reproduces the
 closed form exactly and restates the hazard fragments the fragment gate
 already polices.
 
+*Narrowed 5 September 2026: a BALANCE no longer needs this. The account
+rolls every model period and a stream reads the prior close as
+`prev.<account>` on any grid (`docs/42` §7). What remains is the field.*
+
 **The ask:** a fold bounded by the reader's own cadence — the stream's
-values since the field last stepped — so a stream-driven balance is
+values since the field last stepped — so a stream-driven field is
 expressible at every cadence. It is what a loan-level pool will want, where
 the reductions are actual payments and there is no rate to roll forward
-from. Related: §7.98, §7.101 (a stream cannot fold a field), `docs/28` §4.
-
-### 7.103 A division by zero inside a field's recurrence aborts the run
-
-Belongs with §5, engine. Found 4 September 2026.
-
-The balance recurrence calls `pmt(r, n − p, 1)` for the payments left; when
-the contract's `term` runs past its `term_months` the field keeps stepping,
-`n − p` reaches zero, and the engine panicked — a `rust_decimal` division by
-zero out of `annuity`, with no diagnostic, no period, no field named. The
-rule now guards at maturity, but a modeler's own recurrence can do the same
-thing and gets a stack trace. A runtime arithmetic failure inside the walk
-should surface as a diagnostic naming the field, the period and the
-expression, as `E5020` does for a recurrence that fails to parse.
+from. Related: §7.98, `docs/28` §4.
 
 ### 7.104 The pool's amortization schedule and its accrued interest can disagree
 

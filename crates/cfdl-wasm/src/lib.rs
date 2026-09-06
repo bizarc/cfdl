@@ -50,7 +50,7 @@ pub fn compile(files_json: &str, root_file: &str) -> String {
 pub fn run(ir_json: &str, config_json: Option<String>, pack: Option<String>) -> String {
     let config = match config_json {
         Some(raw) if !raw.trim().is_empty() => {
-            match cfdl_engine::run_config_from_json_str(&raw, 0.0, None) {
+            match cfdl_engine::run_config_from_json_str(&raw, None, None) {
                 Ok(config) => config,
                 Err(err) => return json!({"ok": false, "error": err.to_string()}).to_string(),
             }

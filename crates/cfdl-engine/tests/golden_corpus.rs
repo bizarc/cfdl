@@ -96,7 +96,7 @@ fn engine_reproduces_the_blessed_corpus() {
         // applies; without one it passes `--rate 0.10`. Getting this wrong
         // makes fixtures differ here for a reason that is not the engine's.
         let config = match run_config {
-            Some(path) => match cfdl_engine::run_config_from_json_file(path, 0.0, None) {
+            Some(path) => match cfdl_engine::run_config_from_json_file(path, None, None) {
                 Ok(config) => config,
                 Err(err) => {
                     failures.push(format!("{name}: run config did not load: {err}"));
@@ -105,6 +105,7 @@ fn engine_reproduces_the_blessed_corpus() {
             },
             None => cfdl_engine::RunConfig {
                 discount_rate: 0.10,
+                rate_stated: true,
                 ..Default::default()
             },
         };
@@ -317,10 +318,11 @@ fn walk_matches_the_column_order() {
     for (name, (ir_path, _, run_config)) in &corpus {
         let raw = std::fs::read_to_string(ir_path).expect("blessed IR is readable");
         let config = match run_config {
-            Some(path) => cfdl_engine::run_config_from_json_file(path, 0.0, None)
+            Some(path) => cfdl_engine::run_config_from_json_file(path, None, None)
                 .unwrap_or_else(|err| panic!("{name}: run config: {err}")),
             None => cfdl_engine::RunConfig {
                 discount_rate: 0.10,
+                rate_stated: true,
                 ..Default::default()
             },
         };

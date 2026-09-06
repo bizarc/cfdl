@@ -1,0 +1,32 @@
+[
+  {
+    "code": "E1386_STREAM_FOLDS_STATE",
+    "severity": "error",
+    "message": "Stream 'plant.impairment' folds series 'asset.plant.book_value', which is an entity field. A stream's reduction selects streams; this selector matches nothing and would aggregate to zero in silence.",
+    "file": "model.cfdl",
+    "span": {
+      "start_line": 21,
+      "start_col": 3,
+      "end_line": 21,
+      "end_col": 69
+    },
+    "path": null,
+    "hint": "A field's value is read directly — `asset.plant.book_value` for this period's value as the period closed, `prev.asset.plant.book_value` for the prior one — never folded from a stream: a field is state, and state reads strictly backward. A metric may fold it.",
+    "notes": []
+  },
+  {
+    "code": "E1386_STREAM_FOLDS_STATE",
+    "severity": "error",
+    "message": "Stream 'plant.fee' folds series 'account.reserve', which is an account. A stream's reduction selects streams; this selector matches nothing and would aggregate to zero in silence.",
+    "file": "model.cfdl",
+    "span": {
+      "start_line": 26,
+      "start_col": 3,
+      "end_line": 26,
+      "end_col": 58
+    },
+    "path": null,
+    "hint": "An account's balance is read as `prev.reserve`, the opening balance, never folded from a stream. A metric may fold `account.reserve`.",
+    "notes": []
+  }
+]

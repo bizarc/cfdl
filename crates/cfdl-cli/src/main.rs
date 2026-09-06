@@ -37,8 +37,10 @@ enum Command {
         out: PathBuf,
         #[arg(long)]
         config: Option<PathBuf>,
-        #[arg(long, default_value_t = 0.0)]
-        rate: f64,
+        /// Annual discount rate when the run configuration omits one. Without
+        /// either, the run publishes no `model.npv`.
+        #[arg(long)]
+        rate: Option<f64>,
         #[arg(long)]
         as_of: Option<String>,
         #[arg(long)]
@@ -194,7 +196,7 @@ fn main() -> Result<()> {
                         emit_run_failure(
                             cli.json,
                             vec![RunDiagnostic {
-                                code: "E5002_IR_SCHEMA_VALIDATION_FAILED".to_string(),
+                                code: "E5033_INVALID_RUN_CONFIG".to_string(),
                                 severity: "error".to_string(),
                                 message: format!(
                                     "Invalid --as-of value '{as_of}', expected YYYY-MM-DD."
@@ -220,7 +222,7 @@ fn main() -> Result<()> {
                         emit_run_failure(
                             cli.json,
                             vec![RunDiagnostic {
-                                code: "E5002_IR_SCHEMA_VALIDATION_FAILED".to_string(),
+                                code: err.code().to_string(),
                                 severity: "error".to_string(),
                                 message: format!(
                                     "Failed to load run config '{}': {err}",
@@ -241,7 +243,8 @@ fn main() -> Result<()> {
                 }
             } else {
                 cfdl_engine::RunConfig {
-                    discount_rate: rate,
+                    discount_rate: rate.unwrap_or(0.0),
+                    rate_stated: rate.is_some(),
                     as_of: parsed_as_of,
                     ..Default::default()
                 }
@@ -250,13 +253,16 @@ fn main() -> Result<()> {
             let mut results = match cfdl_engine::run_from_file(&ir_json_path, run_config) {
                 Ok(results) => results,
                 Err(err) => {
+                    // Each engine failure reports under its own code
+                    // (`docs/13` §7.93); `E5002` is kept for an IR that fails
+                    // the schema.
                     emit_run_failure(
                         cli.json,
                         vec![RunDiagnostic {
-                            code: "E5002_IR_SCHEMA_VALIDATION_FAILED".to_string(),
+                            code: err.code().to_string(),
                             severity: "error".to_string(),
                             message: format!(
-                                "Run failed while reading IR '{}': {err}",
+                                "Run failed on IR '{}': {err}",
                                 ir_json_path.display()
                             ),
                             file: Some(ir_json_path.to_string_lossy().to_string()),

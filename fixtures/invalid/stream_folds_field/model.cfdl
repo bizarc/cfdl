@@ -1,0 +1,27 @@
+version 0.1
+model "stream-folds-field"
+time calendar annual from 2020-01 for 5
+
+// A STREAM CANNOT FOLD A FIELD. `series_sum` from a stream selects streams; a
+// field's series is state, read strictly backward, and the selector matched
+// nothing — the stream produced zero and the model ran to completion. The
+// same text in a metric folds the real value, which is what made the zero
+// plausible. The read that works is the field itself: `asset.plant.book_value`
+// this period, `prev.asset.plant.book_value` the prior one.
+
+entity asset plant : Asset.Real {
+  book_value init 100.0 next prev * 0.9
+}
+entity party holder : Party { name = "Holder" }
+
+account reserve { owner party.holder }
+
+stream plant.impairment on entity asset.plant outflow currency USD {
+  schedule every year from 2020-01 to 2024-01
+  amount = 0.1 * series_sum("asset.plant.book_value", time.t, time.t)
+}
+
+stream plant.fee on entity asset.plant outflow currency USD {
+  schedule every year from 2020-01 to 2024-01
+  amount = 0.01 * series_sum("account.reserve", 0, time.t)
+}

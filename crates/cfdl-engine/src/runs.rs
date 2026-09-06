@@ -83,6 +83,7 @@ pub(crate) fn compute_results(
         for (key, value) in &scenario.parameter_overrides {
             merged_overrides.insert(key.clone(), *value);
         }
+        let scenario_stated = scenario.discount_rate.is_some() || config.rate_stated;
         let scenario_run = run_deterministic(
             ir,
             &RunConfig {
@@ -90,6 +91,7 @@ pub(crate) fn compute_results(
                 // is valued at, not the arithmetic every scenario shares.
                 arithmetic: config.arithmetic,
                 discount_rate: scenario.discount_rate.unwrap_or(config.discount_rate),
+                rate_stated: scenario_stated,
                 as_of: scenario.as_of.clone().or_else(|| config.as_of.clone()),
                 parameter_overrides: merged_overrides,
                 scenarios: BTreeMap::new(),
@@ -109,13 +111,15 @@ pub(crate) fn compute_results(
         // The base run's own metrics are the same map, so scenarios and the
         // deterministic block cannot report different metric sets.
         let mut scenario_metrics = scenario_run.metrics;
-        scenario_metrics.insert(
-            "model.npv".to_string(),
-            Scalar::Money(Money {
-                amount: round_amount(scenario_run.npv),
-                currency: ir.model.currency.clone(),
-            }),
-        );
+        if scenario_stated {
+            scenario_metrics.insert(
+                "model.npv".to_string(),
+                Scalar::Money(Money {
+                    amount: round_amount(scenario_run.npv),
+                    currency: ir.model.currency.clone(),
+                }),
+            );
+        }
         scenario_summaries.push(ScenarioSummary {
             name: name.clone(),
             metrics: scenario_metrics,
@@ -190,6 +194,7 @@ pub(crate) fn compute_results(
                 &RunConfig {
                     arithmetic: config.arithmetic,
                     discount_rate: config.discount_rate,
+                    rate_stated: config.rate_stated,
                     as_of: config.as_of.clone(),
                     parameter_overrides: trial_overrides,
                     scenarios: BTreeMap::new(),
@@ -425,7 +430,7 @@ pub(crate) fn compute_results(
     });
 
     Ok(Results {
-        results_version: "0.13".to_string(),
+        results_version: "0.14".to_string(),
         model_hash,
         ledger_hash,
         engine: EngineInfo {

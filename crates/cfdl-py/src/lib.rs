@@ -26,13 +26,13 @@ fn compile_model(model_dir: String, packs_dir: Option<String>) -> PyResult<Strin
 /// discount rate and valuation date when the config omits them; `pack`
 /// applies that pack's declarative domain metrics to the results.
 #[pyfunction]
-#[pyo3(signature = (ir_json, packs_dir=None, config_json=None, rate=0.0, as_of=None, pack=None))]
+#[pyo3(signature = (ir_json, packs_dir=None, config_json=None, rate=None, as_of=None, pack=None))]
 #[allow(clippy::useless_conversion)]
 fn run_ir(
     ir_json: String,
     packs_dir: Option<String>,
     config_json: Option<String>,
-    rate: f64,
+    rate: Option<f64>,
     as_of: Option<String>,
     pack: Option<String>,
 ) -> PyResult<String> {
@@ -69,7 +69,8 @@ fn run_ir(
         }
     } else {
         cfdl_engine::RunConfig {
-            discount_rate: rate,
+            discount_rate: rate.unwrap_or(0.0),
+            rate_stated: rate.is_some(),
             as_of: parsed_as_of,
             ..Default::default()
         }

@@ -562,11 +562,14 @@ impl StateWalk {
                         slot[t] = d;
                     }
                 }
+                // A FAILED RULE IS FATAL, not zero: the fold refuses the run
+                // over these markers once the walk has finished, naming every
+                // field that failed rather than the first (`docs/13` §7.103).
                 Ok(other) => warnings.push(format!(
-                    "State '{name}' {clause} evaluated to {other:?}, which is not a number; using 0."
+                    "FIELD_EVALUATION_FAILED: field '{name}' {clause} at period {t} evaluated to {other:?}, which is not a number."
                 )),
                 Err(err) => warnings.push(format!(
-                    "State '{name}' {clause} evaluation failed: {err}; using 0."
+                    "FIELD_EVALUATION_FAILED: field '{name}' {clause} at period {t} failed: {err}"
                 )),
             }
         }
