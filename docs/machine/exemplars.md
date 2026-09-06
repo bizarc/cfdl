@@ -2314,33 +2314,59 @@ entity asset jv : Asset.Financial {
 // contributed, plus everything the deal earned on it, less every cost.
 account deal_cash {
   from series_sum("cre.*", time.t, time.t)
-     + (min(inputs.equity_commitment, curve_value("dev_cost_cum", time.date))
-                - if(time.t == 0, 0.0,
-                     min(inputs.equity_commitment,
-                         curve_value("dev_cost_cum", edate(time.date, -1)))))
 }
 
-// WHAT EACH PARTNER PUT IN, so that what each partner got back can be measured
-// against it. The venture funds pro rata -- 90% Baupost, 10% Penzance, the
-// same share the tiers split on. Each partner's balance carries its capital out
-// on the dates the facility draws it, and its distributions back in when the
-// venture allocates.
-account baupost_capital {
+// WHAT EACH PARTNER PUT IN, as cash. The venture funds pro rata -- 90% Baupost,
+// 10% Penzance, the same share the tiers split on -- on the dates the facility
+// draws equity, which the facility's own field states. Each contribution is a
+// stream into the project that moves the partner's capital account, so the
+// account carries the capital out as it is paid in and the distributions back
+// in when the venture allocates; nothing restates the draw.
+stream cre.equity_contribution.baupost_land on entity container.project inflow currency USD {
+  schedule on 2011-09
+  category financing.equity.contribution
+  amount = asset.facility.equity_funded * (1.0 - inputs.sponsor_share)
+  moves baupost_capital
+}
+
+stream cre.equity_contribution.baupost on entity container.project inflow currency USD {
+  schedule every month start from 2011-10 to 2024-12
+  category financing.equity.contribution
+  amount = (asset.facility.equity_funded - prev.asset.facility.equity_funded)
+           * (1.0 - inputs.sponsor_share)
+  moves baupost_capital
+}
+
+stream cre.equity_contribution.penzance_land on entity container.project inflow currency USD {
+  schedule on 2011-09
+  category financing.equity.contribution
+  amount = asset.facility.equity_funded * inputs.sponsor_share
+  moves penzance_capital
+}
+
+stream cre.equity_contribution.penzance on entity container.project inflow currency USD {
+  schedule every month start from 2011-10 to 2024-12
+  category financing.equity.contribution
+  amount = (asset.facility.equity_funded - prev.asset.facility.equity_funded)
+           * inputs.sponsor_share
+  moves penzance_capital
+}
+
+// Each partner's capital is DUE to it from the venture: a contribution lowers
+// the balance below zero, and an allocation from the split raises it back.
+account baupost_capital due {
   owner party.baupost
-  from 0.0 - (min(inputs.equity_commitment, curve_value("dev_cost_cum", time.date))
-                - if(time.t == 0, 0.0,
-                     min(inputs.equity_commitment,
-                         curve_value("dev_cost_cum", edate(time.date, -1)))))
-             * (1.0 - inputs.sponsor_share)
 }
 
-account penzance_capital {
+account penzance_capital due {
   owner party.penzance
-  from 0.0 - (min(inputs.equity_commitment, curve_value("dev_cost_cum", time.date))
-                - if(time.t == 0, 0.0,
-                     min(inputs.equity_commitment,
-                         curve_value("dev_cost_cum", edate(time.date, -1)))))
-             * inputs.sponsor_share
+}
+
+// The deal's own cash, with the partners' contributions left out: what the
+// workbook ties to, and what the project returns on.
+slice deal {
+  entity container.project
+  except category "financing.equity.contribution"
 }
 
 // -------------------------------------------------------------- the JV split

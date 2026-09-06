@@ -219,16 +219,6 @@ the FNMA classes are entity fields today, so the REMIC tranches as notes
 Found asserting the seven published WALs of FNMA 2019-2, where the 400% PSA
 column refused the naive floor and the refusal was the convention speaking.
 
-### 7.41 A freeform pot expression is still unchecked
-
-*Roadmap: M2 (`docs/37`). Narrowed by M1's account (`docs/28` §5.1).* The checked forms now exist:
-`from available` is the engine's own quantity, and `from <account>` draws a
-balance whose inflow is declared and whose movements are journaled per
-period — what flows in is named, checked, and auditable. What remains open
-is the freeform `from <expr>`: a hand-written pot names whatever its
-windows happen to say, and nothing checks the economics of the selection.
-The residue is the freeform form only, and the account is the recommended
-spelling wherever the pot is "what has accumulated."
 ### 7.43 Results do not say which entity owns a stream
 
 This is a request rather than a defect, and the part of it that is a defect is

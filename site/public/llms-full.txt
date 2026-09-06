@@ -713,8 +713,11 @@ waterfall deal.distribution on entity asset.trust {
 Rules:
 - A waterfall MUST be owned by exactly one entity.
 - A waterfall MUST declare a `schedule` — the same construct a stream takes —
-  and a `from` expression, which is the pot. The schedule's placement is every
-  step's: a waterfall that distributes `on day 25` pays each step on the 25th,
+  and a `from` expression, which is the pot. Write `from available` for this
+  period's netted stream cash and `from <account>` for what has accumulated;
+  an expression remains legal for a pot neither can say, and it is the
+  model's own claim, checked only for the series it names. The schedule's
+  placement is every step's: a waterfall that distributes `on day 25` pays each step on the 25th,
   and the step's published series carries that offset (`docs/12` §3).
 - Waterfall names MUST be qualified names with at least two segments.
 - A waterfall MUST declare at least one step.
@@ -1495,6 +1498,11 @@ metric lp_irr  = irr(party.lp)
 metric lp_moic = moic(party.lp)
 ```
 
+**What the fold reads** is the party's own account: its contributions are the
+lines that lowered it — an `inflow` stated negative, or a stream that `moves`
+it — and its receipts the allocations in. A capital call written as a stream
+into the deal that moves the partner's account is therefore a contribution.
+
 **The party is a REFERENCE, not text.** A party is an entity, named the way the
 language names entities everywhere else — `pay … to party.lp`, `owner
 party.lp`, `on entity asset.x` — and the reference is what lets the compiler
@@ -1569,7 +1577,7 @@ Rules:
   reads, exact or one trailing `.*` — and a category selector must be rooted
   in a statement section (`E1364`).
 - `window` bounds the PERIODS, where every other clause bounds the streams. A
-  period outside it contributes nothing, so `total`, `npv` and `irr` are folds
+  period outside it contributes nothing, so `total`, `npv`, `irr` and `moic` are folds
   over the window. At most one window per slice.
 
   **A window is not a phase.** A phase is a lifecycle anchor — `phase_start()`
@@ -19724,33 +19732,59 @@ entity asset jv : Asset.Financial {
 // contributed, plus everything the deal earned on it, less every cost.
 account deal_cash {
   from series_sum("cre.*", time.t, time.t)
-     + (min(inputs.equity_commitment, curve_value("dev_cost_cum", time.date))
-                - if(time.t == 0, 0.0,
-                     min(inputs.equity_commitment,
-                         curve_value("dev_cost_cum", edate(time.date, -1)))))
 }
 
-// WHAT EACH PARTNER PUT IN, so that what each partner got back can be measured
-// against it. The venture funds pro rata -- 90% Baupost, 10% Penzance, the
-// same share the tiers split on. Each partner's balance carries its capital out
-// on the dates the facility draws it, and its distributions back in when the
-// venture allocates.
-account baupost_capital {
+// WHAT EACH PARTNER PUT IN, as cash. The venture funds pro rata -- 90% Baupost,
+// 10% Penzance, the same share the tiers split on -- on the dates the facility
+// draws equity, which the facility's own field states. Each contribution is a
+// stream into the project that moves the partner's capital account, so the
+// account carries the capital out as it is paid in and the distributions back
+// in when the venture allocates; nothing restates the draw.
+stream cre.equity_contribution.baupost_land on entity container.project inflow currency USD {
+  schedule on 2011-09
+  category financing.equity.contribution
+  amount = asset.facility.equity_funded * (1.0 - inputs.sponsor_share)
+  moves baupost_capital
+}
+
+stream cre.equity_contribution.baupost on entity container.project inflow currency USD {
+  schedule every month start from 2011-10 to 2024-12
+  category financing.equity.contribution
+  amount = (asset.facility.equity_funded - prev.asset.facility.equity_funded)
+           * (1.0 - inputs.sponsor_share)
+  moves baupost_capital
+}
+
+stream cre.equity_contribution.penzance_land on entity container.project inflow currency USD {
+  schedule on 2011-09
+  category financing.equity.contribution
+  amount = asset.facility.equity_funded * inputs.sponsor_share
+  moves penzance_capital
+}
+
+stream cre.equity_contribution.penzance on entity container.project inflow currency USD {
+  schedule every month start from 2011-10 to 2024-12
+  category financing.equity.contribution
+  amount = (asset.facility.equity_funded - prev.asset.facility.equity_funded)
+           * inputs.sponsor_share
+  moves penzance_capital
+}
+
+// Each partner's capital is DUE to it from the venture: a contribution lowers
+// the balance below zero, and an allocation from the split raises it back.
+account baupost_capital due {
   owner party.baupost
-  from 0.0 - (min(inputs.equity_commitment, curve_value("dev_cost_cum", time.date))
-                - if(time.t == 0, 0.0,
-                     min(inputs.equity_commitment,
-                         curve_value("dev_cost_cum", edate(time.date, -1)))))
-             * (1.0 - inputs.sponsor_share)
 }
 
-account penzance_capital {
+account penzance_capital due {
   owner party.penzance
-  from 0.0 - (min(inputs.equity_commitment, curve_value("dev_cost_cum", time.date))
-                - if(time.t == 0, 0.0,
-                     min(inputs.equity_commitment,
-                         curve_value("dev_cost_cum", edate(time.date, -1)))))
-             * inputs.sponsor_share
+}
+
+// The deal's own cash, with the partners' contributions left out: what the
+// workbook ties to, and what the project returns on.
+slice deal {
+  entity container.project
+  except category "financing.equity.contribution"
 }
 
 // -------------------------------------------------------------- the JV split

@@ -1,13 +1,19 @@
 {
   "model.total": {
-    "value": 196361512.48,
-    "tolerance": 1.0
+    "value": 382606793.06,
+    "tolerance": 1.0,
+    "source": "the project's whole cash: 196,361,512.48 earned plus 186,245,280.59 contributed"
   },
-  "model.irr": {
+  "slice.deal.total": {
+    "value": 196361512.48,
+    "tolerance": 1.0,
+    "source": "lifetime net cash, levered, the partners' contributions left out"
+  },
+  "slice.deal.irr": {
     "value": 0.110161,
     "tolerance": 1e-05
   },
-  "model.moic": {
+  "slice.deal.moic": {
     "value": 2.04664,
     "tolerance": 0.0001
   },

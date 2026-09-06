@@ -46,9 +46,11 @@ accumulates from inception and the preferred return and the capital are
 cumulative balances the venture carries.
 
 What is allocated is the venture's whole cash position: the equity the partners
-contributed, plus everything the deal earned on it, less every cost. Each
-partner's capital and each partner's distributions are tracked separately,
-which is what makes a per-partner return measurable. The preference accrues
+contributed, plus everything the deal earned on it, less every cost. The
+contributions are cash into the project on the dates the facility draws
+equity, each moving its partner's capital account, so each partner's capital
+and each partner's distributions are one record, which is what makes a
+per-partner return measurable. The preference accrues
 from construction start, not from the 2011 land purchase — compounding the land
 for 12.75 years consumes the entire promote.
 
@@ -79,12 +81,16 @@ to the sixth decimal:
 | Peak debt | 370,411,950.94 |
 | Peak equity | 186,245,280.59 |
 | Capitalized interest | 48,448,594.10 |
-| Lifetime net cash, levered | 196,361,512.48 |
+| Lifetime net cash, levered, contributions left out | 196,361,512.48 |
 | Return over the hold | 11.0161% |
 | Multiple on invested capital | 2.04664 |
+| Equity contributed | 186,245,280.59 |
 
-The distribution allocates 382,606,793.06 across seven tiers, leaving nothing
-behind, and each partner's own record then answers what that partner earned:
+The levered figures are the deal's own cash with the partners' contributions
+left out, which is what the workbook reports; the project's whole cash,
+contributions included, is 382,606,793.06. The distribution allocates exactly
+that across seven tiers, leaving nothing behind, and each partner's own record
+then answers what that partner earned:
 
 | | contributed | distributed | MoIC | IRR |
 |---|---|---|---|---|

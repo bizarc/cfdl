@@ -702,8 +702,11 @@ waterfall deal.distribution on entity asset.trust {
 Rules:
 - A waterfall MUST be owned by exactly one entity.
 - A waterfall MUST declare a `schedule` — the same construct a stream takes —
-  and a `from` expression, which is the pot. The schedule's placement is every
-  step's: a waterfall that distributes `on day 25` pays each step on the 25th,
+  and a `from` expression, which is the pot. Write `from available` for this
+  period's netted stream cash and `from <account>` for what has accumulated;
+  an expression remains legal for a pot neither can say, and it is the
+  model's own claim, checked only for the series it names. The schedule's
+  placement is every step's: a waterfall that distributes `on day 25` pays each step on the 25th,
   and the step's published series carries that offset (`docs/12` §3).
 - Waterfall names MUST be qualified names with at least two segments.
 - A waterfall MUST declare at least one step.
@@ -1484,6 +1487,11 @@ metric lp_irr  = irr(party.lp)
 metric lp_moic = moic(party.lp)
 ```
 
+**What the fold reads** is the party's own account: its contributions are the
+lines that lowered it — an `inflow` stated negative, or a stream that `moves`
+it — and its receipts the allocations in. A capital call written as a stream
+into the deal that moves the partner's account is therefore a contribution.
+
 **The party is a REFERENCE, not text.** A party is an entity, named the way the
 language names entities everywhere else — `pay … to party.lp`, `owner
 party.lp`, `on entity asset.x` — and the reference is what lets the compiler
@@ -1558,7 +1566,7 @@ Rules:
   reads, exact or one trailing `.*` — and a category selector must be rooted
   in a statement section (`E1364`).
 - `window` bounds the PERIODS, where every other clause bounds the streams. A
-  period outside it contributes nothing, so `total`, `npv` and `irr` are folds
+  period outside it contributes nothing, so `total`, `npv`, `irr` and `moic` are folds
   over the window. At most one window per slice.
 
   **A window is not a phase.** A phase is a lifecycle anchor — `phase_start()`
