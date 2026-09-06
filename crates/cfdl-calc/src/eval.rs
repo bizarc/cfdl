@@ -145,6 +145,15 @@ pub trait Env {
         SeriesFold::Unavailable
     }
 
+    /// Host hook for `wal(series[, from, to])`: the weighted average life of
+    /// what a series paid, in years on the host's time axis — each period's
+    /// amount weighted by its position, over the total. `NoAnswer` when the
+    /// series paid nothing in the window (a life of nothing is not a
+    /// number), `Unavailable` where there are no series.
+    fn series_life(&self, _name: &str, _from: Option<i64>, _to: Option<i64>) -> SeriesFold {
+        SeriesFold::Unavailable
+    }
+
     /// Host hook for named curve lookup (`curve_value`). Returns the curve's
     /// value at `date` per the curve's declared interpolation; `Unknown` when
     /// the host has no curve by that name, and `OutsideRange` when the curve
@@ -286,6 +295,9 @@ pub fn eval(expr: &Expr, env: &dyn Env, mode: Mode) -> Result<Value, CalcError> 
             }
             if SeriesReduction::of(name).is_some() {
                 return funcs::series_call(name, &values, expr.span, env);
+            }
+            if name == "wal" {
+                return funcs::life_call(name, &values, expr.span, env);
             }
             if name == "curve_value" {
                 return funcs::curve_call(name, &values, expr.span, env);

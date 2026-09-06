@@ -82,6 +82,15 @@ pub struct ExprEnv {
     /// stream's full series into each one made this the hot spot of a run.
     /// `Arc` makes handing it over a refcount bump. Nothing mutates it.
     pub series: Arc<BTreeMap<String, Vec<f64>>>,
+    /// WHERE IN ITS PERIOD each series' cash sits, as a fraction of a period
+    /// (`docs/12` §3), keyed the way `series` is. Read by `wal`, whose answer
+    /// is a position in time: an ordinary annuity's first collection falls at
+    /// one period, not zero. A series with no entry is taken at the period's
+    /// end, the recurrence default.
+    pub series_offsets: Arc<BTreeMap<String, f64>>,
+    /// Periods per year on the run's calendar, so `wal` can answer in years.
+    /// `None` outside a run, where there are no series to measure.
+    pub periods_per_year: Option<f64>,
     /// The last period whose series values exist, when the columns are being
     /// filled rather than finished.
     ///
@@ -209,6 +218,8 @@ impl ExprEnv {
             paid: BTreeMap::new(),
             owed: BTreeMap::new(),
             series: Arc::default(),
+            series_offsets: Arc::default(),
+            periods_per_year: None,
             series_available_to: None,
             curves: BTreeMap::new(),
             quantiles: BTreeMap::new(),
@@ -338,6 +349,7 @@ pub const SERIES_FUNCTIONS: &[&str] = &[
     "series_min",
     "series_prod",
     "series_count",
+    "wal",
 ];
 
 pub fn uses_series(compiled: &CompiledExpr) -> bool {
@@ -907,6 +919,64 @@ impl cfdl_calc::Env for EnvAdapter<'_> {
             }
         };
         fold_or_no_answer(Some(folded))
+    }
+
+    /// `wal`: Σ position·amount / Σ amount over the matched series, in years.
+    /// Each matched series carries its own placement, so a purchase settling
+    /// at a period's start and a collection at its end are not the same
+    /// moment (`docs/12` §3). Nothing paid is `NoAnswer`, not zero.
+    fn series_life(&self, name: &str, from: Option<i64>, to: Option<i64>) -> SeriesFold {
+        if self.env.series.is_empty() {
+            return SeriesFold::Unavailable;
+        }
+        let Some(ppy) = self.env.periods_per_year else {
+            return SeriesFold::Unavailable;
+        };
+        let keys: Vec<&String> = if name.ends_with(".*") {
+            self.env
+                .series
+                .keys()
+                .filter(|key| selector_matches(name, key))
+                .collect()
+        } else {
+            self.env
+                .series
+                .get_key_value(name)
+                .map(|(k, _)| k)
+                .into_iter()
+                .collect()
+        };
+        if keys.is_empty() {
+            return SeriesFold::NoAnswer;
+        }
+        let mut weighted = 0.0_f64;
+        let mut total = 0.0_f64;
+        for key in keys {
+            let values = &self.env.series[key];
+            if values.is_empty() {
+                continue;
+            }
+            let offset = self.env.series_offsets.get(key).copied().unwrap_or(1.0);
+            let last_real = values.len() - 1;
+            let last = self
+                .env
+                .series_available_to
+                .map(|t| t.min(last_real))
+                .unwrap_or(last_real);
+            let lo = from.unwrap_or(0).max(0) as usize;
+            let hi = to.map(|t| t.max(0) as usize).unwrap_or(last).min(last);
+            if lo > hi {
+                continue;
+            }
+            for (i, value) in values.iter().enumerate().take(hi + 1).skip(lo) {
+                weighted += ((i as f64 + offset) / ppy) * value;
+                total += value;
+            }
+        }
+        if total == 0.0 {
+            return SeriesFold::NoAnswer;
+        }
+        fold_or_no_answer(Some(weighted / total))
     }
 
     fn curve_value(&self, name: &str, date: cfdl_calc::CalcDate) -> cfdl_calc::CurveLookup {
@@ -1688,6 +1758,48 @@ mod tests {
             vec!["sofr".to_string(), "cpi".to_string()]
         );
         assert!(curve_references("curve_value(name, time.date)").is_empty());
+    }
+
+    /// `wal` on the model's axis (`docs/12` §3): a bullet's life is its
+    /// term, an annuity due's is one period shorter than the ordinary
+    /// annuity's, and a series that paid nothing has no life at all.
+    #[test]
+    fn wal_is_the_weighted_life_on_the_series_axis() {
+        let mut series: BTreeMap<String, Vec<f64>> = BTreeMap::new();
+        series.insert(
+            "bullet".to_string(),
+            vec![0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 100.0],
+        );
+        series.insert("level".to_string(), vec![10.0; 12]);
+        series.insert("due".to_string(), vec![10.0; 12]);
+        series.insert("nothing".to_string(), vec![0.0; 12]);
+        let mut offsets: BTreeMap<String, f64> = BTreeMap::new();
+        offsets.insert("due".to_string(), 0.0);
+        let env = ExprEnv {
+            series: Arc::new(series),
+            series_offsets: Arc::new(offsets),
+            periods_per_year: Some(12.0),
+            ..ExprEnv::empty()
+        };
+        let years = |src: &str| -> Option<f64> {
+            let compiled = compile_expr(src).expect("compile");
+            match eval(&compiled, &env).expect("eval") {
+                Value::Decimal(v) => Some(v),
+                Value::Optional(None) => None,
+                other => panic!("{other:?}"),
+            }
+        };
+        assert!((years("wal(\"bullet\")").unwrap() - 1.0).abs() < 1e-12);
+        let ordinary = years("wal(\"level\")").unwrap();
+        let due = years("wal(\"due\")").unwrap();
+        assert!((ordinary - 6.5 / 12.0).abs() < 1e-12, "{ordinary}");
+        assert!(
+            (ordinary - due - 1.0 / 12.0).abs() < 1e-12,
+            "{ordinary} {due}"
+        );
+        assert!((years("wal(\"level\", 0, 5)").unwrap() - 3.5 / 12.0).abs() < 1e-12);
+        assert_eq!(years("wal(\"nothing\")"), None);
+        assert_eq!(years("wal(\"absent.*\")"), None);
     }
 
     #[test]

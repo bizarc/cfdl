@@ -1,0 +1,210 @@
+{
+  "ir_version": "0.1",
+  "model": {
+    "name": "metric-wal",
+    "currency": "USD"
+  },
+  "time": {
+    "calendar": "monthly",
+    "start": "2026-01-01",
+    "periods": 12
+  },
+  "phases": [],
+  "entities": [
+    {
+      "id": "9ffb8630a7775dd1bab66e6b45ee1f8f",
+      "symbol": "asset.loan",
+      "type": "core.Entity",
+      "fields": {
+        "name": "Loan"
+      },
+      "state": {}
+    }
+  ],
+  "assumptions": {
+    "constants": {},
+    "random": {}
+  },
+  "metrics": [
+    {
+      "name": "bullet_life",
+      "expr": {
+        "lang": "cfdl",
+        "src": "wal(\"loan.bullet\")"
+      },
+      "provenance": {
+        "source_file": "model.cfdl",
+        "source_span": {
+          "start_line": 27,
+          "start_col": 1,
+          "end_line": 27,
+          "end_col": 39
+        }
+      }
+    },
+    {
+      "name": "level_life",
+      "expr": {
+        "lang": "cfdl",
+        "src": "wal(\"loan.level\")"
+      },
+      "provenance": {
+        "source_file": "model.cfdl",
+        "source_span": {
+          "start_line": 28,
+          "start_col": 1,
+          "end_line": 28,
+          "end_col": 37
+        }
+      }
+    },
+    {
+      "name": "first_half_life",
+      "expr": {
+        "lang": "cfdl",
+        "src": "wal(\"loan.level\", 0.0, 5.0)"
+      },
+      "provenance": {
+        "source_file": "model.cfdl",
+        "source_span": {
+          "start_line": 29,
+          "start_col": 1,
+          "end_line": 29,
+          "end_col": 48
+        }
+      }
+    },
+    {
+      "name": "nothing_life",
+      "expr": {
+        "lang": "cfdl",
+        "src": "wal(\"loan.nothing\")"
+      },
+      "provenance": {
+        "source_file": "model.cfdl",
+        "source_span": {
+          "start_line": 30,
+          "start_col": 1,
+          "end_line": 30,
+          "end_col": 41
+        }
+      }
+    }
+  ],
+  "contracts": [],
+  "streams": [
+    {
+      "id": "0d233671e6ade4af79ead5e5e581ba55",
+      "name": "loan.bullet",
+      "owner": {
+        "symbol": "asset.loan"
+      },
+      "direction": "inflow",
+      "currency": "USD",
+      "schedule": {
+        "kind": "OnDate",
+        "on": "2026-12-01"
+      },
+      "amount": {
+        "lang": "cfdl",
+        "src": "100000.0"
+      },
+      "active_when": {
+        "lang": "cfdl",
+        "src": "true"
+      },
+      "provenance": {
+        "source_file": "model.cfdl",
+        "source_span": {
+          "start_line": 12,
+          "start_col": 1,
+          "end_line": 15,
+          "end_col": 1
+        }
+      }
+    },
+    {
+      "id": "d1faf9687715ac7945e89bc48aceff9e",
+      "name": "loan.level",
+      "owner": {
+        "symbol": "asset.loan"
+      },
+      "direction": "inflow",
+      "currency": "USD",
+      "schedule": {
+        "kind": "Every",
+        "every": "monthly",
+        "from": "2026-01-01",
+        "to": "2026-12-01"
+      },
+      "amount": {
+        "lang": "cfdl",
+        "src": "1000.0"
+      },
+      "active_when": {
+        "lang": "cfdl",
+        "src": "true"
+      },
+      "provenance": {
+        "source_file": "model.cfdl",
+        "source_span": {
+          "start_line": 17,
+          "start_col": 1,
+          "end_line": 20,
+          "end_col": 1
+        }
+      }
+    },
+    {
+      "id": "e0a5637a696e601d53d2e7b488c4412e",
+      "name": "loan.nothing",
+      "owner": {
+        "symbol": "asset.loan"
+      },
+      "direction": "inflow",
+      "currency": "USD",
+      "schedule": {
+        "kind": "Every",
+        "every": "monthly",
+        "from": "2026-01-01",
+        "to": "2026-12-01"
+      },
+      "amount": {
+        "lang": "cfdl",
+        "src": "0.0"
+      },
+      "active_when": {
+        "lang": "cfdl",
+        "src": "true"
+      },
+      "provenance": {
+        "source_file": "model.cfdl",
+        "source_span": {
+          "start_line": 22,
+          "start_col": 1,
+          "end_line": 25,
+          "end_col": 1
+        }
+      }
+    }
+  ],
+  "events": [],
+  "options": [],
+  "runs": [
+    {
+      "kind": "deterministic"
+    }
+  ],
+  "required_observables": [],
+  "required_refs": [],
+  "provenance": {
+    "sources": [
+      "model.cfdl"
+    ],
+    "compiler": {
+      "name": "cfdl",
+      "version": "0.9.0",
+      "hash": "6bebad0d68f4babc5c564c4ea7ecc1f2"
+    }
+  }
+}

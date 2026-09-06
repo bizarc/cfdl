@@ -1386,9 +1386,21 @@ pub(crate) fn fold_results(
             visible.insert(format!("slice.{}", slice.id), net);
         }
         let shared = Arc::new(visible);
+        // A series' placement, under both spellings a metric may use, so
+        // `wal` measures on the axis `model.wal_years` uses (`docs/12` §3).
+        let shared_offsets = Arc::new({
+            let mut offsets: BTreeMap<String, f64> = BTreeMap::new();
+            for (name, offset) in &stream_offsets {
+                offsets.insert(name.clone(), *offset);
+                offsets.insert(format!("stream.{name}"), *offset);
+            }
+            offsets
+        });
         for metric in &ir.metrics {
             let mut env = build_expr_env(ir, None, config, horizon, &date, &base_inputs);
             env.series = Arc::clone(&shared);
+            env.series_offsets = Arc::clone(&shared_offsets);
+            env.periods_per_year = Some(ppy);
             // ENTITY FIELDS, AT THE HORIZON (`docs/13` §7.85). `docs/01` §15.3
             // has promised these in normative text since metrics entered the
             // spec, and the binding was simply absent: `bind_states` is called

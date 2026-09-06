@@ -94,7 +94,7 @@ against a floor of 0.5 set by the table's whole-percent rounding.
 |---|---|
 | Decrement, worst / mean | 0.3640 pp / 0.0841 pp |
 | Informative cells (published value neither 0 nor 100) | 14 of 30 |
-| Weighted average life | **4.696 → 4.7**, published **4.7** |
+| Class AB weighted average life | **4.7099**, published **4.7** |
 | Residual to Classes R and RL | **0.0000000000**, every period |
 | Principal returned to AB | 148,372,434.00 against an original of 148,372,434 |
 
@@ -105,7 +105,8 @@ The interest legs are asserted too, and they are external rather than model
 output: a published balance multiplied by a coupon stated on the cover. Their
 tolerance is the balance band carried through the coupon.
 
-The weighted average life is asserted at ±0.07: 0.05 is the print floor of a
+The class's weighted average life is folded from the principal the waterfall
+pays it (`wal`) and asserted at ±0.07: 0.05 is the print floor of a
 figure published to one decimal, and ~0.015 is the axis — the engine measures
 on its month-end axis while the deal distributes on the 25th measured from
 late-January settlement, a uniform bias across all seven published speeds.
@@ -315,6 +316,10 @@ waterfall g3.interest on entity asset.trust {
   pay io_interest to party.io_holders = asset.io.balance * (0.05 / 12.0)
   pay residual    to party.residual   = remaining
 }
+
+// The life of Class AB, folded from the principal the waterfall pays it: the
+// figure the supplement publishes per speed, measured on the model's axis.
+metric ab_wal = wal("g3.principal.ab_principal")
 ```
 
 ## Run configuration
@@ -341,3 +346,4 @@ Summary metrics for the base run:
 | `domain.credit.principal` | 148,372,434 | ±0.01 |
 | `model.total` | 183,313,276.29 | ±1 |
 | `domain.credit.wal_years` | 4.7 | ±0.07 |
+| `metric.ab_wal` | 4.7 | ±0.07 |

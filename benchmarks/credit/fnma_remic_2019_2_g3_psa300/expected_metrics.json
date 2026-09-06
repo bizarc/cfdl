@@ -10,5 +10,9 @@
   "model.total": {
     "value": 175695352.45,
     "tolerance": 1.0
+  },
+  "metric.ab_wal": {
+    "value": 3.7,
+    "tolerance": 0.07
   }
 }

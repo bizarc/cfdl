@@ -789,6 +789,48 @@ pub(crate) fn series_call(
     }
 }
 
+/// `wal(series[, from, to])`: the weighted average life of what a series
+/// paid — each period's amount weighted by its position in years, over the
+/// total — resolved by the host, which knows the axis (`docs/12` §3). Null
+/// when nothing was paid: a life of nothing is not zero years.
+pub(crate) fn life_call(
+    name: &str,
+    args: &[Arg],
+    span: Span,
+    env: &dyn crate::eval::Env,
+) -> Result<Value, CalcError> {
+    let (series, from, to) = match args {
+        [series] => (series, None, None),
+        [series, from, to] => (series, Some(int(from)?), Some(int(to)?)),
+        _ => {
+            return Err(CalcError::new(
+                format!("{name} expects a series name, or a series name with a from and to period"),
+                Some(span),
+            ))
+        }
+    };
+    let series_name = match &series.0 {
+        Value::Text(s) => s.clone(),
+        other => {
+            return Err(CalcError::new(
+                format!(
+                    "{name} expects a series name text, got {}",
+                    other.type_name()
+                ),
+                Some(series.1),
+            ))
+        }
+    };
+    match env.series_life(&series_name, from, to) {
+        crate::eval::SeriesFold::Value(v) => Ok(Value::Number(v)),
+        crate::eval::SeriesFold::NoAnswer => Ok(Value::Null),
+        crate::eval::SeriesFold::Unavailable => Err(CalcError::new(
+            format!("{name}: series `{series_name}` is not available in this context"),
+            Some(series.1),
+        )),
+    }
+}
+
 /// `curve_value(name, date)`: named curve lookup resolved by the host via
 /// `Env::curve_value` (interpolation is the curve's own declaration).
 pub(crate) fn curve_call(

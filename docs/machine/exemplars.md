@@ -2831,6 +2831,10 @@ waterfall g3.interest on entity asset.trust {
   pay io_interest to party.io_holders = asset.io.balance * (0.05 / 12.0)
   pay residual    to party.residual   = remaining
 }
+
+// The life of Class AB, folded from the principal the waterfall pays it: the
+// figure the supplement publishes per speed, measured on the model's axis.
+metric ab_wal = wal("g3.principal.ab_principal")
 ```
 
 ## credit/auto_abs_tranches
@@ -3760,6 +3764,15 @@ waterfall notes.principal on entity container.trust {
   pay d_principal to party.d_holders for contract credit.note.d line principal =
         min(remaining, container.trust.credit_note_claim_d)
 }
+
+// Each class's life, folded from the principal its step pays: the row the
+// exhibit prints beneath every decrement column, to maturity at 0% ABS.
+metric a2_wal = wal("notes.principal.a2_principal")
+metric a3_wal = wal("notes.principal.a3_principal")
+metric a4_wal = wal("notes.principal.a4_principal")
+metric b_wal = wal("notes.principal.b_principal")
+metric c_wal = wal("notes.principal.c_principal")
+metric d_wal = wal("notes.principal.d_principal")
 ```
 
 ## energy/utility_pv_singleowner

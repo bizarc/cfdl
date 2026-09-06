@@ -130,6 +130,10 @@ than that period's collections, so it cannot cancel them; it simply is not an
 inflow and does not enter WAL at all. Where every stream shares a placement
 this reduces exactly to the net cash-flow series, which is what it was before.
 
+A model's own `wal(<series>)` metric measures on the same axis, per series
+at that series' placement, which is how a class's life is folded from the
+principal its waterfall step pays (`docs/01` §15.3).
+
 `model.moic` deliberately does not use the axis — it is a ratio of cash in to
 cash out over the life, and where inside a period the cash sits does not change
 how much of it there is.

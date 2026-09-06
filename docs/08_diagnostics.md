@@ -423,7 +423,8 @@ see what is wrong with it.
   per stream. The bare form stays legal where the contract lowers exactly one,
   because there is then nothing to disambiguate.
 - `W5022_UNKNOWN_SERIES_REFERENCE` — a series reduction (`series_sum`,
-  `series_avg`, `series_min`, `series_max`, `series_prod`, `series_count`)
+  `series_avg`, `series_min`, `series_max`, `series_prod`, `series_count`,
+  `wal`)
   names a series no stream, contract or waterfall step produces, so it reduces
   over nothing and whatever reads it is reading nothing. A warning rather than an error because a
   literal name matching nothing is also a pack idiom: `cre.exit` sums NOI

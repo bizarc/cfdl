@@ -169,10 +169,11 @@ Backlog: `docs/13` §7.74.
 Two published-figure classes still cannot be asserted, and both are recorded
 at length elsewhere; referenced, not duplicated.
 
-- **Per-class WAL** (`docs/13` §7.22; `docs/20` §3.1): 709 published lives
-  for one deal and seven for another, all reproduced, none assertable —
-  a per-class WAL needs a payment stream paired with the class's original
-  balance, a fold keyed to an entity rather than to a stream pattern.
+- ~~**Per-class WAL**~~ **SHIPPED** 6 September 2026: `wal(<series>)` folds
+  the life of what a series paid on the model's axis, so a class's life is
+  one line over the principal its step pays. The seven FNMA 2019-2 cases
+  assert Class AB's published life per speed, and the auto ABS pilot asserts
+  all six classes to maturity inside the exhibit's print floor.
 - **The settlement axis** (`docs/13` §7.26): time-weighted metrics measure
   from model start on period fractions; a prospectus WAL measures from
   settlement to stated payment days, and the 400% PSA column of FNMA 2019-2

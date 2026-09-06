@@ -93,3 +93,7 @@ waterfall g3.interest on entity asset.trust {
   pay io_interest to party.io_holders = asset.io.balance * (0.05 / 12.0)
   pay residual    to party.residual   = remaining
 }
+
+// The life of Class AB, folded from the principal the waterfall pays it: the
+// figure the supplement publishes per speed, measured on the model's axis.
+metric ab_wal = wal("g3.principal.ab_principal")

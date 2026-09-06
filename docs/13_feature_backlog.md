@@ -166,40 +166,6 @@ re-measured — by scanning `contract <pack>.<type>` and `option … type`
 declarations, not `<pack>.` prefixes, which also match namespaced stream
 names — whenever cases or rosters change.
 
-### 7.22 A published weighted average life cannot be asserted
-
-Belongs with section 4 (credit pack).
-
-`domain.credit.wal_years` folds the pool's own streams —
-`credit.loan.sched_principal.*`, `prepay.*`, `bullet.*`, `recoveries.*` — so it
-answers "when does the collateral come back". A structured deal publishes the
-question one level up: when does *each class* come back. There is no metric for
-that, and a waterfall step's stream cannot be reached by one, because
-`metrics.toml` names streams by pattern and a WAL needs the class's original
-balance as well as its payments.
-
-So a published weighted average life cannot be checked. Ginnie Mae REMIC Trust
-2026-100 publishes 709 of them, one per class per prepayment speed; Fannie Mae
-REMIC Trust 2019-2 publishes seven. In both cases the model reproduces them —
-709 of 709 exactly for the first, all seven for the second — and in both cases
-the only place to say so was `CASE.md`, in prose.
-
-This is the pool-factor problem one level up. That defect was a pool's amortisation state not
-being exposed, which left `auto_abs_speed_050` reconciling its percent-outstanding
-column in words; the fix was a cumulative subtotal, and the case now asserts it.
-The same argument applies here: a figure the issuer publishes, that the model
-gets right, that no gate would notice going wrong.
-
-Shape: a per-class WAL wants two inputs the pack does not currently pair — a
-payment stream and the original balance of the thing being paid. The class
-already carries the second as `original_balance` on a `Credit.Asset.Tranche`, so
-the metric is plausibly a fold over a stream *keyed to an entity*, rather than
-over a stream pattern alone. That is a wider change than a new metric row, which
-is why this is a backlog item and not a patch.
-
-Found modelling Ginnie Mae 2026-100 and Fannie Mae 2019-2, where between them
-716 published figures could be reproduced and none could be asserted.
-
 ### 7.23 A scenario asserts metrics, but not the per-period column that is the published artefact
 
 Belongs with section 5 (harness and tooling).
@@ -1983,30 +1949,6 @@ What this buys is that "add a class" becomes a pack capability rather than an
 application's. Someone writing CFDL in an editor gets the same seven parts the
 prototype's tranche table writes, from the pack that knows what a class is.
 Related: §7.111, §7.112, `packs/credit/templates.toml`.
-
-### 7.114 WAL exists for the model and not for a claim
-
-Belongs with §5, language and engine. Found the same day, building the grid of
-speeds.
-
-`model.wal_years` is published for the model as a whole (`fold.rs`). Weighted
-average life PER CLASS is the number structured credit reads — a grid of
-prepayment speeds against class WAL is the output an investor report leads
-with — and it cannot be expressed.
-
-WAL needs the sum of `t * principal_t` over the sum of `principal_t`.
-`series_sum` sums a series over a range and does not weight by the period, so
-the numerator has no form. The grid can say what each class was PAID under
-each speed, which is what the prototype reports, and cannot say WHEN — so a
-0 CPR case and a 25 CPR case that both repay a class in full are
-indistinguishable in the summary, though they differ by years.
-
-The shape to decide: a `wal(series, from, to)` returning years on the same
-axis `model.wal_years` uses, or a weighted fold that `wal` is then written in
-terms of. Either way it must handle a claim that is never repaid the way §7.95
-requires — undefined, not zero, and not averaged into anything.
-
-Related: §7.95 (undefined is not zero), `benchmarks/credit/auto_abs_wal`.
 
 ### 7.115 Conventions checks: the model is legal and almost certainly not meant
 

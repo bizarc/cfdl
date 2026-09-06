@@ -195,6 +195,13 @@ This is the pattern `13` §7.12 was written about, one level up: a published
 figure with no series or metric to check it against, so it is reconciled in
 words. Recorded as a capability gap at `13` §7.22.
 
+**Closed 6 September 2026.** `wal(<series>)` folds a class's life from the
+principal its step pays (`docs/01` §15.3). The seven Fannie Mae 2019-2 cases
+assert Class AB's published life per speed at ±0.07 — the print floor plus
+the settlement axis `13` §7.26 still carries — and `auto_abs_tranches`
+asserts all six classes to maturity inside the exhibit's 0.005 print floor.
+The Ginnie Mae deal's 709 lives wait on the case itself (§1.1).
+
 Provenance: both REMIC cases, August 2026.
 
 ### 3.2 A clamped waterfall step can hide an over-payment

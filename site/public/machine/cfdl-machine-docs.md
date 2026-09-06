@@ -1450,7 +1450,7 @@ A model MAY declare a metric — a figure it solved for that neither the engine
 nor a pack mints:
 
 ```cfdl
-metric class_a_wal   = series_sum("credit.class_a.principal", 0, 59) / 12.0
+metric class_a_wal   = wal("notes.principal.class_a")
 metric crossover     = metric.class_a_wal - inputs.expected_wal
 ```
 
@@ -1744,6 +1744,10 @@ The expression environment MUST support:
 - `obs.<name>` — externally supplied observable values (provided via
   run-config parameters with the `obs.` key prefix)
 - `curve_value(<name>, <date>)` — lookup into a declared `curve`
+- `wal(<series>[, <from>, <to>])` — the weighted average life of what a
+  published series paid, in years on the axis `model.wal_years` uses
+  (`docs/12` §3): each period's amount at its placement, over the total.
+  Null when nothing was paid — a life of nothing is not zero years.
 - `quantile_at(<name>, <share>)`, `quantile_mean(<name>, <from>, <to>)`,
   `quantile_of(<name>, <value>)` — lookups into a declared `quantile`
 - `ref.<name>` is reserved for ontology references (not in the v0.1 dialect)
@@ -2804,6 +2808,15 @@ Cross-stream series: `series_sum`, `series_avg`, `series_max`, `series_min`,
 `series_prod` and `series_count`, each `(name, from_t, to_t)`, reduce another
 stream's signed per-period amounts over an inclusive period window (`prefix.*`
 wildcards supported).
+
+`wal(name[, from_t, to_t])` is the seventh, and not a reduction of the same
+kind: it answers in YEARS, weighting each period's amount by its position on
+the axis every time-weighted metric shares (`docs/12` §3) and dividing by the
+total, so a bullet's life is its term and an ordinary annuity's first
+collection falls at one period rather than zero. It is null when nothing was
+paid — a life of nothing is not zero years — and each matched series is
+weighted at its own placement, so it is the one fold that does not collapse a
+selector to a single aggregate first.
 
 **Every one of them folds the PER-PERIOD AGGREGATE.** When a selector matches
 several streams they are added together within each period first, and the fold
@@ -8164,7 +8177,8 @@ see what is wrong with it.
   per stream. The bare form stays legal where the contract lowers exactly one,
   because there is then nothing to disambiguate.
 - `W5022_UNKNOWN_SERIES_REFERENCE` — a series reduction (`series_sum`,
-  `series_avg`, `series_min`, `series_max`, `series_prod`, `series_count`)
+  `series_avg`, `series_min`, `series_max`, `series_prod`, `series_count`,
+  `wal`)
   names a series no stream, contract or waterfall step produces, so it reduces
   over nothing and whatever reads it is reading nothing. A warning rather than an error because a
   literal name matching nothing is also a pack idiom: `cre.exit` sums NOI

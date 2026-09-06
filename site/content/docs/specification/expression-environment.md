@@ -344,6 +344,15 @@ Cross-stream series: `series_sum`, `series_avg`, `series_max`, `series_min`,
 stream's signed per-period amounts over an inclusive period window (`prefix.*`
 wildcards supported).
 
+`wal(name[, from_t, to_t])` is the seventh, and not a reduction of the same
+kind: it answers in YEARS, weighting each period's amount by its position on
+the axis every time-weighted metric shares (`docs/12` §3) and dividing by the
+total, so a bullet's life is its term and an ordinary annuity's first
+collection falls at one period rather than zero. It is null when nothing was
+paid — a life of nothing is not zero years — and each matched series is
+weighted at its own placement, so it is the one fold that does not collapse a
+selector to a single aggregate first.
+
 **Every one of them folds the PER-PERIOD AGGREGATE.** When a selector matches
 several streams they are added together within each period first, and the fold
 runs over the resulting single series. For a sum the order never mattered —
