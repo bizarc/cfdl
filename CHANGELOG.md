@@ -8,6 +8,16 @@ This project follows Semantic Versioning: https://semver.org/
 
 ## [Unreleased]
 
+**Backlog: two entries closed, one re-measured.** §2.2 (a pool that
+amortizes on an Actual basis) closes: the refusal `E5027` shipped, the
+30/360 strike with act/360 accrual is pinned, and a payment that genuinely
+recomputes each period is a pack rule over `prev.balance` whenever a real
+instrument asks. §7.1 (storage revenue is a reduced form) closes: the
+quantile primitive landed as `docs/27`, and the dispatch comparison that
+remains is §7.75's. §7.3's coverage table is re-measured at 47 cases —
+energy 10/10, credit 3/4 (`participation` waits on the pass-through case),
+cre 11/14, opco 11/11 — and now counts the election types too (backlog 46).
+
 **A curve declares where it stops.** `curve <name> [from <date>] [to
 <date>] { … }` states the curve's effective dates: inside them the points
 and interpolation apply; a read outside them has no value and refuses the

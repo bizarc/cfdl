@@ -21,51 +21,6 @@ and shapes the language already supports, are recorded in
 
 ## 2. Credit pack
 
-### 2.2 A pool that amortizes on an Actual basis
-
-*Rewritten. The original entry diagnosed this as a pool-factor limit and
-proposed a validation gate for pools. Both were wrong, and the measurement
-that settled it is below.*
-
-**What was claimed:** `amortization_day_count = "act/360"` holds a constant
-payment on a single loan and is only an approximation on a pool, because the
-pool factor `S(p)` is a closed form built from one periodic rate.
-
-**What is true:** it does not hold a constant payment on a single loan either.
-Measured on one 1,200,000 loan at 6% with `cpr = cdr = 0` — no pool, no
-prepayment, no defaults — the payment swung **460.68** over twelve months:
-7,349.63 in a 31-day month, 6,888.95 in February. The cause is not pooling. An
-Actual basis expands to `(360 / time.days_in_period)`, a period-local value,
-and the annuity `pmt(rate / divisor, n - p, 1)` applies it to all `n - p`
-remaining periods — January strikes a payment as if every remaining month had
-31 days. It is the same failure already measured on the ACCRUAL divisor
-(697k-754k, `benchmarks/credit/mbs_pool_conventions`); splitting the two
-divisors fixed that spelling and left this one, and the shipped fixture pairs
-`act/360` accrual with `30/360` amortization, so the broken combination was
-never exercised.
-
-**Shipped:** `E5027_ACTUAL_AMORTIZATION_BASIS` refuses an Actual
-`amortization_day_count` outright, for every pack and every instrument rather
-than for pools. The pairing a loan document actually states still compiles and
-is pinned: strike the payment on `30/360`, accrue interest on `act/360`, and
-the payment holds at 7,194.61 while interest moves 6,200.00 to 5,594.43 with
-month length.
-
-**What remains, if anything.** An instrument whose payment genuinely does
-recompute each period — not a commercial Actual/360 loan, which does not — is
-a BALANCE RECURRENCE, not a closed form. Nothing in the language blocks it: a
-field's `next` sees `time.days_in_period` and reads no series, and `docs/07`
-uses `field.loan_balance` as its own worked example. Open this only when a
-real instrument needs it, with the document that says so.
-
-**And the pool-factor concern was misplaced.** A pool that the closed form
-cannot hold does not need a gate — it needs its components.
-`benchmarks/credit/mbs_pool_by_loan` declares one 100m pool as four loans of
-40/30/20/10, each `part of` the pool with its own contract, and ties to the
-single-pool model at **0.0** across all 372 periods, through two aggregations
-that share no code. Heterogeneity of any kind is already exact that way, which
-is the answer `docs/18` gives for the 43-sub-pool auto ABS case as well.
-
 ## 3. OpCo pack
 
 ## 4. Energy pack
@@ -126,177 +81,83 @@ breaks every `NOTES.md` reference and commit-message citation pointing past the
 insertion — which has already happened once. Appending never renumbers. Each
 item says which section it belongs with.
 
-### 7.1 Storage revenue is a reduced form with an unquantified error
-
-*Rewritten. The entry proposed a price-duration curve input and said it "needs
-no new engine capability". That was wrong on both counts: a duration curve is
-not a date-indexed curve, and the defect is not confined to the energy pack.
-Both corrections are below, and the design they led to is `docs/27_quantiles.md`.*
-
-*Belongs with the language and engine (section 5). It was filed against the
-energy pack and is not an energy item.*
-
-`energy.storage_arbitrage` is `mwh_cycled_year * spread * (1 - degradation)^y`.
-The industry reference models a battery with a **dispatch optimiser** over an
-hourly price series, so its revenue emerges from thousands of hourly
-charge/discharge decisions. The two do not reduce to one another and no choice
-of inputs makes them agree — fitting `spread` until they matched would be
-calibration, not validation.
-
-So this rule has **no external validation**, and
-`benchmarks/energy/merchant_capacity` says so rather than quietly including it.
-Energy is at 9 of 10 rules.
-
-**Attempted, and this is what it showed.** A dispatch run was tried rather than
-assumed: SAM's `Battwatts` model, 20 MW / 80 MWh behind a 100 MW PV plant,
-diurnal generation and an evening-peak load.
-
-- Behind the meter, it discharged **27.9 MWh across a whole year** from an
-  80 MWh battery, and charged nothing. Not a bug — dispatch is driven entirely
-  by the load and price context, and with 100 MW of PV against a 55 MW peak
-  there was nothing for the battery to do.
-- Reconfigured front-of-meter for merchant arbitrage, the native library
-  **segfaulted** (exit 139).
-
-The first result is the important one, and it sharpens the item: `quantity` (the storage rule's MWh cycled)
-is an **input** to our rule and the primary **output** of a dispatch model. The
-quantity we ask the modeller to state is the thing the reference exists to
-compute. So the two cannot be compared without first deciding the answer — which
-is why "fit `spread` until they agree" is calibration and not validation.
-
-A real comparison needs the full `Battery` module with a price-signal dispatch
-choice and a generation chain, not `Battwatts`. Worth doing, but it is a
-scoping exercise of its own rather than a benchmark.
-
-**What the error actually is.** Storage revenue is a DISPERSION FUNCTIONAL: it
-depends on the spread of the price distribution, not its level, because a
-battery discharges only into the upper tail and charges only from the lower one.
-A mean-preserving spread strictly increases it. `spread` is a hand-supplied
-stand-in for that dispersion, which is the precise reason fitting it is
-calibration — you are fitting the answer.
-
-That decomposes the unquantified error into two parts, and only one of them
-needs a dispatch model:
-
-- a **Jensen gap**, from evaluating a dispersion functional at a point
-  statistic; and
-- a **chronology error**, because a four-hour battery cannot reach eight
-  non-contiguous peak hours without recharging.
-
-**The same defect is already shipped in the CRE pack.** `cre.percentage_rent`
-lowers to `max(0, sales - breakpoint) * pct` — a call option on tenant sales
-evaluated at a point estimate of sales. Below the breakpoint it returns exactly
-zero when the true expectation is positive. `benchmarks/cre/retail_strip`
-exercises it. Two packs, one shape, so the fix is a language primitive rather
-than an energy contract.
-
-**Correction: a duration curve is not expressible today.** The previous entry
-said CFDL's `curve` declarations already cover this. They do not. A `curve` is
-indexed by DATE at every layer — the grammar's `curve_point = DATE ":" NUMBER`,
-the IR schema's required `points[].date`, and `CurveDef`'s `Vec<(Date, f64)>` —
-and is consumed by point lookup. A duration curve is indexed by cumulative
-share and is consumed by INTEGRATION, and no expression function integrates
-anything. What is expressible today is a price curve varying by year, which is
-a different object on a different axis and would not close this item.
-
-**And it breaks the circularity the paragraph above identifies.** Unlike
-`quantity` (the storage rule's MWh cycled), a price duration curve is a summary of the hourly price
-series the dispatch model ALSO takes as input — so it is an input on both sides.
-Cycled energy then becomes an output of our rule, derived from power rating,
-duration and efficiency, and comparable to the reference's output. That is
-validation rather than calibration. It is the reason to build this, and it does
-not depend on the reduced form being replaced.
-
-The reduced form is not wrong; practitioners use exactly this shape at the
-financing stage. Ways forward, in order of cost:
-
-- **A `quantile` declaration and three functions.** Designed in
-  `docs/27_quantiles.md`: a value indexed by cumulative share, with
-  `quantile_at`, `quantile_mean` and `quantile_of`. Language surface — spec,
-  grammar, IR schema, two IR structs and a `CurveDef` sibling — so roughly a
-  week, not free. It closes the Jensen gap in both packs. Cheapest first proof
-  is `cre.percentage_rent` against `benchmarks/cre/retail_strip`, which needs no
-  new reference model.
-- **`energy.storage_dispatch`** (7.5), the contract that consumes it.
-- **State of charge**, which needs per-period persistent state (5.2) and would
-  let cycling be modeled rather than assumed.
-
-Note what none of these close. The chronology error still needs the dispatch
-comparison, so this item stays open after the primitive lands and energy stays
-at 9 of 10 rules in 7.3 until that measurement exists.
-
-True hourly dispatch optimization is out of scope and should stay there — that
-is an optimizer, not a declarative cash-flow model.
-
 ### 7.3 Pack contract coverage across the benchmark suite
 
 *Belongs with no single pack — it is about the validation programme.*
 
-**Re-measured 2026-08-30** across all 44 registered cases (2 bespoke, 9 cre,
-18 credit, 6 energy, 9 opco), counting a pack contract type as *exercised*
-when at least one case declares it. When first measured (six cases, headline
-"the external cases route around the packs they should be validating") the
-counts were energy 9/10, credit 1/4, cre 1/12, opco 0/10 — for cre and opco
-the benchmarks bypassed the pack entirely, so they validated the engine, not
-the domain logic. That circularity is now broken:
+**Re-measured 2026-09-06** across all 47 registered cases (2 bespoke, 10 cre,
+18 credit, 8 energy, 9 opco), counting a pack contract type as *exercised*
+when at least one case declares it with `contract <pack>.<type>`. When first
+measured (six cases, headline "the external cases route around the packs they
+should be validating") the counts were energy 9/10, credit 1/4, cre 1/12,
+opco 0/10 — for cre and opco the benchmarks bypassed the pack entirely, so
+they validated the engine, not the domain logic. That circularity is broken:
 
 | pack | exercised | not exercised |
 |---|---|---|
 | energy | **10 / 10** (see caveat) | — |
-| credit | **4 / 4** | — |
+| credit | 3 / 4 | `participation` |
 | cre | 11 / 14 | `lease`, `percentage_rent_expected`, `construction_stub` |
 | opco | **11 / 11** | — |
 
-(The cre and opco rosters have grown since the first measure — 12→14 and
-10→11 — so the denominators moved too.)
+The rosters have moved since the previous measure (2026-08-30, 44 cases):
+credit's three pool types collapsed into one `loan` and gained `note` and
+`participation` (`docs/40`, `docs/42`); cre added `lease_unit`'s companions.
+`participation` is the pass-through security; the Ginnie or Fannie
+pass-through case `docs/41` owes is what exercises it.
 
-What closed the gaps: `office_two_tenant` exercises the acquisition spine
-through the pack (`lease_unit`, `rollover`, `vacancy_loss`, `opex_line`,
-`permanent_debt`, `exit_forward`), `retail_strip` adds `percentage_rent` and
-`exit`, `one_lincoln_street_contract` proves `construction_loan` against the
-native twin, `float_bridge_pool` and `io_bullet_loan` close credit, and
-`lbo_buyout` plus `damodaran_fcff` take opco from zero to nine — the
-driver-disclosing sources the first measure asked for. `dcf_exit_multiple_nwc`
-closes the remaining two, against a template that states an increase in net
-working capital line by line and strikes its terminal value on an LTM EBITDA
-multiple — the two figures Damodaran's engine cannot supply, because it folds
-working capital into reinvestment through a sales-to-capital ratio and takes
-its terminal value by Gordon growth.
+**Elections are a second roster.** Four option types refine
+`Contract.Option` and lower nothing, so the contract scan does not see them.
+Measured by `option … type <T>`: `CRE.Contract.RenewalOption`
+(`office_renewal_option`), `Credit.Contract.CleanUpCall`
+(`americredit_2017_1`) and `OpCo.Contract.EquityOption`
+(`lbo_option_pool_exit`) are exercised; `CRE.Contract.PurchaseOption` is not
+— the purchase option on a finance lease in `docs/41` is its case.
 
-**Exercised is not the same as validated.** One caveat stands: `storage_arbitrage`
-is declared by `solar_ppa_microgrid`, but that case reconciles the reduced-form
-arbitrage margin against convention, not against a dispatch model — the
-chronology comparison the storage entry (§7.5's duration-curve discussion)
-requires does not exist, so energy's *validated* count stays **9 / 10** until it
-does. Read strictly, cases whose references are independently recreated
-conventions (`office_two_tenant`, `retail_strip`, `solar_ppa_microgrid`) sit a
-step below a published third-party model; each CASE.md states which kind it is.
+What closed the earlier gaps: `office_two_tenant` exercises the acquisition
+spine through the pack (`lease_unit`, `rollover`, `vacancy_loss`,
+`opex_line`, `permanent_debt`, `exit_forward`), `retail_strip` adds
+`percentage_rent` and `exit`, `one_lincoln_street_contract` proves
+`construction_loan` against the native twin, `float_bridge_pool` and
+`io_bullet_loan` (now `credit.loan` with the master's `amortization` term)
+close the loan, the auto ABS pilot's classes are `note`s, and `lbo_buyout`
+plus `damodaran_fcff` and `dcf_exit_multiple_nwc` take opco to eleven — the
+driver-disclosing sources the first measure asked for.
 
-**Two axes, not one.** A concept can be expressible in the core language, in a
-pack contract, or both — and a case on native streams is a choice, not a
+**Exercised is not the same as validated.** One caveat stands:
+`storage_arbitrage` is declared by `solar_ppa_microgrid`, but that case
+reconciles the reduced-form arbitrage margin against convention, not against
+a dispatch model — the chronology comparison §7.75 requires does not exist,
+so energy's *validated* count stays **9 / 10** until it does. Read strictly,
+cases whose references are independently recreated conventions
+(`office_two_tenant`, `retail_strip`, `solar_ppa_microgrid`) sit a step
+below a published third-party model; each CASE.md states which kind it is.
+
+**Two axes, not one.** A concept can be expressible in the core language, in
+a pack contract, or both — and a case on native streams is a choice, not a
 coverage failure. `one_lincoln_street` exists in both spellings, and the pair
 is the assertion. `tax_equity_flip` uses no streams and no contracts at all —
-declared state and an event, with the model's own comments arguing why core is
-the right spelling. The penzance developments, `banker_dcf_conventions` and
-`saas_sbc_convention_fork` model natively for the same reason. A core-spelled
-case proves the LANGUAGE expresses the deal with no domain vocabulary — the
-stronger claim; the pack contract is the ergonomics layer, and this entry
-measures whether that layer is exercised, not whether it is mandatory.
+declared state and an event, with the model's own comments arguing why core
+is the right spelling. The penzance developments, `banker_dcf_conventions`
+and `saas_sbc_convention_fork` model natively for the same reason. A
+core-spelled case proves the LANGUAGE expresses the deal with no domain
+vocabulary — the stronger claim; the pack contract is the ergonomics layer,
+and this entry measures whether that layer is exercised, not whether it is
+mandatory.
 
-What remains, and it is now narrow:
+What remains, and it is narrow:
 
-- **cre:** three types unexercised. `basic_acquisition_exit_cap` closed
-  `revenue_line` and `exit_cap` together, off a stabilized property whose
-  income is stated at the property level and whose disposition is a stated NOI
-  over a stated cap rate. `lease` (non-unit grain), `percentage_rent_expected`
-  and `construction_stub` may want a new case each.
-- **energy:** the dispatch comparison that would move `storage_arbitrage` from
-  exercised to validated.
+- **cre:** three types unexercised. `lease` (non-unit grain),
+  `percentage_rent_expected` and `construction_stub` may want a new case
+  each; `PurchaseOption` waits on the finance-lease demonstration.
+- **credit:** `participation`, closed by the pass-through case.
+- **energy:** the dispatch comparison that would move `storage_arbitrage`
+  from exercised to validated (§7.75).
 
 Recorded because coverage claims must cite this table, and the table must be
-re-measured — by scanning `contract <pack>.<type>` declarations, not `<pack>.`
-prefixes, which also match namespaced stream names — whenever cases or rosters
-change.
+re-measured — by scanning `contract <pack>.<type>` and `option … type`
+declarations, not `<pack>.` prefixes, which also match namespaced stream
+names — whenever cases or rosters change.
 
 ### 7.4 A discount rate cannot vary over time
 
@@ -1178,7 +1039,8 @@ edge on a machine in IEEE Std 762's vocabulary, and the chronology cost is
 measured at 4.8% — what carrying charge across midnight is worth, and therefore
 what a daily grain gives up. What remains is `energy.storage_dispatch` itself
 (`docs/27` §9 stage 4), which is no longer gated on a reference.
-Related: §7.1, §7.3, `docs/27` §9, `docs/30` §2.
+Related: §7.3, `docs/27` §9, `docs/30` §2. (§7.1, which first recorded
+the three ways forward, is closed; this entry carries its remainder.)
 
 ### 7.76 The account adoption pass: every pack has a reserve it could not model
 
@@ -2155,7 +2017,7 @@ key — and that `curve` should be able to name the reference it carries, the wa
 Provenance: found writing `merchant_storage_arbitrage`, whose market input is
 730 literal points that no results document can attribute. The desired shape was
 then read from `evs-platform/docs/03_registries_specification.md` rather than
-inferred. Related: §7.1, `docs/27` §4.4 (what `ref` buys), and EVS question 26.
+inferred. Related: `docs/27` §4.4 (what `ref` buys), and EVS question 26.
 
 ### 7.102 A field cannot fold a stream "since my last step"
 

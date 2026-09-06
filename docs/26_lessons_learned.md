@@ -721,3 +721,19 @@ matters.
 Ask which of the three moves applies before proposing iteration; a genuine
 simultaneous fixed point that none of them covers has not yet appeared in a
 benchmark.
+
+### A payment on an Actual basis is a recurrence, not a closed form
+
+Filed as `docs/13` §2.2 and closed 6 September 2026. An Actual
+`amortization_day_count` expands to `360 / time.days_in_period`, a
+period-local value, and the annuity `pmt(rate / divisor, n - p, 1)` applies it
+to every remaining period — January strikes a payment as if every month had
+31 days. Measured on one 1,200,000 loan at 6% with no prepayment or default,
+the "level" payment swung 460.68 across a year. The pooling that the entry
+first blamed had nothing to do with it. `E5027_ACTUAL_AMORTIZATION_BASIS`
+refuses the basis outright; the pairing a loan document states — strike on
+30/360, accrue on act/360 — compiles and is pinned. An instrument whose
+payment genuinely recomputes each period is a balance recurrence: now that
+the loan's balance is an account (`docs/42`), it is a pack rule over
+`prev.balance` and `time.days_in_period`, and nothing in the language blocks
+it. Open it again only with the document that asks for it.
