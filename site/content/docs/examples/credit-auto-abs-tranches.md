@@ -88,6 +88,19 @@ This sits on it — the same place `auto_abs_wal` lands on the collateral. Of th
 208 cells, 205 agree within that floor: the model reproduces the issuer's own
 printed number. Every class retires on exactly the grid's date.
 
+The exhibit prints each class's weighted average life to maturity beneath its
+column. Folded from the principal each class's step pays, on the model's own
+axis, every one lands inside the print floor of 0.005:
+
+| class | life, years | published |
+|---|---:|---:|
+| A-2 | 0.3695 | 0.37 |
+| A-3 | 1.5070 | 1.51 |
+| A-4 | 2.7811 | 2.78 |
+| B | 3.3193 | 3.32 |
+| C | 3.5304 | 3.53 |
+| D | 3.8428 | 3.84 |
+
 Three cells exceed the floor, by 0.0003–0.0005 percentage points — C at
 04/15/22, D at 07/15/22 and 08/15/22. Net of rounding, the disagreement those
 cells prove is at most $74 on the $537.6m pool.
@@ -1030,6 +1043,15 @@ waterfall notes.principal on entity container.trust {
   pay d_principal to party.d_holders for contract credit.note.d line principal =
         min(remaining, container.trust.credit_note_claim_d)
 }
+
+// Each class's life, folded from the principal its step pays: the row the
+// exhibit prints beneath every decrement column, to maturity at 0% ABS.
+metric a2_wal = wal("notes.principal.a2_principal")
+metric a3_wal = wal("notes.principal.a3_principal")
+metric a4_wal = wal("notes.principal.a4_principal")
+metric b_wal = wal("notes.principal.b_principal")
+metric c_wal = wal("notes.principal.c_principal")
+metric d_wal = wal("notes.principal.d_principal")
 ```
 
 ## Run configuration
@@ -1060,3 +1082,9 @@ Summary metrics for the base run:
 | Metric | Value | Tolerance |
 |---|---:|---:|
 | `model.total` | 580,114,574.55 | ±1 |
+| `metric.a2_wal` | 0.37 | ±0.005 |
+| `metric.a3_wal` | 1.51 | ±0.005 |
+| `metric.a4_wal` | 2.78 | ±0.005 |
+| `metric.b_wal` | 3.32 | ±0.005 |
+| `metric.c_wal` | 3.53 | ±0.005 |
+| `metric.d_wal` | 3.84 | ±0.005 |

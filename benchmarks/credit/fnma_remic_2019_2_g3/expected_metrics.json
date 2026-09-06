@@ -10,5 +10,9 @@
   "domain.credit.wal_years": {
     "value": 4.7,
     "tolerance": 0.07
+  },
+  "metric.ab_wal": {
+    "value": 4.7,
+    "tolerance": 0.07
   }
 }

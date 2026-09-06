@@ -2,5 +2,29 @@
   "model.total": {
     "value": 580114574.55,
     "tolerance": 1.0
+  },
+  "metric.a2_wal": {
+    "value": 0.37,
+    "tolerance": 0.005
+  },
+  "metric.a3_wal": {
+    "value": 1.51,
+    "tolerance": 0.005
+  },
+  "metric.a4_wal": {
+    "value": 2.78,
+    "tolerance": 0.005
+  },
+  "metric.b_wal": {
+    "value": 3.32,
+    "tolerance": 0.005
+  },
+  "metric.c_wal": {
+    "value": 3.53,
+    "tolerance": 0.005
+  },
+  "metric.d_wal": {
+    "value": 3.84,
+    "tolerance": 0.005
   }
 }

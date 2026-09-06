@@ -1438,7 +1438,7 @@ A model MAY declare a metric — a figure it solved for that neither the engine
 nor a pack mints:
 
 ```cfdl
-metric class_a_wal   = series_sum("credit.class_a.principal", 0, 59) / 12.0
+metric class_a_wal   = wal("notes.principal.class_a")
 metric crossover     = metric.class_a_wal - inputs.expected_wal
 ```
 
@@ -1732,6 +1732,10 @@ The expression environment MUST support:
 - `obs.<name>` — externally supplied observable values (provided via
   run-config parameters with the `obs.` key prefix)
 - `curve_value(<name>, <date>)` — lookup into a declared `curve`
+- `wal(<series>[, <from>, <to>])` — the weighted average life of what a
+  published series paid, in years on the axis `model.wal_years` uses
+  (`docs/12` §3): each period's amount at its placement, over the total.
+  Null when nothing was paid — a life of nothing is not zero years.
 - `quantile_at(<name>, <share>)`, `quantile_mean(<name>, <from>, <to>)`,
   `quantile_of(<name>, <value>)` — lookups into a declared `quantile`
 - `ref.<name>` is reserved for ontology references (not in the v0.1 dialect)

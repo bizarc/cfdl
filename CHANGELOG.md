@@ -8,6 +8,16 @@ This project follows Semantic Versioning: https://semver.org/
 
 ## [Unreleased]
 
+**`wal(<series>[, from, to])`: the life of what a series paid.** A fold for
+the metric plane returning years on the axis `model.wal_years` uses — each
+period's amount at its own placement, over the total — and null when
+nothing was paid. A class's weighted average life is now one line over the
+principal its waterfall step pays: the seven Fannie Mae 2019-2 cases assert
+Class AB's published life per speed, and `auto_abs_tranches` asserts all
+six classes to maturity inside the exhibit's print floor. Closes backlog
+7.22 and 7.114 and the first bullet of Intex parity item 7; the settlement
+axis (7.26) is the next piece (backlog 38).
+
 **A reserved word is a name where the grammar admits one.** `use =
 "office"`, the grammar file's own example of a field, compiles: an entity,
 a field, an assumption, a phase, a curve, a quantile, a slice, a statement,

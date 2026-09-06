@@ -4,7 +4,7 @@
 
 CFDL 0.9.0. Every model below compiles, and its IR and
 results are byte-asserted against goldens in CI (`fixtures/valid/`,
-166 models.
+167 models.
 
 `gold/ir/`, `gold/results/`). Each is single-purpose: the directory name
 says what it exercises. This is what right looks like — positive few-shot
@@ -3190,6 +3190,41 @@ metric agree       = metric.bare - metric.qualified
 // hand to it: the entity rollup and the model's own net cash flow.
 metric entity_cash = series_sum("entity.asset.proj.net_cash_flow", 0, 2)
 metric model_cash  = series_sum("model.net_cash_flow", 0, 2)
+```
+
+## metric_wal
+
+```cfdl
+version 0.1
+model "metric-wal"
+time calendar monthly from 2026-01 for 12
+
+// `wal(<series>)`: the weighted average life of what a series paid, in years
+// on the axis every time-weighted metric shares (docs/12 §3). A bullet's life
+// is its term; an ordinary annuity's first collection falls at one period,
+// not zero; a series that paid nothing has no life, published as null.
+
+entity asset loan { name = "Loan" }
+
+stream loan.bullet on entity asset.loan inflow currency USD {
+  schedule on 2026-12
+  amount = 100000
+}
+
+stream loan.level on entity asset.loan inflow currency USD {
+  schedule every month from 2026-01 to 2026-12
+  amount = 1000
+}
+
+stream loan.nothing on entity asset.loan inflow currency USD {
+  schedule every month from 2026-01 to 2026-12
+  amount = 0
+}
+
+metric bullet_life = wal("loan.bullet")
+metric level_life = wal("loan.level")
+metric first_half_life = wal("loan.level", 0, 5)
+metric nothing_life = wal("loan.nothing")
 ```
 
 ## minimal_model

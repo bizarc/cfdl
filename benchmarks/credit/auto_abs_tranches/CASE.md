@@ -72,6 +72,19 @@ This sits on it — the same place `auto_abs_wal` lands on the collateral. Of th
 208 cells, 205 agree within that floor: the model reproduces the issuer's own
 printed number. Every class retires on exactly the grid's date.
 
+The exhibit prints each class's weighted average life to maturity beneath its
+column. Folded from the principal each class's step pays, on the model's own
+axis, every one lands inside the print floor of 0.005:
+
+| class | life, years | published |
+|---|---:|---:|
+| A-2 | 0.3695 | 0.37 |
+| A-3 | 1.5070 | 1.51 |
+| A-4 | 2.7811 | 2.78 |
+| B | 3.3193 | 3.32 |
+| C | 3.5304 | 3.53 |
+| D | 3.8428 | 3.84 |
+
 Three cells exceed the floor, by 0.0003–0.0005 percentage points — C at
 04/15/22, D at 07/15/22 and 08/15/22. Net of rounding, the disagreement those
 cells prove is at most $74 on the $537.6m pool.
