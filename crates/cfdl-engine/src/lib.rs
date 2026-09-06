@@ -20,7 +20,7 @@ use std::sync::Arc;
 //                  period's candidates, the machine moves, the column settles;
 //                  `prev` reads what settled
 //   occurrence     what happens: events (each occurrence) and options (an
-//                  election, at most once), stepped inside the state walk
+//                  election, as often as it allows), stepped inside the state walk
 //                  after the machine and writing through its stores (one value per path)
 //   streams        stage 3 — activity, in two phases
 //   accounts       the balance plane: openings, movements by side, the

@@ -1895,6 +1895,33 @@ fn strip_prev_accounts(src: &str, accounts: &BTreeMap<String, DeclaredAccount>) 
 /// same model expressed it correctly the moment the pack was dropped.
 ///
 /// Here both kinds are in hand. A misspelling still matches nothing, which is
+/// Every declaration that carries actions — an event's block, an option's
+/// body — as (label, actions, span, file). One vocabulary, two hosts, so a
+/// check written for events reads an option's actions the same way.
+fn action_hosts(
+    resolve_output: &cfdl_resolver::ResolveOutput,
+) -> Vec<(String, &[cfdl_parser::EventAction], cfdl_parser::Span, &str)> {
+    resolve_output
+        .source_statements
+        .iter()
+        .filter_map(|s| match &s.statement {
+            Stmt::Event(event) => Some((
+                format!("Event '{}'", event.name),
+                event.actions.as_slice(),
+                event.span,
+                s.file.as_str(),
+            )),
+            Stmt::Option(option) if !option.actions.is_empty() => Some((
+                format!("Option '{}'", option.name),
+                option.actions.as_slice(),
+                option.span,
+                s.file.as_str(),
+            )),
+            _ => None,
+        })
+        .collect()
+}
+
 /// what E1302 exists to catch (`docs/08`).
 fn check_event_stream_targets(
     resolve_output: &cfdl_resolver::ResolveOutput,
@@ -1908,11 +1935,8 @@ fn check_event_stream_targets(
         .collect();
 
     let mut diagnostics: Vec<Diagnostic> = Vec::new();
-    for source_stmt in &resolve_output.source_statements {
-        let Stmt::Event(event) = &source_stmt.statement else {
-            continue;
-        };
-        for action in &event.actions {
+    for (label, actions, span, file) in action_hosts(resolve_output) {
+        for action in actions {
             let name = match action {
                 cfdl_parser::EventAction::ActivateStream(name)
                 | cfdl_parser::EventAction::DeactivateStream(name) => name,
@@ -1926,9 +1950,9 @@ fn check_event_stream_targets(
             diagnostics.push(Diagnostic {
                 code: "E1302_UNRESOLVED_STREAM_REF".to_string(),
                 severity: "error".to_string(),
-                message: format!("Event '{}' references unknown stream '{name}'.", event.name),
-                file: Some(source_stmt.file.clone()),
-                span: Some(map_span(event.span)),
+                message: format!("{label} references unknown stream '{name}'."),
+                file: Some(file.to_string()),
+                span: Some(map_span(span)),
                 path: None,
                 hint: Some(if names.is_empty() {
                     "The model declares no streams, and no contract lowered any.".to_string()
@@ -2510,11 +2534,8 @@ fn check_status_writes(
     machines_by_entity: &BTreeMap<String, String>,
 ) -> Result<(), Vec<Diagnostic>> {
     let mut diagnostics: Vec<Diagnostic> = Vec::new();
-    for source_stmt in &resolve_output.source_statements {
-        let Stmt::Event(event) = &source_stmt.statement else {
-            continue;
-        };
-        for action in &event.actions {
+    for (label, actions, span, file) in action_hosts(resolve_output) {
+        for action in actions {
             let cfdl_parser::EventAction::SetEntityField {
                 entity,
                 field,
@@ -2547,11 +2568,11 @@ fn check_status_writes(
                     code: "E1316_UNKNOWN_LIFECYCLE_STATE".to_string(),
                     severity: "error".to_string(),
                     message: format!(
-                        "Event '{}' sets '{entity}.status' to '{target}', which lifecycle '{}' does not declare.",
-                        event.name, machine.id
+                        "{label} sets '{entity}.status' to '{target}', which lifecycle '{}' does not declare.",
+                        machine.id
                     ),
-                    file: Some(source_stmt.file.clone()),
-                    span: Some(map_span(event.span)),
+                    file: Some(file.to_string()),
+                    span: Some(map_span(span)),
                     path: None,
                     hint: Some(format!("Declared states: {}.", machine.states.join(", "))),
                     notes: vec![],
@@ -2563,11 +2584,11 @@ fn check_status_writes(
                     code: "E1353_UNREACHABLE_STATE_WRITE".to_string(),
                     severity: "error".to_string(),
                     message: format!(
-                        "Event '{}' sets '{entity}.status' to '{target}', but no edge of lifecycle '{}' enters that state — the write can never be legal.",
-                        event.name, machine.id
+                        "{label} sets '{entity}.status' to '{target}', but no edge of lifecycle '{}' enters that state — the write can never be legal.",
+                        machine.id
                     ),
-                    file: Some(source_stmt.file.clone()),
-                    span: Some(map_span(event.span)),
+                    file: Some(file.to_string()),
+                    span: Some(map_span(span)),
                     path: None,
                     hint: Some(
                         "Declare the edge — declaring it is what brings the move into existence — or drop the write."
@@ -3815,11 +3836,8 @@ fn check_exercise_targets(
         .collect();
 
     let mut diagnostics: Vec<Diagnostic> = Vec::new();
-    for source_stmt in &resolve_output.source_statements {
-        let Stmt::Event(event) = &source_stmt.statement else {
-            continue;
-        };
-        for action in &event.actions {
+    for (label, actions, span, file) in action_hosts(resolve_output) {
+        for action in actions {
             let cfdl_parser::EventAction::ExerciseOption(name) = action else {
                 continue;
             };
@@ -3829,9 +3847,9 @@ fn check_exercise_targets(
                 diagnostics.push(Diagnostic {
                     code: "E1304_UNRESOLVED_OPTION_REF".to_string(),
                     severity: "error".to_string(),
-                    message: format!("Event '{}' exercises unknown option '{name}'.", event.name),
-                    file: Some(source_stmt.file.clone()),
-                    span: Some(map_span(event.span)),
+                    message: format!("{label} exercises unknown option '{name}'."),
+                    file: Some(file.to_string()),
+                    span: Some(map_span(span)),
                     path: None,
                     hint: Some(if known.is_empty() {
                         "The model declares no options.".to_string()
@@ -5231,6 +5249,18 @@ fn build_ir(
         return Err(diagnostics);
     }
 
+    let option_accounts: BTreeMap<String, DeclaredAccount> = declared_accounts_of(resolve_output)
+        .into_iter()
+        .chain(lowered.accounts.iter().map(|a| {
+            (
+                a.name.clone(),
+                DeclaredAccount {
+                    side: a.side.clone(),
+                    fold: a.fold,
+                },
+            )
+        }))
+        .collect();
     let (ir_events, ir_options, event_diags) = lower_events_options(
         resolve_output,
         &id_seed,
@@ -5238,6 +5268,7 @@ fn build_ir(
         &time_start,
         &timeline_end,
         &phase_map,
+        &option_accounts,
     );
     if !event_diags.is_empty() {
         let mut diagnostics = event_diags;
@@ -8605,6 +8636,58 @@ type EventOptionMaps = (
     Vec<Diagnostic>,
 );
 
+/// Lower an action list to IR `Action` nodes. `value` rewrites a `set`
+/// value's source before it is compiled — an option splices its terms and
+/// its owner's account reads; an event passes it through. `None` when a
+/// value failed to compile, which the caller treats as the host failing.
+fn lower_actions(
+    actions: &[cfdl_parser::EventAction],
+    value: impl Fn(&str) -> String,
+    diags: &mut Vec<Diagnostic>,
+    diag: &dyn Fn(&str, String) -> Diagnostic,
+) -> Option<Vec<serde_json::Value>> {
+    use cfdl_parser::EventAction as A;
+    let mut out = Vec::new();
+    let mut bad = false;
+    for action in actions {
+        let node = match action {
+            A::SetEntityField {
+                entity,
+                field,
+                value: raw,
+            } => {
+                let src = value(raw);
+                if let Err(err) = cfdl_expr::compile_expr(&src) {
+                    diags.push(diag(&err.code, err.message));
+                    bad = true;
+                    continue;
+                }
+                serde_json::json!({
+                    "kind": "SetEntityField",
+                    "entity": { "symbol": entity },
+                    "field": field,
+                    "value": { "lang": "cfdl", "src": src },
+                })
+            }
+            A::ActivateStream(name) => {
+                serde_json::json!({ "kind": "ActivateStream", "stream": name })
+            }
+            A::DeactivateStream(name) => {
+                serde_json::json!({ "kind": "DeactivateStream", "stream": name })
+            }
+            A::ExerciseOption(name) => {
+                serde_json::json!({ "kind": "ExerciseOption", "option": name })
+            }
+        };
+        out.push(node);
+    }
+    if bad {
+        None
+    } else {
+        Some(out)
+    }
+}
+
 /// Lower event/option statements into IR per $defs Event / Option / Action.
 fn lower_events_options(
     resolve_output: &cfdl_resolver::ResolveOutput,
@@ -8613,6 +8696,10 @@ fn lower_events_options(
     time_start: &str,
     timeline_end: &str,
     phase_map: &BTreeMap<String, (String, String)>,
+    // Every account a claim could be read from — declared, and opened by a
+    // pack's contracts — so an option's `prev.balance` resolves to its
+    // owner's the way a stream's does.
+    accounts: &BTreeMap<String, DeclaredAccount>,
 ) -> EventOptionMaps {
     let mut events = Vec::new();
     let mut options = Vec::new();
@@ -8657,43 +8744,11 @@ fn lower_events_options(
                     },
                     None => None,
                 };
-                let mut actions = Vec::new();
-                let mut bad = false;
-                for action in &event.actions {
-                    use cfdl_parser::EventAction as A;
-                    let value = match action {
-                        A::SetEntityField {
-                            entity,
-                            field,
-                            value,
-                        } => {
-                            if let Err(err) = cfdl_expr::compile_expr(value) {
-                                diags.push(diag(&err.code, err.message));
-                                bad = true;
-                                continue;
-                            }
-                            serde_json::json!({
-                                "kind": "SetEntityField",
-                                "entity": { "symbol": entity },
-                                "field": field,
-                                "value": { "lang": "cfdl", "src": value },
-                            })
-                        }
-                        A::ActivateStream(name) => {
-                            serde_json::json!({ "kind": "ActivateStream", "stream": name })
-                        }
-                        A::DeactivateStream(name) => {
-                            serde_json::json!({ "kind": "DeactivateStream", "stream": name })
-                        }
-                        A::ExerciseOption(name) => {
-                            serde_json::json!({ "kind": "ExerciseOption", "option": name })
-                        }
-                    };
-                    actions.push(value);
-                }
-                if bad {
+                let Some(actions) =
+                    lower_actions(&event.actions, |src| src.to_string(), &mut diags, &diag)
+                else {
                     continue;
-                }
+                };
                 let stable = stable_key(&source_stmt.file, &event.name);
                 let mut node = serde_json::json!({
                     "id": deterministic_id("Event", &stable, id_seed),
@@ -8776,8 +8831,27 @@ fn lower_events_options(
                 for (key, term) in &option.terms {
                     term_values.insert(key.as_str(), term.value.as_str());
                 }
-                let exercise_when = substitute_contract_terms(exercise_when, &term_values);
-                let payoff = substitute_contract_terms(payoff, &term_values);
+                // An option is a contract with an election, so it carries the
+                // same two things every contract does: what it is written on,
+                // and who it is between. Without an owner its payoff belonged
+                // to no entity and fell out of every per-entity total. Written
+                // on a contract, its owner is the contract's entity.
+                let owner = option
+                    .subject_entity
+                    .clone()
+                    .or_else(|| subject_contract.and_then(|c| c.subject_entity.clone()));
+                // `prev.balance` in an option written on a loan is the loan's
+                // claim (`docs/42` §3.3), spelled out for the engine as
+                // `prev.<owner>.balance` — the rewrite every stream gets.
+                let rewrite = |src: &str| -> String {
+                    let spliced = substitute_contract_terms(src, &term_values);
+                    match owner.as_deref() {
+                        Some(owner) => rewrite_prev_accounts(&spliced, owner, accounts),
+                        None => spliced,
+                    }
+                };
+                let exercise_when = rewrite(exercise_when);
+                let payoff = rewrite(payoff);
                 let mut bad = false;
                 for src in [&exercise_when, &payoff] {
                     if let Err(err) = cfdl_expr::compile_expr(src) {
@@ -8788,6 +8862,31 @@ fn lower_events_options(
                 if bad {
                     continue;
                 }
+                // What the exercise does, through the vocabulary an event
+                // uses; a `set` value reads the option's terms and claims the
+                // way the election does.
+                let Some(actions) = lower_actions(&option.actions, rewrite, &mut diags, &diag)
+                else {
+                    continue;
+                };
+                // The occasions the election is tested at, lowered through the
+                // same path a stream's and an event's schedule take.
+                let schedule = match option.schedule.as_ref() {
+                    Some(spec) => match lower_schedule(
+                        Some(spec),
+                        time_calendar,
+                        time_start,
+                        timeline_end,
+                        phase_map,
+                    ) {
+                        Ok(sched) => Some(sched),
+                        Err(msg) => {
+                            diags.push(diag("E5005_PHASE_NOT_FOUND", msg));
+                            continue;
+                        }
+                    },
+                    None => None,
+                };
                 let stable = stable_key(&source_stmt.file, &option.name);
                 let mut obj = serde_json::json!({
                     "id": deterministic_id("Option", &stable, id_seed),
@@ -8800,17 +8899,17 @@ fn lower_events_options(
                         "source_span": map_span(option.span),
                     },
                 });
-                // An option is a contract with an election, so it carries the
-                // same two things every contract does: what it is written on,
-                // and who it is between. Without an owner its payoff belonged
-                // to no entity and fell out of every per-entity total. Written
-                // on a contract, its owner is the contract's entity.
-                let owner = option
-                    .subject_entity
-                    .clone()
-                    .or_else(|| subject_contract.and_then(|c| c.subject_entity.clone()));
-                if let Some(subject) = owner {
+                if let Some(subject) = &owner {
                     obj["owner"] = serde_json::json!({ "symbol": subject });
+                }
+                if let Some(sched) = schedule {
+                    obj["schedule"] = serde_json::to_value(sched).expect("schedule serializes");
+                }
+                if let Some(count) = option.exercises {
+                    obj["exercises"] = serde_json::json!(count);
+                }
+                if !actions.is_empty() {
+                    obj["actions"] = serde_json::Value::Array(actions);
                 }
                 if let Some(contract) = subject_contract {
                     obj["contract"] = serde_json::json!(contract.name);

@@ -69,6 +69,11 @@ pub(crate) fn refuse_series_reads_in_logic(ir: &Ir) -> Result<(), EngineError> {
             &option.payoff.src,
             format!("option '{}' payoff", option.name),
         );
+        for action in &option.actions {
+            if let Some(value) = &action.value {
+                check(&value.src, format!("option '{}' action value", option.name));
+            }
+        }
     }
 
     if offences.is_empty() {

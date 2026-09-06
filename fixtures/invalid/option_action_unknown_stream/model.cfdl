@@ -1,0 +1,19 @@
+version 0.1
+model "option-action-unknown-stream"
+time calendar annual from 2026-01 for 3
+
+// An option's actions are checked as an event's are: a stream nothing
+// declares and no contract lowered is refused, not silently skipped.
+
+entity asset loan : Asset.Financial
+
+option reset on entity asset.loan type Option.Refinance {
+  exercise when time.t >= 1
+  payoff 0
+  deactivate stream loan.servicng
+}
+
+stream loan.servicing on entity asset.loan outflow currency USD {
+  schedule every year from 2026-01 to 2028-01
+  amount = 250
+}

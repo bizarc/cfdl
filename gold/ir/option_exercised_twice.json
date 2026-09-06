@@ -1,0 +1,127 @@
+{
+  "ir_version": "0.1",
+  "model": {
+    "name": "option-exercised-twice",
+    "currency": "USD"
+  },
+  "time": {
+    "calendar": "annual",
+    "start": "2026-01-01",
+    "periods": 8
+  },
+  "phases": [],
+  "entities": [
+    {
+      "id": "ff342b712471e8f5c6eb90140aa565dc",
+      "symbol": "asset.bldg",
+      "type": "Asset.Real",
+      "fields": {},
+      "state": {}
+    },
+    {
+      "id": "b694a018719b8074b7896a36b16af236",
+      "symbol": "party.tenant",
+      "type": "Party",
+      "fields": {
+        "name": "Tenant"
+      },
+      "state": {}
+    }
+  ],
+  "assumptions": {
+    "constants": {},
+    "random": {}
+  },
+  "contracts": [],
+  "streams": [
+    {
+      "id": "d725c1b1d49bfb92623519f759e89e57",
+      "name": "bldg.rent",
+      "owner": {
+        "symbol": "asset.bldg"
+      },
+      "direction": "inflow",
+      "currency": "USD",
+      "schedule": {
+        "kind": "Every",
+        "every": "annual",
+        "from": "2026-01-01",
+        "to": "2033-01-01"
+      },
+      "amount": {
+        "lang": "cfdl",
+        "src": "100.0"
+      },
+      "active_when": {
+        "lang": "cfdl",
+        "src": "true"
+      },
+      "provenance": {
+        "source_file": "model.cfdl",
+        "source_span": {
+          "start_line": 25,
+          "start_col": 1,
+          "end_line": 28,
+          "end_col": 1
+        }
+      }
+    }
+  ],
+  "events": [],
+  "options": [
+    {
+      "exercise_when": {
+        "lang": "cfdl",
+        "src": "time.t == 2 or time.t == 4 or time.t == 6"
+      },
+      "exercises": 2,
+      "id": "8376ffe8a992a186197e0b3a00321b95",
+      "name": "renewal",
+      "owner": {
+        "symbol": "asset.bldg"
+      },
+      "parties": [
+        {
+          "entity": {
+            "symbol": "party.tenant"
+          },
+          "role": "holder"
+        }
+      ],
+      "payoff": {
+        "lang": "cfdl",
+        "src": "(1000)"
+      },
+      "provenance": {
+        "source_file": "model.cfdl",
+        "source_span": {
+          "end_col": 1,
+          "end_line": 21,
+          "start_col": 1,
+          "start_line": 16
+        }
+      },
+      "terms": {
+        "strike": 1000
+      },
+      "type": "Option.Renewal"
+    }
+  ],
+  "runs": [
+    {
+      "kind": "deterministic"
+    }
+  ],
+  "required_observables": [],
+  "required_refs": [],
+  "provenance": {
+    "sources": [
+      "model.cfdl"
+    ],
+    "compiler": {
+      "name": "cfdl",
+      "version": "0.9.0",
+      "hash": "6bebad0d68f4babc5c564c4ea7ecc1f2"
+    }
+  }
+}

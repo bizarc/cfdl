@@ -8,6 +8,29 @@ This project follows Semantic Versioning: https://semver.org/
 
 ## [Unreleased]
 
+**An election has a schedule, a count, and does something (stage 7,
+second part).** An exercise is now an OCCURRENCE in the event's sense
+(`docs/34` D1). A `schedule` in the option body supplies the occasions the
+election is tested at — a Bermudan right, exercisable on stated dates —
+and `exercise when` filters them; without one, an occasion is the
+election's rising edge while the option is held, so a right that stays in
+the money is not re-exercised every period, and a right whose condition
+already holds when its window opens is exercised as it opens.
+`exercisable 2 times` is how often the right may be exercised, once by
+default: a lease with two renewals is exercised twice, the payoff
+accumulates, and the journal records `exercise n of N`. The option body
+takes the event's action vocabulary — `set entity`, `activate` /
+`deactivate stream`, `exercise option` — run on each exercise through the
+same stores an event writes and checked the same way (`E1302`, the
+machine's edges); a prepayment option can now end the loan and a renewal
+extend the lease. An option's election, payoff and `set` values read its
+owner's claim as `prev.<account>`, the rewrite every stream gets. Engine:
+the event action runner is one method both hosts call. IR option carries
+`schedule`, `exercises`, `actions`. `docs/01` §13.2, §14; the grammar;
+`docs/10`; the learn quick reference. Fixtures `option_exercised_twice`,
+`option_scheduled`, `option_actions_on_exercise`, and one invalid. Every
+existing option behaves as before: 286 goldens byte-identical.
+
 **An option states its terms, and may be written on a contract (stage 7,
 first part).** An option is a contract with an election, and now carries
 what every contract carries. `terms { strike = 120.0 }` is checked against

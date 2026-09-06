@@ -1,0 +1,30 @@
+version 0.1
+model "option-exercised-twice"
+time calendar annual from 2026-01 for 8
+
+// A RIGHT EXERCISED AS OFTEN AS IT ALLOWS. A lease with two renewals is
+// exercised twice; before this every option fired at most once. Each exercise
+// is an occurrence in the event's sense: unscheduled, the election's rising
+// edge — true having been false — so a right that stays in the money is not
+// re-exercised every period.
+
+entity asset bldg : Asset.Real
+entity party tenant : Party { name = "Tenant" }
+
+// The election holds at t = 2, 4 and 6 (three edges); the right allows two,
+// so the third edge is not exercised. 2026 is t = 0.
+option renewal on entity asset.bldg type Option.Renewal exercisable 2 times {
+  parties { holder = party.tenant }
+  terms { strike = 1000 }
+  exercise when time.t == 2 or time.t == 4 or time.t == 6
+  payoff contract.strike
+}
+
+// Pays each period the election holds, however many: the control that shows
+// the rising edge is what counts, not the level.
+stream bldg.rent on entity asset.bldg inflow currency USD {
+  schedule every year from 2026-01 to 2033-01
+  amount = 100
+}
+
+run deterministic

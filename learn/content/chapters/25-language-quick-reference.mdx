@@ -128,9 +128,14 @@ event <a>.<b> when <boolean expr> {          -- fires ONCE, first true period
   exercise option <name>
 }
 
-option <a>.<b> type <Type> {
-  exercise when <boolean expr>
+option <a>.<b> [on entity <ref> | on contract <name>] type <Type>
+       [exercisable [<n> times] [in <phase>]] {
+  parties { <role> = party.<name>  ... }
+  terms { <key> = <value>  ... }             -- read as contract.<key>
+  schedule <as streams>                      -- optional; a Bermudan right
+  exercise when <boolean expr>               -- the election; rising edge
   payoff <expr>
+  set entity ... | activate stream ... | deactivate stream ...   -- on exercise
 }
 
 waterfall <a>.<b> on entity <ref> {

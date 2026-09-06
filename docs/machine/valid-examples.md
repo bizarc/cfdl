@@ -4,7 +4,7 @@
 
 CFDL 0.9.0. Every model below compiles, and its IR and
 results are byte-asserted against goldens in CI (`fixtures/valid/`,
-159 models.
+162 models.
 
 `gold/ir/`, `gold/results/`). Each is single-purpose: the directory name
 says what it exercises. This is what right looks like — positive few-shot
@@ -3564,6 +3564,50 @@ stream exit.pe_sale on entity asset.equity inflow currency USD {
 }
 ```
 
+## option_actions_on_exercise
+
+```cfdl
+version 0.1
+model "option-actions-on-exercise"
+time calendar annual from 2026-01 for 6
+
+// AN EXERCISE DOES SOMETHING. An option that could only pay cash could not
+// prepay a loan or renew a lease. The option body takes the event's action
+// vocabulary, run on exercise through the same stores an event writes and
+// visible at t+1: here a borrower's right to reset the rate — the payoff is
+// the fee, the action is the reset, and a second action stops the old
+// servicing charge.
+
+entity asset loan : Asset.Financial {
+  rate init 0.06 next prev
+}
+entity party borrower : Party { name = "Borrower" }
+
+option reset on entity asset.loan type Option.Refinance {
+  parties { holder = party.borrower }
+  terms { strike = 0.04 }
+  exercise when time.t >= 2
+  payoff -500
+  set entity asset.loan.rate = contract.strike
+  deactivate stream loan.servicing
+}
+
+// Reads the rate: 0.06 through t = 1, 0.04 from t = 2 — a stream reads the
+// state as the period closed, so a write takes effect in the period it fires
+// (docs/01 §13.1).
+stream loan.interest on entity asset.loan inflow currency USD {
+  schedule every year from 2026-01 to 2031-01
+  amount = 100000 * asset.loan.rate
+}
+
+stream loan.servicing on entity asset.loan outflow currency USD {
+  schedule every year from 2026-01 to 2031-01
+  amount = 250
+}
+
+run deterministic
+```
+
 ## option_as_contract
 
 ```cfdl
@@ -3589,6 +3633,41 @@ stream opco.revenue on entity asset.target inflow currency USD {
   category operating.revenue.recurring
   amount = 1000
 }
+```
+
+## option_exercised_twice
+
+```cfdl
+version 0.1
+model "option-exercised-twice"
+time calendar annual from 2026-01 for 8
+
+// A RIGHT EXERCISED AS OFTEN AS IT ALLOWS. A lease with two renewals is
+// exercised twice; before this every option fired at most once. Each exercise
+// is an occurrence in the event's sense: unscheduled, the election's rising
+// edge — true having been false — so a right that stays in the money is not
+// re-exercised every period.
+
+entity asset bldg : Asset.Real
+entity party tenant : Party { name = "Tenant" }
+
+// The election holds at t = 2, 4 and 6 (three edges); the right allows two,
+// so the third edge is not exercised. 2026 is t = 0.
+option renewal on entity asset.bldg type Option.Renewal exercisable 2 times {
+  parties { holder = party.tenant }
+  terms { strike = 1000 }
+  exercise when time.t == 2 or time.t == 4 or time.t == 6
+  payoff contract.strike
+}
+
+// Pays each period the election holds, however many: the control that shows
+// the rising edge is what counts, not the level.
+stream bldg.rent on entity asset.bldg inflow currency USD {
+  schedule every year from 2026-01 to 2033-01
+  amount = 100
+}
+
+run deterministic
 ```
 
 ## option_on_contract
@@ -3669,6 +3748,41 @@ stream plant.revenue on entity asset.plant inflow currency USD {
   schedule every year from 2026-01 to 2029-01
   amount = 10
 }
+```
+
+## option_scheduled
+
+```cfdl
+version 0.1
+model "option-scheduled"
+time calendar annual from 2026-01 for 6
+
+// A BERMUDAN RIGHT: exercisable on stated dates. The schedule SUPPLIES the
+// occasions and `exercise when` FILTERS them, exactly as an event's schedule
+// and `when` do. The book value crosses the strike in 2027 (t = 1), but the
+// right may only be exercised at the yearly tests from 2028 — so it is
+// exercised at t = 2, once, and the later tests find it spent.
+
+entity asset plant : Asset.Real {
+  book_value init 100.0
+             next prev * 1.10
+}
+entity party holder : Party { name = "Holder" }
+
+option call on entity asset.plant type Option.Call {
+  parties { holder = party.holder }
+  terms { strike = 105.0 }
+  schedule every year from 2028-01 to 2031-01
+  exercise when asset.plant.book_value > contract.strike
+  payoff asset.plant.book_value - contract.strike
+}
+
+stream plant.revenue on entity asset.plant inflow currency USD {
+  schedule every year from 2026-01 to 2031-01
+  amount = 10
+}
+
+run deterministic
 ```
 
 ## option_with_terms

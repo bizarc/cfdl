@@ -168,6 +168,16 @@ pub(crate) struct IrOption {
     pub(crate) payoff: IrExpr,
     #[serde(default)]
     pub(crate) exercisable_in_phase: Option<String>,
+    /// The occasions the election is tested at. Absent means the election's
+    /// own rising edges, while the option is held, supply them.
+    #[serde(default)]
+    pub(crate) schedule: Option<IrSchedule>,
+    /// How many times the right may be exercised. Absent means once.
+    #[serde(default)]
+    pub(crate) exercises: Option<u32>,
+    /// What the exercise does beyond paying, in the event's vocabulary.
+    #[serde(default)]
+    pub(crate) actions: Vec<IrAction>,
     /// The asset the option is written on. An option is a contract, so it has
     /// one; with it, `entity.<field>` in a guard means the same thing it means
     /// in a stream.
