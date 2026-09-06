@@ -98,7 +98,7 @@ they validated the engine, not the domain logic. That circularity is broken:
 | energy | **10 / 10** (see caveat) | — |
 | credit | 3 / 4 | `participation` |
 | cre | 11 / 14 | `lease`, `percentage_rent_expected`, `construction_stub` |
-| opco | **11 / 11** | — |
+| opco | **12 / 12** | — |
 
 The rosters have moved since the previous measure (2026-08-30, 44 cases):
 credit's three pool types collapsed into one `loan` and gained `note` and
@@ -121,7 +121,8 @@ spine through the pack (`lease_unit`, `rollover`, `vacancy_loss`,
 `construction_loan` against the native twin, `float_bridge_pool` and
 `io_bullet_loan` (now `credit.loan` with the master's `amortization` term)
 close the loan, the auto ABS pilot's classes are `note`s, and `lbo_buyout`
-plus `damodaran_fcff` and `dcf_exit_multiple_nwc` take opco to eleven — the
+plus `damodaran_fcff` (now on `opco.reinvestment`, the derived line) and
+`dcf_exit_multiple_nwc` take opco to twelve — the
 driver-disclosing sources the first measure asked for.
 
 **Exercised is not the same as validated.** One caveat stands:
@@ -158,33 +159,6 @@ Recorded because coverage claims must cite this table, and the table must be
 re-measured — by scanning `contract <pack>.<type>` and `option … type`
 declarations, not `<pack>.` prefixes, which also match namespaced stream
 names — whenever cases or rosters change.
-
-### 7.9 `opco.capex_line` cannot express a derived line
-
-Found closing 5.1 against `benchmarks/opco/damodaran_fcff`, and worth separating
-because the old drift table made it look like the same defect it is not.
-
-Reinvestment is **derived** from another line: `revenue(t) * g(t+1) /
-sales_to_capital`. It funds *next* year's growth, so its own growth factor is
-`(1 + g_t) * g_{t+1} / g_t`, which leads the revenue growth path by one year:
-
-| | yr 5 | yr 6 | yr 7 | yr 8 | yr 9 | yr 10 |
-|---|---|---|---|---|---|---|
-| reinvestment grows | 3.24% | 3.12% | 3.01% | 2.89% | 2.78% | 4.58% |
-| revenue grows | 5.00% | 4.92% | 4.83% | 4.75% | 4.66% | 4.58% |
-
-`opco.capex_line` is a self-growing line — a base times a rate path — so it
-cannot express a quantity defined by another line's growth. No recurrence fixes
-this; it is a contract shape gap. The benchmark therefore asserts reinvestment
-for years 1–4 only, which is honest rather than fitted: deriving a
-reinvestment-ratio curve by hand would pass and would hide the gap, exactly as a
-cumulative-index curve would have hidden 5.1.
-
-Shape: a reinvestment contract taking a revenue reference, a growth curve and a
-sales-to-capital ratio, reading revenue through `series_sum` as
-`opco.working_capital_policy` already does. That also makes the FCFF identity
-(`EBIT(1-t) − reinvestment`) expressible from drivers rather than from a
-hand-computed base.
 
 ### 7.13 District energy has no usable reference model
 

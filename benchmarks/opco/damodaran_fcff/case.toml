@@ -14,23 +14,20 @@
 # WHAT IS ASSERTED.
 #
 #   revenue / opex / taxes    years 1-10   exact
-#   reinvestment              years 1-4    exact
+#   reinvestment              years 1-10   exact
+#   model.npv                 the PV of the ten years of FCFF along the
+#                             converging cost of capital, cell B20
 #
 # The growth and tax curves carry a PER-PERIOD rate. The rules compound it
 # through a declared state (docs/14_state_and_recurrence.md), so the factor is
-# the running product of each period's rate rather than pow(1 + g, t) — which
-# applies one period's rate as though it had held from the start and drifted
-# -2.4% on revenue by year 10. That drift is now zero and the blanks are gone.
+# the running product of each period's rate rather than pow(1 + g, t).
 #
-# REINVESTMENT STILL STOPS AT YEAR 4, for an unrelated reason. It is a derived
-# line — revenue(t) * g(t+1) / sales_to_capital — so it grows at
-# (1 + g_t) * g_{t+1}/g_t, leading the growth path by a year. opco.capex_line is
-# a self-growing line and cannot express a quantity defined by another line's
-# growth. A contract shape gap, not a compounding one; see NOTES.md.
+# Reinvestment is a DERIVED line — revenue(t) * g(t+1) / sales_to_capital —
+# and opco.reinvestment states it that way: the model reads next year's growth
+# with edate and the rule applies it to this year's modeled revenue.
 #
-# NOT ASSERTED: value, NPV, per-share price. The run discounts along the
-# converging cost of capital, but reinvestment drifts from year five (docs/13
-# §7.9), so the ten-year PV is not the workbook's yet. See NOTES.md.
+# NOT ASSERTED: enterprise value and the per-share price, which need the
+# terminal value and the balance-sheet bridge besides. See NOTES.md.
 #
 # period_tolerance = 0.001 — the published figures carry four decimals and the
 # engine agrees to 1e-6 everywhere it is asserted.

@@ -4,7 +4,7 @@
 
 CFDL 0.9.0. Every model below compiles, and its IR and
 results are byte-asserted against goldens in CI (`fixtures/valid/`,
-164 models.
+165 models.
 
 `gold/ir/`, `gold/results/`). Each is single-purpose: the directory name
 says what it exercises. This is what right looks like — positive few-shot
@@ -3622,6 +3622,43 @@ stream opex.working_capital on entity asset.firm outflow currency USD {
 stream exit.pe_sale on entity asset.equity inflow currency USD {
   schedule on 2030-12
   amount = 36300000
+}
+```
+
+## opco_reinvestment
+
+```cfdl
+version 0.1
+model "opco-reinvestment"
+use pack "opco" version "0.1.0"
+time calendar annual from 2026-01 for 3
+
+// Growth read a year ahead: reinvestment funds next year's growth, so the
+// curve carries one point past the horizon.
+curve growth to 2029-12 {
+  2026-01: 0.10
+  2027-01: 0.08
+  2028-01: 0.06
+  2029-01: 0.04
+}
+
+entity asset firm : OpCo.Asset.Enterprise
+
+contract opco.revenue_line.core on entity asset.firm {
+  term 2026-01..2028-01
+  terms {
+    amount = 1000
+    growth_rate = curve_value("growth", time.date)
+  }
+}
+
+// 1000 * 0.08 / 2 = 40 in the first year: this year's revenue, next year's growth.
+contract opco.reinvestment.growth on entity asset.firm {
+  term 2026-01..2028-01
+  terms {
+    growth_rate = curve_value("growth", edate(time.date, 12))
+    sales_to_capital = 2.0
+  }
 }
 ```
 

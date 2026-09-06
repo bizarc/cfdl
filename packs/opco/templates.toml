@@ -73,6 +73,25 @@ amount = "0"
 growth_rate = "0.03"
 pct_of_revenue = "0"
 
+[[templates]]
+id = "opco.reinvestment.growth"
+label = "Reinvestment — revenue times growth over sales-to-capital"
+kind = "contract"
+body = """
+contract opco.reinvestment.growth {
+  term ${term_start}..${term_end}
+  terms {
+    growth_rate = ${growth_rate}
+    sales_to_capital = ${sales_to_capital}
+  }
+}
+"""
+[templates.defaults]
+term_start = "2026-01"
+term_end = "2031-12"
+growth_rate = "0.05"
+sales_to_capital = "1.5"
+
 # --- instruments ------------------------------------------------------------
 
 [[templates]]

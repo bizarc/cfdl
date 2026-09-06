@@ -1,0 +1,486 @@
+{
+  "results_version": "0.14",
+  "model_hash": "a8092c4a4b1255e5317ce6a4ed251a202983fd668147f93f57b076cee695e22e",
+  "ledger_hash": "c62cbfd7a48f729d683d80a62f5ef021623e81f953451e8a02c330ac29b339f9",
+  "engine": {
+    "name": "cfdl-engine",
+    "version": "0.9.0"
+  },
+  "warnings": [],
+  "inputs": {
+    "streams": [
+      {
+        "contract": "opco.revenue_line.core",
+        "defaults_applied": [
+          "amount_year"
+        ],
+        "stream": "opco.revenue.recurring.core",
+        "terms": {
+          "amount": "1000",
+          "amount_year": "0",
+          "growth_rate": "curve_value(\"growth\", time.date)"
+        }
+      },
+      {
+        "contract": "opco.reinvestment.growth",
+        "stream": "opco.capex.reinvestment.growth",
+        "terms": {
+          "growth_rate": "curve_value(\"growth\", edate(time.date, 12))",
+          "sales_to_capital": "2.0"
+        }
+      }
+    ]
+  },
+  "deterministic": {
+    "status": "ok",
+    "metrics": {
+      "entity.asset.firm.total": {
+        "amount": 3129.504,
+        "currency": "USD"
+      },
+      "model.npv": {
+        "amount": 2581.415477,
+        "currency": "USD"
+      },
+      "model.total": {
+        "amount": 3129.504,
+        "currency": "USD"
+      },
+      "model.wal_years": 2.051735,
+      "run.annual_discount_rate": 0.1,
+      "run.periods_per_year": 1.0,
+      "stream.opco.capex.reinvestment.growth.total": {
+        "amount": -95.296,
+        "currency": "USD"
+      },
+      "stream.opco.revenue.recurring.core.total": {
+        "amount": 3224.8,
+        "currency": "USD"
+      }
+    },
+    "series": {
+      "asset.firm.opco_revenue_growth_core": {
+        "index": {
+          "calendar": "annual",
+          "start": "2026-01-01",
+          "periods": 3
+        },
+        "values": [
+          1.0,
+          1.08,
+          1.1448
+        ]
+      },
+      "domain.opco.cfads": {
+        "index": {
+          "calendar": "annual",
+          "start": "2026-01-01",
+          "periods": 3
+        },
+        "values": [
+          {
+            "amount": 960.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 1047.6,
+            "currency": "USD"
+          },
+          {
+            "amount": 1121.904,
+            "currency": "USD"
+          }
+        ]
+      },
+      "domain.opco.debt_service_coverage": {
+        "index": {
+          "calendar": "annual",
+          "start": "2026-01-01",
+          "periods": 3
+        },
+        "values": [
+          null,
+          null,
+          null
+        ]
+      },
+      "domain.opco.debt_service_periodic": {
+        "index": {
+          "calendar": "annual",
+          "start": "2026-01-01",
+          "periods": 3
+        },
+        "values": [
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          }
+        ]
+      },
+      "domain.opco.ebitda_periodic": {
+        "index": {
+          "calendar": "annual",
+          "start": "2026-01-01",
+          "periods": 3
+        },
+        "values": [
+          {
+            "amount": 1000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 1080.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 1144.8,
+            "currency": "USD"
+          }
+        ]
+      },
+      "domain.opco.lfcf_periodic": {
+        "index": {
+          "calendar": "annual",
+          "start": "2026-01-01",
+          "periods": 3
+        },
+        "values": [
+          {
+            "amount": 960.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 1047.6,
+            "currency": "USD"
+          },
+          {
+            "amount": 1121.904,
+            "currency": "USD"
+          }
+        ]
+      },
+      "domain.opco.net_cash_from_financing": {
+        "index": {
+          "calendar": "annual",
+          "start": "2026-01-01",
+          "periods": 3
+        },
+        "values": [
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          }
+        ]
+      },
+      "domain.opco.net_cash_from_investing": {
+        "index": {
+          "calendar": "annual",
+          "start": "2026-01-01",
+          "periods": 3
+        },
+        "values": [
+          {
+            "amount": -40.0,
+            "currency": "USD"
+          },
+          {
+            "amount": -32.4,
+            "currency": "USD"
+          },
+          {
+            "amount": -22.896,
+            "currency": "USD"
+          }
+        ]
+      },
+      "domain.opco.net_cash_from_operations": {
+        "index": {
+          "calendar": "annual",
+          "start": "2026-01-01",
+          "periods": 3
+        },
+        "values": [
+          {
+            "amount": 1000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 1080.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 1144.8,
+            "currency": "USD"
+          }
+        ]
+      },
+      "domain.opco.opex_periodic": {
+        "index": {
+          "calendar": "annual",
+          "start": "2026-01-01",
+          "periods": 3
+        },
+        "values": [
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          }
+        ]
+      },
+      "domain.opco.revenue_periodic": {
+        "index": {
+          "calendar": "annual",
+          "start": "2026-01-01",
+          "periods": 3
+        },
+        "values": [
+          {
+            "amount": 1000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 1080.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 1144.8,
+            "currency": "USD"
+          }
+        ]
+      },
+      "domain.opco.ufcf_periodic": {
+        "index": {
+          "calendar": "annual",
+          "start": "2026-01-01",
+          "periods": 3
+        },
+        "values": [
+          {
+            "amount": 960.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 1047.6,
+            "currency": "USD"
+          },
+          {
+            "amount": 1121.904,
+            "currency": "USD"
+          }
+        ]
+      },
+      "entity.asset.firm.net_cash_flow": {
+        "index": {
+          "calendar": "annual",
+          "start": "2026-01-01",
+          "periods": 3
+        },
+        "values": [
+          {
+            "amount": 960.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 1047.6,
+            "currency": "USD"
+          },
+          {
+            "amount": 1121.904,
+            "currency": "USD"
+          }
+        ]
+      },
+      "model.net_cash_flow": {
+        "index": {
+          "calendar": "annual",
+          "start": "2026-01-01",
+          "periods": 3
+        },
+        "values": [
+          {
+            "amount": 960.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 1047.6,
+            "currency": "USD"
+          },
+          {
+            "amount": 1121.904,
+            "currency": "USD"
+          }
+        ]
+      },
+      "stream.opco.capex.reinvestment.growth": {
+        "index": {
+          "calendar": "annual",
+          "start": "2026-01-01",
+          "periods": 3
+        },
+        "offset": 1.0,
+        "entity": "asset.firm",
+        "category": "investing.capital.capex",
+        "contract": "opco.reinvestment.growth",
+        "line": "capex",
+        "values": [
+          {
+            "amount": -40.0,
+            "currency": "USD"
+          },
+          {
+            "amount": -32.4,
+            "currency": "USD"
+          },
+          {
+            "amount": -22.896,
+            "currency": "USD"
+          }
+        ]
+      },
+      "stream.opco.revenue.recurring.core": {
+        "index": {
+          "calendar": "annual",
+          "start": "2026-01-01",
+          "periods": 3
+        },
+        "offset": 1.0,
+        "entity": "asset.firm",
+        "category": "operating.revenue.recurring",
+        "contract": "opco.revenue_line.core",
+        "line": "revenue",
+        "values": [
+          {
+            "amount": 1000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 1080.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 1144.8,
+            "currency": "USD"
+          }
+        ]
+      }
+    }
+  },
+  "scenarios": {
+    "status": "not_run",
+    "summaries": []
+  },
+  "monte_carlo": {
+    "status": "not_run",
+    "trials": 1,
+    "seed": 0,
+    "metrics": {},
+    "trial_summaries": []
+  },
+  "statements": {
+    "statements": [
+      {
+        "id": "by_entity",
+        "label": "Cash by entity",
+        "default": true,
+        "grain": {
+          "calendar": "annual",
+          "start": "2026-01-01",
+          "labels": [
+            "2026",
+            "2027",
+            "2028"
+          ]
+        },
+        "rows": [
+          {
+            "kind": "line",
+            "label": "Firm",
+            "depth": 0,
+            "display_sign": 1.0,
+            "values": [
+              {
+                "amount": 960.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 1047.6,
+                "currency": "USD"
+              },
+              {
+                "amount": 1121.904,
+                "currency": "USD"
+              }
+            ],
+            "total": 3129.504,
+            "streams": [
+              "opco.capex.reinvestment.growth",
+              "opco.revenue.recurring.core"
+            ]
+          }
+        ],
+        "reconciliation": {
+          "bottom_line": 3129.504,
+          "model_total": 3129.504,
+          "residual": 0.0
+        }
+      }
+    ]
+  },
+  "graph": {
+    "entities": [
+      {
+        "symbol": "asset.firm",
+        "family": "asset",
+        "type": "OpCo.Asset.Enterprise"
+      }
+    ],
+    "contracts": [
+      {
+        "name": "opco.reinvestment.growth",
+        "type": "OpCo.Contract.Reinvestment",
+        "master": "Contract.Line",
+        "contract_name": "opco.reinvestment",
+        "instance": "growth",
+        "subject": "asset.firm",
+        "streams": [
+          "opco.capex.reinvestment.growth"
+        ]
+      },
+      {
+        "name": "opco.revenue_line.core",
+        "type": "OpCo.Contract.RevenueLine",
+        "master": "Contract.Line",
+        "contract_name": "opco.revenue_line",
+        "instance": "core",
+        "subject": "asset.firm",
+        "streams": [
+          "opco.revenue.recurring.core"
+        ]
+      }
+    ]
+  }
+}

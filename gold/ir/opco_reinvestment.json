@@ -1,0 +1,372 @@
+{
+  "ir_version": "0.1",
+  "model": {
+    "name": "opco-reinvestment",
+    "currency": "USD"
+  },
+  "time": {
+    "calendar": "annual",
+    "start": "2026-01-01",
+    "periods": 3
+  },
+  "phases": [],
+  "entities": [
+    {
+      "id": "471076055446ce1641fbc7a06755119e",
+      "symbol": "asset.firm",
+      "type": "OpCo.Asset.Enterprise",
+      "fields": {},
+      "rules": {
+        "opco_revenue_growth_core": {
+          "init": {
+            "lang": "cfdl",
+            "src": "1"
+          },
+          "next": {
+            "lang": "cfdl",
+            "src": "prev * pow(1 + (curve_value(\"growth\", time.date)), 1 / 1)"
+          }
+        }
+      },
+      "state": {}
+    }
+  ],
+  "assumptions": {
+    "constants": {},
+    "random": {}
+  },
+  "curves": [
+    {
+      "name": "growth",
+      "interpolation": "step",
+      "effective_to": "2029-12-01",
+      "points": [
+        {
+          "date": "2026-01-01",
+          "value": 0.1
+        },
+        {
+          "date": "2027-01-01",
+          "value": 0.08
+        },
+        {
+          "date": "2028-01-01",
+          "value": 0.06
+        },
+        {
+          "date": "2029-01-01",
+          "value": 0.04
+        }
+      ]
+    }
+  ],
+  "subtotals": [
+    {
+      "id": "domain.opco.revenue_periodic",
+      "kind": "money",
+      "op": "sum",
+      "categories": [
+        "operating.revenue.*"
+      ],
+      "formula": "sum(operating.revenue.*)"
+    },
+    {
+      "id": "domain.opco.opex_periodic",
+      "kind": "money",
+      "op": "negated_sum",
+      "categories": [
+        "operating.expense.*"
+      ],
+      "formula": "-sum(operating.expense.*)"
+    },
+    {
+      "id": "domain.opco.ebitda_periodic",
+      "kind": "money",
+      "op": "sum",
+      "categories": [
+        "operating.revenue.*",
+        "operating.expense.*"
+      ],
+      "formula": "sum(operating.revenue.*, operating.expense.*)"
+    },
+    {
+      "id": "domain.opco.ufcf_periodic",
+      "kind": "money",
+      "op": "sum",
+      "categories": [
+        "operating.*",
+        "investing.capital.capex"
+      ],
+      "formula": "sum(operating.*, investing.capital.capex)"
+    },
+    {
+      "id": "domain.opco.debt_service_periodic",
+      "kind": "money",
+      "op": "negated_sum",
+      "categories": [
+        "financing.debt.interest_paid",
+        "financing.debt.principal"
+      ],
+      "formula": "-sum(financing.debt.interest_paid, financing.debt.principal)"
+    },
+    {
+      "id": "domain.opco.lfcf_periodic",
+      "kind": "money",
+      "op": "sum",
+      "categories": [
+        "financing.*"
+      ],
+      "subtotals": [
+        "domain.opco.ufcf_periodic"
+      ],
+      "formula": "domain.opco.ufcf_periodic + sum(financing.*)"
+    },
+    {
+      "id": "domain.opco.debt_service_coverage",
+      "kind": "number",
+      "op": "ratio",
+      "numerator": "domain.opco.ufcf_periodic",
+      "denominator": "domain.opco.debt_service_periodic",
+      "formula": "domain.opco.ufcf_periodic / domain.opco.debt_service_periodic"
+    },
+    {
+      "id": "domain.opco.cfads",
+      "kind": "money",
+      "op": "sum",
+      "categories": [
+        "operating.*",
+        "investing.capital.capex"
+      ],
+      "formula": "cash flow available for debt service"
+    },
+    {
+      "id": "domain.opco.net_cash_from_operations",
+      "kind": "money",
+      "op": "sum",
+      "categories": [
+        "operating.*"
+      ],
+      "formula": "net cash provided by (used in) operating activities"
+    },
+    {
+      "id": "domain.opco.net_cash_from_investing",
+      "kind": "money",
+      "op": "sum",
+      "categories": [
+        "investing.*"
+      ],
+      "formula": "net cash provided by (used in) investing activities"
+    },
+    {
+      "id": "domain.opco.net_cash_from_financing",
+      "kind": "money",
+      "op": "sum",
+      "categories": [
+        "financing.*"
+      ],
+      "formula": "net cash provided by (used in) financing activities"
+    }
+  ],
+  "contracts": [
+    {
+      "id": "c1957d4931cbf9be628416f53997ee22",
+      "name": "opco.reinvestment.growth",
+      "type": "OpCo.Contract.Reinvestment",
+      "contract_name": "opco.reinvestment",
+      "master": "Contract.Line",
+      "instance": "growth",
+      "subject": {
+        "symbol": "asset.firm"
+      },
+      "term": {
+        "start": "2026-01-01",
+        "end": "2028-01-01"
+      },
+      "currency": "USD",
+      "terms": {
+        "growth_rate": {
+          "lang": "cfdl",
+          "src": "curve_value(\"growth\", edate(time.date, 12))"
+        },
+        "sales_to_capital": 2.0
+      },
+      "effects": {
+        "streams": []
+      },
+      "provenance": {
+        "source_file": "model.cfdl",
+        "source_span": {
+          "start_line": 26,
+          "start_col": 1,
+          "end_line": 32,
+          "end_col": 1
+        }
+      }
+    },
+    {
+      "id": "9abe3658b02ce5715489953a15e13757",
+      "name": "opco.revenue_line.core",
+      "type": "OpCo.Contract.RevenueLine",
+      "contract_name": "opco.revenue_line",
+      "master": "Contract.Line",
+      "instance": "core",
+      "subject": {
+        "symbol": "asset.firm"
+      },
+      "term": {
+        "start": "2026-01-01",
+        "end": "2028-01-01"
+      },
+      "currency": "USD",
+      "terms": {
+        "amount": 1000,
+        "growth_rate": {
+          "lang": "cfdl",
+          "src": "curve_value(\"growth\", time.date)"
+        }
+      },
+      "effects": {
+        "streams": []
+      },
+      "provenance": {
+        "source_file": "model.cfdl",
+        "source_span": {
+          "start_line": 17,
+          "start_col": 1,
+          "end_line": 23,
+          "end_col": 1
+        }
+      }
+    }
+  ],
+  "streams": [
+    {
+      "id": "368cb052da55709d513310f93b2c1fe4",
+      "name": "opco.capex.reinvestment.growth",
+      "owner": {
+        "symbol": "asset.firm"
+      },
+      "direction": "outflow",
+      "currency": "USD",
+      "category": "investing.capital.capex",
+      "schedule": {
+        "kind": "Every",
+        "every": "annual",
+        "from": "2026-01-01",
+        "to": "2028-01-01"
+      },
+      "amount": {
+        "lang": "cfdl",
+        "src": "(series_sum(\"opco.revenue.recurring.*\", time.t, time.t)) * (curve_value(\"growth\", edate(time.date, 12.0))) / 2.0"
+      },
+      "active_when": {
+        "lang": "cfdl",
+        "src": "true"
+      },
+      "provenance": {
+        "source_file": "model.cfdl",
+        "source_span": {
+          "start_line": 26,
+          "start_col": 1,
+          "end_line": 32,
+          "end_col": 1
+        },
+        "generated_by": {
+          "pack": {
+            "name": "opco",
+            "version": "0.1.0"
+          },
+          "rule_id": "opco_reinvestment",
+          "line": "capex",
+          "contract": "opco.reinvestment.growth"
+        }
+      }
+    },
+    {
+      "id": "ad1c4214cf6c9b93bf224631447ffac4",
+      "name": "opco.revenue.recurring.core",
+      "owner": {
+        "symbol": "asset.firm"
+      },
+      "direction": "inflow",
+      "currency": "USD",
+      "category": "operating.revenue.recurring",
+      "schedule": {
+        "kind": "Every",
+        "every": "annual",
+        "from": "2026-01-01",
+        "to": "2028-01-01"
+      },
+      "amount": {
+        "lang": "cfdl",
+        "src": "(1000.0 + 0.0 / 1.0) * entity.asset.firm.opco_revenue_growth_core"
+      },
+      "active_when": {
+        "lang": "cfdl",
+        "src": "true"
+      },
+      "provenance": {
+        "source_file": "model.cfdl",
+        "source_span": {
+          "start_line": 17,
+          "start_col": 1,
+          "end_line": 23,
+          "end_col": 1
+        },
+        "generated_by": {
+          "pack": {
+            "name": "opco",
+            "version": "0.1.0"
+          },
+          "rule_id": "opco_revenue_line",
+          "line": "revenue",
+          "contract": "opco.revenue_line.core"
+        }
+      }
+    }
+  ],
+  "stream_inputs": [
+    {
+      "stream": "opco.revenue.recurring.core",
+      "contract": "opco.revenue_line.core",
+      "terms": {
+        "amount": "1000",
+        "amount_year": "0",
+        "growth_rate": "curve_value(\"growth\", time.date)"
+      },
+      "defaults_applied": [
+        "amount_year"
+      ]
+    },
+    {
+      "stream": "opco.capex.reinvestment.growth",
+      "contract": "opco.reinvestment.growth",
+      "terms": {
+        "growth_rate": "curve_value(\"growth\", edate(time.date, 12))",
+        "sales_to_capital": "2.0"
+      }
+    }
+  ],
+  "events": [],
+  "options": [],
+  "runs": [
+    {
+      "kind": "deterministic"
+    }
+  ],
+  "required_observables": [],
+  "required_refs": [],
+  "provenance": {
+    "sources": [
+      "model.cfdl"
+    ],
+    "compiler": {
+      "name": "cfdl",
+      "version": "0.9.0",
+      "hash": "41487af2a1c4a075cb171c4bd43f8015",
+      "notes": [
+        "active_pack=opco@0.1.0"
+      ]
+    }
+  }
+}

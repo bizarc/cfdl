@@ -203,6 +203,22 @@ one_of = "amount"
 description = "Capex as a share of modeled revenue — an amount stated as a rate on revenue, on its own or added to a stated amount."
 
 [[contracts]]
+type_id = "OpCo.Contract.Reinvestment"
+refines = "Contract.CapitalExpenditure"
+contract_name = "opco.reinvestment"
+subject_family = "asset"
+parties = ["owner"]
+description = "Capital spend derived from another line: the period's revenue times a growth rate over a sales-to-capital ratio — the reinvestment that funds the next period's growth, as an intrinsic valuation states it. A refinement beside capex_line because the cash shape differs: this line is not a base times a rate path."
+
+[[contracts.fields]]
+name = "sales_to_capital"
+field_type = "decimal"
+unit = "ratio"
+required = true
+one_of = "amount"
+description = "Revenue generated per unit of capital invested; the period's reinvestment is revenue times growth_rate over this ratio."
+
+[[contracts]]
 type_id = "OpCo.Contract.WorkingCapital"
 refines = "Contract.WorkingCapital"
 contract_name = "opco.working_capital"

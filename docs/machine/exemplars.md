@@ -4733,10 +4733,10 @@ A free cash flow to firm valuation following Damodaran's published method, with 
 | | |
 |---|---|
 | Pack | `opco` |
-| Contract types | `opco.revenue_line`, `opco.opex_line`, `opco.capex_line`, `opco.cash_taxes` |
+| Contract types | `opco.revenue_line`, `opco.opex_line`, `opco.reinvestment`, `opco.cash_taxes` |
 | Declared | three curves, one of them the cost of capital the run discounts along |
 | Language features | pack contracts driven by curves; declared state inside the pack's growth rules |
-| Conventions | a declining growth path, margin-driven operating expense, cash taxes, capital expenditure as a share of revenue, a cost of capital that converges over the forecast |
+| Conventions | a declining growth path, margin-driven operating expense, cash taxes, reinvestment funding next year's growth, a cost of capital that converges over the forecast |
 
 The reference publishes the **drivers** rather than only the results, which is
 what a pack rule consumes, so the pack's lowering is checked and not only the
@@ -4769,15 +4769,13 @@ engine's arithmetic.
 // years 1-5 are asserted and years 6-10 are not; NOTES.md carries the measured
 // drift, which is the delta 5.1 is expected to close.
 //
-// Reinvestment funds NEXT year's growth, so its exact window closes a year
-// earlier than revenue's. Also asserted only where it is exact.
+// Reinvestment funds NEXT year's growth, so the model reads the growth rate
+// a year ahead and the curve carries the terminal year's growth.
 //
-// NOT ASSERTED: value, NPV, per-share price. The run discounts along the
-// converging cost of capital (the curve below), but reinvestment is exact
-// only through year 4, so the ten-year PV is not the workbook's until the
-// capital line can be derived from revenue growth. Discounting at a rate the
-// source did not use and calling the result agreement would be worse than
-// saying so.
+// ASSERTED: every line for ten years, and the PV of the ten years of FCFF
+// along the converging cost of capital (the curve below). NOT ASSERTED: the
+// enterprise value and the per-share price, which need the terminal value
+// and the balance-sheet bridge.
 
 version 0.1
 model "damodaran-fcff"
@@ -4788,7 +4786,7 @@ entity asset firm : OpCo.Asset.Enterprise
 
 // Revenue growth: 5% while the firm is growing, decaying to the riskfree rate
 // by the terminal year.
-curve revenue_growth linear {
+curve revenue_growth linear to 2036-12 {
   2026-01: 0.0500000000
   2027-01: 0.0500000000
   2028-01: 0.0500000000
@@ -4799,6 +4797,7 @@ curve revenue_growth linear {
   2033-01: 0.0474800000
   2034-01: 0.0466400000
   2035-01: 0.0458000000
+  2036-01: 0.0458000000
 }
 
 // Effective tax rate climbing to the marginal rate over the same window.
@@ -4853,14 +4852,14 @@ contract opco.cash_taxes.federal on entity asset.firm {
   }
 }
 
-// Reinvestment = revenue * growth / sales-to-capital, which funds NEXT year's
-// growth. With a flat growth rate it is itself a geometric series on the same
-// curve.
-contract opco.capex_line.reinvestment on entity asset.firm {
+// Reinvestment = revenue * next year's growth / sales-to-capital: it funds
+// NEXT year's growth, so the rate is read a year ahead and the curve carries
+// the terminal year's growth for the last read.
+contract opco.reinvestment.growth on entity asset.firm {
   term 2026-01..2035-01
   terms {
-    amount = 668.8079047797
-    growth_rate = curve_value("revenue_growth", time.date)
+    growth_rate = curve_value("revenue_growth", edate(time.date, 12))
+    sales_to_capital = 1.708537671031893
   }
 }
 ```

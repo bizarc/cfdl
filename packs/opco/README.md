@@ -79,6 +79,11 @@ Growth is annual-compound stepped continuously on the model clock:
   Terms: `ar_days`, `ap_days`, `inv_days` (all default 0), `release_at_end`.
 - `opco.capex_line` — fixed `amount` (+ `growth_rate`, which may hold an expression) plus
   `pct_of_revenue` of the modeled revenue streams. Stream `opco.capex`.
+- `opco.reinvestment` — capital spend derived from revenue: the period's modeled
+  revenue times `growth_rate` over `sales_to_capital`. The growth rate is the
+  model's claim and may be read a period ahead (`curve_value("g", edate(time.date,
+  12))`), which is how an intrinsic valuation funds next year's growth this
+  year. Stream `opco.capex.reinvestment`.
 
 ### Financing
 
