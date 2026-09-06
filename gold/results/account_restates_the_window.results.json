@@ -1,7 +1,7 @@
 {
   "results_version": "0.14",
   "model_hash": "971e757879f58becfbfa994da02c7937f70892b41f684421777501e92f4e6ca0",
-  "ledger_hash": "a94b35baacc4beba239aad107a539bf5eecb1b9afd86f5697e3135493a20e4b7",
+  "ledger_hash": "91d61834022e567873396731e34f170fc943158e9f33d939e23fab2b6e70bad4",
   "engine": {
     "name": "cfdl-engine",
     "version": "0.9.0"
@@ -657,6 +657,7 @@
           "start": "2026-01-01",
           "periods": 12
         },
+        "offset": 0.0,
         "entity": "asset.suite",
         "values": [
           {
@@ -715,6 +716,7 @@
           "start": "2026-01-01",
           "periods": 12
         },
+        "offset": 0.0,
         "entity": "asset.suite",
         "values": [
           {
@@ -773,6 +775,7 @@
           "start": "2026-01-01",
           "periods": 12
         },
+        "offset": 0.0,
         "entity": "asset.suite",
         "values": [
           {
@@ -891,6 +894,7 @@
           "start": "2026-01-01",
           "periods": 12
         },
+        "offset": 0.0,
         "entity": "asset.suite",
         "values": [
           {
@@ -949,6 +953,7 @@
           "start": "2026-01-01",
           "periods": 12
         },
+        "offset": 0.0,
         "entity": "asset.suite",
         "values": [
           {
@@ -1007,6 +1012,7 @@
           "start": "2026-01-01",
           "periods": 12
         },
+        "offset": 0.0,
         "entity": "asset.suite",
         "values": [
           {

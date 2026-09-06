@@ -78,7 +78,7 @@ against a floor of 0.5 set by the table's whole-percent rounding.
 |---|---|
 | Decrement, worst / mean | 0.3640 pp / 0.0841 pp |
 | Informative cells (published value neither 0 nor 100) | 14 of 30 |
-| Class AB weighted average life | **4.7099**, published **4.7** |
+| Class AB weighted average life | **4.6950**, published **4.7** |
 | Residual to Classes R and RL | **0.0000000000**, every period |
 | Principal returned to AB | 148,372,434.00 against an original of 148,372,434 |
 
@@ -90,10 +90,9 @@ output: a published balance multiplied by a coupon stated on the cover. Their
 tolerance is the balance band carried through the coupon.
 
 The class's weighted average life is folded from the principal the waterfall
-pays it (`wal`) and asserted at ±0.07: 0.05 is the print floor of a
-figure published to one decimal, and ~0.015 is the axis — the engine measures
-on its month-end axis while the deal distributes on the 25th measured from
-late-January settlement, a uniform bias across all seven published speeds.
+pays it (`wal`) and asserted at ±0.05, the print floor of a figure published
+to one decimal. The deal distributes on the 25th, and the waterfalls say so,
+so each payment sits on the day the supplement measures to.
 
 The other six published speeds — 0%, 100%, 300%, 400%, 700% and 1000% — each
 ship as their own case (`fnma_remic_2019_2_g3_psa000` through `_psa1000`),

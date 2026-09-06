@@ -1,7 +1,7 @@
 {
   "results_version": "0.14",
   "model_hash": "2e03324270a68935a8cd50aa237c835a62f1a7ecb9d50a87b1c41f8efa733015",
-  "ledger_hash": "14dfc01dd5850cc182263b8f387335c86109ec35e346bb718821d79f6ae53f20",
+  "ledger_hash": "328f7790213aa7dcd9d9359e90b4e061a4782c9cdbb76c763825de92d94036d1",
   "engine": {
     "name": "cfdl-engine",
     "version": "0.9.0"
@@ -272,6 +272,7 @@
           "start": "2026-01-01",
           "periods": 2
         },
+        "offset": 0.0,
         "values": [
           {
             "amount": 5000.0,
@@ -289,6 +290,7 @@
           "start": "2026-01-01",
           "periods": 2
         },
+        "offset": 0.0,
         "values": [
           {
             "amount": 2500.0,
@@ -306,6 +308,7 @@
           "start": "2026-01-01",
           "periods": 2
         },
+        "offset": 0.0,
         "values": [
           {
             "amount": 2500.0,

@@ -8,6 +8,15 @@ This project follows Semantic Versioning: https://semver.org/
 
 ## [Unreleased]
 
+**A waterfall's steps sit where its schedule puts them.** A priority of
+payments that distributes `on day 25` pays every step on the 25th: each
+step's series now carries its waterfall's placement, so a class's life and
+a slice's present value measure to the deal's own distribution day. The
+seven Fannie Mae 2019-2 cases state the 25th and assert Class AB's
+published life at the print floor, ±0.05, in place of ±0.07. Narrows
+backlog 7.26 to the origin — a life measured from the paying contract's
+term start, which waits on the REMIC tranches as notes.
+
 **`wal(<series>[, from, to])`: the life of what a series paid.** A fold for
 the metric plane returning years on the axis `model.wal_years` uses — each
 period's amount at its own placement, over the total — and null when

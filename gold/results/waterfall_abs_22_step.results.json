@@ -1,7 +1,7 @@
 {
   "results_version": "0.14",
   "model_hash": "bad104b36aca2fea8d091979aaecf355c13b89452013a5acbd010d2c0f6c71b0",
-  "ledger_hash": "caf5eff73a72d071ee49811390bc95daafb4b8c497d3096f1523493f37cf3a23",
+  "ledger_hash": "da1095c4985211061bd506abef2bc777ef45930331570d8d68d26c9df65028e4",
   "engine": {
     "name": "cfdl-engine",
     "version": "0.9.0"
@@ -936,6 +936,7 @@
           "start": "2017-02-01",
           "periods": 6
         },
+        "offset": 1.0,
         "values": [
           {
             "amount": 0.0,
@@ -969,6 +970,7 @@
           "start": "2017-02-01",
           "periods": 6
         },
+        "offset": 1.0,
         "values": [
           {
             "amount": 790350.0,
@@ -1002,6 +1004,7 @@
           "start": "2017-02-01",
           "periods": 6
         },
+        "offset": 1.0,
         "values": [
           {
             "amount": 0.0,
@@ -1035,6 +1038,7 @@
           "start": "2017-02-01",
           "periods": 6
         },
+        "offset": 1.0,
         "values": [
           {
             "amount": 0.0,
@@ -1068,6 +1072,7 @@
           "start": "2017-02-01",
           "periods": 6
         },
+        "offset": 1.0,
         "values": [
           {
             "amount": 140625.83,
@@ -1101,6 +1106,7 @@
           "start": "2017-02-01",
           "periods": 6
         },
+        "offset": 1.0,
         "values": [
           {
             "amount": 0.0,
@@ -1134,6 +1140,7 @@
           "start": "2017-02-01",
           "periods": 6
         },
+        "offset": 1.0,
         "values": [
           {
             "amount": 0.0,
@@ -1167,6 +1174,7 @@
           "start": "2017-02-01",
           "periods": 6
         },
+        "offset": 1.0,
         "values": [
           {
             "amount": 205689.0,
@@ -1200,6 +1208,7 @@
           "start": "2017-02-01",
           "periods": 6
         },
+        "offset": 1.0,
         "values": [
           {
             "amount": 0.0,
@@ -1233,6 +1242,7 @@
           "start": "2017-02-01",
           "periods": 6
         },
+        "offset": 1.0,
         "values": [
           {
             "amount": 0.0,
@@ -1266,6 +1276,7 @@
           "start": "2017-02-01",
           "periods": 6
         },
+        "offset": 1.0,
         "values": [
           {
             "amount": 233576.25,
@@ -1299,6 +1310,7 @@
           "start": "2017-02-01",
           "periods": 6
         },
+        "offset": 1.0,
         "values": [
           {
             "amount": 0.0,
@@ -1332,6 +1344,7 @@
           "start": "2017-02-01",
           "periods": 6
         },
+        "offset": 1.0,
         "values": [
           {
             "amount": 0.0,
@@ -1365,6 +1378,7 @@
           "start": "2017-02-01",
           "periods": 6
         },
+        "offset": 1.0,
         "values": [
           {
             "amount": 0.0,
@@ -1398,6 +1412,7 @@
           "start": "2017-02-01",
           "periods": 6
         },
+        "offset": 1.0,
         "values": [
           {
             "amount": 0.0,
@@ -1431,6 +1446,7 @@
           "start": "2017-02-01",
           "periods": 6
         },
+        "offset": 1.0,
         "values": [
           {
             "amount": 5024436.92,
@@ -1464,6 +1480,7 @@
           "start": "2017-02-01",
           "periods": 6
         },
+        "offset": 1.0,
         "values": [
           {
             "amount": 2500000.0,
@@ -1497,6 +1514,7 @@
           "start": "2017-02-01",
           "periods": 6
         },
+        "offset": 1.0,
         "values": [
           {
             "amount": 1684866.0,
@@ -1530,6 +1548,7 @@
           "start": "2017-02-01",
           "periods": 6
         },
+        "offset": 1.0,
         "values": [
           {
             "amount": 0.0,
@@ -1563,6 +1582,7 @@
           "start": "2017-02-01",
           "periods": 6
         },
+        "offset": 1.0,
         "values": [
           {
             "amount": 1845456.0,
@@ -1596,6 +1616,7 @@
           "start": "2017-02-01",
           "periods": 6
         },
+        "offset": 1.0,
         "values": [
           {
             "amount": 0.0,
@@ -1629,6 +1650,7 @@
           "start": "2017-02-01",
           "periods": 6
         },
+        "offset": 1.0,
         "values": [
           {
             "amount": 0.0,
@@ -1662,6 +1684,7 @@
           "start": "2017-02-01",
           "periods": 6
         },
+        "offset": 1.0,
         "values": [
           {
             "amount": 75000.0,
