@@ -1,4 +1,4 @@
-period,net_cash_flow,domain.cre.debt_service,domain.cre.dscr,domain.cre.egi,domain.cre.leasing_costs,domain.cre.noi,domain.cre.opex_total,domain.cre.pgr,jv.distribution.capital_inv,jv.distribution.capital_sp,jv.distribution.preferred_inv,jv.distribution.preferred_sp,jv.distribution.promote,jv.distribution.residual_inv,jv.distribution.residual_sp
+period,slice.deal,domain.cre.debt_service,domain.cre.dscr,domain.cre.egi,domain.cre.leasing_costs,domain.cre.noi,domain.cre.opex_total,domain.cre.pgr,jv.distribution.capital_inv,jv.distribution.capital_sp,jv.distribution.preferred_inv,jv.distribution.preferred_sp,jv.distribution.promote,jv.distribution.residual_inv,jv.distribution.residual_sp
 0,-67000000.000000,0.000000,,0.000000,0.000000,0.000000,0.000000,0.000000,,,,,,,
 1,0.000000,0.000000,,0.000000,0.000000,0.000000,0.000000,0.000000,,,,,,,
 2,0.000000,0.000000,,0.000000,0.000000,0.000000,0.000000,0.000000,,,,,,,

@@ -4612,6 +4612,7 @@
       },
       "metrics": {
         "irr": 0.056408,
+        "moic": 0.78647,
         "npv": {
           "amount": -159745.245601,
           "currency": "USD"

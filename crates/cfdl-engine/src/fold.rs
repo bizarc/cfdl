@@ -1112,6 +1112,11 @@ pub(crate) fn fold_results(
                 let amount = entry.amount.unwrap_or(0.0);
                 match entry.action.as_str() {
                     "inflow" => flows[entry.period] += amount,
+                    // A STREAM THAT MOVES THE ACCOUNT (`docs/42` §3.2) is the
+                    // party's own cash going in or out — a capital call that
+                    // lowers a partner's `due` account is its contribution.
+                    // The move is journaled already signed for the side.
+                    "move" => flows[entry.period] += amount,
                     "allocate_in" => flows[entry.period] += amount,
                     "allocate_out" => flows[entry.period] -= amount,
                     _ => {}
@@ -1284,6 +1289,17 @@ pub(crate) fn fold_results(
                     slice_metrics.insert(
                         "irr".to_string(),
                         Scalar::Number(round_amount((1.0 + pp_irr).powf(ppy) - 1.0)),
+                    );
+                }
+                // The multiple on the slice's own cash, the way `model.moic`
+                // is on the model's: a workbook tie that excludes financing
+                // reads it here once contributions are streams (D13).
+                let slice_in: f64 = net.iter().filter(|v| **v > 0.0).sum();
+                let slice_out: f64 = -net.iter().filter(|v| **v < 0.0).sum::<f64>();
+                if slice_in > 0.0 && slice_out > 0.0 {
+                    slice_metrics.insert(
+                        "moic".to_string(),
+                        Scalar::Number(round_amount(slice_in / slice_out)),
                     );
                 }
                 let mut net_series = Series::from_values(

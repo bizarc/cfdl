@@ -17,6 +17,11 @@
 # cover for the tier arithmetic, which is what the accounts conversion touched.
 # The workbook-referenced figures are the facility and cash series, and none of
 # them moved: see NOTES.md.
+# The partners' contributions are STREAMS into the project that move each
+# partner's capital account (docs/42). `model.total` therefore carries the
+# equity as well as what the deal earned; the workbook's levered net cash,
+# return and multiple tie to `slice.deal`, the project's cash with the
+# contributions left out — asserted per period as the slice's column.
 summary = "A 160-month ground-up CRE development: land in 2011, a 39-month build on a parabolic draw curve, a $380M facility that funds equity first and capitalizes interest, two rental towers sold in lease-up, and a 34-month condominium sellout."
 pack = "cre"
 period_tolerance = 0.01

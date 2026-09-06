@@ -8,6 +8,18 @@ This project follows Semantic Versioning: https://semver.org/
 
 ## [Unreleased]
 
+**Highlands' equity is cash (D13).** The partners' contributions are streams
+in `financing.equity.contribution` on the dates the facility draws equity,
+each moving its partner's capital account; the three restated copies of the
+draw arithmetic are gone and every partner figure is unchanged. Two general
+engine changes carried it: a party's return now counts a stream that
+`moves` its account as a contribution, and a slice publishes `moic` beside
+`total`, `npv` and `irr`. The workbook's levered figures tie to
+`slice.deal`, the project's cash with the contributions excepted, and the
+harness can assert a slice's figures and its per-period column. Backlog
+§7.41 closes as by design: `available` and the account are the recommended
+pots, an expression stays legal as the model's own claim (backlog 35).
+
 **Backlog: §7.35 closes into the roadmap.** The human accessibility pass is
 one item in one place, `docs/37` M5·4, with `docs/23`'s method note beside
 it (backlog 36).

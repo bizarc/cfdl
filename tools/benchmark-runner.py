@@ -90,6 +90,9 @@ def resolve_columns(fieldnames, series, failures):
             key, label = column, column
         elif column == "net_cash_flow":
             key, label = "model.net_cash_flow", "net"
+        elif column.startswith("slice."):
+            # A slice's net series, published under its own name.
+            key, label = column, column
         else:
             key, label = f"stream.{column}", column
         if key not in series:
@@ -221,7 +224,11 @@ def _run_case_structured(case_dir: pathlib.Path) -> list[tuple[str, str]]:
     if results.get("warnings"):
         failures.append(("engine.warnings", f"engine warnings: {results['warnings'][:3]}"))
 
-    series = results["deterministic"]["series"]
+    series = dict(results["deterministic"]["series"])
+    # A slice's net series, under its own name, so a workbook tie that
+    # excludes financing can assert the operating cash per period.
+    for slice_result in results.get("slices") or []:
+        series[f"slice.{slice_result['id']}"] = slice_result["net"]
     # One tolerance cannot serve a whole case. HUD publishes money to whole
     # dollars, so its lines need ~1.0; its DSCR is quoted to sixteen figures and
     # agrees to five decimals, so a shared 1.0 would assert nothing about it
@@ -278,8 +285,11 @@ def _run_case_structured(case_dir: pathlib.Path) -> list[tuple[str, str]]:
                 f"{name}.engine.warnings",
                 f"scenario {name}: engine warnings: {scenario_results['warnings'][:3]}",
             ))
+        scenario_series = dict(scenario_results["deterministic"]["series"])
+        for slice_result in scenario_results.get("slices") or []:
+            scenario_series[f"slice.{slice_result['id']}"] = slice_result["net"]
         check_columns(
-            csv_path, scenario_results["deterministic"]["series"],
+            csv_path, scenario_series,
             default_tolerance, per_column, failures, f"{name}.",
         )
 
@@ -353,6 +363,11 @@ def _run_case_structured(case_dir: pathlib.Path) -> list[tuple[str, str]]:
     metrics = dict(results["deterministic"]["metrics"])
     domain = results.get("domain_metrics") or {}
     metrics.update(domain.get("metrics", {}))
+    # A slice's figures, as `slice.<name>.<metric>`: a workbook tie that
+    # excludes financing asserts the operating slice's total, irr and moic.
+    for slice_result in results.get("slices") or []:
+        for key, value in (slice_result.get("metrics") or {}).items():
+            metrics[f"slice.{slice_result['id']}.{key}"] = value
     expected_metrics = json.loads((case_dir / "expected_metrics.json").read_text(encoding="utf-8"))
     for key, spec in expected_metrics.items():
         if key not in metrics:

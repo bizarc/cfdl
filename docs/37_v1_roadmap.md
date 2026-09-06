@@ -36,7 +36,7 @@ of 2026-08-31:
 | §7.76 | part two only, and now only for the packs other than credit — a reserve contract shape where a document demands one (DSRA, replacement reserve, FF&E). Credit's shipped 2026-08-31 on `americredit_2017_1` (#247), clause 19's reserve as `account reserve` funded at closing with the top-up as its step. CREST is NOT the cheapest opening, contrary to what this row said: its ~$4,606 is one rounded aggregate against three unknowns, the port's reserve schedule was never carried into the repo, and the case has no close period to fund from — see `docs/13` §7.76 |
 | §7.77 | the external-reference benchmark — a published credit agreement with a cash-trap schedule; a sourcing problem, not a language gap |
 | ~~§7.75~~ | **SHIPPED** as `benchmarks/energy/merchant_storage_arbitrage`, against a provably optimal linear program rather than a tool (SAM's dispatch is documented as suboptimal and reaches 27% of the optimum). Cycling is an output of a walked state of charge. What remains is M3's: the pack rule `energy.storage_dispatch` checked against that optimum (`docs/27` §9 stage 4) |
-| §7.41 | the freeform `from <expr>` pot, the one unchecked selection left |
+| ~~§7.41~~ | closed 6 September 2026 as by design: `available` and the account are the recommended pots and `docs/01` §10.1 says so; a freeform `from <expr>` stays legal as the model's own claim, checked for the series it names (`W5022`, `E1346`) |
 
 ## M3 — validation coverage. **The living table is `docs/13` §7.3.**
 

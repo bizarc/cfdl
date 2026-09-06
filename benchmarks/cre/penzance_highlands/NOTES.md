@@ -131,3 +131,34 @@ Hence the division the model actually rests on:
 
 The gross-up in `deal_cash` is that second object being given the cash the first
 one deliberately does not carry. It is not a workaround for a missing feature.
+
+## Contributions as streams (2026-09-06, D13)
+
+The equity is cash again. Two streams per partner in
+`financing.equity.contribution` — the land at period 0 as a one-shot, then
+each month's draw as the difference of the facility's `equity_funded` field —
+carry the partners' money into the project on the dates the facility draws
+it, and each `moves` its partner's capital account, declared `due`, so the
+account goes negative as capital is paid in and positive as the split
+allocates. The three restated copies of the draw arithmetic are gone;
+`deal_cash` is the project's net stream cash and nothing more, because the
+contributions are now in it.
+
+What moved and what did not. Every partner figure is byte-identical:
+328,472,611.96 and 54,134,181.10 distributed, 1.959618 and 2.906607, 8.1203%
+and 12.7552%. `model.total` gained the 186,245,280.59 contributed, and
+`model.irr` and `model.moic` stopped meaning anything — a project whose
+equity is an inflow has no investment vector at the model level — so the
+workbook's levered net cash, return and multiple tie to `slice.deal`, the
+project's cash with the contributions excepted, asserted per period as the
+slice's column and as `slice.deal.total`, `.irr` and `.moic`. The "division
+the model rests on" above is therefore superseded: the equity IS in the
+stream vector, and the slice is where the investment vector lives.
+
+Two engine changes were needed and both are general. A party's return
+(`irr(party)`, `moic(party)`) folds the journal of the party's account and
+counted `inflow` and allocation lines only; a stream that `moves` the
+account is journaled as `move`, and the fold now counts it. A slice
+publishes `moic` beside `total`, `npv` and `irr`. The observation that an
+account's inflow cannot read an entity field still holds and no longer
+matters here; the facility's own field is read by the contribution streams.
