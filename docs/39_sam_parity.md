@@ -94,23 +94,21 @@ second implementation" to "we agree with NREL."
 
 ## Item 1 — storage dispatch, and the state of charge
 
-**The construct is buildable; the reference is missing.**
-`energy.storage_arbitrage` is the pack's one externally-unvalidated rule —
-`mwh_cycled_year * spread`, a dispersion functional evaluated at a point
-(`docs/13` §7.1). The walk made the fix buildable: a state-of-charge balance
-stepped per period turns `quantity` (the storage rule's MWh cycled) from an assumed input into an
-output of dispatch against a price shape, which is exactly the circularity
-that blocks validation today (`docs/13` §7.75 — the quantity we ask the
-modeller to state is the thing the reference exists to compute).
+**Shipped, and the reference was not a tool.**
+`benchmarks/energy/merchant_storage_arbitrage` models a 20 MW / 80 MWh
+front-of-meter battery with the state of charge as walked state: cycling is
+an output of dispatch against a price shape, and the run/idle decision is a
+guarded edge on a machine. The reference is a provably optimal linear
+program solved per day, because SAM's dispatch is documented as "automated
+but suboptimal", performing "no optimization around the cost of energy and
+power" (NREL/TP-6A20-68614), and reaches 27% of the optimum on that price
+year — agreement with it would have been evidence of nothing. The
+chronology cost of a daily grain is measured at 4.8%.
 
-**What forced the discovery** is also what gates it: §7.1 ran the comparison
-rather than assuming it. SAM's `Battwatts` model behind the meter discharged
-27.9 MWh in a year from an 80 MWh battery — nothing for the battery to do
-under that load — and reconfigured front-of-meter for merchant arbitrage,
-the native library segfaulted (exit 139). A real comparison needs the full
-`Battery` module with price-signal dispatch, a scoping exercise of its own.
-The construct no longer waits on the engine; the case waits on a source.
-Backlog: `docs/13` §7.75, §7.1; the quantile half is `docs/27` §9.
+What remains is the pack's: `energy.storage_arbitrage` still takes the
+cycled energy as an input, so the case does not validate it. The rule that
+replaces it, `energy.storage_dispatch` (`docs/27` §9 stage 4), is what the
+shipped optimum checks. Backlog: `docs/13` §7.3.
 
 ## Item 2 — additive real-plus-inflation escalation
 

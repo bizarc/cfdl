@@ -8,6 +8,14 @@ This project follows Semantic Versioning: https://semver.org/
 
 ## [Unreleased]
 
+**Backlog: §7.13 and §7.75 close.** District energy has no usable reference
+model; the measurement moves to `docs/20` §5.5 beside the other domains the
+suite does not cover, and `docs/20` §5's coverage sentence now cites the
+re-measured table. The storage dispatch reference §7.75 waited on shipped
+as `merchant_storage_arbitrage`; the roadmap, the SAM parity list and §7.3's
+caveat now say so, and what remains is the pack rule `energy.storage_dispatch`
+checked against that optimum (backlog 41).
+
 **`opco.reinvestment`: capital spend derived from revenue.** A second
 refinement of `Contract.CapitalExpenditure` beside `capex_line`: the
 period's modeled revenue times a `growth_rate` the model states over a

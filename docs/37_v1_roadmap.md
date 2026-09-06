@@ -35,7 +35,7 @@ of 2026-08-31:
 | §7.74 | the deal mechanics: coupled interest/principal waterfalls on a trigger, a step's shortfall as a published series, deferred/PIK interest, servicer advances, the clean-up call (a case, not a construct) |
 | §7.76 | part two only, and now only for the packs other than credit — a reserve contract shape where a document demands one (DSRA, replacement reserve, FF&E). Credit's shipped 2026-08-31 on `americredit_2017_1` (#247), clause 19's reserve as `account reserve` funded at closing with the top-up as its step. CREST is NOT the cheapest opening, contrary to what this row said: its ~$4,606 is one rounded aggregate against three unknowns, the port's reserve schedule was never carried into the repo, and the case has no close period to fund from — see `docs/13` §7.76 |
 | §7.77 | the external-reference benchmark — a published credit agreement with a cash-trap schedule; a sourcing problem, not a language gap |
-| §7.75 | the dispatch model that makes `quantity` (the storage rule's MWh cycled) an output — gated on a dispatch reference that runs (SAM segfaulted front-of-meter), not on the engine; also M3's last energy item |
+| ~~§7.75~~ | **SHIPPED** as `benchmarks/energy/merchant_storage_arbitrage`, against a provably optimal linear program rather than a tool (SAM's dispatch is documented as suboptimal and reaches 27% of the optimum). Cycling is an output of a walked state of charge. What remains is M3's: the pack rule `energy.storage_dispatch` checked against that optimum (`docs/27` §9 stage 4) |
 | §7.41 | the freeform `from <expr>` pot, the one unchecked selection left |
 
 ## M3 — validation coverage. **The living table is `docs/13` §7.3.**
@@ -49,9 +49,10 @@ benchmarks and two examples and `construction_stub` in four examples, so what
 §7.3 wants of those two is a different GRAIN, not first exercise. Note the
 asymmetry the re-measure also found: credit and energy have zero example
 coverage — all 14 of their types are demonstrated only in benchmarks, never in
-a teachable example. What remains: the dispatch
-comparison that moves `storage_arbitrage` from exercised to validated
-(§7.75's reference, worn as validation). This milestone is the license to
+a teachable example. What remains: the pack rule
+`energy.storage_dispatch` validated against the shipped optimum
+(`merchant_storage_arbitrage`), which moves `storage_arbitrage` from
+exercised to validated. This milestone is the license to
 compete — every "displaces Argus/Intex" claim is hostage to it, and the
 public line restates rather than overclaims until the table says so.
 

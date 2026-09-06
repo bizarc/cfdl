@@ -257,4 +257,5 @@ not are struck with the reason.
 
 The reserve that list also named (`cre.replacement_reserve`) is an account
 (family H) and `docs/13` §7.76's adoption pass; the storage dispatch rule it
-named is `docs/13` §7.75's.
+named is `docs/27` §9 stage 4, checked against the shipped optimum
+(`docs/39` item 1).

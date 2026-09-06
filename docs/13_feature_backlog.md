@@ -128,8 +128,14 @@ driver-disclosing sources the first measure asked for.
 **Exercised is not the same as validated.** One caveat stands:
 `storage_arbitrage` is declared by `solar_ppa_microgrid`, but that case
 reconciles the reduced-form arbitrage margin against convention, not against
-a dispatch model — the chronology comparison §7.75 requires does not exist,
-so energy's *validated* count stays **9 / 10** until it does. Read strictly,
+a dispatch model. The dispatch reference now exists —
+`benchmarks/energy/merchant_storage_arbitrage`, a provably optimal linear
+program, core-spelled with the state of charge as walked state — and its
+notes say plainly that it does not validate the pack rule, whose shape takes
+the cycled energy as an input the reference exists to compute. Energy's
+*validated* count stays **9 / 10** until `energy.storage_dispatch`
+(`docs/27` §9 stage 4; `docs/41` §5) replaces that rule and is checked
+against the shipped optimum. Read strictly,
 cases whose references are independently recreated conventions
 (`office_two_tenant`, `retail_strip`, `solar_ppa_microgrid`) sit a step
 below a published third-party model; each CASE.md states which kind it is.
@@ -152,52 +158,13 @@ What remains, and it is narrow:
   `percentage_rent_expected` and `construction_stub` may want a new case
   each; `PurchaseOption` waits on the finance-lease demonstration.
 - **credit:** `participation`, closed by the pass-through case.
-- **energy:** the dispatch comparison that would move `storage_arbitrage`
-  from exercised to validated (§7.75).
+- **energy:** `energy.storage_dispatch`, the pack rule the shipped optimum
+  can validate (`docs/27` §9 stage 4).
 
 Recorded because coverage claims must cite this table, and the table must be
 re-measured — by scanning `contract <pack>.<type>` and `option … type`
 declarations, not `<pack>.` prefixes, which also match namespaced stream
 names — whenever cases or rosters change.
-
-### 7.13 District energy has no usable reference model
-
-Scoped, not built. `research/CFDL_pack_roadmap_and_model_catalogue.xlsx` ranks
-District Energy / Waste-to-Energy as a Tier 1 pack candidate with the gate
-"None new — Energy pack extension (~65% reuse)", and names the Ed Bodmer project
-finance collection as the first reference to build against.
-
-That collection does not contain one. Measured across its thermal and
-biomass/biogas pages:
-
-| term | thermal page | biomass page |
-|---|---|---|
-| "district" | 0 | 0 |
-| "cogeneration" | 0 | 0 |
-| "combined heat" | 0 | 0 |
-| "waste" | 0 | 3 (prose) |
-
-The four downloadable thermal models are gas-fired IPPs (`IPP-Model.xlsm`,
-`Gas-Plant-Example`, `Indonesia-Gas-Plant`, `NGCC-with-Merchant`). Their
-structure — PPA and merchant revenue, O&M, senior debt, tax depreciation — is
-what `benchmarks/energy/utility_pv_singleowner` and
-`benchmarks/energy/merchant_capacity` already reconcile against a national
-laboratory model, so they would add a second source for mechanics already
-covered rather than the new ones the candidate needs (thermal load, fuel cost,
-heat offtake).
-
-They also lean on two things that are not expressible: debt sized to a target
-coverage ratio ("sculpt" appears 41 times on the thermal page) and capitalised
-construction interest resolved circularly ("circular", 28 times). Both are
-solves. `docs/14_state_and_recurrence.md` §5 covers why an iterative construct
-would need to be explicit, bounded and convergence-checked rather than implied.
-
-What a district energy case actually needs is a source publishing a thermal
-plant's drivers and the lines they produce — heat and power sold separately,
-fuel cost as a driver, and a heat offtake contract. The catalogue's remaining
-Tier 1 entries with no new gate are Telecom Towers (#9, A.CRE single-tenant NNN)
-and Hospitality (#3/#20, A.CRE or Finamodel), both of which require an email
-registration to download.
 
 ### 7.19 The lexer reserves words the canonical grammar admits
 
@@ -902,43 +869,6 @@ surface (§7.22, §7.23, §7.26), the unexercised class types and structured
 collateral (`docs/20` §2), multi-currency, and a loan-level scale
 measurement. Same-period circular conventions stay out on purpose — the
 causal plane's refusal to iterate is the product's guarantee, not its gap.
-
-### 7.75 Storage state of charge is now buildable, and it is what validates the last energy rule
-
-*Roadmap: M2 (`docs/37`); the case it unblocks is M3 (§7.3).*
-
-**What forced the discovery:** the domain survey behind `docs/30`.
-`energy.storage_arbitrage` is the energy pack's only externally-unvalidated
-rule (§7.3: energy 9/10), and §7.1 recorded three ways forward, the third
-being "needs per-period persistent state (5.2) and would let cycling be
-modeled rather than assumed." The walk's phases 3 and 4 are that state: a
-state-of-charge balance — a field or an account — stepped per period, charged
-and discharged by streams the balance reads strictly backward.
-
-**What it changes:** `quantity` (the storage rule's MWh cycled) stops being an assumed input and
-becomes an output of dispatch against a price shape, which is the circularity
-§7.1 says blocks validation against a dispatch reference. It is also the
-state the `energy.storage_dispatch` quantile rule (`docs/27` §9 stage 4)
-prices around: the quantile closes the Jensen gap, the SOC balance closes the
-chronology gap — a 4-hour battery reaching only contiguous hours is a
-constraint on a walked balance, not on a distribution.
-
-**The gate is open, and the answer was not a tool.**
-`benchmarks/energy/merchant_storage_arbitrage` ships against a provably optimal
-linear program, because SAM's dispatch is documented as "automated but
-SUBOPTIMAL" with "no optimization around the cost of energy and power"
-(NREL/TP-6A20-68614) and reaches 27% of the optimum on that case's price year.
-The full `Battery` module does run front-of-meter — §7.1's segfault was
-`Battwatts` — but running is not the same as being a target.
-
-The case is core-spelled and makes the state-of-charge argument concrete without
-building the contract: cycling is an OUTPUT, the run/idle decision is a guarded
-edge on a machine in IEEE Std 762's vocabulary, and the chronology cost is
-measured at 4.8% — what carrying charge across midnight is worth, and therefore
-what a daily grain gives up. What remains is `energy.storage_dispatch` itself
-(`docs/27` §9 stage 4), which is no longer gated on a reference.
-Related: §7.3, `docs/27` §9, `docs/30` §2. (§7.1, which first recorded
-the three ways forward, is closed; this entry carries its remainder.)
 
 ### 7.76 The account adoption pass: every pack has a reserve it could not model
 
