@@ -22,10 +22,10 @@ specification (restated proposed → shipped), `docs/29` the seven-phase
 implementation record. The collapse property is asserted over the whole
 blessed corpus in `golden_corpus.rs`.
 
-## M2 — what the walk unlocked. **In progress; the umbrella is `docs/13` §7.78.**
+## M2 — what the walk unlocked. **In progress; the remaining rows are below.**
 
 The walk, the machine and the account are the substrate; every M2 item
-stands on them. §7.79 (events re-founded, `docs/34`) was the milestone's
+stands on them. Events re-founded (`docs/34`) was the milestone's
 settled first priority and closed 2026-08-30, paying out §7.77's cure
 period and §7.76's reserve interest the same day. What remains, current as
 of 2026-08-31:

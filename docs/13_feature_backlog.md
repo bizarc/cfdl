@@ -739,7 +739,7 @@ nothing. A few lines in the existing checks — the step set and
 
 ### 7.41 A freeform pot expression is still unchecked
 
-*Roadmap: M2 (§7.78). Narrowed by M1's account (`docs/28` §5.1).* The checked forms now exist:
+*Roadmap: M2 (`docs/37`). Narrowed by M1's account (`docs/28` §5.1).* The checked forms now exist:
 `from available` is the engine's own quantity, and `from <account>` draws a
 balance whose inflow is declared and whose movements are journaled per
 period — what flows in is named, checked, and auditable. What remains open
@@ -1491,10 +1491,10 @@ structural rather than a known debt.
 
 ### 7.74 Structured-finance engine parity — the Intex scope
 
-*Roadmap: partly M2 (§7.78) — the deal mechanics; the analytics ride on
+*Roadmap: partly M2 (`docs/37`) — the deal mechanics; the analytics ride on
 declared metrics (§7.25, shipped). Promoted 2026-09-01 to
 `docs/38_intex_parity.md`, which carries the survey the way `docs/34`
-carries §7.79's design: the parity-or-ahead ledger, the itemized gaps, the
+carries the events design (`docs/34`): the parity-or-ahead ledger, the itemized gaps, the
 non-items and the licensing position all live there, and this entry stays as
 the anchor other entries reference.*
 
@@ -1514,7 +1514,7 @@ causal plane's refusal to iterate is the product's guarantee, not its gap.
 
 ### 7.75 Storage state of charge is now buildable, and it is what validates the last energy rule
 
-*Roadmap: M2 (§7.78); the case it unblocks is M3 (§7.3).*
+*Roadmap: M2 (`docs/37`); the case it unblocks is M3 (§7.3).*
 
 **What forced the discovery:** the domain survey behind `docs/30`.
 `energy.storage_arbitrage` is the energy pack's only externally-unvalidated
@@ -1550,7 +1550,7 @@ Related: §7.1, §7.3, `docs/27` §9, `docs/30` §2.
 
 ### 7.76 The account adoption pass: every pack has a reserve it could not model
 
-*Roadmap: M2 (§7.78).*
+*Roadmap: M2 (`docs/37`).*
 
 **What forced the discovery:** the account shipped (`docs/28` §5.1) and the
 domain survey (`docs/30`) found the same absence recorded independently in
@@ -1666,7 +1666,7 @@ Related: §7.5, §7.41, §7.72 (shipped), §7.74, `docs/25`, `docs/28` §5.1, `d
 
 ### 7.77 A covenant that is published but powerless: the DSCR cash trap
 
-*Roadmap: M2 (§7.78). **The mechanism shipped 2026-08-30**; what remains is
+*Roadmap: M2 (`docs/37`). **The mechanism shipped 2026-08-30**; what remains is
 the benchmark against an external reference, which is `docs/20` §5.1's ask.*
 
 **What could not be expressed:** consequences. The energy pack publishes
@@ -1683,7 +1683,7 @@ against a 1.20 trigger, the machine reads settled cash strictly backward and
 traps at t=5, cash accumulates once NOI recovers (5,000 at t=7, 10,000 at
 t=8), and two consecutive good periods at t=9 release the trap in full.
 
-**The cure period was the part that waited on §7.79**, and it is worth being
+**The cure period was the part that waited on the arrival actions of `docs/34`**, and it is worth being
 precise about why. `trapped_cash_cure` has existed since the walk, and it
 cures on the *next* good period — which no credit agreement says. A cure
 period is a duration measured from the last breach, and a field recurrence
@@ -1698,153 +1698,8 @@ is pinned; the covenant case wants a published credit agreement with a
 cash-trap schedule and figures to reconcile against, and none is vendored.
 That is a case-authoring ask with a sourcing problem, not a language gap.
 
-Related: §7.36, §7.74, §7.79, `docs/28` §5.1 and §6, `docs/30` §2,
+Related: §7.74, `docs/28` §5.1 and §6, `docs/30` §2,
 `docs/20` §5.1.
-
-### 7.78 M2: what the walk unlocked, and what it retired
-
-*An umbrella, in the shape of §7.74 — it owns no work of its own; each
-constituent is an entry below or above it.* Recorded because the v1.0
-roadmap's M2 was written before M1 shipped, and two of the four items it
-named no longer describe work.
-
-**What M2 no longer is.** Sequential-pay note classes (the closed §2.4) run
-today as an ordered waterfall — `benchmarks/credit/auto_abs_tranches`
-compiles AmeriCredit's 22-step priority — so what remains of that item is
-§7.74's deal mechanics, not a liability-stack construct. And contract gating
-(the closed §7.40i) was not a runtime to build: §7.73 (also closed) concluded
-the grain was wrong and the action should be retired, which made M2's gating
-work §7.50 plus state-gating through the declared machine — both now done. Per-period persistent state
-(the closed §5.2) shipped with M1 itself.
-
-**Closed since.** §7.72 (a participant's realized return had no construct) is
-fixed: `irr(party.<p>)` and `moic(party.<p>)` fold the party's OWN ACCOUNT —
-contributions are negative inflows, receipts are allocations in, so the sign
-change an IRR needs is recorded rather than inferred from payee streams, which
-is the §7.43 attribution trap the entry warned against. The party is a
-REFERENCE, so the compiler resolves it (`E1301`), checks it is a party that
-owns an account (`E1356`), and refuses the fold outside a `metric` (`E1355`);
-only flows that never change sign wait for the run, and that refuses naming the
-party. `docs/31` W4 phase 2 is done, which leaves the calculator a benchmark
-case and a surface.
-
-**Closed since.** §7.25 (a model could not declare a metric) is fixed:
-`metric <name> = <expr>` is evaluated once at the horizon in the valuation
-plane and published as `metric.<name>`, a third namespace beside the engine's
-`model.*` and a pack's `domain.*`. Metrics compose in declaration order — the
-waterfall rule — with a forward or circular reference refused (`E1354`) and a
-duplicate name refused (`E1008`). Every declared metric reaches every scenario
-summary, because scenarios and the deterministic block publish the same map.
-That unblocked §7.72 (participant-level returns), since shipped, and
-`docs/31` W4 phase 1 is therefore done.
-
-**Closed since.** §7.73 (the wrong grain) is fixed: `activate`/`deactivate
-contract` is out of the grammar, and `E1303` — which resolved only that
-action's target — is deleted with it. No new code marks the absence: the
-parser's existing "Expected 'stream' after activate/deactivate" says enough,
-and a language with no installed base retires a spelling by removing it, not by
-commemorating it. The `ignored` journal outcome survives, since the engine
-still needs it for an action kind hand-written IR carries and no compiler emits.
-What remains of §7.40i is the contract-surface `active when` / `active in state`
-that would let a pack's streams be gated as a group — worth a case before it is
-worth a construct, since the per-stream spelling now covers the three documents
-that forced the item.
-
-**Closed since.** §7.50 (a model could not name the streams its own contracts
-produced) is fixed: event stream targets resolve after lowering, where a
-contract's streams exist, so `deactivate stream cre.debt.principal` compiles and
-the loan's cash stops — `fixtures/valid/event_stops_lowered_stream` runs debt
-service to zero at the period the event fires. `docs/04` §1.1 now records that
-lowering is the one GENERATIVE stage, which is why a check over lowered names
-cannot sit at name resolution. What remains of §7.40i's additivity argument is a
-contract-surface `active when` / `active in state`, recorded under §7.73's
-closure below.
-
-**Closed since.** §7.45 (a waterfall with no schedule distributed once, at the
-model start) is fixed: `E1348_WATERFALL_NO_SCHEDULE` refuses the omission, which
-is what `docs/01` §10.1 had required in normative text since the waterfall
-entered the spec — the compiler had been inventing a first-period default
-against its own specification, and the engine's every-period branch, which no
-compiler output could reach, is gone.
-
-**Closed since.** §7.79 (an event fired once, and a transition could not
-act) is fixed — the milestone's settled first priority, and the mechanism
-three other entries were waiting to spell. #235 landed `docs/34` phases 1–4
-(rising-edge occurrence, no latch, arrival actions, augmentation, the redrawn
-pack machines of §7.84) and #236 phase 5. It paid out the same day: #238
-built §7.77's cash trap whose cure is a period (`on enter trapped
-{ set good_periods = 0 }` is the whole difference) and §7.76's interest on a
-reserve balance, and shipped the flip case's pot as an account twin — so of
-the table below, §7.77 remains only as an external-reference benchmark and
-§7.76 only as part two, the reserve contract shape per pack where a document
-demands one — and part two is now down to the packs other than credit, whose
-reserve shipped 2026-08-31 on `americredit_2017_1`. Energy's is blocked on
-sourcing rather than on language: see the entry.
-
-**What M2 is**, all of it standing on the walk, the machine and the account
-(`docs/28` §4–§6):
-
-| item | what it unlocks |
-|---|---|
-| §7.41 | the freeform `from <expr>` pot, the one unchecked selection left after the account |
-| §7.76 | the account adoption pass: the reserve every pack's references assume and no pack could model |
-| §7.77 | the DSCR cash trap — the first covenant whose breach has consequences, and can end |
-| §7.75 | storage state of charge, which turns `quantity` (the storage rule's MWh cycled) from an assumption into an output |
-| §7.74 | the deal mechanics still open after the machine: coupled interest/principal waterfalls, a step's shortfall, PIK on an unpaid step, servicer advances, the clean-up call |
-
-**What M2 is not.** Declared metrics (§7.25, since shipped) and
-participant-level returns (§7.72) are M4 — both since shipped — and `docs/31` W4 pulled the first forward on the
-commercial path rather than the roadmap's. Pack coverage (§7.3) is M3.
-
-Re-derived 2026-08-28; §7.79's closure and its consequences recorded
-2026-08-31. The full five-milestone roadmap this entry re-derives M2 from —
-M3 validation coverage, M4 polish, M5 release mechanics included — is now
-committed as `docs/37_v1_roadmap.md`. Related: `docs/28` §10, `docs/29`.
-
-### 7.79 An event is restricted to firing once, and a transition cannot act
-
-*Closed 2026-08-30. Phases 1–4 of `docs/34` landed as #235 — rising-edge
-firing, no latch, `on enter` and edge actions, model-side augmentation of
-pack machines, `results_version` 0.6 — and phase 5 as #236; phase 6's
-surfaces (`docs/10` rows, `terminology.toml`) followed. The migration audit
-answered itself: no event's condition re-rises anywhere in the corpus, and
-across the 123 pre-existing results goldens the only changed line was the
-version stamp. What consumed it shipped next — §7.77's cure counter and
-§7.76's reserve interest (#238). The residue is not this entry's: the
-chained-rollover re-strike showcase is `docs/33` Item 1's case, and it is
-what will force `cre.unit`'s declared actions (`docs/34` phase 5 note).*
-
-*Belongs with the language and engine (section 5). Roadmap: M2 (§7.78).
-Scoped in `docs/34_events_and_the_machine.md`; found by the Argus parity
-survey (`docs/33`, Item 1).*
-
-**What could not be expressed:** an occurrence that recurs, and behavior
-performed on arrival. An event is something that happens — time, a default,
-a cure, a payment — and nothing about happening is once-only. The shipped
-constructs each hold half of this: a guarded edge (the anonymous event,
-described by the entity it impacts and the conditions that must be true)
-fires every occurrence but arrives empty-handed — no action rides on the
-transition; the named `event` carries `set` but latches — the engine skips
-a fired event forever (`event_fired`, `crates/cfdl-engine/src/state.rs`).
-The construct that repeats cannot act, and the construct that acts cannot
-repeat.
-
-**What forced the discovery:** chained rollover, probed pack-free
-(`docs/33`). The cycle itself runs — edges re-arm, `state_enter` windows
-re-anchor, per-cycle costs re-fire — but a duration-in-state counter cannot
-reset on re-entry (the conditional recurrence dies at run:
-`prev.<entity>.status is not declared`), and market rent cannot be struck
-into a field at an endogenous transition. §7.77's cure window and §7.74's
-shortfall bookkeeping are the same absence wearing credit vocabulary.
-
-**The shape** (`docs/34` D1–D8): events fire on each rising edge of their
-conditions, with no `once` keyword — a one-shot expresses its once-ness in
-a singular schedule or a no-return topology, never a latch; states carry
-`on enter` action blocks and edges carry path-specific ones,
-entity-relative, run on every arrival whatever took it, under the existing
-event-`set` write law and the guard's own environment — no new cycle
-risk. Migration is measured, not assumed: a corpus audit counts
-re-rising conditions per event before the goldens are re-blessed.
 
 ### 7.80 121 registered diagnostic codes have no minimal failing example
 
@@ -1880,41 +1735,6 @@ asserting every published path matches exactly one tier would close the
 loop the authoring contract needs. (`ste-allow:` rule ids are now
 validated against §3's rule tables; the tier mapping is the remaining
 unenforced half.)
-
-### 7.84 The pack machines were drawn before the machine could act
-
-*Closed 2026-08-30 by `docs/36_pack_lifecycle_review.md`, which carries the
-survey, the standards each machine was redrawn against, and what changed.*
-
-Found surveying all four packs while implementing arrival actions (§7.79) —
-the first work that made a pack's states load-bearing rather than decorative.
-Seven machines; three families of defect.
-
-**What shipped.** `credit.loan` and `credit.pool` onto Basel/EBA, IFRS 9, the
-GSE loan-level datasets and SIFMA UPM Ch. SF — conditions rather than events
-(`defaulted`, `in_foreclosure`), the cure edges the standards require including
-the EBA's probation-gated return to performing, and `days_past_due` as a field
-because a delinquency bucket is a counter reading and not a regime.
-`energy.facility` onto IEEE Std 762 as NERC GADS operationalises it, which
-restores the standard's distinction between AVAILABILITY and DISPATCH that
-`curtailed` had collapsed, and makes a derate a magnitude rather than a state.
-`cre.unit` gains `month_to_month` and loses `downtime` — the same condition as
-`vacant`, differing only in the path reached, which an edge's actions now
-carry. `cre.property` renames `operating` to `stabilized` and closes the
-returning cycle that earns it a machine at all. `opco.enterprise` is unbound:
-it encoded a transaction process and a capital structure at once, so the normal
-condition of every LBO could not be said.
-
-**One of this entry's three findings was wrong and is withdrawn.** "Declared
-states nothing can enter" misread the language: an entity declares its own
-opening state, so `predevelopment` on `cre.property` and `warehouse` on
-`credit.pool` are reachable as opening states rather than through an edge, and
-the declared `initial` should be — and was — the common case.
-
-**What it cost.** Nothing computed. Every pack transition was guard-less, so no
-machine fired on its own, and no benchmark gated on a state; the results
-goldens moved only on `model_hash` and on state names inside transition
-records, and all 43 benchmark cases passed unchanged.
 
 ### 7.83 An action kind the engine does not know is journaled, not refused
 
