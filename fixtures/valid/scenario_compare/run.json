@@ -2,23 +2,23 @@
   "deterministic": {
     "annual_discount_rate": 0.1,
     "parameters": {
-      "stream.legal.rent:amount": 1000
+      "stream.lease.rent:amount": 1000
     }
   },
   "scenarios": {
     "base": {
       "parameters": {
-        "stream.legal.rent:amount": 1000
+        "stream.lease.rent:amount": 1000
       }
     },
     "downside": {
       "parameters": {
-        "stream.legal.rent:amount": 1200
+        "stream.lease.rent:amount": 1200
       }
     },
     "upside": {
       "parameters": {
-        "stream.legal.rent:amount": 900
+        "stream.lease.rent:amount": 900
       }
     }
   }

@@ -2,26 +2,17 @@
   "deterministic": {
     "annual_discount_rate": 0.08,
     "parameters": {
-      "stream.legal.rent:amount": 1000
+      "stream.lease.rent:amount": 1000
     }
   },
   "monte_carlo": {
     "trial_count": 10,
     "seed": 424242,
     "distributions": {
-      "stream.legal.rent:amount": {
+      "stream.lease.rent:amount": {
         "kind": "normal",
         "mean": 1000,
         "stdev": 75
-      },
-      "stream.legal.fee:amount": {
-        "kind": "fixed",
-        "value": 50
-      },
-      "stream.legal.misc:amount": {
-        "kind": "uniform",
-        "min": -20,
-        "max": 20
       }
     }
   }

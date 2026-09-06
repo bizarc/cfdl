@@ -96,7 +96,12 @@ Notes:
 
 ## 5) Assumptions and uncertainty
 
-`assume` declares a named input; expressions read it as `inputs.<name>`.
+`assume` declares a named input; expressions read it as `inputs.<name>`. A run
+configuration overrides it by that same key, `inputs.<name>`; a key that
+matches nothing the model declares or reads is refused (`E5033`), naming the
+block it sits in and the nearest name it could have meant, so a scenario
+that sets `cpr` instead of `inputs.cpr` cannot silently be the base run
+again.
 
 ### Fixed assumption
 

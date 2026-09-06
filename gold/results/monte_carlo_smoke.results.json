@@ -176,55 +176,55 @@
         "type": "money",
         "trials": 10,
         "mean": {
-          "amount": -6000.0,
+          "amount": -6288.998635,
           "currency": "USD"
         },
         "stdev": {
-          "amount": 0.0,
+          "amount": 521.120978,
           "currency": "USD"
         },
         "min": {
-          "amount": -6000.0,
+          "amount": -7118.187637,
           "currency": "USD"
         },
         "max": {
-          "amount": -6000.0,
+          "amount": -5512.320427,
           "currency": "USD"
         },
         "p01": {
-          "amount": -6000.0,
+          "amount": -7110.040821,
           "currency": "USD"
         },
         "p05": {
-          "amount": -6000.0,
+          "amount": -7077.453557,
           "currency": "USD"
         },
         "p10": {
-          "amount": -6000.0,
+          "amount": -7036.719477,
           "currency": "USD"
         },
         "p25": {
-          "amount": -6000.0,
+          "amount": -6587.208356,
           "currency": "USD"
         },
         "p50": {
-          "amount": -6000.0,
+          "amount": -6348.577057,
           "currency": "USD"
         },
         "p75": {
-          "amount": -6000.0,
+          "amount": -5839.539505,
           "currency": "USD"
         },
         "p90": {
-          "amount": -6000.0,
+          "amount": -5705.605769,
           "currency": "USD"
         },
         "p95": {
-          "amount": -6000.0,
+          "amount": -5608.963098,
           "currency": "USD"
         },
         "p99": {
-          "amount": -6000.0,
+          "amount": -5531.648961,
           "currency": "USD"
         }
       },
@@ -232,55 +232,55 @@
         "type": "money",
         "trials": 10,
         "mean": {
-          "amount": -5867.170452,
+          "amount": -6149.771161,
           "currency": "USD"
         },
         "stdev": {
-          "amount": 0.0,
+          "amount": 509.584267,
           "currency": "USD"
         },
         "min": {
-          "amount": -5867.170452,
+          "amount": -6960.603363,
           "currency": "USD"
         },
         "max": {
-          "amount": -5867.170452,
+          "amount": -5390.287256,
           "currency": "USD"
         },
         "p01": {
-          "amount": -5867.170452,
+          "amount": -6952.636903,
           "currency": "USD"
         },
         "p05": {
-          "amount": -5867.170452,
+          "amount": -6920.771064,
           "currency": "USD"
         },
         "p10": {
-          "amount": -5867.170452,
+          "amount": -6880.938766,
           "currency": "USD"
         },
         "p25": {
-          "amount": -5867.170452,
+          "amount": -6441.379038,
           "currency": "USD"
         },
         "p50": {
-          "amount": -5867.170452,
+          "amount": -6208.03062,
           "currency": "USD"
         },
         "p75": {
-          "amount": -5867.170452,
+          "amount": -5710.262273,
           "currency": "USD"
         },
         "p90": {
-          "amount": -5867.170452,
+          "amount": -5579.293597,
           "currency": "USD"
         },
         "p95": {
-          "amount": -5867.170452,
+          "amount": -5484.790426,
           "currency": "USD"
         },
         "p99": {
-          "amount": -5867.170452,
+          "amount": -5409.18789,
           "currency": "USD"
         }
       },
@@ -288,55 +288,55 @@
         "type": "money",
         "trials": 10,
         "mean": {
-          "amount": -6000.0,
+          "amount": -6288.998635,
           "currency": "USD"
         },
         "stdev": {
-          "amount": 0.0,
+          "amount": 521.120978,
           "currency": "USD"
         },
         "min": {
-          "amount": -6000.0,
+          "amount": -7118.187637,
           "currency": "USD"
         },
         "max": {
-          "amount": -6000.0,
+          "amount": -5512.320427,
           "currency": "USD"
         },
         "p01": {
-          "amount": -6000.0,
+          "amount": -7110.040821,
           "currency": "USD"
         },
         "p05": {
-          "amount": -6000.0,
+          "amount": -7077.453557,
           "currency": "USD"
         },
         "p10": {
-          "amount": -6000.0,
+          "amount": -7036.719477,
           "currency": "USD"
         },
         "p25": {
-          "amount": -6000.0,
+          "amount": -6587.208356,
           "currency": "USD"
         },
         "p50": {
-          "amount": -6000.0,
+          "amount": -6348.577057,
           "currency": "USD"
         },
         "p75": {
-          "amount": -6000.0,
+          "amount": -5839.539505,
           "currency": "USD"
         },
         "p90": {
-          "amount": -6000.0,
+          "amount": -5705.605769,
           "currency": "USD"
         },
         "p95": {
-          "amount": -6000.0,
+          "amount": -5608.963098,
           "currency": "USD"
         },
         "p99": {
-          "amount": -6000.0,
+          "amount": -5531.648961,
           "currency": "USD"
         }
       },
@@ -378,55 +378,55 @@
         "type": "money",
         "trials": 10,
         "mean": {
-          "amount": -6000.0,
+          "amount": -6288.998635,
           "currency": "USD"
         },
         "stdev": {
-          "amount": 0.0,
+          "amount": 521.120978,
           "currency": "USD"
         },
         "min": {
-          "amount": -6000.0,
+          "amount": -7118.187637,
           "currency": "USD"
         },
         "max": {
-          "amount": -6000.0,
+          "amount": -5512.320427,
           "currency": "USD"
         },
         "p01": {
-          "amount": -6000.0,
+          "amount": -7110.040821,
           "currency": "USD"
         },
         "p05": {
-          "amount": -6000.0,
+          "amount": -7077.453557,
           "currency": "USD"
         },
         "p10": {
-          "amount": -6000.0,
+          "amount": -7036.719477,
           "currency": "USD"
         },
         "p25": {
-          "amount": -6000.0,
+          "amount": -6587.208356,
           "currency": "USD"
         },
         "p50": {
-          "amount": -6000.0,
+          "amount": -6348.577057,
           "currency": "USD"
         },
         "p75": {
-          "amount": -6000.0,
+          "amount": -5839.539505,
           "currency": "USD"
         },
         "p90": {
-          "amount": -6000.0,
+          "amount": -5705.605769,
           "currency": "USD"
         },
         "p95": {
-          "amount": -6000.0,
+          "amount": -5608.963098,
           "currency": "USD"
         },
         "p99": {
-          "amount": -6000.0,
+          "amount": -5531.648961,
           "currency": "USD"
         }
       }
@@ -436,21 +436,21 @@
         "trial": 0,
         "metrics": {
           "entity.asset.borrower.total": {
-            "amount": -6000.0,
+            "amount": -7027.667459,
             "currency": "USD"
           },
           "model.npv": {
-            "amount": -5867.170452,
+            "amount": -6872.087144,
             "currency": "USD"
           },
           "model.total": {
-            "amount": -6000.0,
+            "amount": -7027.667459,
             "currency": "USD"
           },
           "run.annual_discount_rate": 0.08,
           "run.periods_per_year": 12.0,
           "stream.lease.rent.total": {
-            "amount": -6000.0,
+            "amount": -7027.667459,
             "currency": "USD"
           }
         }
@@ -459,21 +459,21 @@
         "trial": 1,
         "metrics": {
           "entity.asset.borrower.total": {
-            "amount": -6000.0,
+            "amount": -6292.695254,
             "currency": "USD"
           },
           "model.npv": {
-            "amount": -5867.170452,
+            "amount": -6153.385943,
             "currency": "USD"
           },
           "model.total": {
-            "amount": -6000.0,
+            "amount": -6292.695254,
             "currency": "USD"
           },
           "run.annual_discount_rate": 0.08,
           "run.periods_per_year": 12.0,
           "stream.lease.rent.total": {
-            "amount": -6000.0,
+            "amount": -6292.695254,
             "currency": "USD"
           }
         }
@@ -482,21 +482,21 @@
         "trial": 2,
         "metrics": {
           "entity.asset.borrower.total": {
-            "amount": -6000.0,
+            "amount": -7118.187637,
             "currency": "USD"
           },
           "model.npv": {
-            "amount": -5867.170452,
+            "amount": -6960.603363,
             "currency": "USD"
           },
           "model.total": {
-            "amount": -6000.0,
+            "amount": -7118.187637,
             "currency": "USD"
           },
           "run.annual_discount_rate": 0.08,
           "run.periods_per_year": 12.0,
           "stream.lease.rent.total": {
-            "amount": -6000.0,
+            "amount": -7118.187637,
             "currency": "USD"
           }
         }
@@ -505,21 +505,21 @@
         "trial": 3,
         "metrics": {
           "entity.asset.borrower.total": {
-            "amount": -6000.0,
+            "amount": -5512.320427,
             "currency": "USD"
           },
           "model.npv": {
-            "amount": -5867.170452,
+            "amount": -5390.287256,
             "currency": "USD"
           },
           "model.total": {
-            "amount": -6000.0,
+            "amount": -5512.320427,
             "currency": "USD"
           },
           "run.annual_discount_rate": 0.08,
           "run.periods_per_year": 12.0,
           "stream.lease.rent.total": {
-            "amount": -6000.0,
+            "amount": -5512.320427,
             "currency": "USD"
           }
         }
@@ -528,21 +528,21 @@
         "trial": 4,
         "metrics": {
           "entity.asset.borrower.total": {
-            "amount": -6000.0,
+            "amount": -6404.458859,
             "currency": "USD"
           },
           "model.npv": {
-            "amount": -5867.170452,
+            "amount": -6262.675297,
             "currency": "USD"
           },
           "model.total": {
-            "amount": -6000.0,
+            "amount": -6404.458859,
             "currency": "USD"
           },
           "run.annual_discount_rate": 0.08,
           "run.periods_per_year": 12.0,
           "stream.lease.rent.total": {
-            "amount": -6000.0,
+            "amount": -6404.458859,
             "currency": "USD"
           }
         }
@@ -551,21 +551,21 @@
         "trial": 5,
         "metrics": {
           "entity.asset.borrower.total": {
-            "amount": -6000.0,
+            "amount": -6614.085545,
             "currency": "USD"
           },
           "model.npv": {
-            "amount": -5867.170452,
+            "amount": -6467.661213,
             "currency": "USD"
           },
           "model.total": {
-            "amount": -6000.0,
+            "amount": -6614.085545,
             "currency": "USD"
           },
           "run.annual_discount_rate": 0.08,
           "run.periods_per_year": 12.0,
           "stream.lease.rent.total": {
-            "amount": -6000.0,
+            "amount": -6614.085545,
             "currency": "USD"
           }
         }
@@ -574,21 +574,21 @@
         "trial": 6,
         "metrics": {
           "entity.asset.borrower.total": {
-            "amount": -6000.0,
+            "amount": -5727.081918,
             "currency": "USD"
           },
           "model.npv": {
-            "amount": -5867.170452,
+            "amount": -5600.294301,
             "currency": "USD"
           },
           "model.total": {
-            "amount": -6000.0,
+            "amount": -5727.081918,
             "currency": "USD"
           },
           "run.annual_discount_rate": 0.08,
           "run.periods_per_year": 12.0,
           "stream.lease.rent.total": {
-            "amount": -6000.0,
+            "amount": -5727.081918,
             "currency": "USD"
           }
         }
@@ -597,21 +597,21 @@
         "trial": 7,
         "metrics": {
           "entity.asset.borrower.total": {
-            "amount": -6000.0,
+            "amount": -6506.576788,
             "currency": "USD"
           },
           "model.npv": {
-            "amount": -5867.170452,
+            "amount": -6362.532513,
             "currency": "USD"
           },
           "model.total": {
-            "amount": -6000.0,
+            "amount": -6506.576788,
             "currency": "USD"
           },
           "run.annual_discount_rate": 0.08,
           "run.periods_per_year": 12.0,
           "stream.lease.rent.total": {
-            "amount": -6000.0,
+            "amount": -6506.576788,
             "currency": "USD"
           }
         }
@@ -620,21 +620,21 @@
         "trial": 8,
         "metrics": {
           "entity.asset.borrower.total": {
-            "amount": -6000.0,
+            "amount": -5835.622776,
             "currency": "USD"
           },
           "model.npv": {
-            "amount": -5867.170452,
+            "amount": -5706.432254,
             "currency": "USD"
           },
           "model.total": {
-            "amount": -6000.0,
+            "amount": -5835.622776,
             "currency": "USD"
           },
           "run.annual_discount_rate": 0.08,
           "run.periods_per_year": 12.0,
           "stream.lease.rent.total": {
-            "amount": -6000.0,
+            "amount": -5835.622776,
             "currency": "USD"
           }
         }
@@ -643,21 +643,21 @@
         "trial": 9,
         "metrics": {
           "entity.asset.borrower.total": {
-            "amount": -6000.0,
+            "amount": -5851.28969,
             "currency": "USD"
           },
           "model.npv": {
-            "amount": -5867.170452,
+            "amount": -5721.752329,
             "currency": "USD"
           },
           "model.total": {
-            "amount": -6000.0,
+            "amount": -5851.28969,
             "currency": "USD"
           },
           "run.annual_discount_rate": 0.08,
           "run.periods_per_year": 12.0,
           "stream.lease.rent.total": {
-            "amount": -6000.0,
+            "amount": -5851.28969,
             "currency": "USD"
           }
         }
@@ -665,9 +665,9 @@
     ],
     "aggregates": {
       "npv": {
-        "mean": -5867.170452,
-        "median": -5867.170452,
-        "stddev": 0.0,
+        "mean": -6149.771161,
+        "median": -6208.03062,
+        "stddev": 509.584268,
         "p_negative": 1.0
       }
     }

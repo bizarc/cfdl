@@ -133,6 +133,205 @@ pub(crate) fn warn_curve_reads_past_end(
     }
 }
 
+/// AN OVERRIDE THAT MATCHES NOTHING IS REFUSED (`docs/13` §7.51, §7.116).
+/// A run configuration addresses what it moves by a prefixed key: `inputs.`
+/// an assumption, `stream.<name>:amount` one stream's figure, `cfg.` and
+/// `obs.` their namespaces. A key that resolves to nothing used to be applied
+/// to nothing, and the run reported ok — a scenario setting `cpr` for
+/// `inputs.cpr` was silently the base run again, and a Monte Carlo keyed the
+/// same way a distribution with zero variance. This is the unresolved-name
+/// rule one layer out: the run knows every source, so it refuses, naming the
+/// block the key sits in and the nearest name it could have meant.
+pub(crate) fn refuse_unresolved_overrides(ir: &Ir, config: &RunConfig) -> Result<(), EngineError> {
+    // What resolves. An assumption is declared by `assume`, or read as
+    // `inputs.<name>` somewhere in the model — an input may be supplied
+    // entirely by the run configuration. `cfg.` and `obs.` paths resolve where
+    // some expression reads them. A stream resolves by its name.
+    let mut inputs: BTreeSet<String> = BTreeSet::new();
+    inputs.extend(ir.assumptions.constants.keys().cloned());
+    inputs.extend(ir.assumptions.random.keys().cloned());
+    let mut cfg_paths: BTreeSet<String> = BTreeSet::new();
+    let mut obs_paths: BTreeSet<String> = BTreeSet::new();
+    for src in expression_sources(ir) {
+        for (prefix, set) in [
+            ("inputs.", &mut inputs),
+            ("cfg.", &mut cfg_paths),
+            ("obs.", &mut obs_paths),
+        ] {
+            let mut rest = src.as_str();
+            while let Some(idx) = rest.find(prefix) {
+                let after = &rest[idx + prefix.len()..];
+                let end = after
+                    .find(|c: char| !(c.is_ascii_alphanumeric() || c == '_' || c == '.'))
+                    .unwrap_or(after.len());
+                let path = after[..end].trim_end_matches('.');
+                if !path.is_empty() {
+                    set.insert(path.to_string());
+                }
+                rest = &after[end.min(after.len())..];
+            }
+        }
+    }
+    let streams: BTreeSet<&str> = ir.streams.iter().map(|s| s.name.as_str()).collect();
+
+    let resolves = |key: &str| -> bool {
+        if let Some(name) = key.strip_prefix("inputs.") {
+            inputs.contains(name)
+        } else if let Some(path) = key.strip_prefix("cfg.") {
+            cfg_paths
+                .iter()
+                .any(|p| p == path || p.starts_with(&format!("{path}.")))
+        } else if let Some(path) = key.strip_prefix("obs.") {
+            obs_paths
+                .iter()
+                .any(|p| p == path || p.starts_with(&format!("{path}.")))
+        } else if let Some(name) = key
+            .strip_prefix("stream.")
+            .and_then(|k| k.strip_suffix(":amount"))
+        {
+            streams.contains(name)
+        } else {
+            false
+        }
+    };
+    let hint = |key: &str| -> String {
+        if !key.contains('.') && inputs.contains(key) {
+            return format!("did you mean `inputs.{key}`?");
+        }
+        // The stream form with the wrong punctuation: a dotted `.amount` or a
+        // bracketed name. Name the colon form the engine reads.
+        if key.starts_with("stream") && key.ends_with("amount") {
+            let inner = key
+                .trim_start_matches("stream")
+                .trim_end_matches("amount")
+                .trim_matches(|c: char| c == '.' || c == ':' || c == '[' || c == ']' || c == '"');
+            if let Some(near) = nearest(inner, streams.iter().copied()) {
+                return format!("did you mean `stream.{near}:amount`?");
+            }
+        }
+        if let Some(name) = key.strip_prefix("inputs.") {
+            if let Some(near) = nearest(name, inputs.iter().map(String::as_str)) {
+                return format!("did you mean `inputs.{near}`?");
+            }
+        }
+        if let Some(near) = nearest(key, inputs.iter().map(String::as_str)) {
+            return format!("did you mean `inputs.{near}`?");
+        }
+        "a key is `inputs.<name>`, `stream.<name>:amount`, `cfg.<path>` or `obs.<path>`".to_string()
+    };
+
+    let mut offences: Vec<String> = Vec::new();
+    let mut check = |block: &str, keys: &mut dyn Iterator<Item = &String>| {
+        for key in keys {
+            if !resolves(key) {
+                offences.push(format!(
+                    "{block} sets `{key}`, which nothing in this model declares or reads — {}",
+                    hint(key)
+                ));
+            }
+        }
+    };
+    check(
+        "the deterministic block",
+        &mut config.parameter_overrides.keys(),
+    );
+    for (name, scenario) in &config.scenarios {
+        check(
+            &format!("scenario '{name}'"),
+            &mut scenario.parameter_overrides.keys(),
+        );
+    }
+    if let Some(mc) = &config.monte_carlo {
+        check("monte_carlo.distributions", &mut mc.distributions.keys());
+    }
+    if offences.is_empty() {
+        return Ok(());
+    }
+    Err(EngineError::InvalidRunConfig(format!(
+        "{} — an override that matches nothing would leave the run unchanged and reported as ok",
+        offences.join("; ")
+    )))
+}
+
+/// Every expression source in the document, for the scans that need one.
+fn expression_sources(ir: &Ir) -> Vec<String> {
+    let mut out: Vec<String> = Vec::new();
+    for stream in &ir.streams {
+        out.push(stream.amount.src.clone());
+        if let Some(e) = &stream.active_when {
+            out.push(e.src.clone());
+        }
+    }
+    for entity in &ir.entities {
+        for rule in entity.rules.values() {
+            out.push(rule.init.src.clone());
+            out.push(rule.next.src.clone());
+        }
+    }
+    for account in &ir.accounts {
+        if let Some(e) = &account.inflow {
+            out.push(e.src.clone());
+        }
+        if let Some(e) = &account.init {
+            out.push(e.src.clone());
+        }
+    }
+    for waterfall in &ir.waterfalls {
+        out.push(waterfall.source.src.clone());
+        for step in &waterfall.steps {
+            out.push(step.amount.src.clone());
+        }
+    }
+    for metric in &ir.metrics {
+        out.push(metric.expr.src.clone());
+    }
+    for constant in ir.assumptions.constants.values() {
+        out.push(constant.expr.src.clone());
+    }
+    for option in &ir.options {
+        out.push(option.exercise_when.src.clone());
+        out.push(option.payoff.src.clone());
+    }
+    for event in &ir.events {
+        if let Some(e) = &event.when {
+            out.push(e.src.clone());
+        }
+        for action in &event.actions {
+            if let Some(e) = &action.value {
+                out.push(e.src.clone());
+            }
+        }
+    }
+    out
+}
+
+/// The declared name nearest to `word` by edit distance, when one is close.
+fn nearest<'a>(word: &str, candidates: impl Iterator<Item = &'a str>) -> Option<&'a str> {
+    let mut best: Option<(usize, &str)> = None;
+    for candidate in candidates {
+        let d = edit_distance(word, candidate);
+        if d <= 2.max(word.len() / 3) && best.is_none_or(|(bd, _)| d < bd) {
+            best = Some((d, candidate));
+        }
+    }
+    best.map(|(_, c)| c)
+}
+
+fn edit_distance(a: &str, b: &str) -> usize {
+    let a: Vec<char> = a.chars().collect();
+    let b: Vec<char> = b.chars().collect();
+    let mut prev: Vec<usize> = (0..=b.len()).collect();
+    for (i, ca) in a.iter().enumerate() {
+        let mut cur = vec![i + 1];
+        for (j, cb) in b.iter().enumerate() {
+            let cost = if ca == cb { 0 } else { 1 };
+            cur.push((prev[j] + cost).min(prev[j + 1] + 1).min(cur[j] + 1));
+        }
+        prev = cur;
+    }
+    prev[b.len()]
+}
+
 pub(crate) fn refuse_series_reads_in_logic(ir: &Ir) -> Result<(), EngineError> {
     let mut offences: Vec<String> = Vec::new();
 
