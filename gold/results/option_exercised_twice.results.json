@@ -1,0 +1,462 @@
+{
+  "results_version": "0.13",
+  "model_hash": "28d20a0563749d012be8cd6a51fd3d86ebc7b9571beb5cf65b9f09756d5c844d",
+  "ledger_hash": "0628f8b0ea623b52354d65be9e7b040714dc8d8d8c84436b872ce32a95d591bf",
+  "engine": {
+    "name": "cfdl-engine",
+    "version": "0.9.0"
+  },
+  "warnings": [],
+  "deterministic": {
+    "status": "ok",
+    "metrics": {
+      "entity.asset.bldg.total": {
+        "amount": 2800.0,
+        "currency": "USD"
+      },
+      "entity.party.tenant.total": {
+        "amount": 0.0,
+        "currency": "USD"
+      },
+      "model.npv": {
+        "amount": 2376.053229,
+        "currency": "USD"
+      },
+      "model.total": {
+        "amount": 2800.0,
+        "currency": "USD"
+      },
+      "model.wal_years": 3.428571,
+      "run.annual_discount_rate": 0.05,
+      "run.periods_per_year": 1.0,
+      "stream.bldg.rent.total": {
+        "amount": 800.0,
+        "currency": "USD"
+      },
+      "stream.option.renewal.total": {
+        "amount": 2000.0,
+        "currency": "USD"
+      }
+    },
+    "series": {
+      "entity.asset.bldg.net_cash_flow": {
+        "index": {
+          "calendar": "annual",
+          "start": "2026-01-01",
+          "periods": 8
+        },
+        "values": [
+          {
+            "amount": 100.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 100.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 1100.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 100.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 1100.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 100.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 100.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 100.0,
+            "currency": "USD"
+          }
+        ]
+      },
+      "entity.party.tenant.net_cash_flow": {
+        "index": {
+          "calendar": "annual",
+          "start": "2026-01-01",
+          "periods": 8
+        },
+        "values": [
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          }
+        ]
+      },
+      "model.net_cash_flow": {
+        "index": {
+          "calendar": "annual",
+          "start": "2026-01-01",
+          "periods": 8
+        },
+        "values": [
+          {
+            "amount": 100.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 100.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 1100.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 100.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 1100.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 100.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 100.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 100.0,
+            "currency": "USD"
+          }
+        ]
+      },
+      "stream.bldg.rent": {
+        "index": {
+          "calendar": "annual",
+          "start": "2026-01-01",
+          "periods": 8
+        },
+        "offset": 1.0,
+        "entity": "asset.bldg",
+        "values": [
+          {
+            "amount": 100.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 100.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 100.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 100.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 100.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 100.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 100.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 100.0,
+            "currency": "USD"
+          }
+        ]
+      },
+      "stream.option.renewal": {
+        "index": {
+          "calendar": "annual",
+          "start": "2026-01-01",
+          "periods": 8
+        },
+        "offset": 0.0,
+        "values": [
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 1000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 1000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          }
+        ]
+      }
+    },
+    "journal": [
+      {
+        "period": 2,
+        "date": "2028-01-01",
+        "actor": "option:renewal",
+        "action": "exercise_option",
+        "target": "renewal",
+        "outcome": "applied",
+        "note": "its own `exercise when` held; exercise 1 of 2"
+      },
+      {
+        "period": 4,
+        "date": "2030-01-01",
+        "actor": "option:renewal",
+        "action": "exercise_option",
+        "target": "renewal",
+        "outcome": "applied",
+        "note": "its own `exercise when` held; exercise 2 of 2"
+      }
+    ]
+  },
+  "scenarios": {
+    "status": "not_run",
+    "summaries": []
+  },
+  "monte_carlo": {
+    "status": "not_run",
+    "trials": 1,
+    "seed": 0,
+    "metrics": {},
+    "trial_summaries": []
+  },
+  "statements": {
+    "statements": [
+      {
+        "id": "by_entity",
+        "label": "Cash by entity",
+        "default": true,
+        "grain": {
+          "calendar": "annual",
+          "start": "2026-01-01",
+          "labels": [
+            "2026",
+            "2027",
+            "2028",
+            "2029",
+            "2030",
+            "2031",
+            "2032",
+            "2033"
+          ]
+        },
+        "rows": [
+          {
+            "kind": "line",
+            "label": "Bldg",
+            "depth": 0,
+            "display_sign": 1.0,
+            "values": [
+              {
+                "amount": 100.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 100.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 100.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 100.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 100.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 100.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 100.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 100.0,
+                "currency": "USD"
+              }
+            ],
+            "total": 800.0,
+            "streams": [
+              "bldg.rent"
+            ]
+          },
+          {
+            "kind": "line",
+            "label": "Tenant",
+            "depth": 0,
+            "display_sign": 1.0,
+            "values": [
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              }
+            ],
+            "total": 0.0
+          },
+          {
+            "kind": "residual",
+            "label": "Unclassified",
+            "depth": 1,
+            "display_sign": 1.0,
+            "values": [
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 1000.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 1000.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              }
+            ],
+            "total": 2000.0,
+            "streams": [
+              "option.renewal"
+            ]
+          }
+        ],
+        "reconciliation": {
+          "bottom_line": 2800.0,
+          "model_total": 2800.0,
+          "residual": 0.0
+        },
+        "diagnostics": [
+          {
+            "code": "W3500_STATEMENT_UNCLASSIFIED_STREAM",
+            "message": "1 stream(s) are in no row of statement 'by_entity', so the bottom line is short by 2000.00: option.renewal. Classify them, or give the statement a row that claims them."
+          }
+        ]
+      }
+    ]
+  },
+  "graph": {
+    "entities": [
+      {
+        "symbol": "asset.bldg",
+        "family": "asset",
+        "type": "Asset.Real"
+      },
+      {
+        "symbol": "party.tenant",
+        "family": "party",
+        "type": "Party"
+      }
+    ]
+  }
+}

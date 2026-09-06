@@ -764,11 +764,27 @@ pub struct OptionStmt {
     /// `contract.<term>`.
     #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
     pub terms: BTreeMap<String, ContractTerm>,
+    /// The occasions the election is tested at (`docs/34` D1a, applied to an
+    /// option): a Bermudan right is exercisable on stated dates. The schedule
+    /// SUPPLIES the occasions and `exercise when` FILTERS them; absent, an
+    /// occasion is the rising edge of the election while the option is held.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub schedule: Option<ScheduleSpec>,
+    /// How many times the right may be exercised — `exercisable 2 times`. A
+    /// lease with two renewals is exercised twice. Absent means once.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub exercises: Option<u32>,
     pub exercisable_in: Option<String>,
     /// Boolean trigger expression (raw source).
     pub exercise_when: Option<String>,
     /// Payoff amount expression (raw source).
     pub payoff: Option<String>,
+    /// What the exercise DOES beyond paying: the event action vocabulary,
+    /// run on each exercise through the same stores an event writes. A
+    /// prepayment option ends the loan; a renewal extends the lease. Without
+    /// these an exercise could only pay cash.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub actions: Vec<EventAction>,
     pub span: Span,
 }
 
@@ -3634,9 +3650,9 @@ impl<'a> Parser<'a> {
                 | TokenKind::Keyword(Keyword::Deactivate)
                 | TokenKind::Keyword(Keyword::Exercise) => stops.contains(&TokStopKind::Action),
                 TokenKind::Keyword(Keyword::Payoff) => stops.contains(&TokStopKind::Payoff),
-                TokenKind::Keyword(Keyword::Parties) | TokenKind::Keyword(Keyword::Terms) => {
-                    stops.contains(&TokStopKind::OptionItem)
-                }
+                TokenKind::Keyword(Keyword::Parties)
+                | TokenKind::Keyword(Keyword::Terms)
+                | TokenKind::Keyword(Keyword::Schedule) => stops.contains(&TokStopKind::OptionItem),
                 _ => false,
             };
             if stop {
@@ -3706,90 +3722,11 @@ impl<'a> Parser<'a> {
         loop {
             match self.peek().kind {
                 TokenKind::Punct(Punct::RBrace) | TokenKind::Eof => break,
-                TokenKind::Keyword(Keyword::Set) => {
-                    let _ = self.bump();
-                    let _ = self.expect_keyword(Keyword::Entity, "'entity'")?;
-                    let target_tok = self.bump();
-                    let target = match target_tok.kind {
-                        TokenKind::Qname(ref s) => s.clone(),
-                        _ => {
-                            self.push_expected(
-                                target_tok.span,
-                                "Expected qualified entity field (ns.name.field) after 'set entity'.".to_string(),
-                            );
-                            return None;
-                        }
-                    };
-                    let segments: Vec<&str> = target.split('.').collect();
-                    if segments.len() < 3 {
-                        self.push_expected(
-                            target_tok.span,
-                            "Expected entity field reference of the form ns.name.field."
-                                .to_string(),
-                        );
-                        return None;
-                    }
-                    let field = segments.last().expect("segments non-empty").to_string();
-                    let entity = segments[..segments.len() - 1].join(".");
-                    let _ = self.expect_punct(Punct::Equal, "'='")?;
-                    let Some(value) = self.consume_expr_until(&[TokStopKind::Action]) else {
-                        self.push_expected(
-                            self.current_span(),
-                            "Expected value expression after '='.".to_string(),
-                        );
-                        return None;
-                    };
-                    actions.push(EventAction::SetEntityField {
-                        entity,
-                        field,
-                        value,
-                    });
-                }
-                TokenKind::Keyword(Keyword::Activate) | TokenKind::Keyword(Keyword::Deactivate) => {
-                    let activate =
-                        matches!(self.peek().kind, TokenKind::Keyword(Keyword::Activate));
-                    let _ = self.bump();
-                    let kind_tok = self.bump();
-                    if !matches!(kind_tok.kind, TokenKind::Keyword(Keyword::Stream)) {
-                        // `activate`/`deactivate contract` was removed (docs/13
-                        // §7.73): a contract is a collection of streams, and one
-                        // switch cannot say what forbearance says. Gate the
-                        // streams themselves, by name or with `active in state`.
-                        self.push_expected(
-                            kind_tok.span,
-                            "Expected 'stream' after activate/deactivate.".to_string(),
-                        );
-                        return None;
-                    }
-                    let target_tok = self.bump();
-                    let target = match target_tok.kind {
-                        TokenKind::Ident(ref s) | TokenKind::Qname(ref s) => s.clone(),
-                        _ => {
-                            self.push_expected(target_tok.span, "Expected name.".to_string());
-                            return None;
-                        }
-                    };
-                    actions.push(if activate {
-                        EventAction::ActivateStream(target)
-                    } else {
-                        EventAction::DeactivateStream(target)
-                    });
-                }
-                TokenKind::Keyword(Keyword::Exercise) => {
-                    let _ = self.bump();
-                    let _ = self.expect_keyword(Keyword::Option, "'option'")?;
-                    let target_tok = self.bump();
-                    let target = match target_tok.kind {
-                        TokenKind::Ident(ref s) | TokenKind::Qname(ref s) => s.clone(),
-                        _ => {
-                            self.push_expected(
-                                target_tok.span,
-                                "Expected option name.".to_string(),
-                            );
-                            return None;
-                        }
-                    };
-                    actions.push(EventAction::ExerciseOption(target));
+                TokenKind::Keyword(Keyword::Set)
+                | TokenKind::Keyword(Keyword::Activate)
+                | TokenKind::Keyword(Keyword::Deactivate)
+                | TokenKind::Keyword(Keyword::Exercise) => {
+                    actions.push(self.parse_action_stmt(&[TokStopKind::Action])?);
                 }
                 _ => {
                     self.push_expected(
@@ -3810,7 +3747,105 @@ impl<'a> Parser<'a> {
         })
     }
 
-    /// `option <qname> type <qname> [exercisable in <ident>] { exercise when <expr> payoff <expr> }`
+    /// One action — `set entity <ns.name>.<field> = <expr>`, `activate stream
+    /// <name>`, `deactivate stream <name>`, `exercise option <name>` — the
+    /// vocabulary an event's block and an option's body share. `value_stops`
+    /// are the tokens a `set` value ends at, which differ by host: an
+    /// option's value also ends at its own items.
+    fn parse_action_stmt(&mut self, value_stops: &[TokStopKind]) -> Option<EventAction> {
+        match self.peek().kind {
+            TokenKind::Keyword(Keyword::Set) => {
+                let _ = self.bump();
+                let _ = self.expect_keyword(Keyword::Entity, "'entity'")?;
+                let target_tok = self.bump();
+                let target = match target_tok.kind {
+                    TokenKind::Qname(ref s) => s.clone(),
+                    _ => {
+                        self.push_expected(
+                            target_tok.span,
+                            "Expected qualified entity field (ns.name.field) after 'set entity'."
+                                .to_string(),
+                        );
+                        return None;
+                    }
+                };
+                let segments: Vec<&str> = target.split('.').collect();
+                if segments.len() < 3 {
+                    self.push_expected(
+                        target_tok.span,
+                        "Expected entity field reference of the form ns.name.field.".to_string(),
+                    );
+                    return None;
+                }
+                let field = segments.last().expect("segments non-empty").to_string();
+                let entity = segments[..segments.len() - 1].join(".");
+                let _ = self.expect_punct(Punct::Equal, "'='")?;
+                let Some(value) = self.consume_expr_until(value_stops) else {
+                    self.push_expected(
+                        self.current_span(),
+                        "Expected value expression after '='.".to_string(),
+                    );
+                    return None;
+                };
+                Some(EventAction::SetEntityField {
+                    entity,
+                    field,
+                    value,
+                })
+            }
+            TokenKind::Keyword(Keyword::Activate) | TokenKind::Keyword(Keyword::Deactivate) => {
+                let activate = matches!(self.peek().kind, TokenKind::Keyword(Keyword::Activate));
+                let _ = self.bump();
+                let kind_tok = self.bump();
+                if !matches!(kind_tok.kind, TokenKind::Keyword(Keyword::Stream)) {
+                    // `activate`/`deactivate contract` was removed (docs/13
+                    // §7.73): a contract is a collection of streams, and one
+                    // switch cannot say what forbearance says. Gate the
+                    // streams themselves, by name or with `active in state`.
+                    self.push_expected(
+                        kind_tok.span,
+                        "Expected 'stream' after activate/deactivate.".to_string(),
+                    );
+                    return None;
+                }
+                let target_tok = self.bump();
+                let target = match target_tok.kind {
+                    TokenKind::Ident(ref s) | TokenKind::Qname(ref s) => s.clone(),
+                    _ => {
+                        self.push_expected(target_tok.span, "Expected name.".to_string());
+                        return None;
+                    }
+                };
+                Some(if activate {
+                    EventAction::ActivateStream(target)
+                } else {
+                    EventAction::DeactivateStream(target)
+                })
+            }
+            TokenKind::Keyword(Keyword::Exercise) => {
+                let _ = self.bump();
+                let _ = self.expect_keyword(Keyword::Option, "'option'")?;
+                let target_tok = self.bump();
+                let target = match target_tok.kind {
+                    TokenKind::Ident(ref s) | TokenKind::Qname(ref s) => s.clone(),
+                    _ => {
+                        self.push_expected(target_tok.span, "Expected option name.".to_string());
+                        return None;
+                    }
+                };
+                Some(EventAction::ExerciseOption(target))
+            }
+            _ => {
+                self.push_expected(
+                    self.current_span(),
+                    "Expected action (set, activate, deactivate, exercise).".to_string(),
+                );
+                None
+            }
+        }
+    }
+
+    /// `option <qname> [on entity <ref> | on contract <qname>] type <qname> [exercisable [N times] [in <ident>]] { parties / terms / schedule / exercise when <expr> / payoff <expr> / actions }`
     fn parse_option_stmt(&mut self) -> Option<OptionStmt> {
         let start = self.expect_keyword(Keyword::Option, "'option'")?;
         let name_tok = self.bump();
@@ -3870,18 +3905,48 @@ impl<'a> Parser<'a> {
             }
         };
         let mut exercisable_in = None;
+        let mut exercises = None;
         if matches!(self.peek().kind, TokenKind::Keyword(Keyword::Exercisable)) {
             let _ = self.bump();
-            let _ = self.expect_keyword(Keyword::In, "'in'")?;
-            let phase_tok = self.bump();
-            match phase_tok.kind {
-                TokenKind::Ident(ref s) | TokenKind::Qname(ref s) => {
-                    exercisable_in = Some(s.clone());
+            // `exercisable 2 times`: the count of exercises the right allows.
+            if let TokenKind::Number(ref raw) = self.peek().kind {
+                let raw = raw.clone();
+                let count_tok = self.bump();
+                match raw.replace('_', "").parse::<u32>() {
+                    Ok(n) if n >= 1 => exercises = Some(n),
+                    _ => {
+                        self.push_expected(
+                            count_tok.span,
+                            "Expected a whole number of exercises, at least 1, after 'exercisable'."
+                                .to_string(),
+                        );
+                        return None;
+                    }
                 }
-                _ => {
-                    self.push_expected(phase_tok.span, "Expected phase name.".to_string());
+                let times_tok = self.bump();
+                if !matches!(times_tok.kind, TokenKind::Ident(ref s) if s == "times") {
+                    self.push_expected(times_tok.span, "Expected 'times'.".to_string());
                     return None;
                 }
+            }
+            if matches!(self.peek().kind, TokenKind::Keyword(Keyword::In)) {
+                let _ = self.bump();
+                let phase_tok = self.bump();
+                match phase_tok.kind {
+                    TokenKind::Ident(ref s) | TokenKind::Qname(ref s) => {
+                        exercisable_in = Some(s.clone());
+                    }
+                    _ => {
+                        self.push_expected(phase_tok.span, "Expected phase name.".to_string());
+                        return None;
+                    }
+                }
+            } else if exercises.is_none() {
+                self.push_expected(
+                    self.current_span(),
+                    "Expected a count ('2 times') or 'in <phase>' after 'exercisable'.".to_string(),
+                );
+                return None;
             }
         }
         let _ = self.expect_punct(Punct::LBrace, "'{'")?;
@@ -3889,9 +3954,36 @@ impl<'a> Parser<'a> {
         let mut payoff = None;
         let mut parties: Vec<PartyBinding> = Vec::new();
         let mut terms: BTreeMap<String, ContractTerm> = BTreeMap::new();
+        let mut schedule: Option<ScheduleSpec> = None;
+        let mut actions: Vec<EventAction> = Vec::new();
         loop {
             match self.peek().kind {
                 TokenKind::Punct(Punct::RBrace) | TokenKind::Eof => break,
+                // `exercise when` is the election; `exercise option` is an
+                // action, as in an event.
+                TokenKind::Keyword(Keyword::Exercise)
+                    if matches!(self.peek_at(1).kind, TokenKind::Keyword(Keyword::Option)) =>
+                {
+                    actions.push(self.parse_action_stmt(&[
+                        TokStopKind::Action,
+                        TokStopKind::Payoff,
+                        TokStopKind::OptionItem,
+                    ])?);
+                }
+                TokenKind::Keyword(Keyword::Set)
+                | TokenKind::Keyword(Keyword::Activate)
+                | TokenKind::Keyword(Keyword::Deactivate) => {
+                    actions.push(self.parse_action_stmt(&[
+                        TokStopKind::Action,
+                        TokStopKind::Payoff,
+                        TokStopKind::OptionItem,
+                    ])?);
+                }
+                TokenKind::Keyword(Keyword::Schedule) => {
+                    let _ = self.bump();
+                    schedule = self.parse_schedule_expr();
+                    schedule.as_ref()?;
+                }
                 TokenKind::Keyword(Keyword::Exercise) => {
                     let _ = self.bump();
                     let _ = self.expect_keyword(Keyword::When, "'when'")?;
@@ -3940,7 +4032,7 @@ impl<'a> Parser<'a> {
                 _ => {
                     self.push_expected(
                         self.current_span(),
-                        "Expected 'parties', 'terms', 'exercise when', 'payoff', or '}'."
+                        "Expected 'parties', 'terms', 'schedule', 'exercise when', 'payoff', an action (set, activate, deactivate, exercise option), or '}'."
                             .to_string(),
                     );
                     return None;
@@ -3955,9 +4047,12 @@ impl<'a> Parser<'a> {
             subject_contract,
             parties,
             terms,
+            schedule,
+            exercises,
             exercisable_in,
             exercise_when,
             payoff,
+            actions,
             span: merge_spans(start.span, end.span),
         })
     }

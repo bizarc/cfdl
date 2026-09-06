@@ -226,9 +226,11 @@ generic elections as concrete refinements — `Option.Call`, `Option.Put`,
 write one, and an option's type is checked against them and the pack's
 own (`E1373`, `E1374`; stage 3). DECIDED 5 September 2026: the four stay.
 Call, put, renewal and refinance are the generic vocabulary of elections,
-not domain words, and a pack-free model must be able to write one; stage
-7's second part gives an election a schedule, an exercise count and
-actions on exercise.
+not domain words, and a pack-free model must be able to write one. The
+second part, same day: a `schedule` on an election (a Bermudan right), an
+exercise count (`exercisable 2 times`) and actions on exercise in the
+event's vocabulary — an exercise is an occurrence in `docs/34` D1's sense,
+and an option is exercised as often as it allows (`docs/01` §14).
 
 ### 4.9 Construction — removed from the roster, 4 September 2026
 There is no `Contract.Construction`. A build is capital expenditure on a
@@ -800,8 +802,11 @@ contract names, and their accounts hold what they received (`docs/13`
 7. **Elections**: `Contract.Option`'s core in the `option` grammar — first
    part BUILT 5 September 2026: `terms` on an option checked against its
    type's roster and read as `contract.<term>`; `on contract <name>` as the
-   subject; the four base election names STAY (§4.8). Second part: a
-   schedule on an election, an exercise count, actions on exercise.
+   subject; the four base election names STAY (§4.8). Second part BUILT the
+   same day: a schedule on an election, an exercise count, actions on
+   exercise, and an option's `prev.<account>` reads its owner's claim. What
+   remains of stage 7 is demonstration: a CRE renewal on a lease, and the
+   AmeriCredit clean-up call as `Credit.Contract.CleanUpCall`.
 
 `docs/13` §7.58, §7.63, §7.67 and §7.92 closed with stage 3; §7.96–7.98
 close with the stages that answer them.

@@ -451,18 +451,25 @@ exercise_option_stmt   = "exercise" "option" qname ;
    type's effective fields as a contract's are, and the election and the
    payoff read them as `contract.<term>`; written on a contract, the
    agreement's terms are readable the same way where the option states none
-   of its own. The items may appear in any order. *)
+   of its own. `exercisable N times` is how often the right may be exercised
+   (once by default); a `schedule` supplies the occasions the election is
+   tested at (a Bermudan right), and without one an occasion is the
+   election's rising edge while the option is held. The action statements
+   are what an exercise DOES beyond paying — the event's vocabulary, run on
+   each exercise. The items may appear in any order. *)
 option_stmt     = "option" qname
                   [ "on" ( "entity" entity_ref | "contract" qname ) ]
                   "type" qname
-                  [ "exercisable" "in" qname ]
+                  [ "exercisable" [ INT "times" ] [ "in" qname ] ]
                   option_block ;
 
 option_block    = "{" option_item* "}" ;
 option_item     = parties_block
                 | terms_block
+                | "schedule" schedule_expr
                 | "exercise" "when" expr
                 | "payoff" expr
+                | action_stmt
                 ;
 
 (* --- runs --- *)

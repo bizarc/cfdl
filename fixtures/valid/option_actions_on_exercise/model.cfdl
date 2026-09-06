@@ -1,0 +1,39 @@
+version 0.1
+model "option-actions-on-exercise"
+time calendar annual from 2026-01 for 6
+
+// AN EXERCISE DOES SOMETHING. An option that could only pay cash could not
+// prepay a loan or renew a lease. The option body takes the event's action
+// vocabulary, run on exercise through the same stores an event writes and
+// visible at t+1: here a borrower's right to reset the rate — the payoff is
+// the fee, the action is the reset, and a second action stops the old
+// servicing charge.
+
+entity asset loan : Asset.Financial {
+  rate init 0.06 next prev
+}
+entity party borrower : Party { name = "Borrower" }
+
+option reset on entity asset.loan type Option.Refinance {
+  parties { holder = party.borrower }
+  terms { strike = 0.04 }
+  exercise when time.t >= 2
+  payoff -500
+  set entity asset.loan.rate = contract.strike
+  deactivate stream loan.servicing
+}
+
+// Reads the rate: 0.06 through t = 1, 0.04 from t = 2 — a stream reads the
+// state as the period closed, so a write takes effect in the period it fires
+// (docs/01 §13.1).
+stream loan.interest on entity asset.loan inflow currency USD {
+  schedule every year from 2026-01 to 2031-01
+  amount = 100000 * asset.loan.rate
+}
+
+stream loan.servicing on entity asset.loan outflow currency USD {
+  schedule every year from 2026-01 to 2031-01
+  amount = 250
+}
+
+run deterministic

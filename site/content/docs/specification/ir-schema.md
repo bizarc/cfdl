@@ -1275,6 +1275,22 @@ against it by `make ir-schema`.
         "exercisable_in_phase": {
           "$ref": "#/$defs/Id"
         },
+        "schedule": {
+          "$ref": "#/$defs/Schedule",
+          "description": "The occasions the election is tested at — a Bermudan right, exercisable on stated dates. The schedule supplies the occasions and `exercise_when` filters them. Absent, an occasion is the election's rising edge while the option is held (inside its window): true having been false, so a right that stays in the money is not re-exercised every period."
+        },
+        "exercises": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "How many times the right may be exercised — a lease with two renewals is exercised twice. Absent means once. Each exercise pays the payoff and runs the actions; the payoff series accumulates."
+        },
+        "actions": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Action"
+          },
+          "description": "What the exercise DOES beyond paying, in the event's action vocabulary, run on each exercise through the same stores an event writes and visible at t+1. A prepayment option ends the loan; a renewal extends the lease. Absent or empty, the exercise only pays."
+        },
         "exercise_when": {
           "$ref": "#/$defs/Expr"
         },

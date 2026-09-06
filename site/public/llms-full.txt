@@ -1253,6 +1253,9 @@ for a contract does not cost the ability to stop its cash. A name matching
 neither is `E1302`.
 - `exercise option <OptionName>`
 
+The same vocabulary is what an option's exercise DOES (§14.1): an option body
+carries these statements and runs them on each exercise.
+
 ### 13.3 Event timing and the grid (normative)
 
 An event fires at **each occurrence**, evaluated once per period against the
@@ -1309,8 +1312,9 @@ option call_at_120 on entity asset.plant type Option.Call {
 
 Rules:
 - `option <name> [on entity <EntityRef> | on contract <ContractName>] type
-  <TypeId> [exercisable in <phase>] { parties / terms / exercise when /
-  payoff }`. The body's items may appear in any order.
+  <TypeId> [exercisable [<n> times] [in <phase>]] { parties / terms /
+  schedule / exercise when / payoff / actions }`. The body's items may
+  appear in any order.
 - `type` names an election: a concrete refinement of `Contract.Option` in
   the active pack, or one of the four the language base carries so a model
   with no pack can write one — `Option.Call`, `Option.Put`,
@@ -1337,14 +1341,35 @@ Rules:
   missing term, never a zero.
 - `exercise when` is the election, evaluated once per period against the
   state as the period OPENED (§13.3), and may read entity fields by
-  qualified path and its owner's entity state; it cannot read a stream. The
-  option fires at most once, when the election holds inside its
-  `exercisable in` window or an event forces it there (§13.2). Exercise is
-  rule-based: the model exercises when the stated condition says so, never
-  when a search over holder value says it should.
+  qualified path, its owner's entity state, and its owner's claims as
+  `prev.<account>`; it cannot read a stream. Exercise is rule-based: the
+  model exercises when the stated condition says so, never when a search
+  over holder value says it should.
+- **An exercise is an occurrence**, in the event's sense (§13.1, `docs/34`
+  D1). With a `schedule` in the body — the same sub-language a stream's
+  takes — the schedule supplies the occasions and the election filters them:
+  a Bermudan right, exercisable on stated dates. Without one, an occasion is
+  the election's rising edge while the option is held: true having been
+  false, so a right that stays in the money is not re-exercised every
+  period. Outside its `exercisable in` window the option is not held and its
+  election is not observed, so a right whose condition already holds when
+  the window opens is exercised as it opens. An event's `exercise option`
+  forces an occurrence inside the window (§13.2), never outside it.
+- **A right is exercised as often as it allows.** `exercisable 2 times`
+  declares the count; absent, once. A lease with two five-year renewals is
+  exercised twice. Each exercise pays the payoff and runs the actions; the
+  journal records `exercise n of N`.
+- **An exercise does something.** The body takes the action vocabulary of
+  §13.2 — `set entity`, `activate stream`, `deactivate stream`, `exercise
+  option` — run on each exercise through the same stores an event writes,
+  with the same checks (an unknown stream is `E1302`, a status write is
+  validated against the machine). A prepayment option ends the loan; a
+  renewal extends the lease. A `set` value may read `contract.<term>` and
+  `prev.<account>` as the election does. Without actions an exercise only
+  pays.
 - `payoff` is the cash the exercise produces, published as a series under
   the option's name — zero where it did not exercise, so a non-exercise is
-  assertable.
+  assertable — and accumulated where it is exercised more than once.
 
 ---
 
@@ -2312,18 +2337,25 @@ exercise_option_stmt   = "exercise" "option" qname ;
    type's effective fields as a contract's are, and the election and the
    payoff read them as `contract.<term>`; written on a contract, the
    agreement's terms are readable the same way where the option states none
-   of its own. The items may appear in any order. *)
+   of its own. `exercisable N times` is how often the right may be exercised
+   (once by default); a `schedule` supplies the occasions the election is
+   tested at (a Bermudan right), and without one an occasion is the
+   election's rising edge while the option is held. The action statements
+   are what an exercise DOES beyond paying — the event's vocabulary, run on
+   each exercise. The items may appear in any order. *)
 option_stmt     = "option" qname
                   [ "on" ( "entity" entity_ref | "contract" qname ) ]
                   "type" qname
-                  [ "exercisable" "in" qname ]
+                  [ "exercisable" [ INT "times" ] [ "in" qname ] ]
                   option_block ;
 
 option_block    = "{" option_item* "}" ;
 option_item     = parties_block
                 | terms_block
+                | "schedule" schedule_expr
                 | "exercise" "when" expr
                 | "payoff" expr
+                | action_stmt
                 ;
 
 (* --- runs --- *)
@@ -4096,6 +4128,22 @@ against it by `make ir-schema`.
         },
         "exercisable_in_phase": {
           "$ref": "#/$defs/Id"
+        },
+        "schedule": {
+          "$ref": "#/$defs/Schedule",
+          "description": "The occasions the election is tested at — a Bermudan right, exercisable on stated dates. The schedule supplies the occasions and `exercise_when` filters them. Absent, an occasion is the election's rising edge while the option is held (inside its window): true having been false, so a right that stays in the money is not re-exercised every period."
+        },
+        "exercises": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "How many times the right may be exercised — a lease with two renewals is exercised twice. Absent means once. Each exercise pays the payoff and runs the actions; the payoff series accumulates."
+        },
+        "actions": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Action"
+          },
+          "description": "What the exercise DOES beyond paying, in the event's action vocabulary, run on each exercise through the same stores an event writes and visible at t+1. A prepayment option ends the loan; a renewal extends the lease. Absent or empty, the exercise only pays."
         },
         "exercise_when": {
           "$ref": "#/$defs/Expr"
@@ -9693,7 +9741,7 @@ Templates (starting points; the `skeleton` MCP tool assembles them into a compil
 
 CFDL 0.9.0. Every model below compiles, and its IR and
 results are byte-asserted against goldens in CI (`fixtures/valid/`,
-159 models.
+162 models.
 
 `gold/ir/`, `gold/results/`). Each is single-purpose: the directory name
 says what it exercises. This is what right looks like — positive few-shot
@@ -13252,6 +13300,50 @@ stream exit.pe_sale on entity asset.equity inflow currency USD {
 }
 ```
 
+## option_actions_on_exercise
+
+```cfdl
+version 0.1
+model "option-actions-on-exercise"
+time calendar annual from 2026-01 for 6
+
+// AN EXERCISE DOES SOMETHING. An option that could only pay cash could not
+// prepay a loan or renew a lease. The option body takes the event's action
+// vocabulary, run on exercise through the same stores an event writes and
+// visible at t+1: here a borrower's right to reset the rate — the payoff is
+// the fee, the action is the reset, and a second action stops the old
+// servicing charge.
+
+entity asset loan : Asset.Financial {
+  rate init 0.06 next prev
+}
+entity party borrower : Party { name = "Borrower" }
+
+option reset on entity asset.loan type Option.Refinance {
+  parties { holder = party.borrower }
+  terms { strike = 0.04 }
+  exercise when time.t >= 2
+  payoff -500
+  set entity asset.loan.rate = contract.strike
+  deactivate stream loan.servicing
+}
+
+// Reads the rate: 0.06 through t = 1, 0.04 from t = 2 — a stream reads the
+// state as the period closed, so a write takes effect in the period it fires
+// (docs/01 §13.1).
+stream loan.interest on entity asset.loan inflow currency USD {
+  schedule every year from 2026-01 to 2031-01
+  amount = 100000 * asset.loan.rate
+}
+
+stream loan.servicing on entity asset.loan outflow currency USD {
+  schedule every year from 2026-01 to 2031-01
+  amount = 250
+}
+
+run deterministic
+```
+
 ## option_as_contract
 
 ```cfdl
@@ -13277,6 +13369,41 @@ stream opco.revenue on entity asset.target inflow currency USD {
   category operating.revenue.recurring
   amount = 1000
 }
+```
+
+## option_exercised_twice
+
+```cfdl
+version 0.1
+model "option-exercised-twice"
+time calendar annual from 2026-01 for 8
+
+// A RIGHT EXERCISED AS OFTEN AS IT ALLOWS. A lease with two renewals is
+// exercised twice; before this every option fired at most once. Each exercise
+// is an occurrence in the event's sense: unscheduled, the election's rising
+// edge — true having been false — so a right that stays in the money is not
+// re-exercised every period.
+
+entity asset bldg : Asset.Real
+entity party tenant : Party { name = "Tenant" }
+
+// The election holds at t = 2, 4 and 6 (three edges); the right allows two,
+// so the third edge is not exercised. 2026 is t = 0.
+option renewal on entity asset.bldg type Option.Renewal exercisable 2 times {
+  parties { holder = party.tenant }
+  terms { strike = 1000 }
+  exercise when time.t == 2 or time.t == 4 or time.t == 6
+  payoff contract.strike
+}
+
+// Pays each period the election holds, however many: the control that shows
+// the rising edge is what counts, not the level.
+stream bldg.rent on entity asset.bldg inflow currency USD {
+  schedule every year from 2026-01 to 2033-01
+  amount = 100
+}
+
+run deterministic
 ```
 
 ## option_on_contract
@@ -13357,6 +13484,41 @@ stream plant.revenue on entity asset.plant inflow currency USD {
   schedule every year from 2026-01 to 2029-01
   amount = 10
 }
+```
+
+## option_scheduled
+
+```cfdl
+version 0.1
+model "option-scheduled"
+time calendar annual from 2026-01 for 6
+
+// A BERMUDAN RIGHT: exercisable on stated dates. The schedule SUPPLIES the
+// occasions and `exercise when` FILTERS them, exactly as an event's schedule
+// and `when` do. The book value crosses the strike in 2027 (t = 1), but the
+// right may only be exercised at the yearly tests from 2028 — so it is
+// exercised at t = 2, once, and the later tests find it spent.
+
+entity asset plant : Asset.Real {
+  book_value init 100.0
+             next prev * 1.10
+}
+entity party holder : Party { name = "Holder" }
+
+option call on entity asset.plant type Option.Call {
+  parties { holder = party.holder }
+  terms { strike = 105.0 }
+  schedule every year from 2028-01 to 2031-01
+  exercise when asset.plant.book_value > contract.strike
+  payoff asset.plant.book_value - contract.strike
+}
+
+stream plant.revenue on entity asset.plant inflow currency USD {
+  schedule every year from 2026-01 to 2031-01
+  amount = 10
+}
+
+run deterministic
 ```
 
 ## option_with_terms
@@ -23944,9 +24106,14 @@ event <a>.<b> when <boolean expr> {          -- fires ONCE, first true period
   exercise option <name>
 }
 
-option <a>.<b> type <Type> {
-  exercise when <boolean expr>
+option <a>.<b> [on entity <ref> | on contract <name>] type <Type>
+       [exercisable [<n> times] [in <phase>]] {
+  parties { <role> = party.<name>  ... }
+  terms { <key> = <value>  ... }             -- read as contract.<key>
+  schedule <as streams>                      -- optional; a Bermudan right
+  exercise when <boolean expr>               -- the election; rising edge
   payoff <expr>
+  set entity ... | activate stream ... | deactivate stream ...   -- on exercise
 }
 
 waterfall <a>.<b> on entity <ref> {

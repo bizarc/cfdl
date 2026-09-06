@@ -1,0 +1,144 @@
+{
+  "ir_version": "0.1",
+  "model": {
+    "name": "option-scheduled",
+    "currency": "USD"
+  },
+  "time": {
+    "calendar": "annual",
+    "start": "2026-01-01",
+    "periods": 6
+  },
+  "phases": [],
+  "entities": [
+    {
+      "id": "8ca71b46277588990b2687beb5fc6196",
+      "symbol": "asset.plant",
+      "type": "Asset.Real",
+      "fields": {},
+      "rules": {
+        "book_value": {
+          "init": {
+            "lang": "cfdl",
+            "src": "100.0"
+          },
+          "next": {
+            "lang": "cfdl",
+            "src": "prev * 1.10"
+          }
+        }
+      },
+      "state": {}
+    },
+    {
+      "id": "05e0f5f63d961c9d49138ee28dd07373",
+      "symbol": "party.holder",
+      "type": "Party",
+      "fields": {
+        "name": "Holder"
+      },
+      "state": {}
+    }
+  ],
+  "assumptions": {
+    "constants": {},
+    "random": {}
+  },
+  "contracts": [],
+  "streams": [
+    {
+      "id": "327dcd0f0062ecf38e6786c7a3ca1246",
+      "name": "plant.revenue",
+      "owner": {
+        "symbol": "asset.plant"
+      },
+      "direction": "inflow",
+      "currency": "USD",
+      "schedule": {
+        "kind": "Every",
+        "every": "annual",
+        "from": "2026-01-01",
+        "to": "2031-01-01"
+      },
+      "amount": {
+        "lang": "cfdl",
+        "src": "10.0"
+      },
+      "active_when": {
+        "lang": "cfdl",
+        "src": "true"
+      },
+      "provenance": {
+        "source_file": "model.cfdl",
+        "source_span": {
+          "start_line": 25,
+          "start_col": 1,
+          "end_line": 28,
+          "end_col": 1
+        }
+      }
+    }
+  ],
+  "events": [],
+  "options": [
+    {
+      "exercise_when": {
+        "lang": "cfdl",
+        "src": "asset.plant.book_value > (105.0)"
+      },
+      "id": "2b30c9a85e21e4a212a08118e434d021",
+      "name": "call",
+      "owner": {
+        "symbol": "asset.plant"
+      },
+      "parties": [
+        {
+          "entity": {
+            "symbol": "party.holder"
+          },
+          "role": "holder"
+        }
+      ],
+      "payoff": {
+        "lang": "cfdl",
+        "src": "asset.plant.book_value - (105.0)"
+      },
+      "provenance": {
+        "source_file": "model.cfdl",
+        "source_span": {
+          "end_col": 1,
+          "end_line": 23,
+          "start_col": 1,
+          "start_line": 17
+        }
+      },
+      "schedule": {
+        "every": "annual",
+        "from": "2028-01-01",
+        "kind": "Every",
+        "to": "2031-01-01"
+      },
+      "terms": {
+        "strike": 105.0
+      },
+      "type": "Option.Call"
+    }
+  ],
+  "runs": [
+    {
+      "kind": "deterministic"
+    }
+  ],
+  "required_observables": [],
+  "required_refs": [],
+  "provenance": {
+    "sources": [
+      "model.cfdl"
+    ],
+    "compiler": {
+      "name": "cfdl",
+      "version": "0.9.0",
+      "hash": "6bebad0d68f4babc5c564c4ea7ecc1f2"
+    }
+  }
+}

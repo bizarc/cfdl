@@ -1,0 +1,187 @@
+{
+  "ir_version": "0.1",
+  "model": {
+    "name": "option-actions-on-exercise",
+    "currency": "USD"
+  },
+  "time": {
+    "calendar": "annual",
+    "start": "2026-01-01",
+    "periods": 6
+  },
+  "phases": [],
+  "entities": [
+    {
+      "id": "9ffb8630a7775dd1bab66e6b45ee1f8f",
+      "symbol": "asset.loan",
+      "type": "Asset.Financial",
+      "fields": {},
+      "rules": {
+        "rate": {
+          "init": {
+            "lang": "cfdl",
+            "src": "0.06"
+          },
+          "next": {
+            "lang": "cfdl",
+            "src": "prev"
+          }
+        }
+      },
+      "state": {}
+    },
+    {
+      "id": "1c21d529cbc8ff48c13ea0ca2f26dde2",
+      "symbol": "party.borrower",
+      "type": "Party",
+      "fields": {
+        "name": "Borrower"
+      },
+      "state": {}
+    }
+  ],
+  "assumptions": {
+    "constants": {},
+    "random": {}
+  },
+  "contracts": [],
+  "streams": [
+    {
+      "id": "4d920b7e296f28bd77e89f85f8cb1dc8",
+      "name": "loan.interest",
+      "owner": {
+        "symbol": "asset.loan"
+      },
+      "direction": "inflow",
+      "currency": "USD",
+      "schedule": {
+        "kind": "Every",
+        "every": "annual",
+        "from": "2026-01-01",
+        "to": "2031-01-01"
+      },
+      "amount": {
+        "lang": "cfdl",
+        "src": "100000.0 * asset.loan.rate"
+      },
+      "active_when": {
+        "lang": "cfdl",
+        "src": "true"
+      },
+      "provenance": {
+        "source_file": "model.cfdl",
+        "source_span": {
+          "start_line": 29,
+          "start_col": 1,
+          "end_line": 32,
+          "end_col": 1
+        }
+      }
+    },
+    {
+      "id": "cf68d6617c0486a5bda34a54e0a32eda",
+      "name": "loan.servicing",
+      "owner": {
+        "symbol": "asset.loan"
+      },
+      "direction": "outflow",
+      "currency": "USD",
+      "schedule": {
+        "kind": "Every",
+        "every": "annual",
+        "from": "2026-01-01",
+        "to": "2031-01-01"
+      },
+      "amount": {
+        "lang": "cfdl",
+        "src": "250.0"
+      },
+      "active_when": {
+        "lang": "cfdl",
+        "src": "true"
+      },
+      "provenance": {
+        "source_file": "model.cfdl",
+        "source_span": {
+          "start_line": 34,
+          "start_col": 1,
+          "end_line": 37,
+          "end_col": 1
+        }
+      }
+    }
+  ],
+  "events": [],
+  "options": [
+    {
+      "actions": [
+        {
+          "entity": {
+            "symbol": "asset.loan"
+          },
+          "field": "rate",
+          "kind": "SetEntityField",
+          "value": {
+            "lang": "cfdl",
+            "src": "(0.04)"
+          }
+        },
+        {
+          "kind": "DeactivateStream",
+          "stream": "loan.servicing"
+        }
+      ],
+      "exercise_when": {
+        "lang": "cfdl",
+        "src": "time.t >= 2"
+      },
+      "id": "8af76c6e1bab1c9890e8b95d61e59421",
+      "name": "reset",
+      "owner": {
+        "symbol": "asset.loan"
+      },
+      "parties": [
+        {
+          "entity": {
+            "symbol": "party.borrower"
+          },
+          "role": "holder"
+        }
+      ],
+      "payoff": {
+        "lang": "cfdl",
+        "src": "-500"
+      },
+      "provenance": {
+        "source_file": "model.cfdl",
+        "source_span": {
+          "end_col": 1,
+          "end_line": 24,
+          "start_col": 1,
+          "start_line": 17
+        }
+      },
+      "terms": {
+        "strike": 0.04
+      },
+      "type": "Option.Refinance"
+    }
+  ],
+  "runs": [
+    {
+      "kind": "deterministic"
+    }
+  ],
+  "required_observables": [],
+  "required_refs": [],
+  "provenance": {
+    "sources": [
+      "model.cfdl"
+    ],
+    "compiler": {
+      "name": "cfdl",
+      "version": "0.9.0",
+      "hash": "6bebad0d68f4babc5c564c4ea7ecc1f2"
+    }
+  }
+}

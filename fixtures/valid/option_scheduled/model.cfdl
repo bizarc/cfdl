@@ -1,0 +1,30 @@
+version 0.1
+model "option-scheduled"
+time calendar annual from 2026-01 for 6
+
+// A BERMUDAN RIGHT: exercisable on stated dates. The schedule SUPPLIES the
+// occasions and `exercise when` FILTERS them, exactly as an event's schedule
+// and `when` do. The book value crosses the strike in 2027 (t = 1), but the
+// right may only be exercised at the yearly tests from 2028 — so it is
+// exercised at t = 2, once, and the later tests find it spent.
+
+entity asset plant : Asset.Real {
+  book_value init 100.0
+             next prev * 1.10
+}
+entity party holder : Party { name = "Holder" }
+
+option call on entity asset.plant type Option.Call {
+  parties { holder = party.holder }
+  terms { strike = 105.0 }
+  schedule every year from 2028-01 to 2031-01
+  exercise when asset.plant.book_value > contract.strike
+  payoff asset.plant.book_value - contract.strike
+}
+
+stream plant.revenue on entity asset.plant inflow currency USD {
+  schedule every year from 2026-01 to 2031-01
+  amount = 10
+}
+
+run deterministic

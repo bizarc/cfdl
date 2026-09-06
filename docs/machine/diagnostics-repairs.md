@@ -11,7 +11,7 @@ Diagnostics are the repair signal: read the `code`, `message`, `span`, and
 `hint`, change the model, recompile. The catalog is how an agent learns what
 each code looks like in the flesh before it meets one.
 
-**Coverage:** 230 codes in the docs/08 §7 register; 115 exemplified here; 70 of 127 examples carry a recorded fix.
+**Coverage:** 230 codes in the docs/08 §7 register; 115 exemplified here; 70 of 128 examples carry a recorded fix.
 
 ## account_read_without_prev — E1382_ACCOUNT_READ_WITHOUT_PREV
 
@@ -2641,6 +2641,37 @@ contract opco.revenue_line {
   }
 }
 ```
+
+## option_action_unknown_stream — E1302_UNRESOLVED_STREAM_REF
+
+Failing example:
+
+```cfdl
+version 0.1
+model "option-action-unknown-stream"
+time calendar annual from 2026-01 for 3
+
+// An option's actions are checked as an event's are: a stream nothing
+// declares and no contract lowered is refused, not silently skipped.
+
+entity asset loan : Asset.Financial
+
+option reset on entity asset.loan type Option.Refinance {
+  exercise when time.t >= 1
+  payoff 0
+  deactivate stream loan.servicng
+}
+
+stream loan.servicing on entity asset.loan outflow currency USD {
+  schedule every year from 2026-01 to 2028-01
+  amount = 250
+}
+```
+
+- `E1302_UNRESOLVED_STREAM_REF` (error): Option 'reset' references unknown stream 'loan.servicng'.
+  - hint: Streams in this model, declared and contract-lowered: loan.servicing.
+
+Fix: not yet recorded.
 
 ## option_master_type — E1374_ABSTRACT_TYPE_INSTANTIATED
 

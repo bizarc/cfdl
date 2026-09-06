@@ -1,0 +1,471 @@
+{
+  "results_version": "0.13",
+  "model_hash": "437234099f6cf7338e4f0c64fd270e571a5f0e1a49f7771077accc14e33bde92",
+  "ledger_hash": "e68986004a9908b188ca0e1cb15f3afa9fddc59e15e172e4a7d98438b1b4cc9a",
+  "engine": {
+    "name": "cfdl-engine",
+    "version": "0.9.0"
+  },
+  "warnings": [],
+  "deterministic": {
+    "status": "ok",
+    "metrics": {
+      "entity.asset.loan.total": {
+        "amount": 27000.0,
+        "currency": "USD"
+      },
+      "entity.party.borrower.total": {
+        "amount": 0.0,
+        "currency": "USD"
+      },
+      "model.npv": {
+        "amount": 23103.221784,
+        "currency": "USD"
+      },
+      "model.total": {
+        "amount": 27000.0,
+        "currency": "USD"
+      },
+      "model.wal_years": 3.245455,
+      "run.annual_discount_rate": 0.05,
+      "run.periods_per_year": 1.0,
+      "stream.loan.interest.total": {
+        "amount": 28000.0,
+        "currency": "USD"
+      },
+      "stream.loan.servicing.total": {
+        "amount": -500.0,
+        "currency": "USD"
+      },
+      "stream.option.reset.total": {
+        "amount": -500.0,
+        "currency": "USD"
+      }
+    },
+    "series": {
+      "asset.loan.rate": {
+        "index": {
+          "calendar": "annual",
+          "start": "2026-01-01",
+          "periods": 6
+        },
+        "values": [
+          0.06,
+          0.06,
+          0.04,
+          0.04,
+          0.04,
+          0.04
+        ]
+      },
+      "entity.asset.loan.net_cash_flow": {
+        "index": {
+          "calendar": "annual",
+          "start": "2026-01-01",
+          "periods": 6
+        },
+        "values": [
+          {
+            "amount": 5750.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 5750.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 3500.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 4000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 4000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 4000.0,
+            "currency": "USD"
+          }
+        ]
+      },
+      "entity.party.borrower.net_cash_flow": {
+        "index": {
+          "calendar": "annual",
+          "start": "2026-01-01",
+          "periods": 6
+        },
+        "values": [
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          }
+        ]
+      },
+      "model.net_cash_flow": {
+        "index": {
+          "calendar": "annual",
+          "start": "2026-01-01",
+          "periods": 6
+        },
+        "values": [
+          {
+            "amount": 5750.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 5750.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 3500.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 4000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 4000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 4000.0,
+            "currency": "USD"
+          }
+        ]
+      },
+      "stream.loan.interest": {
+        "index": {
+          "calendar": "annual",
+          "start": "2026-01-01",
+          "periods": 6
+        },
+        "offset": 1.0,
+        "entity": "asset.loan",
+        "values": [
+          {
+            "amount": 6000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 6000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 4000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 4000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 4000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 4000.0,
+            "currency": "USD"
+          }
+        ]
+      },
+      "stream.loan.servicing": {
+        "index": {
+          "calendar": "annual",
+          "start": "2026-01-01",
+          "periods": 6
+        },
+        "offset": 1.0,
+        "entity": "asset.loan",
+        "values": [
+          {
+            "amount": -250.0,
+            "currency": "USD"
+          },
+          {
+            "amount": -250.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          }
+        ]
+      },
+      "stream.option.reset": {
+        "index": {
+          "calendar": "annual",
+          "start": "2026-01-01",
+          "periods": 6
+        },
+        "offset": 0.0,
+        "values": [
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": -500.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          }
+        ]
+      }
+    },
+    "transitions": [
+      {
+        "period": 2,
+        "date": "2028-01-01",
+        "entity": "asset.loan",
+        "field": "rate",
+        "from": "0.06",
+        "to": "0.04",
+        "event": "reset"
+      }
+    ],
+    "journal": [
+      {
+        "period": 2,
+        "date": "2028-01-01",
+        "actor": "option:reset",
+        "action": "exercise_option",
+        "target": "reset",
+        "outcome": "applied",
+        "note": "its own `exercise when` held"
+      },
+      {
+        "period": 2,
+        "date": "2028-01-01",
+        "actor": "option:reset",
+        "action": "set",
+        "target": "asset.loan.rate",
+        "outcome": "applied",
+        "from": "0.06",
+        "to": "0.04"
+      },
+      {
+        "period": 2,
+        "date": "2028-01-01",
+        "actor": "option:reset",
+        "action": "deactivate_stream",
+        "target": "loan.servicing",
+        "outcome": "applied"
+      }
+    ]
+  },
+  "scenarios": {
+    "status": "not_run",
+    "summaries": []
+  },
+  "monte_carlo": {
+    "status": "not_run",
+    "trials": 1,
+    "seed": 0,
+    "metrics": {},
+    "trial_summaries": []
+  },
+  "statements": {
+    "statements": [
+      {
+        "id": "by_entity",
+        "label": "Cash by entity",
+        "default": true,
+        "grain": {
+          "calendar": "annual",
+          "start": "2026-01-01",
+          "labels": [
+            "2026",
+            "2027",
+            "2028",
+            "2029",
+            "2030",
+            "2031"
+          ]
+        },
+        "rows": [
+          {
+            "kind": "line",
+            "label": "Loan",
+            "depth": 0,
+            "display_sign": 1.0,
+            "values": [
+              {
+                "amount": 5750.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 5750.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 4000.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 4000.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 4000.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 4000.0,
+                "currency": "USD"
+              }
+            ],
+            "total": 27500.0,
+            "streams": [
+              "loan.interest",
+              "loan.servicing"
+            ]
+          },
+          {
+            "kind": "line",
+            "label": "Borrower",
+            "depth": 0,
+            "display_sign": 1.0,
+            "values": [
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              }
+            ],
+            "total": 0.0
+          },
+          {
+            "kind": "residual",
+            "label": "Unclassified",
+            "depth": 1,
+            "display_sign": 1.0,
+            "values": [
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": -500.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 0.0,
+                "currency": "USD"
+              }
+            ],
+            "total": -500.0,
+            "streams": [
+              "option.reset"
+            ]
+          }
+        ],
+        "reconciliation": {
+          "bottom_line": 27000.0,
+          "model_total": 27000.0,
+          "residual": 0.0
+        },
+        "diagnostics": [
+          {
+            "code": "W3500_STATEMENT_UNCLASSIFIED_STREAM",
+            "message": "1 stream(s) are in no row of statement 'by_entity', so the bottom line is short by -500.00: option.reset. Classify them, or give the statement a row that claims them."
+          }
+        ]
+      }
+    ]
+  },
+  "graph": {
+    "entities": [
+      {
+        "symbol": "asset.loan",
+        "family": "asset",
+        "type": "Asset.Financial"
+      },
+      {
+        "symbol": "party.borrower",
+        "family": "party",
+        "type": "Party"
+      }
+    ]
+  }
+}
