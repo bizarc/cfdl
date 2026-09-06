@@ -552,11 +552,25 @@ type_id = "Credit.Contract.CleanUpCall"
 refines = "Contract.Option"
 subject_family = "asset"
 parties = ["holder"]
-description = "The issuer's right to retire the pool once it falls below a stated size."
+description = "The right to purchase the remaining collateral and retire the notes once the pool falls to a stated fraction of its initial balance. Written on the trust; the servicer or sponsor usually holds it."
 
 [[contracts.roles]]
 name = "issuer"
 refines = "grantor"
+
+[[contracts.fields]]
+name = "call_threshold"
+field_type = "decimal"
+required = true
+unit = "ratio"
+description = "The fraction of the initial pool balance at or below which the right may be exercised — 10% in most auto and card deals."
+
+[[contracts.fields]]
+name = "initial_balance"
+field_type = "decimal"
+required = true
+unit = "USD"
+description = "The pool balance at the cutoff date the threshold is measured against."
 
 # ---------------------------------------------------------------------------
 # References
