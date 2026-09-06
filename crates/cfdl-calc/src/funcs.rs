@@ -819,15 +819,33 @@ pub(crate) fn curve_call(
             ))
         }
     };
-    env.curve_value(&curve_name, date)
-        .map(Value::Number)
-        .ok_or_else(|| {
-            CalcError::new(
-                format!("{name}: curve `{curve_name}` is not available in this context"),
+    match env.curve_value(&curve_name, date) {
+        crate::eval::CurveLookup::Value(v) => Ok(Value::Number(v)),
+        crate::eval::CurveLookup::Unknown => Err(CalcError::new(
+            format!("{name}: curve `{curve_name}` is not available in this context"),
+            Some(curve.1),
+        )),
+        crate::eval::CurveLookup::OutsideRange { from, to } => {
+            let bounds = match (from, to) {
+                (Some(f), Some(t)) => format!("from {f} to {t}"),
+                (Some(f), None) => format!("from {f}"),
+                (None, Some(t)) => format!("to {t}"),
+                (None, None) => String::new(),
+            };
+            Err(CalcError::new(
+                format!(
+                    "{CURVE_OUTSIDE_RANGE_PREFIX}`{curve_name}` has no value at {date}: its \
+                     effective dates run {bounds}"
+                ),
                 Some(curve.1),
-            )
-        })
+            ))
+        }
+    }
 }
+
+/// The prefix a curve read outside its effective dates carries, so the
+/// expression layer can give it a code of its own rather than `EXPR_EVAL`.
+pub const CURVE_OUTSIDE_RANGE_PREFIX: &str = "curve read outside its effective dates: ";
 
 /// `quantile_at(name, share)`, `quantile_mean(name, from, to)` and
 /// `quantile_of(name, value)`: lookups into a declared `quantile`, resolved by

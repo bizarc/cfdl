@@ -63,6 +63,76 @@ pub(crate) fn refuse_unknown_action_kinds(ir: &Ir) -> Result<(), EngineError> {
     )))
 }
 
+/// A CURVE READ PAST ITS LAST POINT HOLDS ITS LAST VALUE when the curve
+/// declares no end — right for a rate deck, wrong for a schedule declared as
+/// a curve, and silent for both (`docs/13` §7.100). Warned once per (reader,
+/// curve) when a stream's or a field's periods run past the curve's last
+/// point, naming that date and the last date read. A curve that declares
+/// `to <date>` has answered the question and is not warned about: inside its
+/// dates the hold is stated, outside them the run refuses.
+pub(crate) fn warn_curve_reads_past_end(
+    ir: &Ir,
+    plans: &[StreamPlan<'_>],
+    timeline: &[Date],
+    warnings: &mut Vec<String>,
+) {
+    let Some(horizon) = timeline.last() else {
+        return;
+    };
+    let last_point: BTreeMap<&str, Date> = ir
+        .curves
+        .iter()
+        .filter(|c| c.effective_to.is_none())
+        .filter_map(|c| {
+            let last = c.points.last()?;
+            Date::parse(&last.date).ok().map(|d| (c.name.as_str(), d))
+        })
+        .collect();
+    if last_point.is_empty() {
+        return;
+    }
+    let mut readers: Vec<(String, Date, Vec<String>)> = Vec::new();
+    for plan in plans {
+        let last_read = plan
+            .last_settled_period()
+            .and_then(|t| timeline.get(t).cloned())
+            .unwrap_or_else(|| horizon.clone());
+        let mut names = cfdl_expr::curve_references(plan.amount_src());
+        if let Some(src) = plan.active_when_src() {
+            names.extend(cfdl_expr::curve_references(src));
+        }
+        readers.push((format!("stream '{}'", plan.stream_name()), last_read, names));
+    }
+    for entity in &ir.entities {
+        for (field, rule) in &entity.rules {
+            let mut names = cfdl_expr::curve_references(&rule.init.src);
+            names.extend(cfdl_expr::curve_references(&rule.next.src));
+            readers.push((
+                format!("field '{}.{}'", entity.symbol, field),
+                horizon.clone(),
+                names,
+            ));
+        }
+    }
+    let mut seen: BTreeSet<(String, String)> = BTreeSet::new();
+    for (reader, last_read, names) in readers {
+        for name in names {
+            let Some(end) = last_point.get(name.as_str()) else {
+                continue;
+            };
+            if last_read <= *end || !seen.insert((reader.clone(), name.clone())) {
+                continue;
+            }
+            warnings.push(format!(
+                "W5024_CURVE_READ_PAST_END: {reader} reads curve '{name}' through {last_read}, \
+                 past its last point at {end}; the curve holds its last value there. Right for \
+                 a rate deck, wrong for a schedule — declare the curve's effective dates \
+                 (`curve {name} to <date>`) to state where it stops."
+            ));
+        }
+    }
+}
+
 pub(crate) fn refuse_series_reads_in_logic(ir: &Ir) -> Result<(), EngineError> {
     let mut offences: Vec<String> = Vec::new();
 
@@ -534,6 +604,7 @@ pub(crate) fn prepare_model<'a>(
     for stream in &ir.streams {
         plans.push(plan_stream(ir, stream, &timeline, warnings)?);
     }
+    warn_curve_reads_past_end(ir, &plans, &timeline, warnings);
     let account_inflows: Vec<Option<cfdl_expr::CompiledExpr>> = ir
         .accounts
         .iter()

@@ -65,7 +65,7 @@ assume sponsor_share     = 0.10
 // Development cost by period, land and obligations included.
 // EVERY period is declared, including the zeros: a step curve is
 // flat-forward, so an omitted month holds the last draw forward.
-curve dev_cost {
+curve dev_cost to 2038-06 {
   2023-11: 52000000.0000
   2023-12: 0.0000
   2024-01: 0.0000
@@ -235,7 +235,7 @@ curve dev_cost {
 
 // Rental units in occupancy, net of the 5% vacancy and
 // collection allowance the Guidebook states.
-curve units_occupied {
+curve units_occupied to 2038-06 {
   2023-11: 0.0000
   2023-12: 0.0000
   2024-01: 0.0000
@@ -404,7 +404,7 @@ curve units_occupied {
 
 
 // Condominium sellout, net of selling costs.
-curve condo_proceeds {
+curve condo_proceeds to 2038-06 {
   2023-11: 0.0000
   2023-12: 0.0000
   2024-01: 0.0000
@@ -573,7 +573,7 @@ curve condo_proceeds {
 
 // Cumulative development cost, which is what the equity commitment is
 // measured against.
-curve dev_cost_cum {
+curve dev_cost_cum to 2038-06 {
   2023-11: 52000000.00
   2023-12: 52000000.00
   2024-01: 52000000.00
@@ -741,7 +741,7 @@ curve dev_cost_cum {
 }
 
 // Scenario A: the lease-up sale.
-curve exit_a_proceeds {
+curve exit_a_proceeds to 2038-06 {
   2023-11: 0.00
   2023-12: 0.00
   2024-01: 0.00
@@ -909,7 +909,7 @@ curve exit_a_proceeds {
 }
 
 // Scenario B: permanent loan proceeds at stabilization.
-curve refi_proceeds {
+curve refi_proceeds to 2038-06 {
   2023-11: 0.00
   2023-12: 0.00
   2024-01: 0.00

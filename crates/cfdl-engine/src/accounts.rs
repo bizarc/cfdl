@@ -150,9 +150,10 @@ pub(crate) fn account_inflow_at(
             0.0
         }
         Err(err) => {
-            warnings.push(format!(
-                "Account '{}' inflow failed [{}]: {}; using 0.",
-                account.name, err.code, err.message
+            warnings.push(env::eval_failure_warning(
+                &format!("Account '{}' inflow", account.name),
+                &err,
+                "using 0",
             ));
             0.0
         }

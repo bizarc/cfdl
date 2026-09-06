@@ -8,6 +8,17 @@ This project follows Semantic Versioning: https://semver.org/
 
 ## [Unreleased]
 
+**A curve declares where it stops.** `curve <name> [from <date>] [to
+<date>] { … }` states the curve's effective dates: inside them the points
+and interpolation apply; a read outside them has no value and refuses the
+run (`E5040_CURVE_READ_OUTSIDE_RANGE`), naming the curve, the date and the
+reader; a point outside them is refused at compile time (`E5008`). A curve
+that states no end keeps the flat hold past its last point, and a stream or
+field that runs past it is warned once (`W5024_CURVE_READ_PAST_END`) — the
+warning the previous entry held back, now answerable. The four benchmarks
+that hold a rate, an occupancy or a grade flat on purpose say so with `to`.
+Closes backlog 7.100; files 7.110, a stream whose expression fails pays zero (backlog 48).
+
 **The silent-zero family: nine reads that produced a plausible number and
 said nothing now refuse or warn.** A step read from anywhere in the causal
 plane — a field's rule, an event's guard or action, an option's election,
@@ -27,9 +38,8 @@ reports ok; the outcome is gone from the results schema (`results_version`
 0.14). No discount rate, no NPV: a run nobody gave a rate publishes neither
 `model.npv` nor `run.annual_discount_rate` and says why; the rate is
 optional in the CLI (`--rate`), MCP, Python and server. A curve read past
-its last point still holds its value silently; the warning waits for the
-curve's own effective dates, the construct §7.100 now asks for, so that a
-model can answer it. Every engine failure reports under its own code (`E5031`–`E5039`) rather than as
+its last point still held its value silently; the warning waited for the
+curve's own effective dates (the entry above). Every engine failure reports under its own code (`E5031`–`E5039`) rather than as
 an IR schema violation, and the evaluator's run-time codes `EXPR_EVAL` and
 `EXPR_UNKNOWN_NAME` are registered. Closes backlog 7.38, 7.46, 7.68, 7.81,
 7.83, 7.93, 7.97, 7.101 and 7.103; 7.55 (the model-declared statement,

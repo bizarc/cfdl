@@ -89,6 +89,20 @@ impl SeriesReduction {
     }
 }
 
+/// A host's answer to `curve_value`.
+#[derive(Debug, Clone, PartialEq)]
+pub enum CurveLookup {
+    Value(Decimal),
+    /// No curve by that name.
+    Unknown,
+    /// The curve exists and declares effective dates; the date lies outside
+    /// them. Carries the declared bounds as `YYYY-MM-DD` text for the message.
+    OutsideRange {
+        from: Option<String>,
+        to: Option<String>,
+    },
+}
+
 /// What a host could make of a series reduction.
 ///
 /// THREE OUTCOMES, NOT TWO, and collapsing the last two is a measured mistake.
@@ -132,11 +146,13 @@ pub trait Env {
     }
 
     /// Host hook for named curve lookup (`curve_value`). Returns the curve's
-    /// value at `date` per the curve's declared interpolation, or None when
-    /// the host has no curve by that name (which surfaces as an evaluation
-    /// error).
-    fn curve_value(&self, _name: &str, _date: crate::CalcDate) -> Option<Decimal> {
-        None
+    /// value at `date` per the curve's declared interpolation; `Unknown` when
+    /// the host has no curve by that name, and `OutsideRange` when the curve
+    /// declares effective dates and `date` lies outside them. Both surface as
+    /// evaluation errors — the second under its own code, because a read past
+    /// a curve's stated end is a fact about the model, not the host.
+    fn curve_value(&self, _name: &str, _date: crate::CalcDate) -> CurveLookup {
+        CurveLookup::Unknown
     }
 
     /// Host hook for `quantile_at`: the declared quantile's value at a

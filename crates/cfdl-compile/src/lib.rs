@@ -461,6 +461,12 @@ struct IrCurve {
     name: String,
     /// "step" (flat-forward) or "linear".
     interpolation: String,
+    /// The curve's effective dates (`docs/13` §7.100): a read outside them
+    /// has no value. Absent at either end means the end value holds flat.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    effective_from: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    effective_to: Option<String>,
     /// Points sorted ascending by date.
     points: Vec<IrCurvePoint>,
 }
@@ -9388,9 +9394,74 @@ fn lower_curves(resolve_output: &cfdl_resolver::ResolveOutput) -> (Vec<IrCurve>,
             continue;
         }
         points.sort_by_key(|(key, _)| *key);
+
+        // THE EFFECTIVE DATES BOUND THE POINTS. A point outside them could
+        // never be read, so it is a contradiction in the declaration, not a
+        // value the run should quietly drop.
+        let mut range_key = |raw: &str, which: &str| -> Option<(i32, u32, u32)> {
+            match sort_key(raw) {
+                Some(k) => Some(k),
+                None => {
+                    diags.push(make_diag(format!(
+                        "Curve '{}' effective date '{raw}' after '{which}' is invalid.",
+                        curve.name
+                    )));
+                    None
+                }
+            }
+        };
+        let from_key = match curve.effective_from.as_deref() {
+            Some(raw) => match range_key(raw, "from") {
+                Some(k) => Some(k),
+                None => continue,
+            },
+            None => None,
+        };
+        let to_key = match curve.effective_to.as_deref() {
+            Some(raw) => match range_key(raw, "to") {
+                Some(k) => Some(k),
+                None => continue,
+            },
+            None => None,
+        };
+        if let (Some(f), Some(t)) = (from_key, to_key) {
+            if f > t {
+                diags.push(make_diag(format!(
+                    "Curve '{}' ends before it starts: from {} to {}.",
+                    curve.name,
+                    curve.effective_from.as_deref().unwrap_or(""),
+                    curve.effective_to.as_deref().unwrap_or("")
+                )));
+                continue;
+            }
+        }
+        let outside = points
+            .iter()
+            .find(|(k, _)| from_key.is_some_and(|f| *k < f) || to_key.is_some_and(|t| *k > t));
+        if let Some((_, p)) = outside {
+            diags.push(make_diag(format!(
+                "Curve '{}' declares a point at {} outside its effective dates{}{}.",
+                curve.name,
+                p.date,
+                curve
+                    .effective_from
+                    .as_deref()
+                    .map(|d| format!(" from {d}"))
+                    .unwrap_or_default(),
+                curve
+                    .effective_to
+                    .as_deref()
+                    .map(|d| format!(" to {d}"))
+                    .unwrap_or_default()
+            )));
+            continue;
+        }
+
         curves.push(IrCurve {
             name: curve.name.clone(),
             interpolation: curve.interpolation.clone(),
+            effective_from: curve.effective_from.as_deref().map(normalize_date),
+            effective_to: curve.effective_to.as_deref().map(normalize_date),
             points: points.into_iter().map(|(_, p)| p).collect(),
         });
     }

@@ -26,14 +26,36 @@ pub(crate) fn eval_bool_expr(
             false
         }
         Err(err) => {
-            warnings.push(format!(
-                "{subject_kind} '{}' {} evaluation failed [{}]: {}; using false.",
-                subject_name, slot, err.code, err.message
+            warnings.push(eval_failure_warning(
+                &format!("{subject_kind} '{subject_name}' {slot}"),
+                &err,
+                "using false",
             ));
             false
         }
     }
 }
+
+/// The warning an evaluation failure leaves behind — or, for a curve read
+/// outside its effective dates, the MARKER the fold promotes to a refusal
+/// (`docs/13` §7.100). Every non-field reader routes here so the one failure
+/// that is a fact about the model is never softened to a substituted value.
+pub(crate) fn eval_failure_warning(
+    reader: &str,
+    err: &cfdl_expr::ExprError,
+    fallback: &str,
+) -> String {
+    if err.code == cfdl_expr::EXPR_CURVE_OUTSIDE_RANGE {
+        format!("{CURVE_OUTSIDE_RANGE_MARKER}{reader}: {}", err.message)
+    } else {
+        format!(
+            "{reader} evaluation failed [{}]: {}; {fallback}.",
+            err.code, err.message
+        )
+    }
+}
+
+pub(crate) const CURVE_OUTSIDE_RANGE_MARKER: &str = "CURVE_READ_OUTSIDE_RANGE: ";
 
 pub(crate) fn eval_amount_expr(
     expr: &CompiledExpr,
@@ -64,9 +86,10 @@ pub(crate) fn eval_amount_expr(
             }
         },
         Err(err) => {
-            warnings.push(format!(
-                "Stream '{}' amount evaluation failed [{}]: {}; using 0.",
-                stream_name, err.code, err.message
+            warnings.push(eval_failure_warning(
+                &format!("Stream '{stream_name}' amount"),
+                &err,
+                "using 0",
             ));
             0.0
         }
@@ -110,11 +133,22 @@ pub(crate) fn ir_curve_defs(ir: &Ir) -> BTreeMap<String, cfdl_expr::CurveDef> {
                 })
             })
             .collect();
+        let bound = |raw: &Option<String>| {
+            raw.as_deref()
+                .and_then(|d| Date::parse(d).ok())
+                .map(|d| cfdl_expr::Date {
+                    year: d.year,
+                    month: d.month,
+                    day: d.day,
+                })
+        };
         out.insert(
             curve.name.clone(),
             cfdl_expr::CurveDef {
                 interpolation: curve.interpolation.clone(),
                 points,
+                effective_from: bound(&curve.effective_from),
+                effective_to: bound(&curve.effective_to),
             },
         );
     }

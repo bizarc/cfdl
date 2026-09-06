@@ -2157,45 +2157,6 @@ Provenance: found writing `merchant_storage_arbitrage`, whose market input is
 then read from `evs-platform/docs/03_registries_specification.md` rather than
 inferred. Related: §7.1, `docs/27` §4.4 (what `ref` buys), and EVS question 26.
 
-### 7.100 A curve has no effective dates of its own
-
-*Shape decided 5 September 2026. The warning that was to come first
-(`W5024`) was held back: until a curve can declare where it stops, a
-modeller has no way to answer it, and four benchmarks that hold a rate or
-an occupancy flat on purpose would carry it for nothing. Warning and
-construct land together.*
-
-Belongs with §5, language and engine.
-
-`curve_value` outside a curve's declared points returns the nearest endpoint.
-For a price curve that is the market convention — a rate quoted to five years
-is meant to be read at year seven. For a schedule declared as a curve — a
-depreciation table, a step-down fee — it is a wrong answer: a five-year MACRS
-table read by a twenty-five-year tax stream paid its last allowance for
-nineteen years, and the run reported a confident NPV. A curve's range is
-implied by its points and nothing lets it say where it stops.
-
-**The shape, decided with Matthew.** A curve MAY declare its effective dates,
-as a contract declares its term:
-
-```cfdl
-curve macrs_5 from 2026-01 to 2031-12 { 2026-01: 0.20, 2027-01: 0.32, … }
-```
-
-Inside the range the points and interpolation apply as today. A read outside
-the range has no value: a stream or field that reads it there fails the run,
-naming the curve, the date and the reader — the rule `E5032` applies to a
-failed field, that a number never computed is not a number. A curve that
-declares no effective dates keeps the flat-forward convention, with a warning
-(`W5024`) where a reader runs past it — emitted only once this construct
-exists, so that the warning can be answered. The reader's own schedule remains the right way
-to end an allowance; the effective dates are the safety net.
-
-Open only on spelling: whether `from … to …` on the curve header, or a
-`term` clause inside the block, and whether the grammar's date-range
-production is shared with the contract's. Related: §7.99 (a curve cannot cite
-its source), §7.95 (undefined is not zero).
-
 ### 7.102 A field cannot fold a stream "since my last step"
 
 Belongs with §5, language and engine. Found 4 September 2026 building the
@@ -2311,3 +2272,30 @@ case that needs the subtotal writes the exercise cash as a gated stream and
 leaves the payoff at zero, which puts the exercise's cash outside the option
 — what `benchmarks/cre/office_renewal_option` does, with the renewal
 lease's own leasing cost as the exercise's cash.
+
+### 7.110 A stream whose expression fails pays zero, under a warning
+
+Belongs with §5, language and engine. Found 5 September 2026 routing the
+curve-outside-its-dates refusal through the evaluation sites.
+
+§7.103 made a FIELD whose rule fails fatal: a value that was never computed
+is not a number, and the run refuses naming the field and the period. The
+same failure everywhere else is still softened. A stream's amount that fails
+to evaluate — a division by zero, a function on an argument out of range, a
+name that resolves to nothing — is paid as 0; a guard that fails is read as
+false; an account inflow that fails contributes 0; an option payoff that
+fails pays 0. Each leaves a warning in `results.warnings` (`… evaluation
+failed [EXPR_EVAL]: …; using 0.`), and the run reports ok with a total that
+is the true total minus whatever the failed expression would have paid. A
+compile failure of a stream's or field's expression is softened the same
+way (`… expression compile failed …; using 0.`).
+
+The benchmark harness fails a case on any warning, so no shipped case hides
+one; a modeller's run does not have that gate. The rule §7.103 settled
+applies without change: the causal plane refuses, naming the reader, the
+clause and the period, and the fold does it once over the walk's markers
+(the shape `E5032` and `E5040` already use). Decide whether the guard's
+`false` is the one exception — a guard that cannot be evaluated is closer
+to "the condition did not hold" than an amount is to "nothing was paid" —
+before building. Related: §7.103 (the field half, closed), §7.95 (undefined
+is not zero).

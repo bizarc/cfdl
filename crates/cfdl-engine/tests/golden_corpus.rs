@@ -450,3 +450,23 @@ fn the_priced_cycle_is_refused_with_the_path_named() {
         "the refusal names the path: {message}"
     );
 }
+
+/// A curve read outside the effective dates it declares is refused
+/// (`docs/13` §7.100). The model compiles — the range is a run-time fact
+/// about which dates the reader touches — so the IR is committed here.
+#[test]
+fn a_curve_read_outside_its_effective_dates_is_refused() {
+    let raw = include_str!("data/curve_read_outside_range.ir.json");
+    let err = cfdl_engine::run_from_json_str(raw, Default::default())
+        .expect_err("the read past the curve's end must be refused");
+    assert_eq!(err.code(), "E5040_CURVE_READ_OUTSIDE_RANGE");
+    let message = err.to_string();
+    assert!(
+        message.contains("plant.allowance")
+            && message.contains("`allowance` has no value at 2026-07-01")
+            && message.contains("to 2026-06-01"),
+        "the refusal names the reader, the date and the bound: {message}"
+    );
+    // One line per reader and curve, not one per period.
+    assert_eq!(message.matches("has no value at").count(), 1, "{message}");
+}

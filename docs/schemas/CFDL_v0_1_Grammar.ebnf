@@ -145,8 +145,11 @@ entity_field    = IDENT ( "=" expr | "init" expr [ "next" expr ] ) ;
 entity_account  = "account" IDENT [ account_side ] [ "init" expr ] ;
 account_side    = "owed" | "due" ;
 (* --- curves: named date-indexed values, looked up via curve_value() --- *)
-curve_stmt      = "curve" IDENT [ curve_interp ] "{" curve_point { [ "," ] curve_point } "}" ;
+curve_stmt      = "curve" IDENT [ curve_interp ] [ "from" date_lit ] [ "to" date_lit ]
+                  "{" curve_point { [ "," ] curve_point } "}" ;
 curve_interp    = "step" | "linear" ;
+(* `from`/`to` are the curve's effective dates: a read outside them has no
+   value and refuses the run; a curve stating neither holds its end values. *)
 curve_point     = DATE ":" [ "-" ] NUMBER ;
 
 (* --- quantiles: values indexed by CUMULATIVE SHARE rather than by date, read

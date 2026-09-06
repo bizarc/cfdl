@@ -121,7 +121,7 @@ stream cre.abatement.suite_200 on entity asset.rentleg outflow currency USD {
 // or before the date — which is what a suite going dark and coming back is.
 // Two-thirds in 2001 (Suite 200 dark), full in 2002-03, five-sixths in 2004
 // (Suite 100 dark a quarter of the year on 20k of 30k SF), full thereafter.
-curve occupancy step {
+curve occupancy step to 2006-01 {
   2001-01: 0.66666666666667
   2002-01: 1.0
   2004-01: 0.83333333333333

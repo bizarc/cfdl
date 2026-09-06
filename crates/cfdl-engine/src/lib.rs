@@ -107,6 +107,11 @@ pub enum EngineError {
     /// substituted with zero under a warning nobody reads; a number that was
     /// never computed is not a number (`docs/13` §7.103).
     FieldEvaluationFailed(String),
+    /// A stream, guard, account or option read a curve outside the effective
+    /// dates the curve declares (`docs/13` §7.100). Outside them the curve has
+    /// no value — not its end value held flat — so the run refuses, naming
+    /// the curve, the date and the reader.
+    CurveReadOutsideRange(String),
     /// An event's or option's action names a kind the engine does not
     /// execute. Only hand-written IR can carry one, and running on while the
     /// journal says `ignored` reported success for a run that did not do what
@@ -132,6 +137,7 @@ impl EngineError {
             EngineError::AccountsNeedTheWalk(_) => "E5038_ACCOUNTS_NEED_THE_WALK",
             EngineError::FieldEvaluationFailed(_) => "E5032_FIELD_EVALUATION_FAILED",
             EngineError::UnknownActionKind(_) => "E5039_UNKNOWN_ACTION_KIND",
+            EngineError::CurveReadOutsideRange(_) => "E5040_CURVE_READ_OUTSIDE_RANGE",
         }
     }
 }
@@ -147,6 +153,7 @@ impl std::fmt::Display for EngineError {
             EngineError::SeriesReadInLogic(msg) => write!(f, "{msg}"),
             EngineError::FieldEvaluationFailed(msg) => write!(f, "{msg}"),
             EngineError::UnknownActionKind(msg) => write!(f, "{msg}"),
+            EngineError::CurveReadOutsideRange(msg) => write!(f, "{msg}"),
             EngineError::AccountsNeedTheWalk(msg) => write!(f, "{msg}"),
             EngineError::InvalidDate(value) => write!(f, "invalid ISO date: {value}"),
             EngineError::InvalidRunConfig(message) => write!(f, "invalid run config: {message}"),

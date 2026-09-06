@@ -4,7 +4,7 @@
 
 CFDL 0.9.0. Every model below compiles, and its IR and
 results are byte-asserted against goldens in CI (`fixtures/valid/`,
-162 models.
+163 models.
 
 `gold/ir/`, `gold/results/`). Each is single-purpose: the directory name
 says what it exercises. This is what right looks like — positive few-shot
@@ -1763,6 +1763,41 @@ stream plant.revenue on entity asset.plant inflow currency INR {
 stream plant.opex on entity asset.plant outflow currency INR {
   schedule every month from 2026-01 to 2026-12
   amount = 200000
+}
+```
+
+## curve_effective_dates
+
+```cfdl
+version 0.1
+model "curve-effective-dates"
+time calendar monthly from 2026-01 for 12
+
+// A schedule declared as a curve, with the dates it is good for stated on
+// the header (`docs/13` §7.100): inside them the points and interpolation
+// apply; a read outside them has no value and refuses the run (E5040).
+curve allowance from 2026-01 to 2026-12 {
+  2026-01: 1000.0
+  2026-07: 500.0
+}
+
+// A rate deck with an open end: past its last point it holds flat, and the
+// run says so once per reader (W5024).
+curve sofr {
+  2026-01: 0.048
+  2026-07: 0.045
+}
+
+entity asset plant { name = "Plant" }
+
+stream plant.allowance on entity asset.plant outflow currency USD {
+  schedule every month from 2026-01 to 2026-12
+  amount = curve_value("allowance", time.date)
+}
+
+stream plant.interest on entity asset.plant outflow currency USD {
+  schedule every month from 2026-01 to 2026-12
+  amount = 1000000 * (curve_value("sofr", time.date) + 0.02) / 12
 }
 ```
 

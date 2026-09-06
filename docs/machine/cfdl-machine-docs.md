@@ -1101,6 +1101,38 @@ curve power_price linear {
 - Curve names MUST be unique; a curve MUST declare at least one point and
   at most one value per date.
 
+**Effective dates.** A curve MAY state the dates it is good for on its
+header, `from <date>` and/or `to <date>`, the way a phase states its span:
+
+```cfdl
+curve macrs_5 from 2026-01 to 2031-12 {
+  2026-01: 0.20
+  2027-01: 0.32
+  2028-01: 0.192
+  2029-01: 0.1152
+  2030-01: 0.1152
+  2031-01: 0.0576
+}
+
+curve sofr to 2029-05 {
+  2026-01: 0.048
+  2028-01: 0.0385
+}
+```
+
+- Inside the effective dates the points and interpolation apply as above,
+  including the flat hold between the last point and `to`.
+- A read outside them has no value: the run is refused
+  (`E5040_CURVE_READ_OUTSIDE_RANGE`), naming the curve, the date and the
+  reader. A curve's value is not its end value held forever; the header
+  says where the claim stops.
+- Every point MUST lie inside the effective dates (`E5008`).
+- A curve that states no `to` keeps the flat-forward convention past its
+  last point — the market's reading of a rate deck quoted shorter than the
+  deal — and a stream or field whose periods run past that point is warned
+  once (`W5024_CURVE_READ_PAST_END`). Stating `to` answers the warning
+  either way: the hold is meant, or the reader ends where the curve does.
+
 ### 12.6 Quantiles (share-indexed inputs)
 
 A `curve` is indexed by **when**. A `quantile` is indexed by **how much** — a
@@ -2035,8 +2067,11 @@ entity_field    = IDENT ( "=" expr | "init" expr [ "next" expr ] ) ;
 entity_account  = "account" IDENT [ account_side ] [ "init" expr ] ;
 account_side    = "owed" | "due" ;
 (* --- curves: named date-indexed values, looked up via curve_value() --- *)
-curve_stmt      = "curve" IDENT [ curve_interp ] "{" curve_point { [ "," ] curve_point } "}" ;
+curve_stmt      = "curve" IDENT [ curve_interp ] [ "from" date_lit ] [ "to" date_lit ]
+                  "{" curve_point { [ "," ] curve_point } "}" ;
 curve_interp    = "step" | "linear" ;
+(* `from`/`to` are the curve's effective dates: a read outside them has no
+   value and refuses the run; a curve stating neither holds its end values. *)
 curve_point     = DATE ":" [ "-" ] NUMBER ;
 
 (* --- quantiles: values indexed by CUMULATIVE SHARE rather than by date, read
@@ -3372,6 +3407,14 @@ against it by `make ir-schema`.
             "step",
             "linear"
           ]
+        },
+        "effective_from": {
+          "type": "string",
+          "description": "First date the curve has a value (YYYY-MM-DD). A read before it has no value and refuses the run; absent means the first point's value holds before it."
+        },
+        "effective_to": {
+          "type": "string",
+          "description": "Last date the curve has a value (YYYY-MM-DD). A read after it has no value and refuses the run; absent means the last point's value holds flat past it, with W5024 where a reader runs past."
         },
         "points": {
           "type": "array",
@@ -8054,13 +8097,15 @@ Warnings:
 - `E5037_SERIES_READ_IN_LOGIC` — the engine's own check for `E1134`, for IR the compiler never saw.
 - `E5038_ACCOUNTS_NEED_THE_WALK` — a stream moves or reads an account while a forward-reaching read keeps the model on the column order, where no balance is carried.
 - `E5039_UNKNOWN_ACTION_KIND` — an event's or option's action names a kind the engine does not execute. Only hand-written IR can carry one; the run is refused rather than reported as ok with the action journaled as ignored, which is what it did before results 0.14.
+- `E5040_CURVE_READ_OUTSIDE_RANGE` — a stream, guard, account inflow or option payoff read a curve at a date outside the effective dates the curve declares (`from`/`to` on its header). Outside them the curve has no value — not its end value held flat, which is what an undeclared end means — so the run is refused, naming the curve, the first offending date and the reader. End the reader's schedule where the curve ends, or extend the curve's dates. A field's rule that makes the same read refuses under `E5032`.
 - `E5003_IR_EMIT_FAILED` — the IR could not be written.
 - `E5004_INVALID_LOWERING_RULE` — a pack's lowering rule is malformed.
 - `E5005_PHASE_NOT_FOUND` — a lowering rule anchors to a phase the model does not declare.
 - `E5006_MISSING_CONTRACT_TERM` — a lowering rule reads a contract term the contract does not supply.
 - `E5007_DUPLICATE_LOWERED_STREAM` — two contracts lower to the same stream name. Give one a suffix.
 - `E5008_INVALID_CURVE` — duplicate curve name, duplicate point date, or
-  malformed point in a `curve` statement
+  malformed point in a `curve` statement; effective dates that end before
+  they start, or a point declared outside them
 - `E5028_INVALID_QUANTILE` — duplicate quantile name, a malformed point, a
   share outside `0..1`, shares out of order or repeated, or values that fall as
   share rises. The last is the one worth stating plainly: a quantile function
@@ -8106,6 +8151,14 @@ see what is wrong with it.
   components by name whether or not the property declared each one. Selectors
   ending in `.*` are exempt, and are how a model states that matching nothing is
   intended.
+- `W5024_CURVE_READ_PAST_END` — a stream or a field reads a curve past its
+  last declared point, and the curve states no `to` date, so it holds its
+  last value there. Right for a rate deck quoted shorter than the deal; wrong
+  for a schedule declared as a curve — a depreciation table read for twenty
+  years past its end. Warned once per reader and curve, naming the curve's
+  last date and the last date read. Stating the curve's effective dates
+  (`curve <name> to <date>`) answers it: inside them the hold is meant,
+  outside them the run refuses (`E5040`).
 - `W3500_STATEMENT_UNCLASSIFIED_STREAM` — cash that no row of the statement
   claims, usually a hand-written stream carrying no `category`. It is collected
   into a visible `residual` row rather than dropped, so the bottom line still

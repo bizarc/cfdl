@@ -11,7 +11,7 @@ Diagnostics are the repair signal: read the `code`, `message`, `span`, and
 `hint`, change the model, recompile. The catalog is how an agent learns what
 each code looks like in the flesh before it meets one.
 
-**Coverage:** 240 codes in the docs/08 §7 register; 116 exemplified here; 70 of 131 examples carry a recorded fix.
+**Coverage:** 242 codes in the docs/08 §7 register; 116 exemplified here; 70 of 132 examples carry a recorded fix.
 
 ## account_read_without_prev — E1382_ACCOUNT_READ_WITHOUT_PREV
 
@@ -994,6 +994,34 @@ stream test.interest on entity asset.buyer inflow currency USD {
   amount = curve_value("sofr", time.date)
 }
 ```
+
+## curve_point_outside_range — E5008_INVALID_CURVE
+
+Failing example:
+
+```cfdl
+version 0.1
+model "curve-point-outside-range"
+time calendar monthly from 2026-01 for 12
+
+// The curve says it stops in June and then declares a point in July: a
+// contradiction in the declaration, refused (E5008) rather than dropped.
+curve allowance from 2026-01 to 2026-06 {
+  2026-01: 1000.0
+  2026-07: 500.0
+}
+
+entity asset plant { name = "Plant" }
+
+stream plant.allowance on entity asset.plant outflow currency USD {
+  schedule every month from 2026-01 to 2026-06
+  amount = curve_value("allowance", time.date)
+}
+```
+
+- `E5008_INVALID_CURVE` (error): Curve 'allowance' declares a point at 2026-07-01 outside its effective dates from 2026-01 to 2026-06.
+
+Fix: not yet recorded.
 
 ## dup_stream — E1003_DUPLICATE_STREAM
 
@@ -5272,6 +5300,7 @@ Documented in docs/08 §7, awaiting a minimal failing fixture:
 - `E5037_SERIES_READ_IN_LOGIC` — the engine's own check for `E1134`, for IR the compiler never saw.
 - `E5038_ACCOUNTS_NEED_THE_WALK` — a stream moves or reads an account while a forward-reaching read keeps the model on the column order, where no balance is carried.
 - `E5039_UNKNOWN_ACTION_KIND` — an event's or option's action names a kind the engine does not execute. Only hand-written IR can carry one; the run is refused rather than reported as ok with the action journaled as ignored, which is what it did before results 0.14.
+- `E5040_CURVE_READ_OUTSIDE_RANGE` — a stream, guard, account inflow or option payoff read a curve at a date outside the effective dates the curve declares (`from`/`to` on its header). Outside them the curve has no value — not its end value held flat, which is what an undeclared end means — so the run is refused, naming the curve, the first offending date and the reader. End the reader's schedule where the curve ends, or extend the curve's dates. A field's rule that makes the same read refuses under `E5032`.
 - `E6002_CRE_LEASE_INVALID_TERM_RANGE` — 
 - `E6003_CRE_LEASE_UP_MISSING_MONTHS` — 
 - `E6010_CRE_EXIT_MISSING_EXIT_CAP` — 
@@ -5333,3 +5362,4 @@ Documented in docs/08 §7, awaiting a minimal failing fixture:
 - `W3503_STATEMENT_UNKNOWN_STRUCTURE` — a model-declared statement asks for a
 - `W5022_UNKNOWN_SERIES_REFERENCE` — a series reduction (`series_sum`,
 - `W5023_UNRECOGNISED_PACK_CATEGORY` — a stream's category is well-rooted and
+- `W5024_CURVE_READ_PAST_END` — a stream or a field reads a curve past its

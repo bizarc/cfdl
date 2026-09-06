@@ -179,6 +179,11 @@ assume sponsor_share     = 0.10
 ''')
 
 # ---- curves ----------------------------------------------------------------
+# Every curve is read through the valuation tail — the streams by the rent,
+# parking and opex, the facility's balance by the draws and proceeds — and
+# holds its last value there. The effective date states that hold rather than
+# leaving it to be warned about (W5024).
+TO = f" to {ym(N + PROJECT - 1)}"
 for name, fn, note in [
     ("dev_cost", dev, "Development cost by period, land and obligations included.\n"
                       "// EVERY period is declared, including the zeros: a step curve is\n"
@@ -187,13 +192,13 @@ for name, fn, note in [
                               "// collection allowance the Guidebook states."),
     ("condo_proceeds", condo, "Condominium sellout, net of selling costs."),
 ]:
-    w(f"\n// {note}\ncurve {name} {{")
+    w(f"\n// {note}\ncurve {name}{TO} {{")
     for t in range(N):
         w(f"  {ym(t)}: {fn(t):.4f}")
     w("}\n")
 
 w("// Cumulative development cost, which is what the equity commitment is\n"
-  "// measured against.\ncurve dev_cost_cum {")
+  f"// measured against.\ncurve dev_cost_cum{TO} {{")
 c = 0.0
 for t in range(N):
     c += dev(t)
@@ -206,7 +211,7 @@ for name, when, amount, note in [
     ("exit_a_proceeds", A_EXIT, A_VALUE, "Scenario A: the lease-up sale."),
     ("refi_proceeds", B_REFI, PERM_PRINCIPAL, "Scenario B: permanent loan proceeds at stabilization."),
 ]:
-    w(f"// {note}\ncurve {name} {{")
+    w(f"// {note}\ncurve {name}{TO} {{")
     for t in range(N):
         w(f"  {ym(t)}: {amount if t == when else 0.0:.2f}")
     w("}\n")

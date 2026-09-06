@@ -454,14 +454,21 @@ pub struct AssumeStmt {
     pub span: Span,
 }
 
-/// `curve <name> [step|linear] { <date>: <number>, ... }` — a named
-/// date-indexed value curve (e.g. a forward rate curve), looked up in
-/// expressions with `curve_value("<name>", <date>)`.
+/// `curve <name> [step|linear] [from <date>] [to <date>] { <date>: <number>, ... }`
+/// — a named date-indexed value curve (e.g. a forward rate curve), looked up
+/// in expressions with `curve_value("<name>", <date>)`. The optional
+/// `from`/`to` are the curve's EFFECTIVE DATES: inside them the points and
+/// interpolation apply; a read outside them has no value and fails the run
+/// (`docs/13` §7.100). A curve that states neither holds its end values flat.
 #[derive(Debug, Clone, PartialEq, Eq, serde::Serialize)]
 pub struct CurveStmt {
     pub name: String,
     /// "step" (flat-forward, default) or "linear".
     pub interpolation: String,
+    /// First date the curve has a value, as written (`from <date>`).
+    pub effective_from: Option<String>,
+    /// Last date the curve has a value, as written (`to <date>`).
+    pub effective_to: Option<String>,
     /// (date literal, numeric literal) pairs in source order.
     pub points: Vec<(String, String)>,
     pub span: Span,
@@ -4949,6 +4956,38 @@ impl<'a> Parser<'a> {
                 }
             }
         }
+        // The effective dates, `from <date>` and/or `to <date>`, either alone
+        // or both, in that order — the phase's spelling of a date range.
+        let mut effective_from: Option<String> = None;
+        let mut effective_to: Option<String> = None;
+        if matches!(self.peek().kind, TokenKind::Keyword(Keyword::From)) {
+            let _ = self.bump();
+            let tok = self.bump();
+            match tok.kind {
+                TokenKind::Date(ref d) => effective_from = Some(d.clone()),
+                _ => {
+                    self.push_expected(
+                        tok.span,
+                        "Expected <date> after 'from' in curve header.".to_string(),
+                    );
+                    return None;
+                }
+            }
+        }
+        if matches!(self.peek().kind, TokenKind::Keyword(Keyword::To)) {
+            let _ = self.bump();
+            let tok = self.bump();
+            match tok.kind {
+                TokenKind::Date(ref d) => effective_to = Some(d.clone()),
+                _ => {
+                    self.push_expected(
+                        tok.span,
+                        "Expected <date> after 'to' in curve header.".to_string(),
+                    );
+                    return None;
+                }
+            }
+        }
         let _ = self.expect_punct(Punct::LBrace, "'{'")?;
         let mut points: Vec<(String, String)> = Vec::new();
         let end;
@@ -5013,6 +5052,8 @@ impl<'a> Parser<'a> {
         Some(CurveStmt {
             name,
             interpolation,
+            effective_from,
+            effective_to,
             points,
             span: merge_spans(start.span, end.span),
         })

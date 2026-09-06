@@ -501,6 +501,14 @@ against it by `make ir-schema`.
             "linear"
           ]
         },
+        "effective_from": {
+          "type": "string",
+          "description": "First date the curve has a value (YYYY-MM-DD). A read before it has no value and refuses the run; absent means the first point's value holds before it."
+        },
+        "effective_to": {
+          "type": "string",
+          "description": "Last date the curve has a value (YYYY-MM-DD). A read after it has no value and refuses the run; absent means the last point's value holds flat past it, with W5024 where a reader runs past."
+        },
         "points": {
           "type": "array",
           "minItems": 1,
