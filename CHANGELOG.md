@@ -18,7 +18,10 @@ rate to the last bit; the engine reproduces Damodaran's cumulated discount
 factors and ten-year PV from the workbook's own FCFF and cost-of-capital
 rows. `run.annual_discount_curve` is published in place of the rate.
 `benchmarks/opco/damodaran_fcff` runs along its converging cost of capital.
-Closes backlog 7.4 and Argus parity item 2 (backlog 45).
+Closes backlog 7.4 and Argus parity item 2. §7.5, the candidate-contract
+catalog, closes too: its shipped rows are struck, its open rows move to
+`docs/41` §5 as refinements owed per family, and two of them are recorded
+there as not contracts at all (backlog 44).
 
 **Backlog: two entries closed, one re-measured.** §2.2 (a pool that
 amortizes on an Actual basis) closes: the refusal `E5027` shipped, the

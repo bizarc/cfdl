@@ -236,3 +236,25 @@ reason to hold a master back.
 | Guarantee | — | a completion guarantee on a construction financing |
 | Tax | cash taxes, ITC, PTC, depreciation | — |
 | Grant | — (the toll road's subsidy is a hand stream) | the toll road's coverage subsidy |
+
+### Pack refinements forced by a source
+
+The refinements a benchmark source asked for and no pack has yet, carried
+here from the closed `docs/13` §7.5. Each was forced by a document, not
+proposed from taste; each is owed to the case that forced it, under the
+family it belongs to. Two entries that list looked like contracts and are
+not are struck with the reason.
+
+| refinement | forced by | family | shape |
+|---|---|---|---|
+| `cre.restricted_rent` | HUD (`benchmarks/cre/hud_home_multifamily`) | C, Lease | rent capped for an affordability period and reverting to a market track — the defining mechanic of affordable housing, a hand-written conditional today |
+| `cre.abatement` | MIT (`benchmarks/cre/mit_rentleg_plaza`) | C, Lease (a `Contract.Deduction` line) | free rent as its own deduction from potential gross revenue, reportable as a line and counted in NOI at once |
+| `opco.exit_forward_multiple` | the banker DCF (`benchmarks/opco/banker_dcf_conventions`) | E, Sale | a forward (NTM) multiple struck at a point before model end, beside `opco.exit_multiple` |
+| `opco.depreciation` | `opco.cash_taxes` reads `da_monthly` as a bare term no rule produces | an expense line (family H: D&A is not an agreement) | a D&A schedule the tax rule reads by name instead of a term |
+| `opco.revolver`, `opco.cash_sweep`, `opco.nol_carryforward` | every LBO source | A, Debt (revolver, sweep); G, Tax (NOL) | Debt refinements over the balance account (`docs/42`); the coupled mechanics are `docs/13` §7.74's |
+| ~~`opco.equity_bridge`~~ | both opco sources | — | not a contract: the bridge from enterprise to equity value is a statement over accounts and fields (debt, minority interests, cash, non-operating assets) |
+| ~~`opco.share_count`~~ | both opco sources | — | not a contract: a share count that dilutes over time is an entity field |
+
+The reserve that list also named (`cre.replacement_reserve`) is an account
+(family H) and `docs/13` §7.76's adoption pass; the storage dispatch rule it
+named is `docs/13` §7.75's.

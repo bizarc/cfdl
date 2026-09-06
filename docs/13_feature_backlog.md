@@ -159,60 +159,6 @@ re-measured — by scanning `contract <pack>.<type>` and `option … type`
 declarations, not `<pack>.` prefixes, which also match namespaced stream
 names — whenever cases or rosters change.
 
-### 7.5 Candidate contracts, and the packs that need them
-
-*Belongs with the CRE and OpCo packs (sections 1 and 3).*
-
-Every entry below was forced by a source, not proposed from taste. Listed
-together because the shape of the gap is the same in both packs: the contracts
-that exist model an operating business well and stop at the point where a deal
-gets financed or valued.
-
-**CRE — the pack cannot borrow money.**
-
-| candidate | forced by |
-|---|---|
-| ~~`cre.permanent_debt`~~ | **SHIPPED**, then decomposed per docs/07 §6.4: proceeds, interest and principal as their own streams, balloon opt-in, `funded_at_close` for post-financing reconciliations. DSCR-based sizing is a solve and stays out. |
-| ~~`cre.construction_loan`~~ | **SHIPPED.** Equity-first funding behind a commitment, the facility taking the balance once it depletes, interest on the drawn balance. The draw schedule stays a model `curve` and the contract names it, because a funding profile is per-deal data rather than a term. `benchmarks/cre/one_lincoln_street_contract` reproduces the primitive-built case in all 48 cells with zero difference — the pair is the assertion, and if they disagree the contract is wrong. Capitalised interest is a follow-on: affine in the closing balance, so it collects rather than needing a solver. |
-| `cre.restricted_rent` | HUD — rent capped for an affordability period and reverting to a market track. The defining mechanic of affordable housing, currently a hand-written conditional. |
-| `cre.abatement` | MIT — free rent as its own deduction from potential gross revenue. Today it can be reported as a line or counted in NOI, not both (1.3). |
-| `cre.replacement_reserve` | HUD — a capital reserve, separately published and semantically distinct from operating expense. Also One Lincoln Street, whose operating pro forma carries a Capital Reserve line. |
-
-With 1.5, 1.6 and 1.7, these are what would let a real CRE deal be expressed in
-pack contracts instead of native streams — which is the actual fix for 7.3 on
-the CRE side, and needs no new source.
-
-**A correction to how 7.3 originally framed this** (absorbed into its
-2026-08-27 re-measure, kept here for the argument). That entry treated a benchmark running
-on native streams as a coverage failure. It is not, or not only. A case built
-from primitives proves the LANGUAGE expresses the deal with no domain vocabulary
-— which is the stronger claim, and the one a reader evaluating CFDL as a
-language can check. A pack contract is an ergonomics layer for a practitioner
-who should not have to derive an equity-first waterfall from scratch.
-
-So the fix is not to CONVERT those cases. It is to add a contract twin beside
-each, asserted against the primitive-built original rather than only against the
-source: `one_lincoln_street` and `one_lincoln_street_contract` are the first
-pair. A contract validated solely against its own source is the pack marking its
-own homework.
-
-**OpCo — no terminal value a valuation practitioner would recognise.**
-
-| candidate | forced by |
-|---|---|
-| ~~`opco.exit_perpetuity`~~ | **SHIPPED**, and validated against a published nine-point growth sensitivity grid (`benchmarks/opco/gordon_growth_coned`). `discount_rate` is a contract term, which is faithful to the sources rather than a workaround: a terminal cost of capital is not the near-term one. A stream-derived variant is the follow-on. |
-| `opco.exit_forward_multiple` | The banker DCF — a forward (NTM) multiple struck at a point before model end. |
-| `opco.depreciation` | No D&A contract exists, yet `opco_cash_taxes` consumes `da_monthly` as a bare term with no rule producing it. |
-| `opco.equity_bridge` | Both opco sources — debt, cash, minority interests and non-operating assets between enterprise and equity value. Done outside the model today. |
-| `opco.share_count` | Both — a share count that dilutes over time, so per-share value is expressible at all. |
-| `opco.revolver`, `opco.cash_sweep`, `opco.nol_carryforward` | Every LBO source. All three need per-period state (5.2) and should be designed with it rather than before it. |
-
-**Elsewhere.** `energy.storage_dispatch`, a storage rule priced against a
-declared price distribution rather than a scalar spread (7.1). It consumes the
-`quantile` primitive designed in `docs/27_quantiles.md` and cannot be built
-before it — a `curve` is indexed by date and cannot express the integral.
-Credit's three uncovered contract types need a source, not a new contract.
-
 ### 7.9 `opco.capex_line` cannot express a derived line
 
 Found closing 5.1 against `benchmarks/opco/damodaran_fcff`, and worth separating
@@ -620,7 +566,7 @@ debt service.
 The case still hand-writes its mortgage rather than using `cre.permanent_debt`,
 because HUD's instrument carries mortgage insurance the contract does not model.
 A `cre.mortgage_insurance` contract is the shape that would close it, and it is
-not added on one case's evidence — the pack candidate list (§7.5) is where it
+not added on one case's evidence — the pack candidate list (`docs/41` §5) is where it
 belongs if a second source wants it.
 
 This is the coverage question §7.3 and §7.15 measure, in one instance: a case
@@ -1029,7 +975,7 @@ domain survey (`docs/30`) found the same absence recorded independently in
 every domain's references. `crest_solar_cost_based/NOTES.md`: the reference
 EBITDA "includes interest earned on funded reserve accounts (~$4,606 in year
 one), which CFDL does not model." `utility_pv_singleowner/NOTES.md` lists
-reserves among what the reference zeroed out to be comparable. §7.5 carries
+reserves among what the reference zeroed out to be comparable. `docs/41` §5 carries
 `cre.replacement_reserve` from two sources. The roadmap's hospitality entry
 is one accumulating FF&E reserve. Servicer advancing (§7.74) is a
 recoverable-advances balance.
@@ -1060,7 +1006,7 @@ original retires is left open deliberately, since it is the suite's tightest
 external reconciliation. Second, a
 reserve contract shape per pack where a document demands one — the DSRA
 funded to target with `dscr_periodic` gating the release, the replacement
-reserve of §7.5, the FF&E reserve — each as the `pay <step> to account`
+reserve of `docs/41` §5, the FF&E reserve — each as the `pay <step> to account`
 pattern rather than a bespoke contract. **The credit pack's is done**
 (2026-08-31, `benchmarks/credit/americredit_2017_1`): clause 19's reserve, 2.0%
 of the initial pool funded at closing, was a literal written out twenty-eight
@@ -1134,7 +1080,7 @@ keeps the reserve and the interest it earns from being mutually circular. The
 CREST reconciliation line is closed as a mechanism; the case that reconciles
 against CREST's own ~$4,606 still wants the reference.
 
-Related: §7.5, §7.41, §7.72 (shipped), §7.74, `docs/25`, `docs/28` §5.1, `docs/30` §1.
+Related: `docs/41` §5, §7.41, §7.72 (shipped), §7.74, `docs/25`, `docs/28` §5.1, `docs/30` §1.
 
 ### 7.77 A covenant that is published but powerless: the DSCR cash trap
 
