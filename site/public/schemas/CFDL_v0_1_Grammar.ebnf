@@ -135,7 +135,9 @@ assume_stmt     = "assume" IDENT ( "=" expr | "~" dist_expr ) ;
    `prev.asset.<name>.<field>` for the close before this one.
 
    `state <name>` inside an entity block is unrelated: it names the lifecycle
-   state the entity opens in. --- *)
+   state the entity opens in. IDENT here, as everywhere a name is declared,
+   admits a reserved word: `use = "office"` and `state init 1 next prev` are
+   fields, told from the clauses by the `=` or `init` that follows. --- *)
 entity_field    = IDENT ( "=" expr | "init" expr [ "next" expr ] ) ;
 
 (* A claim this entity owes or is due, rolled by the engine from the streams

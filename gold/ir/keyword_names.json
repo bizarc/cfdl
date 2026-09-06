@@ -1,0 +1,183 @@
+{
+  "ir_version": "0.1",
+  "model": {
+    "name": "keyword-names",
+    "currency": "USD"
+  },
+  "time": {
+    "calendar": "monthly",
+    "start": "2026-01-01",
+    "periods": 6
+  },
+  "phases": [
+    {
+      "id": "d391d59bdca49fe9f57c233d69ab4447",
+      "name": "active",
+      "range": {
+        "start": "2026-01-01",
+        "end": "2026-06-01"
+      }
+    }
+  ],
+  "entities": [
+    {
+      "id": "a17cdce0ecf04a18a578649e6b9d2bce",
+      "symbol": "asset.tower",
+      "type": "Asset.Real",
+      "fields": {
+        "use": "office"
+      },
+      "rules": {
+        "net": {
+          "init": {
+            "lang": "cfdl",
+            "src": "curve_value(\"net\", time.date)"
+          },
+          "next": {
+            "lang": "cfdl",
+            "src": "prev"
+          }
+        },
+        "state": {
+          "init": {
+            "lang": "cfdl",
+            "src": "1.0"
+          },
+          "next": {
+            "lang": "cfdl",
+            "src": "prev + 1.0"
+          }
+        }
+      },
+      "state": {}
+    },
+    {
+      "id": "242169529586d494505fd84efe070846",
+      "symbol": "party.owner",
+      "type": "core.Entity",
+      "fields": {
+        "name": "Owner"
+      },
+      "state": {}
+    }
+  ],
+  "assumptions": {
+    "constants": {
+      "term": {
+        "expr": {
+          "lang": "cfdl",
+          "src": "12"
+        },
+        "name": "term",
+        "type": "Decimal"
+      },
+      "year": {
+        "expr": {
+          "lang": "cfdl",
+          "src": "2026"
+        },
+        "name": "year",
+        "type": "Decimal"
+      }
+    },
+    "random": {}
+  },
+  "curves": [
+    {
+      "name": "net",
+      "interpolation": "step",
+      "effective_to": "2026-12-01",
+      "points": [
+        {
+          "date": "2026-01-01",
+          "value": 30.0
+        }
+      ]
+    }
+  ],
+  "contracts": [],
+  "streams": [
+    {
+      "id": "018b64bb69e2ac192e6361e14cd01998",
+      "name": "tower.rent",
+      "owner": {
+        "symbol": "asset.tower"
+      },
+      "direction": "inflow",
+      "currency": "USD",
+      "schedule": {
+        "kind": "Every",
+        "every": "monthly",
+        "from": "2026-01-01",
+        "to": "2026-06-01"
+      },
+      "amount": {
+        "lang": "cfdl",
+        "src": "if(asset.tower.use == \"office\", 1000.0, 500.0) * inputs.term / 12.0     + asset.tower.net + asset.tower.state"
+      },
+      "active_when": {
+        "lang": "cfdl",
+        "src": "true"
+      },
+      "provenance": {
+        "source_file": "model.cfdl",
+        "source_span": {
+          "start_line": 29,
+          "start_col": 1,
+          "end_line": 33,
+          "end_col": 1
+        }
+      }
+    }
+  ],
+  "events": [
+    {
+      "actions": [
+        {
+          "entity": {
+            "symbol": "asset.tower"
+          },
+          "field": "use",
+          "kind": "SetEntityField",
+          "value": {
+            "lang": "cfdl",
+            "src": "\"retail\""
+          }
+        }
+      ],
+      "id": "1b9984c0879d2e7328fa99c7dd406fa6",
+      "name": "tower.restate",
+      "provenance": {
+        "source_file": "model.cfdl",
+        "source_span": {
+          "end_col": 1,
+          "end_line": 37,
+          "start_col": 1,
+          "start_line": 35
+        }
+      },
+      "schedule": {
+        "kind": "OnDate",
+        "on": "2026-04-01"
+      }
+    }
+  ],
+  "options": [],
+  "runs": [
+    {
+      "kind": "deterministic"
+    }
+  ],
+  "required_observables": [],
+  "required_refs": [],
+  "provenance": {
+    "sources": [
+      "model.cfdl"
+    ],
+    "compiler": {
+      "name": "cfdl",
+      "version": "0.9.0",
+      "hash": "6bebad0d68f4babc5c564c4ea7ecc1f2"
+    }
+  }
+}

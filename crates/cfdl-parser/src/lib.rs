@@ -983,6 +983,30 @@ impl<'a> Parser<'a> {
 
     /// Slice the raw source text covered by `span` (lines/cols are 1-based,
     /// end_col inclusive — the lexer's span convention).
+    /// The NAME a token spells where the grammar admits `IDENT`: an
+    /// identifier, or a reserved word used as one (`docs/13` §7.19). The
+    /// lexer reserves before it knows the position, so `use = "office"` and
+    /// `assume term = 5` arrived as keyword tokens and were refused for it;
+    /// the grammar never excluded them, and in a naming position a keyword
+    /// has no other reading. Expression position is not a naming position
+    /// and keeps its own rules.
+    fn name_of(&self, tok: &Token) -> Option<String> {
+        match tok.kind {
+            TokenKind::Ident(ref s) => Some(s.clone()),
+            TokenKind::Keyword(_) => Some(self.slice_source(tok.span)),
+            _ => None,
+        }
+    }
+
+    /// Does a FIELD clause follow the token at `idx + 1`? A field is always
+    /// `<name> =` or `<name> init`; the entity block's other clauses (`state
+    /// <name>`, `account <name>`, `part of`, `lifecycle <name>`) never are.
+    /// One token of lookahead is what lets a field be named `state`.
+    fn field_clause_follows(&self) -> bool {
+        matches!(self.peek_ahead(1).kind, TokenKind::Punct(Punct::Equal))
+            || matches!(self.peek_ahead(1).kind, TokenKind::Ident(ref i) if i == "init")
+    }
+
     fn slice_source(&self, span: Span) -> String {
         let mut out = String::new();
         for line_no in span.start_line..=span.end_line {
@@ -1338,15 +1362,12 @@ impl<'a> Parser<'a> {
         };
 
         let name_tok = self.bump();
-        let name = match name_tok.kind {
-            TokenKind::Ident(ref ident) => ident.clone(),
-            _ => {
-                self.push_expected(
-                    name_tok.span,
-                    "Expected token <identifier> for entity name.".to_string(),
-                );
-                return None;
-            }
+        let Some(name) = self.name_of(&name_tok) else {
+            self.push_expected(
+                name_tok.span,
+                "Expected token <identifier> for entity name.".to_string(),
+            );
+            return None;
         };
 
         // `entity <family> <name>` is a complete statement; a type and a
@@ -1413,6 +1434,16 @@ impl<'a> Parser<'a> {
                     );
                     return None;
                 }
+                // A FIELD NAMED BY A RESERVED WORD (`docs/13` §7.19): `use =
+                // "office"`, `state init 1 next prev`. The clause that follows
+                // is what says it is a field, so this arm comes before the
+                // `account` and `state` clauses and takes only what they
+                // could not — a keyword followed by `=` or `init`.
+                TokenKind::Keyword(_) if self.field_clause_follows() => {
+                    let key_tok = self.bump();
+                    let key = self.slice_source(key_tok.span);
+                    self.parse_entity_field_clause(key, key_tok, &mut fields, &mut literal_fields)?;
+                }
                 // `account <name> [owed|due] [init <expr>]` — a claim this
                 // entity owes or is due, rolled by the engine from the
                 // streams that `moves` it (`docs/42` §3). The side is one
@@ -1421,16 +1452,13 @@ impl<'a> Parser<'a> {
                 TokenKind::Keyword(Keyword::Account) => {
                     let kw = self.bump();
                     let name_tok = self.bump();
-                    let name = match name_tok.kind {
-                        TokenKind::Ident(ref i) => i.clone(),
-                        _ => {
-                            self.push_expected(
-                                name_tok.span,
-                                "Expected an account name after 'account' in an entity block."
-                                    .to_string(),
-                            );
-                            return None;
-                        }
+                    let Some(name) = self.name_of(&name_tok) else {
+                        self.push_expected(
+                            name_tok.span,
+                            "Expected an account name after 'account' in an entity block."
+                                .to_string(),
+                        );
+                        return None;
                     };
                     let mut side = None;
                     let mut end_span = name_tok.span;
@@ -1524,95 +1552,8 @@ impl<'a> Parser<'a> {
                 // rest of the block.
                 TokenKind::Ident(_) => {
                     let key_tok = self.bump();
-                    let TokenKind::Ident(ref key) = key_tok.kind else {
-                        unreachable!("matched Ident above")
-                    };
-                    let key = key.clone();
-
-                    // `<name> init <expr> [next <expr>]` — the long form of a
-                    // field. `<name> = <literal>` is the short one, and they
-                    // are the same thing: `=` means `init` with no rule. The
-                    // clause keyword is all that distinguishes the spellings,
-                    // and `init`/`next` carry no '=' for the reason a state's
-                    // do not.
-                    if matches!(self.peek().kind, TokenKind::Ident(ref i) if i == "init") {
-                        let init_tok = self.bump();
-                        if matches!(self.peek().kind, TokenKind::Punct(Punct::Equal)) {
-                            let span = self.current_span();
-                            self.push_expected(
-                                span,
-                                "`init` takes an expression directly, with no '='. \
-                                 Write `init <expr>`."
-                                    .to_string(),
-                            );
-                            return None;
-                        }
-                        let init = self.parse_expr_slot_until(init_tok.span, &["next"])?;
-                        // `next` is OPTIONAL: a field with no rule holds its
-                        // value, which is what an attribute has always done.
-                        let mut next = None;
-                        let mut end_span = init.span;
-                        if matches!(self.peek().kind, TokenKind::Ident(ref i) if i == "next") {
-                            let next_tok = self.bump();
-                            if matches!(self.peek().kind, TokenKind::Punct(Punct::Equal)) {
-                                let span = self.current_span();
-                                self.push_expected(
-                                    span,
-                                    "`next` takes an expression directly, with no '='. \
-                                     Write `next <expr>`."
-                                        .to_string(),
-                                );
-                                return None;
-                            }
-                            let slot = self.parse_expr_slot(next_tok.span)?;
-                            end_span = slot.span;
-                            next = Some(slot);
-                        }
-                        let span = merge_spans(key_tok.span, end_span);
-                        fields.push(EntityField {
-                            name: key,
-                            init,
-                            next,
-                            span,
-                        });
-                        continue;
-                    }
-
-                    let _ = self.expect_punct(Punct::Equal, "'='")?;
-                    // A signed number lexes as a sign punct then the number.
-                    let sign = match self.peek().kind {
-                        TokenKind::Punct(Punct::Minus) => {
-                            let _ = self.bump();
-                            "-"
-                        }
-                        TokenKind::Punct(Punct::Plus) => {
-                            let _ = self.bump();
-                            ""
-                        }
-                        _ => "",
-                    };
-                    let value_tok = self.bump();
-                    let value = match value_tok.kind {
-                        TokenKind::String(ref s) => s.clone(),
-                        TokenKind::Number(ref n) => format!("{sign}{n}"),
-                        TokenKind::Date(ref d) => d.clone(),
-                        TokenKind::Ident(ref ident) => ident.clone(),
-                        TokenKind::Qname(ref qname) => qname.clone(),
-                        TokenKind::Keyword(Keyword::True) => "true".to_string(),
-                        TokenKind::Keyword(Keyword::False) => "false".to_string(),
-                        _ => {
-                            self.push_expected(
-                                value_tok.span,
-                                format!("Expected a literal value for entity field '{key}'."),
-                            );
-                            return None;
-                        }
-                    };
-                    literal_fields.push(EntityLiteralField {
-                        name: key,
-                        value,
-                        span: merge_spans(key_tok.span, value_tok.span),
-                    });
+                    let key = self.slice_source(key_tok.span);
+                    self.parse_entity_field_clause(key, key_tok, &mut fields, &mut literal_fields)?;
                 }
                 _ => {
                     let bad = self.bump();
@@ -1639,18 +1580,112 @@ impl<'a> Parser<'a> {
         })
     }
 
-    fn parse_phase_stmt(&mut self) -> Option<PhaseStmt> {
-        let start = self.expect_keyword(Keyword::Phase, "'phase'")?;
-        let name_tok = self.bump();
-        let name = match name_tok.kind {
-            TokenKind::Ident(ref ident) => ident.clone(),
-            _ => {
+    /// The clause after a field's name inside an entity block: `init <expr>
+    /// [next <expr>]` (a field with a rule) or `= <literal>` (an attribute).
+    /// Shared by an identifier-named field and a keyword-named one.
+    fn parse_entity_field_clause(
+        &mut self,
+        key: String,
+        key_tok: Token,
+        fields: &mut Vec<EntityField>,
+        literal_fields: &mut Vec<EntityLiteralField>,
+    ) -> Option<()> {
+        // `<name> init <expr> [next <expr>]` — the long form of a
+        // field. `<name> = <literal>` is the short one, and they
+        // are the same thing: `=` means `init` with no rule. The
+        // clause keyword is all that distinguishes the spellings,
+        // and `init`/`next` carry no '=' for the reason a state's
+        // do not.
+        if matches!(self.peek().kind, TokenKind::Ident(ref i) if i == "init") {
+            let init_tok = self.bump();
+            if matches!(self.peek().kind, TokenKind::Punct(Punct::Equal)) {
+                let span = self.current_span();
                 self.push_expected(
-                    name_tok.span,
-                    "Expected token <identifier> after 'phase'.".to_string(),
+                    span,
+                    "`init` takes an expression directly, with no '='. \
+                     Write `init <expr>`."
+                        .to_string(),
                 );
                 return None;
             }
+            let init = self.parse_expr_slot_until(init_tok.span, &["next"])?;
+            // `next` is OPTIONAL: a field with no rule holds its
+            // value, which is what an attribute has always done.
+            let mut next = None;
+            let mut end_span = init.span;
+            if matches!(self.peek().kind, TokenKind::Ident(ref i) if i == "next") {
+                let next_tok = self.bump();
+                if matches!(self.peek().kind, TokenKind::Punct(Punct::Equal)) {
+                    let span = self.current_span();
+                    self.push_expected(
+                        span,
+                        "`next` takes an expression directly, with no '='. \
+                         Write `next <expr>`."
+                            .to_string(),
+                    );
+                    return None;
+                }
+                let slot = self.parse_expr_slot(next_tok.span)?;
+                end_span = slot.span;
+                next = Some(slot);
+            }
+            let span = merge_spans(key_tok.span, end_span);
+            fields.push(EntityField {
+                name: key,
+                init,
+                next,
+                span,
+            });
+            return Some(());
+        }
+
+        let _ = self.expect_punct(Punct::Equal, "'='")?;
+        // A signed number lexes as a sign punct then the number.
+        let sign = match self.peek().kind {
+            TokenKind::Punct(Punct::Minus) => {
+                let _ = self.bump();
+                "-"
+            }
+            TokenKind::Punct(Punct::Plus) => {
+                let _ = self.bump();
+                ""
+            }
+            _ => "",
+        };
+        let value_tok = self.bump();
+        let value = match value_tok.kind {
+            TokenKind::String(ref s) => s.clone(),
+            TokenKind::Number(ref n) => format!("{sign}{n}"),
+            TokenKind::Date(ref d) => d.clone(),
+            TokenKind::Ident(ref ident) => ident.clone(),
+            TokenKind::Qname(ref qname) => qname.clone(),
+            TokenKind::Keyword(Keyword::True) => "true".to_string(),
+            TokenKind::Keyword(Keyword::False) => "false".to_string(),
+            _ => {
+                self.push_expected(
+                    value_tok.span,
+                    format!("Expected a literal value for entity field '{key}'."),
+                );
+                return None;
+            }
+        };
+        literal_fields.push(EntityLiteralField {
+            name: key,
+            value,
+            span: merge_spans(key_tok.span, value_tok.span),
+        });
+        Some(())
+    }
+
+    fn parse_phase_stmt(&mut self) -> Option<PhaseStmt> {
+        let start = self.expect_keyword(Keyword::Phase, "'phase'")?;
+        let name_tok = self.bump();
+        let Some(name) = self.name_of(&name_tok) else {
+            self.push_expected(
+                name_tok.span,
+                "Expected token <identifier> after 'phase'.".to_string(),
+            );
+            return None;
         };
         let _from_kw = self.expect_keyword(Keyword::From, "'from'")?;
         let from_tok = self.bump();
@@ -2392,6 +2427,7 @@ impl<'a> Parser<'a> {
                     let field_tok = self.bump();
                     let field = match field_tok.kind {
                         TokenKind::Ident(ref f) => f.clone(),
+                        TokenKind::Keyword(_) => self.slice_source(field_tok.span),
                         TokenKind::Qname(_) => {
                             self.push_expected(
                                 field_tok.span,
@@ -3103,6 +3139,11 @@ impl<'a> Parser<'a> {
                 {
                     break
                 }
+                // A RESERVED WORD after a closed operand is the next item too
+                // — a field named `state` or `use` (`docs/13` §7.19), or a
+                // clause. No expression puts a keyword after an operand, so
+                // maximal munch applies to keywords exactly as to identifiers.
+                TokenKind::Keyword(_) if complete && !after_dot => break,
                 // `when` closes a waterfall step's amount, the way `active`
                 // closes a stream's.
                 TokenKind::Keyword(Keyword::When) if !extra_stops.is_empty() => break,
@@ -4076,25 +4117,12 @@ impl<'a> Parser<'a> {
     fn parse_metric_stmt(&mut self) -> Option<MetricStmt> {
         let start = self.expect_keyword(Keyword::Metric, "'metric'")?;
         let name_tok = self.bump();
-        let name = match name_tok.kind {
-            TokenKind::Ident(ref s) => s.clone(),
-            TokenKind::Keyword(_) => {
-                let word = self.slice_source(name_tok.span);
-                self.push_expected(
-                    name_tok.span,
-                    format!(
-                        "Expected identifier after 'metric', found the reserved word '{word}'. Reserved words are listed in section 18 of the language specification; choose another name."
-                    ),
-                );
-                return None;
-            }
-            _ => {
-                self.push_expected(
-                    name_tok.span,
-                    "Expected identifier after 'metric'.".to_string(),
-                );
-                return None;
-            }
+        let Some(name) = self.name_of(&name_tok) else {
+            self.push_expected(
+                name_tok.span,
+                "Expected identifier after 'metric'.".to_string(),
+            );
+            return None;
         };
         let _ = self.expect_punct(Punct::Equal, "'='")?;
         let (first, last) = self.scan_to_next_top_level_statement();
@@ -4289,25 +4317,12 @@ impl<'a> Parser<'a> {
     fn parse_statement_stmt(&mut self) -> Option<StatementStmt> {
         let start = self.expect_keyword(Keyword::Statement, "'statement'")?;
         let name_tok = self.bump();
-        let name = match name_tok.kind {
-            TokenKind::Ident(ref s) => s.clone(),
-            TokenKind::Keyword(_) => {
-                let word = self.slice_source(name_tok.span);
-                self.push_expected(
-                    name_tok.span,
-                    format!(
-                        "Expected identifier after 'statement', found the reserved word '{word}'. Reserved words are listed in section 18 of the language specification; choose another name."
-                    ),
-                );
-                return None;
-            }
-            _ => {
-                self.push_expected(
-                    name_tok.span,
-                    "Expected identifier after 'statement'.".to_string(),
-                );
-                return None;
-            }
+        let Some(name) = self.name_of(&name_tok) else {
+            self.push_expected(
+                name_tok.span,
+                "Expected identifier after 'statement'.".to_string(),
+            );
+            return None;
         };
         let _ = self.expect_punct(Punct::LBrace, "'{'")?;
         let mut stmt = StatementStmt {
@@ -4504,25 +4519,12 @@ impl<'a> Parser<'a> {
     fn parse_slice_stmt(&mut self) -> Option<SliceStmt> {
         let start = self.expect_keyword(Keyword::Slice, "'slice'")?;
         let name_tok = self.bump();
-        let name = match name_tok.kind {
-            TokenKind::Ident(ref s) => s.clone(),
-            TokenKind::Keyword(_) => {
-                let word = self.slice_source(name_tok.span);
-                self.push_expected(
-                    name_tok.span,
-                    format!(
-                        "Expected identifier after 'slice', found the reserved word '{word}'. Reserved words are listed in section 18 of the language specification; choose another name."
-                    ),
-                );
-                return None;
-            }
-            _ => {
-                self.push_expected(
-                    name_tok.span,
-                    "Expected identifier after 'slice'.".to_string(),
-                );
-                return None;
-            }
+        let Some(name) = self.name_of(&name_tok) else {
+            self.push_expected(
+                name_tok.span,
+                "Expected identifier after 'slice'.".to_string(),
+            );
+            return None;
         };
         let _ = self.expect_punct(Punct::LBrace, "'{'")?;
         let mut stmt = SliceStmt {
@@ -4686,31 +4688,12 @@ impl<'a> Parser<'a> {
     fn parse_assume_stmt(&mut self) -> Option<AssumeStmt> {
         let start = self.expect_keyword(Keyword::Assume, "'assume'")?;
         let name_tok = self.bump();
-        let name = match name_tok.kind {
-            TokenKind::Ident(ref s) => s.clone(),
-            // A RESERVED WORD LOOKS LIKE A NAME, so say which one it is.
-            //
-            // `assume term = 5.0` reported "Expected identifier" against a word
-            // that reads as a perfectly good identifier, leaving the author to
-            // guess that §18 reserves it. The same shape reaches an ontology
-            // field named after a keyword (docs/13 §7.19).
-            TokenKind::Keyword(_) => {
-                let word = self.slice_source(name_tok.span);
-                self.push_expected(
-                    name_tok.span,
-                    format!(
-                        "Expected identifier after 'assume', found the reserved word '{word}'. Reserved words are listed in section 18 of the language specification; choose another name."
-                    ),
-                );
-                return None;
-            }
-            _ => {
-                self.push_expected(
-                    name_tok.span,
-                    "Expected identifier after 'assume'.".to_string(),
-                );
-                return None;
-            }
+        let Some(name) = self.name_of(&name_tok) else {
+            self.push_expected(
+                name_tok.span,
+                "Expected identifier after 'assume'.".to_string(),
+            );
+            return None;
         };
         match self.peek().kind {
             TokenKind::Punct(Punct::Equal) => {
@@ -4930,15 +4913,12 @@ impl<'a> Parser<'a> {
     fn parse_curve_stmt(&mut self) -> Option<CurveStmt> {
         let start = self.expect_keyword(Keyword::Curve, "'curve'")?;
         let name_tok = self.bump();
-        let name = match name_tok.kind {
-            TokenKind::Ident(ref s) => s.clone(),
-            _ => {
-                self.push_expected(
-                    name_tok.span,
-                    "Expected identifier after 'curve'.".to_string(),
-                );
-                return None;
-            }
+        let Some(name) = self.name_of(&name_tok) else {
+            self.push_expected(
+                name_tok.span,
+                "Expected identifier after 'curve'.".to_string(),
+            );
+            return None;
         };
         let mut interpolation = "step".to_string();
         if let TokenKind::Ident(ref s) = self.peek().kind {
@@ -5068,15 +5048,12 @@ impl<'a> Parser<'a> {
     fn parse_quantile_stmt(&mut self) -> Option<QuantileStmt> {
         let start = self.expect_keyword(Keyword::Quantile, "'quantile'")?;
         let name_tok = self.bump();
-        let name = match name_tok.kind {
-            TokenKind::Ident(ref s) => s.clone(),
-            _ => {
-                self.push_expected(
-                    name_tok.span,
-                    "Expected identifier after 'quantile'.".to_string(),
-                );
-                return None;
-            }
+        let Some(name) = self.name_of(&name_tok) else {
+            self.push_expected(
+                name_tok.span,
+                "Expected identifier after 'quantile'.".to_string(),
+            );
+            return None;
         };
         let mut interpolation = "step".to_string();
         if let TokenKind::Ident(ref s) = self.peek().kind {
@@ -5675,6 +5652,57 @@ phase p from 2026-01 to 2026-02
         let ast = result.ast.expect("AST expected");
         assert_eq!(ast.statements.len(), 3);
         assert!(matches!(ast.statements[2], Stmt::Phase(_)));
+    }
+
+    /// A reserved word is a name where the grammar admits one (`docs/13`
+    /// §7.19): `use = "office"` is the grammar file's own example of a field,
+    /// and a field may be named `state` beside the `state <name>` clause
+    /// because a field is always followed by `=` or `init`.
+    #[test]
+    fn reserved_words_are_names_in_naming_positions() {
+        let src = "version 0.1\nmodel \"m\"\ntime calendar monthly from 2026-01 for 2\n\
+                   assume term = 5\nphase active from 2026-01 to 2026-02\n\
+                   curve net { 2026-01: 1 }\n\
+                   entity asset tower : Asset.Real { use = \"office\" state init 1 next prev state operating net = 3 }\n";
+        let (tokens, lex_diags) = lex(src);
+        assert!(lex_diags.is_empty(), "{lex_diags:?}");
+        let result = parse("model.cfdl", src, &tokens);
+        assert!(result.diagnostics.is_empty(), "{:?}", result.diagnostics);
+        let ast = result.ast.expect("AST expected");
+        let names: Vec<String> = ast
+            .statements
+            .iter()
+            .filter_map(|s| match s {
+                Stmt::Assume(a) => Some(format!("assume {}", a.name)),
+                Stmt::Phase(p) => Some(format!("phase {}", p.name)),
+                Stmt::Curve(c) => Some(format!("curve {}", c.name)),
+                Stmt::Entity(e) => Some(format!(
+                    "entity {} fields {} literals {} state {:?}",
+                    e.name,
+                    e.fields
+                        .iter()
+                        .map(|f| f.name.as_str())
+                        .collect::<Vec<_>>()
+                        .join(","),
+                    e.literal_fields
+                        .iter()
+                        .map(|f| f.name.as_str())
+                        .collect::<Vec<_>>()
+                        .join(","),
+                    e.initial_state
+                )),
+                _ => None,
+            })
+            .collect();
+        assert_eq!(
+            names,
+            vec![
+                "assume term",
+                "phase active",
+                "curve net",
+                "entity tower fields state literals use,net state Some(\"operating\")"
+            ]
+        );
     }
 
     #[test]
