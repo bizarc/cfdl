@@ -252,6 +252,31 @@ pub(crate) fn npv_with_offsets(streams: &[(Vec<f64>, f64)], rate: f64) -> f64 {
     total
 }
 
+/// Present value along a RATE PATH: one per-period rate per period
+/// (`docs/13` §7.4). Period `i` discounts by the product of the periods
+/// walked before it, and a stream's placement offset by its own period's
+/// rate — so a flat path gives `(1+r)^-(i+offset)`, the scalar formula, and
+/// a converging cost of capital gives the cumulated discount factor a
+/// valuation table prints.
+pub(crate) fn npv_along_path(streams: &[(Vec<f64>, f64)], per_period: &[f64]) -> f64 {
+    let mut cumulative = Vec::with_capacity(per_period.len());
+    let mut acc = 1.0_f64;
+    for rate in per_period {
+        cumulative.push(acc);
+        acc /= 1.0 + rate;
+    }
+    let mut total = 0.0_f64;
+    for (values, offset) in streams {
+        for (i, value) in values.iter().enumerate() {
+            let (Some(cum), Some(rate)) = (cumulative.get(i), per_period.get(i)) else {
+                break;
+            };
+            total += value * cum * (1.0 + rate).powf(-offset);
+        }
+    }
+    total
+}
+
 /// Present value at a stated GRAIN: sum the cash into the grain's buckets
 /// first, then discount each bucket once.
 ///
@@ -304,6 +329,46 @@ pub(crate) fn npv_at_grain(
     for ((bucket_idx, key_offset), sum) in grouped {
         let offset = key_offset as f64 / 1e9;
         total += sum / (1.0 + rate_per_bucket).powf(bucket_idx as f64 + offset);
+    }
+    total
+}
+
+/// `npv_at_grain` along a rate path: one annual rate per bucket, the
+/// bucket's factor the product of the buckets before it.
+pub(crate) fn npv_at_grain_along_path(
+    streams: &[(Vec<f64>, f64)],
+    rate_per_bucket: &[f64],
+    grain: &Grain,
+) -> f64 {
+    let mut grouped: BTreeMap<(usize, i64), f64> = BTreeMap::new();
+    for (values, offset) in streams {
+        let key_offset = (offset * 1e9).round() as i64;
+        for (bucket_idx, members) in grain.buckets.iter().enumerate() {
+            let mut sum = 0.0_f64;
+            for &i in members {
+                if let Some(v) = values.get(i) {
+                    sum += *v;
+                }
+            }
+            if sum != 0.0 {
+                *grouped.entry((bucket_idx, key_offset)).or_insert(0.0) += sum;
+            }
+        }
+    }
+    let mut cumulative = Vec::with_capacity(rate_per_bucket.len());
+    let mut acc = 1.0_f64;
+    for rate in rate_per_bucket {
+        cumulative.push(acc);
+        acc /= 1.0 + rate;
+    }
+    let mut total = 0.0_f64;
+    for ((bucket_idx, key_offset), sum) in grouped {
+        let offset = key_offset as f64 / 1e9;
+        let (Some(cum), Some(rate)) = (cumulative.get(bucket_idx), rate_per_bucket.get(bucket_idx))
+        else {
+            continue;
+        };
+        total += sum * cum * (1.0 + rate).powf(-offset);
     }
     total
 }

@@ -5,7 +5,8 @@ growing off a declining growth path, operating margins, cash taxes, capital
 expenditure and working capital, discounted to an enterprise value.
 
 The rate declines year on year, so revenue is a running product of ten
-different growth rates rather than one rate compounded.
+different growth rates rather than one rate compounded. The cost of capital
+converges the same way, and the run discounts each year at that year's rate.
 
 ## The reference
 
@@ -22,9 +23,9 @@ can mark every figure against the original.
 |---|---|
 | Pack | `opco` |
 | Contract types | `opco.revenue_line`, `opco.opex_line`, `opco.capex_line`, `opco.cash_taxes` |
-| Declared | two curves |
+| Declared | three curves, one of them the cost of capital the run discounts along |
 | Language features | pack contracts driven by curves; declared state inside the pack's growth rules |
-| Conventions | a declining growth path, margin-driven operating expense, cash taxes, capital expenditure as a share of revenue |
+| Conventions | a declining growth path, margin-driven operating expense, cash taxes, capital expenditure as a share of revenue, a cost of capital that converges over the forecast |
 
 The reference publishes the **drivers** rather than only the results, which is
 what a pack rule consumes, so the pack's lowering is checked and not only the

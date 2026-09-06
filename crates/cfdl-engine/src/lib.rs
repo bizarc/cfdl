@@ -181,6 +181,7 @@ impl Default for RunConfig {
         Self {
             arithmetic: cfdl_expr::Mode::Decimal,
             discount_rate: 0.0,
+            discount_curve: None,
             rate_stated: false,
             as_of: None,
             parameter_overrides: BTreeMap::new(),
@@ -502,6 +503,7 @@ mod tests {
             let config = RunConfig {
                 discount_rate: rate,
                 rate_stated: true,
+                discount_curve: None,
                 ..RunConfig::default()
             };
             let results = run_from_json_str(src, config).expect("run");
@@ -746,6 +748,7 @@ mod tests {
                 arithmetic: cfdl_expr::Mode::Decimal,
                 discount_rate: 0.05,
                 rate_stated: true,
+                discount_curve: None,
                 as_of: None,
                 parameter_overrides: overrides.clone(),
                 scenarios: BTreeMap::new(),
@@ -760,6 +763,7 @@ mod tests {
                 arithmetic: cfdl_expr::Mode::Decimal,
                 discount_rate: 0.05,
                 rate_stated: true,
+                discount_curve: None,
                 as_of: None,
                 parameter_overrides: overrides,
                 scenarios: BTreeMap::new(),
@@ -799,6 +803,7 @@ mod tests {
                 arithmetic: cfdl_expr::Mode::Decimal,
                 discount_rate: 0.0,
                 rate_stated: true,
+                discount_curve: None,
                 as_of: None,
                 parameter_overrides: overrides,
                 scenarios: BTreeMap::new(),
@@ -919,6 +924,128 @@ mod tests {
         );
     }
 
+    /// A DISCOUNT CURVE (`docs/13` §7.4). The IR below is Damodaran's FCFF
+    /// Simple Ginzu workbook, sheet "Valuation output": row 9 is the ten
+    /// years of FCFF, row 12 the cost of capital converging 7.055% -> 8.81%,
+    /// and B20 the PV of those ten years, 16394.53892909532. Discounting
+    /// along the curve reproduces B20; a flat curve reproduces the scalar
+    /// rate to the last bit; stating both, or a curve the model does not
+    /// declare, is refused.
+    fn damodaran_ir(curve_points: &str) -> String {
+        format!(
+            r#"{{
+            "model": {{ "name": "ginzu", "currency": "USD" }},
+            "time": {{ "calendar": "annual", "start": "2026-01-01", "periods": 10 }},
+            "entities": [ {{ "symbol": "asset.firm", "rules": {{}} }} ],
+            "curves": [ {{ "name": "cost_of_capital", "interpolation": "step", "points": [{curve_points}] }} ],
+            "streams": [
+                {{
+                    "name": "firm.fcff",
+                    "owner": {{ "symbol": "asset.firm" }},
+                    "direction": "inflow",
+                    "schedule": {{ "kind": "Every", "every": "annual", "from": "2026-01-01", "to": "2035-01-01" }},
+                    "amount": {{ "lang": "cfdl", "src": "if(time.t == 0.0, 1982.696720220315, if(time.t == 1.0, 2081.831556231332, if(time.t == 2.0, 2185.9231340428987, if(time.t == 3.0, 2295.219290745043, if(time.t == 4.0, 2423.6376504458894, if(time.t == 5.0, 2495.633211640767, if(time.t == 6.0, 2566.7934322235305, if(time.t == 7.0, 2636.8891298876333, if(time.t == 8.0, 2705.683167881936, 2755.7086026919724)))))))))" }},
+                    "active_when": {{ "lang": "cfdl", "src": "true" }}
+                }}
+            ]
+        }}"#
+        )
+    }
+
+    fn npv_of(results: &super::Results) -> f64 {
+        match results.deterministic.metrics.get("model.npv") {
+            Some(super::Scalar::Money(m)) => m.amount,
+            other => panic!("model.npv: {other:?}"),
+        }
+    }
+
+    #[test]
+    fn a_discount_curve_reproduces_the_workbooks_cumulated_discount_factors() {
+        let ir = damodaran_ir(
+            r#"{ "date": "2026-01-01", "value": 0.0705501574064654 },
+               { "date": "2031-01-01", "value": 0.07406012592517232 },
+               { "date": "2032-01-01", "value": 0.07757009444387923 },
+               { "date": "2033-01-01", "value": 0.08108006296258614 },
+               { "date": "2034-01-01", "value": 0.08459003148129306 },
+               { "date": "2035-01-01", "value": 0.0881 }"#,
+        );
+        let config = RunConfig {
+            discount_curve: Some("cost_of_capital".to_string()),
+            rate_stated: true,
+            ..Default::default()
+        };
+        let results = run_from_json_str(&ir, config).expect("run");
+        let npv = npv_of(&results);
+        assert!(
+            (npv - 16394.53892909532).abs() < 1e-5,
+            "PV of the ten years along the curve: {npv}"
+        );
+        assert!(matches!(
+            results
+                .deterministic
+                .metrics
+                .get("run.annual_discount_curve"),
+            Some(super::Scalar::String(name)) if name == "cost_of_capital"
+        ));
+        assert!(!results
+            .deterministic
+            .metrics
+            .contains_key("run.annual_discount_rate"));
+    }
+
+    #[test]
+    fn a_flat_discount_curve_is_the_scalar_rate_to_the_last_bit() {
+        let ir = damodaran_ir(r#"{ "date": "2026-01-01", "value": 0.0705501574064654 }"#);
+        let along = run_from_json_str(
+            &ir,
+            RunConfig {
+                discount_curve: Some("cost_of_capital".to_string()),
+                rate_stated: true,
+                ..Default::default()
+            },
+        )
+        .expect("curve run");
+        let flat = run_from_json_str(
+            &ir,
+            RunConfig {
+                discount_rate: 0.0705501574064654,
+                rate_stated: true,
+                ..Default::default()
+            },
+        )
+        .expect("scalar run");
+        assert_eq!(npv_of(&along).to_bits(), npv_of(&flat).to_bits());
+    }
+
+    #[test]
+    fn a_discount_curve_the_model_does_not_declare_is_refused() {
+        let ir = damodaran_ir(r#"{ "date": "2026-01-01", "value": 0.07 }"#);
+        let err = run_from_json_str(
+            &ir,
+            RunConfig {
+                discount_curve: Some("wacc".to_string()),
+                rate_stated: true,
+                ..Default::default()
+            },
+        )
+        .expect_err("no such curve");
+        assert_eq!(err.code(), "E5033_INVALID_RUN_CONFIG");
+        assert!(err.to_string().contains("cost_of_capital"), "{err}");
+    }
+
+    #[test]
+    fn a_run_config_stating_both_a_rate_and_a_curve_is_refused() {
+        let raw = r#"{ "deterministic": { "annual_discount_rate": 0.1, "annual_discount_curve": "wacc" } }"#;
+        let err = super::run_config_from_json_str(raw, None, None).expect_err("both stated");
+        assert_eq!(err.code(), "E5033_INVALID_RUN_CONFIG");
+        let raw = r#"{ "deterministic": { "annual_discount_curve": "wacc" }, "scenarios": { "up": { "annual_discount_rate": 0.12 } } }"#;
+        let config = super::run_config_from_json_str(raw, Some(0.05), None)
+            .expect("curve wins over the fallback");
+        assert_eq!(config.discount_curve.as_deref(), Some("wacc"));
+        assert!(config.rate_stated);
+        assert_eq!(config.scenarios["up"].discount_rate, Some(0.12));
+    }
+
     /// NO RATE, NO NPV (`docs/13` §7.46): a run nobody gave a discount rate
     /// publishes neither `model.npv` nor `run.annual_discount_rate`, and says
     /// why; a run that states one, even zero, publishes both.
@@ -955,6 +1082,7 @@ mod tests {
             RunConfig {
                 discount_rate: 0.0,
                 rate_stated: true,
+                discount_curve: None,
                 ..RunConfig::default()
             },
         )
@@ -1196,6 +1324,7 @@ mod tests {
                 arithmetic: cfdl_expr::Mode::Decimal,
                 discount_rate: 0.0,
                 rate_stated: true,
+                discount_curve: None,
                 as_of: None,
                 parameter_overrides: BTreeMap::new(),
                 scenarios: BTreeMap::new(),
@@ -1277,6 +1406,7 @@ mod tests {
                 arithmetic: cfdl_expr::Mode::Decimal,
                 discount_rate: 0.0,
                 rate_stated: true,
+                discount_curve: None,
                 as_of: None,
                 parameter_overrides: overrides,
                 scenarios: BTreeMap::new(),
@@ -1307,6 +1437,7 @@ mod tests {
                 arithmetic: cfdl_expr::Mode::Decimal,
                 discount_rate: 0.0,
                 rate_stated: true,
+                discount_curve: None,
                 as_of: None,
                 parameter_overrides: legacy,
                 scenarios: BTreeMap::new(),
@@ -1338,6 +1469,7 @@ mod tests {
                 arithmetic: cfdl_expr::Mode::Decimal,
                 discount_rate: 0.0,
                 rate_stated: true,
+                discount_curve: None,
                 as_of: None,
                 parameter_overrides: bracket,
                 scenarios: BTreeMap::new(),
@@ -1424,6 +1556,7 @@ mod assumption_order_tests {
             &ir,
             &RunConfig {
                 rate_stated: true,
+                discount_curve: None,
                 ..RunConfig::default()
             },
             &prepare_model(&ir, &mut Vec::new()).expect("prepares"),
@@ -1630,6 +1763,7 @@ mod series_wave_tests {
             &ir,
             &RunConfig {
                 rate_stated: true,
+                discount_curve: None,
                 ..RunConfig::default()
             },
             &prepare_model(&ir, &mut Vec::new()).expect("prepares"),

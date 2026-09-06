@@ -4,7 +4,7 @@
 
 CFDL 0.9.0. Every model below compiles, and its IR and
 results are byte-asserted against goldens in CI (`fixtures/valid/`,
-163 models.
+164 models.
 
 `gold/ir/`, `gold/results/`). Each is single-purpose: the directory name
 says what it exercises. This is what right looks like — positive few-shot
@@ -1840,6 +1840,32 @@ stream ops.cost on entity asset.co outflow currency USD {
 metric gross_revenue = series_sum("ops.revenue", 0, 4)
 metric total_cost    = series_sum("ops.cost", 0, 4)
 metric margin        = metric.gross_revenue + metric.total_cost
+```
+
+## discount_curve_flat
+
+```cfdl
+version 0.1
+model "discount-curve-flat"
+time calendar monthly from 2026-01 for 24
+
+// A flat curve and a scalar rate are the same valuation; this model is run
+// both ways and the present values agree to the last bit.
+curve wacc to 2027-12 {
+  2026-01: 0.10
+}
+
+entity asset plant { name = "Plant" }
+
+stream plant.rent on entity asset.plant inflow currency USD {
+  schedule every month from 2026-01 to 2027-12
+  amount = 1000 + 7 * time.t
+}
+
+stream plant.purchase on entity asset.plant outflow currency USD {
+  schedule on 2026-01
+  amount = 20000
+}
 ```
 
 ## dscr_cash_trap_cure_period

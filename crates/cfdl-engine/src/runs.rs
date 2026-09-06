@@ -83,14 +83,26 @@ pub(crate) fn compute_results(
         for (key, value) in &scenario.parameter_overrides {
             merged_overrides.insert(key.clone(), *value);
         }
-        let scenario_stated = scenario.discount_rate.is_some() || config.rate_stated;
+        let scenario_stated = scenario.discount_rate.is_some()
+            || scenario.discount_curve.is_some()
+            || config.rate_stated;
+        // A scenario that states a rate is valued at that rate, dropping the
+        // run's curve; one that states a curve is valued along it, dropping
+        // the run's rate. One answer per run, as the file rule says.
+        let (scenario_rate, scenario_curve) =
+            match (&scenario.discount_rate, &scenario.discount_curve) {
+                (Some(rate), _) => (*rate, None),
+                (None, Some(curve)) => (0.0, Some(curve.clone())),
+                (None, None) => (config.discount_rate, config.discount_curve.clone()),
+            };
         let scenario_run = run_deterministic(
             ir,
             &RunConfig {
                 // Run-wide: a scenario varies the deal's drivers and the rate it
                 // is valued at, not the arithmetic every scenario shares.
                 arithmetic: config.arithmetic,
-                discount_rate: scenario.discount_rate.unwrap_or(config.discount_rate),
+                discount_rate: scenario_rate,
+                discount_curve: scenario_curve,
                 rate_stated: scenario_stated,
                 as_of: scenario.as_of.clone().or_else(|| config.as_of.clone()),
                 parameter_overrides: merged_overrides,
@@ -194,6 +206,7 @@ pub(crate) fn compute_results(
                 &RunConfig {
                     arithmetic: config.arithmetic,
                     discount_rate: config.discount_rate,
+                    discount_curve: config.discount_curve.clone(),
                     rate_stated: config.rate_stated,
                     as_of: config.as_of.clone(),
                     parameter_overrides: trial_overrides,

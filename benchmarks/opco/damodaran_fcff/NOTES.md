@@ -112,17 +112,25 @@ Deriving a reinvestment-ratio curve by hand and asserting all ten years would
 have worked and would have been the wrong call, for the same reason the
 cumulative index was: it hides a pack gap inside the model that walked into it.
 
-## What is not asserted at all: value
+## What is not asserted: value
 
-The cost of capital converges 7.055% → 8.81% over the same window, and
-`RunConfig.discount_rate` is a single `f64` feeding one `per_period_rate` into
-`npv_with_offsets`. A term structure in the discount rate is not expressible, so
-**no discounted figure is asserted** — not NPV, not enterprise value, not the
-per-share price the model exists to produce.
+The cost of capital converges 7.055% → 8.81% over the same window, and the
+run now discounts along it: `cost_of_capital` is a step curve in the model
+and `run.json` names it as `annual_discount_curve`. Fed the workbook's own
+FCFF row, the engine reproduces its cumulated discount factors and the PV of
+the ten years (16,394.54, cell B20 of "Valuation output") to 1e-5 — that
+check lives in the engine's tests rather than here, because this model's
+FCFF is not the workbook's from year five.
 
-Discounting at a flat rate and reporting the agreement would have been easy and
-dishonest. Backlogged instead; note the offset machinery already handles
-per-*stream* variation, but this is per-*period* variation, a different axis.
+That is the reinvestment line: the workbook derives reinvestment from the
+next year's revenue growth over a sales-to-capital ratio, and the pack's
+capital line grows at its own rate (`docs/13` §7.9, a derived line). Years
+1–4 are exact and asserted; the drift after that is why no discounted figure
+is asserted here yet. Closing §7.9 makes the ten-year PV assertable; the
+enterprise value and the per-share price need the terminal value
+(`opco.exit_perpetuity` at 8.81% and 4.58% growth) and the balance-sheet
+bridge (debt, minority interests, cash, non-operating assets, share count)
+besides. Discounting was the first of those gaps and is closed.
 
 ## What the pack gained
 

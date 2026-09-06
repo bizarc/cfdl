@@ -32,6 +32,117 @@ pub(crate) struct DeterministicRunOutput {
 /// `ExprError`'s Display writes `[CODE] message`, so one marker finds them all
 /// however the site chose to phrase the rest. Deduplicated because a name that
 /// fails once fails every period.
+/// WHAT THE RUN DISCOUNTS WITH (`docs/13` §7.4): one annual rate, or a curve
+/// the model declares read at each period's date. The flat case keeps the
+/// scalar formula byte for byte; the curve case walks the path.
+pub(crate) enum Discount {
+    Flat {
+        annual: f64,
+        per_period: f64,
+    },
+    Path {
+        annual: Vec<f64>,
+        per_period: Vec<f64>,
+    },
+}
+
+impl Discount {
+    pub(crate) fn from_config(
+        ir: &Ir,
+        config: &RunConfig,
+        timeline: &[Date],
+        ppy: f64,
+    ) -> Result<Self, EngineError> {
+        let Some(name) = &config.discount_curve else {
+            return Ok(Discount::Flat {
+                annual: config.discount_rate,
+                per_period: (1.0 + config.discount_rate).powf(1.0 / ppy) - 1.0,
+            });
+        };
+        let curves = env::ir_curve_defs(ir);
+        let Some(curve) = curves.get(name.as_str()) else {
+            let known: Vec<&str> = curves.keys().map(String::as_str).collect();
+            return Err(EngineError::InvalidRunConfig(format!(
+                "annual_discount_curve '{name}' names no curve this model declares{}",
+                if known.is_empty() {
+                    String::new()
+                } else {
+                    format!("; declared: {}", known.join(", "))
+                }
+            )));
+        };
+        let mut annual = Vec::with_capacity(timeline.len());
+        for date in timeline {
+            let Some(calc) = cfdl_calc::CalcDate::new(date.year, date.month, date.day) else {
+                return Err(EngineError::InvalidDate(date.to_string()));
+            };
+            match cfdl_expr::curve_value_at(curve, calc) {
+                cfdl_calc::CurveLookup::Value(v) => {
+                    annual.push(cfdl_calc::decimal_to_f64(v));
+                }
+                cfdl_calc::CurveLookup::OutsideRange { from, to } => {
+                    let bounds = match (from, to) {
+                        (Some(f), Some(t)) => format!("from {f} to {t}"),
+                        (Some(f), None) => format!("from {f}"),
+                        (None, Some(t)) => format!("to {t}"),
+                        (None, None) => String::new(),
+                    };
+                    return Err(EngineError::CurveReadOutsideRange(format!(
+                        "the run's discount curve '{name}' has no value at {date}: its effective \
+                         dates run {bounds} — outside them a curve has no value. Extend the \
+                         curve's dates to the valuation horizon, or end the model where the \
+                         curve does."
+                    )));
+                }
+                cfdl_calc::CurveLookup::Unknown => {
+                    return Err(EngineError::InvalidRunConfig(format!(
+                        "annual_discount_curve '{name}' has no value at {date}"
+                    )));
+                }
+            }
+        }
+        let per_period = annual
+            .iter()
+            .map(|r| (1.0 + r).powf(1.0 / ppy) - 1.0)
+            .collect();
+        Ok(Discount::Path { annual, per_period })
+    }
+
+    pub(crate) fn npv(&self, streams: &[(Vec<f64>, f64)]) -> f64 {
+        match self {
+            Discount::Flat { per_period, .. } => npv_with_offsets(streams, *per_period),
+            Discount::Path { per_period, .. } => npv_along_path(streams, per_period),
+        }
+    }
+
+    /// At an annual grain each bucket takes the annual rate at its first
+    /// period's date.
+    pub(crate) fn npv_at_grain(
+        &self,
+        streams: &[(Vec<f64>, f64)],
+        grain: &Grain,
+        timeline: &[Date],
+    ) -> f64 {
+        match self {
+            Discount::Flat { annual, .. } => npv_at_grain(streams, *annual, grain),
+            Discount::Path { annual, .. } => {
+                let _ = timeline;
+                let per_bucket: Vec<f64> = grain
+                    .buckets
+                    .iter()
+                    .map(|members| {
+                        members
+                            .first()
+                            .and_then(|&i| annual.get(i).copied())
+                            .unwrap_or(0.0)
+                    })
+                    .collect();
+                npv_at_grain_along_path(streams, &per_bucket, grain)
+            }
+        }
+    }
+}
+
 pub(crate) fn unresolved_names(warnings: &[String], declared: &BTreeSet<String>) -> Vec<String> {
     let mut seen: BTreeSet<String> = BTreeSet::new();
     for w in warnings {
@@ -730,7 +841,7 @@ pub(crate) fn fold_results(
 
     let model_total = model_series.iter().sum::<f64>();
     let ppy = periods_per_year(&ir.time.calendar);
-    let per_period_rate = (1.0 + config.discount_rate).powf(1.0 / ppy) - 1.0;
+    let discount = Discount::from_config(ir, config, timeline, ppy)?;
     // The identity grain keeps the original path, byte for byte. Regrouping the
     // sum changes its last bit (measured at 1 ULP), and no published NPV should
     // move because a capability was added that nobody asked for yet.
@@ -739,9 +850,9 @@ pub(crate) fn fold_results(
             let grain = Grain::calendar_year(&timeline[..cash_periods.min(timeline.len())]);
             // One bucket is one year, so the rate for a bucket is the ANNUAL
             // rate — not the per-period rate the grid would use.
-            npv_at_grain(&valued_streams, config.discount_rate, &grain)
+            discount.npv_at_grain(&valued_streams, &grain, timeline)
         }
-        _ => npv_with_offsets(&valued_streams, per_period_rate),
+        _ => discount.npv(&valued_streams),
     };
     metrics.insert(
         "model.total".to_string(),
@@ -766,8 +877,8 @@ pub(crate) fn fold_results(
     } else {
         warnings.push(
             "No discount rate was stated, so `model.npv` and `run.annual_discount_rate` are not \
-             published: a present value needs a rate. State `annual_discount_rate` in the run \
-             configuration, or pass `--rate`."
+             published: a present value needs a rate. State `annual_discount_rate` or \
+             `annual_discount_curve` in the run configuration, or pass `--rate`."
                 .to_string(),
         );
     }
@@ -875,10 +986,16 @@ pub(crate) fn fold_results(
         );
     }
     if config.rate_stated {
-        metrics.insert(
-            "run.annual_discount_rate".to_string(),
-            Scalar::Number(round_amount(config.discount_rate)),
-        );
+        match &config.discount_curve {
+            Some(name) => metrics.insert(
+                "run.annual_discount_curve".to_string(),
+                Scalar::String(name.clone()),
+            ),
+            None => metrics.insert(
+                "run.annual_discount_rate".to_string(),
+                Scalar::Number(round_amount(config.discount_rate)),
+            ),
+        };
     }
     // Published for downstream metric evaluation (e.g. cfdl-metrics
     // `wal_years`, which needs to convert period indices to years).
@@ -1144,7 +1261,7 @@ pub(crate) fn fold_results(
                 slice_metrics.insert(
                     "npv".to_string(),
                     Scalar::Money(Money {
-                        amount: round_amount(npv_with_offsets(&valued, per_period_rate)),
+                        amount: round_amount(discount.npv(&valued)),
                         currency: ir.model.currency.clone(),
                     }),
                 );

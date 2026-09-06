@@ -1,0 +1,125 @@
+{
+  "ir_version": "0.1",
+  "model": {
+    "name": "discount-curve-flat",
+    "currency": "USD"
+  },
+  "time": {
+    "calendar": "monthly",
+    "start": "2026-01-01",
+    "periods": 24
+  },
+  "phases": [],
+  "entities": [
+    {
+      "id": "8ca71b46277588990b2687beb5fc6196",
+      "symbol": "asset.plant",
+      "type": "core.Entity",
+      "fields": {
+        "name": "Plant"
+      },
+      "state": {}
+    }
+  ],
+  "assumptions": {
+    "constants": {},
+    "random": {}
+  },
+  "curves": [
+    {
+      "name": "wacc",
+      "interpolation": "step",
+      "effective_to": "2027-12-01",
+      "points": [
+        {
+          "date": "2026-01-01",
+          "value": 0.1
+        }
+      ]
+    }
+  ],
+  "contracts": [],
+  "streams": [
+    {
+      "id": "e7c4b9d77047b94708240658dda3154c",
+      "name": "plant.purchase",
+      "owner": {
+        "symbol": "asset.plant"
+      },
+      "direction": "outflow",
+      "currency": "USD",
+      "schedule": {
+        "kind": "OnDate",
+        "on": "2026-01-01"
+      },
+      "amount": {
+        "lang": "cfdl",
+        "src": "20000.0"
+      },
+      "active_when": {
+        "lang": "cfdl",
+        "src": "true"
+      },
+      "provenance": {
+        "source_file": "model.cfdl",
+        "source_span": {
+          "start_line": 18,
+          "start_col": 1,
+          "end_line": 21,
+          "end_col": 1
+        }
+      }
+    },
+    {
+      "id": "c1a854b363232aa2f949e427b28175fd",
+      "name": "plant.rent",
+      "owner": {
+        "symbol": "asset.plant"
+      },
+      "direction": "inflow",
+      "currency": "USD",
+      "schedule": {
+        "kind": "Every",
+        "every": "monthly",
+        "from": "2026-01-01",
+        "to": "2027-12-01"
+      },
+      "amount": {
+        "lang": "cfdl",
+        "src": "1000.0 + 7.0 * time.t"
+      },
+      "active_when": {
+        "lang": "cfdl",
+        "src": "true"
+      },
+      "provenance": {
+        "source_file": "model.cfdl",
+        "source_span": {
+          "start_line": 13,
+          "start_col": 1,
+          "end_line": 16,
+          "end_col": 1
+        }
+      }
+    }
+  ],
+  "events": [],
+  "options": [],
+  "runs": [
+    {
+      "kind": "deterministic"
+    }
+  ],
+  "required_observables": [],
+  "required_refs": [],
+  "provenance": {
+    "sources": [
+      "model.cfdl"
+    ],
+    "compiler": {
+      "name": "cfdl",
+      "version": "0.9.0",
+      "hash": "6bebad0d68f4babc5c564c4ea7ecc1f2"
+    }
+  }
+}

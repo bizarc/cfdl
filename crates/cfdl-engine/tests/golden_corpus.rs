@@ -106,6 +106,7 @@ fn engine_reproduces_the_blessed_corpus() {
             None => cfdl_engine::RunConfig {
                 discount_rate: 0.10,
                 rate_stated: true,
+                discount_curve: None,
                 ..Default::default()
             },
         };
@@ -323,6 +324,7 @@ fn walk_matches_the_column_order() {
             None => cfdl_engine::RunConfig {
                 discount_rate: 0.10,
                 rate_stated: true,
+                discount_curve: None,
                 ..Default::default()
             },
         };

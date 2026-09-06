@@ -111,7 +111,7 @@ The run configuration is a small JSON document that travels beside the model. Th
 }
 ```
 
-Configurations can also name **scenarios**: base and downside, each with its own rate and parameter overrides, run in one pass and reported side by side. They carry simulation settings too, which Part II's uncertainty chapter takes up properly. What to internalize now is the division of labor: the *model* owns the claims, the *configuration* owns the question being asked of them. When you find yourself editing the model to ask a different question, stop — you are usually holding the wrong file.
+A rate that changes over the horizon is a curve the model declares and the configuration names instead — `"annual_discount_curve": "wacc"` — so a cost of capital that converges as a firm matures discounts each year at that year's rate. Configurations can also name **scenarios**: base and downside, each with its own rate and parameter overrides, run in one pass and reported side by side. They carry simulation settings too, which Part II's uncertainty chapter takes up properly. What to internalize now is the division of labor: the *model* owns the claims, the *configuration* owns the question being asked of them. When you find yourself editing the model to ask a different question, stop — you are usually holding the wrong file.
 
 ## What can go wrong
 

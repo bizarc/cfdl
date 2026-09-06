@@ -154,47 +154,26 @@ state-reading recurrence compiles clean and dies at run.
 
 ## Item 2 — the discount curve reaches the valuation plane
 
-*Re-examined 2026-09-01 against §7.85, because "the valuation plane" changed
-underneath this item and it is worth being precise about what did and did not
-close. §7.85 changed what the plane READS: a metric now binds entity fields,
-accounts, and every series the plane publishes, and a name nothing publishes
-is refused (`E1365`) instead of folding as a silent zero. It did not change
-what the plane DISCOUNTS with: `RunConfig.discount_rate` is still a single
-`f64` (`crates/cfdl-engine/src/config.rs`), still turned into one
-`per_period_rate` and handed to the NPV fold
-(`crates/cfdl-engine/src/lib.rs`), and no discounted figure consults a curve.
-So this item stands exactly as written — the shape below is unchanged — and
-§7.85 is why building it got easier, not narrower: the reads and refusal
-machinery the curve-driven DF product would want in the metric environment
-now exist. The text that follows is the original.*
+*Built 6 September 2026; `docs/13` §7.4 is closed.* The run configuration
+names a curve the model declares (`annual_discount_curve`, in place of
+`annual_discount_rate`); the valuation plane reads the prevailing annual
+rate at each period's date and compounds discount factors cumulatively —
+`DF(t) = DF(t-1) / (1 + r(date_t))` per period, a stream's placement offset
+at its own period's rate — rather than exponentiating one rate. The two
+conventions stand as stated: the curve holds prevailing annualized rates
+(flat-forward under step semantics), not zero-coupon spots, and `model.irr`
+remains a scalar solve. The annual-grain interaction (§7.69) is handled the
+same way: at `valuation_grain: "annual"` each yearly bucket takes the annual
+rate at its first period. Argus's term-varying rates and a construction
+loan priced differently from stabilized operations are now one curve each.
 
-**Backlog §7.4, made explicit.** The language side is done — `curve` already
-expresses a sparse rate schedule (step = flat-forward, linear =
-calendar-day interpolation). The gap is confined to the valuation plane:
-`RunConfig.discount_rate` is a single `f64`, turned into one
-`per_period_rate` and handed to `npv_with_offsets`; no discounted figure
-ever consults a curve.
-
-**The shape:** the run configuration (or the model) names a curve; the
-valuation plane looks up the prevailing annualized rate per period date and
-compounds discount factors cumulatively —
-
-    DF(t) = DF(t-1) / (1 + r(date_t) / ppy)
-
-— rather than exponentiating one rate. Two conventions to state, not solve:
-the curve holds prevailing annualized rates (flat-forward, matching step
-curve semantics), not zero-coupon spots; and `model.irr` remains a scalar
-solve by construction and is documented as such (`irr_with_offsets` — §7.4
-flags this). One interaction to state: the annual-grain exponent question
-(§7.69) — the cumulative DF product sidesteps it, which is an argument for
-that form.
-
-**Why it matters here:** Argus supports term-varying rates; construction
-discounts at a different rate than stabilized operations; Damodaran's
-converging cost of capital is the opco twin. The standing cost is already in
-the suite: `benchmarks/opco/damodaran_fcff` asserts the entire cash-flow
-build and **no discounted figure at all**, because flat-rate discounting
-would produce a number that is not a check.
+The standing cost in the suite is half paid: `benchmarks/opco/damodaran_fcff`
+now runs along its converging cost of capital, and the engine reproduces the
+workbook's cumulated discount factors and ten-year PV to 1e-5 from the
+published FCFF row. The case still asserts no discounted figure of its own,
+because its reinvestment line drifts from year five (`docs/13` §7.9, a
+derived line) and the enterprise value needs the terminal value and the
+balance-sheet bridge besides.
 
 ## Item 3 — the market-leasing-assumption bundle (pack design item)
 

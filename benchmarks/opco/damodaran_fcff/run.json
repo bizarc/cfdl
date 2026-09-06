@@ -1,1 +1,1 @@
-{"deterministic":{"annual_discount_rate":0.0705501574064654}}
+{"deterministic":{"annual_discount_curve":"cost_of_capital"}}

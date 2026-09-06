@@ -28,8 +28,9 @@
 # a self-growing line and cannot express a quantity defined by another line's
 # growth. A contract shape gap, not a compounding one; see NOTES.md.
 #
-# NOT ASSERTED AT ALL: value, NPV, per-share price. The cost of capital
-# converges 7.055% -> 8.81% and the engine takes a single scalar discount rate.
+# NOT ASSERTED: value, NPV, per-share price. The run discounts along the
+# converging cost of capital, but reinvestment drifts from year five (docs/13
+# §7.9), so the ten-year PV is not the workbook's yet. See NOTES.md.
 #
 # period_tolerance = 0.001 — the published figures carry four decimals and the
 # engine agrees to 1e-6 everywhere it is asserted.
