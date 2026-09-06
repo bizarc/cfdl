@@ -60,7 +60,8 @@ Walk-enabled, in value order:
   pack's one unvalidated rule, and `docs/13` §7.1's third way forward — "needs
   per-period persistent state" — is now buildable: a SOC balance stepped per
   period turns `quantity` (the storage rule's MWh cycled) from an assumed input into an output, which
-  is the circularity §7.1 says blocks validation. Recorded as `docs/13` §7.75.
+  is the circularity §7.1 said blocks validation. Shipped as
+  `benchmarks/energy/merchant_storage_arbitrage` (`docs/39` item 1).
 - **Reserve accounts.** The references model them; the pack could not. DSRA
   and major-maintenance funding to target, with `dscr_periodic`
   (`packs/energy/statements.toml`) already publishing the covenant test that
@@ -182,7 +183,7 @@ lifted, which reorders Tier 1:
 
 - *Project finance / district energy* — DSCR-sculpted debt and circularly
   capitalized IDC are solves (`docs/14` §5); also blocked on a source
-  (`docs/13` §7.13).
+  (`docs/20` §5.5).
 - *ILS / cat bonds* — event-set Monte Carlo; the quantile primitive already
   speaks exceedance and layers (`docs/27`), the sampler does not.
 - *RMBS OAS* — per-period stochastic draws (`docs/13` §7.74) and a

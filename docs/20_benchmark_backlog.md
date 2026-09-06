@@ -274,12 +274,13 @@ count overstates the evidence.
 
 ## 5. Domains the suite does not cover
 
-Sections 1–4 are structured credit. The suite is not: 40 registered cases
-across five directories, and `docs/13` §7.3 records the imbalance the credit
-sections cannot see — cre at 1/12 and opco at 0/10 contract types externally
-validated, against credit's 10/10 and energy's 9/10. The items here are
-domain cases the language can express (or will, at a named phase) that the
-suite has not checked. Provenance: the domain survey in `docs/30`.
+Sections 1–4 are structured credit. The suite is not: 47 registered cases
+across five directories, and `docs/13` §7.3 records the coverage the credit
+sections cannot see — on its 2026-09-06 re-measure energy 10/10, credit 3/4,
+cre 11/14 and opco 12/12 contract types exercised, with energy's last rule
+exercised but not validated. The items here are domain cases the language
+can express (or will, at a named phase) that the suite has not checked.
+Provenance: the domain survey in `docs/30`.
 
 **5.1 The gate fixtures should graduate.** The walk and phase 5 name their
 proof fixtures (`docs/29` phases 4–5): the delinquency machine breaching and
@@ -328,6 +329,25 @@ was wrong to assume a case would. The case is core-spelled and never declares
 wrong, since `quantity` (the storage rule's MWh cycled) is an input to it and the output of any dispatch
 model. `docs/13` §7.3 stands at energy 9/10 validated until a contract exists to
 validate.
+
+**5.5 District energy has no usable reference.** Carried here from the
+closed `docs/13` §7.13. The pack roadmap catalogue ranks District Energy /
+Waste-to-Energy as a Tier 1 candidate needing "none new — Energy pack
+extension (~65% reuse)" and names the Ed Bodmer project-finance collection
+as its first reference. Measured across that collection's thermal and
+biomass pages, "district", "cogeneration" and "combined heat" appear nowhere
+and "waste" three times in prose; its four downloadable thermal models are
+gas-fired IPPs whose mechanics (PPA and merchant revenue, O&M, senior debt,
+tax depreciation) `utility_pv_singleowner` and `merchant_capacity` already
+reconcile against a national-laboratory model, and they lean on two solves
+— debt sculpted to a coverage target and circular capitalised interest —
+that `docs/14` §5 says would need an explicit, bounded, convergence-checked
+construct. What the case needs is a source publishing a thermal plant's
+drivers and the lines they produce: heat and power sold separately, fuel
+cost as a driver, a heat offtake contract. The catalogue's other Tier 1
+entries with no new gate, Telecom Towers (A.CRE single-tenant NNN) and
+Hospitality (A.CRE or Finamodel), need an email registration to download.
+Nothing to build until such a source exists.
 
 **5.5 A promotion, not an invention: the availability-payment concession.**
 `bespoke/ppiaf_toll_highway` already models three tranches, capitalizing
