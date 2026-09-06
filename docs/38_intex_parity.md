@@ -178,8 +178,9 @@ at length elsewhere; referenced, not duplicated.
   from model start on period fractions; a prospectus WAL measures from
   settlement to stated payment days, and the 400% PSA column of FNMA 2019-2
   is the falsifying case.
-- **The speed grid** (`docs/13` §7.23; `docs/20` §2.3): a published decrement
-  table is five to seven speeds per class, and a case can assert one.
+- ~~**The speed grid**~~ **SHIPPED** 6 September 2026: `expected_<scenario>.csv`
+  asserts a scenario's own per-period column, so a published decrement table
+  is one case with a scenario per speed (`docs/20` §2.3).
 
 ## Item 8 — class types nothing exercises
 

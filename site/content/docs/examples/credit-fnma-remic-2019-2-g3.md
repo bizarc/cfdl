@@ -1,12 +1,12 @@
 ---
 id: benchmark-credit-fnma-remic-2019-2-g3
-title: "Credit: Fannie Mae REMIC with a stripped coupon"
+title: "Credit: Fannie Mae REMIC with a stripped coupon, at six prepayment speeds"
 slug: "/docs/examples/credit-fnma-remic-2019-2-g3"
 description: "Security Group 3 of a Fannie Mae REMIC: a seasoned mortgage pool passing through to a single class, with the coupon stripped between it and an interest-only class that carries no principal."
 source: benchmarks/credit/fnma_remic_2019_2_g3
 ---
 
-# Credit: Fannie Mae REMIC with a stripped coupon
+# Credit: Fannie Mae REMIC with a stripped coupon, at six prepayment speeds
 
 Security Group 3 of a Fannie Mae REMIC: a seasoned mortgage pool passing through to a single class, with the coupon stripped between it and an interest-only class that carries no principal.
 
@@ -110,11 +110,23 @@ pays it (`wal`) and asserted at ±0.05, the print floor of a figure published
 to one decimal. The deal distributes on the 25th, and the waterfalls say so,
 so each payment sits on the day the supplement measures to.
 
-The other six published speeds — 0%, 100%, 300%, 400%, 700% and 1000% — each
-ship as their own case (`fnma_remic_2019_2_g3_psa000` through `_psa1000`),
-asserting their own decrement columns and weighted average lives, including
-0% PSA, which the supplement prepares on its own alternative assumption of a
-360-month original and remaining term at 7.50%.
+The supplement's other columns are scenarios of this case, each varying the
+one term that differs — the prepayment speed — and asserting its own
+decrement column and class life from its own file:
+
+| speed | asserted cells | worst balance, pp | Class AB life | published |
+|---|---:|---:|---:|---:|
+| 100% PSA | 180 | 0.414 | 6.0977 | 6.1 |
+| 300% PSA | 175 | 0.483 | 3.6682 | 3.7 |
+| 400% PSA | 170 | 0.475 | 2.9460 | 2.9 |
+| 700% PSA | 150 | 0.427 | 1.6920 | 1.7 |
+| 1000% PSA | 135 | 0.455 | 1.0609 | 1.1 |
+
+Every balance sits inside the half-percent floor and every life inside the
+print floor of 0.05. The 0% PSA column ships as its own case
+(`fnma_remic_2019_2_g3_psa000`): the supplement prepares it on a different
+collateral assumption, a 360-month original and remaining term at 7.50%, so
+it is a different pool rather than a different speed.
 
 ## The delta
 
@@ -126,9 +138,11 @@ reproducing the published tables would need those seventeen deals' own
 collateral. That is a compositional boundary, not a gap in this document, and it
 is why only Group 3 is here.
 
-**One speed here, seven in all.** This case ships the pricing speed; the other
-six columns are sibling cases, so a convention error that hides under the
-rounding floor at one speed has to hide at all seven simultaneously.
+**Seven speeds, one model.** What the seven columns prove together is stronger
+than any one alone: a convention error in the prepayment curve, the seasoning
+ramp or the payment timing that hides under one column's whole-percent
+rounding has to hide under all seven columns and seven published lives
+simultaneously.
 
 **No losses.** Fannie Mae guarantees timely payment of principal and interest,
 so the collateral cannot default in a way the classes would see.
@@ -144,7 +158,7 @@ published figure or derived from one.
 
 ## The model
 
-```cfdl run={"deterministic":{"annual_discount_rate":0.03}}
+```cfdl run={"deterministic":{"annual_discount_rate":0.03},"scenarios":{"psa100":{"parameters":{"inputs.psa":1}},"psa300":{"parameters":{"inputs.psa":3}},"psa400":{"parameters":{"inputs.psa":4}},"psa700":{"parameters":{"inputs.psa":7}},"psa1000":{"parameters":{"inputs.psa":10}}}}
 version 0.1
 model "fnma-remic-2019-2-g3"
 use pack "credit" version "0.1.0"
@@ -190,6 +204,11 @@ time calendar monthly from 2019-02 for 361
 // Reference: Prospectus Supplement dated 24 January 2019 to the REMIC
 // Prospectus dated 1 November 2018. See SOURCE.md.
 
+// The prepayment speed, as a multiple of the standard PSA curve. The pricing
+// speed is 198%; the supplement's other columns are scenarios in `run.json`,
+// each asserting its own decrement column and class life.
+assume psa = 1.98
+
 entity asset trust : Credit.Asset.Loan {
   collateral_type = "residential"
 }
@@ -213,10 +232,10 @@ entity asset pool : Credit.Asset.Loan {
 
   balance init 148372434.0
                * (1.0 - ((-pmt(0.0045425, 173.0, 1.0)) - 0.0045425))
-               * (1.0 - cpr_to_periodic(min(1.98 * 0.002 * max(1.0, min(176.0, 30.0)), 1.0), 12.0))
+               * (1.0 - cpr_to_periodic(min(inputs.psa * 0.002 * max(1.0, min(176.0, 30.0)), 1.0), 12.0))
           next if(time.t < 173.0,
                   prev * (1.0 - ((-pmt(0.0045425, 173.0 - time.t, 1.0)) - 0.0045425))
-                       * (1.0 - cpr_to_periodic(min(1.98 * 0.002 * max(1.0, min(time.t + 176.0, 30.0)), 1.0), 12.0)),
+                       * (1.0 - cpr_to_periodic(min(inputs.psa * 0.002 * max(1.0, min(time.t + 176.0, 30.0)), 1.0), 12.0)),
                   0.0)
 }
 
@@ -261,7 +280,7 @@ contract credit.loan.g3 on entity asset.pool {
     interest_rate = 0.05451
     term_months = 173
     age_months = 175
-    psa_speed = 1.98
+    psa_speed = inputs.psa
     servicing_fee = 0.00451
   }
 }
@@ -324,7 +343,38 @@ metric ab_wal = wal("g3.principal.ab_principal")
 ## Run configuration
 
 ```json
-{"deterministic":{"annual_discount_rate":0.03}}
+{
+  "deterministic": {
+    "annual_discount_rate": 0.03
+  },
+  "scenarios": {
+    "psa100": {
+      "parameters": {
+        "inputs.psa": 1.0
+      }
+    },
+    "psa300": {
+      "parameters": {
+        "inputs.psa": 3.0
+      }
+    },
+    "psa400": {
+      "parameters": {
+        "inputs.psa": 4.0
+      }
+    },
+    "psa700": {
+      "parameters": {
+        "inputs.psa": 7.0
+      }
+    },
+    "psa1000": {
+      "parameters": {
+        "inputs.psa": 10.0
+      }
+    }
+  }
+}
 ```
 
 ## Verified results
@@ -337,6 +387,16 @@ Checked period by period: **6 series** across **60 periods** — **180 values** 
 - `g3.interest.ab_interest` — within ±2009.21
 - `g3.interest.io_interest` — within ±1081.88
 - `g3.interest.residual` — within ±0.01
+
+Checked per scenario, each a full run under its own parameters:
+
+| Scenario | `model.total` | `metric.ab_wal` |
+|---|---:|---:|
+| `psa100` | 193,718,881.03 | 6.1 |
+| `psa300` | 175,695,352.45 | 3.7 |
+| `psa400` | 170,337,628.95 | 2.9 |
+| `psa700` | 161,035,147.51 | 1.7 |
+| `psa1000` | 156,352,857.6 | 1.1 |
 
 Summary metrics for the base run:
 
