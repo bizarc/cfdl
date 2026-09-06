@@ -22,10 +22,10 @@ can mark every figure against the original.
 | | |
 |---|---|
 | Pack | `opco` |
-| Contract types | `opco.revenue_line`, `opco.opex_line`, `opco.capex_line`, `opco.cash_taxes` |
+| Contract types | `opco.revenue_line`, `opco.opex_line`, `opco.reinvestment`, `opco.cash_taxes` |
 | Declared | three curves, one of them the cost of capital the run discounts along |
 | Language features | pack contracts driven by curves; declared state inside the pack's growth rules |
-| Conventions | a declining growth path, margin-driven operating expense, cash taxes, capital expenditure as a share of revenue, a cost of capital that converges over the forecast |
+| Conventions | a declining growth path, margin-driven operating expense, cash taxes, reinvestment funding next year's growth, a cost of capital that converges over the forecast |
 
 The reference publishes the **drivers** rather than only the results, which is
 what a pack rule consumes, so the pack's lowering is checked and not only the
@@ -33,11 +33,14 @@ engine's arithmetic.
 
 ## The result
 
-All ten years reproduce exactly.
+All ten years reproduce exactly, reinvestment included, and the present value
+of the ten years of free cash flow along the converging cost of capital is the
+workbook's own figure.
 
 Revenue is carried as declared state because the growth rate moves:
 `pow(1 + g, t)` applies one year's rate as though it had held from the start,
-which is exact only while the rate is constant.
+which is exact only while the rate is constant. Reinvestment is derived from
+revenue and the following year's growth, which the model reads a year ahead.
 
 ## The delta
 

@@ -112,25 +112,23 @@ Deriving a reinvestment-ratio curve by hand and asserting all ten years would
 have worked and would have been the wrong call, for the same reason the
 cumulative index was: it hides a pack gap inside the model that walked into it.
 
-## What is not asserted: value
+## Value: the ten-year PV is asserted, the enterprise value is not
 
-The cost of capital converges 7.055% → 8.81% over the same window, and the
-run now discounts along it: `cost_of_capital` is a step curve in the model
-and `run.json` names it as `annual_discount_curve`. Fed the workbook's own
-FCFF row, the engine reproduces its cumulated discount factors and the PV of
-the ten years (16,394.54, cell B20 of "Valuation output") to 1e-5 — that
-check lives in the engine's tests rather than here, because this model's
-FCFF is not the workbook's from year five.
+The cost of capital converges 7.055% → 8.81% over the forecast, and the run
+discounts along it: `cost_of_capital` is a step curve in the model and
+`run.json` names it as `annual_discount_curve`. With reinvestment now derived
+(`opco.reinvestment`: this year's revenue times next year's growth over the
+sales-to-capital ratio, the growth read a year ahead with `edate`), all ten
+years of FCFF are the workbook's, and `model.npv` reproduces the PV of the
+ten years — 16,394.54, cell B20 of "Valuation output" — to 1e-4.
 
-That is the reinvestment line: the workbook derives reinvestment from the
-next year's revenue growth over a sales-to-capital ratio, and the pack's
-capital line grows at its own rate (`docs/13` §7.9, a derived line). Years
-1–4 are exact and asserted; the drift after that is why no discounted figure
-is asserted here yet. Closing §7.9 makes the ten-year PV assertable; the
-enterprise value and the per-share price need the terminal value
-(`opco.exit_perpetuity` at 8.81% and 4.58% growth) and the balance-sheet
-bridge (debt, minority interests, cash, non-operating assets, share count)
-besides. Discounting was the first of those gaps and is closed.
+The enterprise value (37,517.53) and the per-share price (7.19) are not
+asserted. They need the terminal value — `opco.exit_perpetuity` at the
+terminal cost of capital 8.81% and growth 4.58% on the terminal year's FCFF
+of 1,855.23 — and the balance-sheet bridge: debt 45,063, minority interests
+1,558, cash 19,000, non-operating assets 21,119, over 4,315 shares. The
+bridge is a statement over stated amounts rather than a contract, and is
+the next thing this case can take on.
 
 ## What the pack gained
 

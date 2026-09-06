@@ -9811,6 +9811,7 @@ Contract types (a `contract <name>` declaration lowers to streams through the pa
 | `OpCo.Contract.RevenueLine` | `opco.revenue_line` | owner |  |
 | `OpCo.Contract.OperatingExpenseLine` | `opco.opex_line` | owner |  |
 | `OpCo.Contract.CapexLine` | `opco.capex_line` | owner |  |
+| `OpCo.Contract.Reinvestment` | `opco.reinvestment` | owner | Capital spend derived from another line: the period's revenue times a growth rate over a sales-to-capital ratio — the reinvestment that funds the next period's growth, as an intrinsic valuation states it. A refinement beside capex_line because the cash shape differs: this line is not a base times a rate path. |
 | `OpCo.Contract.WorkingCapital` | `opco.working_capital` | owner |  |
 | `OpCo.Contract.WorkingCapitalPolicy` | `opco.working_capital_policy` | owner | Days-based policy — receivables, payables, inventory — rather than a stated movement. |
 | `OpCo.Contract.TermDebt` | `opco.term_debt` | borrower, lender |  |
@@ -9828,6 +9829,7 @@ Templates (starting points; the `skeleton` MCP tool assembles them into a compil
 - `opco.revenue_line.core` — Revenue line — core
 - `opco.opex_line.operating` — Opex line — operating
 - `opco.capex_line.maintenance` — Capex line — maintenance
+- `opco.reinvestment.growth` — Reinvestment — revenue times growth over sales-to-capital
 - `opco.term_debt` — Term loan (proceeds, interest, principal)
 - `opco.cash_taxes` — Cash taxes on EBIT
 - `opco.working_capital_policy` — Working capital — days policy

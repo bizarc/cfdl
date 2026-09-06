@@ -8,6 +8,17 @@ This project follows Semantic Versioning: https://semver.org/
 
 ## [Unreleased]
 
+**`opco.reinvestment`: capital spend derived from revenue.** A second
+refinement of `Contract.CapitalExpenditure` beside `capex_line`: the
+period's modeled revenue times a `growth_rate` the model states over a
+`sales_to_capital` ratio. The growth rate may be read a period ahead
+(`curve_value("g", edate(time.date, 12))`), which is how an intrinsic
+valuation funds next year's growth this year. `benchmarks/opco/damodaran_fcff`
+moves onto it: all ten years of reinvestment are now the workbook's, and the
+PV of the ten years of FCFF along the converging cost of capital is
+asserted against cell B20. Closes backlog 7.9 (backlog 43); opco 12/12 in
+§7.3.
+
 **A discount rate that varies over time.** The run configuration may name a
 curve the model declares — `annual_discount_curve` in place of
 `annual_discount_rate`, never beside it (`E5033`) — and the run discounts

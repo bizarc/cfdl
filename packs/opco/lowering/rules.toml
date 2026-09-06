@@ -213,6 +213,31 @@ growth_rate = "0"
 pct_of_revenue = "0"
 
 # ---------------------------------------------------------------------------
+# opco.reinvestment — capital spend derived from revenue: revenue(t) times a
+# growth rate over a sales-to-capital ratio. The growth rate is the model's
+# claim — Damodaran reads next year's growth, `curve_value(g, edate(time.date,
+# 12))`, because reinvestment funds next year's growth — and the rule applies
+# it to this period's revenue, read from the modeled streams the way the
+# working-capital policy reads them.
+# ---------------------------------------------------------------------------
+
+[[rules]]
+id = "opco_reinvestment"
+contract_name = "opco.reinvestment"
+line = "capex"
+stream_name = "opco.capex.reinvestment{{contract.dot_suffix}}"
+owner_entity = "${subject}"
+direction = "outflow"
+category = "investing.capital.capex"
+amount_expr = "(series_sum(\"opco.revenue.recurring.*\", time.t, time.t)) * {{contract.growth_rate}} / {{contract.sales_to_capital}}"
+schedule_kind = "every"
+schedule_from = "{{contract.term_start}}"
+schedule_to = "{{contract.term_end}}"
+
+[rules.defaults]
+growth_rate = "0"
+
+# ---------------------------------------------------------------------------
 # opco.term_debt — scheduled term loan: optional IO period, then level-pay
 # amortization over amort_months, balloon of the remaining balance at the
 # contract's term_end. Payment index k = p - io_months + 1 (1-based, p =
