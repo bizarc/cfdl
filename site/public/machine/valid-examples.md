@@ -4,7 +4,7 @@
 
 CFDL 0.9.0. Every model below compiles, and its IR and
 results are byte-asserted against goldens in CI (`fixtures/valid/`,
-167 models.
+168 models.
 
 `gold/ir/`, `gold/results/`). Each is single-purpose: the directory name
 says what it exercises. This is what right looks like — positive few-shot
@@ -7473,6 +7473,43 @@ waterfall fund.distribution on entity asset.fund {
   pay gp_promote  to party.gp = remaining * inputs.gp_carry
   pay lp_residual to party.lp = remaining
 }
+```
+
+## waterfall_pay_day
+
+```cfdl
+version 0.1
+model "waterfall-pay-day"
+time calendar monthly from 2026-01 for 12
+
+// A STEP'S CASH SITS WHERE ITS WATERFALL'S SCHEDULE PUTS IT (docs/12 §3).
+// The trust collects at month end and distributes on the 15th; each step's
+// series carries that placement, so a holder's life is measured to the day
+// the deal pays, not to the period's close.
+
+entity container trust : Container.SPV { name = "Trust" }
+entity asset pool : Asset.Real { name = "Pool" }
+entity party senior { name = "Senior" }
+entity party junior { name = "Junior" }
+
+stream pool.principal on entity asset.pool inflow currency USD {
+  schedule every month from 2026-01 to 2026-12
+  amount = 1000
+}
+
+waterfall notes.principal on entity container.trust {
+  schedule every month on day 15 from 2026-01 to 2026-12
+  from series_sum("pool.principal", time.t, time.t)
+  pay senior to party.senior = min(remaining, 500)
+  pay junior to party.junior = remaining
+}
+
+// 500 a month to senior on the 15th: the same months as the collections that
+// fund it, each half a month earlier on the axis, so its life is half a month
+// shorter than the collections' own.
+metric senior_life = wal("notes.principal.senior")
+metric junior_life = wal("notes.principal.junior")
+metric collections_life = wal("pool.principal")
 ```
 
 ## waterfall_smoke

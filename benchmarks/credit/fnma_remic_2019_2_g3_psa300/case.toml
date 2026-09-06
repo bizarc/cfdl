@@ -11,7 +11,10 @@
 # to. Cells the table marks '*' (above zero, below half a percent) are not
 # asserted.
 #
-# domain.credit.wal_years carries 0.07: 0.05 is the print floor of a WAL
+# metric.ab_wal, the class's life, carries 0.05, the print floor: the waterfalls
+# distribute on the 25th, so the engine measures to the supplement's own day.
+# domain.credit.wal_years, the collateral's life on the month-end axis, keeps
+# 0.07: 0.05 is the print floor of a WAL
 # published to one decimal, and ~0.015 is the axis — the engine measures on
 # its month-end ordinary-annuity axis, while the deal distributes on the 25th
 # measured from late-January settlement. The bias is uniform across all seven

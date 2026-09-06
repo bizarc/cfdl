@@ -46,6 +46,7 @@ payment inside its own period, and therefore how far it is discounted.
 | `every month start from … to …` | start | start of the period |
 | `every month on eom from … to …` | end | end of the period |
 | `every month on day 15 from … to …` | day 15 | that point in the period |
+| a waterfall's `schedule every month on day 25 …` | day 25, for every step | that point in the period |
 | `every year mid from … to …` | halfway | the period's midpoint |
 
 This is Excel's convention: `NPV` discounts the first value by one full
@@ -132,7 +133,14 @@ this reduces exactly to the net cash-flow series, which is what it was before.
 
 A model's own `wal(<series>)` metric measures on the same axis, per series
 at that series' placement, which is how a class's life is folded from the
-principal its waterfall step pays (`docs/01` §15.3).
+principal its waterfall step pays (`docs/01` §15.3). A waterfall's steps sit
+where its schedule puts them: a priority of payments that distributes `on
+day 25` pays every step on the 25th, so each step's series carries that
+placement, and a deal that states its distribution date once has every
+time-weighted metric on its own axis. What remains of a prospectus
+convention is the origin — a published life is measured from settlement,
+the day the holder's claim came into being, which is the term start of the
+contract the step pays (`docs/13` §7.26).
 
 `model.moic` deliberately does not use the axis — it is a ratio of cash in to
 cash out over the life, and where inside a period the cash sits does not change

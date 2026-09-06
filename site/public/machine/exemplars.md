@@ -2795,7 +2795,7 @@ contract credit.loan.g3 on entity asset.pool {
 // the group's whole cash. `docs/03` §3.2 keeps the `from` expression free
 // for exactly this.
 waterfall g3.principal on entity asset.trust {
-  schedule every month from 2019-02 to 2033-06
+  schedule every month on day 25 from 2019-02 to 2033-06
 
   from series_sum("credit.loan.sched_principal.*", time.t, time.t)
        + series_sum("credit.loan.prepay.*", time.t, time.t)
@@ -2818,7 +2818,7 @@ waterfall g3.principal on entity asset.trust {
 // the group's whole cash. `docs/03` §3.2 keeps the `from` expression free
 // for exactly this.
 waterfall g3.interest on entity asset.trust {
-  schedule every month from 2019-02 to 2033-06
+  schedule every month on day 25 from 2019-02 to 2033-06
 
   // What the TRUST receives, which is not what the loans pay. The pack's
   // interest line is gross, at the 5.451% mortgage coupon; the servicing and

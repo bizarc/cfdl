@@ -1,7 +1,7 @@
 {
   "results_version": "0.14",
   "model_hash": "e3929a110dfc48e0b5c3d023bd0df4d275cf8867f605469ba4c5a048a812c716",
-  "ledger_hash": "3f22149eac7fb14a2c637612fbd3f03268378a7ed63c06ca49a6b2cc577ab7ad",
+  "ledger_hash": "9d7239ad267154aae18d9b3bfe681cf40b15831c7eb8b5c082b7b5b91ded30b1",
   "engine": {
     "name": "cfdl-engine",
     "version": "0.9.0"
@@ -1919,6 +1919,7 @@
           "start": "2026-01-01",
           "periods": 15
         },
+        "offset": 1.0,
         "contract": "credit.note.a",
         "line": "interest",
         "values": [
@@ -1990,6 +1991,7 @@
           "start": "2026-01-01",
           "periods": 15
         },
+        "offset": 1.0,
         "contract": "credit.note.a",
         "line": "principal",
         "values": [

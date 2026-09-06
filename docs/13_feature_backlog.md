@@ -228,17 +228,23 @@ from one deal's axis can hide a same-sized convention error in the next
 deal's, and nothing in the suite would notice: 2019-2 happened to publish a
 column (400%) that discriminates, and the next deal may not.
 
-Shape, in two independent pieces:
+*Narrowed 6 September 2026.* The payment-day half shipped: a waterfall's
+schedule placement is every step's, so `schedule every month on day 25`
+puts each class's principal on the 25th and the seven FNMA cases assert
+their published lives at the print floor (±0.05). No run-configuration
+date was added, and none should be: a settlement date is not a fact the
+run asks, it is the day the holder's claim came into being — the term
+start of the contract the step pays — and the day count is that contract's
+own term, since two instruments in one model may differ.
 
-- a run-config `settlement_date` that becomes the origin for `wal_years` and
-  `payback_years`, measured in actual days;
-- a declarable payment-day placement — a day rule the pack lowering carries
-  into its emitted streams' offsets, the way model-level schedules already
-  carry `on day <n>` — so a deal states "distributions on the 25th" once and
-  every time-weighted metric lands on the deal's own axis.
-
-With both, the WAL tolerances return to the print floor and the axis stops
-being a tolerance line item anywhere.
+What remains is the origin. `wal` over a step bound to a contract
+(`pay … for contract credit.note.ab line principal`) should measure from
+that contract's term start in actual days over 365, the market definition
+of a published life, rather than from the model start on period fractions;
+the FNMA classes are entity fields today, so the REMIC tranches as notes
+(`docs/41` §5, `docs/42` S4) is what lets that land. The residual on FNMA
+2019-2 is the two days between its 30 January settlement and the model's
+1 February start.
 
 Found asserting the seven published WALs of FNMA 2019-2, where the 400% PSA
 column refused the naive floor and the refusal was the convention speaking.

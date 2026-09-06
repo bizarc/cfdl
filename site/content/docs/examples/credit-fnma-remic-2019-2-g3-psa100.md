@@ -48,15 +48,14 @@ table's whole-percent rounding sets. Worst balance disagreement
 
 | | |
 |---|---|
-| Class AB weighted average life | **6.1125**, published **6.1** |
+| Class AB weighted average life | **6.0977**, published **6.1** |
 | Residual to Classes R and RL | **0.0000000000**, every period |
 | Principal returned to AB | 148,372,434.00 against an original of 148,372,434 |
 
 The class's weighted average life is folded from the principal the waterfall
-pays it (`wal`) and asserted at ±0.07: 0.05 is the print floor of a
-figure published to one decimal, and ~0.015 is the axis — the engine measures
-on its month-end axis while the deal distributes on the 25th measured from
-late-January settlement, a bias uniform across all seven published speeds.
+pays it (`wal`) and asserted at ±0.05, the print floor of a figure published
+to one decimal. The deal distributes on the 25th, and the waterfalls say so,
+so each payment sits on the day the supplement measures to.
 
 ## The delta
 
@@ -141,7 +140,7 @@ contract credit.loan.g3 on entity asset.pool {
 // the group's whole cash. `docs/03` §3.2 keeps the `from` expression free
 // for exactly this.
 waterfall g3.principal on entity asset.trust {
-  schedule every month from 2019-02 to 2033-06
+  schedule every month on day 25 from 2019-02 to 2033-06
 
   from series_sum("credit.loan.sched_principal.*", time.t, time.t)
        + series_sum("credit.loan.prepay.*", time.t, time.t)
@@ -158,7 +157,7 @@ waterfall g3.principal on entity asset.trust {
 // the group's whole cash. `docs/03` §3.2 keeps the `from` expression free
 // for exactly this.
 waterfall g3.interest on entity asset.trust {
-  schedule every month from 2019-02 to 2033-06
+  schedule every month on day 25 from 2019-02 to 2033-06
 
   from series_sum("credit.loan.interest.*", time.t, time.t)
        + series_sum("credit.loan.servicing.*", time.t, time.t)
@@ -197,4 +196,4 @@ Summary metrics for the base run:
 | `domain.credit.principal` | 148,372,434 | ±0.01 |
 | `domain.credit.wal_years` | 6.1 | ±0.07 |
 | `model.total` | 193,718,881.03 | ±1 |
-| `metric.ab_wal` | 6.1 | ±0.07 |
+| `metric.ab_wal` | 6.1 | ±0.05 |

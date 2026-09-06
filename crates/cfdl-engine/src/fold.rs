@@ -624,13 +624,28 @@ pub(crate) fn fold_results(
             })
         })
         .collect();
+    // A STEP'S CASH SITS WHERE ITS WATERFALL'S SCHEDULE PUTS IT (`docs/12`
+    // §3). A priority of payments that distributes `on day 25` pays every
+    // step on the 25th, so each step's series carries that placement — the
+    // axis a class's life (`wal`) and a slice's present value measure on.
+    // A waterfall with no schedule keeps the recurrence default, the close.
+    for waterfall in &ir.waterfalls {
+        let offset = waterfall
+            .schedule
+            .as_ref()
+            .map(|schedule| discount_offset(schedule, &ir.time.calendar))
+            .unwrap_or(1.0);
+        for step in &waterfall.steps {
+            stream_offsets.insert(format!("{}.{}", waterfall.name, step.name), offset);
+        }
+    }
     for (name, values) in &waterfall_series {
         let mut series = Series::from_values(
             &ir.time.calendar,
             &ir.time.start,
             periods as u32,
             &ir.model.currency,
-            None,
+            stream_offsets.get(name).copied(),
             values,
         );
         // A step's series belongs to the waterfall's attached entity.

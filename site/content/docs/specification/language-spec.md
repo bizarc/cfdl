@@ -702,7 +702,9 @@ waterfall deal.distribution on entity asset.trust {
 Rules:
 - A waterfall MUST be owned by exactly one entity.
 - A waterfall MUST declare a `schedule` — the same construct a stream takes —
-  and a `from` expression, which is the pot.
+  and a `from` expression, which is the pot. The schedule's placement is every
+  step's: a waterfall that distributes `on day 25` pays each step on the 25th,
+  and the step's published series carries that offset (`docs/12` §3).
 - Waterfall names MUST be qualified names with at least two segments.
 - A waterfall MUST declare at least one step.
 

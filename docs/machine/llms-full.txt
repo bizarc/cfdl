@@ -713,7 +713,9 @@ waterfall deal.distribution on entity asset.trust {
 Rules:
 - A waterfall MUST be owned by exactly one entity.
 - A waterfall MUST declare a `schedule` — the same construct a stream takes —
-  and a `from` expression, which is the pot.
+  and a `from` expression, which is the pot. The schedule's placement is every
+  step's: a waterfall that distributes `on day 25` pays each step on the 25th,
+  and the step's published series carries that offset (`docs/12` §3).
 - Waterfall names MUST be qualified names with at least two segments.
 - A waterfall MUST declare at least one step.
 
@@ -5261,7 +5263,7 @@ against it by `make results-schema`.
           "description": "One entry per period. Money for a cash series; a bare number for a dimensionless one such as an entity field, which has no denomination."
         },
         "offset": {
-          "description": "Where in each period this series' cash falls: 0.0 at the period's open (an annuity due, or a one-shot on its date), 1.0 at its close (an ordinary annuity, the default), 0.5 for the mid-period convention. The same offset used to discount the series, and the axis `model.wal_years` and `model.payback_years` are measured on — so an ordinary annuity's first monthly collection is at 1/12 of a year, not 0. Absent on aggregates (`model.net_cash_flow`, the annual rollup), which sum streams whose placements differ. See 12_payment_timing.md. Absent on field series, which are not paid and so sit nowhere in their period.",
+          "description": "Where in each period this series' cash falls: 0.0 at the period's open (an annuity due, or a one-shot on its date), 1.0 at its close (an ordinary annuity, the default), 0.5 for the mid-period convention. The same offset used to discount the series, and the axis `model.wal_years` and `model.payback_years` are measured on — so an ordinary annuity's first monthly collection is at 1/12 of a year, not 0. A waterfall step's series carries its waterfall's schedule placement — `on day 25` puts every step on the 25th. Absent on aggregates (`model.net_cash_flow`, the annual rollup), which sum streams whose placements differ. See 12_payment_timing.md. Absent on field series, which are not paid and so sit nowhere in their period.",
           "type": "number"
         },
         "entity": {
@@ -9852,7 +9854,7 @@ Templates (starting points; the `skeleton` MCP tool assembles them into a compil
 
 CFDL 0.9.0. Every model below compiles, and its IR and
 results are byte-asserted against goldens in CI (`fixtures/valid/`,
-167 models.
+168 models.
 
 `gold/ir/`, `gold/results/`). Each is single-purpose: the directory name
 says what it exercises. This is what right looks like — positive few-shot
@@ -17321,6 +17323,43 @@ waterfall fund.distribution on entity asset.fund {
 }
 ```
 
+## waterfall_pay_day
+
+```cfdl
+version 0.1
+model "waterfall-pay-day"
+time calendar monthly from 2026-01 for 12
+
+// A STEP'S CASH SITS WHERE ITS WATERFALL'S SCHEDULE PUTS IT (docs/12 §3).
+// The trust collects at month end and distributes on the 15th; each step's
+// series carries that placement, so a holder's life is measured to the day
+// the deal pays, not to the period's close.
+
+entity container trust : Container.SPV { name = "Trust" }
+entity asset pool : Asset.Real { name = "Pool" }
+entity party senior { name = "Senior" }
+entity party junior { name = "Junior" }
+
+stream pool.principal on entity asset.pool inflow currency USD {
+  schedule every month from 2026-01 to 2026-12
+  amount = 1000
+}
+
+waterfall notes.principal on entity container.trust {
+  schedule every month on day 15 from 2026-01 to 2026-12
+  from series_sum("pool.principal", time.t, time.t)
+  pay senior to party.senior = min(remaining, 500)
+  pay junior to party.junior = remaining
+}
+
+// 500 a month to senior on the 15th: the same months as the collections that
+// fund it, each half a month earlier on the axis, so its life is half a month
+// shorter than the collections' own.
+metric senior_life = wal("notes.principal.senior")
+metric junior_life = wal("notes.principal.junior")
+metric collections_life = wal("pool.principal")
+```
+
 ## waterfall_smoke
 
 ```cfdl
@@ -20166,7 +20205,7 @@ contract credit.loan.g3 on entity asset.pool {
 // the group's whole cash. `docs/03` §3.2 keeps the `from` expression free
 // for exactly this.
 waterfall g3.principal on entity asset.trust {
-  schedule every month from 2019-02 to 2033-06
+  schedule every month on day 25 from 2019-02 to 2033-06
 
   from series_sum("credit.loan.sched_principal.*", time.t, time.t)
        + series_sum("credit.loan.prepay.*", time.t, time.t)
@@ -20189,7 +20228,7 @@ waterfall g3.principal on entity asset.trust {
 // the group's whole cash. `docs/03` §3.2 keeps the `from` expression free
 // for exactly this.
 waterfall g3.interest on entity asset.trust {
-  schedule every month from 2019-02 to 2033-06
+  schedule every month on day 25 from 2019-02 to 2033-06
 
   // What the TRUST receives, which is not what the loans pay. The pack's
   // interest line is gross, at the 5.451% mortgage coupon; the servicing and
