@@ -348,6 +348,34 @@ express. Revisit the engine if a stage acquires its own consumer — the
 language server wanting `prepare` without the walk would be one — or if the
 layering breaks and the goldens do not catch it.
 
+### A monthly instrument on an annual model is a wrong calendar, not a missing feature
+
+**Claimed:** `benchmarks/cre/hud_home_multifamily` could not use
+`cre.permanent_debt` because a monthly-paying loan on an annual calendar is
+refused (`E2108`), so either the engine needed a sub-period clock (strike each
+occurrence on its own index and sum into the period) or the harness needed to
+read the annual rollup for an annual source. Three mechanisms were proposed
+before the question was asked.
+
+**Actually:** the case was annual because the *source* is an annual pro forma
+and the harness asserts at the model's period — the presentation grain, not
+the instruments'. The mortgage pays monthly, the rent roll is monthly, the
+vacancy reads the rent. A monthly calendar with an annual valuation is the
+standard, and every consumer already exists: `model.npv` discounts each flow
+at its fractional year, `model.irr` publishes the annualized rate, and the
+results' annual rollup re-buckets every line and recomputes the ratios. The
+model moved to a monthly calendar, the loan and its insurance became
+contracts stated from the sizing tab's terms, and the published annual rows
+were asserted as twelfths at each anchor month — every line is level within a
+year, so the monthly coverage ratio is the annual one. Nothing in the engine,
+the compiler or the harness changed (`docs/13` §7.54, 6 September 2026).
+
+**The general shape.** Before reaching for a language, engine or harness
+change, look at the results that already exist and ask whether the case is
+stated on the calendar its instruments carry. The refusal was right; the
+calendar was wrong. A source's grain is a view of the results, never a
+reason for the calendar.
+
 ## How to achieve a behavior
 
 ### A balance swept by the period's free cash flow

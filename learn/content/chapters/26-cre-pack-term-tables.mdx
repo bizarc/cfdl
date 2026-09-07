@@ -82,7 +82,9 @@ Apply over stabilized operations only — during lease-up, vacancy is already in
 
 ## Debt
 
-**`cre.permanent_debt`** → `loan.permanent_debt_service` (financing.debt.service, outflow) — one combined stream, which is what the pack's DSCR metric selects. Interest-only while inside `io_months`, then the level payment struck on `amort_months`; maturity is the contract's term.
+**`cre.permanent_debt`** → `cre.debt.proceeds` (financing.debt.proceeds, inflow), `cre.debt.interest` (financing.debt.interest_paid, outflow) and `cre.debt.principal` (financing.debt.principal, outflow) — the whole instrument, and interest plus principal is the level payment the pack's coverage subtotal reads. Interest-only while inside `interest_only_months`, then the level payment struck on `amortization_months`; maturity is the contract's term, and the loan's balance is an account.
+
+**`cre.mortgage_insurance`** → `cre.mortgage_insurance.premium` (financing.debt.mortgage_insurance, outflow) — `premium_rate` a year on `coverage`, paid on the calendar beside the loan. Not debt service; its own agreement.
 
 | Term | Required | Default | Meaning |
 |---|---|---|---|

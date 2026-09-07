@@ -556,6 +556,29 @@ name = "proceeds"
 name = "principal"
 
 [[contracts]]
+type_id = "CRE.Contract.MortgageInsurance"
+refines = "Contract.Insurance"
+contract_name = "cre.mortgage_insurance"
+subject_family = "asset"
+side = "pays"
+parties = ["insurer", "insured"]
+description = "Mortgage insurance on a permanent loan — FHA/HUD MIP. The premium is an annual rate on the insured principal, paid with the loan; it is not debt service, and it folds into coverage where the source measures coverage on the whole payment."
+
+[[contracts.fields]]
+name = "premium_rate"
+field_type = "decimal"
+required = true
+unit = "ratio"
+one_of = "premium"
+description = "Annual premium as a rate on `coverage` — HUD's 0.45% of the original principal."
+
+[[contracts.fields]]
+name = "coverage"
+field_type = "decimal"
+required = true
+description = "The insured principal the rate applies to — the loan's original amount, flat, where the premium is struck on it."
+
+[[contracts]]
 type_id = "CRE.Contract.ConstructionFunding"
 refines = "Contract.CapitalExpenditure"
 contract_name = "cre.construction_stub"

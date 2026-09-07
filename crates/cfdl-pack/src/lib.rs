@@ -512,8 +512,13 @@ impl PackOntology {
                     "A hedge or exchange of exposures — a swap, a rate cap, a collar."),
                 master("Contract.Insurance", &["insurer", "insured"],
                     vec![
-                        field("premium", "decimal", true, None, None, "Premium per period."),
-                        field("coverage", "decimal", false, None, None, "The insured amount."),
+                        // The premium is quoted one of two ways: an amount per
+                        // period, or an annual rate on the insured amount — a
+                        // mortgage insurance premium is 0.45% of the original
+                        // principal, a property policy is so much a year.
+                        field("premium", "decimal", false, None, Some("premium"), "Premium per period."),
+                        field("premium_rate", "decimal", false, Some("ratio"), Some("premium"), "Annual premium as a rate on `coverage`."),
+                        field("coverage", "decimal", false, None, None, "The insured amount — the basis a `premium_rate` applies to."),
                         field("deductible", "decimal", false, None, None, "Retained per claim."),
                     ],
                     vec![line("premium", "Premium paid.")],

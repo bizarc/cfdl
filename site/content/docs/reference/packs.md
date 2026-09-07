@@ -87,6 +87,7 @@ statement.
 | `cre.percentage_rent` | `breakpoint_year`, `overage_pct`, `sales_growth`, `sales_year` | `cre.pct_rent.overage[.suffix]` |
 | `cre.exit_forward` | `cap_rate`, `selling_costs` | `cre.exit.proceeds`, `cre.exit.selling_costs` |
 | `cre.permanent_debt` | `balloon_at_maturity`, `funded_at_close`, `interest_rate`, `payment_frequency`, `principal` | `cre.debt.proceeds[.suffix]`, `cre.debt.interest[.suffix]`, `cre.debt.principal[.suffix]` |
+| `cre.mortgage_insurance` | `coverage`, `premium`, `premium_rate` | `cre.mortgage_insurance.premium[.suffix]` |
 | `cre.construction_loan` | `capitalize_interest`, `draw_accrual_fraction`, `draw_curve`, `equity_commitment`, `interest_rate` | `cre.construction.equity_draw[.suffix]`, `cre.construction.loan_draw[.suffix]`, `cre.construction.interest[.suffix]`, `cre.construction.capitalized_interest[.suffix]` |
 
 ### `credit`

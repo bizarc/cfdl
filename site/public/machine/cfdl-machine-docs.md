@@ -6976,12 +6976,16 @@ deal repays from a named cash source, the contract takes a series or
 curve reference as a term, as `cre.construction_loan` takes its draw
 curve.
 
-**A contract paying finer than the model calendar aggregates into the
-period rather than being refused**, and its day count is a year fraction
-the placeholder expands to, so a monthly-paying mortgage runs on an
-annual model and act/act falls out of the same expansion (`docs/13`
-§7.16, §7.57). Statutory or workbook rounding belongs on the rule as a
-`round_step` term, never in a case's hand stream.
+**The calendar carries the cadence.** A model runs at the finest cadence
+its instruments carry — a monthly-paying mortgage puts the model on a
+monthly calendar — and a source that publishes annually is read from the
+results' annual rollup, which is a view of the same ledger. A rule paying
+finer than the calendar it is on is refused (`E2108`): twelve payments
+would share one period's environment and be struck once and multiplied.
+A contract's day count is a year fraction the placeholder expands to, so
+act/act falls out of the same expansion (`docs/13` §7.57). Statutory or
+workbook rounding belongs on the rule as a `round_step` term, never in a
+case's hand stream.
 
 **Parties in roles are real.** A model's `parties { landlord = party.acme
 }` is validated against the type's effective roles — the master's,
@@ -9744,6 +9748,7 @@ Contract types (a `contract <name>` declaration lowers to streams through the pa
 | `CRE.Contract.OperatingExpense` | `cre.opex_line` | owner | One operating expense line. Instance it per expense for an itemised schedule, or declare one unsuffixed for a single blended figure; the entity it hangs on sets the level. |
 | `CRE.Contract.OperatingRevenue` | `cre.revenue_line` | owner |  |
 | `CRE.Contract.PermanentDebt` | `cre.permanent_debt` | borrower, lender |  |
+| `CRE.Contract.MortgageInsurance` | `cre.mortgage_insurance` | insurer, insured | Mortgage insurance on a permanent loan — FHA/HUD MIP. The premium is an annual rate on the insured principal, paid with the loan; it is not debt service, and it folds into coverage where the source measures coverage on the whole payment. |
 | `CRE.Contract.ConstructionFunding` | `cre.construction_stub` | owner |  |
 | `CRE.Contract.ConstructionLoan` | `cre.construction_loan` | lender | A construction facility funded behind an equity commitment: equity draws first, the loan takes the balance once the commitment is exhausted, and interest accrues on the drawn balance through the build. |
 | `CRE.Contract.Disposition` | `cre.exit` | seller |  |
@@ -9772,6 +9777,7 @@ Templates (starting points; the `skeleton` MCP tool assembles them into a compil
 - `cre.revenue_line.antenna` — Revenue — antenna and rooftop
 - `cre.revenue_line.laundry_vending` — Revenue — laundry and vending
 - `cre.revenue_line.blended` — Revenue — single blended line
+- `cre.mortgage_insurance` — Mortgage insurance (MIP on a permanent loan)
 - `cre.permanent_debt` — Permanent mortgage (proceeds, interest, principal)
 - `cre.lease_unit` — Unit lease (rent, abatement, recoveries, TI/LC)
 - `cre.exit_forward` — Exit at forward NOI (gross, selling costs)
