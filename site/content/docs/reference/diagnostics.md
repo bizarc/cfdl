@@ -242,7 +242,8 @@ register, so it cannot fall behind the language.
 | `E6055_CRE_DEBT_INVALID_IO_MONTHS` | Pack domain validations | whole months, 0 or more |
 | `E6056_CRE_DEBT_INVALID_BALLOON_FLAG` | Pack domain validations | `balloon_at_maturity` is 0 or 1 |
 | `E6057_CRE_CONSTRUCTION_INVALID_EQUITY_COMMITMENT` | Pack domain validations | zero or greater; zero is an all-debt build and legal, so the bound is not exclusive |
-| `E6058_CRE_CONSTRUCTION_INVALID_RATE` | Pack domain validations | a nominal annual rate in [0, 1], which catches 8 entered where 0.08 was meant |
+| `E6058_CRE_CONSTRUCTION_INVALID_RATE` | Pack domain validations | a nominal annual rate, 0 or more (0.08 for 8%), the floor every debt contract states. |
+| `W6001_CRE_CONSTRUCTION_RATE_ABOVE_ONE` | Pack domain validations | the rate is above 1, which is almost always 8 entered where 0.08 was meant. A convention: the run proceeds, and a coupon above 100% that is meant allowlists the warning. |
 | `E6059_CRE_CONSTRUCTION_INVALID_DRAW_ACCRUAL_FRACTION` | Pack domain validations | where in the period a draw lands, in [0, 1]; 0.5 is funding drawn ratably through it |
 | `E6060_CRE_CONSTRUCTION_INVALID_TERM_RANGE` | Pack domain validations | the build must sit inside the model timeline, or the schedule silently loses draws |
 | `E6061_CRE_OPEX_LINE_MISSING_AMOUNT` | Pack domain validations | an operating expense line states `amount` or `amount_year`; both default to zero, so stating neither is a line that silently costs nothing |
@@ -290,15 +291,17 @@ register, so it cannot fall behind the language.
 | `E9013_CREDIT_INVALID_RECOVERY_LAG` | Pack domain validations |  |
 | `E9014_CREDIT_INVALID_SERVICING_FEE` | Pack domain validations |  |
 | `E9015_CREDIT_INVALID_PREPAY_PENALTY` | Pack domain validations |  |
-| `E9016_CREDIT_INVALID_PSA_SPEED` | Pack domain validations | `psa_speed` is a MULTIPLE of the standard prepayment curve, so 1.5 means 150% PSA. Must be 0..10; 0 selects the flat `cpr` path. |
-| `E9017_CREDIT_INVALID_SDA_SPEED` | Pack domain validations | `sda_speed` is a multiple of the standard default assumption. Must be 0..10; 0 selects the flat `cdr` path. |
+| `E9016_CREDIT_INVALID_PSA_SPEED` | Pack domain validations | `psa_speed` is a MULTIPLE of the standard prepayment curve, so 1.5 means 150% PSA. Must be 0 or more; 0 selects the flat `cpr` path. |
+| `W9001_CREDIT_PSA_SPEED_ABOVE_TEN` | Pack domain validations | `psa_speed` is above 10 (1000% PSA), the highest speed a published table prints. A convention, not a definition (`docs/13` §7.56): the run proceeds, and a stress case that means it allowlists the warning. |
+| `E9017_CREDIT_INVALID_SDA_SPEED` | Pack domain validations | `sda_speed` is a multiple of the standard default assumption. Must be 0 or more; 0 selects the flat `cdr` path. |
+| `W9002_CREDIT_SDA_SPEED_ABOVE_TEN` | Pack domain validations | `sda_speed` is above 10 (1000% SDA); the same convention as `W9001`. |
 | `E9018_CREDIT_INVALID_ABS_SPEED` | Pack domain validations | `abs_speed` is the Absolute Prepayment Model speed: the fraction of ORIGINAL balance prepaying each month. Already monthly, so unlike `cpr`/`cdr` it is not converted. Must be 0..1. |
 | `E9019_CREDIT_INVALID_AGE_MONTHS` | Pack domain validations | `age_months` is the pool's weighted average age at closing. PSA, SDA and the ABS model are all indexed from ORIGINATION, so a seasoned pool starts part-way up the ramp; leaving it at the default 0 on a seasoned pool understates prepayment. Non-negative integer. |
 | `E9020_CREDIT_RATE_FLOOR_ABOVE_CAP` | Pack domain validations |  |
 | `E9021_CREDIT_INVALID_SHARE` | Pack domain validations | a participation's `share` is not in (0, 1]. A share above one pays out more than the pool produced; zero is a participation in nothing. |
 | `E9022_CREDIT_INVALID_COUPON` | Pack domain validations | a note's `coupon` is negative. |
 
-*246 codes.*
+*249 codes.*
 <!-- /cfdl:generated diagnostics-catalog -->
 
 ## Related

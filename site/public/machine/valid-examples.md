@@ -4,7 +4,7 @@
 
 CFDL 0.9.0. Every model below compiles, and its IR and
 results are byte-asserted against goldens in CI (`fixtures/valid/`,
-169 models.
+170 models.
 
 `gold/ir/`, `gold/results/`). Each is single-purpose: the directory name
 says what it exercises. This is what right looks like — positive few-shot
@@ -1748,6 +1748,53 @@ contract credit.loan.smoke on entity asset.buyer {
     interest_rate = 0.06
     term_months = 12
     cpr = 0.10
+    cdr = 0.03
+    severity = 0.50
+    recovery_lag_months = 3
+  }
+}
+
+contract credit.purchase.smoke on entity asset.buyer {
+  term 2026-01..2026-01
+  terms {
+    price = 1200000
+  }
+}
+```
+
+## credit_speed_above_ten_warns
+
+```cfdl
+version 0.1
+model "credit-speed-above-ten-warns"
+use pack "credit" version "0.1.0"
+time calendar monthly from 2026-01 for 15
+
+// Linear-interpolated index path: rides down from 5.0% to 3.8% over a year.
+curve sofr linear {
+  2026-01: 0.050
+  2027-01: 0.038
+}
+
+entity asset buyer : Credit.Asset.Loan
+
+// A CONVENTION, NOT A DEFINITION (docs/13 §7.56): 1200% PSA is above
+// anything a published table prints, so the pack WARNS (W9001) and the run
+// proceeds — a stress case that means it allowlists the warning; a negative
+// speed would refuse (E9016).
+// Small floating IO pool: SOFR + 300, floor 7.25% (binds late), 12-month
+// bullet, prepay/default/severity with a 3-month recovery lag.
+contract credit.loan.smoke on entity asset.buyer {
+  term 2026-01..2027-03
+  terms {
+    amortization = "interest_only"
+    principal = 1200000
+    index_curve = "sofr"
+    margin = 0.03
+    rate_floor = 0.0725
+    rate_cap = 0.10
+    term_months = 12
+    psa_speed = 12
     cdr = 0.03
     severity = 0.50
     recovery_lag_months = 3

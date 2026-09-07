@@ -8,6 +8,22 @@ This project follows Semantic Versioning: https://semver.org/
 
 ## [Unreleased]
 
+**A pack's ceiling that is a convention warns; its floor that is a definition
+refuses.** `psa_speed` and `sda_speed` above 10 (1000%, the highest speed a
+published table prints) and a construction loan rate above 1 (8 where 0.08
+was meant) now warn under `W9001`, `W9002` and `W6001` — the run proceeds,
+and a stress case that means it allowlists the warning — while a negative
+speed or rate still refuses. A pack validation with `severity = "warning"`
+may carry a `W` code under the pack's digit. Every numeric pack field that
+had no unit now states one (`USD`, `USD/yr`, `x`). **A successful compile
+now keeps its warnings** — they were dropped before, so a warning-severity
+validation had never reached anyone: they ride in the IR (`warnings`), the
+CLI prints them, the MCP `compile` returns them beside `ok: true`, and the
+run republishes them first in `deterministic.warnings`. A warning-severity
+bound on a term deferred to the run questions the value at run start rather
+than refusing it. Closes backlog 7.56; the reasoning, and the machinery not
+built, is in docs/26.
+
 **A value the run supplies is checked where it arrives.** An assumption may
 declare its type — `assume renewal : fraction = 0.85` — and the type carries
 a domain (`docs/01` §5.7): a `fraction` is 0 to 1, a `duration` is whole and

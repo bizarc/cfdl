@@ -165,6 +165,7 @@ pub(crate) fn refuse_out_of_bounds_inputs(
     ir: &Ir,
     config: &RunConfig,
     base_inputs: &BTreeMap<String, f64>,
+    warnings: &mut Vec<String>,
 ) -> Result<(), EngineError> {
     // The resolved input map: the model's own values, then the run's.
     let mut inputs: BTreeMap<&str, f64> =
@@ -234,10 +235,21 @@ pub(crate) fn refuse_out_of_bounds_inputs(
                     (None, Some(hi)) => hi,
                     (None, None) => "in range".to_string(),
                 };
-                failures.push(format!(
-                    "contract `{}` term `{term}` reads `{}` = {value}, and the pack requires {range} ({})",
-                    contract.name, bound.reads, bound.code
-                ));
+                // A CONVENTION QUESTIONS, A DEFINITION REFUSES: a
+                // warning-severity bound is the pack saying "almost certainly
+                // not meant", and the model that means it proceeds under the
+                // warning, which it can allowlist.
+                if bound.severity.as_deref() == Some("warning") {
+                    warnings.push(format!(
+                        "{}: contract `{}` term `{term}` reads `{}` = {value}, outside the {range} the pack expects — state it if the value is meant",
+                        bound.code, contract.name, bound.reads
+                    ));
+                } else {
+                    failures.push(format!(
+                        "contract `{}` term `{term}` reads `{}` = {value}, and the pack requires {range} ({})",
+                        contract.name, bound.reads, bound.code
+                    ));
+                }
             }
         }
     }

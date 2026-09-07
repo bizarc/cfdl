@@ -11,7 +11,7 @@ Diagnostics are the repair signal: read the `code`, `message`, `span`, and
 `hint`, change the model, recompile. The catalog is how an agent learns what
 each code looks like in the flesh before it meets one.
 
-**Coverage:** 246 codes in the docs/08 §7 register; 119 exemplified here; 69 of 134 examples carry a recorded fix.
+**Coverage:** 249 codes in the docs/08 §7 register; 119 exemplified here; 69 of 134 examples carry a recorded fix.
 
 ## account_read_without_prev — E1382_ACCOUNT_READ_WITHOUT_PREV
 
@@ -5336,7 +5336,7 @@ Documented in docs/08 §7, awaiting a minimal failing fixture:
 - `E6055_CRE_DEBT_INVALID_IO_MONTHS` — whole months, 0 or more
 - `E6056_CRE_DEBT_INVALID_BALLOON_FLAG` — `balloon_at_maturity` is 0 or 1
 - `E6057_CRE_CONSTRUCTION_INVALID_EQUITY_COMMITMENT` — zero or greater; zero is
-- `E6058_CRE_CONSTRUCTION_INVALID_RATE` — a nominal annual rate in [0, 1], which
+- `E6058_CRE_CONSTRUCTION_INVALID_RATE` — a nominal annual rate, 0 or more
 - `E6059_CRE_CONSTRUCTION_INVALID_DRAW_ACCRUAL_FRACTION` — where in the period a
 - `E6060_CRE_CONSTRUCTION_INVALID_TERM_RANGE` — the build must sit inside the
 - `E6061_CRE_OPEX_LINE_MISSING_AMOUNT` — an operating expense line states
@@ -5387,3 +5387,6 @@ Documented in docs/08 §7, awaiting a minimal failing fixture:
 - `W5022_UNKNOWN_SERIES_REFERENCE` — a series reduction (`series_sum`,
 - `W5023_UNRECOGNISED_PACK_CATEGORY` — a stream's category is well-rooted and
 - `W5024_CURVE_READ_PAST_END` — a stream or a field reads a curve past its
+- `W6001_CRE_CONSTRUCTION_RATE_ABOVE_ONE` — the rate is above 1, which is
+- `W9001_CREDIT_PSA_SPEED_ABOVE_TEN` — `psa_speed` is above 10 (1000% PSA),
+- `W9002_CREDIT_SDA_SPEED_ABOVE_TEN` — `sda_speed` is above 10 (1000% SDA);

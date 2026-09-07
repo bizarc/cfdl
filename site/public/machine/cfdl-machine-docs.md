@@ -3222,6 +3222,13 @@ against it by `make ir-schema`.
     "views": {
       "$ref": "#/$defs/Views",
       "description": "Lenses on a completed result — never part of the model. `model_hash` is taken over this document WITHOUT `views`, so adding a slice or a statement changes no identity: two users who look at identical results differently are running the same model. A declared metric is not here; it is a figure the model claims."
+    },
+    "warnings": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/CompileWarning"
+      },
+      "description": "Warnings the compile raised and kept. Absent when there are none. The engine republishes them in results `warnings`, so a run that started from a questioned model says so."
     }
   },
   "$defs": {
@@ -5175,7 +5182,58 @@ against it by `make ir-schema`.
             "error",
             "warning",
             "info"
+          ],
+          "description": "The validation's severity: `warning` questions the value at run start and the run proceeds under the warning; `error` refuses it (E5041)."
+        }
+      }
+    },
+    "CompileWarning": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "code",
+        "severity",
+        "message"
+      ],
+      "description": "A warning the compile raised and kept (docs/08 §3.2): the diagnostic object, severity `warning` or `info`. A pack convention questioned — psa_speed above 1000% — never an error, which would have failed the compile instead.",
+      "properties": {
+        "code": {
+          "type": "string"
+        },
+        "severity": {
+          "type": "string",
+          "enum": [
+            "warning",
+            "info"
           ]
+        },
+        "message": {
+          "type": "string"
+        },
+        "file": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "span": {},
+        "path": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "hint": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "notes": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
         }
       }
     }
@@ -5259,7 +5317,8 @@ against it by `make results-schema`.
       "type": "array",
       "items": {
         "type": "string"
-      }
+      },
+      "description": "Run-level warnings, `CODE: message`: the compile's kept warnings first (a pack convention questioned, carried in the IR), then the engine's own. A warned run is a suspect run to the benchmark harness."
     },
     "inputs": {
       "$ref": "#/$defs/InputsSection"
@@ -7972,6 +8031,13 @@ A diagnostic SHOULD include:
 ### 3.2 warning
 - Indicates a potential issue, ambiguity, or best-practice violation.
 - Compilation MAY proceed.
+- A warning a successful compile raises is KEPT: it rides in the IR
+  (`warnings`), the CLI prints it, the MCP `compile` returns it beside
+  `ok: true`, and the engine republishes it in the results' `warnings`, so a
+  run that started from a questioned model says so. A pack states a
+  convention this way — `severity = "warning"` on a validation, under a `W`
+  code with the pack's digit — and a model that means the value allowlists
+  the warning.
 
 ### 3.3 info
 - Non-problem informational messages, e.g., pack hints.
@@ -8520,8 +8586,11 @@ CRE pack codes:
 - `E6056_CRE_DEBT_INVALID_BALLOON_FLAG` — `balloon_at_maturity` is 0 or 1
 - `E6057_CRE_CONSTRUCTION_INVALID_EQUITY_COMMITMENT` — zero or greater; zero is
   an all-debt build and legal, so the bound is not exclusive
-- `E6058_CRE_CONSTRUCTION_INVALID_RATE` — a nominal annual rate in [0, 1], which
-  catches 8 entered where 0.08 was meant
+- `E6058_CRE_CONSTRUCTION_INVALID_RATE` — a nominal annual rate, 0 or more
+  (0.08 for 8%), the floor every debt contract states.
+- `W6001_CRE_CONSTRUCTION_RATE_ABOVE_ONE` — the rate is above 1, which is
+  almost always 8 entered where 0.08 was meant. A convention: the run
+  proceeds, and a coupon above 100% that is meant allowlists the warning.
 - `E6059_CRE_CONSTRUCTION_INVALID_DRAW_ACCRUAL_FRACTION` — where in the period a
   draw lands, in [0, 1]; 0.5 is funding drawn ratably through it
 - `E6060_CRE_CONSTRUCTION_INVALID_TERM_RANGE` — the build must sit inside the
@@ -8609,10 +8678,16 @@ Credit pack codes:
 - `E9014_CREDIT_INVALID_SERVICING_FEE`
 - `E9015_CREDIT_INVALID_PREPAY_PENALTY`
 - `E9016_CREDIT_INVALID_PSA_SPEED` — `psa_speed` is a MULTIPLE of the standard
-  prepayment curve, so 1.5 means 150% PSA. Must be 0..10; 0 selects the flat
-  `cpr` path.
+  prepayment curve, so 1.5 means 150% PSA. Must be 0 or more; 0 selects the
+  flat `cpr` path.
+- `W9001_CREDIT_PSA_SPEED_ABOVE_TEN` — `psa_speed` is above 10 (1000% PSA),
+  the highest speed a published table prints. A convention, not a definition
+  (`docs/13` §7.56): the run proceeds, and a stress case that means it
+  allowlists the warning.
 - `E9017_CREDIT_INVALID_SDA_SPEED` — `sda_speed` is a multiple of the standard
-  default assumption. Must be 0..10; 0 selects the flat `cdr` path.
+  default assumption. Must be 0 or more; 0 selects the flat `cdr` path.
+- `W9002_CREDIT_SDA_SPEED_ABOVE_TEN` — `sda_speed` is above 10 (1000% SDA);
+  the same convention as `W9001`.
 - `E9018_CREDIT_INVALID_ABS_SPEED` — `abs_speed` is the Absolute Prepayment
   Model speed: the fraction of ORIGINAL balance prepaying each month. Already
   monthly, so unlike `cpr`/`cdr` it is not converted. Must be 0..1.

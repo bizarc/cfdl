@@ -352,6 +352,7 @@ unbound = true
 [[contracts.fields]]
 name = "principal"
 field_type = "decimal"
+unit = "USD"
 required = true
 one_of = "amount"
 description = "The balance at the model's start — what is owed when the model opens. A loan that funds inside the run states the amount it funds for."
@@ -378,11 +379,13 @@ description = "Annual conditional default rate."
 [[contracts.fields]]
 name = "psa_speed"
 field_type = "decimal"
+unit = "x"
 description = "Multiple of the standard PSA prepayment curve — 1.5 is 150% PSA."
 
 [[contracts.fields]]
 name = "sda_speed"
 field_type = "decimal"
+unit = "x"
 description = "Multiple of the standard default assumption — 1.0 is 100% SDA."
 
 [[contracts.fields]]

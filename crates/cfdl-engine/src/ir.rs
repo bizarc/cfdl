@@ -3,6 +3,11 @@ use super::*;
 
 #[derive(Debug, Deserialize)]
 pub(crate) struct Ir {
+    /// Warnings the compile raised and kept (`docs/08` §3.2); republished in
+    /// `deterministic.warnings` so a run that started from a questioned model
+    /// says so.
+    #[serde(default)]
+    pub(crate) warnings: Vec<IrCompileWarning>,
     pub(crate) model: IrModel,
     pub(crate) time: IrTime,
     #[serde(default)]
@@ -92,6 +97,12 @@ pub(crate) struct IrContractDecl {
 }
 
 #[derive(Debug, Deserialize)]
+pub(crate) struct IrCompileWarning {
+    pub(crate) code: String,
+    pub(crate) message: String,
+}
+
+#[derive(Debug, Deserialize)]
 pub(crate) struct IrTermBound {
     /// `inputs.<name>` or `cfg.<path>`.
     pub(crate) reads: String,
@@ -104,6 +115,10 @@ pub(crate) struct IrTermBound {
     #[serde(default)]
     pub(crate) exclusive_max: Option<f64>,
     pub(crate) code: String,
+    /// `warning` questions the value and lets the run proceed; anything else
+    /// refuses it.
+    #[serde(default)]
+    pub(crate) severity: Option<String>,
 }
 
 #[derive(Debug, Deserialize)]

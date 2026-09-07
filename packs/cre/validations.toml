@@ -241,18 +241,29 @@ when = "present"
 on_invalid = "skip"
 min = 0.0
 
-# A construction rate is quoted nominal and annual. 1.0 as an upper bound
-# catches the commonest input error by an order of magnitude — 8 entered where
-# 0.08 was meant — without ruling out a distressed mezzanine coupon.
+# A construction rate is quoted nominal and annual, and 0 or more — the same
+# floor every other debt contract states. Above 1.0 it is almost certainly
+# 8 entered where 0.08 was meant, so that WARNS (docs/13 §7.56): a distressed
+# coupon above 100% is not ruled out, only questioned.
 [[validations]]
 contract = "cre.construction_loan"
 code = "E6058_CRE_CONSTRUCTION_INVALID_RATE"
-message = "CRE construction loan 'interest_rate' must be a nominal annual rate between 0 and 1 (0.08 for 8%)."
+message = "CRE construction loan 'interest_rate' is a nominal annual rate and must be 0 or more (0.08 for 8%)."
 check = "term_number"
 term = "interest_rate"
 when = "present"
 on_invalid = "skip"
 min = 0.0
+
+[[validations]]
+contract = "cre.construction_loan"
+code = "W6001_CRE_CONSTRUCTION_RATE_ABOVE_ONE"
+message = "CRE construction loan 'interest_rate' is above 1 — 8 where 0.08 (8%) was meant? State it if the coupon is meant."
+severity = "warning"
+check = "term_number"
+term = "interest_rate"
+when = "present"
+on_invalid = "skip"
 max = 1.0
 
 # Capitalize or pay: an opt-in flag, as `balloon_at_maturity` is on permanent

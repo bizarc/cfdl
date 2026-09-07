@@ -76,7 +76,25 @@ fn main() -> Result<()> {
                 packs_dir: packs.or_else(default_packs_dir),
             };
             match cfdl_compile::compile_to_file_with_options(&model_root, &out, &options) {
-                Ok(()) => Ok(()),
+                Ok(()) => {
+                    // A successful compile may still have something to say
+                    // (docs/08 §3.2): the warnings ride in the IR, and a
+                    // reader at the terminal sees them here.
+                    if !cli.json {
+                        if let Ok(text) = std::fs::read_to_string(&out) {
+                            if let Ok(ir) = serde_json::from_str::<serde_json::Value>(&text) {
+                                for w in ir["warnings"].as_array().into_iter().flatten() {
+                                    eprintln!(
+                                        "WARNING[{}] {}",
+                                        w["code"].as_str().unwrap_or(""),
+                                        w["message"].as_str().unwrap_or("")
+                                    );
+                                }
+                            }
+                        }
+                    }
+                    Ok(())
+                }
                 Err(diags) => {
                     if cli.json {
                         // ONLY JSON to stdout

@@ -31,7 +31,9 @@ pub struct CompileParams {
 #[derive(Debug, Serialize, JsonSchema)]
 pub struct CompileResult {
     pub ok: bool,
-    /// Structured diagnostics per docs/08. Empty when `ok`.
+    /// Structured diagnostics per docs/08. When `ok`, the warnings the
+    /// compile kept (a pack convention questioned; the model proceeds), and
+    /// empty when it raised none.
     pub diagnostics: Vec<serde_json::Value>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub ir: Option<String>,
@@ -73,11 +75,17 @@ pub fn compile(params: &CompileParams, defaults: &Defaults) -> Result<CompileRes
         defaults,
     )?;
     Ok(match outcome {
-        Ok(ir) => CompileResult {
-            ok: true,
-            diagnostics: Vec::new(),
-            ir: params.include_ir.then_some(ir),
-        },
+        Ok(ir) => {
+            let warnings = serde_json::from_str::<serde_json::Value>(&ir)
+                .ok()
+                .and_then(|v| v.get("warnings").and_then(|w| w.as_array().cloned()))
+                .unwrap_or_default();
+            CompileResult {
+                ok: true,
+                diagnostics: warnings,
+                ir: params.include_ir.then_some(ir),
+            }
+        }
         Err(diags) => CompileResult {
             ok: false,
             diagnostics: diags

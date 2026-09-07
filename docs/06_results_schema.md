@@ -67,7 +67,8 @@ against it by `make results-schema`.
       "type": "array",
       "items": {
         "type": "string"
-      }
+      },
+      "description": "Run-level warnings, `CODE: message`: the compile's kept warnings first (a pack convention questioned, carried in the IR), then the engine's own. A warned run is a suspect run to the benchmark harness."
     },
     "inputs": {
       "$ref": "#/$defs/InputsSection"

@@ -229,6 +229,7 @@ parties = ["owner"]
 [[contracts.fields]]
 name = "amount"
 field_type = "decimal"
+unit = "USD"
 required = true
 description = "Working-capital investment per period; negative releases it."
 
@@ -276,6 +277,7 @@ parties = ["borrower", "lender"]
 [[contracts.fields]]
 name = "principal"
 field_type = "decimal"
+unit = "USD"
 required = true
 one_of = "amount"
 description = "The loan amount."
@@ -318,6 +320,7 @@ description = "A declared curve of tax rates by date, instead of a fixed rate."
 [[contracts.fields]]
 name = "da_monthly"
 field_type = "decimal"
+unit = "USD"
 description = "Depreciation and amortization deduction per period."
 
 [[contracts.fields]]
@@ -357,12 +360,14 @@ parties = ["seller"]
 [[contracts.fields]]
 name = "base"
 field_type = "decimal"
+unit = "USD"
 required = true
 description = "The figure the multiple is struck on."
 
 [[contracts.fields]]
 name = "multiple"
 field_type = "decimal"
+unit = "x"
 required = true
 one_of = "basis"
 description = "Multiple applied to the base."
@@ -382,6 +387,7 @@ parties = ["seller"]
 [[contracts.fields]]
 name = "multiple"
 field_type = "decimal"
+unit = "x"
 required = true
 one_of = "basis"
 description = "Multiple applied to the trailing twelve months of EBITDA before the sale date."
@@ -404,6 +410,7 @@ parties = ["seller"]
 [[contracts.fields]]
 name = "base"
 field_type = "decimal"
+unit = "USD"
 required = true
 description = "The terminal-period flow, before the growth step."
 

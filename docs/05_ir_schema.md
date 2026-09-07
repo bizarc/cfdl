@@ -222,6 +222,13 @@ against it by `make ir-schema`.
     "views": {
       "$ref": "#/$defs/Views",
       "description": "Lenses on a completed result — never part of the model. `model_hash` is taken over this document WITHOUT `views`, so adding a slice or a statement changes no identity: two users who look at identical results differently are running the same model. A declared metric is not here; it is a figure the model claims."
+    },
+    "warnings": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/CompileWarning"
+      },
+      "description": "Warnings the compile raised and kept. Absent when there are none. The engine republishes them in results `warnings`, so a run that started from a questioned model says so."
     }
   },
   "$defs": {
@@ -2175,7 +2182,58 @@ against it by `make ir-schema`.
             "error",
             "warning",
             "info"
+          ],
+          "description": "The validation's severity: `warning` questions the value at run start and the run proceeds under the warning; `error` refuses it (E5041)."
+        }
+      }
+    },
+    "CompileWarning": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "code",
+        "severity",
+        "message"
+      ],
+      "description": "A warning the compile raised and kept (docs/08 §3.2): the diagnostic object, severity `warning` or `info`. A pack convention questioned — psa_speed above 1000% — never an error, which would have failed the compile instead.",
+      "properties": {
+        "code": {
+          "type": "string"
+        },
+        "severity": {
+          "type": "string",
+          "enum": [
+            "warning",
+            "info"
           ]
+        },
+        "message": {
+          "type": "string"
+        },
+        "file": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "span": {},
+        "path": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "hint": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "notes": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
         }
       }
     }
