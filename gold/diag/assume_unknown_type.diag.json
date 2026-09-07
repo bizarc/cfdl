@@ -1,0 +1,19 @@
+[
+  {
+    "code": "E2305_ASSUME_UNKNOWN_TYPE",
+    "severity": "error",
+    "message": "Assumption 'share' declares type 'share', which the language does not have. A type is fraction, rate, decimal, int or duration.",
+    "file": "model.cfdl",
+    "span": {
+      "start_line": 8,
+      "start_col": 1,
+      "end_line": 8,
+      "end_col": 26
+    },
+    "path": null,
+    "hint": null,
+    "notes": [
+      "assumption 'share'"
+    ]
+  }
+]

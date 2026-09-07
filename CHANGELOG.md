@@ -8,6 +8,22 @@ This project follows Semantic Versioning: https://semver.org/
 
 ## [Unreleased]
 
+**A value the run supplies is checked where it arrives.** An assumption may
+declare its type — `assume renewal : fraction = 0.85` — and the type carries
+a domain (`docs/01` §5.7): a `fraction` is 0 to 1, a `duration` is whole and
+non-negative. It may state the modeler's own range, `within [0.04, 0.10]`,
+checked and never clamped. A literal outside either is refused at compile
+time (`E2307`); an override, a scenario value, a Monte Carlo draw or a `cfg.`
+path outside either is refused at run start (`E5041`), as is a value the
+pack bounds on a contract term deferred to `inputs.` or `cfg.` — the bound
+travels in the IR as `term_bounds` under the validation's own code, so a
+scenario can no longer set `psa_speed` to 50 against a stated 0 to 10 and
+report ok. `cfg.` is admitted in a term where `inputs.` is. New codes
+`E2305`, `E2306`, `E2307`, `E5041`; the IR gains `within` on an assumption,
+`Fraction` and `Duration` as value types, and `term_bounds` on a contract.
+Backlog 7.56, first half; the pack consequence (units naming types, pack
+bounds as conventions) is stated there.
+
 **The HUD case is on the calendar its mortgage pays on.** It was annual
 because the workbook is an annual pro forma; the instruments are monthly. It
 now runs monthly, the first mortgage is `cre.permanent_debt` stated from the

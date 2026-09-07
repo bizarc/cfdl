@@ -236,6 +236,15 @@
           "src": "inputs.annual_yield"
         }
       },
+      "term_bounds": {
+        "degradation": {
+          "reads": "inputs.degradation",
+          "min": 0.0,
+          "max": 1.0,
+          "code": "E8001_ENERGY_INVALID_DEGRADATION",
+          "severity": "error"
+        }
+      },
       "effects": {
         "streams": []
       },

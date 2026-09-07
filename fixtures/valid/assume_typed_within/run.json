@@ -1,0 +1,8 @@
+{
+  "deterministic": {
+    "annual_discount_rate": 0.05,
+    "parameters": {
+      "cfg.psa": 1.5
+    }
+  }
+}

@@ -447,10 +447,19 @@ pub struct StatementRowStmt {
 #[derive(Debug, Clone, PartialEq, Eq, serde::Serialize)]
 pub struct AssumeStmt {
     pub name: String,
+    /// The declared type, `assume x : fraction = …` — the language's own
+    /// (`docs/01` §5): a `fraction` is 0 to 1 by definition, a `duration` is
+    /// whole and non-negative, a `rate` or `decimal` carries no domain. The
+    /// compiler names the vocabulary; the parser records the word.
+    pub type_name: Option<String>,
     /// Deterministic form: `assume x = <expr>` (raw expression source).
     pub value: Option<String>,
     /// Stochastic form: `assume x ~ Dist(...)`.
     pub dist: Option<AssumeDist>,
+    /// The modeler's own bound, `within [lo, hi]` — CHECKED at every arrival
+    /// (a literal, an override, a scenario value, a draw), never clamped.
+    /// `clip` on a distribution truncates draws; this refuses a value.
+    pub within: Option<(String, String)>,
     pub span: Span,
 }
 
@@ -578,6 +587,11 @@ pub enum TermValueKind {
     Literal,
     /// A reference to one declared input: `inputs.<name>`, nothing more.
     InputRef,
+    /// A reference to a run-configuration value: `cfg.<path>`, nothing more.
+    /// The same tier as `InputRef` — present, value unknowable until the run
+    /// — so a bound on the term is checked when the run supplies it, not
+    /// parsed here as though the path were a number (`docs/13` §7.56).
+    CfgRef,
     /// A full expression, carried as source text and compiled downstream.
     Expr,
 }
@@ -610,6 +624,24 @@ impl ContractTerm {
         self.kind == TermValueKind::InputRef
     }
 
+    /// `cfg.<path>` — the run configuration's own channel, deferred the same
+    /// way an input is.
+    pub fn is_cfg_ref(&self) -> bool {
+        self.kind == TermValueKind::CfgRef
+    }
+
+    /// Whether the value arrives from the run rather than the text: an
+    /// `inputs.` or a `cfg.` reference. Bounds on such a term are the run's
+    /// to check.
+    pub fn is_deferred(&self) -> bool {
+        self.is_input_ref() || self.is_cfg_ref()
+    }
+
+    /// The `cfg.` path a deferred term reads, when it reads one.
+    pub fn cfg_path(&self) -> Option<&str> {
+        self.is_cfg_ref().then(|| &self.value["cfg.".len()..])
+    }
+
     /// Classify a value KNOWN to be atomic (one token) — for constructing
     /// terms outside the parser, e.g. in tests. The parser itself classifies
     /// from token kind, which is authoritative for full source.
@@ -632,6 +664,19 @@ impl ContractTerm {
 /// merely dot-free: with expression terms, `inputs.cpi * 2` strips to
 /// `cpi * 2`, which contains no dot and used to classify as an input named
 /// "cpi * 2" — a spurious E5010 waiting to fire.
+/// `cfg.<path>` — one or more identifiers after the prefix, the shape a
+/// run-configuration reference takes (`cfg.psa`, `cfg.exit.cap_rate`).
+fn cfg_ref_path(value: &str) -> Option<&str> {
+    let rest = value.strip_prefix("cfg.")?;
+    let ok = !rest.is_empty()
+        && rest.split('.').all(|seg| {
+            let mut chars = seg.chars();
+            matches!(chars.next(), Some(c) if c.is_ascii_alphabetic() || c == '_')
+                && chars.all(|c| c.is_ascii_alphanumeric() || c == '_')
+        });
+    ok.then_some(rest)
+}
+
 fn input_ref_name(value: &str) -> Option<&str> {
     let rest = value.strip_prefix("inputs.")?;
     let mut chars = rest.chars();
@@ -2046,6 +2091,10 @@ impl<'a> Parser<'a> {
                                 && input_ref_name(&v).is_some()
                             {
                                 TermValueKind::InputRef
+                            } else if matches!(value_tok.kind, TokenKind::Qname(_))
+                                && cfg_ref_path(&v).is_some()
+                            {
+                                TermValueKind::CfgRef
                             } else {
                                 TermValueKind::Literal
                             };
@@ -4695,23 +4744,39 @@ impl<'a> Parser<'a> {
             );
             return None;
         };
+        // `assume x : fraction = …` — the type is the language's word, read
+        // here as an identifier and checked by the compiler against §5.
+        let mut type_name: Option<String> = None;
+        if matches!(self.peek().kind, TokenKind::Punct(Punct::Colon)) {
+            let _ = self.bump();
+            let type_tok = self.bump();
+            match type_tok.kind {
+                TokenKind::Ident(ref t) => type_name = Some(t.clone()),
+                _ => {
+                    self.push_expected(
+                        type_tok.span,
+                        "Expected a type after ':' — fraction, rate, decimal, int or duration."
+                            .to_string(),
+                    );
+                    return None;
+                }
+            }
+        }
         match self.peek().kind {
             TokenKind::Punct(Punct::Equal) => {
                 let _ = self.bump();
-                let (first, last) = self.scan_to_next_top_level_statement();
-                let (Some(first), Some(last)) = (first, last) else {
-                    self.push_expected(
-                        self.current_span(),
-                        "Expected expression after '='.".to_string(),
-                    );
-                    return None;
-                };
-                let expr_span = merge_spans(first, last);
+                // An expression slot, not a scan to the next statement: the
+                // value ends where an operand closes and `within` begins.
+                let slot = self.parse_expr_slot_until(start.span, &[])?;
+                let mut end = slot.expr_span;
+                let within = self.parse_within(&mut end)?;
                 Some(AssumeStmt {
                     name,
-                    value: Some(self.slice_source(expr_span)),
+                    type_name,
+                    value: Some(slot.src),
                     dist: None,
-                    span: merge_spans(start.span, expr_span),
+                    within,
+                    span: merge_spans(start.span, end),
                 })
             }
             TokenKind::Punct(Punct::Tilde) => {
@@ -4752,11 +4817,7 @@ impl<'a> Parser<'a> {
                     };
                     let _ = self.expect_punct(Punct::Equal, "'='")?;
                     if is_clip {
-                        let _ = self.expect_punct(Punct::LBracket, "'['")?;
-                        let lo = self.parse_signed_number()?;
-                        let _ = self.expect_punct(Punct::Comma, "','")?;
-                        let hi = self.parse_signed_number()?;
-                        let _ = self.expect_punct(Punct::RBracket, "']'")?;
+                        let (lo, hi, _) = self.parse_bracketed_pair()?;
                         clip = Some((lo, hi));
                     } else {
                         let value = self.parse_signed_number()?;
@@ -4768,16 +4829,20 @@ impl<'a> Parser<'a> {
                         break;
                     }
                 }
-                let end = self.expect_punct(Punct::RParen, "')'")?;
+                let close = self.expect_punct(Punct::RParen, "')'")?;
+                let mut end = close.span;
+                let within = self.parse_within(&mut end)?;
                 Some(AssumeStmt {
                     name,
+                    type_name,
                     value: None,
                     dist: Some(AssumeDist {
                         name: dist_name.to_string(),
                         args,
                         clip,
                     }),
-                    span: merge_spans(start.span, end.span),
+                    within,
+                    span: merge_spans(start.span, end),
                 })
             }
             _ => {
@@ -4788,6 +4853,31 @@ impl<'a> Parser<'a> {
                 None
             }
         }
+    }
+
+    /// `within [lo, hi]` after an assumption's value or distribution. A
+    /// contextual word, like `lifecycle`: it is an ordinary identifier
+    /// everywhere else, so no name is taken from the modeler.
+    fn parse_within(&mut self, end: &mut Span) -> Option<Option<(String, String)>> {
+        if !matches!(self.peek().kind, TokenKind::Ident(ref w) if w == "within") {
+            return Some(None);
+        }
+        let _ = self.bump();
+        let (lo, hi, close) = self.parse_bracketed_pair()?;
+        *end = close;
+        Some(Some((lo, hi)))
+    }
+
+    /// `[lo, hi]` — two signed numbers, the shape `clip` and `within` share.
+    /// Returns the closing bracket's span so a caller can end its statement
+    /// there.
+    fn parse_bracketed_pair(&mut self) -> Option<(String, String, Span)> {
+        let _ = self.expect_punct(Punct::LBracket, "'['")?;
+        let lo = self.parse_signed_number()?;
+        let _ = self.expect_punct(Punct::Comma, "','")?;
+        let hi = self.parse_signed_number()?;
+        let close = self.expect_punct(Punct::RBracket, "']'")?;
+        Some((lo, hi, close.span))
     }
 
     fn parse_signed_number(&mut self) -> Option<String> {

@@ -35,7 +35,7 @@ fn read_number(contract: &cfdl_parser::ContractStmt, term: &str, kind: NumberKin
     let Some(entry) = contract.terms.get(term) else {
         return TermValue::Absent;
     };
-    if entry.is_input_ref() {
+    if entry.is_deferred() {
         return TermValue::Deferred;
     }
     if entry.kind == cfdl_parser::TermValueKind::Expr {

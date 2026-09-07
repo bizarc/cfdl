@@ -1,0 +1,13 @@
+version 0.1
+model "assume-unknown-type"
+time calendar monthly from 2026-01 for 3
+
+entity asset a : Asset.Financial
+
+// `share` is not a type the language has (docs/01 §5): E2305.
+assume share : share = 0.9
+
+stream fee.x on entity asset.a inflow currency USD {
+  schedule every month from 2026-01 to 2026-03
+  amount = 100 * inputs.share
+}

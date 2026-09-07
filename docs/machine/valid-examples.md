@@ -4,7 +4,7 @@
 
 CFDL 0.9.0. Every model below compiles, and its IR and
 results are byte-asserted against goldens in CI (`fixtures/valid/`,
-168 models.
+169 models.
 
 `gold/ir/`, `gold/results/`). Each is single-purpose: the directory name
 says what it exercises. This is what right looks like — positive few-shot
@@ -393,6 +393,60 @@ assume growth ~ Normal(mean=0.03, stdev=0.01, clip=[0.0, 0.08])
 stream fee.management on entity asset.borrower inflow currency USD {
   schedule every month from 2026-01 to 2026-06
   amount = inputs.base_fee * (1 + inputs.growth)
+}
+```
+
+## assume_typed_within
+
+```cfdl
+version 0.1
+model "assume-typed-within"
+use pack "credit" version "0.1.0"
+time calendar monthly from 2026-01 for 15
+
+// Linear-interpolated index path: rides down from 5.0% to 3.8% over a year.
+curve sofr linear {
+  2026-01: 0.050
+  2027-01: 0.038
+}
+
+// TYPED ASSUMPTIONS AND THE MODELER'S OWN BOUND (docs/01 §5.7, §12.1).
+// `fraction` is 0 to 1 by definition; `within` is the range this deal
+// admits, checked at every arrival and never clamped. The loan's speed
+// defers to the run configuration's other channel, `cfg.`, and the pack's
+// bound on it (0 to 10) is checked when the run supplies the value.
+assume severity_haircut : fraction = 0.50
+assume margin_bps : rate = 0.03 within [0.01, 0.05]
+assume lag : duration = 3
+assume speed_shift : rate ~ Normal(mean=0.0, stdev=0.1, clip=[-0.2, 0.2]) within [-0.5, 0.5]
+
+entity asset buyer : Credit.Asset.Loan
+
+// Small floating IO pool: SOFR + 300, floor 7.25% (binds late), 12-month
+// bullet, prepay/default/severity with a 3-month recovery lag.
+contract credit.loan.smoke on entity asset.buyer {
+  term 2026-01..2027-03
+  terms {
+    amortization = "interest_only"
+    principal = 1200000
+    index_curve = "sofr"
+    margin = inputs.margin_bps
+    rate_floor = 0.0725
+    rate_cap = 0.10
+    term_months = 12
+    cpr = 0.10
+    psa_speed = cfg.psa
+    cdr = 0.03
+    severity = inputs.severity_haircut
+    recovery_lag_months = 3
+  }
+}
+
+contract credit.purchase.smoke on entity asset.buyer {
+  term 2026-01..2026-01
+  terms {
+    price = 1200000
+  }
 }
 ```
 

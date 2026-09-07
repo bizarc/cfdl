@@ -112,6 +112,12 @@ pub enum EngineError {
     /// no value — not its end value held flat — so the run refuses, naming
     /// the curve, the date and the reader.
     CurveReadOutsideRange(String),
+    /// A value the run supplied — an override, a scenario value, a draw, a
+    /// `cfg.` path — is outside the domain of its type, the `within` the
+    /// model states, or the bound the pack states on the term that reads it
+    /// (`docs/13` §7.56). Refused, never adjusted: a value pulled into range
+    /// would be the silent substitution this family of checks exists to end.
+    InputOutOfBounds(String),
     /// An event's or option's action names a kind the engine does not
     /// execute. Only hand-written IR can carry one, and running on while the
     /// journal says `ignored` reported success for a run that did not do what
@@ -138,6 +144,7 @@ impl EngineError {
             EngineError::FieldEvaluationFailed(_) => "E5032_FIELD_EVALUATION_FAILED",
             EngineError::UnknownActionKind(_) => "E5039_UNKNOWN_ACTION_KIND",
             EngineError::CurveReadOutsideRange(_) => "E5040_CURVE_READ_OUTSIDE_RANGE",
+            EngineError::InputOutOfBounds(_) => "E5041_INPUT_OUT_OF_BOUNDS",
         }
     }
 }
@@ -154,6 +161,7 @@ impl std::fmt::Display for EngineError {
             EngineError::FieldEvaluationFailed(msg) => write!(f, "{msg}"),
             EngineError::UnknownActionKind(msg) => write!(f, "{msg}"),
             EngineError::CurveReadOutsideRange(msg) => write!(f, "{msg}"),
+            EngineError::InputOutOfBounds(msg) => write!(f, "{msg}"),
             EngineError::AccountsNeedTheWalk(msg) => write!(f, "{msg}"),
             EngineError::InvalidDate(value) => write!(f, "invalid ISO date: {value}"),
             EngineError::InvalidRunConfig(message) => write!(f, "invalid run config: {message}"),
@@ -226,6 +234,7 @@ pub fn compare_evaluation_orders(
     let prep = prepare_model(&ir, &mut warnings)?;
     let timeline = prep.timeline.clone();
     let base_inputs = assumption_inputs(&ir, &mut warnings)?;
+    refuse_out_of_bounds_inputs(&ir, &config, &base_inputs)?;
 
     // The column order: all state first, then each stream over the whole
     // timeline, in dependency waves.
@@ -299,6 +308,10 @@ fn run_deterministic(
 
     let mut warnings = Vec::new();
     let base_inputs = assumption_inputs(ir, &mut warnings)?;
+    // EVERY VALUE THE RUN SUPPLIED IS CHECKED HERE, once, before anything
+    // reads it: the type's domain and the model's `within` on each
+    // assumption, and the pack's bound on each term that defers to the run.
+    refuse_out_of_bounds_inputs(ir, config, &base_inputs)?;
     // States are recurrences: every period is computed from the completed
     // previous one, so the whole column exists before anything reads it.
     //
@@ -1044,6 +1057,96 @@ mod tests {
         assert_eq!(config.discount_curve.as_deref(), Some("wacc"));
         assert!(config.rate_stated);
         assert_eq!(config.scenarios["up"].discount_rate, Some(0.12));
+    }
+
+    /// A value the run supplies is checked where it arrives (`docs/13`
+    /// §7.56): the type's domain, the model's `within`, and the pack's bound
+    /// on a term that defers to the run. Refused, never adjusted.
+    #[test]
+    fn a_supplied_value_outside_its_bound_is_refused() {
+        let ir = r#"{
+            "model": { "name": "bounds", "currency": "USD" },
+            "time": { "calendar": "monthly", "start": "2026-01-01", "periods": 2 },
+            "entities": [ { "symbol": "asset.a", "rules": {} } ],
+            "assumptions": {
+                "constants": {
+                    "share": { "expr": { "lang": "cfdl", "src": "0.9" }, "type": "Fraction" },
+                    "cap_rate": { "expr": { "lang": "cfdl", "src": "0.065" }, "type": "Rate", "within": [0.04, 0.10] },
+                    "speed": { "expr": { "lang": "cfdl", "src": "1.5" } }
+                },
+                "random": {
+                    "growth": { "dist": { "kind": "Normal", "params": { "mean": 0.03, "stdev": 0.01 } }, "type": "Rate", "within": [-0.05, 0.10] }
+                }
+            },
+            "contracts": [
+                {
+                    "name": "credit.loan.x",
+                    "type": "Credit.Contract.Loan",
+                    "subject": { "symbol": "asset.a" },
+                    "term_bounds": {
+                        "psa_speed": { "reads": "inputs.speed", "min": 0.0, "max": 10.0, "code": "E9016_CREDIT_INVALID_PSA_SPEED" },
+                        "abs_speed": { "reads": "cfg.abs", "min": 0.0, "max": 1.0, "code": "E9018_CREDIT_INVALID_ABS_SPEED" }
+                    }
+                }
+            ],
+            "streams": [
+                {
+                    "name": "ops.revenue",
+                    "owner": { "symbol": "asset.a" },
+                    "direction": "inflow",
+                    "schedule": { "kind": "Every", "every": "monthly", "from": "2026-01-01", "to": "2026-02-01" },
+                    "amount": { "lang": "cfdl", "src": "100.0 * inputs.share * inputs.cap_rate * inputs.speed * inputs.growth * cfg.abs" },
+                    "active_when": { "lang": "cfdl", "src": "true" }
+                }
+            ]
+        }"#;
+        let run = |keys: &[(&str, f64)]| {
+            let mut overrides = BTreeMap::new();
+            overrides.insert("cfg.abs".to_string(), 0.02);
+            for (k, v) in keys {
+                overrides.insert(k.to_string(), *v);
+            }
+            run_from_json_str(
+                ir,
+                RunConfig {
+                    parameter_overrides: overrides,
+                    ..Default::default()
+                },
+            )
+        };
+        run(&[]).expect("every value inside its bound");
+        run(&[
+            ("inputs.share", 1.0),
+            ("inputs.cap_rate", 0.10),
+            ("inputs.speed", 10.0),
+        ])
+        .expect("the bounds are inclusive");
+        // The type's domain.
+        let err = run(&[("inputs.share", 1.3)]).expect_err("a fraction above one");
+        assert_eq!(err.code(), "E5041_INPUT_OUT_OF_BOUNDS");
+        assert!(
+            err.to_string().contains("`inputs.share` is 1.3")
+                && err.to_string().contains("domain of a fraction (0 to 1)"),
+            "{err}"
+        );
+        // The model's within.
+        let err = run(&[("inputs.cap_rate", 0.12)]).expect_err("a rate past its within");
+        assert!(err.to_string().contains("within [0.04, 0.1]"), "{err}");
+        // The pack's bound on a term deferred to an input …
+        let err = run(&[("inputs.speed", 50.0)]).expect_err("psa past the pack's bound");
+        let msg = err.to_string();
+        assert!(
+            msg.contains("term `psa_speed` reads `inputs.speed` = 50")
+                && msg.contains("0 or more and 10 or less")
+                && msg.contains("E9016_CREDIT_INVALID_PSA_SPEED"),
+            "{msg}"
+        );
+        // … and to the run configuration's other channel.
+        let err = run(&[("cfg.abs", 2.0)]).expect_err("abs past the pack's bound");
+        assert!(err.to_string().contains("reads `cfg.abs` = 2"), "{err}");
+        // A random assumption's central value is checked like any other.
+        let err = run(&[("inputs.growth", 0.5)]).expect_err("growth past its within");
+        assert!(err.to_string().contains("`inputs.growth` is 0.5"), "{err}");
     }
 
     /// AN OVERRIDE THAT MATCHES NOTHING IS REFUSED (`docs/13` §7.51, §7.116):

@@ -83,6 +83,27 @@ pub(crate) struct IrContractDecl {
     pub(crate) subject: IrEntityRef,
     #[serde(default)]
     pub(crate) parties: Vec<IrContractParty>,
+    /// Bounds on the terms this contract defers to the run (`docs/13`
+    /// §7.56): the pack's validation could not check a value the text does
+    /// not carry, so the bound travels here and `prepare` checks it once the
+    /// run has supplied the value.
+    #[serde(default)]
+    pub(crate) term_bounds: BTreeMap<String, IrTermBound>,
+}
+
+#[derive(Debug, Deserialize)]
+pub(crate) struct IrTermBound {
+    /// `inputs.<name>` or `cfg.<path>`.
+    pub(crate) reads: String,
+    #[serde(default)]
+    pub(crate) min: Option<f64>,
+    #[serde(default)]
+    pub(crate) max: Option<f64>,
+    #[serde(default)]
+    pub(crate) exclusive_min: Option<f64>,
+    #[serde(default)]
+    pub(crate) exclusive_max: Option<f64>,
+    pub(crate) code: String,
 }
 
 #[derive(Debug, Deserialize)]
@@ -445,11 +466,22 @@ pub(crate) struct IrAssumptions {
 #[derive(Debug, Deserialize)]
 pub(crate) struct IrAssumeConstant {
     pub(crate) expr: IrExpr,
+    /// The language type (`Fraction`, `Rate`, `Decimal`, `Int`, `Duration`);
+    /// its domain is checked at run start against whatever the run supplied.
+    #[serde(default, rename = "type")]
+    pub(crate) type_id: Option<String>,
+    /// The modeler's own bound, checked the same way (`docs/01` §12.1).
+    #[serde(default)]
+    pub(crate) within: Option<[f64; 2]>,
 }
 
 #[derive(Debug, Deserialize)]
 pub(crate) struct IrAssumeRandom {
     pub(crate) dist: IrDistribution,
+    #[serde(default, rename = "type")]
+    pub(crate) type_id: Option<String>,
+    #[serde(default)]
+    pub(crate) within: Option<[f64; 2]>,
 }
 
 #[derive(Debug, Deserialize)]

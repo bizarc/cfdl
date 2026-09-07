@@ -153,7 +153,9 @@ Core language semantics MUST NOT change based on pack selection.
 ### 5.3 Financial types
 - `Currency` (ISO 4217 string, e.g., `USD`)
 - `Money` = `{ amount: Decimal, currency: Currency }`
-- `Rate` (unitless decimal with semantic meaning)
+- `Rate` (unitless decimal with semantic meaning; no domain)
+- `Fraction` (a share of a whole — a probability, a pro rata, a percentage of
+  revenue; 0 to 1 by definition, §5.7)
 - `Percent` (syntactic sugar for Rate; `10%` == `0.10`)
 
 ### 5.4 Reference types
@@ -165,6 +167,26 @@ Core language semantics MUST NOT change based on pack selection.
 - Any `amount` that represents money MUST have a currency, either explicitly or inferred from surrounding context.
 - Streams MUST have a declared currency.
 - Expressions MUST type-check to the required slot type.
+
+### 5.7 Domains (normative)
+
+A type may carry a domain — the range it admits by definition, not by any
+deal's judgment:
+
+| type | domain |
+|---|---|
+| `Fraction` | 0 to 1, inclusive |
+| `Duration` | a whole number, 0 or more |
+| `Int` | a whole number |
+| `Rate`, `Decimal`, `Money` | none |
+
+A value in a typed slot outside its domain is refused wherever the value
+arrives: a literal at compile time (`E2307`), an input or `cfg.` value at run
+start, a Monte Carlo draw per trial (`E5041`). Refused, never adjusted — a
+value pulled into range would be a number the model did not state. A
+modeler's own range on top of the domain is `within` (§12.1). A pack field's
+unit names one of these types where one applies (`docs/07` §6.1), so the
+domain check reaches every contract term without the pack declaring a bound.
 
 ---
 
@@ -530,7 +552,9 @@ Rules:
 A term's value is one of:
 
 - a **literal** — a number, string, date, or `true`/`false`;
-- a **reference to one declared input**, written `inputs.<name>`;
+- a **reference to one declared input**, written `inputs.<name>`, or to
+  a **run-configuration value**, written `cfg.<path>` — both deferred to the
+  run, which supplies the value;
 - a **reference to a declared contract or account**, by name, where the
   type's field is of type `contract` or `account` (a guarantee's `covered`,
   a note's `principal_account`; `docs/40` §4.13, §4.17) — a name nothing
@@ -590,9 +614,12 @@ Bounds are checked where the value is knowable. A literal term is checked
 against the pack's declared bounds at compile time. A term referencing an
 input is checked against that input's `clip`
 (`E5011_TERM_CLIP_OUT_OF_BOUNDS`), and referencing an undeclared input is an
-error (`E5010_TERM_UNKNOWN_INPUT`). An expression term's value is not knowable
-until the run, so pack bounds do not apply to it at compile time — the same
-tier as an input reference.
+error (`E5010_TERM_UNKNOWN_INPUT`). A term deferred to `inputs.` or `cfg.`
+carries the pack's bound into the IR, and the engine checks the value the run
+supplies — an override, a scenario value, a draw — at run start
+(`E5041_INPUT_OUT_OF_BOUNDS`), under the pack validation's own code. An
+expression term's value is computed per period and is not checked against
+the pack's bound.
 
 Pack interaction:
 - A pack MAY provide a schema for `<TypeId>` and validate `terms`.
@@ -1049,11 +1076,28 @@ carves itself out of the grid.
 ### 12.1 Deterministic assumption
 ```cfdl
 assume base_rent = 4000
+assume renewal : fraction = 0.85
+assume cap_rate : rate = 0.065 within [0.04, 0.10]
 ```
 
 A deterministic assumption is a named value the model owns. Terms and
 expressions read it as `inputs.<name>`, and a scenario overrides it by the same
 name, which makes `assume` the model's single channel for variation.
+
+**Type.** `assume <name> : <type> = …` declares the value's type — `fraction`,
+`rate`, `decimal`, `int` or `duration` (§5). The type gives the value its
+domain (§5.7): a `fraction` is 0 to 1, a `duration` is whole and non-negative.
+Untyped, an assumption is a `Decimal`. A type the language does not have is
+`E2305_ASSUME_UNKNOWN_TYPE`.
+
+**The modeler's own bound.** `within [lo, hi]` states the range this deal
+admits, on top of the type's domain, and is CHECKED — never clamped — wherever
+the value arrives: a literal here (`E2307_ASSUME_OUT_OF_BOUNDS`), an override,
+a scenario value or a draw at run start (`E5041_INPUT_OUT_OF_BOUNDS`). A bound
+that is inverted or reaches outside the type's domain is
+`E2306_ASSUME_INVALID_WITHIN`. `within` is a contextual word, an ordinary
+identifier elsewhere. A pack's bound on a term states what the term is; a
+model's `within` states what the deal is — the two are checked together.
 
 Discounting is not an assumption. The valuation rate belongs to the run, so one
 set of cash flows can be valued at several rates without editing the model. It
@@ -1074,7 +1118,13 @@ present value is zero and is unaffected. The run publishes
 ### 12.2 Stochastic assumption (distribution)
 ```cfdl
 assume rent_growth ~ Normal(mean=0.03, stdev=0.01, clip=[-0.02, 0.08])
+assume occupancy : fraction ~ Normal(mean=0.92, stdev=0.03, clip=[0.7, 1.0]) within [0.5, 1.0]
 ```
+
+A distribution takes the same `: <type>` and `within` as a constant. `clip`
+truncates the draws and is unchanged; `within` refuses a draw outside it,
+and a clip that can produce a value outside the type's domain or the `within`
+is refused at compile time (`E2306`), since the draws would break the bound.
 
 Supported distributions (v0.1 core):
 - `Normal(mean, stdev, clip?)`
@@ -3601,7 +3651,17 @@ against it by `make ir-schema`.
           "$ref": "#/$defs/Expr"
         },
         "type": {
-          "$ref": "#/$defs/ValueTypeId"
+          "$ref": "#/$defs/ValueTypeId",
+          "description": "The language type (docs/01 §5.7). `Fraction` is 0 to 1 by definition and `Duration` is whole and non-negative; `Rate`, `Decimal` and `Int` carry no domain beyond integrality. The domain is checked wherever the value arrives."
+        },
+        "within": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          },
+          "minItems": 2,
+          "maxItems": 2,
+          "description": "The modeler's own bound, `within [lo, hi]` (docs/01 §12.1): checked wherever the value arrives — a literal at compile time, an override, a scenario value or a draw at run start — and refused when outside, never clamped. `clip` on a distribution truncates draws; this refuses a value."
         }
       }
     },
@@ -3622,6 +3682,15 @@ against it by `make ir-schema`.
         },
         "type": {
           "$ref": "#/$defs/ValueTypeId"
+        },
+        "within": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          },
+          "minItems": 2,
+          "maxItems": 2,
+          "description": "The modeler's own bound, `within [lo, hi]` (docs/01 §12.1): checked wherever the value arrives — a literal at compile time, an override, a scenario value or a draw at run start — and refused when outside, never clamped. `clip` on a distribution truncates draws; this refuses a value."
         }
       }
     },
@@ -3634,7 +3703,9 @@ against it by `make ir-schema`.
         "Decimal",
         "Date",
         "Money",
-        "Rate"
+        "Rate",
+        "Fraction",
+        "Duration"
       ]
     },
     "Distribution": {
@@ -3761,6 +3832,13 @@ against it by `make ir-schema`.
         },
         "provenance": {
           "$ref": "#/$defs/NodeProvenance"
+        },
+        "term_bounds": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/$defs/TermBound"
+          },
+          "description": "Bounds on the terms this contract defers to the run, keyed by term name; absent when it defers no bounded term."
         }
       }
     },
@@ -5059,6 +5137,45 @@ against it by `make ir-schema`.
         "display": {
           "type": "string",
           "description": "How to RENDER the sign. Never changes what is summed: values carries the signed amount, so a consumer ignoring this still adds up."
+        }
+      }
+    },
+    "TermBound": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "reads",
+        "code"
+      ],
+      "description": "The bound a DEFERRED contract term must meet when the run supplies its value (docs/13 §7.56). A literal is checked at compile time against the pack's validations; a term reading `inputs.` or `cfg.` cannot be, so the bound travels here under the validation's own code and the engine checks the value at run start (E5041).",
+      "properties": {
+        "reads": {
+          "type": "string",
+          "description": "`inputs.<name>` or `cfg.<path>` — the channel the term reads."
+        },
+        "min": {
+          "type": "number"
+        },
+        "max": {
+          "type": "number"
+        },
+        "exclusive_min": {
+          "type": "number"
+        },
+        "exclusive_max": {
+          "type": "number"
+        },
+        "code": {
+          "type": "string",
+          "description": "The pack validation's code, cited by the run-time refusal."
+        },
+        "severity": {
+          "type": "string",
+          "enum": [
+            "error",
+            "warning",
+            "info"
+          ]
         }
       }
     }
@@ -8144,6 +8261,7 @@ Warnings:
 - `E5037_SERIES_READ_IN_LOGIC` — the engine's own check for `E1134`, for IR the compiler never saw.
 - `E5038_ACCOUNTS_NEED_THE_WALK` — a stream moves or reads an account while a forward-reaching read keeps the model on the column order, where no balance is carried.
 - `E5039_UNKNOWN_ACTION_KIND` — an event's or option's action names a kind the engine does not execute. Only hand-written IR can carry one; the run is refused rather than reported as ok with the action journaled as ignored, which is what it did before results 0.14.
+- `E5041_INPUT_OUT_OF_BOUNDS` — a value the run supplied — an override, a scenario value, a Monte Carlo draw, a `cfg.` path — is outside the domain of the assumption's type (`docs/01` §5.7), outside the `within` the model states, or outside the bound the pack states on the contract term that reads it (carried in the IR as `term_bounds`, and cited under the pack validation's own code). Refused, never adjusted: state a value inside the bound, keep a distribution's `clip` inside it, or widen the bound where the deal genuinely differs. The compile-time counterpart on a literal is `E2307`.
 - `E5040_CURVE_READ_OUTSIDE_RANGE` — a stream, guard, account inflow or option payoff read a curve at a date outside the effective dates the curve declares (`from`/`to` on its header). Outside them the curve has no value — not its end value held flat, which is what an undeclared end means — so the run is refused, naming the curve, the first offending date and the reader. End the reader's schedule where the curve ends, or extend the curve's dates. A field's rule that makes the same read refuses under `E5032`.
 - `E5003_IR_EMIT_FAILED` — the IR could not be written.
 - `E5004_INVALID_LOWERING_RULE` — a pack's lowering rule is malformed.
@@ -8314,6 +8432,17 @@ see what is wrong with it.
 - `E2303_ASSUME_MISSING_PARAM` — a distribution is missing a parameter it
   requires.
 - `E2304_ASSUME_INVALID_CLIP` — a `clip=[lo, hi]` is malformed or inverted.
+- `E2305_ASSUME_UNKNOWN_TYPE` — `assume <name> : <type>` names a type the
+  language does not have. A type is `fraction`, `rate`, `decimal`, `int` or
+  `duration` (`docs/01` §5).
+- `E2306_ASSUME_INVALID_WITHIN` — a `within [lo, hi]` is malformed, inverted,
+  or reaches outside the domain of the assumption's type; or a distribution's
+  `clip` can produce a value outside the type's domain or the `within`, so
+  the draws would break the bound.
+- `E2307_ASSUME_OUT_OF_BOUNDS` — a literal assumption is outside the domain of
+  its type (a `fraction` above 1, a `duration` that is not whole) or outside
+  the `within` the model states. A value the run supplies is checked the same
+  way at run start (`E5041`).
 - `E2401_OPTION_MISSING_EXERCISE` — an option declares no `exercise when`, so
   nothing can ever trigger it.
 - `E2402_OPTION_MISSING_PAYOFF` — an option declares no `payoff`, so exercising

@@ -1,0 +1,36 @@
+[
+  {
+    "code": "E2306_ASSUME_INVALID_WITHIN",
+    "severity": "error",
+    "message": "Assumption 'share' states within [0, 1.5], which reaches outside the domain of a fraction: 0 to 1.",
+    "file": "model.cfdl",
+    "span": {
+      "start_line": 8,
+      "start_col": 1,
+      "end_line": 8,
+      "end_col": 47
+    },
+    "path": null,
+    "hint": null,
+    "notes": [
+      "assumption 'share'"
+    ]
+  },
+  {
+    "code": "E2306_ASSUME_INVALID_WITHIN",
+    "severity": "error",
+    "message": "Assumption 'other' states within [2, 1], which is malformed or inverted.",
+    "file": "model.cfdl",
+    "span": {
+      "start_line": 9,
+      "start_col": 1,
+      "end_line": 9,
+      "end_col": 30
+    },
+    "path": null,
+    "hint": null,
+    "notes": [
+      "assumption 'other'"
+    ]
+  }
+]

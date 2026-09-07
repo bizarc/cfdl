@@ -142,6 +142,152 @@ pub(crate) fn warn_curve_reads_past_end(
 /// same way a distribution with zero variance. This is the unresolved-name
 /// rule one layer out: the run knows every source, so it refuses, naming the
 /// block the key sits in and the nearest name it could have meant.
+/// A VALUE THE RUN SUPPLIED IS CHECKED WHERE IT ARRIVES (`docs/13` §7.56).
+///
+/// The compiler checks what the text carries: a literal assumption against
+/// its type's domain and its `within`, a literal term against the pack's
+/// validations. What the text does not carry — an override, a scenario
+/// value, a Monte Carlo draw, a `cfg.` path — it cannot check, and until this
+/// the pack's bound meant less than it appeared to: a scenario could set
+/// `psa_speed` to 50 against a stated 0 to 10 and the run reported ok.
+///
+/// So the same three bounds are applied here to the resolved values:
+/// - each assumption's TYPE domain (`Fraction` is 0 to 1, `Duration` is
+///   whole and non-negative), and its `within [lo, hi]`;
+/// - each deferred contract term's pack bound, carried in the IR as
+///   `term_bounds` with the validation's own code.
+///
+/// Refused, never adjusted. A Monte Carlo trial that draws outside a bound
+/// refuses the way any run failure does; a distribution's `clip` is the
+/// tool for keeping draws inside one, and the compiler already refuses a
+/// clip that reaches past the bound.
+pub(crate) fn refuse_out_of_bounds_inputs(
+    ir: &Ir,
+    config: &RunConfig,
+    base_inputs: &BTreeMap<String, f64>,
+) -> Result<(), EngineError> {
+    // The resolved input map: the model's own values, then the run's.
+    let mut inputs: BTreeMap<&str, f64> =
+        base_inputs.iter().map(|(k, v)| (k.as_str(), *v)).collect();
+    for (key, value) in &config.parameter_overrides {
+        if let Some(name) = key.strip_prefix("inputs.") {
+            inputs.insert(name, *value);
+        }
+    }
+    let mut failures: Vec<String> = Vec::new();
+
+    let mut check_assumption = |name: &str, type_id: Option<&str>, within: Option<[f64; 2]>| {
+        let Some(value) = inputs.get(name).copied() else {
+            return;
+        };
+        let type_id = type_id.unwrap_or("Decimal");
+        if let Some(reason) = type_violation(value, type_id, within) {
+            let supplied = if config
+                .parameter_overrides
+                .contains_key(&format!("inputs.{name}"))
+            {
+                "the run supplied"
+            } else {
+                "the model evaluated"
+            };
+            failures.push(format!(
+                "`inputs.{name}` is {value} ({supplied} it), {reason}"
+            ));
+        }
+    };
+    for (name, constant) in &ir.assumptions.constants {
+        check_assumption(name, constant.type_id.as_deref(), constant.within);
+    }
+    for (name, random) in &ir.assumptions.random {
+        check_assumption(name, random.type_id.as_deref(), random.within);
+    }
+
+    for contract in &ir.contracts {
+        for (term, bound) in &contract.term_bounds {
+            // The value the term reads, from whichever channel it names.
+            let value = if let Some(name) = bound.reads.strip_prefix("inputs.") {
+                inputs.get(name).copied()
+            } else if bound.reads.starts_with("cfg.") {
+                config.parameter_overrides.get(&bound.reads).copied()
+            } else {
+                None
+            };
+            let Some(value) = value else {
+                continue;
+            };
+            let below = bound.min.is_some_and(|lo| value < lo)
+                || bound.exclusive_min.is_some_and(|lo| value <= lo);
+            let above = bound.max.is_some_and(|hi| value > hi)
+                || bound.exclusive_max.is_some_and(|hi| value >= hi);
+            if below || above {
+                let lo = bound
+                    .min
+                    .map(|v| format!("{v} or more"))
+                    .or_else(|| bound.exclusive_min.map(|v| format!("more than {v}")));
+                let hi = bound
+                    .max
+                    .map(|v| format!("{v} or less"))
+                    .or_else(|| bound.exclusive_max.map(|v| format!("less than {v}")));
+                let range = match (lo, hi) {
+                    (Some(lo), Some(hi)) => format!("{lo} and {hi}"),
+                    (Some(lo), None) => lo,
+                    (None, Some(hi)) => hi,
+                    (None, None) => "in range".to_string(),
+                };
+                failures.push(format!(
+                    "contract `{}` term `{term}` reads `{}` = {value}, and the pack requires {range} ({})",
+                    contract.name, bound.reads, bound.code
+                ));
+            }
+        }
+    }
+
+    if failures.is_empty() {
+        Ok(())
+    } else {
+        Err(EngineError::InputOutOfBounds(format!(
+            "{} — a value outside its bound is refused, never adjusted; state one inside it, or widen the bound where the deal genuinely differs",
+            failures.join("; ")
+        )))
+    }
+}
+
+/// Why `value` cannot be an input of this type under this bound, or `None`.
+/// The same rule the compiler applies to a literal (`bound_violation` there);
+/// stated twice because the crates share no code, and kept identical.
+fn type_violation(value: f64, type_id: &str, within: Option<[f64; 2]>) -> Option<String> {
+    if matches!(type_id, "Int" | "Duration") && value.fract() != 0.0 {
+        return Some(format!(
+            "not a whole number as a {} must be",
+            type_id.to_lowercase()
+        ));
+    }
+    let domain = match type_id {
+        "Fraction" => Some((0.0, 1.0)),
+        "Duration" => Some((0.0, f64::INFINITY)),
+        _ => None,
+    };
+    if let Some((lo, hi)) = domain {
+        if value < lo || value > hi {
+            let range = if hi.is_infinite() {
+                format!("{lo} or more")
+            } else {
+                format!("{lo} to {hi}")
+            };
+            return Some(format!(
+                "outside the domain of a {} ({range})",
+                type_id.to_lowercase()
+            ));
+        }
+    }
+    if let Some([lo, hi]) = within {
+        if value < lo || value > hi {
+            return Some(format!("outside the within [{lo}, {hi}] the model states"));
+        }
+    }
+    None
+}
+
 pub(crate) fn refuse_unresolved_overrides(ir: &Ir, config: &RunConfig) -> Result<(), EngineError> {
     // What resolves. An assumption is declared by `assume`, or read as
     // `inputs.<name>` somewhere in the model — an input may be supplied
