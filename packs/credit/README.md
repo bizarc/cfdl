@@ -162,8 +162,8 @@ Terms:
 | `rate_cap` | coupon cap | `1` |
 | `cpr` | annual conditional prepayment rate | `0` |
 | `cdr` | annual conditional default rate | `0` |
-| `psa_speed` | multiple of the standard prepayment curve — `1.5` is 150% PSA | `0` |
-| `sda_speed` | multiple of the standard default assumption — `1.0` is 100% SDA | `0` |
+| `psa_speed` | multiple of the standard prepayment curve — `1.5` is 150% PSA; above 10 warns (`W9001`) | `0` |
+| `sda_speed` | multiple of the standard default assumption — `1.0` is 100% SDA; above 10 warns (`W9002`) | `0` |
 | `abs_speed` | Absolute Prepayment Model speed, already monthly | `0` |
 | `age_months` | age at the model's start, in months | `0` |
 | `severity` | loss severity on defaulted balance | `0` |

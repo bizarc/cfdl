@@ -421,6 +421,10 @@ struct Ir {
     required_observables: Vec<String>,
     required_refs: Vec<String>,
     provenance: IrProvenance,
+    /// Warnings a successful compile raised (`docs/08` §3.2): a pack
+    /// convention questioned, never an error. Omitted when there are none.
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    warnings: Vec<Diagnostic>,
 }
 
 /// A declared metric: a name and the expression that produces it.
@@ -5431,6 +5435,23 @@ fn build_ir(
         sort_compile_diagnostics(&mut diagnostics);
         return Err(diagnostics);
     }
+    // A SUCCESSFUL COMPILE KEEPS ITS WARNINGS. Before this they were dropped
+    // here — a warning-severity pack validation, or any other lowering
+    // warning, fired into a vector nobody read, so a convention the pack
+    // meant to question was silent. They ride in the IR (`warnings`), the
+    // CLI prints them, the MCP `compile` returns them beside `ok: true`, and
+    // the engine republishes them in `deterministic.warnings`, where the
+    // benchmark harness treats a warned run as suspect.
+    let compile_warnings: Vec<Diagnostic> = {
+        let mut warnings: Vec<Diagnostic> = lowered
+            .diagnostics
+            .iter()
+            .filter(|diag| diag.severity != "error")
+            .cloned()
+            .collect();
+        sort_compile_diagnostics(&mut warnings);
+        warnings
+    };
     {
         // Two lowered streams with one name would silently merge in results
         // reporting; make it a hard error instead.
@@ -6155,6 +6176,7 @@ fn build_ir(
     };
 
     let mut ir = Ir {
+        warnings: compile_warnings,
         ir_version: "0.1".to_string(),
         model: IrModel {
             name: model_name,

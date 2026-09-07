@@ -230,11 +230,11 @@ pub fn compare_evaluation_orders(
     if walk_ineligible_reason(&ir, &deps).is_some() {
         return Ok(None);
     }
-    let mut warnings = Vec::new();
+    let mut warnings = compile_warnings(&ir);
     let prep = prepare_model(&ir, &mut warnings)?;
     let timeline = prep.timeline.clone();
     let base_inputs = assumption_inputs(&ir, &mut warnings)?;
-    refuse_out_of_bounds_inputs(&ir, &config, &base_inputs)?;
+    refuse_out_of_bounds_inputs(&ir, &config, &base_inputs, &mut warnings)?;
 
     // The column order: all state first, then each stream over the whole
     // timeline, in dependency waves.
@@ -297,6 +297,17 @@ pub fn walk_eligibility(raw_ir: &str) -> Result<Option<String>, EngineError> {
     Ok(walk_ineligible_reason(&ir, &deps))
 }
 
+/// The compile's kept warnings, as the run publishes them: `CODE: message`,
+/// the same shape the engine's own warnings take. First in the list, so a
+/// run that started from a questioned model says so before anything it
+/// computed.
+fn compile_warnings(ir: &Ir) -> Vec<String> {
+    ir.warnings
+        .iter()
+        .map(|w| format!("{}: {}", w.code, w.message))
+        .collect()
+}
+
 fn run_deterministic(
     ir: &Ir,
     config: &RunConfig,
@@ -306,12 +317,12 @@ fn run_deterministic(
     // preparation, which happens once per model rather than once per run.
     let timeline = prep.timeline.clone();
 
-    let mut warnings = Vec::new();
+    let mut warnings = compile_warnings(ir);
     let base_inputs = assumption_inputs(ir, &mut warnings)?;
     // EVERY VALUE THE RUN SUPPLIED IS CHECKED HERE, once, before anything
     // reads it: the type's domain and the model's `within` on each
     // assumption, and the pack's bound on each term that defers to the run.
-    refuse_out_of_bounds_inputs(ir, config, &base_inputs)?;
+    refuse_out_of_bounds_inputs(ir, config, &base_inputs, &mut warnings)?;
     // States are recurrences: every period is computed from the completed
     // previous one, so the whole column exists before anything reads it.
     //
@@ -1072,7 +1083,8 @@ mod tests {
                 "constants": {
                     "share": { "expr": { "lang": "cfdl", "src": "0.9" }, "type": "Fraction" },
                     "cap_rate": { "expr": { "lang": "cfdl", "src": "0.065" }, "type": "Rate", "within": [0.04, 0.10] },
-                    "speed": { "expr": { "lang": "cfdl", "src": "1.5" } }
+                    "speed": { "expr": { "lang": "cfdl", "src": "1.5" } },
+                    "sda": { "expr": { "lang": "cfdl", "src": "1.0" } }
                 },
                 "random": {
                     "growth": { "dist": { "kind": "Normal", "params": { "mean": 0.03, "stdev": 0.01 } }, "type": "Rate", "within": [-0.05, 0.10] }
@@ -1085,7 +1097,8 @@ mod tests {
                     "subject": { "symbol": "asset.a" },
                     "term_bounds": {
                         "psa_speed": { "reads": "inputs.speed", "min": 0.0, "max": 10.0, "code": "E9016_CREDIT_INVALID_PSA_SPEED" },
-                        "abs_speed": { "reads": "cfg.abs", "min": 0.0, "max": 1.0, "code": "E9018_CREDIT_INVALID_ABS_SPEED" }
+                        "abs_speed": { "reads": "cfg.abs", "min": 0.0, "max": 1.0, "code": "E9018_CREDIT_INVALID_ABS_SPEED" },
+                        "sda_speed": { "reads": "inputs.sda", "max": 10.0, "code": "W9002_CREDIT_SDA_SPEED_ABOVE_TEN", "severity": "warning" }
                     }
                 }
             ],
@@ -1095,7 +1108,7 @@ mod tests {
                     "owner": { "symbol": "asset.a" },
                     "direction": "inflow",
                     "schedule": { "kind": "Every", "every": "monthly", "from": "2026-01-01", "to": "2026-02-01" },
-                    "amount": { "lang": "cfdl", "src": "100.0 * inputs.share * inputs.cap_rate * inputs.speed * inputs.growth * cfg.abs" },
+                    "amount": { "lang": "cfdl", "src": "100.0 * inputs.share * inputs.cap_rate * inputs.speed * inputs.growth * cfg.abs * inputs.sda" },
                     "active_when": { "lang": "cfdl", "src": "true" }
                 }
             ]
@@ -1147,6 +1160,19 @@ mod tests {
         // A random assumption's central value is checked like any other.
         let err = run(&[("inputs.growth", 0.5)]).expect_err("growth past its within");
         assert!(err.to_string().contains("`inputs.growth` is 0.5"), "{err}");
+        // A CONVENTION questions rather than refuses: a value past a
+        // warning-severity bound runs, and the run says so.
+        let results = run(&[("inputs.sda", 12.0)]).expect("a convention does not refuse");
+        assert!(
+            results
+                .warnings
+                .iter()
+                .any(|w| w.starts_with("W9002_CREDIT_SDA_SPEED_ABOVE_TEN:") && w.contains("= 12")),
+            "{:?}",
+            results.warnings
+        );
+        let results = run(&[]).expect("inside");
+        assert!(results.warnings.iter().all(|w| !w.contains("W9002")));
     }
 
     /// AN OVERRIDE THAT MATCHES NOTHING IS REFUSED (`docs/13` §7.51, §7.116):

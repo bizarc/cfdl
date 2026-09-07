@@ -3680,9 +3680,17 @@ fn parse_validations(raw: &str, source: &str) -> Result<Vec<PackValidation>, Pac
             return Err(fail("a validation is missing `code`.".to_string()));
         }
         if let Some(prefix) = &parsed.code_prefix {
-            if !validation.code.starts_with(prefix.as_str()) {
+            // A pack's prefix reserves a digit — `E9` — and a CONVENTION the
+            // pack warns about rather than refuses carries the same digit
+            // under `W` (`W9…`), so the register's E/W taxonomy holds for pack
+            // codes too and a warning is never spelled as an error.
+            let warning_prefix = prefix.replacen('E', "W", 1);
+            let ok = validation.code.starts_with(prefix.as_str())
+                || (validation.severity == ValidationSeverity::Warning
+                    && validation.code.starts_with(warning_prefix.as_str()));
+            if !ok {
                 return Err(fail(format!(
-                    "code '{}' does not start with the pack's reserved prefix '{prefix}'.",
+                    "code '{}' does not start with the pack's reserved prefix '{prefix}' (or '{warning_prefix}' for a warning).",
                     validation.code
                 )));
             }

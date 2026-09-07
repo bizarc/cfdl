@@ -290,6 +290,7 @@ description = "Base rent per year, spread by the calendar."
 [[contracts.fields]]
 name = "opex_year"
 field_type = "decimal"
+unit = "USD/yr"
 description = "Recoverable operating expenses per year — the base the expense stop is measured against."
 
 [[contracts.fields]]
@@ -301,11 +302,13 @@ description = "Annual growth of the recoverable opex base."
 [[contracts.fields]]
 name = "gross_up_factor"
 field_type = "decimal"
+unit = "x"
 description = "Factor recoverable opex is grossed up by before the stop is applied, so a part-vacant building recovers as if full."
 
 [[contracts.fields]]
 name = "expense_stop_year"
 field_type = "decimal"
+unit = "USD/yr"
 description = "Expense stop per year: the tenant reimburses recoverable opex above it, times its pro rata share."
 
 [[contracts.fields]]
@@ -317,11 +320,13 @@ description = "The tenant's share of recoverable opex above the stop, 0 to 1; 0 
 [[contracts.fields]]
 name = "ti_total"
 field_type = "decimal"
+unit = "USD"
 description = "Tenant improvement allowance, paid at term start."
 
 [[contracts.fields]]
 name = "lc_total"
 field_type = "decimal"
+unit = "USD"
 description = "Leasing commissions, paid at term start."
 
 [[contracts.lines]]
@@ -380,11 +385,13 @@ description = "Annual growth of market rent."
 [[contracts.fields]]
 name = "renewal_ti_lc"
 field_type = "decimal"
+unit = "USD"
 description = "Tenant improvements and leasing commissions on renewal."
 
 [[contracts.fields]]
 name = "new_ti_lc"
 field_type = "decimal"
+unit = "USD"
 description = "Tenant improvements and leasing commissions on a new lease."
 
 [[contracts.roles]]
@@ -530,6 +537,7 @@ parties = ["borrower", "lender"]
 [[contracts.fields]]
 name = "principal"
 field_type = "decimal"
+unit = "USD"
 required = true
 one_of = "amount"
 description = "The loan amount."
@@ -575,6 +583,7 @@ description = "Annual premium as a rate on `coverage` — HUD's 0.45% of the ori
 [[contracts.fields]]
 name = "coverage"
 field_type = "decimal"
+unit = "USD"
 required = true
 description = "The insured principal the rate applies to — the loan's original amount, flat, where the premium is struck on it."
 
@@ -589,6 +598,7 @@ parties = ["owner"]
 [[contracts.fields]]
 name = "amount"
 field_type = "decimal"
+unit = "USD"
 required = true
 one_of = "amount"
 description = "Construction spend per period."
@@ -621,6 +631,7 @@ description = "Nominal annual rate on the drawn balance."
 [[contracts.fields]]
 name = "equity_commitment"
 field_type = "decimal"
+unit = "USD"
 required = true
 description = "Equity funds the draws up to this amount; the facility funds the rest."
 

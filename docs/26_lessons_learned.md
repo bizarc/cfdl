@@ -376,6 +376,33 @@ stated on the calendar its instruments carry. The refusal was right; the
 calendar was wrong. A source's grain is a view of the results, never a
 reason for the calendar.
 
+### A bound the run can break is checked at the run; the vocabulary stays small
+
+**Claimed:** to make pack bounds systematic, every pack field should name a
+language type, the loader should derive each field's domain from it, refuse
+a validation that restates a domain, and carry a "positive money" attribute
+— so that definitional bounds and deal conventions are told apart by
+machinery rather than by a reader, and nothing is ever audited again.
+
+**Actually:** the classification that machinery would automate was a
+54-line list read once, and the mechanism it needed already existed: a pack
+validation carries a `severity`, so a convention warns by one word (a `W`
+code under the pack's digit). What the run could break silently — an
+override, a scenario value, a draw, a `cfg.` path past a pack's bound — is
+now checked at run start (`E5041`) from bounds the packs already state,
+carried in the IR under the validation's own code. The modeler-facing
+additions are opt-in and read like English: `assume renewal : fraction`,
+`within [0.04, 0.10]`. A modeler who writes neither loses nothing, and a
+ten-minute model is the same ten-minute model.
+
+**The general shape.** Keep the language surface as small as it needs to be
+to be effective, and count pack-authoring vocabulary as surface too. Before
+a new type, keyword, attribute or loader rule, ask whether an existing
+mechanism covers it and whether the work it automates is actually large.
+Modeler-facing additions must be optional. When a plan grows a second half
+of machinery, bring the reduced version first (`docs/13` §7.56, 7 September
+2026).
+
 ## How to achieve a behavior
 
 ### A balance swept by the period's free cash flow

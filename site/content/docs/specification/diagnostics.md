@@ -95,6 +95,13 @@ A diagnostic SHOULD include:
 ### 3.2 warning
 - Indicates a potential issue, ambiguity, or best-practice violation.
 - Compilation MAY proceed.
+- A warning a successful compile raises is KEPT: it rides in the IR
+  (`warnings`), the CLI prints it, the MCP `compile` returns it beside
+  `ok: true`, and the engine republishes it in the results' `warnings`, so a
+  run that started from a questioned model says so. A pack states a
+  convention this way — `severity = "warning"` on a validation, under a `W`
+  code with the pack's digit — and a model that means the value allowlists
+  the warning.
 
 ### 3.3 info
 - Non-problem informational messages, e.g., pack hints.
@@ -643,8 +650,11 @@ CRE pack codes:
 - `E6056_CRE_DEBT_INVALID_BALLOON_FLAG` — `balloon_at_maturity` is 0 or 1
 - `E6057_CRE_CONSTRUCTION_INVALID_EQUITY_COMMITMENT` — zero or greater; zero is
   an all-debt build and legal, so the bound is not exclusive
-- `E6058_CRE_CONSTRUCTION_INVALID_RATE` — a nominal annual rate in [0, 1], which
-  catches 8 entered where 0.08 was meant
+- `E6058_CRE_CONSTRUCTION_INVALID_RATE` — a nominal annual rate, 0 or more
+  (0.08 for 8%), the floor every debt contract states.
+- `W6001_CRE_CONSTRUCTION_RATE_ABOVE_ONE` — the rate is above 1, which is
+  almost always 8 entered where 0.08 was meant. A convention: the run
+  proceeds, and a coupon above 100% that is meant allowlists the warning.
 - `E6059_CRE_CONSTRUCTION_INVALID_DRAW_ACCRUAL_FRACTION` — where in the period a
   draw lands, in [0, 1]; 0.5 is funding drawn ratably through it
 - `E6060_CRE_CONSTRUCTION_INVALID_TERM_RANGE` — the build must sit inside the
@@ -732,10 +742,16 @@ Credit pack codes:
 - `E9014_CREDIT_INVALID_SERVICING_FEE`
 - `E9015_CREDIT_INVALID_PREPAY_PENALTY`
 - `E9016_CREDIT_INVALID_PSA_SPEED` — `psa_speed` is a MULTIPLE of the standard
-  prepayment curve, so 1.5 means 150% PSA. Must be 0..10; 0 selects the flat
-  `cpr` path.
+  prepayment curve, so 1.5 means 150% PSA. Must be 0 or more; 0 selects the
+  flat `cpr` path.
+- `W9001_CREDIT_PSA_SPEED_ABOVE_TEN` — `psa_speed` is above 10 (1000% PSA),
+  the highest speed a published table prints. A convention, not a definition
+  (`docs/13` §7.56): the run proceeds, and a stress case that means it
+  allowlists the warning.
 - `E9017_CREDIT_INVALID_SDA_SPEED` — `sda_speed` is a multiple of the standard
-  default assumption. Must be 0..10; 0 selects the flat `cdr` path.
+  default assumption. Must be 0 or more; 0 selects the flat `cdr` path.
+- `W9002_CREDIT_SDA_SPEED_ABOVE_TEN` — `sda_speed` is above 10 (1000% SDA);
+  the same convention as `W9001`.
 - `E9018_CREDIT_INVALID_ABS_SPEED` — `abs_speed` is the Absolute Prepayment
   Model speed: the fraction of ORIGINAL balance prepaying each month. Already
   monthly, so unlike `cpr`/`cdr` it is not converted. Must be 0..1.

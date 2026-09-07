@@ -1,0 +1,2387 @@
+{
+  "results_version": "0.14",
+  "model_hash": "9b9ff45f741d9e1bcf97bb8723d98555b945090038f35452eeee873e810996d5",
+  "ledger_hash": "af45546ed0228b34a497f91f5a3cf440846e4b18f9fc236627012c6a0e88bb7c",
+  "engine": {
+    "name": "cfdl-engine",
+    "version": "0.9.0"
+  },
+  "warnings": [
+    "W5024_CURVE_READ_PAST_END: stream 'credit.loan.interest.smoke' reads curve 'sofr' through 2027-03-01, past its last point at 2027-01-01; the curve holds its last value there. Right for a rate deck, wrong for a schedule — declare the curve's effective dates (`curve sofr to <date>`) to state where it stops.",
+    "W9001_CREDIT_PSA_SPEED_ABOVE_TEN: Credit 'psa_speed' is above 10 (1000% PSA), the highest speed a published table prints. State it if the stress is meant."
+  ],
+  "inputs": {
+    "streams": [
+      {
+        "contract": "credit.loan.smoke",
+        "defaults_applied": [
+          "age_months",
+          "payment_frequency",
+          "sda_speed"
+        ],
+        "stream": "credit.loan.interest.smoke",
+        "terms": {
+          "age_months": "0",
+          "cdr": "0.03",
+          "index_curve": "sofr",
+          "margin": "0.03",
+          "payment_frequency": "",
+          "rate_cap": "0.10",
+          "rate_floor": "0.0725",
+          "sda_speed": "0"
+        }
+      },
+      {
+        "contract": "credit.loan.smoke",
+        "defaults_applied": [
+          "age_months",
+          "payment_frequency",
+          "sda_speed"
+        ],
+        "stream": "credit.loan.bullet.smoke",
+        "terms": {
+          "age_months": "0",
+          "cdr": "0.03",
+          "payment_frequency": "",
+          "sda_speed": "0"
+        }
+      },
+      {
+        "contract": "credit.loan.smoke",
+        "defaults_applied": [
+          "age_months",
+          "payment_frequency",
+          "sda_speed"
+        ],
+        "stream": "credit.loan.defaults.smoke",
+        "terms": {
+          "age_months": "0",
+          "cdr": "0.03",
+          "payment_frequency": "",
+          "sda_speed": "0"
+        }
+      },
+      {
+        "contract": "credit.loan.smoke",
+        "defaults_applied": [
+          "abs_speed",
+          "age_months",
+          "cpr",
+          "payment_frequency",
+          "prepay_penalty_rate"
+        ],
+        "stream": "credit.loan.penalty.smoke",
+        "terms": {
+          "abs_speed": "0",
+          "age_months": "0",
+          "cpr": "0",
+          "payment_frequency": "",
+          "prepay_penalty_rate": "0",
+          "psa_speed": "12"
+        }
+      },
+      {
+        "contract": "credit.loan.smoke",
+        "defaults_applied": [
+          "abs_speed",
+          "age_months",
+          "cpr",
+          "payment_frequency"
+        ],
+        "stream": "credit.loan.prepay.smoke",
+        "terms": {
+          "abs_speed": "0",
+          "age_months": "0",
+          "cpr": "0",
+          "payment_frequency": "",
+          "psa_speed": "12"
+        }
+      },
+      {
+        "contract": "credit.loan.smoke",
+        "defaults_applied": [
+          "abs_speed",
+          "age_months",
+          "cpr",
+          "payment_frequency",
+          "sda_speed"
+        ],
+        "stream": "credit.loan.recoveries.smoke",
+        "terms": {
+          "abs_speed": "0",
+          "age_months": "0",
+          "cdr": "0.03",
+          "cpr": "0",
+          "payment_frequency": "",
+          "principal": "1200000",
+          "psa_speed": "12",
+          "sda_speed": "0",
+          "severity": "0.50"
+        }
+      },
+      {
+        "contract": "credit.loan.smoke",
+        "defaults_applied": [
+          "age_months",
+          "payment_frequency",
+          "sda_speed",
+          "servicing_fee"
+        ],
+        "stream": "credit.loan.servicing.smoke",
+        "terms": {
+          "age_months": "0",
+          "cdr": "0.03",
+          "payment_frequency": "",
+          "sda_speed": "0",
+          "servicing_fee": "0"
+        }
+      },
+      {
+        "contract": "credit.purchase.smoke",
+        "stream": "credit.purchase.price.smoke",
+        "terms": {
+          "price": "1200000"
+        }
+      }
+    ]
+  },
+  "deterministic": {
+    "status": "ok",
+    "metrics": {
+      "entity.asset.buyer.total": {
+        "amount": 67435.820194,
+        "currency": "USD"
+      },
+      "model.irr": 0.061399,
+      "model.moic": 1.056688,
+      "model.npv": {
+        "amount": -38614.023758,
+        "currency": "USD"
+      },
+      "model.payback_periods": 11.0,
+      "model.payback_years": 1.0,
+      "model.total": {
+        "amount": 67435.820194,
+        "currency": "USD"
+      },
+      "model.wal_years": 0.918717,
+      "run.annual_discount_rate": 0.1,
+      "run.periods_per_year": 12.0,
+      "stream.credit.loan.bullet.smoke.total": {
+        "amount": 1005345.61249,
+        "currency": "USD"
+      },
+      "stream.credit.loan.defaults.smoke.total": {
+        "amount": -34237.744092,
+        "currency": "USD"
+      },
+      "stream.credit.loan.interest.smoke.total": {
+        "amount": 84554.69224,
+        "currency": "USD"
+      },
+      "stream.credit.loan.penalty.smoke.total": {
+        "amount": 0.0,
+        "currency": "USD"
+      },
+      "stream.credit.loan.prepay.smoke.total": {
+        "amount": 160416.643418,
+        "currency": "USD"
+      },
+      "stream.credit.loan.recoveries.smoke.total": {
+        "amount": 17118.872046,
+        "currency": "USD"
+      },
+      "stream.credit.loan.servicing.smoke.total": {
+        "amount": 0.0,
+        "currency": "USD"
+      },
+      "stream.credit.purchase.price.smoke.total": {
+        "amount": -1200000.0,
+        "currency": "USD"
+      }
+    },
+    "series": {
+      "account.asset.buyer.balance": {
+        "index": {
+          "calendar": "monthly",
+          "start": "2026-01-01",
+          "periods": 15
+        },
+        "values": [
+          1194531.1296435434,
+          1186616.3510161447,
+          1176242.163618441,
+          1163409.040995476,
+          1148131.979897718,
+          1130440.9396835286,
+          1110381.1605244013,
+          1088013.3497343133,
+          1063413.726517166,
+          1036673.9166142902,
+          1007900.6897366081,
+          9.458744898438454e-11,
+          9.458744898438454e-11,
+          9.458744898438454e-11,
+          9.458744898438454e-11
+        ]
+      },
+      "asset.buyer.credit_loan_lagged_balance_smoke": {
+        "index": {
+          "calendar": "monthly",
+          "start": "2026-01-01",
+          "periods": 15
+        },
+        "values": [
+          1200000.0,
+          1200000.0,
+          1200000.0,
+          1200000.0,
+          1194531.1296435434,
+          1186616.3510161443,
+          1176242.1636184405,
+          1163409.040995476,
+          1148131.979897718,
+          1130440.9396835286,
+          1110381.1605244016,
+          1088013.3497343143,
+          1063413.7265171667,
+          1036673.9166142911,
+          1007900.6897366088
+        ]
+      },
+      "domain.credit.balance_outstanding": {
+        "index": {
+          "calendar": "monthly",
+          "start": "2026-01-01",
+          "periods": 15
+        },
+        "values": [
+          {
+            "amount": 1197573.18798,
+            "currency": "USD"
+          },
+          {
+            "amount": 1192686.603837,
+            "currency": "USD"
+          },
+          {
+            "amount": 1185320.546575,
+            "currency": "USD"
+          },
+          {
+            "amount": 1175469.255018,
+            "currency": "USD"
+          },
+          {
+            "amount": 1163141.492397,
+            "currency": "USD"
+          },
+          {
+            "amount": 1148361.022567,
+            "currency": "USD"
+          },
+          {
+            "amount": 1131166.966145,
+            "currency": "USD"
+          },
+          {
+            "amount": 1111614.025577,
+            "currency": "USD"
+          },
+          {
+            "amount": 1089772.569094,
+            "currency": "USD"
+          },
+          {
+            "amount": 1065728.564684,
+            "currency": "USD"
+          },
+          {
+            "amount": 1039583.356582,
+            "currency": "USD"
+          },
+          {
+            "amount": 34237.744092,
+            "currency": "USD"
+          },
+          {
+            "amount": 34237.744092,
+            "currency": "USD"
+          },
+          {
+            "amount": 34237.744092,
+            "currency": "USD"
+          },
+          {
+            "amount": 34237.744092,
+            "currency": "USD"
+          }
+        ]
+      },
+      "domain.credit.gross_collections": {
+        "index": {
+          "calendar": "monthly",
+          "start": "2026-01-01",
+          "periods": 15
+        },
+        "values": [
+          {
+            "amount": 10406.531631,
+            "currency": "USD"
+          },
+          {
+            "amount": 12728.740904,
+            "currency": "USD"
+          },
+          {
+            "amount": 15065.455762,
+            "currency": "USD"
+          },
+          {
+            "amount": 18904.759207,
+            "currency": "USD"
+          },
+          {
+            "amount": 21196.737135,
+            "currency": "USD"
+          },
+          {
+            "amount": 23445.567766,
+            "currency": "USD"
+          },
+          {
+            "amount": 25642.98633,
+            "currency": "USD"
+          },
+          {
+            "amount": 27768.066298,
+            "currency": "USD"
+          },
+          {
+            "amount": 29853.491739,
+            "currency": "USD"
+          },
+          {
+            "amount": 31885.369884,
+            "currency": "USD"
+          },
+          {
+            "amount": 33800.003846,
+            "currency": "USD"
+          },
+          {
+            "amount": 1012798.658933,
+            "currency": "USD"
+          },
+          {
+            "amount": 1347.902747,
+            "currency": "USD"
+          },
+          {
+            "amount": 1314.009388,
+            "currency": "USD"
+          },
+          {
+            "amount": 1277.538623,
+            "currency": "USD"
+          }
+        ]
+      },
+      "domain.credit.net_collections": {
+        "index": {
+          "calendar": "monthly",
+          "start": "2026-01-01",
+          "periods": 15
+        },
+        "values": [
+          {
+            "amount": 10406.531631,
+            "currency": "USD"
+          },
+          {
+            "amount": 12728.740904,
+            "currency": "USD"
+          },
+          {
+            "amount": 15065.455762,
+            "currency": "USD"
+          },
+          {
+            "amount": 18904.759207,
+            "currency": "USD"
+          },
+          {
+            "amount": 21196.737135,
+            "currency": "USD"
+          },
+          {
+            "amount": 23445.567766,
+            "currency": "USD"
+          },
+          {
+            "amount": 25642.98633,
+            "currency": "USD"
+          },
+          {
+            "amount": 27768.066298,
+            "currency": "USD"
+          },
+          {
+            "amount": 29853.491739,
+            "currency": "USD"
+          },
+          {
+            "amount": 31885.369884,
+            "currency": "USD"
+          },
+          {
+            "amount": 33800.003846,
+            "currency": "USD"
+          },
+          {
+            "amount": 1012798.658933,
+            "currency": "USD"
+          },
+          {
+            "amount": 1347.902747,
+            "currency": "USD"
+          },
+          {
+            "amount": 1314.009388,
+            "currency": "USD"
+          },
+          {
+            "amount": 1277.538623,
+            "currency": "USD"
+          }
+        ]
+      },
+      "domain.credit.original_balance": {
+        "index": {
+          "calendar": "monthly",
+          "start": "2026-01-01",
+          "periods": 15
+        },
+        "values": [
+          {
+            "amount": 1200000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 1200000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 1200000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 1200000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 1200000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 1200000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 1200000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 1200000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 1200000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 1200000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 1200000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 1200000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 1200000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 1200000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 1200000.0,
+            "currency": "USD"
+          }
+        ]
+      },
+      "domain.credit.pool_factor": {
+        "index": {
+          "calendar": "monthly",
+          "start": "2026-01-01",
+          "periods": 15
+        },
+        "values": [
+          0.997978,
+          0.993906,
+          0.987767,
+          0.979558,
+          0.969285,
+          0.956968,
+          0.942639,
+          0.926345,
+          0.908144,
+          0.888107,
+          0.866319,
+          0.028531,
+          0.028531,
+          0.028531,
+          0.028531
+        ]
+      },
+      "domain.credit.principal_collections": {
+        "index": {
+          "calendar": "monthly",
+          "start": "2026-01-01",
+          "periods": 15
+        },
+        "values": [
+          {
+            "amount": 2426.81202,
+            "currency": "USD"
+          },
+          {
+            "amount": 4886.584143,
+            "currency": "USD"
+          },
+          {
+            "amount": 7366.057262,
+            "currency": "USD"
+          },
+          {
+            "amount": 9851.291557,
+            "currency": "USD"
+          },
+          {
+            "amount": 12327.762621,
+            "currency": "USD"
+          },
+          {
+            "amount": 14780.46983,
+            "currency": "USD"
+          },
+          {
+            "amount": 17194.056422,
+            "currency": "USD"
+          },
+          {
+            "amount": 19552.940568,
+            "currency": "USD"
+          },
+          {
+            "amount": 21841.456483,
+            "currency": "USD"
+          },
+          {
+            "amount": 24044.00441,
+            "currency": "USD"
+          },
+          {
+            "amount": 26145.208102,
+            "currency": "USD"
+          },
+          {
+            "amount": 1005345.61249,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          }
+        ]
+      },
+      "domain.credit.principal_paid_negated": {
+        "index": {
+          "calendar": "monthly",
+          "start": "2026-01-01",
+          "periods": 15
+        },
+        "values": [
+          {
+            "amount": -2426.81202,
+            "currency": "USD"
+          },
+          {
+            "amount": -7313.396163,
+            "currency": "USD"
+          },
+          {
+            "amount": -14679.453425,
+            "currency": "USD"
+          },
+          {
+            "amount": -24530.744982,
+            "currency": "USD"
+          },
+          {
+            "amount": -36858.507603,
+            "currency": "USD"
+          },
+          {
+            "amount": -51638.977433,
+            "currency": "USD"
+          },
+          {
+            "amount": -68833.033855,
+            "currency": "USD"
+          },
+          {
+            "amount": -88385.974423,
+            "currency": "USD"
+          },
+          {
+            "amount": -110227.430906,
+            "currency": "USD"
+          },
+          {
+            "amount": -134271.435316,
+            "currency": "USD"
+          },
+          {
+            "amount": -160416.643418,
+            "currency": "USD"
+          },
+          {
+            "amount": -1165762.255908,
+            "currency": "USD"
+          },
+          {
+            "amount": -1165762.255908,
+            "currency": "USD"
+          },
+          {
+            "amount": -1165762.255908,
+            "currency": "USD"
+          },
+          {
+            "amount": -1165762.255908,
+            "currency": "USD"
+          }
+        ]
+      },
+      "domain.credit.principal_paid_to_date": {
+        "index": {
+          "calendar": "monthly",
+          "start": "2026-01-01",
+          "periods": 15
+        },
+        "values": [
+          {
+            "amount": 2426.81202,
+            "currency": "USD"
+          },
+          {
+            "amount": 7313.396163,
+            "currency": "USD"
+          },
+          {
+            "amount": 14679.453425,
+            "currency": "USD"
+          },
+          {
+            "amount": 24530.744982,
+            "currency": "USD"
+          },
+          {
+            "amount": 36858.507603,
+            "currency": "USD"
+          },
+          {
+            "amount": 51638.977433,
+            "currency": "USD"
+          },
+          {
+            "amount": 68833.033855,
+            "currency": "USD"
+          },
+          {
+            "amount": 88385.974423,
+            "currency": "USD"
+          },
+          {
+            "amount": 110227.430906,
+            "currency": "USD"
+          },
+          {
+            "amount": 134271.435316,
+            "currency": "USD"
+          },
+          {
+            "amount": 160416.643418,
+            "currency": "USD"
+          },
+          {
+            "amount": 1165762.255908,
+            "currency": "USD"
+          },
+          {
+            "amount": 1165762.255908,
+            "currency": "USD"
+          },
+          {
+            "amount": 1165762.255908,
+            "currency": "USD"
+          },
+          {
+            "amount": 1165762.255908,
+            "currency": "USD"
+          }
+        ]
+      },
+      "domain.credit.servicing_fee": {
+        "index": {
+          "calendar": "monthly",
+          "start": "2026-01-01",
+          "periods": 15
+        },
+        "values": [
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          }
+        ]
+      },
+      "domain.credit.total_investment_income": {
+        "index": {
+          "calendar": "monthly",
+          "start": "2026-01-01",
+          "periods": 15
+        },
+        "values": [
+          {
+            "amount": 7979.719611,
+            "currency": "USD"
+          },
+          {
+            "amount": 7842.156761,
+            "currency": "USD"
+          },
+          {
+            "amount": 7699.3985,
+            "currency": "USD"
+          },
+          {
+            "amount": 7532.438482,
+            "currency": "USD"
+          },
+          {
+            "amount": 7354.877272,
+            "currency": "USD"
+          },
+          {
+            "amount": 7161.032868,
+            "currency": "USD"
+          },
+          {
+            "amount": 6958.014375,
+            "currency": "USD"
+          },
+          {
+            "amount": 6740.476492,
+            "currency": "USD"
+          },
+          {
+            "amount": 6556.750064,
+            "currency": "USD"
+          },
+          {
+            "amount": 6408.504106,
+            "currency": "USD"
+          },
+          {
+            "amount": 6247.360633,
+            "currency": "USD"
+          },
+          {
+            "amount": 6073.963075,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          }
+        ]
+      },
+      "entity.asset.buyer.net_cash_flow": {
+        "index": {
+          "calendar": "monthly",
+          "start": "2026-01-01",
+          "periods": 15
+        },
+        "values": [
+          {
+            "amount": -1189593.468369,
+            "currency": "USD"
+          },
+          {
+            "amount": 12728.740904,
+            "currency": "USD"
+          },
+          {
+            "amount": 15065.455762,
+            "currency": "USD"
+          },
+          {
+            "amount": 18904.759207,
+            "currency": "USD"
+          },
+          {
+            "amount": 21196.737135,
+            "currency": "USD"
+          },
+          {
+            "amount": 23445.567766,
+            "currency": "USD"
+          },
+          {
+            "amount": 25642.98633,
+            "currency": "USD"
+          },
+          {
+            "amount": 27768.066298,
+            "currency": "USD"
+          },
+          {
+            "amount": 29853.491739,
+            "currency": "USD"
+          },
+          {
+            "amount": 31885.369884,
+            "currency": "USD"
+          },
+          {
+            "amount": 33800.003846,
+            "currency": "USD"
+          },
+          {
+            "amount": 1012798.658933,
+            "currency": "USD"
+          },
+          {
+            "amount": 1347.902747,
+            "currency": "USD"
+          },
+          {
+            "amount": 1314.009388,
+            "currency": "USD"
+          },
+          {
+            "amount": 1277.538623,
+            "currency": "USD"
+          }
+        ]
+      },
+      "model.net_cash_flow": {
+        "index": {
+          "calendar": "monthly",
+          "start": "2026-01-01",
+          "periods": 15
+        },
+        "values": [
+          {
+            "amount": -1189593.468369,
+            "currency": "USD"
+          },
+          {
+            "amount": 12728.740904,
+            "currency": "USD"
+          },
+          {
+            "amount": 15065.455762,
+            "currency": "USD"
+          },
+          {
+            "amount": 18904.759207,
+            "currency": "USD"
+          },
+          {
+            "amount": 21196.737135,
+            "currency": "USD"
+          },
+          {
+            "amount": 23445.567766,
+            "currency": "USD"
+          },
+          {
+            "amount": 25642.98633,
+            "currency": "USD"
+          },
+          {
+            "amount": 27768.066298,
+            "currency": "USD"
+          },
+          {
+            "amount": 29853.491739,
+            "currency": "USD"
+          },
+          {
+            "amount": 31885.369884,
+            "currency": "USD"
+          },
+          {
+            "amount": 33800.003846,
+            "currency": "USD"
+          },
+          {
+            "amount": 1012798.658933,
+            "currency": "USD"
+          },
+          {
+            "amount": 1347.902747,
+            "currency": "USD"
+          },
+          {
+            "amount": 1314.009388,
+            "currency": "USD"
+          },
+          {
+            "amount": 1277.538623,
+            "currency": "USD"
+          }
+        ]
+      },
+      "stream.credit.loan.bullet.smoke": {
+        "index": {
+          "calendar": "monthly",
+          "start": "2026-01-01",
+          "periods": 15
+        },
+        "offset": 1.0,
+        "entity": "asset.buyer",
+        "category": "operating.collection.principal",
+        "contract": "credit.loan.smoke",
+        "line": "principal",
+        "values": [
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 1005345.61249,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          }
+        ]
+      },
+      "stream.credit.loan.defaults.smoke": {
+        "index": {
+          "calendar": "monthly",
+          "start": "2026-01-01",
+          "periods": 15
+        },
+        "offset": 1.0,
+        "entity": "asset.buyer",
+        "contract": "credit.loan.smoke",
+        "line": "default",
+        "values": [
+          {
+            "amount": -3042.058337,
+            "currency": "USD"
+          },
+          {
+            "amount": -3028.194484,
+            "currency": "USD"
+          },
+          {
+            "amount": -3008.130136,
+            "currency": "USD"
+          },
+          {
+            "amount": -2981.831066,
+            "currency": "USD"
+          },
+          {
+            "amount": -2949.298477,
+            "currency": "USD"
+          },
+          {
+            "amount": -2910.570384,
+            "currency": "USD"
+          },
+          {
+            "amount": -2865.722737,
+            "currency": "USD"
+          },
+          {
+            "amount": -2814.870222,
+            "currency": "USD"
+          },
+          {
+            "amount": -2758.166734,
+            "currency": "USD"
+          },
+          {
+            "amount": -2695.805493,
+            "currency": "USD"
+          },
+          {
+            "amount": -2628.018775,
+            "currency": "USD"
+          },
+          {
+            "amount": -2555.077246,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          }
+        ]
+      },
+      "stream.credit.loan.interest.smoke": {
+        "index": {
+          "calendar": "monthly",
+          "start": "2026-01-01",
+          "periods": 15
+        },
+        "offset": 1.0,
+        "entity": "asset.buyer",
+        "category": "operating.collection.interest",
+        "contract": "credit.loan.smoke",
+        "line": "interest",
+        "values": [
+          {
+            "amount": 7979.719611,
+            "currency": "USD"
+          },
+          {
+            "amount": 7842.156761,
+            "currency": "USD"
+          },
+          {
+            "amount": 7699.3985,
+            "currency": "USD"
+          },
+          {
+            "amount": 7532.438482,
+            "currency": "USD"
+          },
+          {
+            "amount": 7354.877272,
+            "currency": "USD"
+          },
+          {
+            "amount": 7161.032868,
+            "currency": "USD"
+          },
+          {
+            "amount": 6958.014375,
+            "currency": "USD"
+          },
+          {
+            "amount": 6740.476492,
+            "currency": "USD"
+          },
+          {
+            "amount": 6556.750064,
+            "currency": "USD"
+          },
+          {
+            "amount": 6408.504106,
+            "currency": "USD"
+          },
+          {
+            "amount": 6247.360633,
+            "currency": "USD"
+          },
+          {
+            "amount": 6073.963075,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          }
+        ]
+      },
+      "stream.credit.loan.penalty.smoke": {
+        "index": {
+          "calendar": "monthly",
+          "start": "2026-01-01",
+          "periods": 15
+        },
+        "offset": 1.0,
+        "entity": "asset.buyer",
+        "category": "operating.collection.penalty",
+        "contract": "credit.loan.smoke",
+        "line": "penalty",
+        "values": [
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          }
+        ]
+      },
+      "stream.credit.loan.prepay.smoke": {
+        "index": {
+          "calendar": "monthly",
+          "start": "2026-01-01",
+          "periods": 15
+        },
+        "offset": 1.0,
+        "entity": "asset.buyer",
+        "category": "operating.collection.prepayment",
+        "contract": "credit.loan.smoke",
+        "line": "prepayment",
+        "values": [
+          {
+            "amount": 2426.81202,
+            "currency": "USD"
+          },
+          {
+            "amount": 4886.584143,
+            "currency": "USD"
+          },
+          {
+            "amount": 7366.057262,
+            "currency": "USD"
+          },
+          {
+            "amount": 9851.291557,
+            "currency": "USD"
+          },
+          {
+            "amount": 12327.762621,
+            "currency": "USD"
+          },
+          {
+            "amount": 14780.46983,
+            "currency": "USD"
+          },
+          {
+            "amount": 17194.056422,
+            "currency": "USD"
+          },
+          {
+            "amount": 19552.940568,
+            "currency": "USD"
+          },
+          {
+            "amount": 21841.456483,
+            "currency": "USD"
+          },
+          {
+            "amount": 24044.00441,
+            "currency": "USD"
+          },
+          {
+            "amount": 26145.208102,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          }
+        ]
+      },
+      "stream.credit.loan.recoveries.smoke": {
+        "index": {
+          "calendar": "monthly",
+          "start": "2026-01-01",
+          "periods": 15
+        },
+        "offset": 1.0,
+        "entity": "asset.buyer",
+        "category": "operating.collection.recovery",
+        "contract": "credit.loan.smoke",
+        "line": "recovery",
+        "values": [
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 1521.029168,
+            "currency": "USD"
+          },
+          {
+            "amount": 1514.097242,
+            "currency": "USD"
+          },
+          {
+            "amount": 1504.065068,
+            "currency": "USD"
+          },
+          {
+            "amount": 1490.915533,
+            "currency": "USD"
+          },
+          {
+            "amount": 1474.649238,
+            "currency": "USD"
+          },
+          {
+            "amount": 1455.285192,
+            "currency": "USD"
+          },
+          {
+            "amount": 1432.861369,
+            "currency": "USD"
+          },
+          {
+            "amount": 1407.435111,
+            "currency": "USD"
+          },
+          {
+            "amount": 1379.083367,
+            "currency": "USD"
+          },
+          {
+            "amount": 1347.902747,
+            "currency": "USD"
+          },
+          {
+            "amount": 1314.009388,
+            "currency": "USD"
+          },
+          {
+            "amount": 1277.538623,
+            "currency": "USD"
+          }
+        ]
+      },
+      "stream.credit.loan.servicing.smoke": {
+        "index": {
+          "calendar": "monthly",
+          "start": "2026-01-01",
+          "periods": 15
+        },
+        "offset": 1.0,
+        "entity": "asset.buyer",
+        "category": "operating.expense.servicing",
+        "contract": "credit.loan.smoke",
+        "line": "servicing",
+        "values": [
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          }
+        ]
+      },
+      "stream.credit.purchase.price.smoke": {
+        "index": {
+          "calendar": "monthly",
+          "start": "2026-01-01",
+          "periods": 15
+        },
+        "offset": 0.0,
+        "entity": "asset.buyer",
+        "category": "investing.acquisition.purchase",
+        "contract": "credit.purchase.smoke",
+        "line": "price",
+        "values": [
+          {
+            "amount": -1200000.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 0.0,
+            "currency": "USD"
+          }
+        ]
+      }
+    },
+    "journal": [
+      {
+        "period": 0,
+        "date": "2026-01-01",
+        "actor": "stream:credit.loan.defaults.smoke",
+        "action": "move",
+        "target": "asset.buyer.balance",
+        "outcome": "applied",
+        "amount": -3042.058337,
+        "pot_before": 1200000.0,
+        "pot_after": 1196957.941663
+      },
+      {
+        "period": 0,
+        "date": "2026-01-01",
+        "actor": "stream:credit.loan.prepay.smoke",
+        "action": "move",
+        "target": "asset.buyer.balance",
+        "outcome": "applied",
+        "amount": -2426.81202,
+        "pot_before": 1196957.941663,
+        "pot_after": 1194531.129644
+      },
+      {
+        "period": 1,
+        "date": "2026-02-01",
+        "actor": "stream:credit.loan.defaults.smoke",
+        "action": "move",
+        "target": "asset.buyer.balance",
+        "outcome": "applied",
+        "amount": -3028.194484,
+        "pot_before": 1194531.129644,
+        "pot_after": 1191502.935159
+      },
+      {
+        "period": 1,
+        "date": "2026-02-01",
+        "actor": "stream:credit.loan.prepay.smoke",
+        "action": "move",
+        "target": "asset.buyer.balance",
+        "outcome": "applied",
+        "amount": -4886.584143,
+        "pot_before": 1191502.935159,
+        "pot_after": 1186616.351016
+      },
+      {
+        "period": 2,
+        "date": "2026-03-01",
+        "actor": "stream:credit.loan.defaults.smoke",
+        "action": "move",
+        "target": "asset.buyer.balance",
+        "outcome": "applied",
+        "amount": -3008.130136,
+        "pot_before": 1186616.351016,
+        "pot_after": 1183608.22088
+      },
+      {
+        "period": 2,
+        "date": "2026-03-01",
+        "actor": "stream:credit.loan.prepay.smoke",
+        "action": "move",
+        "target": "asset.buyer.balance",
+        "outcome": "applied",
+        "amount": -7366.057262,
+        "pot_before": 1183608.22088,
+        "pot_after": 1176242.163618
+      },
+      {
+        "period": 3,
+        "date": "2026-04-01",
+        "actor": "stream:credit.loan.defaults.smoke",
+        "action": "move",
+        "target": "asset.buyer.balance",
+        "outcome": "applied",
+        "amount": -2981.831066,
+        "pot_before": 1176242.163618,
+        "pot_after": 1173260.332552
+      },
+      {
+        "period": 3,
+        "date": "2026-04-01",
+        "actor": "stream:credit.loan.prepay.smoke",
+        "action": "move",
+        "target": "asset.buyer.balance",
+        "outcome": "applied",
+        "amount": -9851.291557,
+        "pot_before": 1173260.332552,
+        "pot_after": 1163409.040995
+      },
+      {
+        "period": 4,
+        "date": "2026-05-01",
+        "actor": "stream:credit.loan.defaults.smoke",
+        "action": "move",
+        "target": "asset.buyer.balance",
+        "outcome": "applied",
+        "amount": -2949.298477,
+        "pot_before": 1163409.040995,
+        "pot_after": 1160459.742519
+      },
+      {
+        "period": 4,
+        "date": "2026-05-01",
+        "actor": "stream:credit.loan.prepay.smoke",
+        "action": "move",
+        "target": "asset.buyer.balance",
+        "outcome": "applied",
+        "amount": -12327.762621,
+        "pot_before": 1160459.742519,
+        "pot_after": 1148131.979898
+      },
+      {
+        "period": 5,
+        "date": "2026-06-01",
+        "actor": "stream:credit.loan.defaults.smoke",
+        "action": "move",
+        "target": "asset.buyer.balance",
+        "outcome": "applied",
+        "amount": -2910.570384,
+        "pot_before": 1148131.979898,
+        "pot_after": 1145221.409514
+      },
+      {
+        "period": 5,
+        "date": "2026-06-01",
+        "actor": "stream:credit.loan.prepay.smoke",
+        "action": "move",
+        "target": "asset.buyer.balance",
+        "outcome": "applied",
+        "amount": -14780.46983,
+        "pot_before": 1145221.409514,
+        "pot_after": 1130440.939684
+      },
+      {
+        "period": 6,
+        "date": "2026-07-01",
+        "actor": "stream:credit.loan.defaults.smoke",
+        "action": "move",
+        "target": "asset.buyer.balance",
+        "outcome": "applied",
+        "amount": -2865.722737,
+        "pot_before": 1130440.939684,
+        "pot_after": 1127575.216946
+      },
+      {
+        "period": 6,
+        "date": "2026-07-01",
+        "actor": "stream:credit.loan.prepay.smoke",
+        "action": "move",
+        "target": "asset.buyer.balance",
+        "outcome": "applied",
+        "amount": -17194.056422,
+        "pot_before": 1127575.216946,
+        "pot_after": 1110381.160524
+      },
+      {
+        "period": 7,
+        "date": "2026-08-01",
+        "actor": "stream:credit.loan.defaults.smoke",
+        "action": "move",
+        "target": "asset.buyer.balance",
+        "outcome": "applied",
+        "amount": -2814.870222,
+        "pot_before": 1110381.160524,
+        "pot_after": 1107566.290303
+      },
+      {
+        "period": 7,
+        "date": "2026-08-01",
+        "actor": "stream:credit.loan.prepay.smoke",
+        "action": "move",
+        "target": "asset.buyer.balance",
+        "outcome": "applied",
+        "amount": -19552.940568,
+        "pot_before": 1107566.290303,
+        "pot_after": 1088013.349734
+      },
+      {
+        "period": 8,
+        "date": "2026-09-01",
+        "actor": "stream:credit.loan.defaults.smoke",
+        "action": "move",
+        "target": "asset.buyer.balance",
+        "outcome": "applied",
+        "amount": -2758.166734,
+        "pot_before": 1088013.349734,
+        "pot_after": 1085255.183
+      },
+      {
+        "period": 8,
+        "date": "2026-09-01",
+        "actor": "stream:credit.loan.prepay.smoke",
+        "action": "move",
+        "target": "asset.buyer.balance",
+        "outcome": "applied",
+        "amount": -21841.456483,
+        "pot_before": 1085255.183,
+        "pot_after": 1063413.726517
+      },
+      {
+        "period": 9,
+        "date": "2026-10-01",
+        "actor": "stream:credit.loan.defaults.smoke",
+        "action": "move",
+        "target": "asset.buyer.balance",
+        "outcome": "applied",
+        "amount": -2695.805493,
+        "pot_before": 1063413.726517,
+        "pot_after": 1060717.921024
+      },
+      {
+        "period": 9,
+        "date": "2026-10-01",
+        "actor": "stream:credit.loan.prepay.smoke",
+        "action": "move",
+        "target": "asset.buyer.balance",
+        "outcome": "applied",
+        "amount": -24044.00441,
+        "pot_before": 1060717.921024,
+        "pot_after": 1036673.916614
+      },
+      {
+        "period": 10,
+        "date": "2026-11-01",
+        "actor": "stream:credit.loan.defaults.smoke",
+        "action": "move",
+        "target": "asset.buyer.balance",
+        "outcome": "applied",
+        "amount": -2628.018775,
+        "pot_before": 1036673.916614,
+        "pot_after": 1034045.897839
+      },
+      {
+        "period": 10,
+        "date": "2026-11-01",
+        "actor": "stream:credit.loan.prepay.smoke",
+        "action": "move",
+        "target": "asset.buyer.balance",
+        "outcome": "applied",
+        "amount": -26145.208102,
+        "pot_before": 1034045.897839,
+        "pot_after": 1007900.689737
+      },
+      {
+        "period": 11,
+        "date": "2026-12-01",
+        "actor": "stream:credit.loan.bullet.smoke",
+        "action": "move",
+        "target": "asset.buyer.balance",
+        "outcome": "applied",
+        "amount": -1005345.61249,
+        "pot_before": 1007900.689737,
+        "pot_after": 2555.077246
+      },
+      {
+        "period": 11,
+        "date": "2026-12-01",
+        "actor": "stream:credit.loan.defaults.smoke",
+        "action": "move",
+        "target": "asset.buyer.balance",
+        "outcome": "applied",
+        "amount": -2555.077246,
+        "pot_before": 2555.077246,
+        "pot_after": 0.0
+      }
+    ],
+    "annual_rollup": {
+      "series": {
+        "domain.credit.balance_outstanding": {
+          "index": {
+            "calendar": "annual",
+            "start": "2026-01-01",
+            "periods": 2
+          },
+          "values": [
+            {
+              "amount": 12534655.334548,
+              "currency": "USD"
+            },
+            {
+              "amount": 102713.232276,
+              "currency": "USD"
+            }
+          ]
+        },
+        "domain.credit.gross_collections": {
+          "index": {
+            "calendar": "annual",
+            "start": "2026-01-01",
+            "periods": 2
+          },
+          "values": [
+            {
+              "amount": 1263496.369435,
+              "currency": "USD"
+            },
+            {
+              "amount": 3939.450758,
+              "currency": "USD"
+            }
+          ]
+        },
+        "domain.credit.net_collections": {
+          "index": {
+            "calendar": "annual",
+            "start": "2026-01-01",
+            "periods": 2
+          },
+          "values": [
+            {
+              "amount": 1263496.369435,
+              "currency": "USD"
+            },
+            {
+              "amount": 3939.450758,
+              "currency": "USD"
+            }
+          ]
+        },
+        "domain.credit.original_balance": {
+          "index": {
+            "calendar": "annual",
+            "start": "2026-01-01",
+            "periods": 2
+          },
+          "values": [
+            {
+              "amount": 14400000.0,
+              "currency": "USD"
+            },
+            {
+              "amount": 3600000.0,
+              "currency": "USD"
+            }
+          ]
+        },
+        "domain.credit.pool_factor": {
+          "index": {
+            "calendar": "annual",
+            "start": "2026-01-01",
+            "periods": 2
+          },
+          "values": [
+            0.870462,
+            0.028531
+          ]
+        },
+        "domain.credit.principal_collections": {
+          "index": {
+            "calendar": "annual",
+            "start": "2026-01-01",
+            "periods": 2
+          },
+          "values": [
+            {
+              "amount": 1165762.255908,
+              "currency": "USD"
+            },
+            {
+              "amount": 0.0,
+              "currency": "USD"
+            }
+          ]
+        },
+        "domain.credit.principal_paid_negated": {
+          "index": {
+            "calendar": "annual",
+            "start": "2026-01-01",
+            "periods": 2
+          },
+          "values": [
+            {
+              "amount": -1865344.665452,
+              "currency": "USD"
+            },
+            {
+              "amount": -3497286.767724,
+              "currency": "USD"
+            }
+          ]
+        },
+        "domain.credit.principal_paid_to_date": {
+          "index": {
+            "calendar": "annual",
+            "start": "2026-01-01",
+            "periods": 2
+          },
+          "values": [
+            {
+              "amount": 1865344.665452,
+              "currency": "USD"
+            },
+            {
+              "amount": 3497286.767724,
+              "currency": "USD"
+            }
+          ]
+        },
+        "domain.credit.servicing_fee": {
+          "index": {
+            "calendar": "annual",
+            "start": "2026-01-01",
+            "periods": 2
+          },
+          "values": [
+            {
+              "amount": 0.0,
+              "currency": "USD"
+            },
+            {
+              "amount": 0.0,
+              "currency": "USD"
+            }
+          ]
+        },
+        "domain.credit.total_investment_income": {
+          "index": {
+            "calendar": "annual",
+            "start": "2026-01-01",
+            "periods": 2
+          },
+          "values": [
+            {
+              "amount": 84554.692239,
+              "currency": "USD"
+            },
+            {
+              "amount": 0.0,
+              "currency": "USD"
+            }
+          ]
+        },
+        "model.net_cash_flow": {
+          "index": {
+            "calendar": "annual",
+            "start": "2026-01-01",
+            "periods": 2
+          },
+          "values": [
+            {
+              "amount": 63496.369437,
+              "currency": "USD"
+            },
+            {
+              "amount": 3939.450758,
+              "currency": "USD"
+            }
+          ]
+        },
+        "stream.credit.loan.bullet.smoke": {
+          "index": {
+            "calendar": "annual",
+            "start": "2026-01-01",
+            "periods": 2
+          },
+          "values": [
+            {
+              "amount": 1005345.61249,
+              "currency": "USD"
+            },
+            {
+              "amount": 0.0,
+              "currency": "USD"
+            }
+          ]
+        },
+        "stream.credit.loan.defaults.smoke": {
+          "index": {
+            "calendar": "annual",
+            "start": "2026-01-01",
+            "periods": 2
+          },
+          "values": [
+            {
+              "amount": -34237.744092,
+              "currency": "USD"
+            },
+            {
+              "amount": 0.0,
+              "currency": "USD"
+            }
+          ]
+        },
+        "stream.credit.loan.interest.smoke": {
+          "index": {
+            "calendar": "annual",
+            "start": "2026-01-01",
+            "periods": 2
+          },
+          "values": [
+            {
+              "amount": 84554.69224,
+              "currency": "USD"
+            },
+            {
+              "amount": 0.0,
+              "currency": "USD"
+            }
+          ]
+        },
+        "stream.credit.loan.penalty.smoke": {
+          "index": {
+            "calendar": "annual",
+            "start": "2026-01-01",
+            "periods": 2
+          },
+          "values": [
+            {
+              "amount": 0.0,
+              "currency": "USD"
+            },
+            {
+              "amount": 0.0,
+              "currency": "USD"
+            }
+          ]
+        },
+        "stream.credit.loan.prepay.smoke": {
+          "index": {
+            "calendar": "annual",
+            "start": "2026-01-01",
+            "periods": 2
+          },
+          "values": [
+            {
+              "amount": 160416.643418,
+              "currency": "USD"
+            },
+            {
+              "amount": 0.0,
+              "currency": "USD"
+            }
+          ]
+        },
+        "stream.credit.loan.recoveries.smoke": {
+          "index": {
+            "calendar": "annual",
+            "start": "2026-01-01",
+            "periods": 2
+          },
+          "values": [
+            {
+              "amount": 13179.421289,
+              "currency": "USD"
+            },
+            {
+              "amount": 3939.450758,
+              "currency": "USD"
+            }
+          ]
+        },
+        "stream.credit.loan.servicing.smoke": {
+          "index": {
+            "calendar": "annual",
+            "start": "2026-01-01",
+            "periods": 2
+          },
+          "values": [
+            {
+              "amount": 0.0,
+              "currency": "USD"
+            },
+            {
+              "amount": 0.0,
+              "currency": "USD"
+            }
+          ]
+        },
+        "stream.credit.purchase.price.smoke": {
+          "index": {
+            "calendar": "annual",
+            "start": "2026-01-01",
+            "periods": 2
+          },
+          "values": [
+            {
+              "amount": -1200000.0,
+              "currency": "USD"
+            },
+            {
+              "amount": 0.0,
+              "currency": "USD"
+            }
+          ]
+        }
+      }
+    }
+  },
+  "scenarios": {
+    "status": "not_run",
+    "summaries": []
+  },
+  "monte_carlo": {
+    "status": "not_run",
+    "trials": 1,
+    "seed": 0,
+    "metrics": {},
+    "trial_summaries": []
+  },
+  "statements": {
+    "statements": [
+      {
+        "id": "by_entity",
+        "label": "Cash by entity",
+        "default": true,
+        "grain": {
+          "calendar": "monthly",
+          "start": "2026-01-01",
+          "labels": [
+            "2026-01",
+            "2026-02",
+            "2026-03",
+            "2026-04",
+            "2026-05",
+            "2026-06",
+            "2026-07",
+            "2026-08",
+            "2026-09",
+            "2026-10",
+            "2026-11",
+            "2026-12",
+            "2027-01",
+            "2027-02",
+            "2027-03"
+          ]
+        },
+        "rows": [
+          {
+            "kind": "line",
+            "label": "Buyer",
+            "depth": 0,
+            "display_sign": 1.0,
+            "values": [
+              {
+                "amount": -1192635.526706,
+                "currency": "USD"
+              },
+              {
+                "amount": 9700.54642,
+                "currency": "USD"
+              },
+              {
+                "amount": 12057.325626,
+                "currency": "USD"
+              },
+              {
+                "amount": 15922.928141,
+                "currency": "USD"
+              },
+              {
+                "amount": 18247.438658,
+                "currency": "USD"
+              },
+              {
+                "amount": 20534.997382,
+                "currency": "USD"
+              },
+              {
+                "amount": 22777.263593,
+                "currency": "USD"
+              },
+              {
+                "amount": 24953.196076,
+                "currency": "USD"
+              },
+              {
+                "amount": 27095.325005,
+                "currency": "USD"
+              },
+              {
+                "amount": 29189.564392,
+                "currency": "USD"
+              },
+              {
+                "amount": 31171.985071,
+                "currency": "USD"
+              },
+              {
+                "amount": 1010243.581686,
+                "currency": "USD"
+              },
+              {
+                "amount": 1347.902747,
+                "currency": "USD"
+              },
+              {
+                "amount": 1314.009388,
+                "currency": "USD"
+              },
+              {
+                "amount": 1277.538623,
+                "currency": "USD"
+              }
+            ],
+            "total": 33198.076102,
+            "streams": [
+              "credit.loan.bullet.smoke",
+              "credit.loan.defaults.smoke",
+              "credit.loan.interest.smoke",
+              "credit.loan.penalty.smoke",
+              "credit.loan.prepay.smoke",
+              "credit.loan.recoveries.smoke",
+              "credit.loan.servicing.smoke",
+              "credit.purchase.price.smoke"
+            ]
+          }
+        ],
+        "reconciliation": {
+          "bottom_line": 33198.076102,
+          "model_total": 67435.820194,
+          "residual": -34237.744092
+        },
+        "diagnostics": [
+          {
+            "code": "W3502_STATEMENT_BOTTOM_LINE_RESIDUAL",
+            "message": "Statement 'by_entity' totals 33198.076102 against model.total 67435.820194, a residual of -34237.744092."
+          }
+        ]
+      }
+    ]
+  },
+  "graph": {
+    "entities": [
+      {
+        "symbol": "asset.buyer",
+        "family": "asset",
+        "type": "Credit.Asset.Loan"
+      }
+    ],
+    "contracts": [
+      {
+        "name": "credit.loan.smoke",
+        "type": "Credit.Contract.Loan",
+        "master": "Contract.Debt",
+        "contract_name": "credit.loan",
+        "instance": "smoke",
+        "subject": "asset.buyer",
+        "streams": [
+          "credit.loan.bullet.smoke",
+          "credit.loan.defaults.smoke",
+          "credit.loan.interest.smoke",
+          "credit.loan.penalty.smoke",
+          "credit.loan.prepay.smoke",
+          "credit.loan.recoveries.smoke",
+          "credit.loan.servicing.smoke"
+        ]
+      },
+      {
+        "name": "credit.purchase.smoke",
+        "type": "Credit.Contract.Purchase",
+        "master": "Contract.Purchase",
+        "contract_name": "credit.purchase",
+        "instance": "smoke",
+        "subject": "asset.buyer",
+        "streams": [
+          "credit.purchase.price.smoke"
+        ]
+      }
+    ]
+  }
+}

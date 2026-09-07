@@ -219,35 +219,6 @@ the FNMA classes are entity fields today, so the REMIC tranches as notes
 Found asserting the seven published WALs of FNMA 2019-2, where the 400% PSA
 column refused the naive floor and the refusal was the convention speaking.
 
-### 7.56 A term deferred to `inputs.` is never bounds-checked
-
-*Belongs with the language and engine (section 5). Split from the closed 7.24.
-Half built 7 September 2026; what remains is the pack consequence.*
-
-**Built.** A value the run supplies is checked where it arrives
-(`E5041_INPUT_OUT_OF_BOUNDS`): an assumption's type domain (`docs/01` §5.7)
-and its `within`, and the pack's bound on a term deferred to `inputs.` or
-`cfg.`, which travels in the IR as `term_bounds` under the validation's own
-code. A literal is checked at compile time (`E2307`). `cfg.` is admitted in
-a term where `inputs.` is, and is no longer parsed as a number and refused
-under a bound's message.
-
-**Remaining — the pack as a subset of the language.** A pack field's `unit`
-should name a language type where one applies: `ratio` (54 uses across the
-packs) splits into `fraction` (a probability, a share, a pro rata: 0 to 1) and
-`rate` (an interest rate, an escalation, a growth: unbounded); `months`,
-`days`, `years` are durations. With the domain derived from the type, a
-numeric bound left in `validations.toml` is by construction a judgment about
-plausible deals rather than a definition — `psa_speed` at most 10 — and
-should load as a §7.115 convention warning, allowlistable in the model, with a
-bound that merely restates a type's domain refused at load as redundant. That
-is the systematic answer: nothing is audited, then or later, because a new
-contract cannot be added without units and cannot smuggle a definitional
-bound into the conventional file. The 69 numeric bounds the packs carry today
-are sorted once, by the loader, and the list is brought to chat before any
-changes behavior.
----
-
 ### 7.57 A pack rule cannot accrue on act/act, because a divisor is not a fraction
 
 *Belongs with the packs (section 5). Split from the closed 6.1.*
