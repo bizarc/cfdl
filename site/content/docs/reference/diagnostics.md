@@ -179,6 +179,7 @@ register, so it cannot fall behind the language.
 | `E5037_SERIES_READ_IN_LOGIC` | Lowering/emission | the engine's own check for `E1134`, for IR the compiler never saw. |
 | `E5038_ACCOUNTS_NEED_THE_WALK` | Lowering/emission | a stream moves or reads an account while a forward-reaching read keeps the model on the column order, where no balance is carried. |
 | `E5039_UNKNOWN_ACTION_KIND` | Lowering/emission | an event's or option's action names a kind the engine does not execute. Only hand-written IR can carry one; the run is refused rather than reported as ok with the action journaled as ignored, which is what it did before results 0.14. |
+| `E5041_INPUT_OUT_OF_BOUNDS` | Lowering/emission | a value the run supplied — an override, a scenario value, a Monte Carlo draw, a `cfg.` path — is outside the domain of the assumption's type (`docs/01` §5.7), outside the `within` the model states, or outside the bound the pack states on the contract term that reads it (carried in the IR as `term_bounds`, and cited under the pack validation's own code). Refused, never adjusted: state a value inside the bound, keep a distribution's `clip` inside it, or widen the bound where the deal genuinely differs. The compile-time counterpart on a literal is `E2307`. |
 | `E5040_CURVE_READ_OUTSIDE_RANGE` | Lowering/emission | a stream, guard, account inflow or option payoff read a curve at a date outside the effective dates the curve declares (`from`/`to` on its header). Outside them the curve has no value — not its end value held flat, which is what an undeclared end means — so the run is refused, naming the curve, the first offending date and the reader. End the reader's schedule where the curve ends, or extend the curve's dates. A field's rule that makes the same read refuses under `E5032`. |
 | `E5003_IR_EMIT_FAILED` | Lowering/emission | the IR could not be written. |
 | `E5004_INVALID_LOWERING_RULE` | Lowering/emission | a pack's lowering rule is malformed. |
@@ -215,6 +216,9 @@ register, so it cannot fall behind the language.
 | `E2302_ASSUME_INVALID_PARAM` | Lowering/emission | a distribution parameter is not a number, or is outside what the distribution admits. |
 | `E2303_ASSUME_MISSING_PARAM` | Lowering/emission | a distribution is missing a parameter it requires. |
 | `E2304_ASSUME_INVALID_CLIP` | Lowering/emission | a `clip=[lo, hi]` is malformed or inverted. |
+| `E2305_ASSUME_UNKNOWN_TYPE` | Lowering/emission | `assume <name> : <type>` names a type the language does not have. A type is `fraction`, `rate`, `decimal`, `int` or `duration` (`docs/01` §5). |
+| `E2306_ASSUME_INVALID_WITHIN` | Lowering/emission | a `within [lo, hi]` is malformed, inverted, or reaches outside the domain of the assumption's type; or a distribution's `clip` can produce a value outside the type's domain or the `within`, so the draws would break the bound. |
+| `E2307_ASSUME_OUT_OF_BOUNDS` | Lowering/emission | a literal assumption is outside the domain of its type (a `fraction` above 1, a `duration` that is not whole) or outside the `within` the model states. A value the run supplies is checked the same way at run start (`E5041`). |
 | `E2401_OPTION_MISSING_EXERCISE` | Lowering/emission | an option declares no `exercise when`, so nothing can ever trigger it. |
 | `E2402_OPTION_MISSING_PAYOFF` | Lowering/emission | an option declares no `payoff`, so exercising it would move no cash. |
 | `E5023_SUBTOTAL_UNKNOWN_CATEGORY` | Lowering/emission | a pack subtotal folds a category no rule emits, so the row would always be zero. |
@@ -294,7 +298,7 @@ register, so it cannot fall behind the language.
 | `E9021_CREDIT_INVALID_SHARE` | Pack domain validations | a participation's `share` is not in (0, 1]. A share above one pays out more than the pool produced; zero is a participation in nothing. |
 | `E9022_CREDIT_INVALID_COUPON` | Pack domain validations | a note's `coupon` is negative. |
 
-*242 codes.*
+*246 codes.*
 <!-- /cfdl:generated diagnostics-catalog -->
 
 ## Related

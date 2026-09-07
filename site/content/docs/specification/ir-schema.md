@@ -661,7 +661,17 @@ against it by `make ir-schema`.
           "$ref": "#/$defs/Expr"
         },
         "type": {
-          "$ref": "#/$defs/ValueTypeId"
+          "$ref": "#/$defs/ValueTypeId",
+          "description": "The language type (docs/01 §5.7). `Fraction` is 0 to 1 by definition and `Duration` is whole and non-negative; `Rate`, `Decimal` and `Int` carry no domain beyond integrality. The domain is checked wherever the value arrives."
+        },
+        "within": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          },
+          "minItems": 2,
+          "maxItems": 2,
+          "description": "The modeler's own bound, `within [lo, hi]` (docs/01 §12.1): checked wherever the value arrives — a literal at compile time, an override, a scenario value or a draw at run start — and refused when outside, never clamped. `clip` on a distribution truncates draws; this refuses a value."
         }
       }
     },
@@ -682,6 +692,15 @@ against it by `make ir-schema`.
         },
         "type": {
           "$ref": "#/$defs/ValueTypeId"
+        },
+        "within": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          },
+          "minItems": 2,
+          "maxItems": 2,
+          "description": "The modeler's own bound, `within [lo, hi]` (docs/01 §12.1): checked wherever the value arrives — a literal at compile time, an override, a scenario value or a draw at run start — and refused when outside, never clamped. `clip` on a distribution truncates draws; this refuses a value."
         }
       }
     },
@@ -694,7 +713,9 @@ against it by `make ir-schema`.
         "Decimal",
         "Date",
         "Money",
-        "Rate"
+        "Rate",
+        "Fraction",
+        "Duration"
       ]
     },
     "Distribution": {
@@ -821,6 +842,13 @@ against it by `make ir-schema`.
         },
         "provenance": {
           "$ref": "#/$defs/NodeProvenance"
+        },
+        "term_bounds": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/$defs/TermBound"
+          },
+          "description": "Bounds on the terms this contract defers to the run, keyed by term name; absent when it defers no bounded term."
         }
       }
     },
@@ -2119,6 +2147,45 @@ against it by `make ir-schema`.
         "display": {
           "type": "string",
           "description": "How to RENDER the sign. Never changes what is summed: values carries the signed amount, so a consumer ignoring this still adds up."
+        }
+      }
+    },
+    "TermBound": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "reads",
+        "code"
+      ],
+      "description": "The bound a DEFERRED contract term must meet when the run supplies its value (docs/13 §7.56). A literal is checked at compile time against the pack's validations; a term reading `inputs.` or `cfg.` cannot be, so the bound travels here under the validation's own code and the engine checks the value at run start (E5041).",
+      "properties": {
+        "reads": {
+          "type": "string",
+          "description": "`inputs.<name>` or `cfg.<path>` — the channel the term reads."
+        },
+        "min": {
+          "type": "number"
+        },
+        "max": {
+          "type": "number"
+        },
+        "exclusive_min": {
+          "type": "number"
+        },
+        "exclusive_max": {
+          "type": "number"
+        },
+        "code": {
+          "type": "string",
+          "description": "The pack validation's code, cited by the run-time refusal."
+        },
+        "severity": {
+          "type": "string",
+          "enum": [
+            "error",
+            "warning",
+            "info"
+          ]
         }
       }
     }

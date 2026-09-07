@@ -107,7 +107,18 @@ again.
 
 ```cfdl
 assume base_rent = 4000
+assume renewal : fraction = 0.85
+assume cap_rate : rate = 0.065 within [0.04, 0.10]
 ```
+
+An assumption may declare its type — `fraction`, `rate`, `decimal`, `int`,
+`duration` — and the type carries a domain: a `fraction` is 0 to 1, a
+`duration` is whole and non-negative. `within [lo, hi]` states the range this
+deal admits. Both are checked wherever the value arrives — the literal here,
+an override or a scenario value or a draw at run start — and a value outside
+is refused (`E2307` at compile time, `E5041` at run start), never pulled into
+range. A pack's bound on a contract term that reads the assumption is checked
+at run start the same way, under the pack's own code.
 
 Discounting is not an assumption. The valuation rate belongs to the run —
 `annual_discount_rate` in the run configuration below — so one set of cash flows

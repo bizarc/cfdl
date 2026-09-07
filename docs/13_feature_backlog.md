@@ -221,25 +221,31 @@ column refused the naive floor and the refusal was the convention speaking.
 
 ### 7.56 A term deferred to `inputs.` is never bounds-checked
 
-*Belongs with the language and engine (section 5). Split from the closed 7.24.*
+*Belongs with the language and engine (section 5). Split from the closed 7.24.
+Half built 7 September 2026; what remains is the pack consequence.*
 
-Two questions survived the correction to 7.24, and they are separable.
+**Built.** A value the run supplies is checked where it arrives
+(`E5041_INPUT_OUT_OF_BOUNDS`): an assumption's type domain (`docs/01` §5.7)
+and its `within`, and the pack's bound on a term deferred to `inputs.` or
+`cfg.`, which travels in the IR as `term_bounds` under the validation's own
+code. A literal is checked at compile time (`E2307`). `cfg.` is admitted in
+a term where `inputs.` is, and is no longer parsed as a number and refused
+under a bound's message.
 
-**A term referencing `inputs.` escapes its pack's bounds.** `docs/01` §8.2.1
-accepts this deliberately — the value is not known at compile time — but it
-means a scenario may drive a term past a bound the pack states, at compile time
-and at run start alike. Either the bound is checked when the value arrives, or
-the pack's bound means less than it appears to.
-
-**Should `cfg.*` work in a term as well?** It is the run configuration's other
-half. A reader who reaches for it today gets a diagnostic saying the value is
-invalid rather than that the channel is wrong: `E9016` naming a bound is
-actively misleading when the term is `cfg.psa`. If the answer is no, the
-diagnostic should say so.
-
-Both are about a term's relationship to the run rather than about bounds as
-such, which is why they belong together.
-
+**Remaining — the pack as a subset of the language.** A pack field's `unit`
+should name a language type where one applies: `ratio` (54 uses across the
+packs) splits into `fraction` (a probability, a share, a pro rata: 0 to 1) and
+`rate` (an interest rate, an escalation, a growth: unbounded); `months`,
+`days`, `years` are durations. With the domain derived from the type, a
+numeric bound left in `validations.toml` is by construction a judgment about
+plausible deals rather than a definition — `psa_speed` at most 10 — and
+should load as a §7.115 convention warning, allowlistable in the model, with a
+bound that merely restates a type's domain refused at load as redundant. That
+is the systematic answer: nothing is audited, then or later, because a new
+contract cannot be added without units and cannot smuggle a definitional
+bound into the conventional file. The 69 numeric bounds the packs carry today
+are sorted once, by the loader, and the list is brought to chat before any
+changes behavior.
 ---
 
 ### 7.57 A pack rule cannot accrue on act/act, because a divisor is not a fraction

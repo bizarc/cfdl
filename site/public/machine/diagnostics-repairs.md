@@ -11,7 +11,7 @@ Diagnostics are the repair signal: read the `code`, `message`, `span`, and
 `hint`, change the model, recompile. The catalog is how an agent learns what
 each code looks like in the flesh before it meets one.
 
-**Coverage:** 242 codes in the docs/08 §7 register; 116 exemplified here; 69 of 131 examples carry a recorded fix.
+**Coverage:** 246 codes in the docs/08 §7 register; 119 exemplified here; 69 of 134 examples carry a recorded fix.
 
 ## account_read_without_prev — E1382_ACCOUNT_READ_WITHOUT_PREV
 
@@ -242,6 +242,84 @@ stream core.rent on entity asset.suite inflow currency USD {
 
 - `E1359_ARRIVAL_ACTION_UNKNOWN_FIELD` (error): Lifecycle 'unit' entry into 'delinquent' sets 'markr', which entity 'asset.suite' does not have — declared: marker.
   - hint: An arrival action names a field on the entity that transitioned, and one machine may be bound by several entities — every one of them needs the field. Declare it on the entity, or correct the name.
+
+Fix: not yet recorded.
+
+## assume_literal_out_of_bounds — E2307_ASSUME_OUT_OF_BOUNDS
+
+Failing example:
+
+```cfdl
+version 0.1
+model "assume-literal-out-of-bounds"
+time calendar monthly from 2026-01 for 3
+
+entity asset a : Asset.Financial
+
+// A literal the compiler can see is checked here rather than at the run: E2307.
+assume share : fraction = 1.3
+assume months : duration = 2.5
+assume cap = 0.12 within [0.04, 0.10]
+
+stream fee.x on entity asset.a inflow currency USD {
+  schedule every month from 2026-01 to 2026-03
+  amount = 100 * inputs.share
+}
+```
+
+- `E2307_ASSUME_OUT_OF_BOUNDS` (error): Assumption 'share' is 1.3, outside the domain of a fraction (0 to 1).
+- `E2307_ASSUME_OUT_OF_BOUNDS` (error): Assumption 'months' is 2.5, not a whole number as a duration must be.
+- `E2307_ASSUME_OUT_OF_BOUNDS` (error): Assumption 'cap' is 0.12, outside the within [0.04, 0.1] the model states.
+
+Fix: not yet recorded.
+
+## assume_unknown_type — E2305_ASSUME_UNKNOWN_TYPE
+
+Failing example:
+
+```cfdl
+version 0.1
+model "assume-unknown-type"
+time calendar monthly from 2026-01 for 3
+
+entity asset a : Asset.Financial
+
+// `share` is not a type the language has (docs/01 §5): E2305.
+assume share : share = 0.9
+
+stream fee.x on entity asset.a inflow currency USD {
+  schedule every month from 2026-01 to 2026-03
+  amount = 100 * inputs.share
+}
+```
+
+- `E2305_ASSUME_UNKNOWN_TYPE` (error): Assumption 'share' declares type 'share', which the language does not have. A type is fraction, rate, decimal, int or duration.
+
+Fix: not yet recorded.
+
+## assume_within_inverted — E2306_ASSUME_INVALID_WITHIN
+
+Failing example:
+
+```cfdl
+version 0.1
+model "assume-within-inverted"
+time calendar monthly from 2026-01 for 3
+
+entity asset a : Asset.Financial
+
+// A within that reaches outside its type's domain, and one that is inverted: E2306.
+assume share : fraction = 0.9 within [0.0, 1.5]
+assume other = 1 within [2, 1]
+
+stream fee.x on entity asset.a inflow currency USD {
+  schedule every month from 2026-01 to 2026-03
+  amount = 100 * inputs.share
+}
+```
+
+- `E2306_ASSUME_INVALID_WITHIN` (error): Assumption 'share' states within [0, 1.5], which reaches outside the domain of a fraction: 0 to 1.
+- `E2306_ASSUME_INVALID_WITHIN` (error): Assumption 'other' states within [2, 1], which is malformed or inverted.
 
 Fix: not yet recorded.
 
@@ -5246,6 +5324,7 @@ Documented in docs/08 §7, awaiting a minimal failing fixture:
 - `E5038_ACCOUNTS_NEED_THE_WALK` — a stream moves or reads an account while a forward-reaching read keeps the model on the column order, where no balance is carried.
 - `E5039_UNKNOWN_ACTION_KIND` — an event's or option's action names a kind the engine does not execute. Only hand-written IR can carry one; the run is refused rather than reported as ok with the action journaled as ignored, which is what it did before results 0.14.
 - `E5040_CURVE_READ_OUTSIDE_RANGE` — a stream, guard, account inflow or option payoff read a curve at a date outside the effective dates the curve declares (`from`/`to` on its header). Outside them the curve has no value — not its end value held flat, which is what an undeclared end means — so the run is refused, naming the curve, the first offending date and the reader. End the reader's schedule where the curve ends, or extend the curve's dates. A field's rule that makes the same read refuses under `E5032`.
+- `E5041_INPUT_OUT_OF_BOUNDS` — a value the run supplied — an override, a scenario value, a Monte Carlo draw, a `cfg.` path — is outside the domain of the assumption's type (`docs/01` §5.7), outside the `within` the model states, or outside the bound the pack states on the contract term that reads it (carried in the IR as `term_bounds`, and cited under the pack validation's own code). Refused, never adjusted: state a value inside the bound, keep a distribution's `clip` inside it, or widen the bound where the deal genuinely differs. The compile-time counterpart on a literal is `E2307`.
 - `E6002_CRE_LEASE_INVALID_TERM_RANGE` — 
 - `E6003_CRE_LEASE_UP_MISSING_MONTHS` — 
 - `E6010_CRE_EXIT_MISSING_EXIT_CAP` — 

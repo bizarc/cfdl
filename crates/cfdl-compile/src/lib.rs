@@ -912,8 +912,92 @@ struct IrContract {
     term: IrDateRange,
     currency: String,
     terms: BTreeMap<String, serde_json::Value>,
+    /// The bounds a DEFERRED term must meet when the run supplies its value
+    /// (`docs/13` §7.56). A literal is checked here against the pack's
+    /// validations; a term reading `inputs.` or `cfg.` cannot be, so the
+    /// bound travels with the term and the engine checks the value at run
+    /// start — an override, a scenario value or a draw past it refuses the
+    /// run instead of driving the contract somewhere the pack said it cannot
+    /// go. Keyed by term name; absent when the contract defers no bounded
+    /// term.
+    #[serde(skip_serializing_if = "BTreeMap::is_empty")]
+    term_bounds: BTreeMap<String, IrTermBound>,
     effects: IrEffects,
     provenance: IrNodeProvenance,
+}
+
+/// One deferred term's bound: where the value comes from and what the pack
+/// requires of it, under the pack's own code so the refusal names it.
+#[derive(Debug, Clone, Serialize)]
+struct IrTermBound {
+    /// `inputs.<name>` or `cfg.<path>` — the channel the term reads.
+    reads: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    min: Option<f64>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    max: Option<f64>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    exclusive_min: Option<f64>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    exclusive_max: Option<f64>,
+    /// The validation's code, so the run-time refusal cites the same rule
+    /// the compiler would have.
+    code: String,
+    /// `error` or `warning` — the validation's own severity.
+    severity: String,
+}
+
+/// The bounds every deferred term of `contract` carries into the IR: one
+/// entry per `term_number` validation with a bound, for each term that reads
+/// `inputs.` or `cfg.`. Several validations on one term collapse to the
+/// tightest bound under the first code.
+fn deferred_term_bounds(
+    contract: &cfdl_parser::ContractStmt,
+    validations: &[cfdl_pack::PackValidation],
+) -> BTreeMap<String, IrTermBound> {
+    let mut out: BTreeMap<String, IrTermBound> = BTreeMap::new();
+    for (key, term) in &contract.terms {
+        if !term.is_deferred() {
+            continue;
+        }
+        for validation in validations {
+            if validation.check != cfdl_pack::ValidationCheck::TermNumber
+                || validation.term.as_deref() != Some(key.as_str())
+                || !validation.applies_to(&contract.name)
+            {
+                continue;
+            }
+            let has_bound = validation.min.is_some()
+                || validation.max.is_some()
+                || validation.exclusive_min.is_some()
+                || validation.exclusive_max.is_some();
+            if !has_bound {
+                continue;
+            }
+            let entry = out.entry(key.clone()).or_insert_with(|| IrTermBound {
+                reads: term.value.clone(),
+                min: None,
+                max: None,
+                exclusive_min: None,
+                exclusive_max: None,
+                code: validation.code.clone(),
+                severity: validation.severity.as_str().to_string(),
+            });
+            let tighter_lo = |cur: Option<f64>, new: Option<f64>| match (cur, new) {
+                (Some(a), Some(b)) => Some(a.max(b)),
+                (a, b) => a.or(b),
+            };
+            let tighter_hi = |cur: Option<f64>, new: Option<f64>| match (cur, new) {
+                (Some(a), Some(b)) => Some(a.min(b)),
+                (a, b) => a.or(b),
+            };
+            entry.min = tighter_lo(entry.min, validation.min);
+            entry.exclusive_min = tighter_lo(entry.exclusive_min, validation.exclusive_min);
+            entry.max = tighter_hi(entry.max, validation.max);
+            entry.exclusive_max = tighter_hi(entry.exclusive_max, validation.exclusive_max);
+        }
+    }
+    out
 }
 
 #[derive(Debug, Clone, Serialize)]
@@ -5046,6 +5130,9 @@ fn build_ir(
                     .iter()
                     .map(|(key, term)| (key.clone(), term_value_json(term)))
                     .collect(),
+                term_bounds: active_pack
+                    .map(|pack| deferred_term_bounds(contract, &pack.validations))
+                    .unwrap_or_default(),
                 effects: IrEffects { streams: vec![] },
                 provenance: IrNodeProvenance {
                     source_file: source_stmt.file.clone(),
@@ -9498,19 +9585,86 @@ fn lower_assumptions(resolve_output: &cfdl_resolver::ResolveOutput) -> AssumeMap
             continue;
         }
 
+        // THE TYPE IS THE LANGUAGE'S (`docs/01` §5.7): a `fraction` is 0 to
+        // 1 by definition, a `duration` is whole and non-negative, `rate`,
+        // `decimal` and `int` carry no domain beyond integrality. The domain
+        // is checked wherever the value arrives — a literal here, an override
+        // or a draw at run start — and refused, never adjusted.
+        let type_id = match assume.type_name.as_deref() {
+            None => "Decimal",
+            Some(word) => match assume_type_id(word) {
+                Some(id) => id,
+                None => {
+                    diags.push(make_diag(
+                        "E2305_ASSUME_UNKNOWN_TYPE",
+                        format!(
+                            "Assumption '{}' declares type '{word}', which the language does not have. A type is fraction, rate, decimal, int or duration.",
+                            assume.name
+                        ),
+                    ));
+                    continue;
+                }
+            },
+        };
+        let domain = assume_type_domain(type_id);
+        // THE MODELER'S OWN BOUND, `within [lo, hi]`: checked, never clamped.
+        let within = match &assume.within {
+            None => None,
+            Some((lo, hi)) => match (lo.parse::<f64>(), hi.parse::<f64>()) {
+                (Ok(lo), Ok(hi)) if lo <= hi => {
+                    // A bound wider than the type's domain promises a range
+                    // the type cannot reach.
+                    if let Some((dlo, dhi)) = domain {
+                        if lo < dlo || hi > dhi {
+                            diags.push(make_diag(
+                                "E2306_ASSUME_INVALID_WITHIN",
+                                format!(
+                                    "Assumption '{}' states within [{lo}, {hi}], which reaches outside the domain of a {}: {dlo} to {dhi}.",
+                                    assume.name,
+                                    type_id.to_lowercase()
+                                ),
+                            ));
+                            continue;
+                        }
+                    }
+                    Some((lo, hi))
+                }
+                _ => {
+                    diags.push(make_diag(
+                        "E2306_ASSUME_INVALID_WITHIN",
+                        format!(
+                            "Assumption '{}' states within [{lo}, {hi}], which is malformed or inverted.",
+                            assume.name
+                        ),
+                    ));
+                    continue;
+                }
+            },
+        };
         if let Some(value_src) = &assume.value {
             if let Err(err) = cfdl_expr::compile_expr(value_src) {
                 diags.push(make_diag(&err.code, err.message));
                 continue;
             }
-            constants.insert(
-                assume.name.clone(),
-                serde_json::json!({
-                    "name": assume.name,
-                    "expr": { "lang": "cfdl", "src": value_src },
-                    "type": "Decimal",
-                }),
-            );
+            // A literal is knowable now. An expression is the run's to check.
+            if let Ok(value) = value_src.trim().parse::<f64>() {
+                if let Some(reason) = bound_violation(value, type_id, domain, within) {
+                    diags.push(make_diag(
+                        "E2307_ASSUME_OUT_OF_BOUNDS",
+                        format!("Assumption '{}' is {value}, {reason}.", assume.name),
+                    ));
+                    continue;
+                }
+            }
+            let mut json = serde_json::json!({
+                "name": assume.name,
+                "expr": { "lang": "cfdl", "src": value_src },
+                "type": type_id,
+            });
+            if let Some((lo, hi)) = within {
+                json["within"] = serde_json::json!([lo, hi]);
+            }
+            constants.insert(assume.name.clone(), json);
         } else if let Some(dist) = &assume.dist {
             let required: &[&[&str]] = match dist.name.as_str() {
                 "normal" => &[&["mean"], &["stdev", "stddev"]],
@@ -9578,19 +9732,96 @@ fn lower_assumptions(resolve_output: &cfdl_resolver::ResolveOutput) -> AssumeMap
             };
             let mut dist_json = serde_json::json!({ "kind": kind, "params": params });
             if let Some(clip) = clip {
+                // A clip that can produce a value outside the bound is a
+                // promise the draws will break; say so now.
+                if let (Some(lo), Some(hi)) = (clip[0].as_f64(), clip[1].as_f64()) {
+                    let lo_reason = bound_violation(lo, type_id, domain, within);
+                    let hi_reason = bound_violation(hi, type_id, domain, within);
+                    if let Some(reason) = lo_reason.or(hi_reason) {
+                        diags.push(make_diag(
+                            "E2306_ASSUME_INVALID_WITHIN",
+                            format!(
+                                "Assumption '{}' clips to [{lo}, {hi}], which can produce a value {reason}.",
+                                assume.name
+                            ),
+                        ));
+                        continue;
+                    }
+                }
                 dist_json["clip"] = clip;
             }
-            random.insert(
-                assume.name.clone(),
-                serde_json::json!({
-                    "name": assume.name,
-                    "dist": dist_json,
-                    "type": "Decimal",
-                }),
-            );
+            let mut json = serde_json::json!({
+                "name": assume.name,
+                "dist": dist_json,
+                "type": type_id,
+            });
+            if let Some((lo, hi)) = within {
+                json["within"] = serde_json::json!([lo, hi]);
+            }
+            random.insert(assume.name.clone(), json);
         }
     }
     (constants, random, diags)
+}
+
+/// The language's value types an assumption may declare (`docs/01` §5), by
+/// the word a model writes.
+fn assume_type_id(word: &str) -> Option<&'static str> {
+    Some(match word {
+        "fraction" => "Fraction",
+        "rate" => "Rate",
+        "decimal" => "Decimal",
+        "int" => "Int",
+        "duration" => "Duration",
+        _ => return None,
+    })
+}
+
+/// The closed range a type admits by definition (`docs/01` §5.7), where it
+/// has one. `Duration` and `Int` are whole; that is checked separately.
+fn assume_type_domain(type_id: &str) -> Option<(f64, f64)> {
+    match type_id {
+        "Fraction" => Some((0.0, 1.0)),
+        "Duration" => Some((0.0, f64::INFINITY)),
+        _ => None,
+    }
+}
+
+/// Why `value` cannot be an assumption of this type under this bound, or
+/// `None` when it can. Shared by the compile-time check on a literal and the
+/// clip check on a distribution; the engine applies the same rule at run
+/// start to whatever the run supplied.
+fn bound_violation(
+    value: f64,
+    type_id: &str,
+    domain: Option<(f64, f64)>,
+    within: Option<(f64, f64)>,
+) -> Option<String> {
+    if matches!(type_id, "Int" | "Duration") && value.fract() != 0.0 {
+        return Some(format!(
+            "not a whole number as a {} must be",
+            type_id.to_lowercase()
+        ));
+    }
+    if let Some((lo, hi)) = domain {
+        if value < lo || value > hi {
+            let range = if hi.is_infinite() {
+                format!("{lo} or more")
+            } else {
+                format!("{lo} to {hi}")
+            };
+            return Some(format!(
+                "outside the domain of a {} ({range})",
+                type_id.to_lowercase()
+            ));
+        }
+    }
+    if let Some((lo, hi)) = within {
+        if value < lo || value > hi {
+            return Some(format!("outside the within [{lo}, {hi}] the model states"));
+        }
+    }
+    None
 }
 
 fn validate_expressions(resolve_output: &cfdl_resolver::ResolveOutput) -> Vec<Diagnostic> {
@@ -9986,7 +10217,9 @@ fn term_value_json(term: &cfdl_parser::ContractTerm) -> serde_json::Value {
                 other => serde_json::Value::String(other.to_string()),
             }
         }
-        cfdl_parser::TermValueKind::InputRef | cfdl_parser::TermValueKind::Expr => {
+        cfdl_parser::TermValueKind::InputRef
+        | cfdl_parser::TermValueKind::CfgRef
+        | cfdl_parser::TermValueKind::Expr => {
             serde_json::json!({ "lang": "cfdl", "src": term.value })
         }
     }

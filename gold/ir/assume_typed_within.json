@@ -1,0 +1,918 @@
+{
+  "ir_version": "0.1",
+  "model": {
+    "name": "assume-typed-within",
+    "currency": "USD"
+  },
+  "time": {
+    "calendar": "monthly",
+    "start": "2026-01-01",
+    "periods": 15
+  },
+  "phases": [],
+  "entities": [
+    {
+      "id": "c8726c9577f18720c017fefa34ac122b",
+      "symbol": "asset.buyer",
+      "type": "Credit.Asset.Loan",
+      "fields": {},
+      "rules": {
+        "credit_loan_lagged_balance_smoke": {
+          "init": {
+            "lang": "cfdl",
+            "src": "1200000"
+          },
+          "next": {
+            "lang": "cfdl",
+            "src": "if(months_between(parse_date(\"2026-01-01\"), time.date) > 3 and months_between(parse_date(\"2026-01-01\"), time.date) - 3 < 12, prev * ((1 - cpr_to_periodic(if(0 == 0, 0.03, 0 * (min(0.0002 * min(max(1, (0 + (months_between(parse_date(\"2026-01-01\"), time.date) - 3 - 1)) + 1), 30), 0.006) - 0.000095 * max(0, min(max(1, (0 + (months_between(parse_date(\"2026-01-01\"), time.date) - 3 - 1)) + 1), 120) - 60))), 12)) - if(0 == 0, cpr_to_periodic(if(cfg.psa == 0, 0.10, min(cfg.psa * 0.002 * max(1, min((0 + (months_between(parse_date(\"2026-01-01\"), time.date) - 3 - 1)) + 1, 30)), 1)), 12), min(0 / max(1 - 0 * (0 + (months_between(parse_date(\"2026-01-01\"), time.date) - 3 - 1)), 0.000001), 1))), prev)"
+          },
+          "schedule": {
+            "kind": "Every",
+            "every": "monthly",
+            "from": "2026-01-01",
+            "to": "2027-03-01"
+          }
+        }
+      },
+      "field_roles": {
+        "balance": [
+          "credit_loan_lagged_balance_smoke"
+        ]
+      },
+      "state": {},
+      "lifecycle": "credit.loan"
+    }
+  ],
+  "assumptions": {
+    "constants": {
+      "lag": {
+        "expr": {
+          "lang": "cfdl",
+          "src": "3"
+        },
+        "name": "lag",
+        "type": "Duration"
+      },
+      "margin_bps": {
+        "expr": {
+          "lang": "cfdl",
+          "src": "0.03"
+        },
+        "name": "margin_bps",
+        "type": "Rate",
+        "within": [
+          0.01,
+          0.05
+        ]
+      },
+      "severity_haircut": {
+        "expr": {
+          "lang": "cfdl",
+          "src": "0.50"
+        },
+        "name": "severity_haircut",
+        "type": "Fraction"
+      }
+    },
+    "random": {
+      "speed_shift": {
+        "dist": {
+          "clip": [
+            -0.2,
+            0.2
+          ],
+          "kind": "Normal",
+          "params": {
+            "mean": 0.0,
+            "stdev": 0.1
+          }
+        },
+        "name": "speed_shift",
+        "type": "Rate",
+        "within": [
+          -0.5,
+          0.5
+        ]
+      }
+    }
+  },
+  "curves": [
+    {
+      "name": "sofr",
+      "interpolation": "linear",
+      "points": [
+        {
+          "date": "2026-01-01",
+          "value": 0.05
+        },
+        {
+          "date": "2027-01-01",
+          "value": 0.038
+        }
+      ]
+    }
+  ],
+  "accounts": [
+    {
+      "name": "asset.buyer.balance",
+      "owner_entity": "asset.buyer",
+      "side": "due",
+      "init": {
+        "lang": "cfdl",
+        "src": "1200000"
+      }
+    }
+  ],
+  "lifecycles": [
+    {
+      "id": "credit.loan",
+      "initial": "current",
+      "states": [
+        "current",
+        "delinquent",
+        "defaulted",
+        "in_foreclosure",
+        "liquidated",
+        "prepaid",
+        "matured",
+        "repurchased"
+      ],
+      "edges": [
+        {
+          "from": "current",
+          "to": "delinquent"
+        },
+        {
+          "from": "delinquent",
+          "to": "current"
+        },
+        {
+          "from": "delinquent",
+          "to": "defaulted"
+        },
+        {
+          "from": "defaulted",
+          "to": "current"
+        },
+        {
+          "from": "defaulted",
+          "to": "in_foreclosure"
+        },
+        {
+          "from": "in_foreclosure",
+          "to": "current"
+        },
+        {
+          "from": "in_foreclosure",
+          "to": "liquidated"
+        },
+        {
+          "from": "current",
+          "to": "prepaid"
+        },
+        {
+          "from": "delinquent",
+          "to": "prepaid"
+        },
+        {
+          "from": "defaulted",
+          "to": "prepaid"
+        },
+        {
+          "from": "current",
+          "to": "matured"
+        },
+        {
+          "from": "delinquent",
+          "to": "matured"
+        },
+        {
+          "from": "current",
+          "to": "repurchased"
+        },
+        {
+          "from": "delinquent",
+          "to": "repurchased"
+        },
+        {
+          "from": "defaulted",
+          "to": "repurchased"
+        }
+      ],
+      "entry_actions": [
+        {
+          "state": "prepaid",
+          "actions": [
+            {
+              "kind": "SetRole",
+              "author": "pack",
+              "field": "balance",
+              "value": {
+                "lang": "cfdl",
+                "src": "0.0"
+              }
+            }
+          ]
+        },
+        {
+          "state": "repurchased",
+          "actions": [
+            {
+              "kind": "SetRole",
+              "author": "pack",
+              "field": "balance",
+              "value": {
+                "lang": "cfdl",
+                "src": "0.0"
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "subtotals": [
+    {
+      "id": "domain.credit.gross_collections",
+      "kind": "money",
+      "op": "sum",
+      "categories": [
+        "operating.collection.*"
+      ],
+      "formula": "sum(operating.collection.*)"
+    },
+    {
+      "id": "domain.credit.principal_collections",
+      "kind": "money",
+      "op": "sum",
+      "categories": [
+        "operating.collection.principal",
+        "operating.collection.prepayment"
+      ],
+      "formula": "sum(scheduled principal, prepayments)"
+    },
+    {
+      "id": "domain.credit.servicing_fee",
+      "kind": "money",
+      "op": "negated_sum",
+      "categories": [
+        "operating.expense.servicing"
+      ],
+      "formula": "-sum(operating.expense.servicing)"
+    },
+    {
+      "id": "domain.credit.net_collections",
+      "kind": "money",
+      "op": "sum",
+      "categories": [
+        "operating.*"
+      ],
+      "formula": "sum(operating.*)"
+    },
+    {
+      "id": "domain.credit.principal_paid_to_date",
+      "kind": "money",
+      "op": "cumulative",
+      "subtotals": [
+        "domain.credit.principal_collections"
+      ],
+      "formula": "running total of principal collections"
+    },
+    {
+      "id": "domain.credit.original_balance",
+      "kind": "money",
+      "op": "negated_cumulative",
+      "categories": [
+        "investing.acquisition.purchase"
+      ],
+      "formula": "-cumulative(investing.acquisition.purchase)"
+    },
+    {
+      "id": "domain.credit.principal_paid_negated",
+      "kind": "money",
+      "op": "negated_cumulative",
+      "subtotals": [
+        "domain.credit.principal_collections"
+      ],
+      "formula": "-cumulative(principal collections)"
+    },
+    {
+      "id": "domain.credit.balance_outstanding",
+      "kind": "money",
+      "op": "sum",
+      "subtotals": [
+        "domain.credit.original_balance",
+        "domain.credit.principal_paid_negated"
+      ],
+      "formula": "original balance less principal paid to date"
+    },
+    {
+      "id": "domain.credit.pool_factor",
+      "kind": "number",
+      "op": "ratio",
+      "numerator": "domain.credit.balance_outstanding",
+      "denominator": "domain.credit.original_balance",
+      "formula": "domain.credit.balance_outstanding / domain.credit.original_balance"
+    },
+    {
+      "id": "domain.credit.total_investment_income",
+      "kind": "money",
+      "op": "sum",
+      "categories": [
+        "operating.collection.interest",
+        "operating.collection.penalty"
+      ],
+      "formula": "sum(interest income, fee income)"
+    }
+  ],
+  "contracts": [
+    {
+      "id": "55514717276f6e23bae823df49ec6996",
+      "name": "credit.loan.smoke",
+      "type": "Credit.Contract.Loan",
+      "contract_name": "credit.loan",
+      "master": "Contract.Debt",
+      "instance": "smoke",
+      "subject": {
+        "symbol": "asset.buyer"
+      },
+      "term": {
+        "start": "2026-01-01",
+        "end": "2027-03-01"
+      },
+      "currency": "USD",
+      "terms": {
+        "amortization": "interest_only",
+        "cdr": 0.03,
+        "cpr": 0.1,
+        "index_curve": "sofr",
+        "margin": {
+          "lang": "cfdl",
+          "src": "inputs.margin_bps"
+        },
+        "principal": 1200000,
+        "psa_speed": {
+          "lang": "cfdl",
+          "src": "cfg.psa"
+        },
+        "rate_cap": 0.1,
+        "rate_floor": 0.0725,
+        "recovery_lag_months": 3,
+        "severity": {
+          "lang": "cfdl",
+          "src": "inputs.severity_haircut"
+        },
+        "term_months": 12
+      },
+      "term_bounds": {
+        "psa_speed": {
+          "reads": "cfg.psa",
+          "min": 0.0,
+          "max": 10.0,
+          "code": "E9016_CREDIT_INVALID_PSA_SPEED",
+          "severity": "error"
+        },
+        "severity": {
+          "reads": "inputs.severity_haircut",
+          "min": 0.0,
+          "max": 1.0,
+          "code": "E9012_CREDIT_INVALID_SEVERITY",
+          "severity": "error"
+        }
+      },
+      "effects": {
+        "streams": []
+      },
+      "provenance": {
+        "source_file": "model.cfdl",
+        "source_span": {
+          "start_line": 26,
+          "start_col": 1,
+          "end_line": 42,
+          "end_col": 1
+        }
+      }
+    },
+    {
+      "id": "2eca99f87e604343389866d4867e2bed",
+      "name": "credit.purchase.smoke",
+      "type": "Credit.Contract.Purchase",
+      "contract_name": "credit.purchase",
+      "master": "Contract.Purchase",
+      "instance": "smoke",
+      "subject": {
+        "symbol": "asset.buyer"
+      },
+      "term": {
+        "start": "2026-01-01",
+        "end": "2027-03-01"
+      },
+      "currency": "USD",
+      "terms": {
+        "price": 1200000
+      },
+      "effects": {
+        "streams": []
+      },
+      "provenance": {
+        "source_file": "model.cfdl",
+        "source_span": {
+          "start_line": 44,
+          "start_col": 1,
+          "end_line": 49,
+          "end_col": 1
+        }
+      }
+    }
+  ],
+  "streams": [
+    {
+      "id": "f65a4e860ce94630c63692f4bc8edaf5",
+      "name": "credit.loan.bullet.smoke",
+      "owner": {
+        "symbol": "asset.buyer"
+      },
+      "direction": "inflow",
+      "currency": "USD",
+      "category": "operating.collection.principal",
+      "moves": "asset.buyer.balance",
+      "schedule": {
+        "kind": "Every",
+        "every": "monthly",
+        "from": "2026-01-01",
+        "to": "2027-03-01"
+      },
+      "amount": {
+        "lang": "cfdl",
+        "src": "if(months_between(parse_date(\"2026-01-01\"), time.date) == 12.0 - 1.0, prev.asset.buyer.balance * (1.0 - cpr_to_periodic(if(0.0 == 0.0, 0.03, 0.0 * (min(0.0002 * min(max(1.0, (0.0 + (months_between(parse_date(\"2026-01-01\"), time.date))) + 1.0), 30.0), 0.006) - 0.000095 * max(0.0, min(max(1.0, (0.0 + (months_between(parse_date(\"2026-01-01\"), time.date))) + 1.0), 120.0) - 60.0))), 12.0)), 0.0)"
+      },
+      "active_when": {
+        "lang": "cfdl",
+        "src": "true"
+      },
+      "provenance": {
+        "source_file": "model.cfdl",
+        "source_span": {
+          "start_line": 26,
+          "start_col": 1,
+          "end_line": 42,
+          "end_col": 1
+        },
+        "generated_by": {
+          "pack": {
+            "name": "credit",
+            "version": "0.1.0"
+          },
+          "rule_id": "credit_loan_interest_only_bullet",
+          "line": "principal",
+          "contract": "credit.loan.smoke"
+        }
+      }
+    },
+    {
+      "id": "2e9f355ea3067ed1b5025464d533a8df",
+      "name": "credit.loan.defaults.smoke",
+      "owner": {
+        "symbol": "asset.buyer"
+      },
+      "direction": "writeoff",
+      "currency": "USD",
+      "moves": "asset.buyer.balance",
+      "schedule": {
+        "kind": "Every",
+        "every": "monthly",
+        "from": "2026-01-01",
+        "to": "2027-03-01"
+      },
+      "amount": {
+        "lang": "cfdl",
+        "src": "if(months_between(parse_date(\"2026-01-01\"), time.date) < 12.0, prev.asset.buyer.balance * cpr_to_periodic(if(0.0 == 0.0, 0.03, 0.0 * (min(0.0002 * min(max(1.0, (0.0 + (months_between(parse_date(\"2026-01-01\"), time.date))) + 1.0), 30.0), 0.006) - 0.000095 * max(0.0, min(max(1.0, (0.0 + (months_between(parse_date(\"2026-01-01\"), time.date))) + 1.0), 120.0) - 60.0))), 12.0), 0.0)"
+      },
+      "active_when": {
+        "lang": "cfdl",
+        "src": "true"
+      },
+      "provenance": {
+        "source_file": "model.cfdl",
+        "source_span": {
+          "start_line": 26,
+          "start_col": 1,
+          "end_line": 42,
+          "end_col": 1
+        },
+        "generated_by": {
+          "pack": {
+            "name": "credit",
+            "version": "0.1.0"
+          },
+          "rule_id": "credit_loan_interest_only_defaults",
+          "line": "default",
+          "contract": "credit.loan.smoke"
+        }
+      }
+    },
+    {
+      "id": "195b5984a17ed3407e5bdf1e56e28d28",
+      "name": "credit.loan.interest.smoke",
+      "owner": {
+        "symbol": "asset.buyer"
+      },
+      "direction": "inflow",
+      "currency": "USD",
+      "category": "operating.collection.interest",
+      "schedule": {
+        "kind": "Every",
+        "every": "monthly",
+        "from": "2026-01-01",
+        "to": "2027-03-01"
+      },
+      "amount": {
+        "lang": "cfdl",
+        "src": "if(months_between(parse_date(\"2026-01-01\"), time.date) < 12.0, prev.asset.buyer.balance * (1.0 - cpr_to_periodic(if(0.0 == 0.0, 0.03, 0.0 * (min(0.0002 * min(max(1.0, (0.0 + (months_between(parse_date(\"2026-01-01\"), time.date))) + 1.0), 30.0), 0.006) - 0.000095 * max(0.0, min(max(1.0, (0.0 + (months_between(parse_date(\"2026-01-01\"), time.date))) + 1.0), 120.0) - 60.0))), 12.0)) * clamp(curve_value(\"sofr\", time.date) + inputs.margin_bps, 0.0725, 0.10) / 12.0, 0.0)"
+      },
+      "active_when": {
+        "lang": "cfdl",
+        "src": "true"
+      },
+      "provenance": {
+        "source_file": "model.cfdl",
+        "source_span": {
+          "start_line": 26,
+          "start_col": 1,
+          "end_line": 42,
+          "end_col": 1
+        },
+        "generated_by": {
+          "pack": {
+            "name": "credit",
+            "version": "0.1.0"
+          },
+          "rule_id": "credit_loan_floating_interest_only_interest",
+          "line": "interest",
+          "contract": "credit.loan.smoke"
+        }
+      }
+    },
+    {
+      "id": "6f89ac52e0337d7bc40c46a4a6e9be4e",
+      "name": "credit.loan.penalty.smoke",
+      "owner": {
+        "symbol": "asset.buyer"
+      },
+      "direction": "inflow",
+      "currency": "USD",
+      "category": "operating.collection.penalty",
+      "schedule": {
+        "kind": "Every",
+        "every": "monthly",
+        "from": "2026-01-01",
+        "to": "2027-03-01"
+      },
+      "amount": {
+        "lang": "cfdl",
+        "src": "if(months_between(parse_date(\"2026-01-01\"), time.date) < 12.0 - 1.0, prev.asset.buyer.balance * if(0.0 == 0.0, cpr_to_periodic(if(cfg.psa == 0.0, 0.10, min(cfg.psa * 0.002 * max(1.0, min((0.0 + (months_between(parse_date(\"2026-01-01\"), time.date))) + 1.0, 30.0)), 1.0)), 12.0), min(0.0 / max(1.0 - 0.0 * (0.0 + (months_between(parse_date(\"2026-01-01\"), time.date))), 0.000001), 1.0)) * 0.0, 0.0)"
+      },
+      "active_when": {
+        "lang": "cfdl",
+        "src": "true"
+      },
+      "provenance": {
+        "source_file": "model.cfdl",
+        "source_span": {
+          "start_line": 26,
+          "start_col": 1,
+          "end_line": 42,
+          "end_col": 1
+        },
+        "generated_by": {
+          "pack": {
+            "name": "credit",
+            "version": "0.1.0"
+          },
+          "rule_id": "credit_loan_interest_only_penalty",
+          "line": "penalty",
+          "contract": "credit.loan.smoke"
+        }
+      }
+    },
+    {
+      "id": "257ea61841eb2631e6402bf5e7fbc00d",
+      "name": "credit.loan.prepay.smoke",
+      "owner": {
+        "symbol": "asset.buyer"
+      },
+      "direction": "inflow",
+      "currency": "USD",
+      "category": "operating.collection.prepayment",
+      "moves": "asset.buyer.balance",
+      "schedule": {
+        "kind": "Every",
+        "every": "monthly",
+        "from": "2026-01-01",
+        "to": "2027-03-01"
+      },
+      "amount": {
+        "lang": "cfdl",
+        "src": "if(months_between(parse_date(\"2026-01-01\"), time.date) < 12.0 - 1.0, prev.asset.buyer.balance * if(0.0 == 0.0, cpr_to_periodic(if(cfg.psa == 0.0, 0.10, min(cfg.psa * 0.002 * max(1.0, min((0.0 + (months_between(parse_date(\"2026-01-01\"), time.date))) + 1.0, 30.0)), 1.0)), 12.0), min(0.0 / max(1.0 - 0.0 * (0.0 + (months_between(parse_date(\"2026-01-01\"), time.date))), 0.000001), 1.0)), 0.0)"
+      },
+      "active_when": {
+        "lang": "cfdl",
+        "src": "true"
+      },
+      "provenance": {
+        "source_file": "model.cfdl",
+        "source_span": {
+          "start_line": 26,
+          "start_col": 1,
+          "end_line": 42,
+          "end_col": 1
+        },
+        "generated_by": {
+          "pack": {
+            "name": "credit",
+            "version": "0.1.0"
+          },
+          "rule_id": "credit_loan_interest_only_prepay",
+          "line": "prepayment",
+          "contract": "credit.loan.smoke"
+        }
+      }
+    },
+    {
+      "id": "530b3d177bd67997211562605acfef8b",
+      "name": "credit.loan.recoveries.smoke",
+      "owner": {
+        "symbol": "asset.buyer"
+      },
+      "direction": "inflow",
+      "currency": "USD",
+      "category": "operating.collection.recovery",
+      "schedule": {
+        "kind": "Every",
+        "every": "monthly",
+        "from": "2026-01-01",
+        "to": "2027-03-01"
+      },
+      "amount": {
+        "lang": "cfdl",
+        "src": "if(months_between(parse_date(\"2026-01-01\"), time.date) >= 3.0 and months_between(parse_date(\"2026-01-01\"), time.date) < 12.0 + 3.0, entity.asset.buyer.credit_loan_lagged_balance_smoke * cpr_to_periodic(if(0.0 == 0.0, 0.03, 0.0 * (min(0.0002 * min(max(1.0, (0.0 + (months_between(parse_date(\"2026-01-01\"), time.date) - 3.0)) + 1.0), 30.0), 0.006) - 0.000095 * max(0.0, min(max(1.0, (0.0 + (months_between(parse_date(\"2026-01-01\"), time.date) - 3.0)) + 1.0), 120.0) - 60.0))), 12.0) * (1.0 - inputs.severity_haircut), 0.0)"
+      },
+      "active_when": {
+        "lang": "cfdl",
+        "src": "true"
+      },
+      "provenance": {
+        "source_file": "model.cfdl",
+        "source_span": {
+          "start_line": 26,
+          "start_col": 1,
+          "end_line": 42,
+          "end_col": 1
+        },
+        "generated_by": {
+          "pack": {
+            "name": "credit",
+            "version": "0.1.0"
+          },
+          "rule_id": "credit_loan_interest_only_recoveries",
+          "line": "recovery",
+          "contract": "credit.loan.smoke"
+        }
+      }
+    },
+    {
+      "id": "c725c73c0c2779e82dd6f0eca0b3cb34",
+      "name": "credit.loan.servicing.smoke",
+      "owner": {
+        "symbol": "asset.buyer"
+      },
+      "direction": "outflow",
+      "currency": "USD",
+      "category": "operating.expense.servicing",
+      "schedule": {
+        "kind": "Every",
+        "every": "monthly",
+        "from": "2026-01-01",
+        "to": "2027-03-01"
+      },
+      "amount": {
+        "lang": "cfdl",
+        "src": "if(months_between(parse_date(\"2026-01-01\"), time.date) < 12.0, prev.asset.buyer.balance * (1.0 - cpr_to_periodic(if(0.0 == 0.0, 0.03, 0.0 * (min(0.0002 * min(max(1.0, (0.0 + (months_between(parse_date(\"2026-01-01\"), time.date))) + 1.0), 30.0), 0.006) - 0.000095 * max(0.0, min(max(1.0, (0.0 + (months_between(parse_date(\"2026-01-01\"), time.date))) + 1.0), 120.0) - 60.0))), 12.0)) * (0.0 / 12.0), 0.0)"
+      },
+      "active_when": {
+        "lang": "cfdl",
+        "src": "true"
+      },
+      "provenance": {
+        "source_file": "model.cfdl",
+        "source_span": {
+          "start_line": 26,
+          "start_col": 1,
+          "end_line": 42,
+          "end_col": 1
+        },
+        "generated_by": {
+          "pack": {
+            "name": "credit",
+            "version": "0.1.0"
+          },
+          "rule_id": "credit_loan_interest_only_servicing",
+          "line": "servicing",
+          "contract": "credit.loan.smoke"
+        }
+      }
+    },
+    {
+      "id": "ec0887479cc8613f391ba9b4d46e8b92",
+      "name": "credit.purchase.price.smoke",
+      "owner": {
+        "symbol": "asset.buyer"
+      },
+      "direction": "outflow",
+      "currency": "USD",
+      "category": "investing.acquisition.purchase",
+      "schedule": {
+        "kind": "OnDate",
+        "on": "2026-01-01"
+      },
+      "amount": {
+        "lang": "cfdl",
+        "src": "1200000.0"
+      },
+      "active_when": {
+        "lang": "cfdl",
+        "src": "true"
+      },
+      "provenance": {
+        "source_file": "model.cfdl",
+        "source_span": {
+          "start_line": 44,
+          "start_col": 1,
+          "end_line": 49,
+          "end_col": 1
+        },
+        "generated_by": {
+          "pack": {
+            "name": "credit",
+            "version": "0.1.0"
+          },
+          "rule_id": "credit_purchase_price",
+          "line": "price",
+          "contract": "credit.purchase.smoke"
+        }
+      }
+    }
+  ],
+  "stream_inputs": [
+    {
+      "stream": "credit.loan.interest.smoke",
+      "contract": "credit.loan.smoke",
+      "terms": {
+        "age_months": "0",
+        "cdr": "0.03",
+        "index_curve": "sofr",
+        "margin": "inputs.margin_bps",
+        "payment_frequency": "",
+        "rate_cap": "0.10",
+        "rate_floor": "0.0725",
+        "sda_speed": "0"
+      },
+      "defaults_applied": [
+        "age_months",
+        "payment_frequency",
+        "sda_speed"
+      ]
+    },
+    {
+      "stream": "credit.loan.bullet.smoke",
+      "contract": "credit.loan.smoke",
+      "terms": {
+        "age_months": "0",
+        "cdr": "0.03",
+        "payment_frequency": "",
+        "sda_speed": "0"
+      },
+      "defaults_applied": [
+        "age_months",
+        "payment_frequency",
+        "sda_speed"
+      ]
+    },
+    {
+      "stream": "credit.loan.defaults.smoke",
+      "contract": "credit.loan.smoke",
+      "terms": {
+        "age_months": "0",
+        "cdr": "0.03",
+        "payment_frequency": "",
+        "sda_speed": "0"
+      },
+      "defaults_applied": [
+        "age_months",
+        "payment_frequency",
+        "sda_speed"
+      ]
+    },
+    {
+      "stream": "credit.loan.penalty.smoke",
+      "contract": "credit.loan.smoke",
+      "terms": {
+        "abs_speed": "0",
+        "age_months": "0",
+        "cpr": "0.10",
+        "payment_frequency": "",
+        "prepay_penalty_rate": "0",
+        "psa_speed": "cfg.psa"
+      },
+      "defaults_applied": [
+        "abs_speed",
+        "age_months",
+        "payment_frequency",
+        "prepay_penalty_rate"
+      ]
+    },
+    {
+      "stream": "credit.loan.prepay.smoke",
+      "contract": "credit.loan.smoke",
+      "terms": {
+        "abs_speed": "0",
+        "age_months": "0",
+        "cpr": "0.10",
+        "payment_frequency": "",
+        "psa_speed": "cfg.psa"
+      },
+      "defaults_applied": [
+        "abs_speed",
+        "age_months",
+        "payment_frequency"
+      ]
+    },
+    {
+      "stream": "credit.loan.recoveries.smoke",
+      "contract": "credit.loan.smoke",
+      "terms": {
+        "abs_speed": "0",
+        "age_months": "0",
+        "cdr": "0.03",
+        "cpr": "0.10",
+        "payment_frequency": "",
+        "principal": "1200000",
+        "psa_speed": "cfg.psa",
+        "sda_speed": "0",
+        "severity": "inputs.severity_haircut"
+      },
+      "defaults_applied": [
+        "abs_speed",
+        "age_months",
+        "payment_frequency",
+        "sda_speed"
+      ]
+    },
+    {
+      "stream": "credit.loan.servicing.smoke",
+      "contract": "credit.loan.smoke",
+      "terms": {
+        "age_months": "0",
+        "cdr": "0.03",
+        "payment_frequency": "",
+        "sda_speed": "0",
+        "servicing_fee": "0"
+      },
+      "defaults_applied": [
+        "age_months",
+        "payment_frequency",
+        "sda_speed",
+        "servicing_fee"
+      ]
+    },
+    {
+      "stream": "credit.purchase.price.smoke",
+      "contract": "credit.purchase.smoke",
+      "terms": {
+        "price": "1200000"
+      }
+    }
+  ],
+  "events": [],
+  "options": [],
+  "runs": [
+    {
+      "kind": "deterministic"
+    }
+  ],
+  "required_observables": [],
+  "required_refs": [],
+  "provenance": {
+    "sources": [
+      "model.cfdl"
+    ],
+    "compiler": {
+      "name": "cfdl",
+      "version": "0.9.0",
+      "hash": "a3f82ed4ab8eea8020071ddf3bdf74de",
+      "notes": [
+        "active_pack=credit@0.1.0"
+      ]
+    }
+  }
+}

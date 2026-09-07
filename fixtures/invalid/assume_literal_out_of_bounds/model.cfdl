@@ -1,0 +1,15 @@
+version 0.1
+model "assume-literal-out-of-bounds"
+time calendar monthly from 2026-01 for 3
+
+entity asset a : Asset.Financial
+
+// A literal the compiler can see is checked here rather than at the run: E2307.
+assume share : fraction = 1.3
+assume months : duration = 2.5
+assume cap = 0.12 within [0.04, 0.10]
+
+stream fee.x on entity asset.a inflow currency USD {
+  schedule every month from 2026-01 to 2026-03
+  amount = 100 * inputs.share
+}
