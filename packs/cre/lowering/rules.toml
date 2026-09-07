@@ -575,6 +575,37 @@ balloon_at_maturity = "0"
 payment_frequency = ""
 
 # ---------------------------------------------------------------------------
+# cre.mortgage_insurance — FHA/HUD mortgage insurance on a permanent loan.
+#
+# ONE STREAM, THE PREMIUM. It is struck as an annual rate on the insured
+# principal and paid with the loan on the model's calendar, so the annual
+# figure spreads across the periods of the year the way the loan payment
+# does. It is NOT debt service: the category is its own, and whether coverage
+# is measured with or without it is the subtotal's business (the CRE
+# `domain.cre.debt_service` subtotal includes it, because the one published
+# source that carries it measures coverage on P+I+MIP).
+#
+# The master allows a premium per period instead of a rate; this refinement
+# requires the rate-on-coverage form because that is how MIP is quoted.
+# ---------------------------------------------------------------------------
+
+[[rules]]
+id = "cre_mortgage_insurance_premium"
+contract_name = "cre.mortgage_insurance"
+line = "premium"
+stream_name = "cre.mortgage_insurance.premium{{contract.dot_suffix}}"
+owner_entity = "${subject}"
+direction = "outflow"
+category = "financing.debt.mortgage_insurance"
+amount_expr = "({{contract.premium}} + {{contract.premium_rate}} * {{contract.coverage}}) / {{model.periods_per_year}}"
+schedule_kind = "every"
+schedule_from = "{{contract.term_start}}"
+schedule_to = "{{contract.term_end}}"
+
+[rules.defaults]
+premium = "0"
+
+# ---------------------------------------------------------------------------
 # cre.construction_loan — a construction facility behind an equity commitment.
 #
 # THE DRAW SCHEDULE IS DATA, NOT A TERM. A development's funding curve is

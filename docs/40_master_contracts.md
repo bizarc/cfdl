@@ -260,12 +260,15 @@ declared curve or quantile); one of `fixed_rate` or `strike`. Line:
 on a floating loan is the first thing a project-finance case will ask for.
 
 ### 4.11 `Contract.Insurance`
-Roles `insurer`, `insured`. Fields: `premium`; `coverage` (opt);
-`deductible` (opt). Line: `premium` (`claim` where a refinement models
-recoveries). Side: insured pays.
+Roles `insurer`, `insured`. Fields: the premium as a group — `premium`
+(an amount per period) or `premium_rate` (an annual rate on `coverage`),
+because a policy is quoted either way and a mortgage insurance premium is
+a rate on the original principal; `coverage` (opt, the basis a rate
+applies to); `deductible` (opt). Line: `premium` (`claim` where a
+refinement models recoveries). Side: insured pays.
 HUD's mortgage insurance premium is the standing case
-(`benchmarks/cre/hud_home_multifamily`), which today is a hand stream
-because the debt contract rightly refused to carry it.
+(`benchmarks/cre/hud_home_multifamily`), a `cre.mortgage_insurance`
+contract beside the loan; the debt contract rightly refused to carry it.
 
 ### 4.12 `Contract.Line` and its kinds — decision R1
 Role `owner` (the model's own party; no counterparty). Fields: `amount`,

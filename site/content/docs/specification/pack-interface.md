@@ -623,12 +623,16 @@ deal repays from a named cash source, the contract takes a series or
 curve reference as a term, as `cre.construction_loan` takes its draw
 curve.
 
-**A contract paying finer than the model calendar aggregates into the
-period rather than being refused**, and its day count is a year fraction
-the placeholder expands to, so a monthly-paying mortgage runs on an
-annual model and act/act falls out of the same expansion (`docs/13`
-§7.16, §7.57). Statutory or workbook rounding belongs on the rule as a
-`round_step` term, never in a case's hand stream.
+**The calendar carries the cadence.** A model runs at the finest cadence
+its instruments carry — a monthly-paying mortgage puts the model on a
+monthly calendar — and a source that publishes annually is read from the
+results' annual rollup, which is a view of the same ledger. A rule paying
+finer than the calendar it is on is refused (`E2108`): twelve payments
+would share one period's environment and be struck once and multiplied.
+A contract's day count is a year fraction the placeholder expands to, so
+act/act falls out of the same expansion (`docs/13` §7.57). Statutory or
+workbook rounding belongs on the rule as a `round_step` term, never in a
+case's hand stream.
 
 **Parties in roles are real.** A model's `parties { landlord = party.acme
 }` is validated against the type's effective roles — the master's,

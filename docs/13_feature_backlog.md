@@ -219,25 +219,6 @@ the FNMA classes are entity fields today, so the REMIC tranches as notes
 Found asserting the seven published WALs of FNMA 2019-2, where the 400% PSA
 column refused the naive floor and the refusal was the convention speaking.
 
-### 7.54 The HUD case cannot move onto `cre.permanent_debt`
-
-*Belongs with the CRE pack (section 1). Split from the closed 7.14.*
-
-The reporting half is done: `benchmarks/cre/hud_home_multifamily` states P+I+MIP
-the way its source publishes it, and mortgage insurance is no longer counted as
-debt service.
-
-The case still hand-writes its mortgage rather than using `cre.permanent_debt`,
-because HUD's instrument carries mortgage insurance the contract does not model.
-A `cre.mortgage_insurance` contract is the shape that would close it, and it is
-not added on one case's evidence — the pack candidate list (`docs/41` §5) is where it
-belongs if a second source wants it.
-
-This is the coverage question §7.3 and §7.15 measure, in one instance: a case
-that reconciles externally while routing around the pack it should validate.
-
----
-
 ### 7.56 A term deferred to `inputs.` is never bounds-checked
 
 *Belongs with the language and engine (section 5). Split from the closed 7.24.*

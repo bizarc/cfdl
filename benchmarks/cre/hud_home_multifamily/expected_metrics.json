@@ -5,6 +5,6 @@
   },
   "domain.cre.debt_service": {
     "value": 195846,
-    "tolerance": 1.0
+    "tolerance": 6.0
   }
 }

@@ -375,6 +375,25 @@ growth_rate = "0.03"
 # zeros where only the deal knows.
 
 [[templates]]
+id = "cre.mortgage_insurance"
+label = "Mortgage insurance (MIP on a permanent loan)"
+kind = "contract"
+body = """
+contract cre.mortgage_insurance {
+  term ${term_start}..${term_end}
+  terms {
+    premium_rate = ${premium_rate}
+    coverage = ${coverage}
+  }
+}
+"""
+[templates.defaults]
+term_start = "2026-01"
+term_end = "2035-12"
+premium_rate = "0.0045"
+coverage = "6000000"
+
+[[templates]]
 id = "cre.permanent_debt"
 label = "Permanent mortgage (proceeds, interest, principal)"
 kind = "contract"

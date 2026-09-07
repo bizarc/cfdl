@@ -8,6 +8,19 @@ This project follows Semantic Versioning: https://semver.org/
 
 ## [Unreleased]
 
+**The HUD case is on the calendar its mortgage pays on.** It was annual
+because the workbook is an annual pro forma; the instruments are monthly. It
+now runs monthly, the first mortgage is `cre.permanent_debt` stated from the
+sizing tab's terms rather than from its published payment, and mortgage
+insurance is `cre.mortgage_insurance`, the CRE refinement of
+`Contract.Insurance` (whose premium is now a group: an amount per period or
+`premium_rate` on `coverage`). The two reproduce the tab's 1,165.7819 a month
+to the fourth decimal; the published annual rows are asserted as twelfths at
+each anchor month and read whole from the results' annual rollup. Nothing in
+the engine or the harness moved. docs/07 now says the calendar carries the
+cadence, where it claimed a finer-paying contract aggregates. Closes backlog
+7.54; fills the docs/41 Insurance row.
+
 **An override that matches nothing is refused.** A run-configuration key —
 in the deterministic block, a scenario or the Monte Carlo distributions —
 that names no assumption the model declares or reads, no declared stream,

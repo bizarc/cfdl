@@ -313,9 +313,11 @@ decision.
 - **The billing substitution is the one to probe.** Construct a coarser-than-grid
   stream with `net <n>` — a quarterly accrual on a monthly grid — and confirm the
   billing date is the quarter's close both before and after.
-- **Then the case that could not be built:** a monthly-paying loan on an annual
-  model. `benchmarks/cre/hud_home_multifamily` needs it, and measured with
-  `E2108` bypassed the contract already returns the workbook's published
-  13,314.3827 (7.14).
+- **The case that could not be built was on the wrong calendar.** A
+  monthly-paying loan on an annual model is refused (`E2108`), and
+  `benchmarks/cre/hud_home_multifamily` once recorded that as the blocker.
+  The model now runs monthly, as its mortgage pays, and the workbook's annual
+  rows are read from the results' annual rollup — 13,989.38 a year from the
+  loan's terms, with no change to the grid.
 - **Traceability is testable:** a period's reported value must equal the sum of
   the flows bucketed into it, by construction rather than by assertion.

@@ -18,15 +18,17 @@ development on a 29-year operating pro forma.
 
 ## The result
 
-Per-period, against the published pro forma, worst disagreement over all 29
-years of each line:
+The model is monthly and the workbook is annual, so the comparison is the
+results' annual rollup against the published pro forma. Worst disagreement
+over all 29 years of each line:
 
 | line | worst | what explains it |
 |---|---|---|
 | Gross potential rent | 0.48 | workbook rounds to whole dollars |
 | Rent loss (vacancy) | 0.48 | same |
 | Other revenue | 0.47 | same |
-| Debt service | **0.00** | exact |
+| Debt service (P+I+MIP) | 0.38 | the workbook rounds the annual payment |
+| Mortgage insurance | **0.00** | exact |
 | Replacement reserve | **0.00** | exact — was 4.35, see below |
 | Total operating expenses | **0.00** | exact — was 12.26, see below |
 
@@ -35,16 +37,16 @@ publishes at four points to sixteen significant figures:
 
 | | CFDL | published | difference |
 |---|---|---|---|
-| year 2 | 1.5757802845092563 | 1.5757380799199372 | +4.2e-05 |
-| year 5 | 1.5337679171491894 | 1.5337765387089857 | −8.6e-06 |
-| year 10 | 1.4335489505325618 | 1.4334834512831511 | +6.6e-05 |
-| year 15 | 1.2886742479090734 | 1.2887268568160697 | −5.3e-05 |
+| year 2 | 1.563096 | 1.575738079919937 | -1.3e-02 |
+| year 5 | 1.51688 | 1.533776538708986 | -1.7e-02 |
+| year 10 | 1.408339 | 1.433483451283151 | -2.5e-02 |
+| year 14 | 1.288639 | 1.28872685681607 | -8.8e-05 |
 
 Agreement to five decimal places on a ratio built from lines the workbook has
 already rounded to whole dollars. The residual is entirely that rounding: the
 workbook's DSCR cell is `-E24/E27`, and both of those are `=ROUND(...,0)`, so it
-divides a rounded NOI by a rounded debt service while CFDL divides the
-unrounded ones.
+divides a rounded NOI by a rounded debt service (13,989) while CFDL divides the
+unrounded ones (13,989.38 from the loan's terms).
 
 **These are now assertions rather than a table.** This section used to end by
 saying the four values were reproduced by hand and that nothing checked them —
@@ -55,9 +57,9 @@ and `domain.cre.dscr` straight from the Operating Pro Forma's rows 15, 24 and
 
 Two things made that possible. The subtotals exist per period at all, as folds
 over categories rather than named streams. And `case.toml` can set a tolerance
-per column: the money lines need ~1.0 because the workbook publishes whole
-dollars, the DSCR needs 1e-4 because it agrees to five decimals, and a single
-number cannot express both — a shared 1.0 would assert nothing about the ratio
+per column: the money lines need a twelfth of a dollar a month because the
+workbook publishes whole dollars a year, the DSCR needs 1e-4 because it agrees
+to five decimals, and a single number cannot express both — a shared 1.0 would assert nothing about the ratio
 and a shared 1e-4 would fail every line above it.
 
 DSCR is asserted at six of the eleven anchors and left blank at the rest. The
@@ -137,39 +139,59 @@ The other is `benchmarks/opco/damodaran_fcff` — an unrelated source, an
 unrelated pack, a multiplicative growth path rather than a rounded escalation.
 Two independent published sources confirming one mechanism.
 
-## Why this case still hand-writes its mortgage
+## The calendar is monthly, and the mortgage is the pack's
 
-`cre.permanent_debt` now exists and `benchmarks/cre/office_two_tenant` uses it.
-This case does not, for one reason — not the two originally recorded here.
+This case was written on an annual calendar, because the workbook is an
+annual pro forma and the harness asserts at the model's period. That was the
+presentation grain, not the instruments': the mortgage pays monthly, the
+rent roll is monthly and the vacancy reads the rent. A monthly-paying loan on
+an annual calendar is refused (`E2108_SCHEDULE_FINER_THAN_CALENDAR`), which
+this file once recorded as the blocker to using `cre.permanent_debt`. The
+refusal was right and the calendar was wrong.
 
-**The cadence is not the blocker.** The workbook's First Mortgage Sizing tab
-states $150,000 at 4.00% over a 15-year term, paid monthly:
-`pmt(0.04/12, 180, 150000) x 12 = 13,314.38`, exactly the workbook's own
-"Annual P+I as % of loan amount" of 8.876255% applied to the principal. This
-file first claimed a monthly-paying loan could not be modeled on an annual
-calendar. Measured with the check bypassed, the contract returns **13,314.3827**
-on this model, to the cent. The engine sums the twelve monthly accruals into the
-year; `E2108_SCHEDULE_FINER_THAN_CALENDAR` is what refuses it, and that check is
-broader than the engine requires. See `docs/13_feature_backlog.md` 7.16.
+The model now runs monthly. Every published line is level within a year, so
+each month carries a twelfth of the year's figure and the monthly coverage
+ratio is the annual one; `expected.csv` anchors the January of each anchor
+year at the published annual line over twelve, and the results' annual
+rollup reproduces the pro forma rows themselves (the table above is read
+from it). Nothing in the language, the engine or the harness changed to make
+that possible: the annual view of a monthly model was already a section of
+the results.
 
-**The published line is not debt service.** That is the reason that stands. It
-is P+I+MIP — the workbook says so where it defines coverage — and the residual
-is exact:
+**The loan is stated from its terms.** The First Mortgage Sizing tab states
+$150,000 at 4.00% over a 15-year term, self-amortizing, paid monthly, with
+mortgage insurance at 0.450% of the original principal. An earlier version of
+this model carried the tab's *answer* — the "Calculated Monthly P+I+MIP
+Payment" of 1,165.7819, transcribed to four places — and derived the two
+published legs from it. Two contracts now carry the terms and produce the
+answer:
 
 ```
-published line     13,989.38
-P&I                13,314.38
-mortgage insurance    675.00   = 0.450% of the original principal, flat
+cre.permanent_debt        150,000 at 4.00%, 180 months    1,109.5319 a month
+cre.mortgage_insurance    0.450% of 150,000, flat            56.2500 a month
+                                                          ----------
+                                                           1,165.7819   the sizing tab, to the fourth decimal
 ```
 
-Mortgage insurance is not a payment on the debt, and `cre.permanent_debt` does
-not invent one. Modeling it would mean either putting a `mip_rate` on a debt
-contract that has no business carrying it, or fitting principal and rate
-backwards until the total happened to land on 13,989.38 — reproducing the number
-while modeling something that is not the loan.
+Mortgage insurance is not a payment on the debt, and the debt contract does
+not carry it; it is an agreement of its own, `cre.mortgage_insurance`, the
+CRE refinement of `Contract.Insurance`. Coverage is measured on the whole
+published line because the pack's `domain.cre.debt_service` subtotal includes
+the insurance category — this source, the one that carries MIP, defines
+coverage as NOI over P+I+MIP.
 
-So the stream stays hand-written and the assertion stays at the workbook's own
-195,846. Recorded as `docs/13_feature_backlog.md` 7.14.
+**The workbook pays fourteen of the fifteen years.** Its pro forma carries
+the payment through year 14 and shows zero from year 15 — the same one-year
+slip as the affordability period. The contracts' term therefore ends in 2037.
+After the last payment the loan's account (`account.asset.home_project.balance`)
+still holds 13,030.34, the year the workbook did not pay. A hand-written
+stream simply stopped; a contract shows what stopping leaves behind.
+
+**The lifetime figure moves by the rounding.** The workbook's 195,846 is
+fourteen copies of a payment it rounds to 13,989; the contracts pay fourteen
+copies of 13,989.38, 195,851.36. `expected_metrics.json` keeps the published
+figure with a tolerance of six dollars, which is that rounding and nothing
+else.
 
 ## Two pack gaps this case walked into
 
@@ -222,16 +244,16 @@ existed — they were split for the rounding reason — so this moved nothing:
 their sum reproduces the total the file asserted before, at every anchor.
 
 **P&I and MIP.** The pro forma's debt line is one number and the workbook
-defines it as P+I+MIP. Both legs are now separate streams, grounded in the
-First Mortgage Sizing tab rather than inferred: MIP is the stated 0.450% of the
-stated $150,000 principal (675.00, flat, exact), and debt service is the
-residual of the published "Calculated Monthly P+I+MIP Payment" of 1,165.7819.
-**And the round is the workbook's.** The pro forma's debt cell is
-`=ROUND(...,0)`, so 13,989 is what it computes rather than what it displays, and
-the DSCR it publishes is that rounded line divided into a rounded NOI. An
-intermediate version of this work used the sizing tab's unrounded 13,989.3828
-and moved the lifetime expectation to 195,851.36; that was more precise and less
-accurate, and it would have left a 0.38 residual on every published debt line.
+defines it as P+I+MIP. The two are separate contracts now, and three separate
+streams — interest, principal and the premium — each grounded in the First
+Mortgage Sizing tab's terms rather than in its published payment. The premium
+is asserted at every anchor (56.25 a month, exact); interest and principal are
+not published separately by the workbook and are not asserted, but their
+sum with the premium is the sizing tab's 1,165.7819 to the fourth decimal.
+The pro forma's debt cell is `=ROUND(...,0)`, so its 13,989 a year sits 0.38
+under the contracts' 13,989.38; the coverage ratio it publishes is that
+rounded line divided into a rounded NOI, which is the residual in the DSCR
+table above.
 
 The model applies the workbook's round through the same `round_to` it already
 uses for the expense recurrence, rather than restating 13,989 as a constant — so

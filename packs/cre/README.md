@@ -76,7 +76,7 @@ time.date) + 0.005` states an agreed formula directly. A varying rate arrives
 through the term itself; there are no curve-selector twin terms.
 - `cre.lease_unit.<id>`, `cre.rollover.<id>`, `cre.opex_line`,
   `cre.vacancy_loss`, `cre.percentage_rent`, `cre.exit_forward`
-- `cre.permanent_debt`
+- `cre.permanent_debt`, `cre.mortgage_insurance`
 - `cre.construction_loan`
 
 ### `cre.construction_loan`
@@ -171,8 +171,28 @@ folding an unamortized balance into the final period would make that period's
 DSCR meaningless; the standard pro forma repays it out of the sale. Turn it on
 when the payoff genuinely belongs in the debt service line.
 
-**Not modeled:** sizing to a target coverage ratio (a solve), refinance (needs
-the events layer), and mortgage insurance — MIP is not a payment on the debt.
+**Not modeled:** sizing to a target coverage ratio (a solve) and refinance
+(needs the events layer). Mortgage insurance is not a payment on the debt and
+is its own agreement: `cre.mortgage_insurance`.
+
+### `cre.mortgage_insurance`
+
+FHA/HUD mortgage insurance on a permanent loan — the CRE refinement of
+`Contract.Insurance`. One stream, the premium, struck as an annual rate on the
+insured principal and paid on the model's calendar:
+
+- `cre.mortgage_insurance.premium{.<id>}` — the premium
+  (`financing.debt.mortgage_insurance`)
+
+| term | meaning | default |
+|---|---|---|
+| `premium_rate` | annual premium as a rate on `coverage` — HUD's 0.450% | *required* |
+| `coverage` | the insured principal, flat — the loan's original amount | *required* |
+
+It is not debt service, and the category says so. Whether coverage is measured
+with or without it is the subtotal's business: `domain.cre.debt_service`
+includes it, because the one published source that carries MIP defines
+coverage as NOI over P+I+MIP. Declare it beside the loan with the same term.
 
 ## Expected terms (authoring contract)
 

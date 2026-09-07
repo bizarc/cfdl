@@ -162,7 +162,7 @@ compensation is an expense line. None needs a master.
 | Sale | `Contract.Sale` | in the base |
 | Option | `Contract.Option` | in the base |
 | Derivative | `Contract.Derivative` | in the base |
-| Insurance | `Contract.Insurance` | in the base |
+| Insurance | `Contract.Insurance` | in the base; `cre.mortgage_insurance` refines it |
 | Guarantee / credit enhancement | `Contract.Guarantee` | in the base (§4.17); the survey found it missing, see §4 |
 | Collateral | — | not a contract: a RELATION between an obligation and an asset (`docs/13` §7.89) |
 | CDS, repo, margining | — | out of scope: trading-book instruments outside a cash-flow model of a deal |
@@ -232,7 +232,7 @@ reason to hold a master back.
 | Purchase, Sale | acquisitions and exits in every domain | — |
 | Option | management options, calls, renewals | a purchase option on a finance lease |
 | Derivative | — | a rate swap on a floating construction loan |
-| Insurance | — (HUD's MIP is a hand stream) | the HUD case's MIP |
+| Insurance | `cre.mortgage_insurance` — the HUD case's MIP (`benchmarks/cre/hud_home_multifamily`) | — |
 | Guarantee | — | a completion guarantee on a construction financing |
 | Tax | cash taxes, ITC, PTC, depreciation | — |
 | Grant | — (the toll road's subsidy is a hand stream) | the toll road's coverage subsidy |

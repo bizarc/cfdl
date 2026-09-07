@@ -2,13 +2,13 @@
 id: benchmark-cre-hud-home-multifamily
 title: "CRE: HOME-funded affordable multifamily"
 slug: "/docs/examples/cre-hud-home-multifamily"
-description: "A 29-year affordable multifamily underwriting from HUD's HOME Multifamily template, with restricted rents reverting to market at year 15 and a first mortgage that matures before the hold ends."
+description: "A 29-year affordable multifamily underwriting from HUD's HOME Multifamily template, with restricted rents reverting to market at year 15 and a first mortgage, stated from its sizing terms, that stops paying before the hold ends."
 source: benchmarks/cre/hud_home_multifamily
 ---
 
 # CRE: HOME-funded affordable multifamily
 
-A 29-year affordable multifamily underwriting from HUD's HOME Multifamily template, with restricted rents reverting to market at year 15 and a first mortgage that matures before the hold ends.
+A 29-year affordable multifamily underwriting from HUD's HOME Multifamily template, with restricted rents reverting to market at year 15 and a first mortgage, stated from its sizing terms, that stops paying before the hold ends.
 
 Every number below is checked against an independent reference
 implementation on every commit — period by period, and on each metric,
@@ -19,14 +19,15 @@ inside a declared tolerance. See [benchmark methodology](/docs/benchmarks).
 A 29-year affordable multifamily underwriting. Rents are restricted under a
 federal HOME subsidy and revert to market in year 15; four operating expense
 lines each escalate on their own schedule; a replacement reserve accrues; and a
-permanent mortgage carries both debt service and mortgage insurance, which are
-separate obligations rather than one payment.
+permanent mortgage, stated from its sizing terms, carries mortgage insurance as
+a separate agreement rather than as part of one payment.
 
 ## The reference
 
 A federal agency's HOME multifamily underwriting template, published as a
 spreadsheet together with a populated example. It publishes a full annual cash
-flow, so every line is checkable year by year.
+flow. The model runs monthly, as the mortgage pays, and its annual rollup
+reproduces the published rows year by year.
 
 **Freely downloadable**, and a populated example ships with it.
 
@@ -35,30 +36,37 @@ flow, so every line is checkable year by year.
 | | |
 |---|---|
 | Pack | `cre` |
-| Declared | five states, ten native streams |
-| Language features | declared state for each escalating expense line and the reserve |
-| Conventions | restricted rents reverting to market mid-hold, per-line escalation, a replacement reserve, mortgage insurance separated from debt service |
+| Declared | five states, two contracts, eight native streams |
+| Language features | declared state for each escalating expense line and the reserve; a monthly calendar reconciled to an annual pro forma through the results' annual rollup |
+| Contracts | `cre.permanent_debt`, `cre.mortgage_insurance` |
+| Conventions | restricted rents reverting to market mid-hold, per-line escalation, a replacement reserve, mortgage insurance as an agreement of its own |
 
 The five states carry the four operating expense lines and the reserve, each
-compounding at its own rate.
+compounding at its own rate once a year. The two contracts state the first
+mortgage as the template's sizing tab states it: $150,000 at 4.00% over 180
+months, and mortgage insurance at 0.450% of the original principal. Together
+they reproduce the tab's monthly payment of 1,165.7819 to the fourth decimal.
 
 ## The result
 
 Net operating income and debt service reproduce the template's own figures:
 `domain.cre.noi` = **1,886,475** and `domain.cre.debt_service` = **195,846**.
 
-Asserted: ten stream columns across 29 years, plus the two aggregates.
+Asserted: nine stream and subtotal columns at eleven anchor months across 29
+years, the coverage ratio at six of them, plus the two lifetime aggregates.
 
 ## The delta
 
-The per-period tolerance is 0.5 — half a dollar — because the template publishes
-money to whole dollars while compounding on unrounded balances. Its debt service
-coverage ratio, which the template quotes to sixteen figures, agrees to five
-decimal places and is asserted far more tightly than the money lines.
+The per-month tolerance is 0.05 — a twelfth of half a dollar — because the
+template publishes money to whole dollars a year while compounding on unrounded
+balances. Its debt service coverage ratio, which the template quotes to sixteen
+figures, agrees to five decimal places and is asserted far more tightly than
+the money lines.
 
 The template's mortgage payment is principal, interest **and** mortgage
-insurance. Insurance is not debt service, and the coverage ratio is computed
-without it.
+insurance, rounded to whole dollars a year. The contracts pay the unrounded
+payment, 0.38 a year more, and the lifetime debt service is asserted at the
+template's figure within that rounding.
 
 ## The model
 
@@ -79,23 +87,31 @@ without it.
 // that dwarfs the 2% trend either side of it. A model that got the trend right
 // and the switch wrong would look correct for thirteen years.
 //
-// WHY THESE ARE NATIVE STREAMS. Two CRE pack rules nearly fit and do not:
-// `cre.opex_line` emits a single un-suffixed stream, so a property cannot
-// have more than one expense line; and `cre.vacancy_loss` takes a CONSTANT
-// `potential_gross_year`, so vacancy cannot track a rent roll that grows. Both
-// The streams below are named into
+// THE CALENDAR IS MONTHLY BECAUSE THE INSTRUMENTS ARE. The mortgage pays
+// monthly, the rent roll is monthly, and the vacancy reads the rent. The
+// workbook publishes an ANNUAL pro forma, which is a view of the results —
+// the annual rollup — and never a reason for an annual calendar. Every
+// published line is level within a year, so each month carries a twelfth of
+// the year's figure and the monthly coverage ratio is the annual one.
+//
+// WHY THE OPERATING LINES ARE NATIVE STREAMS. `cre.vacancy_loss` takes a
+// CONSTANT `potential_gross_year`, so vacancy cannot track a rent roll that
+// steps 46% at the cliff; and the four expense lines escalate by a ROUNDED
+// RECURRENCE the pack's closed form cannot state. The streams are named into
 // the pack's taxonomy so `--pack cre` domain metrics still aggregate them,
-// which is the same posture benchmarks/cre/mit_rentleg_plaza takes.
+// which is the same posture benchmarks/cre/mit_rentleg_plaza takes. The
+// mortgage and its insurance are the pack's: `cre.permanent_debt` and
+// `cre.mortgage_insurance`, stated as the sizing tab states them.
 //
 // Rounding: the workbook rounds every pro forma line to whole dollars, and
 // computes rent loss from the ROUNDED gross rent. We carry full precision, so
-// agreement is to the dollar rather than to the cent. That is the source's
-// floor, not ours.
+// agreement is to the dollar a year rather than to the cent. That is the
+// source's floor, not ours.
 
 version 0.1
 model "hud-home-multifamily"
 use pack "cre" version "0.1.0"
-time calendar annual from 2024-01 for 29
+time calendar monthly from 2024-01 for 348
 
 entity asset home_project : CRE.Asset.RealProperty {
   // The affordability regime, as a fact about the building. An event clears it
@@ -103,25 +119,32 @@ entity asset home_project : CRE.Asset.RealProperty {
   // restating the switch.
   restricted init 1.0
 
-  // THE OPERATING LINES ARE THE PROPERTY'S, each escalating on the trend.
-  // The trend is the shared assumption; the amounts are facts about this
-  // building, so they belong to it.
+  // THE OPERATING LINES ARE THE PROPERTY'S, each an ANNUAL figure escalating
+  // on the trend once a year. The trend is the shared assumption; the amounts
+  // are facts about this building, so they belong to it. Each steps in
+  // January — the workbook's year boundary — and holds through the year; the
+  // streams below pay a twelfth of it each month.
   // management, escalating on the trend.
   opex_management init inputs.opex_management
-       next round_to(prev * (1 + inputs.opex_trend), 1)
+       next if(time.t - 12 * round_down(time.t / 12, 0) == 0,
+               round_to(prev * (1 + inputs.opex_trend), 1), prev)
   // maintenance, escalating on the trend.
   opex_maintenance init inputs.opex_maintenance
-       next round_to(prev * (1 + inputs.opex_trend), 1)
+       next if(time.t - 12 * round_down(time.t / 12, 0) == 0,
+               round_to(prev * (1 + inputs.opex_trend), 1), prev)
   // utilities, escalating on the trend.
   opex_utilities init inputs.opex_utilities
-       next round_to(prev * (1 + inputs.opex_trend), 1)
+       next if(time.t - 12 * round_down(time.t / 12, 0) == 0,
+               round_to(prev * (1 + inputs.opex_trend), 1), prev)
   // taxes and ins, escalating on the trend.
   opex_taxes_ins init inputs.opex_taxes_ins
-       next round_to(prev * (1 + inputs.opex_trend), 1)
+       next if(time.t - 12 * round_down(time.t / 12, 0) == 0,
+               round_to(prev * (1 + inputs.opex_trend), 1), prev)
 
   // The replacement reserve, on the same trend.
   reserve init inputs.reserve_y1
-          next round_to(prev * (1 + inputs.opex_trend), 1)
+          next if(time.t - 12 * round_down(time.t / 12, 0) == 0,
+                  round_to(prev * (1 + inputs.opex_trend), 1), prev)
 }
 
 // ---------------------------------------------------------------------------
@@ -143,14 +166,18 @@ assume opex_utilities     = 12300.00
 assume opex_taxes_ins     = 14863.00
 assume opex_trend         = 0.025
 assume reserve_y1         = 21013.00    // replacement reserve deposit
-// The first mortgage, from the workbook's First Mortgage Sizing tab. Its
-// published payment is labeled "Calculated Monthly P+I+MIP Payment" — the
-// three are one line on the pro forma, and only two of them are debt service.
-assume first_mortgage     = 150000.00   // sizing tab, calculated loan amount
+// The first mortgage, from the workbook's First Mortgage Sizing tab: the
+// loan's TERMS, not its payment. The tab states $150,000 at 4.00% over a
+// 15-year term, self-amortizing, paid monthly, with mortgage insurance at
+// 0.450% of the original principal. Its "Calculated Monthly P+I+MIP Payment"
+// of 1,165.7819 is what those terms produce, and the contracts below
+// reproduce it to the fourth decimal.
+assume first_mortgage     = 150000.00   // sizing tab, lender's proposed loan amount
+assume mortgage_rate      = 0.04        // sizing tab, interest rate
+// The amortization term is a literal: a months term converts to periods at
+// compile time (E5017), so it is stated on the contract — 180, the sizing
+// tab's 15-year term.
 assume mip_rate           = 0.0045      // sizing tab, 0.450% of original principal
-// Displayed to four places; the pro forma rounds the annual figure to whole
-// dollars anyway, so the digits beyond these are immaterial to the result.
-assume pi_mip_monthly     = 1165.7819   // sizing tab, monthly P+I+MIP
 
 // Restriction runs through year 14; year 15 is the first at market rents. The
 // assumptions tab states a 15-year affordability period, and the workbook's own
@@ -165,7 +192,7 @@ assume pi_mip_monthly     = 1165.7819   // sizing tab, monthly P+I+MIP
 // instead of re-derived from a `<` in an expression.
 assume restricted_years   = 14
 
-event affordability_expires when time.t >= inputs.restricted_years {
+event affordability_expires when time.t >= inputs.restricted_years * 12 {
   set entity asset.home_project.restricted = 0.0
 }
 
@@ -174,24 +201,26 @@ event affordability_expires when time.t >= inputs.restricted_years {
 // ---------------------------------------------------------------------------
 
 stream cre.unit.base_rent.home on entity asset.home_project inflow currency USD {
-  schedule every year from 2024-01 to 2052-01
+  schedule every month from 2024-01 to 2052-12
   category operating.revenue.base_rent
+  // An annual figure trending once a year, paid by the month.
   amount = if(asset.home_project.restricted == 1.0,
             inputs.rent_restricted_y1,
-            inputs.rent_market_y1) * pow(1 + inputs.rent_trend, time.t)
+            inputs.rent_market_y1)
+           * pow(1 + inputs.rent_trend, round_down(time.t / 12, 0)) / 12
 }
 
 stream cre.ops.revenue on entity asset.home_project inflow currency USD {
-  schedule every year from 2024-01 to 2052-01
+  schedule every month from 2024-01 to 2052-12
   category operating.revenue.other
-  amount = inputs.other_income_y1 * pow(1 + inputs.other_trend, time.t)
+  amount = inputs.other_income_y1 * pow(1 + inputs.other_trend, round_down(time.t / 12, 0)) / 12
 }
 
 // Vacancy tracks the active rent track, so it steps at the cliff too — by
 // READING the rent it is a percentage of, rather than restating how rent is
 // computed. The switch is stated once, in the event above.
 stream cre.vacancy.loss on entity asset.home_project outflow currency USD {
-  schedule every year from 2024-01 to 2052-01
+  schedule every month from 2024-01 to 2052-12
   category operating.deduction.vacancy
   amount = inputs.vacancy_rate
            * series_sum("cre.unit.base_rent.*", time.t, time.t)
@@ -212,8 +241,9 @@ stream cre.vacancy.loss on entity asset.home_project outflow currency USD {
 // separate a little more every year. That left a 12.26 residual at year 29 and
 // was the sole reason this case carried period_tolerance = 13.
 //
-// A declared state expresses that recurrence directly.
-// One state per sub-line, because each is rounded on its own before the sum.
+// A declared state expresses that recurrence directly. One state per
+// sub-line, because each is rounded on its own before the sum; each holds an
+// ANNUAL figure and steps in January, and the stream pays a twelfth of it.
 
 
 // One stream per PUBLISHED sub-line. The workbook reports these four
@@ -226,73 +256,77 @@ stream cre.vacancy.loss on entity asset.home_project outflow currency USD {
 // decomposition and not a change: the four sum to what the single stream
 // carried, to the cent.
 stream cre.opex.line.management on entity asset.home_project outflow currency USD {
-  schedule every year from 2024-01 to 2052-01
+  schedule every month from 2024-01 to 2052-12
   category operating.expense.opex
-  amount = asset.home_project.opex_management
+  amount = asset.home_project.opex_management / 12
 }
 
 stream cre.opex.line.maintenance on entity asset.home_project outflow currency USD {
-  schedule every year from 2024-01 to 2052-01
+  schedule every month from 2024-01 to 2052-12
   category operating.expense.opex
-  amount = asset.home_project.opex_maintenance
+  amount = asset.home_project.opex_maintenance / 12
 }
 
 stream cre.opex.line.utilities on entity asset.home_project outflow currency USD {
-  schedule every year from 2024-01 to 2052-01
+  schedule every month from 2024-01 to 2052-12
   category operating.expense.opex
-  amount = asset.home_project.opex_utilities
+  amount = asset.home_project.opex_utilities / 12
 }
 
 stream cre.opex.line.taxes_insurance on entity asset.home_project outflow currency USD {
-  schedule every year from 2024-01 to 2052-01
+  schedule every month from 2024-01 to 2052-12
   category operating.expense.opex
-  amount = asset.home_project.opex_taxes_ins
+  amount = asset.home_project.opex_taxes_ins / 12
 }
 
 // The replacement reserve is its own published line and is semantically not an
 // operating expense — HUD reports it below total expenses — but it does sit
 // above NOI, which is why it is an operating deduction rather than capital.
 stream cre.opex.line on entity asset.home_project outflow currency USD {
-  schedule every year from 2024-01 to 2052-01
+  schedule every month from 2024-01 to 2052-12
   category operating.expense.opex
-  amount = asset.home_project.reserve
+  amount = asset.home_project.reserve / 12
 }
 
 // ---------------------------------------------------------------------------
-// Debt — level annual payment for 14 years, then the first mortgage matures.
-// Named to match what domain.cre.debt_service reads.
+// Debt — the first mortgage and its insurance, as the sizing tab states them.
 // ---------------------------------------------------------------------------
 
-// The pro forma carries ONE debt line and the workbook defines it as P+I+MIP,
-// so it was modeled as one number and the two published components could not
-// be checked separately. Mortgage insurance is not a payment on the debt —
-// and coverage here is measured against the whole line, which is
-// what `financing.*` folds to.
+// The pro forma carries ONE debt line and the workbook defines it as P+I+MIP.
+// Only two of the three are debt service, so they are two contracts: the
+// loan, and the mortgage insurance on it. `cre.permanent_debt` lowers the
+// interest and principal legs from the loan's terms — $150,000 at 4.00%
+// amortizing over 180 months — and their sum is the level payment,
+// 1,109.5319 a month; `cre.mortgage_insurance` pays 0.450% of the original
+// principal a year, 56.25 a month. Together they are the sizing tab's
+// 1,165.7819 to the fourth decimal, with nothing transcribed.
 //
-// MIP is the sizing tab's stated 0.450% of original principal, flat and exact.
-// Debt service is the residual.
+// THE WORKBOOK PAYS FOURTEEN OF THE FIFTEEN YEARS. Its pro forma carries the
+// payment through year 14 and shows zero from year 15, the same one-year
+// slip as the affordability period — so the term here ends in 2037, and the
+// balance the loan's account still carries after the last payment (13,030)
+// is the year the workbook did not pay. A hand-written stream simply stopped;
+// a contract shows what stopping leaves behind.
 //
-// THE ROUND IS THE WORKBOOK'S, NOT A FUDGE. The pro forma's debt cell is
-// `=ROUND(...,0)`, so 13,989 is what it COMPUTES and not what it displays, and
-// the DSCR it publishes is that rounded line divided into a rounded NOI. Using
-// the sizing tab's unrounded 13,989.3828 instead would be more precise and less
-// accurate — it would leave a 0.38 residual against every published debt line.
-//
-// Written as the workbook's arithmetic rather than as its answer: the same
-// `round_to` this model already uses for the expense recurrence, applied to the
-// published monthly payment. So the derivation is visible and tracks the sizing
-// inputs, instead of a 13,989 constant that would not. The 0.38 the round
-// discards belongs to the P&I leg, which is the leg the workbook rounded.
-stream loan.permanent_debt_service on entity asset.home_project outflow currency USD {
-  schedule every year from 2024-01 to 2037-01
-  category financing.debt.service
-  amount = round_to(inputs.pi_mip_monthly * 12, 1) - inputs.first_mortgage * inputs.mip_rate
+// Coverage is measured on the whole published line: the pack's
+// `domain.cre.debt_service` subtotal includes mortgage insurance because this
+// source, the one that carries it, defines coverage as NOI over P+I+MIP.
+contract cre.permanent_debt on entity asset.home_project {
+  term 2024-01..2037-12
+  terms {
+    principal = inputs.first_mortgage
+    interest_rate = inputs.mortgage_rate
+    amortization_months = 180
+    funded_at_close = 0
+  }
 }
 
-stream loan.mortgage_insurance on entity asset.home_project outflow currency USD {
-  schedule every year from 2024-01 to 2037-01
-  category financing.debt.mortgage_insurance
-  amount = inputs.first_mortgage * inputs.mip_rate
+contract cre.mortgage_insurance on entity asset.home_project {
+  term 2024-01..2037-12
+  terms {
+    premium_rate = inputs.mip_rate
+    coverage = inputs.first_mortgage
+  }
 }
 ```
 
@@ -306,18 +340,18 @@ stream loan.mortgage_insurance on entity asset.home_project outflow currency USD
 
 Checked period by period: **13 series** across **11 periods** — **138 values** in all, each within the tolerance shown.
 
-- `cre.unit.base_rent.home` — within ±0.5
-- `cre.vacancy.loss` — within ±0.5
-- `cre.ops.revenue` — within ±0.5
-- `cre.opex.line.management` — within ±0.5
-- `cre.opex.line.maintenance` — within ±0.5
-- `cre.opex.line.utilities` — within ±0.5
-- `cre.opex.line.taxes_insurance` — within ±0.5
-- `cre.opex.line` — within ±0.5
-- `loan.permanent_debt_service` — within ±0.5
-- `loan.mortgage_insurance` — within ±0.5
-- `domain.cre.egi` — within ±1.0
-- `domain.cre.noi` — within ±1.0
+- `cre.unit.base_rent.home` — within ±0.05
+- `cre.vacancy.loss` — within ±0.05
+- `cre.ops.revenue` — within ±0.05
+- `cre.opex.line.management` — within ±0.05
+- `cre.opex.line.maintenance` — within ±0.05
+- `cre.opex.line.utilities` — within ±0.05
+- `cre.opex.line.taxes_insurance` — within ±0.05
+- `cre.opex.line` — within ±0.05
+- `cre.mortgage_insurance.premium` — within ±0.05
+- `domain.cre.debt_service` — within ±0.05
+- `domain.cre.egi` — within ±0.1
+- `domain.cre.noi` — within ±0.1
 - `domain.cre.dscr` — within ±1.0e-4
 
 Summary metrics for the base run:
@@ -325,4 +359,4 @@ Summary metrics for the base run:
 | Metric | Value | Tolerance |
 |---|---:|---:|
 | `domain.cre.noi` | 1,886,475 | ±130 |
-| `domain.cre.debt_service` | 195,846 | ±1 |
+| `domain.cre.debt_service` | 195,846 | ±6 |

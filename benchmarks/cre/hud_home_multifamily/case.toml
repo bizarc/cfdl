@@ -14,16 +14,23 @@
 # year. Those four are the point of the case — a model with the right trend and
 # the wrong switch looks correct for thirteen years.
 #
-# period_tolerance = 0.5 — the theoretical floor, and every line now sits under
-# it. The workbook publishes whole dollars, so half a dollar is the most an
-# exact figure can differ from its rounded print; nothing here needs more.
+# THE MODEL IS MONTHLY AND THE SOURCE IS ANNUAL. Each anchor row is the January
+# of its year, and each figure is the workbook's published annual line over
+# twelve: every line is level within a year, so a month carries a twelfth of it
+# and the monthly coverage ratio IS the annual one. The results' annual rollup
+# reproduces the pro forma rows themselves; NOTES.md quotes them.
 #
-#   cre.unit.base_rent.home       worst 0.45   whole-dollar rounding
-#   cre.vacancy.loss              worst 0.48   whole-dollar rounding
-#   cre.ops.revenue               worst 0.42   whole-dollar rounding
-#   cre.opex.line             worst 0.00   exact
-#   cre.opex.line               worst 0.00   exact
-#   loan.permanent_debt_service   worst 0.00   exact
+# period_tolerance = 0.05 — a twelfth of the theoretical floor. The workbook
+# publishes whole dollars a year, so half a dollar is the most an exact annual
+# figure can differ from its rounded print, and a twelfth of that is the most a
+# month can. Worst per line, on the annual rollup against the published rows:
+#
+#   cre.unit.base_rent.home          worst 0.45   whole-dollar rounding
+#   cre.vacancy.loss                 worst 0.48   whole-dollar rounding
+#   cre.ops.revenue                  worst 0.42   whole-dollar rounding
+#   cre.opex.line.*                  worst 0.00   exact
+#   cre.mortgage_insurance.premium   worst 0.00   exact
+#   domain.cre.debt_service          worst 0.38   the workbook rounds P+I+MIP
 #
 # THE TWO EXPENSE LINES WERE THE REASON THIS CASE CARRIED A TOLERANCE OF 13.
 # The workbook escalates them as a RECURRENCE — each year is last year's
@@ -40,9 +47,9 @@
 # This is one half of the acceptance test for docs/14_state_and_recurrence.md.
 # The other is benchmarks/opco/damodaran_fcff, an unrelated source in an
 # unrelated pack. Two independent published sources confirming one mechanism.
-summary = "A 29-year affordable multifamily underwriting from HUD's HOME Multifamily template, with restricted rents reverting to market at year 15 and a first mortgage that matures before the hold ends."
+summary = "A 29-year affordable multifamily underwriting from HUD's HOME Multifamily template, with restricted rents reverting to market at year 15 and a first mortgage, stated from its sizing terms, that stops paying before the hold ends."
 pack = "cre"
-period_tolerance = 0.5
+period_tolerance = 0.05
 
 # One tolerance cannot serve this case, which is why the published subtotals
 # went unasserted until now.
@@ -57,6 +64,6 @@ period_tolerance = 0.5
 # A single 1.0 would assert nothing about the ratio; a single 1e-4 would fail
 # every money line.
 [tolerance]
-"domain.cre.egi" = 1.0
-"domain.cre.noi" = 1.0
+"domain.cre.egi" = 0.1
+"domain.cre.noi" = 0.1
 "domain.cre.dscr" = 1.0e-4
