@@ -1844,7 +1844,25 @@ ALREADY returns `unbound`, and a role that may not be bound was bound anyway,
 because nothing consumed the field. Exposure is necessary and not sufficient.
 This entry is worth doing and it is worth less than §7.115.
 
-Related: §7.115, §7.116, `crates/cfdl-mcp/src/tools/lookup.rs`.
+MEASURED, 2026-09-07. A transcribe run of `gpt-5.6-sol` over 18 cases put a
+number on the cost: of 113 asserted groups missed, 89 were name-dependent and
+24 were economic. `penzance_highlands` is the clearest instance — 7 of its 8
+name-independent assertions matched, the deal was right down to debt service,
+and it scored 0.280 because 17 of its 25 groups are labels no specification
+conveys. The economics were not the difficulty; naming was.
+
+AND THE ACCOUNTS. A waterfall step is written in terms of accounts as well as
+published series: which accounts exist on the subject, which party owns each,
+and which side it sits on. None of that is reachable through `lookup` either,
+so the second half of a step is as unwritable as the first. Beside
+`publishes`:
+
+    accounts: [ { name, owner, side, opens_at, description } ]
+
+That is the difference between naming the cash a step moves and naming where
+it moves from and to, and a step needs both.
+
+Related: §7.115, §7.116, §7.118, `crates/cfdl-mcp/src/tools/lookup.rs`.
 
 ### 7.118 `skeleton` starts a valid model, not a valid structure
 
@@ -1867,6 +1885,35 @@ bar `skeleton` already holds itself to. The shapes belong in the pack rather
 than in the tool, because what a deal of a kind consists of is domain knowledge
 and the pack is where domain knowledge lives; §7.113's template extension is
 most of the mechanism.
+
+MEASURED, 2026-09-07, and it reframes the shape. The same transcribe run
+shows an author that fills terms well and does not invent structure:
+`penzance_highlands` reproduced the whole income statement — potential gross
+rent, effective gross income, opex, NOI, leasing costs, debt service and the
+lifetime total — and omitted the partnership above it entirely, all eight
+`jv.distribution.*` lines. `auto_abs_tranches` matched none of its economics
+and missed 13 name-dependent groups. Ten of the 42 cases carry a waterfall;
+`skeleton` emits none, in any pack, in any shape.
+
+So the deficit is not that a starter is small. It is that nothing tells an
+author what a model may CONTAIN. Named shapes answer that for the deals
+someone thought to name, and a catalogue answers it for the rest:
+
+- the inventory — every construct a model of this domain may hold, contracts,
+  accounts, waterfalls, statements, slices, options, and what each is for
+- the CLUES for discerning when each applies — the tells in a specification
+  that say a promote is present, that cash is split between parties at all,
+  that a reserve exists, that a class is subordinated. A component nobody can
+  tell they need is not discoverable by having been listed
+
+The clues are the harder half and the more valuable one. A catalogue without
+them is a glossary; with them it is the thing that would have made an author
+notice that Highlands has a partnership in it.
+
+ORDERING. This entry depends on §7.117 and must not ship before it. A
+skeleton that emits a waterfall whose series and accounts an author cannot
+then inspect produces a structurally correct model referring to names that do
+not resolve — a new failure wearing the shape of progress.
 
 Related: §7.111, §7.113, §7.117.
 
