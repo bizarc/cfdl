@@ -564,7 +564,10 @@ def run_eval(
         marker = "PASS" if score.get("matches") or (
             task["tier"] == "repair" and score["compiles"]
         ) else "fail"
-        print(f"[eval][{marker}] {task['tier']}/{task['id']} partial={score['partial']}")
+        econ = score.get("economics")
+        econ_txt = "" if econ is None else f" econ={econ} ({score.get('economics_groups','')})"
+        print(f"[eval][{marker}] {task['tier']}/{task['id']} "
+              f"partial={score['partial']}{econ_txt}")
     return {"agent": agent, "summary": summarize(results, tiers), "results": results}
 
 
@@ -578,15 +581,39 @@ def summarize(results: list[dict], tiers: list[str]) -> dict:
         cost = sum(float((r.get("usage") or {}).get("cost", 0.0)) for r in rows)
         econ = [r["score"]["economics"] for r in rows
                 if r["score"].get("economics") is not None]
+        # Pooled economics weights a case by how much it asserts. A mean of
+        # per-case ratios lets a case with one economic assertion count as
+        # much as one with eleven, which flattered every run that scored 1/1.
+        pooled_ok = pooled_all = 0
+        for r in rows:
+            groups = r["score"].get("economics_groups")
+            if groups and "/" in groups:
+                ok, total = groups.split("/")
+                pooled_ok += int(ok)
+                pooled_all += int(total)
         summary[tier] = {
             "tasks": len(rows),
             "passed": sum(1 for r in rows if r["score"][key]),
+            # Did the deal come out right, regardless of what the author
+            # called its lines — the headline for authoring. A case whose
+            # every economic assertion matched passes here even if it named
+            # nothing the way the reference did.
+            "passed_economics": sum(
+                1 for r in rows if r["score"].get("economics") == 1.0
+            ),
+            "economics_pooled": (
+                round(pooled_ok / pooled_all, 4) if pooled_all else None
+            ),
+            "economics_groups": f"{pooled_ok}/{pooled_all}",
+            "mean_economics": round(sum(econ) / len(econ), 4) if econ else None,
+            # Kept for continuity with runs graded before economics existed;
+            # it counts author-invented labels a specification cannot convey.
             "mean_partial": round(
                 sum(r["score"]["partial"] for r in rows) / len(rows), 4
             ),
-            # The headline for authoring: did the deal come out right,
-            # regardless of what the author called its lines.
-            "mean_economics": round(sum(econ) / len(econ), 4) if econ else None,
+            "naming_missed": sum(
+                r["score"].get("naming_missed") or 0 for r in rows
+            ),
             "cost_usd": round(cost, 4),
             "cost_per_task_usd": round(cost / len(rows), 4),
         }

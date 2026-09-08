@@ -31,7 +31,7 @@ in the compiled model, and the per-period lookup.
 Present value **−433,719.03**, multiple on invested capital **1.151953** and
 weighted average life **2.367044 years**.
 
-Asserted: net cash flow per period across 36 months, plus the three summary
+Asserted: net cash flow per period across 41 months, plus the three summary
 figures.
 
 ## The delta

@@ -16,7 +16,7 @@ inside a declared tolerance. See [benchmark methodology](/docs/benchmarks).
 
 ## The case
 
-A retail strip center held for ten years. An anchor tenant pays base rent plus
+A retail strip center held for seven years. An anchor tenant pays base rent plus
 percentage rent above a stated breakpoint; inline shops sit on net leases with
 staggered expiries. Operating expense recoveries run off a base-year stop that is
 grossed up to 95% occupancy, so the landlord recovers as though the center were
@@ -50,7 +50,7 @@ Present value **8,328,491.23**, net operating income **4,012,080.73** and leasin
 costs **340,000.00**.
 
 Asserted: effective gross income, net operating income and net cash flow per
-period across 120 months, plus the three lifetime figures.
+period across 84 months, plus the three lifetime figures.
 
 Percentage rent, the base-year gross-up and the recovery stop can each be wrong
 in offsetting ways that a lifetime NOI would not show, so assertion is per

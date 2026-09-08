@@ -31,7 +31,7 @@ comparison is against a month-by-month recursion of the same convention.
 Present value **−295,975.22**, multiple on invested capital **1.225381** and
 weighted average life **3.84394 years**.
 
-Asserted: net cash flow per period across 120 months, plus the three summary
+Asserted: net cash flow per period across 126 months, plus the three summary
 figures.
 
 ## The delta
