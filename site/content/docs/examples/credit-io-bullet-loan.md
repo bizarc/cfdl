@@ -46,7 +46,7 @@ prepayment and default.
 Present value **−61,370.42**, multiple on invested capital **1.286054** and
 weighted average life **3.864922 years**.
 
-Asserted: net cash flow per period across 60 months, plus the three summary
+Asserted: net cash flow per period across 64 months, plus the three summary
 figures.
 
 ## The delta
