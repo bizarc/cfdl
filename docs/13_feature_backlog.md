@@ -1869,3 +1869,37 @@ and the pack is where domain knowledge lives; §7.113's template extension is
 most of the mechanism.
 
 Related: §7.111, §7.113, §7.117.
+
+### 7.119 A non-cash stream cannot be written in a model with a pack
+
+Belongs with §5, language and engine. Found 2026-09-07, authoring the repair
+fixtures the catalog is missing.
+
+Two checks disagree, and between them they refuse every `accrual` and
+`writeoff` stream in any model with a pack active:
+
+- with a category, `E1379_NONCASH_STREAM_CATEGORY` — a non-cash stream that
+  carries one is refused, on `!cash && stream.category.is_some()`
+- without one, `E5029_STREAM_MISSING_CATEGORY` — a stream that declares no
+  category is refused while a pack is active, on `None if pack_active`, which
+  makes no exemption for the non-cash kinds
+
+There is no third option, so the stream cannot be written. A minimal model
+proves it: take a `writeoff` moving a balance under `use pack "cre"`, and each
+variant produces its own error, neither of which the other admits.
+
+The tell is in E5029's own message, which says the uncategorized stream's cash
+"would reach model.total and fold into no subtotal". That is true of a cash
+stream and false of a write-off, which moves a balance and reaches no total at
+all. The rationale for demanding a category does not describe a non-cash
+stream, which suggests E5029 should exempt them rather than E1379 relaxing —
+but that is the decision, not a foregone conclusion.
+
+The evidence was found where it should have been: `fixtures/invalid/`
+`noncash_stream_with_category` declares `use pack "cre"`, so the fixture that
+demonstrates E1379 has no writable repair. A diagnostic whose minimal fix
+cannot be stated is the cheapest possible signal that two rules disagree, and
+it argues for the repair catalog covering every code rather than most.
+
+Related: §7.115, `crates/cfdl-compile/src/lib.rs` (E1379, E5029),
+`fixtures/invalid/noncash_stream_with_category`.
