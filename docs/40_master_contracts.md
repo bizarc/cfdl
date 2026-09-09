@@ -1,13 +1,17 @@
 # Master contract types — the construct, stated top-down
 
-Status: **stages 1 and 2 of seven built** — principles and the roster settled in
-discussion 2 September 2026; R1–R3 decided the same day (§4.12, §7, §8).
-Stage 1 (the ontology model in `cfdl-pack`: fields, roles with
-specialization, lines, side, the effective walks, the load checks, the
-roster below in the language base, and every pack's roles specialized)
-is in. Stage 2 (the packs conform: hard renames to the masters' names,
-`line` on every rule, template coverage as a load check) is in. Stages 3–7
-are listed at the end and each lands as its own change.
+Status: **all seven stages built**, 5 September 2026 — principles and the
+roster settled in discussion 2 September 2026; R1–R3 decided the same day
+(§4.12, §7, §8). Stage 1 (the ontology model in `cfdl-pack`: fields, roles
+with specialization, lines, side, the effective walks, the load checks, the
+roster below in the language base, and every pack's roles specialized) is in.
+Stage 2 (the packs conform: hard renames to the masters' names, `line` on
+every rule, template coverage as a load check) is in. Stages 3, 4, 5, 5b, 6
+and 7 each landed as its own change and are recorded at the end of this
+document, where each says what it built; stage 7 completed 5 September 2026
+with `Contract.Option`'s elections and their three demonstrations. What the
+stages left behind is listed there too: `Contract.Derivative` has no
+refinement, and the two follow-ons `docs/13` §7.108 and §7.109.
 Repository-only; the site carries the result, not the argument.
 
 ## 1. Why this document exists

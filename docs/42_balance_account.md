@@ -2,12 +2,21 @@
 
 *Drafted 4 September 2026 from the conversation that followed the level-pay
 balance (PR #289); revised the same day after review, and again once the
-surface was settled (§3.2, §3.5, §3.6). Status: DESIGN NOTE,
-nothing built. It is a language and engine item of its own, separate from
-the engine restructure (since done by stage, `docs/26`), and it should be settled before
-the restructure so the restructure is not reopened for it. Where this note
-and the shipped level-pay balance disagree, the shipped balance is the
-stopgap.*
+surface was settled (§3.2, §3.5, §3.6). Status: **BUILT** — the note was
+written as a design note and the design has since shipped. The core surface
+is in the language: an entity owns an account, streams of all four
+directions move it, `accrual` and `writeoff` are non-cash and enter no total,
+`prev.<account>` reads the opening, `init` is the first period's opening,
+every movement is journaled, the relation folds a container's account from
+its members, and `E1378`–`E1384` refuse the malformed forms (`docs/10`). The
+pack side is in with `docs/40` stage 6: a master declares the account
+(§3.5), `Contract.Debt` names `balance`, every refinement opens it, a rule's
+`account` key moves it, and the loader refuses a type that opens an account
+no rule moves. The engine restructure this note asked to precede went ahead
+by stage afterwards (`docs/26`) and was not reopened for it. What remains is
+listed at the end: the demonstrations S4–S6, and §7.107's within-period
+compounding. Where this note and the shipped level-pay balance disagree, the
+shipped balance is the stopgap.*
 
 ## 0. The sentence
 
