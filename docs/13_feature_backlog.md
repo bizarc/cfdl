@@ -219,40 +219,6 @@ the FNMA classes are entity fields today, so the REMIC tranches as notes
 Found asserting the seven published WALs of FNMA 2019-2, where the 400% PSA
 column refused the naive floor and the refusal was the convention speaking.
 
-### 7.57 A pack rule cannot accrue on act/act, because a divisor is not a fraction
-
-*Belongs with the packs (section 5). Split from the closed 6.1.*
-
-`year_frac` accepts `act/act` (ISDA), so a hand-written model can accrue on it.
-A pack rule cannot: `{{model.accrual_divisor}}` expands to `<ppy>` or
-`(360 / time.days_in_period)` — one number per period — and act/act needs a
-denominator that changes with the year the period falls in.
-
-The shape is the one the expansion table already implies. A divisor is the
-reciprocal of a year fraction:
-
-```
-30/360   rate / 12                  ==  rate * year_frac(s, e, "30/360")
-act/360  rate * days/360            ==  rate * year_frac(s, e, "act/360")
-act/365  rate * days/365            ==  rate * year_frac(s, e, "act/365")
-```
-
-So the placeholder could expand to a `year_frac` call over the period's bounds
-rather than to a number. act/act then falls out with no special case, and the
-pack placeholder becomes sugar over a capability a model already has natively —
-which is the property worth having whether or not act/act is the reason.
-
-Note that two of the three expansions are already run-time text, not compile-time
-constants: `(360 / time.days_in_period)` reads the environment. So the argument
-that the divisor must resolve at compile time holds only for the fixed case.
-
-**What it needs first.** `year_frac` takes two dates, and an expression can read
-`time.date` and `time.days_in_period`. Whether those reconstruct the period's
-start and end — and which end `time.date` denotes — is the fact to establish
-before scoping this.
-
----
-
 ### 7.60 A weekly schedule cannot be anchored to a weekday
 
 *Belongs with the language (section 5). Found building the keyword register.*

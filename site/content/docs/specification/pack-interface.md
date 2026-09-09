@@ -1284,16 +1284,37 @@ contract's `day_count` term and expands to:
 | `day_count` | expands to | meaning |
 |---|---|---|
 | absent, `30/360`, `30e/360` | `<ppy>` | every period is 1/ppy of a year |
-| `act/360` | `(360 / time.days_in_period)` | actual days over a 360-day year |
-| `act/365` | `(365 / time.days_in_period)` | actual days over a 365-day year |
+| `act/360` | `(1 / year_frac(time.date, edate(time.date, <n>), "act/360"))` | actual days over a 360-day year |
+| `act/365` | `(1 / year_frac(time.date, edate(time.date, <n>), "act/365"))` | actual days over a 365-day year |
+| `act/act` | `(1 / year_frac(time.date, edate(time.date, <n>), "act/act"))` | ISDA: each part of the span over its own year's length |
 
-Dividing by `(360 / days)` is multiplying by `days / 360`, so a 31-day January
-accrues more than a 28-day February — which is the point of an Actual
-convention. On a daily grid it collapses to `rate / 360`. The default expands
-to exactly the same text as `{{model.periods_per_year}}`, so a rule can adopt
-the placeholder without changing any existing model. An unrecognized value is
+`<n>` is the RULE's own length in months — 1, 3 or 12 — not the grid's. A
+divisor is the reciprocal of a year fraction, so this measures the period the
+rule actually fires over, which is the period it accrues. That distinction is
+the whole of the expansion: a quarterly-paying loan accrues a quarter each
+time it fires, whatever book it is carried on, exactly as
+`{{model.periods_per_year}}` resolves to the rule's rhythm rather than the
+calendar's. Reading `time.days_in_period` here instead would measure the grid,
+and did: a quarterly-paying act/360 loan on a monthly grid booked one month of
+interest per payment — 20,500 where 60,833.33 was right, on 1,000,000 at 6%
+over 2026.
+
+Dividing by `(1 / year_frac)` is multiplying by the year fraction, so a 31-day
+January accrues more than a 28-day February — which is the point of an Actual
+convention. The default expands to exactly the same text as
+`{{model.periods_per_year}}`, and its year fraction is exactly `1/ppy`, so
+30/360 keeps the cheaper compile-time constant. An unrecognized value is
 `E5019_UNKNOWN_DAY_COUNT` rather than a silent fallback: act/360 against
 act/365 is about 1.4% of interest.
+
+`act/act` needs a period whose end it can name, so it is accepted for a
+monthly, quarterly or annual payment cadence and refused by
+`E5019_UNKNOWN_DAY_COUNT` for a daily or weekly one — where it would have to
+be approximated as act/365 and would be wrong by a day every leap year.
+A daily or weekly rule keeps the older `(360 / time.days_in_period)` form for
+act/360 and act/365: such a rule arises only with no `schedule_every` on a
+matching calendar, where the rule's period and the grid's are the same period
+and the two forms agree.
 
 Use it for every **nominal** rate — note rates, servicing strips, floating
 index-plus-margin. Do not use it for annual *quantities* (`rent_year`,

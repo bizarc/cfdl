@@ -984,6 +984,92 @@ def perpetuity_matches_gordon_form() -> tuple[float, float]:
     return worst, 0.0
 
 
+@check("credit: an Actual/360 accrual measures the contract's period, not the grid's")
+def actual_basis_follows_the_contract() -> tuple[float, float]:
+    """Actual/360 interest is principal * rate * actual days / 360.
+
+    The identity is the definition of the convention, so it holds for any
+    correct implementation and for any reporting grid. This states it for a
+    contract that pays QUARTERLY on a MONTHLY grid, which is where the two
+    notions of "a period" come apart: the rule fires four times, and each
+    firing must accrue its own quarter's days, not the calendar month the
+    firing happens to land in.
+
+    2026 is not a leap year, so a full year is 365 actual days and the
+    convention's 365/360 uplift is the whole of the difference from 30/360.
+    """
+    src = """version 0.1
+model "act360-quarterly-pay"
+use pack "credit" version "0.1.0"
+time calendar monthly from 2026-01 for 12
+
+entity asset loan : Credit.Asset.Loan
+
+contract credit.loan.q on entity asset.loan {
+  term 2026-01..2026-12
+  terms {
+    amortization = "interest_only"
+    principal = 1000000
+    interest_rate = 0.06
+    term_months = 120
+    payment_frequency = "quarter"
+    day_count = "act/360"
+    cpr = 0
+    cdr = 0
+    severity = 0
+    servicing_fee = 0
+    recovery_lag_months = 0
+  }
+}
+"""
+    block = run_pack_model(src, 0.05, "credit")
+    booked = sum(series(block, "credit.loan.interest.q"))
+    return booked, 1000000.0 * 0.06 * 365.0 / 360.0
+
+
+@check("credit: the same contract accrues the same interest on any grid")
+def accrual_is_independent_of_the_reporting_grid() -> tuple[float, float]:
+    """A contract's economics are its own; the grid only reports them.
+
+    The same quarterly-pay Actual/360 loan is run on a monthly grid and on a
+    quarterly one. Both must book the same interest, because nothing about
+    the loan changed — only the resolution at which it is observed.
+    """
+    def model(calendar: str, periods: int) -> str:
+        # The term ends on the last firing, so both grids carry the same four
+        # quarterly accruals — January, April, July and October — and the
+        # comparison is of the accrual, not of how many there are.
+        return f"""version 0.1
+model "act360-grid-{calendar}"
+use pack "credit" version "0.1.0"
+time calendar {calendar} from 2026-01 for {periods}
+
+entity asset loan : Credit.Asset.Loan
+
+contract credit.loan.q on entity asset.loan {{
+  term 2026-01..2026-10
+  terms {{
+    amortization = "interest_only"
+    principal = 1000000
+    interest_rate = 0.06
+    term_months = 120
+    payment_frequency = "quarter"
+    day_count = "act/360"
+    cpr = 0
+    cdr = 0
+    severity = 0
+    servicing_fee = 0
+    recovery_lag_months = 0
+  }}
+}}
+"""
+    monthly = sum(series(run_pack_model(model("monthly", 12), 0.05, "credit"),
+                         "credit.loan.interest.q"))
+    quarterly = sum(series(run_pack_model(model("quarterly", 4), 0.05, "credit"),
+                           "credit.loan.interest.q"))
+    return monthly, quarterly
+
+
 def main() -> int:
     if not CLI.exists():
         print(f"analytic-checks: {CLI} not found — run `cargo build -p cfdl-cli`")
