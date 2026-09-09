@@ -1131,18 +1131,6 @@ against it by `make ir-schema`.
         }
       ]
     },
-    "Weekday": {
-      "type": "string",
-      "enum": [
-        "Mon",
-        "Tue",
-        "Wed",
-        "Thu",
-        "Fri",
-        "Sat",
-        "Sun"
-      ]
-    },
     "BusinessDayConvention": {
       "type": "string",
       "enum": [
