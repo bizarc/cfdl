@@ -194,7 +194,7 @@
       },
       "amount": {
         "lang": "cfdl",
-        "src": "if(months_between(parse_date(\"2026-01-01\"), time.date) < 0.0, 5000000.0 * (0.08 / (360.0 / time.days_in_period)), -ipmt(0.08 / (360.0 / time.days_in_period), months_between(parse_date(\"2026-01-01\"), time.date) - 0.0 + 1.0, 84.0, 5000000.0))"
+        "src": "if(months_between(parse_date(\"2026-01-01\"), time.date) < 0.0, 5000000.0 * (0.08 / (1.0 / year_frac(time.date, edate(time.date, 1.0), \"act/360\"))), -ipmt(0.08 / (1.0 / year_frac(time.date, edate(time.date, 1.0), \"act/360\")), months_between(parse_date(\"2026-01-01\"), time.date) - 0.0 + 1.0, 84.0, 5000000.0))"
       },
       "active_when": {
         "lang": "cfdl",
@@ -237,7 +237,7 @@
       },
       "amount": {
         "lang": "cfdl",
-        "src": "if(months_between(time.date, parse_date(\"2027-12-01\")) == 0.0, prev.asset.target.balance, if(months_between(parse_date(\"2026-01-01\"), time.date) < 0.0, 0.0, -ppmt(0.08 / (360.0 / time.days_in_period), months_between(parse_date(\"2026-01-01\"), time.date) - 0.0 + 1.0, 84.0, 5000000.0)))"
+        "src": "if(months_between(time.date, parse_date(\"2027-12-01\")) == 0.0, prev.asset.target.balance, if(months_between(parse_date(\"2026-01-01\"), time.date) < 0.0, 0.0, -ppmt(0.08 / (1.0 / year_frac(time.date, edate(time.date, 1.0), \"act/360\")), months_between(parse_date(\"2026-01-01\"), time.date) - 0.0 + 1.0, 84.0, 5000000.0)))"
       },
       "active_when": {
         "lang": "cfdl",

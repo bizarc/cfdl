@@ -7776,6 +7776,32 @@ fn lower_contract_streams(
                             _ => ppy.to_string(),
                         },
                     ),
+                    // ACCRUAL MEASURES THE CONTRACT'S PERIOD, NOT THE GRID'S.
+                    //
+                    // `time.days_in_period` is a timeline property: it counts
+                    // the days of the period the GRID is standing in. That is
+                    // the right answer to a question this placeholder is not
+                    // asking. A rule fires on the contract's rhythm — a
+                    // quarterly-paying loan accrues a quarter each time it
+                    // fires, whatever the book it is carried on — so the
+                    // divisor has to measure the rule's own period, exactly as
+                    // `{{model.periods_per_year}}` and `{{time.elapsed_periods}}`
+                    // already do a few lines above and below. Reading the grid
+                    // here booked one month of interest per quarterly payment:
+                    // 20,500 where 60,833.33 was right, on 1,000,000 at 6% over
+                    // 2026, with no diagnostic. See `docs/26_lessons_learned.md`.
+                    //
+                    // A year fraction over the rule's own bounds says it
+                    // directly. `time.date` is the period's START (proved by
+                    // `year_frac(time.date, edate(time.date, 1), "act/360") * 360
+                    // == time.days_in_period` on a monthly grid), so the end is
+                    // one rule-period on from it, and a divisor is the year
+                    // fraction's reciprocal. act/act then needs no special case:
+                    // it is a basis `year_frac` has always known.
+                    //
+                    // 30/360 stays on `ppy` — its year fraction is exactly
+                    // 1/ppy, so the reciprocal is the same number, and `ppy` is
+                    // a compile-time constant where the call is not.
                     "model.accrual_divisor" => Some(
                         match resolve_plain("day_count")
                             .unwrap_or_default()
@@ -7783,8 +7809,9 @@ fn lower_contract_streams(
                             .trim_matches('"')
                         {
                             "" | "30/360" | "30e/360" => ppy.to_string(),
-                            "act/360" => "(360 / time.days_in_period)".to_string(),
-                            "act/365" => "(365 / time.days_in_period)".to_string(),
+                            basis @ ("act/360" | "act/365" | "act/act") => {
+                                accrual_divisor_expr(basis, &rule_freq, ppy)
+                            }
                             // Unreachable in practice: validate_pack_contract
                             // rejects an unknown value once per contract and
                             // short-circuits lowering, which is where the
@@ -8474,6 +8501,19 @@ fn validate_pack_contract(
         }
     }
 
+    // The cadence the contract's rules will fire on: its own payment rhythm
+    // when it states one, the calendar's when it does not. This is the period
+    // an Actual accrual measures, and `act/act` needs to be able to name that
+    // period's end — which `edate` can do for a whole number of months and
+    // cannot do for a day or a week.
+    let accrual_cadence = contract
+        .terms
+        .get("payment_frequency")
+        .map(|t| interval_to_frequency(t.value.trim().trim_matches('"')).to_string())
+        .unwrap_or_else(|| timeline_calendar.to_string());
+    let act_act_expressible =
+        matches!(accrual_cadence.as_str(), "monthly" | "quarterly" | "annual");
+
     // A misspelled day count must not fall back to a default in silence: the
     // gap between act/360 and act/365 is about 1.4% of interest.
     for key in ["day_count", "amortization_day_count"] {
@@ -8481,12 +8521,26 @@ fn validate_pack_contract(
             continue;
         };
         let value = term.value.trim().trim_matches('"');
-        if !matches!(value, "30/360" | "30e/360" | "act/360" | "act/365") {
+        // `act/act` (ISDA) accrues over the rule's own period, so it is
+        // supported wherever that period has an end `edate` can name. On a
+        // daily or weekly cadence it does not, and approximating it as
+        // act/365 would be wrong by a day every leap year — silently, which
+        // is the failure this whole family of checks exists to prevent.
+        let known = matches!(value, "30/360" | "30e/360" | "act/360" | "act/365")
+            || (value == "act/act" && act_act_expressible);
+        if !known {
+            let supported = if act_act_expressible {
+                "30/360, 30e/360, act/360, act/365, act/act"
+            } else {
+                "30/360, 30e/360, act/360, act/365 (act/act needs a monthly, \
+                 quarterly or annual payment cadence, which names the period it \
+                 accrues over)"
+            };
             diagnostics.push(pack_diag(
                 "E5019_UNKNOWN_DAY_COUNT",
                 &format!(
-                    "Contract '{}' declares {} = '{}'. Supported: 30/360, 30e/360, act/360, act/365.",
-                    contract.name, key, value
+                    "Contract '{}' declares {} = '{}'. Supported: {}.",
+                    contract.name, key, value, supported
                 ),
                 source_stmt,
                 term.span,
@@ -8518,7 +8572,10 @@ fn validate_pack_contract(
     // and a per-period divisor is exactly right for it.
     if let Some(term) = contract.terms.get("amortization_day_count") {
         let value = term.value.trim().trim_matches('"');
-        if matches!(value, "act/360" | "act/365") {
+        // act/act belongs here for the same reason as its two siblings, and
+        // more so: its divisor moves with the calendar year as well as the
+        // month, so a payment struck from it would move with both.
+        if matches!(value, "act/360" | "act/365" | "act/act") {
             diagnostics.push(pack_diag(
                 "E5027_ACTUAL_AMORTIZATION_BASIS",
                 &format!(
@@ -8768,6 +8825,38 @@ fn rule_frequency<'a>(schedule_every: &'a str, calendar: &'a str) -> &'a str {
     } else {
         interval_to_frequency(schedule_every)
     }
+}
+
+/// The divisor an Actual day-count basis accrues on, over the RULE's period.
+///
+/// A divisor is the reciprocal of a year fraction, so this is `1 / year_frac`
+/// over the period the rule itself spans: `time.date` opens it and
+/// `edate(time.date, n)` closes it, where `n` is the rule's own length in
+/// months. Reading `time.days_in_period` instead would measure the grid, which
+/// is a different period whenever a contract states its own payment rhythm.
+///
+/// Daily and weekly rules keep the older grid-derived form. Their period has
+/// no whole-month length for `edate` to take, and the only way either arises
+/// today is a rule with no `schedule_every` on a matching calendar — where the
+/// rule's period and the grid's are the same period, and the two forms agree.
+/// `act/act` is refused for that cadence by `E5019_UNKNOWN_DAY_COUNT` rather
+/// than silently approximated, because its denominator is the calendar year's
+/// real length and a daily period cannot name its own end.
+fn accrual_divisor_expr(basis: &str, rule_freq: &str, ppy: u32) -> String {
+    let months = match rule_freq {
+        "monthly" => 1,
+        "quarterly" => 3,
+        "annual" => 12,
+        // Daily and weekly: no whole-month step. act/act never reaches here.
+        _ => {
+            return match basis {
+                "act/360" => "(360 / time.days_in_period)".to_string(),
+                "act/365" => "(365 / time.days_in_period)".to_string(),
+                _ => ppy.to_string(),
+            };
+        }
+    };
+    format!("(1 / year_frac(time.date, edate(time.date, {months}), \"{basis}\"))")
 }
 
 /// An expression counting whole elapsed periods of `frequency` from `anchor`

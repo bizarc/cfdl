@@ -8,6 +8,27 @@ This project follows Semantic Versioning: https://semver.org/
 
 ## [Unreleased]
 
+**An Actual-basis accrual measures the contract's period, not the grid's.**
+`{{model.accrual_divisor}}` expanded an Actual `day_count` to
+`360 / time.days_in_period`, which counts the days of the period the MODEL is
+standing in — while `{{model.periods_per_year}}` and `{{time.elapsed_periods}}`
+in the same expression resolve against the rule's own frequency. A contract
+stating its own `payment_frequency` therefore accrued the wrong span: a
+quarterly-paying act/360 loan on a monthly grid booked one month of interest
+per payment, 20,500 where 60,833.33 was right on 1,000,000 at 6% over 2026,
+with no diagnostic. The divisor is now the reciprocal of a year fraction over
+the rule's own bounds, `1 / year_frac(time.date, edate(time.date, <n>),
+<basis>)`. **This is a behavior change** for any model pairing an Actual
+`day_count` with a `payment_frequency` that differs from the calendar; where
+the two agree — every benchmark and every fixture — not one series or metric
+moves, and only `model_hash` changes. `act/act` (ISDA) is now a supported
+`day_count`, which the new form admits with no special case, and is refused
+for `amortization_day_count` alongside act/360 and act/365
+(`E5027_ACTUAL_AMORTIZATION_BASIS`) and for a daily or weekly cadence, which
+cannot name the period it would accrue over. Two identities in
+`analytic-checks` now pin it. Closes backlog 7.57; the reasoning is in
+docs/26.
+
 **A pack's ceiling that is a convention warns; its floor that is a definition
 refuses.** `psa_speed` and `sda_speed` above 10 (1000%, the highest speed a
 published table prints) and a construction loan rate above 1 (8 where 0.08

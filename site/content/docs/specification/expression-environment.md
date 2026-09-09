@@ -125,9 +125,16 @@ monthly-paying loan carried on a daily book divides by 12, not 365, and only
 the compiler can see that. `time.ppy` reads the calendar and would say 365.
 
 `time.days_in_period` is the actual calendar days the current period spans —
-31 in January, 28 in a non-leap February, 1 on a daily grid. It is what makes
-an Actual/360 or Actual/365 accrual expressible: `rate * time.days_in_period /
-360`. Packs reach it through `{{model.accrual_divisor}}` rather than directly.
+31 in January, 28 in a non-leap February, 1 on a daily grid. It is a property
+of the GRID, and it answers for the period the model is standing in, not for
+the period a stream fires over. So `rate * time.days_in_period / 360` is an
+Actual/360 accrual only for a stream that fires every period; a stream on its
+own longer cadence (`schedule every quarter` on a monthly grid) must measure
+its own span, which `year_frac` does:
+`rate * year_frac(time.date, edate(time.date, 3), "act/360")`. `time.date` is
+the period's START, so `edate` from it names the end. Packs reach the same
+expression through `{{model.accrual_divisor}}` rather than either form
+directly.
 
 ### 3.1 Fields that move: `<family>.<entity>.<field>` and `prev`
 

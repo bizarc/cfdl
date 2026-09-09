@@ -792,3 +792,38 @@ payment genuinely recomputes each period is a balance recurrence: now that
 the loan's balance is an account (`docs/42`), it is a pack rule over
 `prev.balance` and `time.days_in_period`, and nothing in the language blocks
 it. Open it again only with the document that asks for it.
+
+### A placeholder that resolves against the timeline beside siblings that resolve against the contract
+
+Filed as `docs/13` §7.57 and closed 9 September 2026. The entry asked only
+for act/act, which a single-number divisor cannot express; the shape of the
+answer turned out to be a defect the entry had not seen.
+
+A pack rule's amount carries several placeholders, and `{{model.periods_per_year}}`
+and `{{time.elapsed_periods}}` both resolve at compile time against the RULE's
+own frequency — a monthly-paying loan on a daily book divides by 12, not 365,
+and `rule_frequency` exists to say so. `{{model.accrual_divisor}}` did not: for
+an Actual basis it expanded to `360 / time.days_in_period`, a runtime binding
+that knows only the grid. So one expression mixed two notions of "a period",
+and they part company the moment a contract states its own `payment_frequency`.
+A quarterly-paying act/360 loan on a monthly grid booked one month of interest
+per payment — 20,500 where 60,833.33 was right, on 1,000,000 at 6% over 2026 —
+with no diagnostic, because every individual term was legal.
+
+Three things are worth keeping from it. **`schedule` was never the problem**:
+the stream fired quarterly throughout, and a 30/360 contract at the same
+cadence was always correct, because its divisor is `ppy` and `ppy` follows the
+rule. Timing and measurement are separate questions and only the second was
+wrong. **The grid-derived form was right whenever the two cadences coincided**,
+which is every case in the suite, so 42 benchmarks and 300 goldens agreed with
+a wrong expansion — two implementations agreeing is not evidence, and here
+there was only one. **A divisor is the reciprocal of a year fraction**, so
+`1 / year_frac(time.date, edate(time.date, <rule months>), <basis>)` states the
+period the rule fires over directly, and act/act then needs no special case at
+all: it is a basis `year_frac` had always known.
+
+The general lesson is narrower than "prefer compile-time resolution". It is
+that a set of placeholders substituted into ONE expression must agree about
+what a period is, and nothing checked that. When a placeholder reaches for a
+runtime binding while its neighbours resolve at compile time, that difference
+is the bug's hiding place.

@@ -3385,7 +3385,7 @@ contract credit.loan.p on entity asset.buyer {
 }
 ```
 
-- `E5019_UNKNOWN_DAY_COUNT` (error): Contract 'credit.loan.p' declares day_count = 'actual/360'. Supported: 30/360, 30e/360, act/360, act/365.
+- `E5019_UNKNOWN_DAY_COUNT` (error): Contract 'credit.loan.p' declares day_count = 'actual/360'. Supported: 30/360, 30e/360, act/360, act/365, act/act.
 
 Minimal fix (compiles):
 
