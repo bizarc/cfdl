@@ -219,81 +219,6 @@ the FNMA classes are entity fields today, so the REMIC tranches as notes
 Found asserting the seven published WALs of FNMA 2019-2, where the 400% PSA
 column refused the naive floor and the refusal was the convention speaking.
 
-### 7.69 The annual grain is deliberate; what follows from it is not all settled
-
-*Belongs with the engine (section 5). Found reconciling
-`benchmarks/cre/penzance_highlands`. REWRITTEN after `Grain` became a type —
-the first version of this item called the central behavior a defect, and the
-tests say otherwise.*
-
-Filed first as "the annual grain discards intra-year timing", evidenced by a
-monthly model covering 2026 with one $100 inflow at 10%:
-
-| | period-grain NPV | annual-grain NPV |
-|---|---|---|
-| $100 in January | 100.0000 | 100.0000 |
-| $100 in September | **93.8436** | **100.0000** |
-
-That measurement still reproduces. It is not a defect. Two tests in
-`crates/cfdl-engine/src/lib.rs` assert exactly this, in both directions:
-`npv_at_grain` on a monthly model must EQUAL the same cash as a single annual
-payment — *"valued at the same annual convention these must agree"* — and it
-must DIFFER from discounting that monthly model per period — *"discounting
-twelve times differs from discounting one bucket once"*. Valuing at an annual
-convention regardless of the grid the model is written on is the whole point,
-and it is what lets a monthly model reconcile against an annually stated
-source. Time-differentiating cash inside the bucket would defeat it.
-
-`Grain` (`crates/cfdl-engine/src/results.rs`) has since made that mechanism a
-type, with three consumers: the valuation (`lib.rs:1130`), the annual rollup
-(`results.rs:155`), and statements, which reach it through
-`Grain::from_index(ix, spec.grain)`. Anything below therefore touches three
-surfaces rather than one.
-
-Three questions the tests do NOT settle.
-
-**Does the short first bucket belong in a VALUATION?** `Grain::calendar_year`
-documents it — *"a mid-year start therefore produces a short first bucket,
-which is what the annual rollup has always done and what a fiscal reader
-expects"* — and for reporting that is plainly right. Discounting is a different
-use of the same partition: a bucket's exponent is its integer index, so a flow
-four months after a September start is discounted a full year. Identical cash
-flows, 24 monthly inflows of 100 at 10%:
-
-| model start | period-grain | annual-grain |
-|---|---|---|
-| 2026-01 | 2,193.81 | 2,290.91 |
-| 2026-09 | 2,193.81 | 2,152.07 |
-
-139 apart on the start month alone. A reader who accepts that January and
-September are not distinguished *within* a bucket may still not expect the
-model's start month to move the answer. Whether it should is a convention
-question — a fiscal-year source would want exactly this, a project-life
-valuation would not — and it is currently unstated either way.
-
-**A stream's placement changes units across the two paths.** At period grain
-the exponent is `i + offset`, so `end` waits one PERIOD. At annual grain it is
-`bucket + offset`, so the same declaration waits one YEAR. Twelvefold on a
-monthly model, from an unchanged line of source, and no test covers it.
-
-**`model.irr` never follows the grain.** It always solves `irr_with_offsets`,
-the per-period form (`lib.rs:1147`), while the NPV branches above it. To be
-precise about what is and is not wrong: both read the same `valued_streams`, so
-the IRR does solve NPV = 0 over exactly the cash flows the NPV values — the
-difference is the convention, not the inputs. But under an annual valuation a
-reader who checks by discounting at the reported IRR gets a non-zero NPV.
-
-Nothing published is affected: **0 of 41 benchmark run configs set
-`valuation_grain`**, so all three live in a path no case exercises.
-
-Shape: state the convention rather than change it. The bucketing is settled and
-should stay — calendar years are what make external reconciliation possible,
-and `Grain` now expresses that in one place. What is missing is a written
-answer to "what does a bucket's exponent mean", and a decision on whether
-`model.irr` follows the grain or is documented in `06_results_schema.md` as
-always model-grain. If the exponent ever does become electable, it belongs on
-`Grain` as a property of the partition, not as a second code path.
-
 ### 7.70 A quantile's audit record is empty for the contracts that will use it
 
 *Belongs with the language and engine (section 5). Found closing stage 3 of
@@ -1434,6 +1359,19 @@ it: both are counts of which periods' zeros carried a negative sign at the
 28th digit. A multiple on money that never moved should be null, as the
 pool factor is before the pool is bought, not a number that changes when a
 float flips its last bit. The same applies to `model.irr` on such a series.
+
+A SECOND INSTANCE, and this one is shipped and published. `benchmarks/cre/
+penzance_highlands` opens with 79 periods before any cash, and 23 of its
+per-period net cash flows are `-0.0` — negative zeros. Every one counts as a
+sign change, so the solver finds a root where the deal has none:
+`model.irr` publishes 809072402.742629, which is 8.1e10 percent. It is the
+same defect as the pool factor above, reached by a different route: there the
+zeros were the whole series, here they are a stretch of it, and in both cases
+a signed zero is being read as information. Whatever null-ing rule closes this
+entry must cover a series that is PARTLY zero, not only one that is entirely
+zero — and `retail_strip`, which publishes 327% honestly on a model that
+books an exit without booking the acquisition, must be left alone by it: that
+is a modelling choice in the case, not sign noise.
 
 ### 7.107 The construction loan compounds interest within the period
 
