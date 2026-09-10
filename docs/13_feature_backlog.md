@@ -268,6 +268,54 @@ shape as `check-keyword-register.py`, no dependency. It would have caught
 `owner` and `direction`; it would NOT have caught `term` moving inside the
 contract block, so it is a stopgap and should be labelled one.
 
+**MEASURED, and the cheap interim was not built.** Prototyped, it produces 48
+findings of which every one is explainable — the 12 lexer-only words are the
+two features removed by decision (weekday anchors, stub policies) and the 36
+grammar-only words are contextual keywords and operators. Zero real defects,
+and it would have caught none of the thirteen below. The entry called it a
+stopgap; the measurement says it is not worth the file.
+
+**The recogniser half SHIPPED**, dependency-free, as
+`tools/check-grammar-recogniser.py` in `ci-gates`: a tokenizer per `docs/02`
+§1, an EBNF-to-BNF conversion, and an Earley recogniser required to derive
+every `.cfdl` file the rest of CI proves parses. Earley rather than a
+backtracking PEG because EBNF alternation is unordered and ordered choice
+would reject files the grammar admits — a gate that accuses falsely is worse
+than none. `IDENT` deliberately matches reserved words, so the gate cannot
+see a grammar that lets a keyword stand where a name belongs; that direction
+belongs to `check-keyword-register.py` and to sentence generation.
+
+WHAT IT FOUND, at 355 shipped models: **thirteen defect classes across 215
+files, and the published grammar could derive 136 of them.** Two shipped
+first (#332): `map_entry` omitted the `=` between a key and its value, so no
+`terms` or `parties` block was derivable at all, and `contract_category` was
+defined and reachable from nothing. The remaining eleven, in order of blast
+radius — `amount_stmt` omitted the same `=` (120 files); `stream_item` had no
+`category` clause (64); `stream_stmt` required a direction and a currency
+that are optional (10); a stream could not be `active in state` (9); a
+waterfall step could not pay an account, nor name the contract line it
+settles (7); a slice and an authored row had no `line` clause, which
+`docs/40` stage 5 shipped in September (6); a unit could not be quoted, so
+`250000 "MWh/yr"` was underivable (5); map entries could not be
+comma-separated (4); a waterfall had to state its schedule before its pot (2);
+an assumption could not state its type or a `within` bound (2); a
+distribution argument, a clip and a bound could not be negative (2); and a
+point schedule took none of the options a recurring one takes (1).
+
+The pattern in that list is the entry's own thesis restated: nine of the
+eleven are features that SHIPPED and whose grammar was never updated. The
+grammar is not decaying on its own; it falls behind every time the language
+gains something, exactly as this entry predicted after `account_stmt`.
+
+WHAT REMAINS. The generation half — sentences from the EBNF that `cfdl parse`
+must accept, catching a grammar that is too BROAD. There is a known instance
+waiting for it: `map_inline` describes an inline map literal the parser
+accepts in no form, with or without `=`. It is not annotated NOT IMPLEMENTED,
+so the recogniser does not exclude it and nothing rejects it either; whether
+it is annotated or deleted is a decision. Generation is where the remaining
+cost sits, and it catches the rarer failure: too-narrow has bitten at least
+fifteen times now, too-broad twice.
+
 ---
 
 ### 7.66 Two published pages disagree about the arithmetic, and nothing checks
