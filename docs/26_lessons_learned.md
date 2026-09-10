@@ -880,3 +880,41 @@ terminal cross-check of keywords against the parser. Prototyped, it produced
 the real defects either gate found. It is not in the tree. A stopgap that catches
 nothing is worse than an admitted gap, because it retires the question.
 
+### A page that restates a fact will eventually restate it wrongly
+
+Filed as `docs/13` §7.66 and closed 10 September 2026 — the two contradictions
+it named were already repaired, and the general gate it proposed was
+deliberately NOT built.
+
+**What it caught.** `/docs/reference/expressions` said "All arithmetic is
+floating point" while `/docs/specification/expression-environment`, which is
+normative, said "All arithmetic is exact 128-bit decimal — `0.1 + 0.2 == 0.3`
+is `true`." For a financial modelling language that is close to the most
+consequential sentence either page carries, and the wrong copy was on the page
+a modeller reads first. The same pair was stale in the other direction: the
+specification claimed `excel_compat` was "reachable only from Rust" long after
+the `arithmetic` run-config key shipped. Both are now correct, and correct
+rather than merely changed — a probe returns 1 for
+`if(0.1 + 0.2 == 0.3, 1, 0)`, and `arithmetic` is in `run.schema.json` with
+its two-value enum.
+
+**Where the drift actually was, which is the part worth keeping.**
+`reference/expressions.md` is not hand-written throughout. It is authored
+prose wrapped around a GENERATED region — `<!-- cfdl:generated
+expression-builtins -->` — one of ten such regions across the site, beside the
+diagnostics catalogue, the pack contracts, the pack metrics and the benchmark
+table. The sentence that went wrong sat twenty lines above a region that
+cannot go wrong, on the same page. The machinery to keep it honest already
+existed and was not pointed at it.
+
+**Why no gate was built.** The entry asked whether a claims gate is possible —
+extracting assertions from prose and comparing pages. That is fuzzy work, and
+the evidence for it was a single contradiction that is now closed. The two
+times this project has faced the same question it answered by making ONE PLACE
+AUTHORITATIVE rather than by comparing two: `ci-gates` is the single list of
+gates, and `docs/01` §18 is the single register of reserved words, each held
+to the code by a check. The generated region is that same answer for a page.
+So the shape of any future repair is known and cheap — move the claim into a
+region, do not write a comparator — and it does not need a backlog entry to
+hold the place. Reopen it with a second contradiction, not with a worry.
+
