@@ -2092,11 +2092,11 @@ row_clause      = "category" STRING
                 | "stream" STRING
                 | "slice" IDENT
                 | "series" STRING
-                | "entity" QNAME
+                | "entity" entity_ref
                 | "of" IDENT "to" IDENT
                 | "display" IDENT
                 | "depth" NUMBER ;
-slice_clause    = "entity" QNAME
+slice_clause    = "entity" entity_ref
                 | "type" ( QNAME | IDENT )
                 | "line" IDENT
                 | "category" STRING
@@ -2182,7 +2182,7 @@ quantile_point  = NUMBER ":" [ "-" ] NUMBER ;
 
 dist_expr       = dist_name "(" [ dist_arg { "," dist_arg } ] ")" ;
 dist_name       = "Normal" | "LogNormal" | "Uniform" | "Triangular" ;
-dist_arg        = IDENT "=" [ "-" ] literal
+dist_arg        = IDENT "=" [ "-" ] number
                 | "clip" "=" list_number
                 ;
 
@@ -2201,7 +2201,7 @@ dist_arg        = IDENT "=" [ "-" ] literal
 
    `term` is a contract ITEM, inside the block. That is §8.1 of the language
    specification, which is normative and which this grammar contradicted. *)
-contract_stmt   = "contract" qname [ qname ] [ "on" "entity" entity_ref ]
+contract_stmt   = "contract" dotted_name [ qname ] [ "on" "entity" entity_ref ]
                   contract_block ;
 
 contract_block  = "{" { contract_item } "}" ;
@@ -2215,7 +2215,6 @@ payment_stmt    = "payment" "net" INT [ "days" | "months" ] ;
 
 contract_item   = term_stmt
                 | payment_stmt
-                | currency_stmt
                 | terms_block
                 | effects_block
                 | parties_block
@@ -2263,7 +2262,7 @@ direction       = "inflow" | "outflow" | "accrual" | "writeoff" ;
 (* `direction` and `currency` are optional: a stream that states neither is an
    inflow in the model's reporting currency, which is what most core-spelled
    streams are. *)
-stream_stmt     = "stream" qname
+stream_stmt     = "stream" dotted_name
                   "on" "entity" entity_ref
                   [ direction ]
                   [ "currency" IDENT ]
@@ -2457,7 +2456,11 @@ list_date       = "[" date_lit { "," date_lit } "]" ;
    false. At least one of the two clauses MUST be present. There is no `once`
    keyword and nothing latches: once-ness is declared, as a schedule whose
    occurrence is singular or a topology with no way back. *)
-event_stmt      = "event" qname [ "schedule" schedule_expr ] [ "when" expr ]
+(* At least one of the two: a schedule supplies the occasions, `when`
+   filters them, and an event with neither has no occurrence to fire on. *)
+event_stmt      = "event" qname
+                  ( "schedule" schedule_expr [ "when" expr ]
+                  | "when" expr )
                   event_block ;
 event_block     = "{" { action_stmt } "}" ;
 
@@ -2531,12 +2534,24 @@ money_lit       = number ( IDENT | STRING ) ;
 
 list            = "[" [ literal { "," literal } ] "]" ;
 
-map_inline      = "{" [ qname literal_or_expr { qname literal_or_expr } ] "}" ;
+(* NOT IMPLEMENTED. The parser accepts an inline map literal in no form,
+   with or without `=` between a key and its value. Found by
+   `check-grammar-generation.py`, which is the only thing that ever
+   asked. Kept rather than deleted because `literal` still names it and
+   the shape is the one a map literal would take; both grammar gates
+   respect the annotation and stop promising it. *)
+map_inline      = "{" [ qname "=" literal_or_expr
+                        { [ "," ] qname "=" literal_or_expr } ] "}" ;
 
-list_number     = "[" [ "-" ] number { "," [ "-" ] number } "]" ;
+list_number     = "[" [ "-" ] number "," [ "-" ] number "]" ;
+                  (* a low and a high; never one, never three *)
 
 entity_ref      = IDENT "." IDENT { "." IDENT } ;
 qname           = IDENT { "." IDENT } ;
+(* A DECLARED name, as distinct from a reference: at least two segments.
+   A stream, a contract and a waterfall are namespaced by what declares
+   them, and the parser refuses a bare identifier for each. *)
+dotted_name     = IDENT "." IDENT { "." IDENT } ;
 
 string_lit      = STRING ;
 number          = DECIMAL | INT ;
