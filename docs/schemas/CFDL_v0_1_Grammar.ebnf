@@ -210,6 +210,7 @@ contract_item   = term_stmt
                 | terms_block
                 | effects_block
                 | parties_block
+                | contract_category
                 ;
 
 term_stmt       = "term" date_lit ".." date_lit ;
@@ -228,7 +229,7 @@ map_block       = "{" { map_entry } "}" ;
    of "3% of effective gross income", a coupon of "SOFR + 225bp". Forcing those
    through a model-level `assume` moves the agreement out of the contract and
    leaves a reference behind. See backlog 7.64. *)
-map_entry       = qname literal_or_expr ;
+map_entry       = qname "=" literal_or_expr ;
 
 (* --- effects (streams in v0.1 core) --- *)
 effects_block   = "effects" "{" { effect_stmt } "}" ;
