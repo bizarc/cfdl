@@ -219,47 +219,6 @@ the FNMA classes are entity fields today, so the REMIC tranches as notes
 Found asserting the seven published WALs of FNMA 2019-2, where the 400% PSA
 column refused the naive floor and the refusal was the convention speaking.
 
-### 7.66 Two published pages disagree about the arithmetic, and nothing checks
-
-*Belongs with the documentation (section 7). Found reading the live site.*
-
-`/docs/reference/expressions` says:
-
-> All arithmetic is floating point.
-
-`/docs/specification/expression-environment`, which is NORMATIVE, says:
-
-> All arithmetic is exact 128-bit decimal (`rust_decimal`, 28 significant
-> digits). `0.1 + 0.2 == 0.3` is `true`.
-
-The specification is right — `cfdl-calc`'s header states decimal-first with
-float64 as a documented escape for transcendental work. For a financial
-modelling language this is close to the most consequential sentence either
-page carries, and the wrong one is on the page a modeller reads first.
-
-**The same page pair is stale in the other direction.** The specification's
-`excel_compat` paragraph says the mode "is reachable **only from Rust**...
-There is no CLI flag and no run-config key, so a *model* cannot be run in it",
-and "Nothing in the repo calls `eval_with_mode` today". Both have been false
-since the `arithmetic` run-config key shipped: it is declared in
-`run.schema.json`, the engine rejects any other value, and `eval` routes
-through `eval_with_mode`. `docs/09`'s user-guide entry is correct, so the
-three pages describe two different languages.
-
-**The general defect is that nothing compares them.** Every gate checks a page
-against the code or against itself — `check-doc-examples` compiles snippets,
-`gen-glossary` matches the register, `check-site-voice` reads tone. Nothing
-asks whether two pages making the same claim agree, which is why a
-one-sentence contradiction survived on the site.
-
-Fixing the two sentences is minutes. What is worth deciding is whether a
-claims gate is possible at all, or whether the reference layer should stop
-restating what the specification states and link to it instead — the same
-single-source-of-truth question the gate list and the keyword register both
-answered by making one place authoritative.
-
----
-
 ### 7.69 The annual grain is deliberate; what follows from it is not all settled
 
 *Belongs with the engine (section 5). Found reconciling
