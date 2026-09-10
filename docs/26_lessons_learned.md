@@ -918,3 +918,41 @@ So the shape of any future repair is known and cheap — move the claim into a
 region, do not write a comparator — and it does not need a backlog entry to
 hold the place. Reopen it with a second contradiction, not with a worry.
 
+### The grain is a convention the modeller chooses, and only IRR forgot
+
+Filed as `docs/13` §7.69 and closed 10 September 2026 by writing the
+convention down, not by changing it.
+
+`valuation_grain` lets a modeller say whether a monthly model discounts
+monthly or values each calendar year's cash once — the annual reading being
+what Argus does for CRE, and what makes a monthly model reconcile against an
+annually stated source. Two engine tests already assert it in both directions.
+
+**The entry's first question dissolved on contact with the design.** It asked
+whether a mid-year start should move a valuation, having measured two
+identical cash patterns 126 apart on start month alone. The buckets say why:
+a January start puts 24 monthly payments in `[1200, 1200]`, a September start
+in `[400, 1200, 800]`. Same cash, three calendar years instead of two, so more
+of it is discounted further out. That is not the start month mysteriously
+moving an answer — it is what "value each calendar year's cash once" means.
+The measurement confirmed the design; the entry, and this session after it,
+read it as questioning the design.
+
+**What survived was small, and only measurable once.** `model.npv` branches on
+the grain and `model.irr` does not, so under an annual valuation the two are
+struck on different conventions. Across five CRE benchmarks only
+`penzance_one_rosslyn` has flows with a single well-defined root, and there
+the convention is worth 6.5696% against 6.5540% — under two basis points.
+`docs/06` now says IRR is always model-grain and why. A synthetic case built
+to have a clean shape had suggested 2.4 points, which is a reminder that a
+model invented to demonstrate an effect will demonstrate it.
+
+**The by-product was a false finding, caught by checking it against the entry
+it resembled.** Two benchmarks publish absurd IRRs — 327% and 8.1e10 percent.
+The second is `docs/13` §7.106 exactly: 23 of its per-period flows are `-0.0`,
+and every negative zero counts as a sign change. The first is not a defect at
+all: `retail_strip` books an exit without booking the acquisition, so a huge
+return on a small outflow is the honest answer to the model as written. One
+belonged to an existing entry, the other belonged nowhere, and neither was
+new. Check a finding against the entry it resembles before filing it.
+
