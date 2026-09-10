@@ -2087,6 +2087,8 @@ statement_row   = ( "line" | "subtotal" | "ratio" ) STRING
                     "{" row_clause* "}"
                 | "spacer" ;
 row_clause      = "category" STRING
+                | "type" ( QNAME | IDENT )
+                | "line" IDENT
                 | "stream" STRING
                 | "slice" IDENT
                 | "series" STRING
@@ -2096,6 +2098,7 @@ row_clause      = "category" STRING
                 | "depth" NUMBER ;
 slice_clause    = "entity" QNAME
                 | "type" ( QNAME | IDENT )
+                | "line" IDENT
                 | "category" STRING
                 | "stream" STRING
                 | "window" "from" date_lit "to" date_lit
@@ -2131,7 +2134,8 @@ entity_state_stmt = "state" IDENT ;
 entity_lifecycle = "lifecycle" IDENT ;
 
 (* --- assumptions --- *)
-assume_stmt     = "assume" IDENT ( "=" expr | "~" dist_expr ) ;
+assume_stmt     = "assume" IDENT [ ":" IDENT ]
+                  ( "=" expr | "~" dist_expr ) [ "within" list_number ] ;
 
 (* --- fields: a value the entity has in every period ---
    `use = "office"` states a fact and holds. `balance init <expr> next <expr>`
@@ -2178,7 +2182,7 @@ quantile_point  = NUMBER ":" [ "-" ] NUMBER ;
 
 dist_expr       = dist_name "(" [ dist_arg { "," dist_arg } ] ")" ;
 dist_name       = "Normal" | "LogNormal" | "Uniform" | "Triangular" ;
-dist_arg        = IDENT "=" literal
+dist_arg        = IDENT "=" [ "-" ] literal
                 | "clip" "=" list_number
                 ;
 
@@ -2227,7 +2231,7 @@ parties_block   = "parties" map_block ;
 (* NOT IMPLEMENTED. No production reads `tags`; §18.2 lists it as reserved. *)
 tags_block      = "tags" map_block ;
 
-map_block       = "{" { map_entry } "}" ;
+map_block       = "{" [ map_entry { [ "," ] map_entry } [ "," ] ] "}" ;
 (* A term may be an expression. Restricting it to a literal was a restriction
    of the IMPLEMENTATION, not of the design: what a contract records is often
    itself an expression — a rent escalating at "CPI plus 50 basis points", a fee
@@ -2256,10 +2260,13 @@ stream_effect_stmt = "stream" qname
 direction       = "inflow" | "outflow" | "accrual" | "writeoff" ;
 
 (* --- standalone streams --- *)
+(* `direction` and `currency` are optional: a stream that states neither is an
+   inflow in the model's reporting currency, which is what most core-spelled
+   streams are. *)
 stream_stmt     = "stream" qname
                   "on" "entity" entity_ref
-                  direction
-                  "currency" IDENT
+                  [ direction ]
+                  [ "currency" IDENT ]
                   stream_block ;
 
 stream_block    = "{" { stream_item } "}" ;
@@ -2267,15 +2274,22 @@ stream_item     = schedule_stmt
                 | amount_stmt
                 | active_stmt
                 | moves_stmt
+                | stream_category
                 ;
+
+(* What this flow IS: the one thing that says how aggregation folds it
+   (docs/35). A stream declares its own; a pack rule assigns one to each
+   stream it lowers. *)
+stream_category = "category" qname ;
 
 (* The account this stream's amount moves: a bare name is a claim declared on
    the owning entity, a qualified name any declared account. Whether a cash
    stream raises or lowers it follows from the account's side. *)
 moves_stmt      = "moves" ( IDENT | qname ) ;
 
-active_stmt     = "active" "when" expr ;
-amount_stmt     = "amount" expr ;
+active_stmt     = "active" "when" expr
+                | "active" "in" "state" IDENT { "," IDENT } ;
+amount_stmt     = "amount" "=" expr ;
 
 (* --- waterfalls: an ordered priority of payments over a pot ---
    `from` is the pot; each `pay` step takes min(max(0, expr), remaining) and
@@ -2298,7 +2312,8 @@ waterfall_stmt  = "waterfall" qname
                   "on" "entity" entity_ref
                   waterfall_block ;
 
-waterfall_block = "{" schedule_stmt "from" expr { waterfall_step } "}" ;
+waterfall_block = "{" ( schedule_stmt "from" expr | "from" expr schedule_stmt )
+                  { waterfall_step } "}" ;
 
 (* --- accounts ---
    A declared cash location whose balance carries ACROSS periods. `available`
@@ -2367,7 +2382,12 @@ account_item    = account_owner | account_from | account_init ;
 account_owner   = "owner" entity_ref ;
 account_from    = "from" expr ;
 account_init    = "init" expr ;
-waterfall_step  = "pay" IDENT "to" entity_ref "=" expr ;
+(* A step pays a party or a declared account, and may name the contract
+   claim it settles — which is what lets a class be paid its own interest
+   rather than a number that happens to equal it. *)
+waterfall_step  = "pay" IDENT "to" ( "account" IDENT | entity_ref )
+                  [ "for" "contract" qname "line" IDENT ]
+                  "=" expr ;
 
 (* --- schedules --- *)
 schedule_stmt   = "schedule" schedule_expr ;
@@ -2382,7 +2402,8 @@ schedule_expr   = schedule_on
                 | schedule_state_enter
                 ;
 
-schedule_on     = "on" date_lit [ placement ] ;
+schedule_on     = "on" date_lit [ placement ] [ "net" INT [ "days" | "months" ] ]
+                  [ schedule_opts ] ;
 
 schedule_phase_enter = "on" "phase_enter" "(" string_lit ")" ;
 
@@ -2504,13 +2525,15 @@ literal_or_expr = literal | expr ;
 
 literal         = string_lit | number | bool_lit | date_lit | money_lit | list | map_inline ;
 
-money_lit       = number IDENT ;  (* e.g., 42000 USD *)
+money_lit       = number ( IDENT | STRING ) ;
+                  (* e.g. `42000 USD`; quoted where the unit is not an
+                     identifier, as in `250000 "MWh/yr"` *)
 
 list            = "[" [ literal { "," literal } ] "]" ;
 
 map_inline      = "{" [ qname literal_or_expr { qname literal_or_expr } ] "}" ;
 
-list_number     = "[" number { "," number } "]" ;
+list_number     = "[" [ "-" ] number { "," [ "-" ] number } "]" ;
 
 entity_ref      = IDENT "." IDENT { "." IDENT } ;
 qname           = IDENT { "." IDENT } ;
