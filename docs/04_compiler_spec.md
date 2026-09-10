@@ -175,7 +175,6 @@ Schedules are normalized into a structured AST:
 Where:
 - `OnRule::DayOfMonth(u8)`
 - `OnRule::EndOfMonth`
-- `OnRule::Weekdays(Vec<Weekday>)`
 
 Schedule options:
 - `ScheduleOpts { convention: Option<Convention>, calendar: Option<String>, stub: Option<StubPolicy>, except: Vec<DateLit>, also: Vec<DateLit> }`

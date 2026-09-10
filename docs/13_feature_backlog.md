@@ -219,33 +219,6 @@ the FNMA classes are entity fields today, so the REMIC tranches as notes
 Found asserting the seven published WALs of FNMA 2019-2, where the 400% PSA
 column refused the naive floor and the refusal was the convention speaking.
 
-### 7.60 A weekly schedule cannot be anchored to a weekday
-
-*Belongs with the language (section 5). Found building the keyword register.*
-
-`docs/01` §18 documented `Mon` through `Sun` as reserved words for eight
-versions. They are reserved, they render in error messages, and no production
-reads them. The syntax they imply does not exist:
-
-```
-schedule every week on Mon from 2026-01 to 2026-02
-  -> Expected 'day <n>' or 'eom' after 'on'
-```
-
-`weekly` is not a calendar frequency either — the frequencies are `daily`,
-`monthly`, `quarterly` and `annual` — so a weekly TIMELINE is unavailable as
-well, though `every week` is a valid schedule interval.
-
-Provenance: found by the gate that now holds §18 to the lexer. The words were
-documented as though the feature shipped, which is how it went unnoticed.
-
-**What it needs.** `on <weekday>` in the schedule anchor, and a decision on
-whether a weekly calendar frequency is wanted or whether weekly schedules on a
-daily timeline are the answer. No case needs it yet; a rent roll on weekly
-billing or a daily-book instrument settling on Fridays would.
-
----
-
 ### 7.61 Nothing checks the grammar against the parser
 
 *Belongs with the language (section 5). Replaces the closed 7.49.*

@@ -135,7 +135,9 @@ Core language semantics MUST NOT change based on pack selection.
 ### 5.2 Temporal types
 - `Date` (calendar date)
 - `DateRange` (`start..end`, inclusive of start, inclusive of end unless otherwise stated)
-- `Frequency` (`daily`, `weekly`, `monthly`, `quarterly`, `annual`)
+- `Frequency` (`daily`, `weekly`, `monthly`, `quarterly`, `annual`) — a
+  SCHEDULE may take any of the five (`schedule every week` is valid); a
+  model CALENDAR takes four, and not `weekly` (§7.1)
 - `Duration` (e.g., `30d`, `12m`, `30y`)
 
 ### 5.3 Financial types
@@ -938,12 +940,7 @@ schedule every month on day 1 from 2026-02-01 to 2028-01-31
 schedule every month on eom from 2026-02-01 to 2028-01-31
 ```
 
-#### 10.2.5 Weekday sets (daily/weekly)
-```cfdl
-schedule every week on Mon,Wed,Fri from 2026-02-01 to 2026-06-30
-```
-
-#### 10.2.6 Business-day conventions
+#### 10.2.5 Business-day conventions
 ```cfdl
 schedule every month on eom
   from 2026-02-01 to 2028-01-31
@@ -958,7 +955,7 @@ Conventions:
 - `preceding`
 - `modified_preceding`
 
-#### 10.2.7 Stub rules
+#### 10.2.6 Stub rules
 ```cfdl
 schedule every month on day 15
   from 2026-02-01 to 2026-12-31
@@ -1887,9 +1884,16 @@ it:
 `direction`, `Fri`, `long_back`, `long_front`, `Mon`, `Sat`, `short_back`, `short_front`, `Sun`, `tags`,
 `Thu`, `Tue`, `Wed`.
 
-`Mon` through `Sun` anchor a weekly schedule to a weekday. That syntax is not
-implemented: `on` accepts `day <n>` or `eom`, and `weekly` is not a calendar
-frequency — the frequencies are `daily`, `monthly`, `quarterly` and `annual`.
+`Mon` through `Sun` were to anchor a weekly schedule to a weekday. That
+syntax was REMOVED BY DECISION, not deferred: `schedule ... on <weekday list>`
+is rejected and is not in the grammar (`docs/10`, beside `stub <policy>`, which
+went the same way for the same reason). `on` accepts `day <n>` or `eom`. The
+words stay reserved so that reopening the decision could not break a model that
+had meanwhile used one as a name — which is what this section is for — but
+nothing is pending behind them. A weekly CADENCE is unaffected and works:
+`schedule every week` compiles and lowers to an `every: "weekly"` schedule.
+What has no spelling is the weekday it lands on, which today follows from the
+model's start date.
 `direction` and `owner` name parts of a stream header the parser reads
 positionally. `tags` and the four stub conventions belong to features that are
 specified and not yet built.
