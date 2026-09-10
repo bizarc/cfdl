@@ -3,7 +3,7 @@
 
 SHELL := /bin/bash
 
-.PHONY: notebook-ids pack-series pack-templates keyword-register grammar-recogniser diagnostic-parity ci-gates invariants glossary glossary-check machine-docs machine-docs-check agent-eval-selftest agent-eval-replay shipped-examples benchmark-cases help fmt fmt-check lint test build clean gold gold-update ci verify site-voice verify-python verify-site verify-site-nofresh verify-site-fresh verify-learn-nofresh doc-examples training-examples py-develop py-test py-wheel notebooks-render notebooks-check wasm cadence-parity ir-schema results-schema run-schema pack-validations rule-fragments py-stamp py-check
+.PHONY: notebook-ids pack-series pack-templates keyword-register grammar-recogniser grammar-generation diagnostic-parity ci-gates invariants glossary glossary-check machine-docs machine-docs-check agent-eval-selftest agent-eval-replay shipped-examples benchmark-cases help fmt fmt-check lint test build clean gold gold-update ci verify site-voice verify-python verify-site verify-site-nofresh verify-site-fresh verify-learn-nofresh doc-examples training-examples py-develop py-test py-wheel notebooks-render notebooks-check wasm cadence-parity ir-schema results-schema run-schema pack-validations rule-fragments py-stamp py-check
 
 help:
 	@echo "Targets:"
@@ -96,7 +96,7 @@ bench:
 # was in this file and not in the workflow.
 ci-gates: analytic invariants cadence-parity ir-schema results-schema run-schema \
           notebook-ids \
-          pack-validations pack-series pack-templates keyword-register grammar-recogniser site-voice \
+          pack-validations pack-series pack-templates keyword-register grammar-recogniser grammar-generation site-voice \
           diagnostic-parity \
           glossary-check machine-docs-check agent-eval-selftest \
           rule-fragments \
@@ -264,6 +264,12 @@ keyword-register:
 # derive. See docs/13 §7.61 for what went wrong without it.
 grammar-recogniser:
 	$(PYGATE) tools/check-grammar-recogniser.py
+
+# The other direction: sentences generated FROM the grammar, which the
+# parser must accept. Catches a grammar that is too broad — a promise the
+# implementation does not keep — which no shipped file can exercise.
+grammar-generation:
+	$(PYGATE) tools/check-grammar-generation.py
 
 # The register in docs/08 must be the codes the tools emit. It was neither:
 # 18 codes were documented by nothing that could produce them — including the
