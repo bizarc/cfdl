@@ -834,16 +834,19 @@ Filed as `docs/13` §7.61 and closed 9 September 2026, with two gates rather
 than one. `docs/02` calls `docs/schemas/CFDL_v0_1_Grammar.ebnf` normative,
 says implementations MUST support it, and the site offers it for download for
 parser generators. Nobody had ever performed that adaptation, so nobody knew
-whether the grammar survived one. It did not, in fifteen places.
+whether the grammar survived one. It did not.
 
-**The measure of the gap.** A recogniser built from the published EBNF
-accepted 136 of 355 shipped models. `map_entry` omitted the `=` between a key
+**The measure of the gap, and the only numbers here worth quoting because
+the gates recompute them.** A recogniser built from the published EBNF
+accepted 136 of 355 shipped models; it now accepts all 355. The generator
+emits 238 sentences at each-alternative coverage, and the parser now accepts
+every one. `map_entry` omitted the `=` between a key
 and its value, so no `terms` or `parties` block was derivable at all;
 `amount_stmt` omitted the same `=`; `stream_item` had no `category`;
 `contract_category` was defined and reachable from nothing. Anyone generating
 a parser from the published grammar got one that rejected most real CFDL.
 
-**The pattern is not decay.** Nine of the eleven defects the recogniser found
+**The pattern is not decay.** Most of the defects the recogniser found
 were features that SHIPPED and whose grammar was never updated — the `line`
 clause is `docs/40` stage 5, six days old when the gate found it. A grammar
 does not rot on its own; it falls behind every time the language gains
@@ -852,10 +855,10 @@ and why a proofread was never going to hold.
 
 **Two directions, and they fail differently.** Running the grammar over
 shipped models catches it being too NARROW, and that is the failure this
-project kept having — fifteen instances. Generating sentences from it and
+project kept having, and by far the commoner one. Generating sentences from it and
 requiring the parser to accept them catches it being too BROAD, which no
 shipped file can exercise BY CONSTRUCTION: the defect lives exactly where no
-model goes. That direction found six more — an event needing neither a
+model goes. That direction found six — an event needing neither a
 schedule nor a condition, a contract declaring a currency, a distribution
 parameter that could be a date or a string, a bound of any length rather than
 a low and a high, entity selection by bare identifier, and `map_inline`, an
@@ -874,6 +877,6 @@ like work. Fix the tool until its complaints are boring, then read them.
 **What was proposed and NOT built.** The entry offered a cheap interim — a
 terminal cross-check of keywords against the parser. Prototyped, it produced
 48 findings of which every one was explainable, and would have caught none of
-the twenty-one real defects. It is not in the tree. A stopgap that catches
+the real defects either gate found. It is not in the tree. A stopgap that catches
 nothing is worse than an admitted gap, because it retires the question.
 
