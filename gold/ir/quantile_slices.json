@@ -91,7 +91,7 @@
     {
       "quantile": "prices",
       "function": "quantile_mean",
-      "args": []
+      "unresolved": true
     },
     {
       "quantile": "prices",

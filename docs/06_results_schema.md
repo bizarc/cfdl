@@ -925,8 +925,7 @@ against it by `make results-schema`.
       "type": "object",
       "required": [
         "quantile",
-        "function",
-        "args"
+        "function"
       ],
       "additionalProperties": false,
       "properties": {
@@ -947,7 +946,11 @@ against it by `make results-schema`.
           "items": {
             "type": "number"
           },
-          "description": "The literal arguments after the name, in source order. Empty when they were not literals."
+          "description": "The literal arguments after the name, in source order. Absent — not empty — when they were not literals; `unresolved` says so."
+        },
+        "unresolved": {
+          "type": "boolean",
+          "description": "True when an argument is not a compile-time literal: it reads the period (`time.date`), a run input (`inputs.*`), or another computed value. No single resolved figure exists for such a call, so `args` and `value` are both absent and the call is listed on its name alone. Published rather than left implicit because the old shape was an empty `args` array, and every quantile function takes a fixed arity with at least one argument after the name — `quantile_mean` three, `quantile_of` and `quantile_at` two — so `[]` could never mean \"a call that took no arguments\" and read as exactly that. What it would take to publish a value per period instead is `docs/13` §7.70."
         },
         "value": {
           "type": "number",

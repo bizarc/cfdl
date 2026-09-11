@@ -266,6 +266,35 @@ declaration they were asked of.
 Publishing the resolved slice is not a nicety. A nonlinear input whose
 evaluation is not published is a number no reviewer can check.
 
+**WHERE THAT PROPERTY ACTUALLY HOLDS, stated because this section claimed it in
+general and delivers it in one half.** The record is computed at COMPILE TIME,
+so it carries a resolved value only where the call's arguments are compile-time
+literals. Where they are not, the call is listed on its name alone with
+`unresolved: true` and no value — and that is the honest answer, not a defect
+in the resolver: there is no single figure to publish.
+
+Two kinds of call reach that state, and the second is the one this section
+missed. A PACK-LOWERED call, where the rule deflates its breakpoint by
+`pow(1 + growth, {{time.elapsed_years}})` and the slice bounds therefore differ
+in every period — `cre.percentage_rent_expected` is the instance. And a
+HAND-WRITTEN call whose bound is a run input:
+`quantile_mean("prices", inputs.tail_start, 1.0)` loses the record for the same
+reason, though its bound does not vary by period at all. So the gap is not
+"packs lose the audit chain"; it is "a value this document cannot see until the
+run loses it", and an ordinary hand-written model can reach it.
+
+What a reviewer still has, in both cases: the declaration and its points are in
+the source and therefore inside `model_hash`, and the integral is closed-form
+with no sampling, no iteration and no tolerance — five repeated compiles and
+runs of `cre_percentage_rent_expected` give one `model_hash` and one
+`ledger_hash`. So reproducibility is proved by the hash whatever the record
+says. What is missing is narrower and real: the INTERMEDIATE figure, so the
+integral can be checked by hand against the declared curve rather than
+re-derived from the stream total.
+
+Publishing one value per period — which is the true answer — is `docs/13`
+§7.70, with what it costs.
+
 ## 7. Non-goals, and why each is hard
 
 These belong in the specification, not in a reader's inference.
