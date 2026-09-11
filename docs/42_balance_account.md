@@ -75,7 +75,7 @@ balance. Opening equals the prior closing. Closing equals opening less the
 reductions. Defaults are a column like any other; survival is not a column
 at all. That row is the design.
 
-**Intex** (`docs/38`, `docs/13` §7.74). The collateral view is a set of
+**Intex** (`docs/38`). The collateral view is a set of
 books with transitions between them — performing, delinquent, defaulted —
 recoveries after a lag, and the realized loss as what remains. Every
 trigger and every overcollateralization test reads those balances. On the
@@ -492,7 +492,7 @@ note adds nothing to it.
 
 ## 8. Related
 
-`docs/13` §7.74 (Intex scope), §7.76 (accounts), §7.96–§7.98 (the pool
+`docs/38` (Intex scope), `docs/13` §7.76 (accounts), §7.96–§7.98 (the pool
 balance, the clean-up call), §7.101 (a stream cannot fold a field),
 §7.102–§7.106 (filed from the level-pay work); `docs/15` §7.8 (a non-cash
 quantity is a flow kind excluded from cash aggregation); `docs/28` §4

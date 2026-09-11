@@ -956,3 +956,74 @@ return on a small outflow is the honest answer to the model as written. One
 belonged to an existing entry, the other belonged nowhere, and neither was
 new. Check a finding against the entry it resembles before filing it.
 
+### An audit record resolves only what the compiler can see
+
+Filed as `docs/13` §7.70 and closed 11 September 2026 with the two surfaces
+around it corrected and the per-period series NOT built. The entry is removed;
+what follows is the part worth keeping, including the thing it got wrong about
+its own difficulty.
+
+**What the record does.** `inputs.quantiles` publishes each quantile call site
+with the slice it asked for and what that resolved to — the top of the audit
+chain for a nonlinear input a reviewer cannot eyeball. It is computed at
+COMPILE TIME, so it carries a value only where the call's arguments are
+compile-time literals.
+
+**Who loses it is not who the entry said.** The entry framed this as pack
+contracts losing the audit chain, because `cre.percentage_rent_expected`
+deflates its breakpoint by an expression over `time.date`. But a hand-written
+`quantile_mean("prices", inputs.tail_start, 1.0)` loses the record for the same
+reason, and its bound does not vary by period at all. The condition is "not a
+compile-time literal", and an ordinary model reaches it.
+
+**IDENTITY IS THE WORK, NOT INTERIOR MUTABILITY.** The entry concluded that
+reframing the fix as a per-period SERIES dissolves two of three objections —
+dedup and canonical order are moot for one value per period — leaving only the
+`&self` hooks. Scoping it found that the reframe moves the difficulty rather
+than dissolving it. The record is keyed `(quantile, function, args)`, and when
+the arguments are not literals `args` is empty, so the key degenerates to
+`(quantile, function)`. A series needs a stable NAME, and that key cannot
+distinguish two call sites computing different per-period values through the
+same function on the same quantile. `percentage_rent_expected` has three
+quantile calls in one expression and publishes two records — correct there only
+because two of them are textually identical.
+
+So a per-period series needs one of: a canonical expression printer, which
+`cfdl-calc` does not have, keying on the argument's TEXT (strongest — it merges
+textually identical calls exactly as the current map accidentally does); or the
+owning construct passed into `eval`, which widens a signature used at ten call
+sites; or position in a deterministic walk, which renames a published series
+whenever the IR is reordered and should be refused. Interior mutability, by
+contrast, is cheap: the engine is single-threaded, so an `Rc<RefCell<…>>` on
+`ExprEnv` suffices, and there is exactly ONE production `EnvAdapter`
+construction to thread it through.
+
+**Why it was not built.** The integral is proved exact by unit tests that do
+not read the record at all, the one consuming contract is fixture-only, and
+five repeated compiles and runs give one `model_hash` and one `ledger_hash` —
+so reproducibility is already proved by the hash. The strongest argument for
+the series is that a series is checkable BY MACHINE, inheriting the benchmark
+harness's per-period tolerance; that argument only pays once a benchmark
+reconciles a quantile-consuming contract against an external reference, and
+none does. Build it then, against the identity problem above.
+
+### An umbrella entry outlives its usefulness the day its survey is written
+
+Filed as `docs/13` §7.74 and closed 11 September 2026. It named the gaps
+between CFDL and a full structured-finance engine, and on 1 September its
+substance was promoted to `docs/38_intex_parity.md` — the parity ledger, the
+itemized gaps, the non-items and the licensing position. What stayed behind was
+a pointer that owned no work, kept as "the anchor other entries reference".
+
+That anchoring was the problem rather than the reason to keep it. `docs/38`
+cited the backlog eleven times to say where its own items were filed, so the
+two documents pointed at each other and neither was the home. A survey document
+IS the home once it exists; an entry that only says "see the survey" adds a hop
+and a thing to keep in sync. The citations now name the section of `docs/38`
+that holds each item, and the roadmap rows in `docs/37` that tracked this are
+unaffected — they were never citing the umbrella for its content.
+
+The same reasoning closed §7.78 and §7.79 on 5 September. Three umbrella
+entries in a week suggests the pattern is worth naming: file work, not
+signposts. When a backlog entry grows a document, delete the entry.
+

@@ -219,110 +219,6 @@ the FNMA classes are entity fields today, so the REMIC tranches as notes
 Found asserting the seven published WALs of FNMA 2019-2, where the 400% PSA
 column refused the naive floor and the refusal was the convention speaking.
 
-### 7.70 A quantile's audit record is empty for the contracts that will use it
-
-*Belongs with the language and engine (section 5). Found closing stage 3 of
-`docs/27_quantiles.md`, against the contract that stage shipped.*
-
-`InputsSection.quantiles` publishes each quantile call site with the slice it
-asked for and what that resolved to. For a hand-written model it does what it
-was built for:
-
-    quantile_mean  prices  [0.98, 1.0]  ->  426.0
-
-For `cre.percentage_rent_expected`, the first pack contract to consume a
-quantile, it publishes this:
-
-    quantile_mean  store_sales  []  ->  ABSENT
-    quantile_of    store_sales  []  ->  ABSENT
-
-**Not a defect in the resolver.** The record is computed at compile time, and
-the pack rule deflates the breakpoint by
-`pow(1 + growth, {{time.elapsed_years}})`, which expands to an expression over
-`time.date`. The slice bounds are therefore genuinely different in every
-period, and no single compile-time value exists to publish. Declining to invent
-one is correct.
-
-Constant folding does not rescue it. Even at `sales_growth = 0` the expanded
-text still reads `time.date`, so the expression is not constant however
-degenerate the arithmetic.
-
-**What that costs.** The audit chain's stated purpose is that a reviewer can
-check a nonlinear input without redoing the integral. That holds for a
-hand-written model and does not hold for a pack-lowered one — which is the case
-most models will be, and is precisely the case the primitive was built to
-serve. `docs/27` §6 claims the property in general; it is true in one half.
-
-**And the shape misreads.** `args: []` renders as a call taking no arguments
-rather than one whose arguments vary by period. The results schema says
-"empty when they were not literals", so the document is accurate and the
-rendering is still misleading to anyone who has not read it.
-
-**The fix is a stage 2 revision, not a patch here.** Recording slices during
-EVALUATION would capture a value per period, which is the true answer. It was
-considered and rejected when stage 2 was built, for reasons that have not
-changed: the `Env` hooks take `&self`, so recording needs interior mutability;
-it moves work into the per-period path that the compile-time design keeps out
-of it; and the same call recurs every period, so it needs a dedup rule and a
-canonical order or the results document stops being reproducible.
-
-**The shape is already in the language, and it is not a scalar.** The slice
-bound and the resolved mean are a NUMBER PER PERIOD — geometrically a curve,
-but emitted rather than declared, which makes it a SERIES. The results document
-already publishes non-cash per-period numbers that way: an entity field appears
-as `{index: {calendar, start, periods}, values: [...]}` under its own key, bare
-numbers with no currency wrapper, and 58 such series exist across the goldens.
-
-Framing it as a series dissolves two of the three objections that stopped this
-being built at evaluation time. Dedup and canonical order are moot, because a
-series is one value per period in period order. Reproducibility is moot, for
-the same reason it is moot for any stream. Only interior mutability survives,
-and it may not survive either: the engine already evaluates these expressions
-every period and already emits a per-period number for a field, so this is the
-existing machinery rather than new machinery.
-
-**And it is the argument that settles the design.** A scalar in
-`InputsSection` is inert — a reviewer reads it and takes it on trust. A series
-in `deterministic.series` is checkable BY MACHINE, every period, against a
-reference: it inherits the CSV export, the per-period tolerance in the
-benchmark harness, and the statement layer. `docs/26` makes exactly this point
-about covenants — a benchmark asserts COLUMNS, and testing every period is
-strictly stronger than testing one number. For a nonlinear input that is the
-difference between publishing a figure and proving it.
-
-So the design is: emit the resolved slice as a series under its own key, the
-way a field is published, and let the audit run through machinery that already
-exists. What remains open is the key's name, whether both the slice bound and
-the resolved value are published or only the second, and whether the
-compile-time scalar record stays for the literal case or is replaced.
-
-Open this before any further pack contract consumes a quantile. Shipping a
-second one against an audit record that does not work would make the gap
-structural rather than a known debt.
-
-### 7.74 Structured-finance engine parity — the Intex scope
-
-*Roadmap: partly M2 (`docs/37`) — the deal mechanics; the analytics ride on
-declared metrics (§7.25, shipped). Promoted 2026-09-01 to
-`docs/38_intex_parity.md`, which carries the survey the way `docs/34`
-carries the events design (`docs/34`): the parity-or-ahead ledger, the itemized gaps, the
-non-items and the licensing position all live there, and this entry stays as
-the anchor other entries reference.*
-
-**What this item is.** An umbrella over the gaps that separate CFDL from the
-full scope of a structured-finance cash flow engine (the Intex/Trepp
-category: collateral pools feeding tranche waterfalls with triggers and
-reserve accounts, plus bond analytics over the result). The collateral side
-and the reserve mechanics are the larger half and are done; what remains, per
-`docs/38`: the coupled-waterfall trio of `docs/17` §5 (cross-linked pots, the
-shortfall series, deferred/PIK), the externally-referenced trigger case
-(§7.77's remainder), servicer advances, a clean-up call case, valuation
-solvers and the make-whole, per-period stochastic draws, the analyst output
-surface (§7.22, §7.23, §7.26), the unexercised class types and structured
-collateral (`docs/20` §2), multi-currency, and a loan-level scale
-measurement. Same-period circular conventions stay out on purpose — the
-causal plane's refusal to iterate is the product's guarantee, not its gap.
-
 ### 7.76 The account adoption pass: every pack has a reserve it could not model
 
 *Roadmap: M2 (`docs/37`).*
@@ -334,7 +230,7 @@ EBITDA "includes interest earned on funded reserve accounts (~$4,606 in year
 one), which CFDL does not model." `utility_pv_singleowner/NOTES.md` lists
 reserves among what the reference zeroed out to be comparable. `docs/41` §5 carries
 `cre.replacement_reserve` from two sources. The roadmap's hospitality entry
-is one accumulating FF&E reserve. Servicer advancing (§7.74) is a
+is one accumulating FF&E reserve. Servicer advancing (`docs/38` Item 3) is a
 recoverable-advances balance.
 
 **The ask, in three parts** — the first and third are done, and the second
@@ -437,7 +333,7 @@ keeps the reserve and the interest it earns from being mutually circular. The
 CREST reconciliation line is closed as a mechanism; the case that reconciles
 against CREST's own ~$4,606 still wants the reference.
 
-Related: `docs/41` §5, §7.41, §7.72 (shipped), §7.74, `docs/25`, `docs/28` §5.1, `docs/30` §1.
+Related: `docs/41` §5, §7.41, §7.72 (shipped), `docs/38`, `docs/25`, `docs/28` §5.1, `docs/30` §1.
 
 ### 7.77 A covenant that is published but powerless: the DSCR cash trap
 
@@ -473,7 +369,7 @@ is pinned; the covenant case wants a published credit agreement with a
 cash-trap schedule and figures to reconcile against, and none is vendored.
 That is a case-authoring ask with a sourcing problem, not a language gap.
 
-Related: §7.74, `docs/28` §5.1 and §6, `docs/30` §2,
+Related: `docs/38`, `docs/28` §5.1 and §6, `docs/30` §2,
 `docs/20` §5.1.
 
 ### 7.80 121 registered diagnostic codes have no minimal failing example

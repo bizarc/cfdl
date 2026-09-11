@@ -1,8 +1,11 @@
 # Intex parity — the real items
 
-Status: informative, 2026-09-01. Not published; repository-only, like the
-backlog. Promoted from `docs/13` §7.74, which remains the backlog anchor and
-now points here.
+Status: informative, 2026-09-01; sole home since 11 September 2026. Not
+published; repository-only, like the backlog. Promoted from `docs/13` §7.74,
+which was then kept as a backlog anchor pointing here while this document
+pointed back at it — so neither was the home. The anchor is closed and THIS
+document is where these items live. Each item's own section below is its
+citation; there is no backlog entry to keep in sync with it.
 
 Intex is the reference engine for structured-finance cash flow projection —
 the Intex/Trepp category: collateral pools feeding tranche waterfalls with
@@ -94,12 +97,12 @@ write-up-from-the-bottom mechanics that CMBS and CLO documents assume.
   balance rather than vanishing.
 
 **What forced the discovery:** the AmeriCredit waterfall work (`docs/17`) and
-the §7.74 survey. The 22-clause deal happened not to need any of the three;
+the survey this document carries. The 22-clause deal happened not to need any of the three;
 the next tier of deals (CLO OC/IC diversion, CMBS appraisal reduction) is
 built from them.
 
 **The shape:** open — question 2 has two candidate forms and no decision.
-Backlog: `docs/13` §7.74 (this document's anchor); design home `docs/17` §5.
+Design home: `docs/17` §5.
 
 ## Item 2 — the trigger that fails and cures, benchmarked
 
@@ -123,7 +126,7 @@ machine they are a state pair (`advancing`, `stopped`) with streams gated on
 it and a recoverable-advances account; `docs/30` §1 already names the
 recoverable-advances balance as one of the reserves every domain has under a
 different name. The item is naming that shape in the credit pack and shipping
-a case, not new machinery. Backlog: `docs/13` §7.74.
+a case, not new machinery.
 
 ## Item 4 — the clean-up call, exercised
 
@@ -134,7 +137,7 @@ occurrence, not a condition a pool sits in," `docs/36` §2.2, landed in
 `revolving`, `amortizing`, `rapid_amortization`, `retired`), so the election
 is an event driving `amortizing -> retired` whose guard reads pool factor —
 expressible today. No shipped case exercises it. A benchmark deal with a call
-is the ask, not a construct. Backlog: `docs/13` §7.74.
+is the ask, not a construct.
 
 ## Item 5 — valuation solvers and the make-whole
 
@@ -150,8 +153,8 @@ cost provenance and replay.
 The **make-whole** is the one causal cash amount in this cluster: its size is
 a discounting computation, and the priced exception of `docs/28` §7 is the
 sanctioned mechanism, as with the direct-cap reversion — the primitive is the
-priced exception plus a PV expression, not a new solver. Backlog:
-`docs/13` §7.74; adjacent: §7.4 (the discount curve, `docs/33` Item 2).
+priced exception plus a PV expression, not a new solver. Adjacent:
+`docs/13` §7.4 (the discount curve, `docs/33` Item 2).
 
 ## Item 6 — per-period stochastic draws
 
@@ -162,7 +165,6 @@ stream, seeded per (assumption, period, trial) the way per-assumption streams
 are seeded today — additive, journaled, replayable. Correlation stays
 excluded (`docs/01` §1.1.10) until a document forces it; a rate-dependent CPR
 is a recurrence reading the rate path and needs no correlation construct.
-Backlog: `docs/13` §7.74.
 
 ## Item 7 — the output surface an analyst reads
 
@@ -194,8 +196,7 @@ carrying over and itself accruing), `SP`/`SPS`.
 trigger that REORDERS a waterfall is the shape `docs/17` §5 left open, and a
 deal exercising it would settle whether declaration order plus `when` is
 enough or whether priority needs to be first-class. `AFC` is Item 1's
-shortfall accrual wearing a class-type name. Backlog: `docs/13` §7.74;
-`docs/20` §2.4.
+shortfall accrual wearing a class-type name. See `docs/20` §2.4.
 
 ## Item 9 — structured collateral
 
@@ -212,7 +213,7 @@ Backlog: `docs/20` §2.1.
 
 No mechanism has landed; the account was shaped so the currency clause is
 additive (`docs/28` §5.1). Blocked on a document that needs it, not on design
-room. Backlog: `docs/13` §7.74.
+room.
 
 ## Item 11 — loan-level scale, measured
 
@@ -224,7 +225,7 @@ Nothing has run thousands of entities, and the per-(stream, period)
 environment rebuild (`docs/29` §2.3, whose performance half was deliberately
 not built when the measurement said the correctness half sufficed) is the
 known hot spot to profile first. The ask is a measurement, then the fix if
-the measurement demands one. Backlog: `docs/13` §7.74.
+the measurement demands one.
 
 ---
 
@@ -232,10 +233,10 @@ the measurement demands one. Backlog: `docs/13` §7.74.
 
 | candidate gap | resolution |
 |---|---|
-| Same-period circular conventions (a fee on an ending balance that includes the fee) | out on purpose — spreadsheet artifacts, not indenture mechanics; priorities are ordered and the causal plane's refusal to iterate is the guarantee, not the gap (`docs/13` §7.74, closing paragraph; `docs/28` §4) |
+| Same-period circular conventions (a fee on an ending balance that includes the fee) | out on purpose — spreadsheet artifacts, not indenture mechanics; priorities are ordered and the causal plane's refusal to iterate is the guarantee, not the gap (the non-items here; `docs/28` §4) |
 | Reserve accounts, trapped cash, interest on a funded balance | shipped — `docs/28` §5.1, `docs/13` §7.76, `benchmarks/credit/americredit_2017_1` |
 | An event that recurs, an action on arrival | shipped — `docs/13` §7.79, `docs/34` |
-| Deterministic scenario grids (the category's dominant workflow) | scenarios plus curves plus options, today (`docs/13` §7.74) |
+| Deterministic scenario grids (the category's dominant workflow) | scenarios plus curves plus options, today |
 | Metric distributions per trial | shipped — `docs/13` §7.87, `results_version` 0.9 |
 
 ## The benchmark this document wants
