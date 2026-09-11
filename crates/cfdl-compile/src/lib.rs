@@ -579,7 +579,24 @@ struct IrQuantilePoint {
 struct IrQuantileCall {
     quantile: String,
     function: String,
+    /// Omitted when the arguments are not compile-time literals, rather than
+    /// published as `[]`.
+    ///
+    /// Every quantile function takes a fixed arity with at least one argument
+    /// after the name — `quantile_mean` exactly three, `quantile_of` and
+    /// `quantile_at` exactly two — so an EMPTY argument list could never mean
+    /// "a call that took none". It only ever meant "these were not literals",
+    /// and it read as the first. `unresolved` now says which, and the key is
+    /// absent rather than empty so there is nothing left to misread.
+    #[serde(skip_serializing_if = "Vec::is_empty")]
     args: Vec<f64>,
+    /// True when an argument is not a compile-time literal: it reads the
+    /// period (`time.date`), a run input (`inputs.*`), or another computed
+    /// value. No single resolved figure exists for such a call, so `args` and
+    /// `value` are both absent — see `docs/13` §7.70 for what it would take to
+    /// publish one per period instead.
+    #[serde(skip_serializing_if = "std::ops::Not::not")]
+    unresolved: bool,
     /// Absent when an argument is not a literal. The call is still listed: a
     /// silently omitted call site would read as a model that never made one.
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -6786,6 +6803,7 @@ fn collect_quantile_inputs(
             seen.entry(key).or_insert(IrQuantileCall {
                 quantile: call.quantile,
                 function: call.function,
+                unresolved: call.args.is_empty(),
                 args: call.args,
                 // Rounded to the engine's single global policy for published
                 // numbers (1e-6). Two reasons, and the second is the load-

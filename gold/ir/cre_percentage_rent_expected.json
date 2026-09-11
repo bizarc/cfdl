@@ -56,12 +56,12 @@
     {
       "quantile": "store_sales",
       "function": "quantile_mean",
-      "args": []
+      "unresolved": true
     },
     {
       "quantile": "store_sales",
       "function": "quantile_of",
-      "args": []
+      "unresolved": true
     }
   ],
   "lifecycles": [

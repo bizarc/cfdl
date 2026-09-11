@@ -238,12 +238,25 @@ no RNG, no iteration, no convergence tolerance. Same inputs, same IR, same
 
 **Replayable — and here is the temptation to refuse.** Points are inlined into
 the IR and therefore inside `model_hash`. An 8760-point stack in a `.cfdl` file
-is ugly, and the fix will look like pointing at a CSV. Refuse it: an external
-path puts the audit chain outside the hash, and a results document whose
-`model_hash` does not cover its own price assumption is not reproducible in any
-sense worth the word. A duration curve is already a compression of 8760 hours —
-10 to 30 points is the normal size — and `import` organizes files without
-leaving the hash.
+is ugly, and the fix will look like pointing at a CSV.
+
+What this section originally said was "refuse it", on the ground that an
+external path puts the audit chain outside the hash. **That is too broad, and
+the reason is a distinction it did not draw.** What must be refused is an
+UNHASHED reference — a path to a file the results document cannot prove it
+read, which is what leaves `model_hash` not covering the model's own price
+assumption. A reference whose target is carried WITH the model, and hashed with
+it, is a different mechanism and is not refused: observables are planned that
+way, colocated with the model file in a package. The test is whether the hash
+covers the numbers, not whether the numbers sit in the `.cfdl` file.
+
+So the rule is: a results document whose `model_hash` does not cover its own
+price assumption is not reproducible in any sense worth the word — and inlining
+is one way to satisfy that, not the only one. For a quantile it remains the
+right way today: a duration curve is already a compression of 8760 hours, 10 to
+30 points is the normal size, and `import` organizes files without leaving the
+hash. Revisit it when packaged observables arrive, against the hash test rather
+than against the file boundary.
 
 **Provenance** (`docs/01` §17.2, §17.3). A `ref` clause populates
 `required_refs`, which has been declared and empty since v0.1.
@@ -265,6 +278,35 @@ declaration they were asked of.
 
 Publishing the resolved slice is not a nicety. A nonlinear input whose
 evaluation is not published is a number no reviewer can check.
+
+**WHERE THAT PROPERTY ACTUALLY HOLDS, stated because this section claimed it in
+general and delivers it in one half.** The record is computed at COMPILE TIME,
+so it carries a resolved value only where the call's arguments are compile-time
+literals. Where they are not, the call is listed on its name alone with
+`unresolved: true` and no value — and that is the honest answer, not a defect
+in the resolver: there is no single figure to publish.
+
+Two kinds of call reach that state, and the second is the one this section
+missed. A PACK-LOWERED call, where the rule deflates its breakpoint by
+`pow(1 + growth, {{time.elapsed_years}})` and the slice bounds therefore differ
+in every period — `cre.percentage_rent_expected` is the instance. And a
+HAND-WRITTEN call whose bound is a run input:
+`quantile_mean("prices", inputs.tail_start, 1.0)` loses the record for the same
+reason, though its bound does not vary by period at all. So the gap is not
+"packs lose the audit chain"; it is "a value this document cannot see until the
+run loses it", and an ordinary hand-written model can reach it.
+
+What a reviewer still has, in both cases: the declaration and its points are in
+the source and therefore inside `model_hash`, and the integral is closed-form
+with no sampling, no iteration and no tolerance — five repeated compiles and
+runs of `cre_percentage_rent_expected` give one `model_hash` and one
+`ledger_hash`. So reproducibility is proved by the hash whatever the record
+says. What is missing is narrower and real: the INTERMEDIATE figure, so the
+integral can be checked by hand against the declared curve rather than
+re-derived from the stream total.
+
+Publishing one value per period — which is the true answer — is `docs/13`
+§7.70, with what it costs.
 
 ## 7. Non-goals, and why each is hard
 
