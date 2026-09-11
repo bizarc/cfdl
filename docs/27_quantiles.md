@@ -238,12 +238,25 @@ no RNG, no iteration, no convergence tolerance. Same inputs, same IR, same
 
 **Replayable — and here is the temptation to refuse.** Points are inlined into
 the IR and therefore inside `model_hash`. An 8760-point stack in a `.cfdl` file
-is ugly, and the fix will look like pointing at a CSV. Refuse it: an external
-path puts the audit chain outside the hash, and a results document whose
-`model_hash` does not cover its own price assumption is not reproducible in any
-sense worth the word. A duration curve is already a compression of 8760 hours —
-10 to 30 points is the normal size — and `import` organizes files without
-leaving the hash.
+is ugly, and the fix will look like pointing at a CSV.
+
+What this section originally said was "refuse it", on the ground that an
+external path puts the audit chain outside the hash. **That is too broad, and
+the reason is a distinction it did not draw.** What must be refused is an
+UNHASHED reference — a path to a file the results document cannot prove it
+read, which is what leaves `model_hash` not covering the model's own price
+assumption. A reference whose target is carried WITH the model, and hashed with
+it, is a different mechanism and is not refused: observables are planned that
+way, colocated with the model file in a package. The test is whether the hash
+covers the numbers, not whether the numbers sit in the `.cfdl` file.
+
+So the rule is: a results document whose `model_hash` does not cover its own
+price assumption is not reproducible in any sense worth the word — and inlining
+is one way to satisfy that, not the only one. For a quantile it remains the
+right way today: a duration curve is already a compression of 8760 hours, 10 to
+30 points is the normal size, and `import` organizes files without leaving the
+hash. Revisit it when packaged observables arrive, against the hash test rather
+than against the file boundary.
 
 **Provenance** (`docs/01` §17.2, §17.3). A `ref` clause populates
 `required_refs`, which has been declared and empty since v0.1.
