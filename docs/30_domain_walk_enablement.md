@@ -35,7 +35,7 @@ gap list wants all four:
    revolver, the recoverable-advances balance of a mortgage servicer.
 3. **The declared machine** (`docs/28` §6, phase 5, unbuilt). The
    breach-and-cure regime is the same construct everywhere: OC/IC tests in
-   credit (`docs/13` §7.74), delinquency and cure on realised rent in CRE
+   credit (`docs/38` Item 1), delinquency and cure on realised rent in CRE
    (`docs/28` §6.1's own worked example), curtail-and-restart in energy — the
    `energy.facility` lifecycle already declares `operating ⇄ curtailed` as
    edges, inert today (`packs/energy/ontology/types.toml`) — covenant breach
@@ -144,7 +144,7 @@ The cheapest coverage wins need no walk feature at all: `opco.depreciation`,
 
 ## 5. Credit
 
-Owned entirely by `docs/13` §7.74; nothing is restated here. The one addition
+Owned entirely by `docs/38`; nothing is restated here. The one addition
 from this survey: the phase 5 and walk gate fixtures — the delinquency
 machine, trapped cash across a failed trigger releasing on cure, the
 once-at-end waterfall read by a later balance — are benchmark seeds, not just
@@ -163,7 +163,7 @@ lifted, which reorders Tier 1:
 - *Mortgage servicing rights* — an advance balance that accrues on
   delinquency and recovers on cure is exactly the delinquency machine plus an
   account.
-- *Securitization waterfalls* — the §7.74 umbrella; the remaining engine asks
+- *Securitization waterfalls* — `docs/38`; the remaining engine asks
   are listed there.
 - *Data centers* — `state_enter` gives milestone-gated revenue commencement;
   the new primitive is a capacity dimension, which is pack-shape work.
@@ -186,7 +186,7 @@ lifted, which reorders Tier 1:
   (`docs/20` §5.5).
 - *ILS / cat bonds* — event-set Monte Carlo; the quantile primitive already
   speaks exceedance and layers (`docs/27`), the sampler does not.
-- *RMBS OAS* — per-period stochastic draws (`docs/13` §7.74) and a
+- *RMBS OAS* — per-period stochastic draws (`docs/38` Item 6) and a
   valuation-plane solver.
 - *Life settlements / pension risk transfer* — an actuarial data subsystem;
   "build them together or not at all."

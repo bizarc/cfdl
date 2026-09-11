@@ -950,7 +950,7 @@ against it by `make results-schema`.
         },
         "unresolved": {
           "type": "boolean",
-          "description": "True when an argument is not a compile-time literal: it reads the period (`time.date`), a run input (`inputs.*`), or another computed value. No single resolved figure exists for such a call, so `args` and `value` are both absent and the call is listed on its name alone. Published rather than left implicit because the old shape was an empty `args` array, and every quantile function takes a fixed arity with at least one argument after the name — `quantile_mean` three, `quantile_of` and `quantile_at` two — so `[]` could never mean \"a call that took no arguments\" and read as exactly that. What it would take to publish a value per period instead is `docs/13` §7.70."
+          "description": "True when an argument is not a compile-time literal: it reads the period (`time.date`), a run input (`inputs.*`), or another computed value. No single resolved figure exists for such a call, so `args` and `value` are both absent and the call is listed on its name alone. Published rather than left implicit because the old shape was an empty `args` array, and every quantile function takes a fixed arity with at least one argument after the name — `quantile_mean` three, `quantile_of` and `quantile_at` two — so `[]` could never mean \"a call that took no arguments\" and read as exactly that. What it would take to publish a value per period instead — and why the hard part is naming the call site, not recording it — is `docs/26`, \"An audit record resolves only what the compiler can see\"."
         },
         "value": {
           "type": "number",

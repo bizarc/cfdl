@@ -593,8 +593,9 @@ struct IrQuantileCall {
     /// True when an argument is not a compile-time literal: it reads the
     /// period (`time.date`), a run input (`inputs.*`), or another computed
     /// value. No single resolved figure exists for such a call, so `args` and
-    /// `value` are both absent — see `docs/13` §7.70 for what it would take to
-    /// publish one per period instead.
+    /// `value` are both absent. What it would take to publish one per period —
+    /// and why the hard part is NAMING the call site rather than recording it —
+    /// is `docs/26`, "An audit record resolves only what the compiler can see".
     #[serde(skip_serializing_if = "std::ops::Not::not")]
     unresolved: bool,
     /// Absent when an argument is not a literal. The call is still listed: a

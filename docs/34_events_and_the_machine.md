@@ -56,7 +56,7 @@ vocabulary, same journaling.
 ## What this unblocks, concretely
 
 - **Per-arrival behavior** — §7.77's DSCR cash-trap cure window (a counter
-  that resets on each breach), §7.74's step-shortfall and
+  that resets on each breach), `docs/38` Item 1's step-shortfall and
   servicer-advance bookkeeping.
 - **Endogenous re-striking** — look up the prevailing market rent or rate
   at the transition's own instant and hold it for the cycle: chained
@@ -361,7 +361,7 @@ that closes it — and a §7.77 cure-counter.
 
 **First priority within M2** (settled in review): it stands on the walk,
 the machine and the journal, and it is the mechanism §7.77 (cure window),
-§7.74 (shortfall, advances) and §7.76's counters were waiting to spell —
+`docs/38` (shortfall, advances) and §7.76's counters were waiting to spell —
 three other M2 entries consume it, so it goes first, ahead of the
 independent §7.50/§7.73 pair. §7.73 composes: state-gating gates the streams, and this
 plan makes the states act. A backlog entry referencing this document is

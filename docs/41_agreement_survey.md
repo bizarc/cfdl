@@ -251,7 +251,7 @@ not are struck with the reason.
 | `cre.abatement` | MIT (`benchmarks/cre/mit_rentleg_plaza`) | C, Lease (a `Contract.Deduction` line) | free rent as its own deduction from potential gross revenue, reportable as a line and counted in NOI at once |
 | `opco.exit_forward_multiple` | the banker DCF (`benchmarks/opco/banker_dcf_conventions`) | E, Sale | a forward (NTM) multiple struck at a point before model end, beside `opco.exit_multiple` |
 | `opco.depreciation` | `opco.cash_taxes` reads `da_monthly` as a bare term no rule produces | an expense line (family H: D&A is not an agreement) | a D&A schedule the tax rule reads by name instead of a term |
-| `opco.revolver`, `opco.cash_sweep`, `opco.nol_carryforward` | every LBO source | A, Debt (revolver, sweep); G, Tax (NOL) | Debt refinements over the balance account (`docs/42`); the coupled mechanics are `docs/13` §7.74's |
+| `opco.revolver`, `opco.cash_sweep`, `opco.nol_carryforward` | every LBO source | A, Debt (revolver, sweep); G, Tax (NOL) | Debt refinements over the balance account (`docs/42`); the coupled mechanics are `docs/38` Item 1's |
 | ~~`opco.equity_bridge`~~ | both opco sources | — | not a contract: the bridge from enterprise to equity value is a statement over accounts and fields (debt, minority interests, cash, non-operating assets) |
 | ~~`opco.share_count`~~ | both opco sources | — | not a contract: a share count that dilutes over time is an entity field |
 

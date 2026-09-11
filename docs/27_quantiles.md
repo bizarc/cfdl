@@ -305,8 +305,10 @@ says. What is missing is narrower and real: the INTERMEDIATE figure, so the
 integral can be checked by hand against the declared curve rather than
 re-derived from the stream total.
 
-Publishing one value per period — which is the true answer — is `docs/13`
-§7.70, with what it costs.
+Publishing one value per period is the true answer, and what it costs is
+`docs/26`, "An audit record resolves only what the compiler can see" — where
+the cost is not the per-period recording but giving each call site a stable
+NAME, which the record's current key cannot do.
 
 ## 7. Non-goals, and why each is hard
 
