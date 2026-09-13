@@ -377,6 +377,165 @@ stream cre.perm_payoff on entity container.project outflow currency USD {{
             'max(0.0, inputs.loan_commitment - prev.asset.facility.balance - '
             'prev.asset.facility.balance * inputs.loan_rate / 12.0))'))
 
+# ---------------------------------------------------------------- the JV split
+# The companion case's construction, carried over unchanged: contributions as
+# streams that move each partner's DUE account, the venture's cash as an
+# account fed by every cre.* stream, and a seven-tier split that fires once.
+# What differs here is that ONE model carries TWO exits, and a waterfall's
+# schedule is a date, not an expression. So there are two waterfalls, one on
+# each scenario's final cash event, and every tier is weighted by the scenario
+# switch, so the inactive one allocates nothing.
+#
+# Scenario A distributes at the LAST CONDOMINIUM CLOSING, not at the tower
+# sale: the sellout runs eight months past the sale, and those closings are
+# the venture's cash too. Scenario B distributes at its sale, which is also
+# the last period of the cash horizon.
+A_DIST = max(A_EXIT, CONDO0 + CONDO_M - 1)
+B_DIST = B_EXIT
+w(f"""
+// ------------------------------------------------------------ the JV capital
+// The companion case's construction. Cash accrues to the venture and is split
+// once, so the preference and the capital are CUMULATIVE balances carried
+// forward rather than re-derived at the distribution -- 17_ordered_waterfall.md
+// section 10. Both partners fund pro rata and nothing is returned before the
+// split, so the two balances only grow; their difference is the accrued
+// preference.
+//
+// The preference accrues from CONSTRUCTION START ({ym(T_START)}), not from the
+// 2023 land purchase, the convention the companion case states: the venture is
+// formed to build, and the land earns nothing until there is something to build.
+entity asset jv : Asset.Financial {{
+  // The facility's equity funding one period back, so a month's contribution
+  // can be differenced without reaching two periods behind.
+  funded_prev init 0.0
+              next prev.asset.facility.equity_funded
+
+  capital init 0.0
+          next prev.asset.jv.capital
+             + (prev.asset.facility.equity_funded - prev.asset.jv.funded_prev)
+
+  unreturned init 0.0
+             next prev.asset.jv.unreturned * (1.0 + if(time.t >= {T_START}, inputs.pref_rate / 12.0, 0.0))
+                + (prev.asset.facility.equity_funded - prev.asset.jv.funded_prev)
+}}
+
+// ------------------------------------------------------- the venture's cash
+// A development JV does not distribute while the deal is live, so cash
+// accumulates from inception and is allocated once. What accumulates is the
+// venture's whole cash position: the equity the partners contributed, plus
+// everything the deal earned on it, less every cost.
+account deal_cash {{
+  from series_sum("cre.*", time.t, time.t)
+}}
+
+// WHAT EACH PARTNER PUT IN, as cash. The venture funds pro rata -- 90%% Baupost,
+// 10%% Penzance, the same share the tiers split on -- on the dates the facility
+// draws equity, which the facility's own field states. Each contribution is a
+// stream into the project that moves the partner's capital account.
+stream cre.equity_contribution.baupost_land on entity container.project inflow currency USD {{
+  schedule on {ym(0)}
+  category financing.equity.contribution
+  amount = asset.facility.equity_funded * (1.0 - inputs.sponsor_share)
+  moves baupost_capital
+}}
+
+stream cre.equity_contribution.baupost on entity container.project inflow currency USD {{
+  schedule every month start from {ym(1)} to {ym(N-1)}
+  category financing.equity.contribution
+  amount = (asset.facility.equity_funded - prev.asset.facility.equity_funded)
+           * (1.0 - inputs.sponsor_share)
+  moves baupost_capital
+}}
+
+stream cre.equity_contribution.penzance_land on entity container.project inflow currency USD {{
+  schedule on {ym(0)}
+  category financing.equity.contribution
+  amount = asset.facility.equity_funded * inputs.sponsor_share
+  moves penzance_capital
+}}
+
+stream cre.equity_contribution.penzance on entity container.project inflow currency USD {{
+  schedule every month start from {ym(1)} to {ym(N-1)}
+  category financing.equity.contribution
+  amount = (asset.facility.equity_funded - prev.asset.facility.equity_funded)
+           * inputs.sponsor_share
+  moves penzance_capital
+}}
+
+// Each partner's capital is DUE to it from the venture: a contribution lowers
+// the balance below zero, and an allocation from the split raises it back.
+account baupost_capital due {{
+  owner party.baupost
+}}
+
+account penzance_capital due {{
+  owner party.penzance
+}}
+
+// The deal's own cash, with the partners' contributions left out: what the
+// workbook ties to, and what the project returns on.
+slice deal {{
+  entity container.project
+  except category "financing.equity.contribution"
+}}
+
+// -------------------------------------------------------------- the JV split
+// Penzance / Baupost terms are not public; these tiers are stated assumptions.
+//
+// Capital and the preference come back PRO RATA. The investor's tier of each
+// pair is capped at its share of the pot, so a pot too small to return
+// everyone's capital -- the 2026-discount scenario is one -- or to pay the
+// whole preference -- every scenario at the guideline basis is one -- shorts
+// both partners in proportion rather than the sponsor alone. Below the
+// promote the partners are pari passu. The companion case pays the investor
+// first, and its pot is never short, so the two spellings agree there.
+//
+// One model, two exits, and a waterfall's schedule is a date. So each strategy
+// has its own distribution, on its own final cash event, and every tier is
+// weighted by the scenario switch: the strategy not selected allocates nothing
+// and leaves the pot untouched for the one that is.
+//
+// Scenario A: the towers sell in {ym(A_EXIT)}, and the condominium sellout runs
+// to {ym(A_DIST)}. The venture distributes when the last unit closes.
+waterfall jv.distribution_a on entity container.project {{
+  schedule on {ym(A_DIST)} end
+  from deal_cash
+
+  pay capital_inv   to party.baupost  = min(0.0 - prev.baupost_capital, remaining * (1.0 - inputs.sponsor_share)) * (1.0 - inputs.scenario_b)
+  pay capital_sp    to party.penzance = min(0.0 - prev.penzance_capital, remaining) * (1.0 - inputs.scenario_b)
+  pay preferred_inv to party.baupost  = min((asset.jv.unreturned - asset.jv.capital) * (1.0 - inputs.sponsor_share), remaining * (1.0 - inputs.sponsor_share)) * (1.0 - inputs.scenario_b)
+  pay preferred_sp  to party.penzance = (asset.jv.unreturned - asset.jv.capital) * inputs.sponsor_share * (1.0 - inputs.scenario_b)
+  pay promote       to party.penzance = remaining * 0.20 * (1.0 - inputs.scenario_b)
+  pay residual_inv  to party.baupost  = remaining * (1.0 - inputs.sponsor_share) * (1.0 - inputs.scenario_b)
+  pay residual_sp   to party.penzance = remaining * (1.0 - inputs.scenario_b)
+}}
+
+// Scenario B: the stabilized asset sells in {ym(B_DIST)}, the last period of
+// the cash horizon, and the venture distributes on the same date.
+waterfall jv.distribution_b on entity container.project {{
+  schedule on {ym(B_DIST)} end
+  from deal_cash
+
+  pay capital_inv   to party.baupost  = min(0.0 - prev.baupost_capital, remaining * (1.0 - inputs.sponsor_share)) * inputs.scenario_b
+  pay capital_sp    to party.penzance = min(0.0 - prev.penzance_capital, remaining) * inputs.scenario_b
+  pay preferred_inv to party.baupost  = min((asset.jv.unreturned - asset.jv.capital) * (1.0 - inputs.sponsor_share), remaining * (1.0 - inputs.sponsor_share)) * inputs.scenario_b
+  pay preferred_sp  to party.penzance = (asset.jv.unreturned - asset.jv.capital) * inputs.sponsor_share * inputs.scenario_b
+  pay promote       to party.penzance = remaining * 0.20 * inputs.scenario_b
+  pay residual_inv  to party.baupost  = remaining * (1.0 - inputs.sponsor_share) * inputs.scenario_b
+  pay residual_sp   to party.penzance = remaining * inputs.scenario_b
+}}
+
+// -------------------------------------------------------------- the returns
+// WHAT EACH PARTNER EARNS, measured on that partner's own capital in and
+// distributions out. Penzance's figure is all-in: its preferred and residual
+// as a 10%% investor, and the promote it earns as sponsor. Each tier is
+// reported on its own, so the promote can be read separately.
+metric baupost_irr   = irr(party.baupost)
+metric baupost_moic  = moic(party.baupost)
+metric penzance_irr  = irr(party.penzance)
+metric penzance_moic = moic(party.penzance)
+""".replace("%%", "%"))
+
 (CASE / "run.json").write_text(json.dumps({
     "deterministic": {"annual_discount_rate": 0.10, "as_of": str(M0),
                       "parameters": {"inputs.scenario_b": 1.0}},

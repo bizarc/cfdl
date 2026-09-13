@@ -73,9 +73,10 @@ condominium pricing, growth, and the JV tiers.
 | | |
 |---|---|
 | Pack | `cre` |
-| Declared | 6 curves, 7 entities, 12 streams, 5 field recurrences, 2 scenarios, a 12-month valuation tail |
-| Language features | `curve` lookups, entity field recurrences (`init`/`next`/`prev`), a scenario switch that weights streams through `inputs.*`, `pow` escalation from a stated index base, `series_sum` over a `project` tail for a forward-income valuation, `part of` roll-up, `start` and `end` placement |
-| Conventions | equity-first funding, capitalized construction interest, a facility retired out of disposal proceeds, permanent refinance at stabilization, sale in lease-up |
+| Declared | 6 curves, 8 entities, 16 streams, 8 field recurrences, 3 accounts, 2 waterfalls, 14 tiers, 4 metrics, 1 slice, 6 scenarios, a 12-month valuation tail |
+| What the deal requires | carrying a balance across periods, an ordered priority of payments, cash that accumulates between distributions, a return measured per partner, two exits in one model |
+| Language features | `curve` lookups, entity field recurrences (`init`/`next`/`prev`), a scenario switch that weights streams and tiers through `inputs.*`, `pow` escalation from a stated index base, `series_sum` over a `project` tail for a forward-income valuation, `account` and `moves`, a `waterfall` paying `from` an account, `irr`/`moic` over a party, a `slice`, `part of` roll-up, `start` and `end` placement |
+| Conventions | equity-first funding, capitalized construction interest, a facility retired out of disposal proceeds, permanent refinance at stabilization, sale in lease-up, pro rata return of capital and preference, one distribution per strategy |
 
 The model carries **two exit strategies over one set of facts**. The input
 `inputs.scenario_b` selects one.
@@ -89,6 +90,23 @@ The model carries **two exit strategies over one set of facts**. The input
 
 Both strategies run from one model, on one set of costs and one construction facility. The
 two columns below differ only in when the venture sells.
+
+**One strategy per named run.** The six runs in `run.json` are the case's
+scenario set. Nothing outside it is asserted.
+
+| run | strategy | exit | market factor | what it answers |
+|---|---|---|---|---|
+| `build_to_core` (deterministic) | stabilize, refinance, hold five years | 2037-06 | 1.00 | the base case: the hold |
+| `merchant_build` | sell in lease-up, as at The Highlands | 2031-10 | 1.00 | the comparison |
+| `core_at_2026_discount` | hold | 2037-06 | 0.884 | the hold, priced where Central Place traded |
+| `core_at_2022_premium` | hold | 2037-06 | 1.321 | the hold, priced where The Highlands traded |
+| `merchant_at_2026_discount` | sell | 2031-10 | 0.884 | the sale, at the discount |
+| `merchant_at_2022_premium` | sell | 2031-10 | 1.321 | the sale, at the premium |
+
+The hold is the base. The sale is kept because the same partners chose it four
+blocks away, and because the two answer different questions about the same
+building. The hold length is five years past stabilization and is fixed by
+the generator; a longer hold is a different run, not a different input.
 
 **The engine derives the exit rather than states it.** The model declares a 12-month
 projection tail. The sale is valued on the twelve months of income that follow it,
@@ -117,9 +135,9 @@ Both scenarios tie to the workbook to under a dollar.
 | Permanent loan | — | 347,217,832 |
 | Exit value | 567,404,298 | 691,127,415 |
 | Exit per unit | 734,980 | 895,243 |
-| `model.total` | 28,591,606 | 223,799,127 |
-| `model.moic` | 1.094 | 1.738 |
-| `model.irr` | 2.02% | 6.65% |
+| `slice.deal.total` | 28,591,606 | 223,799,127 |
+| `slice.deal.moic` | 1.094 | 1.738 |
+| `slice.deal.irr` | 2.02% | 6.57% |
 
 Scenario A derives an exit of **$734,980 per unit**. Evo recorded **$735,385**,
 within 0.1%. Same submarket, same method, comparable product. That is a
@@ -128,6 +146,47 @@ cross-check rather than a coincidence.
 **The holding period is the deal.** The land, the building, the cost and the
 guideline basis are identical across both scenarios. A sale in lease-up returns
 1.09x. A five-year hold past stabilization returns 1.74x.
+
+The levered figures are the deal's own cash with the partners' contributions
+left out, which is what the workbook reports. The project's whole cash,
+contributions included, is 473,468,010 under the hold and 278,260,488 under
+the sale, and each strategy's distribution allocates exactly that.
+
+**The split.** The partners fund pro rata, 90% Baupost and 10% Penzance, on
+the dates the facility draws equity, and each contribution moves that
+partner's own account.
+Cash accrues to the venture and is split once per strategy: at the last
+condominium closing in 2032-05 under the sale, and at the exit in 2037-06
+under the hold. The split is seven tiers: capital back, an 8% preference
+compounded from construction start, a 20% promote, and the residual 90/10.
+
+Capital and the preference come back pro rata. Below the promote the partners
+are pari passu, so a pot too small to pay the whole preference shorts both in
+proportion.
+
+| | A, sell in lease-up | B, hold five years |
+|---|---:|---:|
+| Distributed | 278,260,488 | 473,468,010 |
+| Preference owed | 115,348,264 | 297,775,808 |
+| Preference paid | 28,591,606 | 223,799,127 |
+| Promote | 0 | 0 |
+| Baupost, contributed | 224,701,994 | 224,701,994 |
+| Baupost, distributed | 250,434,439 | 426,121,209 |
+| Penzance, contributed | 24,966,888 | 24,966,888 |
+| Penzance, distributed | 27,826,049 | 47,346,801 |
+| MoIC, both partners | 1.1145 | 1.8964 |
+| IRR, both partners | 2.00% | 6.22% |
+
+**At the guideline basis, neither strategy clears the preference.** The hold
+returns 6.57% on the deal's cash and the preference is 8%, so the profit is
+paid out as preference and stops short of it. The promote is zero, and both
+partners earn the same return, because nothing above the preference exists to
+split unevenly.
+
+The promote appears at the 2022 premium. Priced where The Highlands traded, the
+hold pays a promote of 29,575,044 and the sale 19,076,024, and the sponsor's
+return separates from the investor's: 13.43% against 9.64% under the hold. Each
+named run pins its party figures in `expected_scenarios.json`.
 
 ## The delta
 
@@ -149,7 +208,15 @@ smaller. No Rosslyn condominium of that size has traded recently.
 **Scenario B exits at $895,243 per unit, above every recorded comparable.** The figure is 2037 dollars, after eleven years of growth. The engine derives it from the twelve months of income after the sale, over the guideline cap. It is the figure most exposed to the growth rate and the market factor.
 
 **The JV tiers are placeholders.** The Penzance and Baupost terms are private.
-The tier percentages state a structure, not the partnership's economics.
+The tier percentages state a structure, not the partnership's economics. The
+structure is real: each partner's capital and distributions are one record, and
+the return per partner is model output. Replacing the three rates is a
+three-line change, and every partner figure recomputes.
+
+**The tier and party figures are the model's own.** The workbook carries no
+split, so nothing external asserts them. They are pinned as regression cover,
+and `NOTES.md` recomputes every tier outside the engine from the pot and the
+balances, to the cent.
 
 **The holding period is a strategy, not a fact.** Scenario A follows the
 companion deal, where both towers sold in lease-up. Scenario B holds five years

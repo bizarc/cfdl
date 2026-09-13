@@ -545,7 +545,7 @@
       distribution. It runs as written. Four curves declare a value for every period of the 160-month grid. This listing abridges those runs of figures for length. The model itself carries them in full.
     </p>
     <details>
-      <summary>Show the model &mdash; 409 lines of CFDL</summary>
+      <summary>Show the model &mdash; 921 lines of CFDL</summary>
       <div class="scroll"><pre><code>version 0.1
 model &quot;penzance-highlands&quot; currency USD
 use pack &quot;cre&quot; version &quot;0.1.0&quot;
@@ -563,7 +563,7 @@ time calendar monthly from 2011-09 for 160
 // separable, which is the modeling problem this case addresses.
 //
 // Program, obligations, land basis, both sale prices and the whole condo
-// sellout are recorded fact — Arlington's site-plan record, deed register,
+// sellout are recorded fact — Arlington&#x27;s site-plan record, deed register,
 // assessment roll and Commercial Guidebook. Cost, debt pricing and the JV
 // split are stated assumptions. Provenance is in CASE.md.
 // ===========================================================================
@@ -582,7 +582,7 @@ assume pref_rate        = 0.08
 assume sponsor_share    = 0.10
 
 // Development cost per period and its running total. Declared as curves so
-// the facility's recurrence can read them. Cost here is a pure function of
+// the facility&#x27;s recurrence can read them. Cost here is a pure function of
 // time.
 //
 // EVERY period is declared, including the zeros. A step curve is
@@ -622,59 +622,59 @@ curve pierce_sellout {
 
 
 // ---------------------------------------------------------------- structure
-entity asset project : CRE.Asset.Portfolio
-entity asset east : CRE.Asset.RealProperty { asset_class = &quot;mixed_use&quot;  part of asset.project }
-entity asset west : CRE.Asset.RealProperty { asset_class = &quot;multifamily&quot;  part of asset.project }
+entity container project : CRE.Container.Portfolio
+entity asset east : CRE.Asset.RealProperty { asset_class = &quot;mixed_use&quot;  part of container.project }
+entity asset west : CRE.Asset.RealProperty { asset_class = &quot;multifamily&quot;  part of container.project }
 
 entity party penzance : CRE.Party.Sponsor  { name = &quot;Penzance&quot; }
 entity party baupost  : CRE.Party.Investor { name = &quot;The Baupost Group&quot; }
 entity party mack     : CRE.Party.Lender   { name = &quot;Mack Real Estate Credit Strategies&quot; }
 
 // ------------------------------------------------------------------ capital
-stream cre.land on entity asset.project outflow currency USD {
+stream cre.land on entity container.project outflow currency USD {
   schedule on 2011-09
   category investing.capital.capex
   amount = 67000000.00
 }
 
 
-stream cre.hard_buildings on entity asset.project outflow currency USD {
+stream cre.hard_buildings on entity container.project outflow currency USD {
   schedule every month start from 2018-04 to 2021-06
   category investing.capital.construction
   amount = 301693050.00 * (time.t - 78.0) * (118.0 - time.t) / 10660.0
 }
 
-stream cre.hard_garage on entity asset.project outflow currency USD {
+stream cre.hard_garage on entity container.project outflow currency USD {
   schedule every month start from 2018-04 to 2021-06
   category investing.capital.construction
   amount = 33184000.00 * (time.t - 78.0) * (118.0 - time.t) / 10660.0
 }
 
-stream cre.fire_station on entity asset.project outflow currency USD {
+stream cre.fire_station on entity container.project outflow currency USD {
   schedule every month start from 2018-04 to 2021-06
   category investing.capital.construction
   amount = 7454800.00 * (time.t - 78.0) * (118.0 - time.t) / 10660.0
 }
 
-stream cre.park_and_street on entity asset.project outflow currency USD {
+stream cre.park_and_street on entity container.project outflow currency USD {
   schedule every month start from 2018-04 to 2021-06
   category investing.capital.construction
   amount = 14000000.00 * (time.t - 78.0) * (118.0 - time.t) / 10660.0
 }
 
-stream cre.soft_costs on entity asset.project outflow currency USD {
+stream cre.soft_costs on entity container.project outflow currency USD {
   schedule every month start from 2018-04 to 2021-06
   category investing.capital.construction
   amount = 60576414.50 * (time.t - 78.0) * (118.0 - time.t) / 10660.0
 }
 
-stream cre.contingency on entity asset.project outflow currency USD {
+stream cre.contingency on entity container.project outflow currency USD {
   schedule every month start from 2018-04 to 2021-06
   category investing.capital.construction
   amount = 17816592.50 * (time.t - 78.0) * (118.0 - time.t) / 10660.0
 }
 
-stream cre.developer_fee on entity asset.project outflow currency USD {
+stream cre.developer_fee on entity container.project outflow currency USD {
   schedule every month start from 2018-04 to 2021-06
   category investing.capital.construction
   amount = 17994713.10 * (time.t - 78.0) * (118.0 - time.t) / 10660.0
@@ -683,13 +683,13 @@ stream cre.developer_fee on entity asset.project outflow currency USD {
 
 // SP #445 conditions: utility undergrounding and TDM at permit; public art,
 // green building and affordable housing at certificate of occupancy.
-stream cre.obligations_permit on entity asset.project outflow currency USD {
+stream cre.obligations_permit on entity container.project outflow currency USD {
   schedule on 2018-04
   category investing.capital.construction
   amount = 157303.00
 }
 
-stream cre.obligations_co on entity asset.project outflow currency USD {
+stream cre.obligations_co on entity container.project outflow currency USD {
   schedule on 2021-09
   category investing.capital.construction
   amount = 12252500.00
@@ -764,25 +764,25 @@ stream cre.evo_tax on entity asset.east outflow currency USD {
 // dates differ (5/18 leasehold, 7/12 fee), which is why the press reported two.
 stream cre.aubrey_sale on entity asset.west inflow currency USD {
   schedule on 2022-05
-  category investing.reversion
+  category investing.disposal.reversion
   amount = 266455000.00
 }
 
 stream cre.evo_sale on entity asset.east inflow currency USD {
   schedule on 2022-05
-  category investing.reversion
+  category investing.disposal.reversion
   amount = 334642240.00
 }
 
-stream cre.sale_costs on entity asset.project outflow currency USD {
+stream cre.sale_costs on entity container.project outflow currency USD {
   schedule on 2022-05
-  category investing.selling_costs
+  category investing.disposal.selling_costs
   amount = 601097240.00 * inputs.cost_of_sale
 }
 
 stream cre.pierce_closings on entity asset.east inflow currency USD {
   schedule every month start from 2021-08 to 2024-06
-  category investing.reversion
+  category investing.disposal.reversion
   amount = curve_value(&quot;pierce_sellout&quot;, time.date) * (1.0 - inputs.condo_selling_cost)
 }
 
@@ -826,9 +826,9 @@ entity asset facility : Asset.Financial {
 }
 
 // Interest is capitalized: it is repaid inside the principal repayment. That is the convention the reference workbook uses.
-stream cre.loan_draw on entity asset.project inflow currency USD {
+stream cre.loan_draw on entity container.project inflow currency USD {
   schedule every month start from 2011-09 to 2024-12
-  category financing.debt_proceeds
+  category financing.debt.proceeds
   amount = asset.facility.draw
 }
 
@@ -836,25 +836,25 @@ stream cre.loan_draw on entity asset.project inflow currency USD {
 // net to zero in cash while the balance grows. Stated GROSS rather than folded
 // into the balance silently, so `domain.cre.debt_service` sees real interest
 // and coverage during the build is measurable instead of absent.
-stream cre.loan_interest on entity asset.project outflow currency USD {
+stream cre.loan_interest on entity container.project outflow currency USD {
   schedule every month start from 2011-09 to 2024-12
-  category financing.interest
+  category financing.debt.interest_paid
   amount = asset.facility.interest
 }
 
-stream cre.loan_interest_funding on entity asset.project inflow currency USD {
+stream cre.loan_interest_funding on entity container.project inflow currency USD {
   schedule every month start from 2011-09 to 2024-12
-  category financing.debt_proceeds
+  category financing.debt.proceeds
   amount = asset.facility.interest
 }
 
-// The payoff sits in the reversion. `financing.debt_principal` folds into
+// The payoff sits in the reversion. `financing.debt.principal` folds into
 // `domain.cre.debt_service`, and a balance retired out of sale proceeds is not
 // debt service — it would make every coverage ratio in the disposal period
-// meaningless. The cre pack says the same of a permanent loan's balloon.
-stream cre.loan_repayment on entity asset.project outflow currency USD {
+// meaningless. The cre pack says the same of a permanent loan&#x27;s balloon.
+stream cre.loan_repayment on entity container.project outflow currency USD {
   schedule every month start from 2011-09 to 2024-12
-  category investing.reversion
+  category investing.disposal.reversion
   amount = asset.facility.repay
 }
 
@@ -873,7 +873,7 @@ stream cre.loan_repayment on entity asset.project outflow currency USD {
 // Compounding that $67M from 2011 instead consumes the entire promote, which
 // is how the assumption was identified.
 entity asset jv : Asset.Financial {
-  // The facility's equity funding one period back, so a month's contribution
+  // The facility&#x27;s equity funding one period back, so a month&#x27;s contribution
   // can be differenced without reaching two periods behind.
   funded_prev init 0.0
               next prev.asset.facility.equity_funded
@@ -887,46 +887,72 @@ entity asset jv : Asset.Financial {
                 + (prev.asset.facility.equity_funded - prev.asset.jv.funded_prev)
 }
 
-// ------------------------------------------------------- the venture's cash
+// ------------------------------------------------------- the venture&#x27;s cash
 //
 // A development JV does not distribute while the deal is live, so cash
 // accumulates from inception and is allocated once, at the final closing. What
-// accumulates is the venture's whole cash position: the equity the partners
+// accumulates is the venture&#x27;s whole cash position: the equity the partners
 // contributed, plus everything the deal earned on it, less every cost.
 account deal_cash {
   from series_sum(&quot;cre.*&quot;, time.t, time.t)
-     + (min(inputs.equity_commitment, curve_value(&quot;dev_cost_cum&quot;, time.date))
-                - if(time.t == 0, 0.0,
-                     min(inputs.equity_commitment,
-                         curve_value(&quot;dev_cost_cum&quot;, edate(time.date, -1)))))
 }
 
-// WHAT EACH PARTNER PUT IN, so that what each partner got back can be measured
-// against it. The venture funds pro rata -- 90% Baupost, 10% Penzance, the
-// same share the tiers split on. Each partner's balance carries its capital out
-// on the dates the facility draws it, and its distributions back in when the
-// venture allocates.
-account baupost_capital {
+// WHAT EACH PARTNER PUT IN, as cash. The venture funds pro rata -- 90% Baupost,
+// 10% Penzance, the same share the tiers split on -- on the dates the facility
+// draws equity, which the facility&#x27;s own field states. Each contribution is a
+// stream into the project that moves the partner&#x27;s capital account, so the
+// account carries the capital out as it is paid in and the distributions back
+// in when the venture allocates; nothing restates the draw.
+stream cre.equity_contribution.baupost_land on entity container.project inflow currency USD {
+  schedule on 2011-09
+  category financing.equity.contribution
+  amount = asset.facility.equity_funded * (1.0 - inputs.sponsor_share)
+  moves baupost_capital
+}
+
+stream cre.equity_contribution.baupost on entity container.project inflow currency USD {
+  schedule every month start from 2011-10 to 2024-12
+  category financing.equity.contribution
+  amount = (asset.facility.equity_funded - prev.asset.facility.equity_funded)
+           * (1.0 - inputs.sponsor_share)
+  moves baupost_capital
+}
+
+stream cre.equity_contribution.penzance_land on entity container.project inflow currency USD {
+  schedule on 2011-09
+  category financing.equity.contribution
+  amount = asset.facility.equity_funded * inputs.sponsor_share
+  moves penzance_capital
+}
+
+stream cre.equity_contribution.penzance on entity container.project inflow currency USD {
+  schedule every month start from 2011-10 to 2024-12
+  category financing.equity.contribution
+  amount = (asset.facility.equity_funded - prev.asset.facility.equity_funded)
+           * inputs.sponsor_share
+  moves penzance_capital
+}
+
+// Each partner&#x27;s capital is DUE to it from the venture: a contribution lowers
+// the balance below zero, and an allocation from the split raises it back.
+account baupost_capital due {
   owner party.baupost
-  from 0.0 - (min(inputs.equity_commitment, curve_value(&quot;dev_cost_cum&quot;, time.date))
-                - if(time.t == 0, 0.0,
-                     min(inputs.equity_commitment,
-                         curve_value(&quot;dev_cost_cum&quot;, edate(time.date, -1)))))
-             * (1.0 - inputs.sponsor_share)
 }
 
-account penzance_capital {
+account penzance_capital due {
   owner party.penzance
-  from 0.0 - (min(inputs.equity_commitment, curve_value(&quot;dev_cost_cum&quot;, time.date))
-                - if(time.t == 0, 0.0,
-                     min(inputs.equity_commitment,
-                         curve_value(&quot;dev_cost_cum&quot;, edate(time.date, -1)))))
-             * inputs.sponsor_share
+}
+
+// The deal&#x27;s own cash, with the partners&#x27; contributions left out: what the
+// workbook ties to, and what the project returns on.
+slice deal {
+  entity container.project
+  except category &quot;financing.equity.contribution&quot;
 }
 
 // -------------------------------------------------------------- the JV split
 // Penzance / Baupost terms are not public; these tiers are stated assumptions.
-waterfall jv.distribution on entity asset.project {
+waterfall jv.distribution on entity container.project {
   schedule on 2024-06 end
   from deal_cash
 
@@ -944,18 +970,16 @@ waterfall jv.distribution on entity asset.project {
 }
 
 // -------------------------------------------------------------- the returns
-// WHAT EACH PARTNER ACTUALLY EARNED, measured on that partner's own capital in
+// WHAT EACH PARTNER ACTUALLY EARNED, measured on that partner&#x27;s own capital in
 // and distributions out.
 //
-// Penzance's figure is all-in: its preferred and residual as a 10% investor,
+// Penzance&#x27;s figure is all-in: its preferred and residual as a 10% investor,
 // and the promote it earned as sponsor. Each tier is reported on its own, so
 // the promote can be read separately from the investor return.
 metric baupost_irr   = irr(party.baupost)
 metric baupost_moic  = moic(party.baupost)
 metric penzance_irr  = irr(party.penzance)
-metric penzance_moic = moic(party.penzance)
-
-</code></pre></div>
+metric penzance_moic = moic(party.penzance)</code></pre></div>
     </details>
   </section>
 
