@@ -1,14 +1,48 @@
 {
-  "model.total": {
+  "slice.deal.total": {
     "value": 223799127.44,
-    "tolerance": 1.0
+    "tolerance": 1.0,
+    "source": "lifetime net cash, levered, the partners' contributions left out: the workbook's scenario B net"
   },
-  "model.irr": {
+  "slice.deal.irr": {
     "value": 0.065696,
     "tolerance": 1e-05
   },
-  "model.moic": {
+  "slice.deal.moic": {
     "value": 1.73801,
+    "tolerance": 0.0001
+  },
+  "model.total": {
+    "value": 473468010.04,
+    "tolerance": 1.0,
+    "source": "the project's whole cash: 223,799,127.44 earned plus 249,668,882.60 contributed"
+  },
+  "entity.party.baupost.total": {
+    "value": 426121209.04,
+    "tolerance": 1.0,
+    "source": "capital_inv + preferred_inv; the pot is short of the preference, so no promote and no residual"
+  },
+  "entity.party.penzance.total": {
+    "value": 47346801.0,
+    "tolerance": 1.0,
+    "source": "capital_sp + preferred_sp, pro rata with the investor"
+  },
+  "metric.baupost_irr": {
+    "value": 0.062184,
+    "tolerance": 1e-05,
+    "source": "irr(party.baupost) over the party's own account"
+  },
+  "metric.baupost_moic": {
+    "value": 1.896384,
+    "tolerance": 0.0001
+  },
+  "metric.penzance_irr": {
+    "value": 0.062184,
+    "tolerance": 1e-05,
+    "source": "equal to the investor's: below the preference the partners are pari passu"
+  },
+  "metric.penzance_moic": {
+    "value": 1.896384,
     "tolerance": 0.0001
   }
 }
