@@ -8,7 +8,24 @@
 # same frozen input set, so they tie by construction rather than by
 # transcription. Reconciling them found three defects — see CASE.md.
 # Status: pending practitioner review.
-summary = "A 170-month ground-up development of 845 units in three towers: land recorded in 2023, a 42-month build, a condominium sellout, and two exit strategies — sell in lease-up, or stabilize, refinance and hold five years."
+#
+# The JV split is the companion case's construction: the partners' contributions
+# are STREAMS that move each partner's due account (docs/42), the venture's cash
+# is an account fed by every cre.* stream, and a seven-tier waterfall fires once
+# per strategy. `model.total` therefore carries the equity as well as what the
+# deal earned; the workbook's net cash, return and multiple tie to `slice.deal`,
+# the project's cash with the contributions left out. The tier columns, the two
+# party totals and the four party metrics are the MODEL's own numbers pinned as
+# regression cover — the Penzance/Baupost terms are private and the tiers are
+# stated placeholders, so nothing external asserts them. NOTES.md carries an
+# independent recomputation of every tier from the pot and the balances.
+#
+# expected_merchant_build.csv is the workbook's ScenarioA equity column, checked
+# against a run with `inputs.scenario_b = 0`; it agrees to under a dollar, hence
+# the slice tolerance below. expected_scenarios.json pins the party figures under
+# every named scenario: the promote is zero at the guideline basis under either
+# strategy and appears only at the 2022 premium.
+summary = "A 170-month ground-up development of 845 units in three towers: land recorded in 2023, a 42-month build, a condominium sellout, and two exit strategies — sell in lease-up, or stabilize, refinance and hold five years — each with its own JV distribution and a return per partner."
 pack = "cre"
 period_tolerance = 0.01
 
@@ -21,6 +38,8 @@ period_tolerance = 0.01
 # build) is a named scenario in run.json, selected by `inputs.scenario_b`.
 
 [tolerance]
+# The workbook's scenario A column ties to under a dollar, not to the cent.
+"slice.deal" = 1.0
 "domain.cre.noi" = 0.01
 "domain.cre.egi" = 0.01
 "domain.cre.opex_total" = 0.01

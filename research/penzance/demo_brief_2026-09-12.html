@@ -1,0 +1,226 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow,noarchive">
+<title>Penzance Demo Brief</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+  :root{
+    --ground:#FAF9F7; --surface:#F2F0EC; --ink:#191C1F; --muted:#5C6570;
+    --rule:#E2DFDA; --accent:#1F4E5F; --accent-soft:#E6EDEF;
+    --good:#3F6B4F; --good-soft:#E4EFE7; --warn:#8A5A1E; --warn-soft:#F5EBDD; --bad:#8E3B3B; --bad-soft:#F3E3E3;
+    --serif:"Newsreader",Georgia,"Times New Roman",serif;
+    --sans:"IBM Plex Sans","Helvetica Neue",Arial,sans-serif;
+    --mono:"IBM Plex Mono","SF Mono",Menlo,Consolas,monospace;
+    --measure:70ch;
+  }
+  @media (prefers-color-scheme:dark){
+    :root:not([data-theme="light"]){
+      --ground:#14171A; --surface:#1A1E22; --ink:#E8E6E2; --muted:#969EA6;
+      --rule:#292E33; --accent:#79ADBD; --accent-soft:#1D2A30;
+      --good:#8FBF9F; --good-soft:#1C2A21; --warn:#D9A65C; --warn-soft:#2E2618; --bad:#D98B8B; --bad-soft:#2E1C1C;
+    }
+  }
+  :root[data-theme="dark"]{
+    --ground:#14171A; --surface:#1A1E22; --ink:#E8E6E2; --muted:#969EA6;
+    --rule:#292E33; --accent:#79ADBD; --accent-soft:#1D2A30;
+    --good:#8FBF9F; --good-soft:#1C2A21; --warn:#D9A65C; --warn-soft:#2E2618; --bad:#D98B8B; --bad-soft:#2E1C1C;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--ground);color:var(--ink);font-family:var(--sans);font-size:15.5px;line-height:1.55}
+  main{max-width:880px;margin:0 auto;padding:48px 24px 96px}
+  .eyebrow{font-family:var(--sans);font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin:0 0 8px}
+  h1{font-family:var(--serif);font-weight:500;font-size:40px;line-height:1.1;margin:0 0 12px;text-wrap:balance}
+  h2{font-family:var(--serif);font-weight:500;font-size:27px;line-height:1.2;margin:56px 0 16px;text-wrap:balance;padding-top:20px;border-top:1px solid var(--rule)}
+  h3{font-family:var(--sans);font-weight:600;font-size:15px;margin:28px 0 8px}
+  p{max-width:var(--measure);margin:0 0 14px}
+  .lede{font-family:var(--serif);font-size:19px;line-height:1.45;color:var(--ink);max-width:var(--measure)}
+  a{color:var(--accent)}
+  code{font-family:var(--mono);font-size:.88em;background:var(--surface);padding:1px 5px;border-radius:3px}
+  ul,ol{max-width:var(--measure);padding-left:22px;margin:0 0 14px}
+  li{margin:0 0 6px}
+  .tbl{overflow-x:auto;margin:0 0 20px}
+  table{border-collapse:collapse;width:100%;font-size:14px}
+  th,td{text-align:left;vertical-align:top;padding:9px 10px;border-bottom:1px solid var(--rule)}
+  th{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:500}
+  td.num{font-family:var(--mono);font-variant-numeric:tabular-nums;white-space:nowrap}
+  .chip{display:inline-block;font-size:11.5px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;padding:2px 8px;border-radius:999px;white-space:nowrap}
+  .ok{background:var(--good-soft);color:var(--good)}
+  .warn{background:var(--warn-soft);color:var(--warn)}
+  .bad{background:var(--bad-soft);color:var(--bad)}
+  .info{background:var(--accent-soft);color:var(--accent)}
+  .summary{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:12px;margin:28px 0 8px}
+  .summary div{background:var(--surface);padding:14px 16px;border-left:3px solid var(--accent)}
+  .summary .k{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin:0 0 4px}
+  .summary .v{font-family:var(--serif);font-size:20px;line-height:1.25;margin:0}
+  .agenda{list-style:none;padding:0;max-width:none}
+  .agenda li{display:grid;grid-template-columns:72px 1fr;gap:18px;padding:18px 0;border-bottom:1px solid var(--rule);margin:0}
+  .agenda .t{font-family:var(--mono);font-size:13px;color:var(--muted);padding-top:4px;white-space:nowrap}
+  .agenda .t b{display:block;color:var(--ink);font-weight:500;font-size:15px}
+  .agenda h4{font-family:var(--serif);font-weight:500;font-size:20px;margin:0 0 6px}
+  .agenda p{margin:0 0 8px}
+  .agenda .show{font-size:14px;color:var(--muted)}
+  .agenda .show a{white-space:nowrap}
+  .say{font-family:var(--serif);font-style:italic;font-size:16.5px;border-left:2px solid var(--accent);padding:2px 0 2px 14px;margin:8px 0 10px;max-width:var(--measure)}
+  .risk{font-size:13.5px;color:var(--warn)}
+  .check{list-style:none;padding:0}
+  .check li{padding-left:28px;position:relative}
+  .check li::before{content:"";position:absolute;left:2px;top:5px;width:14px;height:14px;border:1.5px solid var(--muted);border-radius:3px}
+  .note{background:var(--surface);padding:14px 18px;max-width:var(--measure);margin:0 0 16px}
+  @media (max-width:600px){h1{font-size:32px}.agenda li{grid-template-columns:1fr;gap:6px}}
+</style>
+</head>
+<body>
+<main>
+  <p class="eyebrow">Prepared 12 September 2026 · internal</p>
+  <h1>Penzance leadership: demo readiness and run of show</h1>
+  <p class="lede">Everything a Penzance executive could open is live and green. One learn-site bug hid the CRE metrics on the capstone and is fixed in a pull request awaiting merge. The two Penzance cases run clean, tie to their references, and sit behind basic auth. Below: what was checked, what to do before the room, and a 60-minute outline built around The Highlands and One Rosslyn.</p>
+
+  <div class="summary">
+    <div><p class="k">cfdl.dev</p><p class="v">Ready</p></div>
+    <div><p class="k">learn.cfdl.dev</p><p class="v">Ready after #339 deploys</p></div>
+    <div><p class="k">CRE benchmarks</p><p class="v">10 of 10 pass</p></div>
+    <div><p class="k">Penzance pages</p><p class="v">Live, gated, numbers match</p></div>
+  </div>
+
+  <h2>What was reviewed</h2>
+  <p>Three passes: a walk of the public site in the browser, a walk of the Academy including running exercises, and a fresh release build running every CRE benchmark against its reference. The main branch is green on CI, site and learn workflows as of last night.</p>
+
+  <div class="tbl"><table>
+    <tr><th>Surface</th><th>Status</th><th>Finding</th><th>Action</th></tr>
+    <tr><td>Academy capstone, chapters 20 to 24</td><td><span class="chip bad">Was broken</span></td><td>Domain metrics read "this model doesn't use the cre pack" on every CRE exercise. NOI and DSCR never rendered. The exercise runner never passed the declared pack to the results panel.</td><td>Fixed in <a href="https://github.com/bizarc/cfdl/pull/339">#339</a>. Merge and confirm the learn deploy before the meeting.</td></tr>
+    <tr><td>Academy chapter 24 starter</td><td><span class="chip warn">By design</span></td><td>Pressing Run on the untouched starter shows a red run-config error. The exercise is to add the two inputs the scenario references.</td><td>Do not run the starter live. Show the solution or talk over the code.</td></tr>
+    <tr><td>Academy chapter numbering</td><td><span class="chip warn">Polish</span></td><td>A chapter inserted at order 11.5 shifts every later header by one. Around 60 in-text cross-references now name the file number, not the header number.</td><td>Not visible unless someone follows a reference. Fix after the meeting.</td></tr>
+    <tr><td>Playground CRE examples</td><td><span class="chip warn">Polish</span></td><td>"Developer lifecycle" headlines IRR 176% and "Stochastic lease rollover" headlines IRR 7,414% because neither carries a purchase price. Both are toys next to a developer.</td><td>Lead with the Statement tab and the Monte Carlo tab, never the Metrics headline.</td></tr>
+    <tr><td>Install and licensing pages</td><td><span class="chip warn">Polish</span></td><td>"Homebrew (at launch)", "pip (at launch)", and "external pull requests are not accepted" copy. No about, contact or pricing page exists.</td><td>Frame as pre-1.0. Have an ownership and engagement answer ready. Do not click Install.</td></tr>
+    <tr><td>Public CRE case pages</td><td><span class="chip ok">Ready</span></td><td>Eight cases published under Validation. Two-tenant office and One Lincoln Street are the strongest for this audience.</td><td>Use as the "what it can express" section.</td></tr>
+    <tr><td>Private Penzance pages</td><td><span class="chip ok">Ready</span></td><td>Both return 401 without credentials, so the secret is configured. Every headline figure on the pages matches the current CASE files.</td><td>Sign in on the demo machine beforehand. Decide who at Penzance may keep the link.</td></tr>
+    <tr><td>Benchmarks, all ten CRE</td><td><span class="chip ok">Ready</span></td><td>Compile, run and match expected files within tolerance on a fresh release build. Zero warnings on both Penzance cases.</td><td>None.</td></tr>
+    <tr><td>Site chrome</td><td><span class="chip ok">Ready</span></td><td>All 16 routes resolve. WASM engine ready in under a second. Dark mode and 375px mobile both fine. Only console noise is the browser's probe for favicon.ico; an SVG icon is declared.</td><td>None. No Open Graph image, so a pasted link shows no preview card.</td></tr>
+  </table></div>
+
+  <h3>What a Penzance analyst would notice in the cases</h3>
+  <p>The Highlands case is the fuller of the two. It carries the accounts, the seven-tier split and a per-partner return. One Rosslyn is the weaker sibling in four ways that are worth knowing before someone else finds them.</p>
+  <ul>
+    <li><b>One Rosslyn declares partners and a preferred rate but has no waterfall.</b> The case text says the JV tiers are placeholders. In the model there are no tiers at all. Either say so, or add the Highlands split before the meeting.</li>
+    <li><b>Scenario A's exit, permanent loan and payoff are constants from the generator.</b> "The engine derives the exit" holds for the build-to-core scenario only. Changing growth or the cap rate leaves the merchant-build exit untouched.</li>
+    <li><b>Scenario A is not asserted.</b> There is no expected-scenarios file, so its 2.02% and 1.094x are reported but not pinned.</li>
+    <li><b>Occupancy at the Highlands sale.</b> One Rosslyn's text says Evo sold at 60% occupied. The Highlands model's ramp puts Evo near 49% on that date.</li>
+  </ul>
+  <p>None of these blocks the meeting. The honest framing already in both cases, that cost, debt pricing, lease-up pace and the partnership terms are stated placeholders, is the framing to keep. Penzance is the one party in the world that can replace those placeholders, which is the ask.</p>
+
+  <h2>Before the room</h2>
+  <ul class="check">
+    <li>Merge <a href="https://github.com/bizarc/cfdl/pull/339">#339</a>, wait for the learn workflow, then open a capstone chapter and confirm Domain metrics show NOI.</li>
+    <li>On the demo machine, sign in to <a href="https://cfdl.dev/private/highlands">/private/highlands</a> and <a href="https://cfdl.dev/private/one-rosslyn">/private/one-rosslyn</a> so no auth prompt appears live.</li>
+    <li>Open every tab in order and click Run once in each playground and exercise so the engine is warm. Capstone exercises take eight to ten seconds to hydrate.</li>
+    <li>Decide the JV-tier line. The pages publish an 8.12% Baupost and 12.76% Penzance return on placeholder tiers under real names. Say "placeholder" before they read it.</li>
+    <li>Decide whether Penzance may keep the private links after the meeting, and whether to rotate the credential afterwards.</li>
+    <li>Have the ownership answer ready: source-available under BUSL-1.1, pre-1.0, roadmap held internally.</li>
+    <li>Optional, one afternoon: give One Rosslyn the Highlands waterfall and party accounts so both cases answer "what does each partner earn".</li>
+  </ul>
+
+  <h2>Run of show, 60 minutes</h2>
+  <p>The spine is their two buildings. Everything before them earns the right to show them, and everything after them is what we want from Penzance. Keep the language section short. Executives buy the Highlands page, not the grammar.</p>
+
+  <ol class="agenda">
+    <li>
+      <div class="t"><b>0:00</b>5 min</div>
+      <div>
+        <h4>Why a language</h4>
+        <p>The problem they live with: every deal model is a bespoke spreadsheet, assumptions are buried in cells, and no two models of the same building agree. CFDL writes the model as readable text with time, structure and behavior kept apart, compiles it deterministically, and checks it against independent references, period by period.</p>
+        <p class="show">Show: <a href="https://cfdl.dev">cfdl.dev</a> home. The "number and the distribution around it" block.</p>
+        <p class="say">Same inputs, same version, byte-identical output. The model is the document, and the document is checkable.</p>
+      </div>
+    </li>
+    <li>
+      <div class="t"><b>0:05</b>5 min</div>
+      <div>
+        <h4>The whole idea in ninety seconds</h4>
+        <p>One stream, one rent, one edit, one re-run. Then flip to the Statement tab so they see a pro forma they recognize: rental revenue, EGI, NOI, DSCR, sale proceeds, monthly to annual.</p>
+        <p class="show">Show: <a href="https://learn.cfdl.dev/chapters/why-a-language">Academy chapter 1</a>, change the amount to <code>4200 * 1.05</code>, run. Then the playground Statement tab with CSV export.</p>
+        <p class="say">This is the Argus output you already read. The difference is that the thing producing it is a page of text you can diff.</p>
+      </div>
+    </li>
+    <li>
+      <div class="t"><b>0:10</b>10 min</div>
+      <div>
+        <h4>What it can express</h4>
+        <p>Three public cases, one point each. Leases: free rent, escalations, expense stops, TI and LC, probability-weighted rollover, forward-NOI exit, every period inside a cent of the reference. Construction: equity first, then the facility, with capitalized interest tying to the dollar. Uncertainty: the renew-versus-relet two-cluster outcome that a blended number hides.</p>
+        <p class="show">Show: <a href="https://cfdl.dev/docs/examples/cre-office-two-tenant">two-tenant office</a>, <a href="https://cfdl.dev/docs/examples/cre-one-lincoln-street">One Lincoln Street</a>, then the playground "Stochastic lease rollover" straight to the Monte Carlo tab.</p>
+        <p class="risk">Skip the Metrics headline on both playground examples. Skip the CRE pack reference page.</p>
+      </div>
+    </li>
+    <li>
+      <div class="t"><b>0:20</b>12 min</div>
+      <div>
+        <h4>Their book: The Highlands, reconstructed</h4>
+        <p>A completed deal rebuilt from public record only: site plan SP #445, the 2011 land deed, both 2022 tower sales, all 102 Pierce closings from the assessment roll, rents solved back from assessed value at the County's own cap. The facility ties to an independent workbook exactly. The deal returns 11.02% and 2.05x on the recorded exits.</p>
+        <p>Then the split. Contributions move each partner's account, a seven-tier waterfall fires once at the last condo closing, and the engine reports each partner's own return. Say "placeholder tiers" out loud before the table.</p>
+        <p class="show">Show: <a href="https://cfdl.dev/private/highlands">/private/highlands</a>. Peak debt, capitalized interest, the partner table, the nine-rate NPV sensitivity and why no NPV is asserted.</p>
+        <p class="say">Everything sourced is labeled sourced. Everything assumed is labeled assumed. You are the only people who can turn the second column into the first.</p>
+      </div>
+    </li>
+    <li>
+      <div class="t"><b>0:32</b>12 min</div>
+      <div>
+        <h4>Their book: One Rosslyn, before it exists</h4>
+        <p>The inverse case: program and land are fact, economics are forecast. Rent derived from Central Place by the County's method. Construction anchored to Highlands' actual spend and escalated by the BLS output index. Two exit strategies over one set of facts: sell in lease-up as they did at Highlands, or stabilize, refinance and hold five years. The engine derives the exit from the twelve months of income after the sale, and scenario A lands within 0.1% of Evo's recorded price per unit.</p>
+        <p>The market factor is bracketed by their own history: +32% at Highlands in 2022, −11.6% at Central Place in 2026. Both variants are named scenarios in the run file.</p>
+        <p class="show">Show: <a href="https://cfdl.dev/private/one-rosslyn">/private/one-rosslyn</a>. The A-versus-B table, then the market-factor scenarios.</p>
+        <p class="say">Land, building, cost and basis are identical in both columns. The holding period is the deal: 1.09x or 1.74x.</p>
+        <p class="risk">The condo pricing is the weakest input and the case says so. If they push on the 2037 exit per unit, agree: it is the figure most exposed to growth and the factor.</p>
+      </div>
+    </li>
+    <li>
+      <div class="t"><b>0:44</b>8 min</div>
+      <div>
+        <h4>How it reaches their desk</h4>
+        <p>Analysts keep Excel; CFDL is the record behind it. Python SDK with pandas results, an API server for saved runs, VS Code with diagnostics, and the Academy for training a team on it. Position against Argus honestly: lease-by-lease, rollover cycles and statements are at parity in the language; the lease-abstraction UI and importers are not the product.</p>
+        <p class="show">Show: <a href="https://cfdl.dev/docs/install">surfaces overview</a> without clicking through, and the <a href="https://learn.cfdl.dev/chapters/capstone-revenue">Harbor Point capstone</a>, a ground-up office-over-retail deal with a construction facility, permanent takeout and a promote, which is the shape of their business.</p>
+      </div>
+    </li>
+    <li>
+      <div class="t"><b>0:52</b>8 min</div>
+      <div>
+        <h4>What we want from Penzance</h4>
+        <ul>
+          <li><b>Practitioner review of both cases.</b> Both are marked pending exactly that. Their corrections to cost, pace and debt pricing make the cases real.</li>
+          <li><b>The partnership terms, under NDA,</b> so the split is theirs rather than a placeholder, and the per-partner return means something.</li>
+          <li><b>A third asset of their choosing,</b> ideally an operating office building, so the rollover and recovery machinery runs on their leases rather than a textbook's.</li>
+          <li><b>A pilot shape:</b> one analyst, one deal, one quarter, with the Excel-migration and audit services from the commercial plan as the on-ramp.</li>
+        </ul>
+        <p class="say">You have the record. We have the machine that checks it. Pick the building.</p>
+      </div>
+    </li>
+  </ol>
+
+  <h2>Questions they will ask</h2>
+  <div class="tbl"><table>
+    <tr><th>Question</th><th>Answer</th></tr>
+    <tr><td>Where did you get our numbers?</td><td>Arlington County: site plan records, the deed register, the assessment roll, the Commercial Guidebooks. Nothing private. Each case lists the source for every figure and marks the rest as assumed.</td></tr>
+    <tr><td>Is the 12.76% our actual return?</td><td>No. The tier percentages are stated placeholders; the terms are yours. The mechanics are real, the split is not.</td></tr>
+    <tr><td>Why is there no NPV?</td><td>The deal is financed, so any NPV is levered and needs a cost of equity nobody has stated. Return and multiple are solved from cash and do not move with the rate. The page shows the swing across nine rates.</td></tr>
+    <tr><td>Does it replace Argus or Excel?</td><td>It replaces the model, not the desk. Excel stays as the view. Argus's lease-abstraction workflow is out of scope by decision.</td></tr>
+    <tr><td>Who owns this and what does it cost?</td><td>Source-available under BUSL-1.1, pre-1.0, no public pricing yet. Engagement starts with services: migration and audit of an existing model.</td></tr>
+    <tr><td>Can our analysts learn it?</td><td>The Academy is 28 chapters and 23 runnable exercises ending in a development capstone with a promote waterfall and a downside scenario.</td></tr>
+  </table></div>
+
+  <h2>Tabs, in order</h2>
+  <ol>
+    <li><a href="https://cfdl.dev">cfdl.dev</a></li>
+    <li><a href="https://learn.cfdl.dev/chapters/why-a-language">learn.cfdl.dev/chapters/why-a-language</a></li>
+    <li><a href="https://cfdl.dev/playground">cfdl.dev/playground</a>, Statement tab loaded</li>
+    <li><a href="https://cfdl.dev/docs/examples/cre-office-two-tenant">cre-office-two-tenant</a></li>
+    <li><a href="https://cfdl.dev/docs/examples/cre-one-lincoln-street">cre-one-lincoln-street</a></li>
+    <li><a href="https://cfdl.dev/private/highlands">/private/highlands</a>, signed in</li>
+    <li><a href="https://cfdl.dev/private/one-rosslyn">/private/one-rosslyn</a>, signed in</li>
+    <li><a href="https://learn.cfdl.dev/chapters/capstone-revenue">learn.cfdl.dev/chapters/capstone-revenue</a></li>
+  </ol>
+</main>
+</body>
+</html>

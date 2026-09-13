@@ -1,0 +1,182 @@
+{
+  "build_to_core": {
+    "model.total": {
+      "value": 473468010.04,
+      "tolerance": 1.0
+    },
+    "entity.party.baupost.total": {
+      "value": 426121209.04,
+      "tolerance": 1.0
+    },
+    "entity.party.penzance.total": {
+      "value": 47346801.0,
+      "tolerance": 1.0
+    },
+    "metric.baupost_irr": {
+      "value": 0.062184,
+      "tolerance": 1e-05
+    },
+    "metric.baupost_moic": {
+      "value": 1.896384,
+      "tolerance": 0.0001
+    },
+    "metric.penzance_irr": {
+      "value": 0.062184,
+      "tolerance": 1e-05
+    },
+    "metric.penzance_moic": {
+      "value": 1.896384,
+      "tolerance": 0.0001
+    }
+  },
+  "core_at_2022_premium": {
+    "model.total": {
+      "value": 695319910.21,
+      "tolerance": 1.0
+    },
+    "entity.party.baupost.total": {
+      "value": 599170379.7,
+      "tolerance": 1.0
+    },
+    "entity.party.penzance.total": {
+      "value": 96149530.52,
+      "tolerance": 1.0
+    },
+    "metric.baupost_irr": {
+      "value": 0.096438,
+      "tolerance": 1e-05
+    },
+    "metric.baupost_moic": {
+      "value": 2.666511,
+      "tolerance": 0.0001
+    },
+    "metric.penzance_irr": {
+      "value": 0.134263,
+      "tolerance": 1e-05
+    },
+    "metric.penzance_moic": {
+      "value": 3.851082,
+      "tolerance": 0.0001
+    }
+  },
+  "core_at_2026_discount": {
+    "model.total": {
+      "value": 393297229.92,
+      "tolerance": 1.0
+    },
+    "entity.party.baupost.total": {
+      "value": 353967506.93,
+      "tolerance": 1.0
+    },
+    "entity.party.penzance.total": {
+      "value": 39329722.99,
+      "tolerance": 1.0
+    },
+    "metric.baupost_irr": {
+      "value": 0.043871,
+      "tolerance": 1e-05
+    },
+    "metric.baupost_moic": {
+      "value": 1.575275,
+      "tolerance": 0.0001
+    },
+    "metric.penzance_irr": {
+      "value": 0.043871,
+      "tolerance": 1e-05
+    },
+    "metric.penzance_moic": {
+      "value": 1.575275,
+      "tolerance": 0.0001
+    }
+  },
+  "merchant_at_2022_premium": {
+    "model.total": {
+      "value": 460397267.85,
+      "tolerance": 1.0
+    },
+    "entity.party.baupost.total": {
+      "value": 397189119.23,
+      "tolerance": 1.0
+    },
+    "entity.party.penzance.total": {
+      "value": 63208148.62,
+      "tolerance": 1.0
+    },
+    "metric.baupost_irr": {
+      "value": 0.107399,
+      "tolerance": 1e-05
+    },
+    "metric.baupost_moic": {
+      "value": 1.767626,
+      "tolerance": 0.0001
+    },
+    "metric.penzance_irr": {
+      "value": 0.177775,
+      "tolerance": 1e-05
+    },
+    "metric.penzance_moic": {
+      "value": 2.531679,
+      "tolerance": 0.0001
+    }
+  },
+  "merchant_at_2026_discount": {
+    "model.total": {
+      "value": 212441589.65,
+      "tolerance": 1.0
+    },
+    "entity.party.baupost.total": {
+      "value": 191197430.68,
+      "tolerance": 1.0
+    },
+    "entity.party.penzance.total": {
+      "value": 21244158.96,
+      "tolerance": 1.0
+    },
+    "metric.baupost_irr": {
+      "value": -0.029424,
+      "tolerance": 1e-05
+    },
+    "metric.baupost_moic": {
+      "value": 0.850893,
+      "tolerance": 0.0001
+    },
+    "metric.penzance_irr": {
+      "value": -0.029424,
+      "tolerance": 1e-05
+    },
+    "metric.penzance_moic": {
+      "value": 0.850893,
+      "tolerance": 0.0001
+    }
+  },
+  "merchant_build": {
+    "model.total": {
+      "value": 278260488.21,
+      "tolerance": 1.0
+    },
+    "entity.party.baupost.total": {
+      "value": 250434439.39,
+      "tolerance": 1.0
+    },
+    "entity.party.penzance.total": {
+      "value": 27826048.82,
+      "tolerance": 1.0
+    },
+    "metric.baupost_irr": {
+      "value": 0.02002,
+      "tolerance": 1e-05
+    },
+    "metric.baupost_moic": {
+      "value": 1.114518,
+      "tolerance": 0.0001
+    },
+    "metric.penzance_irr": {
+      "value": 0.02002,
+      "tolerance": 1e-05
+    },
+    "metric.penzance_moic": {
+      "value": 1.114518,
+      "tolerance": 0.0001
+    }
+  }
+}
