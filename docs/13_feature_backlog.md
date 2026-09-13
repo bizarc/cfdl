@@ -1631,3 +1631,42 @@ it argues for the repair catalog covering every code rather than most.
 
 Related: §7.115, `crates/cfdl-compile/src/lib.rs` (E1379, E5029),
 `fixtures/invalid/noncash_stream_with_category`.
+
+### 7.120 A party metric undefined in any scenario fails the whole run
+
+Belongs with §5, language and engine. Found 12 September 2026 giving
+`benchmarks/cre/penzance_one_rosslyn` the Highlands split.
+
+`irr(party.<p>)` and `moic(party.<p>)` are evaluated over the party's own
+account (§7.72). When the party contributed and received nothing back, the
+fold marks the return undefined (`party 'penzance' never received anything
+from account 'penzance_capital'`), and a declared `metric` reading it is
+refused with `E5031`. That refusal is right for the deterministic run: a
+declared metric with no value is a silent zero waiting to happen (§7.95).
+But the same refusal fires when the metric is undefined in ANY named
+scenario, and it fails the entire run — the deterministic answer, every
+other scenario, and the Monte Carlo — even though the deterministic run
+evaluates it.
+
+The scenario where a partner is wiped out is exactly the scenario a
+downside exists to show. On One Rosslyn, paid investor-first, the
+2026-discount run returned the investor 191,197,430.68 of its capital and
+the sponsor nothing, and the whole case refused to run. The case avoided the
+question by returning capital pro rata, which is the better convention; the
+engine's behaviour is unchanged and the next case that meets it will meet it
+the same way.
+
+Two things to decide, in order. First, whether a wiped-out partner's
+`moic` is undefined at all: 0.0 is the defined answer (received over
+contributed, with received 0), and only `irr` has no rate to solve for —
+the fold sets both undefined today because it tests `received <= 0` before
+computing either. Second, how a scenario summary carries a metric the
+scenario cannot evaluate: `model.irr` is already omitted from a summary
+when undefined (the deterministic One Rosslyn summary carries no
+`model.irr`, since the contributions leave its cash without a sign change),
+so the precedent is to omit the key and say why, not to fail the run. The
+deterministic run's refusal should stand.
+
+Related: §7.72 (participant-level return), §7.95 (undefined is not zero),
+`crates/cfdl-engine/src/fold.rs` (`party_returns`, and the `E5031` site for
+declared metrics), `benchmarks/cre/penzance_one_rosslyn/NOTES.md`.
