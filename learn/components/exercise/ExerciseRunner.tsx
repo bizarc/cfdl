@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { ChevronDown, Play, RotateCcw } from "lucide-react";
 import { EditorPane } from "@/components/playground/EditorPane";
 import { ResultsPanel } from "@/components/playground/ResultsPanel";
@@ -37,6 +37,17 @@ export default function ExerciseRunner({
   const [engineError, setEngineError] = useState<string | null>(null);
   const [ran, setRan] = useState(false);
   const [solutionOpen, setSolutionOpen] = useState(false);
+
+  // The pack the model itself declares, recomputed as the learner edits. The
+  // results panel compares it against the exercise's selected pack; without it
+  // every pack-backed exercise reported a mismatch and hid its domain metrics.
+  const declaredPack = useMemo(() => {
+    for (const source of Object.values(files)) {
+      const match = /^\s*use\s+pack\s+"([^"]+)"/m.exec(source);
+      if (match) return match[1];
+    }
+    return undefined;
+  }, [files]);
 
   const onRun = useCallback(async () => {
     setRan(true);
@@ -119,6 +130,7 @@ export default function ExerciseRunner({
             diagnostics={diagnostics}
             engineError={engineError}
             selectedPack={pack || undefined}
+            modelDeclaredPack={declaredPack}
           />
         </div>
       )}
