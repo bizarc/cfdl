@@ -27,12 +27,13 @@ blessed corpus in `golden_corpus.rs`.
 The walk, the machine and the account are the substrate; every M2 item
 stands on them. Events re-founded (`docs/34`) was the milestone's
 settled first priority and closed 2026-08-30, paying out §7.77's cure
-period and §7.76's reserve interest the same day. What remains, current as
-of 2026-08-31:
+period and §7.76's reserve interest the same day. What remains, re-checked
+against the tree 14 September 2026 — the previous pass was 2026-08-31 and had
+gone stale on the clean-up call:
 
 | item | remains |
 |---|---|
-| `docs/38` | the deal mechanics: coupled interest/principal waterfalls on a trigger, a step's shortfall as a published series, deferred/PIK interest, servicer advances, the clean-up call (a case, not a construct) |
+| `docs/38` | the deal mechanics: coupled interest/principal waterfalls on a trigger, a step's shortfall as a published series, deferred/PIK interest (all three `docs/38` Item 1, and `docs/17` §5 leaves the first undesigned), and servicer advances (Item 3 — a state pair and a recoverable-advances account, probably no new machinery). The CLEAN-UP CALL has since shipped: `Credit.Contract.CleanUpCall` on `americredit_2017_1` (#308, `docs/40` stage 7), so four items remain here, not five |
 | §7.76 | part two only, and now only for the packs other than credit — a reserve contract shape where a document demands one (DSRA, replacement reserve, FF&E). Credit's shipped 2026-08-31 on `americredit_2017_1` (#247), clause 19's reserve as `account reserve` funded at closing with the top-up as its step. CREST is NOT the cheapest opening, contrary to what this row said: its ~$4,606 is one rounded aggregate against three unknowns, the port's reserve schedule was never carried into the repo, and the case has no close period to fund from — see `docs/13` §7.76 |
 | §7.77 | the external-reference benchmark — a published credit agreement with a cash-trap schedule; a sourcing problem, not a language gap |
 | ~~§7.75~~ | **SHIPPED** as `benchmarks/energy/merchant_storage_arbitrage`, against a provably optimal linear program rather than a tool (SAM's dispatch is documented as suboptimal and reaches 27% of the optimum). Cycling is an output of a walked state of charge. What remains is M3's: the pack rule `energy.storage_dispatch` checked against that optimum (`docs/27` §9 stage 4) |

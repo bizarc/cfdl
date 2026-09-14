@@ -128,16 +128,26 @@ recoverable-advances balance as one of the reserves every domain has under a
 different name. The item is naming that shape in the credit pack and shipping
 a case, not new machinery.
 
-## Item 4 — the clean-up call, exercised
+## Item 4 — the clean-up call, exercised. **SHIPPED.**
 
-**What could not be expressed:** nothing — the gap is a missing case. The
-pack-lifecycle review retired `called` as a state ("a clean-up call is an
-occurrence, not a condition a pool sits in," `docs/36` §2.2, landed in
-`packs/credit/ontology/types.toml` — the pool machine is now `warehouse`,
-`revolving`, `amortizing`, `rapid_amortization`, `retired`), so the election
-is an event driving `amortizing -> retired` whose guard reads pool factor —
-expressible today. No shipped case exercises it. A benchmark deal with a call
-is the ask, not a construct.
+**What could not be expressed:** nothing — the gap was a missing case, and the
+case now exists. The pack-lifecycle review retired `called` as a state ("a
+clean-up call is an occurrence, not a condition a pool sits in," `docs/36`
+§2.2, landed in `packs/credit/ontology/types.toml` — the pool machine is now
+`warehouse`, `revolving`, `amortizing`, `rapid_amortization`, `retired`), so
+the election is an occurrence and not a condition.
+
+`benchmarks/credit/americredit_2017_1` exercises it (#308, `docs/40` stage 7):
+`Credit.Contract.CleanUpCall` written on the trust and held by the servicer,
+`call_threshold = 0.10` against the cutoff balance, `exercise when
+prev.balance <= contract.call_threshold * contract.initial_balance` reading
+the trust's own fold as its claim, and each loan's machine writing the balance
+off on `repurchased` (`docs/42` §3.5). Every cell of the deal is unchanged by
+it.
+
+This row previously read "no shipped case exercises it" for a week after one
+did — the hazard of a status line in a survey document, which is the same
+failure `docs/26` records for `docs/40`'s stage header.
 
 ## Item 5 — valuation solvers and the make-whole
 
