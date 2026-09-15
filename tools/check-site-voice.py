@@ -38,7 +38,15 @@ length, voice, and imperative form — those are judgment calls (see the tiering
 in docs/22), and a gate that flags judgment gets disabled, which is this file's
 founding rule.
 
-Usage: python3 tools/check-site-voice.py
+THE REGISTRY. Every check is a `Rule` carrying the id a reviewer cites, the
+layer it belongs to and the document types it binds. Layer one is universal and
+applies to every published word; layer two is by type and is not implemented
+yet. An exemption names the rules it exempts, so the specification carve-out can
+be read rather than inferred from a boolean at the call site.
+
+Usage:
+  python3 tools/check-site-voice.py            gate: fails on any finding
+  python3 tools/check-site-voice.py --report   measure: groups by rule, never fails
 """
 
 from __future__ import annotations
@@ -49,6 +57,8 @@ import pathlib
 import re
 import sys
 import tomllib
+from collections import Counter
+from dataclasses import dataclass
 
 sys.stdout.reconfigure(encoding="utf-8")
 sys.stderr.reconfigure(encoding="utf-8")
@@ -74,6 +84,65 @@ def ce_rule_ids() -> set[str]:
 
 
 CE_RULE_IDS = None  # populated lazily; docs/22 is read once
+
+
+# --- The rule registry ------------------------------------------------------
+#
+# A rule carries the id a reviewer cites, the layer it belongs to, and the types
+# it binds. Before this structure the gate held two flat lists of (pattern,
+# message) pairs and a boolean at the call site, so nothing could say WHICH rule
+# an exemption exempted — the specification exemption turned off all sixteen
+# narrative patterns while its docstring claimed it turned off one.
+#
+# LAYER ONE is universal: it applies to every published word whatever the
+# document is. LAYER TWO is by type. Only layer one is implemented today; the
+# `layer` field exists so the second can be added a rule at a time rather than
+# as one unreviewable change.
+#
+# The ids beginning `N` and `X` are not yet declared in docs/22 §3. They name
+# rules this gate has always enforced without writing them down. docs/22 gains
+# them when the standard is restructured; until then `assert_ids_declared`
+# checks only the ids the document does declare.
+
+ALL_TYPES = frozenset({"task", "concept", "reference", "marketing"})
+
+UNIVERSAL = "universal"
+BY_TYPE = "by_type"
+
+
+@dataclass(frozen=True)
+class Rule:
+    """One mechanical check, and the rule of the standard it enforces."""
+
+    id: str
+    layer: str
+    why: str
+    pattern: re.Pattern[str]
+    # "prose" matches the line with inline code spans removed: a backticked
+    # identifier is code, not prose, whatever it is spelled like. "raw" matches
+    # the line as written.
+    on: str = "prose"
+    types: frozenset[str] = ALL_TYPES
+    # A rule the escape hatch may not waive. Naming a competitor is the first.
+    waivable: bool = True
+
+
+@dataclass(frozen=True)
+class Finding:
+    """One rule firing at one place, rendered the way the gate has always."""
+
+    rel: str
+    why: str
+    excerpt: str
+    rule_id: str
+    lineno: int | None = None
+    locus: str = ""  # the trail into a JSON document, for a schema finding
+
+    def render(self) -> str:
+        where = f"{self.rel}:{self.lineno}" if self.lineno is not None else self.rel
+        locus = f"  {self.locus}" if self.locus else ""
+        return f"  {where}{locus}  {self.why}\n      {self.excerpt}"
+
 
 # Each pattern is a thing that reads as development process rather than as
 # documentation. Kept narrow on purpose: a gate that cries wolf gets disabled.
@@ -154,6 +223,42 @@ PATTERNS = [
     ),
 ]
 
+# The rule each narrative pattern enforces, in PATTERNS order. Several patterns
+# share an id because one rule has several tells: a repository reference is a
+# generator path, a crate path, "from a checkout" and a GitHub link alike.
+#
+#   N1  cites an internal document
+#   N2  discloses unfinished work
+#   N3  narrates development
+#   N4  references the repository
+#   N6  claims something about the authors rather than the product
+#   W6  marketing ornament (docs/22 §3.3)
+NARRATIVE_IDS = (
+    "N1",  # docs/NN_name.md
+    "N2",  # backlog
+    "N3",  # SUPERSEDED
+    "N3",  # originally said
+    "N2",  # TODO / FIXME
+    "N4",  # reference_gen
+    "N4",  # in-house
+    "N2",  # pending practitioner review
+    "N6",  # honest / dishonest
+    "N3",  # we chose / decided
+    "N3",  # this page used to
+    "N4",  # generated from <repo path>
+    "N4",  # `crates/...`
+    "N4",  # in this repository
+    "N4",  # github.com
+    "W6",  # ornament
+)
+
+# The specification exemption. A normative document published as a labeled
+# section may cite another specification by filename, and before the registry
+# this exemption silently covered every narrative rule rather than this set.
+# Narrowing it is a corpus change and belongs in its own commit, so the set is
+# spelled out here rather than quietly reduced.
+SPEC_EXEMPT = frozenset(NARRATIVE_IDS)
+
 
 # --- CFDL-CE: the mechanical subset of docs/22 ------------------------------
 #
@@ -221,6 +326,51 @@ def ce_patterns() -> list[tuple[re.Pattern[str], str]]:
 
 
 CE_PATTERNS = ce_patterns()
+
+# The rule each CFDL-CE pattern enforces, in ce_patterns() order. W2 has four
+# tells because four retired synonyms name two defined things.
+#
+#   W1  one word, one form          W3  the approved verb for an action
+#   W2  one concept, one term       V6  no contractions
+#   X1  a multiple is 8.0x, not 8.0×   X2  millions are m, not mm
+#   X3  a hyphen is U+002D
+CE_IDS = ("W1", "W2", "W2", "W2", "W2", "W3", "X1", "X2", "X3", "V6")
+
+
+def build_registry() -> tuple[Rule, ...]:
+    """Every mechanical rule, in the order the gate has always applied them.
+
+    Order is load-bearing: the first rule to match a line is the one reported,
+    and the narrative rules read the raw line while the CFDL-CE rules read it
+    with its code spans removed.
+    """
+    if len(NARRATIVE_IDS) != len(PATTERNS):
+        raise SystemExit(
+            f"check-site-voice: {len(PATTERNS)} narrative patterns but "
+            f"{len(NARRATIVE_IDS)} ids. Every pattern names the rule it enforces."
+        )
+    if len(CE_IDS) != len(CE_PATTERNS):
+        raise SystemExit(
+            f"check-site-voice: {len(CE_PATTERNS)} CFDL-CE patterns but "
+            f"{len(CE_IDS)} ids. Every pattern names the rule it enforces."
+        )
+    rules = [
+        Rule(id=rid, layer=UNIVERSAL, why=why, pattern=pattern, on="raw")
+        for rid, (pattern, why) in zip(NARRATIVE_IDS, PATTERNS)
+    ]
+    rules += [
+        Rule(id=rid, layer=UNIVERSAL, why=why, pattern=pattern, on="prose")
+        for rid, (pattern, why) in zip(CE_IDS, CE_PATTERNS)
+    ]
+    return tuple(rules)
+
+
+REGISTRY = build_registry()
+
+
+def rules_for(exempt: frozenset[str]) -> tuple[Rule, ...]:
+    """The rules that bind a source, given the exemptions its group carries."""
+    return tuple(rule for rule in REGISTRY if rule.id not in exempt)
 
 
 def spec_sources() -> list[pathlib.Path]:
@@ -296,10 +446,11 @@ def _lines_of(path: pathlib.Path) -> list[str]:
     return [html.unescape(line) for line in text.splitlines()]
 
 
-def check_text_file(path: pathlib.Path, *, narrative: bool = True) -> list[str]:
-    """`narrative=False` runs only the CE rules — the specification exemption."""
-    findings = []
-    rel = path.relative_to(REPO_ROOT)
+def check_text_file(path: pathlib.Path, *, exempt: frozenset[str] = frozenset()) -> list[Finding]:
+    """Check one published source against every rule its group does not exempt."""
+    findings: list[Finding] = []
+    rel = path.relative_to(REPO_ROOT).as_posix()
+    applicable = rules_for(exempt)
     # A case.toml's COMMENTS are maintainer's notes and are no longer published;
     # only its declared `summary` reaches a page.
     only_summary = path.name == "case.toml"
@@ -320,35 +471,49 @@ def check_text_file(path: pathlib.Path, *, narrative: bool = True) -> list[str]:
             ste = STE_ALLOW_ID.search(line)
             if ste and ste.group(1) not in CE_RULE_IDS:
                 findings.append(
-                    f"  {rel}:{n}  ste-allow names rule '{ste.group(1)}', which "
-                    f"docs/22 does not declare\n      {line.strip()[:100]}"
+                    Finding(
+                        rel=rel,
+                        lineno=n,
+                        rule_id="WAIVER",
+                        why=(
+                            f"ste-allow names rule '{ste.group(1)}', which "
+                            f"docs/22 does not declare"
+                        ),
+                        excerpt=line.strip()[:100],
+                    )
                 )
             continue
         if only_summary and not line.lstrip().startswith("summary"):
             continue
-        hit = None
-        if narrative:
-            for pattern, why in PATTERNS:
-                if pattern.search(line):
-                    hit = why
-                    break
-        if hit is None:
-            # CE rules see the line without its code spans: a backticked
-            # identifier is code, not prose, whatever it is spelled like.
-            prose = INLINE_CODE.sub("", line)
-            for pattern, why in CE_PATTERNS:
-                if pattern.search(prose):
-                    hit = why
-                    break
-        if hit is not None:
-            findings.append(f"  {rel}:{n}  {hit}\n      {line.strip()[:100]}")
+        # A rule reads the raw line or the line with its code spans removed. The
+        # stripped copy is built once and only if some rule asks for it.
+        prose = None
+        for rule in applicable:
+            if rule.on == "raw":
+                subject = line
+            else:
+                if prose is None:
+                    prose = INLINE_CODE.sub("", line)
+                subject = prose
+            if rule.pattern.search(subject):
+                findings.append(
+                    Finding(
+                        rel=rel,
+                        lineno=n,
+                        rule_id=rule.id,
+                        why=rule.why,
+                        excerpt=line.strip()[:100],
+                    )
+                )
+                break
     return findings
 
 
-def check_schema(path: pathlib.Path) -> list[str]:
+def check_schema(path: pathlib.Path, *, exempt: frozenset[str] = frozenset()) -> list[Finding]:
     """Schema `description` strings are served publicly and rendered as prose."""
-    findings = []
-    rel = path.relative_to(REPO_ROOT)
+    findings: list[Finding] = []
+    rel = path.relative_to(REPO_ROOT).as_posix()
+    applicable = rules_for(exempt)
 
     def walk(node, trail):
         if isinstance(node, dict):
@@ -357,18 +522,19 @@ def check_schema(path: pathlib.Path) -> list[str]:
                     if ALLOW.search(value):
                         continue
                     prose = INLINE_CODE.sub("", value)
-                    hit = next(
-                        (why for pattern, why in PATTERNS if pattern.search(value)),
-                        None,
-                    ) or next(
-                        (why for pattern, why in CE_PATTERNS if pattern.search(prose)),
-                        None,
-                    )
-                    if hit is not None:
-                        findings.append(
-                            f"  {rel}  {'.'.join(trail) or '<root>'}  {hit}\n"
-                            f"      {value.strip()[:100]}"
-                        )
+                    for rule in applicable:
+                        subject = value if rule.on == "raw" else prose
+                        if rule.pattern.search(subject):
+                            findings.append(
+                                Finding(
+                                    rel=rel,
+                                    locus=".".join(trail) or "<root>",
+                                    rule_id=rule.id,
+                                    why=rule.why,
+                                    excerpt=value.strip()[:100],
+                                )
+                            )
+                            break
                 else:
                     walk(value, trail + [str(key)])
         elif isinstance(node, list):
@@ -379,8 +545,9 @@ def check_schema(path: pathlib.Path) -> list[str]:
     return findings
 
 
-def main() -> int:
-    findings: list[str] = []
+def collect() -> tuple[list[Finding], int]:
+    """Every finding across every published source, and how many were read."""
+    findings: list[Finding] = []
     checked = 0
 
     for path in sources():
@@ -388,7 +555,7 @@ def main() -> int:
         checked += 1
 
     for path in spec_sources():
-        findings += check_text_file(path, narrative=False)
+        findings += check_text_file(path, exempt=SPEC_EXEMPT)
         checked += 1
 
     for name in ("ir.schema.json", "results.schema.json"):
@@ -397,9 +564,43 @@ def main() -> int:
             findings += check_schema(path)
             checked += 1
 
+    return findings, checked
+
+
+def report(findings: list[Finding], checked: int) -> int:
+    """Print what the corpus holds, grouped by rule, and pass regardless.
+
+    A measurement, not a gate. Before widening a rule or narrowing an exemption,
+    this says how much it will surface — the number that decides whether the
+    change is one commit or twelve.
+    """
+    print(f"check-site-voice --report: {checked} site-facing sources, {len(findings)} findings\n")
+    if not findings:
+        print("  nothing to report")
+        return 0
+    by_rule = Counter(f.rule_id for f in findings)
+    width = max(len(rid) for rid in by_rule)
+    for rid, count in sorted(by_rule.items(), key=lambda kv: (-kv[1], kv[0])):
+        files = len({f.rel for f in findings if f.rule_id == rid})
+        why = next(f.why for f in findings if f.rule_id == rid)
+        plural = "file " if files == 1 else "files"
+        print(f"  {rid:<{width}}  {count:>4}  in {files:>3} {plural}   {why}")
+    print("\n  worst files:")
+    by_file = Counter(f.rel for f in findings)
+    for rel, count in by_file.most_common(10):
+        print(f"  {count:>4}  {rel}")
+    return 0
+
+
+def main() -> int:
+    if "--report" in sys.argv[1:]:
+        return report(*collect())
+
+    findings, checked = collect()
+
     if findings:
         print("check-site-voice: internal narrative would be published.\n", file=sys.stderr)
-        print("\n".join(findings), file=sys.stderr)
+        print("\n".join(f.render() for f in findings), file=sys.stderr)
         print(
             "\nThese files feed the documentation site, so what is written here is\n"
             "what a reader sees. Rationale belongs in the repository — the design\n"
