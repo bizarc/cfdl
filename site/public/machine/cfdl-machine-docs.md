@@ -8945,11 +8945,11 @@ practice rather than demanding a change. The measured corpora now hold none, and
 the two `can't`s the audit named in TSX are both fixed — `site/app/page.tsx`, and
 `learn/app/page.tsx`, which the audit never measured (2026-08-25).
 
-TSX microcopy remains the estate's blind spot. `tools/check-site-voice.py` reads
-Markdown and MDX sources, so prose hardcoded in a component is checked by nobody;
-that is how a second `can't` survived the audit that reported the first. Anything
-user-facing written in a `.tsx` file is Tier D at minimum and still bound by W1–W3
-and V6.
+TSX microcopy remains the blind spot in the published documentation.
+`tools/check-site-voice.py` reads Markdown and MDX sources, so prose hardcoded
+in a component is checked by nobody; that is how a second `can't` survived the
+audit that reported the first. Anything user-facing written in a `.tsx` file is
+Tier D at minimum and still bound by W1–W3 and V6.
 
 ### 3.3 Words
 

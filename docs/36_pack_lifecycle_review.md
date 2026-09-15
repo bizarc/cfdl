@@ -51,7 +51,7 @@ should not blur them.
 
 ## 2. Credit
 
-The best-standardised domain in the estate: a prudential definition of default,
+The best-standardized of the four domains: a prudential definition of default,
 an accounting stage model, and loan-level datasets recording what happened.
 
 ### 2.1 `credit.loan` — rename and extend
