@@ -23,7 +23,11 @@ and a new public street — that are pure cost with no revenue.
 
 Public record, and an independent spreadsheet implementation built from it.
 Both read the same frozen input set, so they tie by construction rather than by
-transcription.
+transcription. Every figure the model uses is a stated assumption labeled with
+its standing, and everything else derives from those figures inside the model:
+the budget's draw, the obligations, the equity commitment, each tower's rent
+and lease-up, the facility and the split. The one table is the condominium
+sellout, which is recorded fact.
 
 Fact, from Arlington County: the program, unit mix by tower, GFA, parking, FAR
 and the quantified public obligations (site plan SP #445, 2017 approval with
@@ -59,7 +63,7 @@ for 12.75 years consumes the entire promote.
 | | |
 |---|---|
 | Pack | `cre` |
-| Declared | 4 curves, 8 entities, 28 streams, 3 accounts, 1 waterfall, 7 tiers, 4 metrics, 8 field recurrences |
+| Declared | 53 assumptions, 12 of them derived; 1 curve of recorded closings, 9 entities, 32 streams, 11 field recurrences, 3 accounts, 1 waterfall, 7 tiers, 4 metrics, 1 slice |
 | What the deal requires | carrying a balance across periods, a recorded schedule of closings, an ordered priority of payments, cash that accumulates between distributions, a return measured per partner, where in the period the cash falls |
 | Conventions | equity-first funding, capitalized construction interest, a facility retired out of disposal proceeds, sale in lease-up |
 
@@ -68,8 +72,13 @@ and the outstanding balance — each advancing from the month before it, so ever
 month resolves from one already settled. It is built directly rather than from
 the pack's construction loan, and the behavior is the same.
 
-Every cost schedule states a value for **every** month, including the quiet
-ones, so a run of zeros is declared rather than inferred.
+The budget's draw is a parabola over the 39-month construction window, stated
+in closed form and held one period ahead on a program entity, so the seven
+cost lines and the facility read the same month's share as the prior close.
+The equity funded to date is the cost incurred through the month, in closed
+form, capped at a stated share of total cost. The recorded closings are the
+one table, and every month in their range is declared, so a quiet month is a
+declared zero rather than an inferred one.
 
 ## The result
 
@@ -134,4 +143,6 @@ per-period figures are asserted alongside the lifetime ones.
 
 **Both towers sold in lease-up.** Delivery is mid-2021 and the recorded exits
 are May 2022, so on any plausible pace neither tower had stabilized. The
-model carries the ramp rather than a stabilized year.
+model carries the ramp rather than a stabilized year: at the assumed pace of
+25 units a month from each delivery, Aubrey is 83% leased on the sale date and
+Evo 49%. No source states either figure; the pace is the assumption.

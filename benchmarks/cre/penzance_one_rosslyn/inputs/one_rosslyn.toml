@@ -109,7 +109,22 @@ construction_months = 42                  # PROJECTION — 971,890 sf over one
 delivery_ne         = "2030-06"             # PROJECTION
 delivery_nw         = "2030-06"             # PROJECTION
 delivery_s          = "2030-12"             # PROJECTION
-hold_months_after_stabilization = 12      # PROJECTION
+lease_up_months     = 18                  # PROJECTION — each tower, from its delivery
+condo_sellout_months = 24                 # PROJECTION — from the NE delivery
+construction_end    = "2030-05"             # PROJECTION — 42 months from the start
+condo_sellout_end   = "2032-05"             # PROJECTION — 24 months from the NE delivery
+merchant_sale       = "2031-10"             # PROJECTION — scenario A, ten months after
+                                          # the last delivery
+stabilization       = "2032-06"             # PROJECTION — S delivery + 18 months; the
+                                          # scenario B refinance
+core_exit           = "2037-06"             # PROJECTION — scenario B, five years past
+                                          # stabilization
+grid_start          = "2023-11"             # the land; month 0 of the model's grid
+grid_periods        = 164                 # the cash horizon closes on the core exit
+valuation_tail      = 12                  # the year of income a sale is priced on
+operations_end      = "2038-06"             # the last month the tail can read
+rent_vintage        = "2026-07"             # the Guidebook's own vintage; rents and
+                                          # expenses escalate from here
 
 # ------------------------------------------- Rosslyn operating base (2026)
 # Arlington County, "2026 Guidebook: Commercial Market Analysis & Guidelines",
@@ -126,6 +141,9 @@ expenses_per_unit       = 9_466           # FACT — $/unit/year, 2010+
 vacancy_collection      = 0.05            # FACT — includes rent loss and concessions
 parking_garage_low      = 50              # FACT — $/space/month
 parking_garage_high     = 150             # FACT — $/space/month
+parking_spaces_per_unit = 0.5             # PROJECTION — 429 spaces over 845 units
+growth                  = 0.03            # PROJECTION — rent and expenses, below
+                                          # BLS CUSR0000SEHA 10yr 4.23%, 3yr 3.98%
 land_value_per_unit     = 78_000          # FACT — mid/high-rise within a half-mile
                                           # walk of Metro. One Rosslyn's 772 rental
                                           # units imply $60,216,000 against a
@@ -188,6 +206,7 @@ developer_fee_ratio     = 0.053736        # FACT
 # at 49.6% over the same window, so 53.4% is not an artefact of one series.
 escalation_realized     = 1.5340          # FACT — 2019-11 (Highlands construction
                                           # midpoint) to 2026-07, published
+escalation_years_forward = 2.17           # 2026-07 to the projected 2028-09 midpoint
 escalation_forward_rate = 0.0343          # PROJECTION — 36-month trailing CAGR on
                                           # the same index, applied 2026-07 to the
                                           # projected 2028-09 midpoint. Trailing
@@ -204,6 +223,9 @@ loan_rate               = 0.0640          # PROJECTION — SOFR + spread. The
                                           # 6.50%, which is a sanity check rather
                                           # than a source.
 ltc                     = 0.60            # PROJECTION
+perm_spread             = 0.0175          # PROJECTION — over the 10-year Treasury
+perm_ltv                = 0.60            # PROJECTION — scenario B only
+perm_amortization_years = 30              # PROJECTION — scenario B only
 
 # ------------------------------------------------------- condominium pricing
 # The WEAKEST input in the case, and the one doing the most work: it carries
@@ -214,3 +236,11 @@ ltc                     = 0.60            # PROJECTION
 pierce_gross            = 190_186_220     # FACT — 102 recorded closings
 pierce_per_unit         = 1_864_571       # FACT
 selling_cost            = 0.05            # PROJECTION
+
+# ------------------------------------------------------------ the JV split
+# PROJECTION in full. The Penzance / Baupost terms are private; these three
+# rates are stated placeholders that the model's tiers read.
+[jv]
+pref_rate               = 0.08
+sponsor_share           = 0.10
+promote_share           = 0.20

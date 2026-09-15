@@ -79,7 +79,7 @@ condominium pricing, growth, and the JV tiers.
 | | |
 |---|---|
 | Pack | `cre` |
-| Declared | 67 assumptions, 16 of them derived; 10 entities, 30 streams, 12 field recurrences, 3 accounts, 2 waterfalls, 14 tiers, 4 metrics, 1 slice, 6 scenarios, a 12-month valuation tail |
+| Declared | 70 assumptions, 25 of them derived; 10 entities, 30 streams, 12 field recurrences, 3 accounts, 2 waterfalls, 14 tiers, 4 metrics, 1 slice, 6 scenarios, a 12-month valuation tail |
 | What the deal requires | carrying a balance across periods, an ordered priority of payments, cash that accumulates between distributions, a return measured per partner, two exits in one model |
 | Language features | derived assumptions (`assume x = inputs.a * inputs.b`), `pmt` for the level payment, `clamp` for the lease-up ramp, entity field recurrences (`init`/`next`/`prev`) including a schedule held one period ahead, a scenario switch that weights streams and tiers through `inputs.*`, `pow` escalation from a stated index base, `series_sum` over a `project` tail for a forward-income valuation and over a `cre.rent.*` wildcard, `account` and `moves`, a `waterfall` paying `from` an account, `irr`/`moic` over a party, a `slice`, `part of` roll-up, `start` and `end` placement |
 | Conventions | equity-first funding, capitalized construction interest, a facility retired out of disposal proceeds, permanent refinance at stabilization, sale in lease-up, pro rata return of capital and preference, one distribution per strategy |

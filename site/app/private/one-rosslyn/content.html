@@ -623,7 +623,7 @@ assume exit_a_value = inputs.stabilized_noi_2026
     </p>
 
     <details>
-      <summary>Show the model &mdash; 705 lines of CFDL</summary>
+      <summary>Show the model &mdash; 708 lines of CFDL</summary>
       <div class="scroll"><pre><code>version 0.1
 model &quot;penzance-one-rosslyn&quot; currency USD
 
@@ -723,7 +723,7 @@ assume obligations_total    = inputs.ahif_base_density + inputs.public_space_rms
 // the companion case&#x27;s own.
 assume highlands_buildings_psf   = 255.0        // FACT: 301,693,050 / 1,183,110 sf
 assume highlands_parking_space   = 32000.0      // FACT: 33,184,000 / 1,037 spaces
-assume escalation_realized       = 1.5340       // FACT: BLS WPUIP2312001, 2019-11 to 2026-07
+assume escalation_realized       = 1.534       // FACT: BLS WPUIP2312001, 2019-11 to 2026-07
 assume escalation_forward_rate   = 0.0343       // PROJECTION: 36-month trailing rate on the same index
 assume escalation_years_forward  = 2.17         // 2026-07 to the projected 2028-09 midpoint
 assume soft_ratio                = 0.180893     // FACT: ratio to hard, companion case
@@ -737,17 +737,18 @@ assume construction_cost = inputs.hard_cost
                          * (1.0 + inputs.soft_ratio + inputs.contingency_ratio + inputs.developer_fee_ratio)
 
 // ------------------------------------------------------------------ timing
-// PROJECTION, as month numbers on the grid: 2023-11 is month 0. The schedules
-// below name the same months as dates.
-assume construction_start   = 37.0    // 2026-12, reported &quot;late 2026&quot;
+// PROJECTION. Each date is stated once, in the schedules below and here; the
+// month numbers the expressions need are counted from the grid&#x27;s first month.
+assume construction_start   = months_between(parse_date(&quot;2023-11&quot;), parse_date(&quot;2026-12&quot;))
 assume construction_months  = 42.0
-assume delivery_nw          = 79.0    // 2030-06
-assume delivery_s           = 85.0    // 2030-12
+assume delivery_nw          = months_between(parse_date(&quot;2023-11&quot;), parse_date(&quot;2030-06&quot;))
+assume delivery_s           = months_between(parse_date(&quot;2023-11&quot;), parse_date(&quot;2030-12&quot;))
 assume lease_up_months      = 18.0    // each tower, from its delivery
-assume exit_a_month         = 95.0    // 2031-10, ten months after the last delivery
-assume refinance_month      = 103.0   // 2032-06, stabilization
-assume exit_b_month         = 163.0   // 2037-06, five years past stabilization
-assume condo_months         = 24.0    // sellout from the NE delivery, 2030-06
+assume exit_a_month         = months_between(parse_date(&quot;2023-11&quot;), parse_date(&quot;2031-10&quot;))
+assume refinance_month      = months_between(parse_date(&quot;2023-11&quot;), parse_date(&quot;2032-06&quot;))
+assume exit_b_month         = months_between(parse_date(&quot;2023-11&quot;), parse_date(&quot;2037-06&quot;))
+assume condo_months         = 24.0    // sellout from the NE delivery
+assume rent_base_month      = months_between(parse_date(&quot;2023-11&quot;), parse_date(&quot;2026-07&quot;))
 
 // The draw is a parabola over the construction window: the weight on month t
 // is (t - (start - 1)) * ((start + months) - t), and the weights sum to
@@ -766,11 +767,12 @@ assume draw_weight_sum = inputs.construction_months * (inputs.construction_month
 assume rent_per_unit          = 3789.0    // DERIVED, $/unit/month, 2026 dollars
 assume expenses_per_unit      = 9466.0    // FACT, $/unit/year
 assume vacancy                = 0.05      // FACT, vacancy and collection
-assume parking_per_space      = 100.0     // midpoint of the Guidebook&#x27;s $50-150 garage range
+assume parking_garage_low     = 50.0      // FACT, $/space/month
+assume parking_garage_high    = 150.0     // FACT
+assume parking_per_space      = (inputs.parking_garage_low + inputs.parking_garage_high) / 2.0
 assume parking_spaces_per_unit = 0.5      // PROJECTION: 429 spaces over 845 units
 assume growth                 = 0.03      // PROJECTION, rent and expenses
 assume cap_rate               = 0.0545    // FACT, guideline loaded cap
-assume rent_base_month        = 32.0      // 2026-07, the Guidebook&#x27;s own vintage
 
 // ------------------------------------------------------------ condominium
 // PROJECTION, and the weakest input in the case: the NE tower&#x27;s 73 units
@@ -787,15 +789,16 @@ assume condo_monthly       = inputs.ne_units / inputs.condo_months
 assume sofr                 = 0.0365
 assume construction_spread  = 0.0275
 assume loan_rate            = inputs.sofr + inputs.construction_spread
-assume ltc                  = 0.60
+assume ltc                  = 0.6
 assume loan_commitment      = inputs.construction_cost * inputs.ltc
 assume equity_commitment    = (inputs.land_price + inputs.construction_cost + inputs.obligations_total)
                             * (1.0 - inputs.ltc)
-assume ust10                = 0.0470
+assume ust10                = 0.047
 assume perm_spread          = 0.0175
 assume perm_rate            = inputs.ust10 + inputs.perm_spread
-assume perm_ltv             = 0.60
-assume perm_amortization_months = 360.0
+assume perm_ltv             = 0.6
+assume perm_amortization_years  = 30.0
+assume perm_amortization_months = inputs.perm_amortization_years * 12.0
 
 // --------------------------------------------------------------- valuation
 // Stabilized net operating income by the County&#x27;s method, in 2026 dollars:
@@ -824,8 +827,8 @@ assume perm_payment   = 0.0 - pmt(inputs.perm_rate / 12.0, inputs.perm_amortizat
 // Penzance / Baupost terms are not public; these three rates are stated
 // placeholders. Replacing them recomputes every partner figure.
 assume pref_rate      = 0.08
-assume sponsor_share  = 0.10
-assume promote_share  = 0.20
+assume sponsor_share  = 0.1
+assume promote_share  = 0.2
 
 
 // ---------------------------------------------------------------- structure
