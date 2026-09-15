@@ -10787,7 +10787,7 @@ time calendar annual from 2026-01 for 3
 // a grouping is not. The `container` family says what the thing IS, and the
 // language base ships the types (`Container.Fund`, `Container.Portfolio`,
 // `Container.SPV`, `Container.Transaction`) for a model to use pack-free and
-// for a pack to refine (docs/13 §7.88).
+// for a pack to refine (docs/13 §7.129).
 //
 // Containment reuses `part_of` — one hierarchy concept, widened endpoints —
 // so the parent's cash aggregates BY THE RELATION, exactly as an asset

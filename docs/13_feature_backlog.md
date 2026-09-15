@@ -382,12 +382,12 @@ item is one minimal failing fixture, its blessed golden, and a
 compile-verified repair in `fixtures/repairs/`. Retired codes (§8) are
 exempt. The catalog's coverage line is the progress meter.
 
-### 7.82 CFDL-CE tiers are prose; nothing asserts the estate maps to them
+### 7.82 CFDL-CE tiers are prose; nothing asserts the published documentation maps to them
 
 docs/22 §2 assigns every published surface to a tier (A–D) with path
 globs written in a markdown table. No tool parses that table, so a new
-published file lands in no tier and no rule applies to it — the estate's
-coverage is whatever `check-site-voice.py` happens to glob. Promoting the
+published file lands in no tier and no rule applies to it — coverage is
+whatever `check-site-voice.py` happens to glob. Promoting the
 tier table to a machine-readable form (or parsing it as written) and
 asserting every published path matches exactly one tier would close the
 loop the authoring contract needs. (`ste-allow:` rule ids are now
@@ -455,28 +455,6 @@ against a published equity multiple. Two earlier drafts of this entry
 overreached — the first called the party metric structurally different, the
 second proposed a taxonomy node and a `cre.acquisition` contract as though the
 language could not express the multiple. It can, and does.
-
----
-
-### 7.88 A model-level entity namespace is not validated against the families
-
-*Belongs with the language and engine (section 5). What remains of the
-container entry: the construct shipped 30–31 August 2026 — `container` is the
-third entity family, `NODE_FAMILIES` adds contract and reference for
-relations to range over, and a container MAY carry deal-level cash
-(`docs/01` §7.1, `docs/07` §6.1, `CHANGELOG`).*
-
-`entity carpark x` is legal and silently untyped. The model namespace was
-never family-gated — which is why `entity container fund` compiled before
-the family existed — so a declaration whose family the language does not
-know is accepted as though it were one. Decide whether a model-level
-`entity` declaration should be validated against `ENTITY_FAMILIES` at all,
-and if so what the refusal says: the namespace is either a typo for a family
-the roster has or a family it lacks, and the diagnostic should let the author
-tell which. Found when the container family landed; it was a finding of that
-work, not a change it made.
-
-Related: `docs/01` §7.1, `docs/07` §6.1.
 
 ---
 
@@ -1518,3 +1496,115 @@ Related: `docs/28` §7 (amended), §7.123, §7.124,
 (`priced_closure`, `priced_refusal`), `crates/cfdl-engine/src/walk.rs`,
 `fixtures/valid/cre_derived_lines`, `benchmarks/cre/mit_rentleg_plaza`.
 
+
+---
+
+### 7.129 The entity family is a second taxonomy over the masters, restated by hand on every type
+
+*Belongs with the language and engine (section 5). Supersedes §7.88, whose
+ungated model declaration is part 3 here. Found 15 September 2026 outlining
+that entry: the gate is worth having, and the roster it would check against
+is the thing actually worth fixing.*
+
+**What is wrong.** Two rosters name the same split. `ENTITY_FAMILIES` and
+`NODE_FAMILIES` hold lowercase words — `asset`, `party`, `container`,
+`contract`, `reference`. The masters hold the same distinction as types the
+language ships and packs refine: `Asset.Real`, `Asset.Financial`,
+`Asset.Intangible`, the four `Container.*`, `Party`. Every pack entity type
+states both, beside a third field saying it again:
+
+```toml
+type_id = "Credit.Asset.LoanPool"
+family  = "asset"
+class   = "financial"
+refines = "Asset.Financial"
+```
+
+The family is not an independent fact. Walked to the root of its refinement
+chain, every one of the 33 entity types across the four packs agrees with the
+family it declares — no exceptions, including `CRE.Asset.Unit`, which reaches
+its root two links up through `CRE.Asset.RealProperty`. It is derived data
+maintained by hand, and the hand is the only thing keeping the two rosters
+from drifting.
+
+Three consequences follow.
+
+1. **Nothing resolves the family it publishes.** `runs.rs` fills the results
+   graph with `e.symbol.split('.').next()` — the first segment of a string,
+   not a lookup. A model declaring `entity carpark lot` publishes
+   `"family": "carpark"` against a schema whose `family` is documented as
+   "asset, party, or container" and typed as a bare string with no enum.
+2. **The model declaration is ungated** (§7.88's finding). `entity carpark
+   lot` compiles, runs and publishes with no diagnostic, which is why
+   `entity container fund` compiled before the family existed. The author
+   learns of it later and elsewhere: a block field read back as
+   `carpark.lot.spaces` fails at run with `E5031_UNRESOLVED_NAME` naming the
+   field, which is declared, rather than the family, which is not. The same
+   model with `asset` substituted runs.
+3. **The endpoint vocabulary is tied to neither roster.** A relation names
+   families (`from_family = ["asset", "container"]`); a contract's roles imply
+   one (`E1321` reads `family == "party"` off the type). Neither is checked
+   against the masters the types actually refine.
+
+**The wrinkle, stated before the shape.** The masters do not cover all five
+families. Asset has three roots, container four, party one — so a family is
+recoverable for the three `ENTITY_FAMILIES`. Contract has eighteen sibling
+masters and no common root above them; `reference` has no master at all,
+because a curve and a quantile carry no ontology type. `core.Entity` and
+`core.Contract` are sentinels for an unresolved type, not roots. So "the
+family is the root of the chain" is true today for exactly the families an
+`entity` declaration may take, and not for the two that only a relation
+endpoint names.
+
+**The shape.** Three parts, smallest first. Parts 1 and 3 stand alone; part 2
+is the fuller move and needs part 1 done.
+
+1. **Retire the restated field.** `family` leaves the pack ontology format.
+   A type's family is computed from the root of its `refines` chain, which
+   already validates as a chain and already terminates. Load-time validation
+   keeps its refusal and changes what it reads. Thirty-three declarations lose
+   a line; no model changes; the two rosters can no longer disagree because
+   there is one.
+2. **Name masters at the endpoints.** A relation states `from = "Asset"` and
+   `to = "Container"` rather than family words, so the endpoint vocabulary and
+   the type vocabulary are one. This requires the two missing roots the
+   wrinkle names: an abstract `Contract` above the eighteen masters, and a
+   `Reference` master for the observables. Both are worth having on their own
+   terms — `is_a(t, "Contract")` is not askable today — but they are language
+   surface, and the ten-minute test applies to them before this part is built.
+3. **Gate the declaration, which is §7.88.** `entity <family> <name>` is
+   checked at compile against the families an `entity` may take, as a new
+   `E1319_UNKNOWN_ENTITY_FAMILY` beside `E1311_UNKNOWN_ENTITY_TYPE`. The
+   message lists the roster; the hint carries a near-miss where there is one,
+   so an author can tell a misspelling from a family the language lacks — the
+   distinction §7.88 asked for, using `edit_distance_at_most_one`, which five
+   sites already call. The published `family` is resolved rather than split
+   from the symbol, and gains its enum in the results schema.
+
+**What the keyword is, and stays.** `entity asset tower : CRE.Asset.RealProperty`
+does not change. The first word is not the roster restated in the model; it is
+what says which kind of thing is being declared before any type resolves, and
+it is all an untyped entity has. Two benchmark declarations of 301 are
+untyped, so the type is very nearly always present — but "very nearly" is why
+the keyword carries the gate in part 3 rather than being removed.
+
+**What moves.** Thirty-three pack type declarations lose `family`. No `.cfdl`
+model changes: 895 entity declarations across benchmarks and fixtures use only
+the three families, and none reuses a bare name across two of them, so nothing
+in the corpus depends on the current permissiveness. The results schema gains
+an enum on `GraphEntity.family`. Two resolver test fixtures declaring a `legal`
+namespace are respelled. `docs/07` §6.1's relation paragraph is edited by
+part 2 if part 2 ships.
+
+**Not this entry.** Whether `container` earns its place as a core entity, and
+whether `part_of` should have been widened to it. Whether the relation roster
+should be instantiable at all — it is read at four sites today, none of them
+the compiler or the engine, and making it live is a larger piece that this
+entry neither needs nor blocks. `class` on an asset, which is a third
+restatement of `Asset.Real | Financial | Intangible` and can be judged once
+part 1 has settled whether derived fields should be stored.
+
+Related: `docs/01` §7.1, `docs/07` §6.1, `docs/40` §5,
+`crates/cfdl-pack/src/lib.rs` (`ENTITY_FAMILIES`, `NODE_FAMILIES`,
+`OntologyEntity`), `crates/cfdl-engine/src/runs.rs`,
+`docs/schemas/results.schema.json` (`GraphEntity`).

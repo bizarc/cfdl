@@ -124,7 +124,7 @@ pub struct PackEntrypoints {
 // identity-bearing, valid relation endpoints (`NODE_FAMILIES`). Three are
 // declared with `entity` (`ENTITY_FAMILIES`); a contract is declared with
 // `contract` and lowers, a reference with `curve`/`quantile` and is observed.
-// docs/13 §7.88 records the restoration of this roster to its own comment.
+// docs/13 §7.129 asks whether this roster should exist beside the masters.
 // ---------------------------------------------------------------------------
 
 /// The families an `entity` declaration may take. Closed, because the
@@ -638,7 +638,7 @@ impl PackOntology {
                     "asset|container",
                     "many_to_one",
                     "contains",
-                    "Optional hierarchy. Never required: the modeller chooses the grain, and an asset stands alone unless grouped. Containment reuses this relation — an asset in a fund, an SPV in a fund — rather than adding a second hierarchy concept (docs/13 §7.88).",
+                    "Optional hierarchy. Never required: the modeller chooses the grain, and an asset stands alone unless grouped. Containment reuses this relation — an asset in a fund, an SPV in a fund — rather than adding a second hierarchy concept (docs/13 §7.129).",
                 ),
                 relation(
                     "owns",
