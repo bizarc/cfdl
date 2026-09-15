@@ -1146,7 +1146,7 @@ pub(crate) fn fold_results(
         }
     }
 
-    // SLICES (docs/13 §7.90): each declared selection, resolved against the
+    // SLICES (docs/01 §15.4): each declared selection, resolved against the
     // settled ledger. Kinds intersect, values within a kind union, excepts
     // subtract; an empty include-kind does not constrain, so a slice of
     // nothing but excepts reads "everything minus these". Matching delegates
@@ -1342,7 +1342,7 @@ pub(crate) fn fold_results(
             .get(horizon)
             .cloned()
             .unwrap_or_else(|| timeline[0].clone());
-        // WHAT A METRIC CAN SEE (`docs/13` §7.85).
+        // WHAT A METRIC CAN SEE (`docs/01` §15.3).
         //
         // The expression dialect first — a stream is `ops.rev`, a waterfall
         // step is `<waterfall>.<step>` — because that is what every existing
@@ -1395,12 +1395,12 @@ pub(crate) fn fold_results(
         // are genuinely undefined — a coverage ratio in a period with no debt
         // service — which is why it publishes `null` rather than zero, and a
         // fold over it needs a decision (skip the undefined periods, or refuse
-        // the fold) that belongs with the reductions of §7.86. Leaving it
+        // the fold) that belongs with the reductions (`docs/13` §7.95). Leaving it
         // unbound is not the old behaviour: the check below refuses the name
         // outright, where before it read zero and said nothing.
         visible.insert("model.net_cash_flow".to_string(), model_series.clone());
-        // A SLICE'S NET, under the key its results publish it by (docs/13
-        // §7.90: a named selection that functions consume). A metric folding
+        // A SLICE'S NET, under the key its results publish it by (docs/01
+        // §15.4: a named selection that functions consume). A metric folding
         // `slice.all_debt` reads cash selected by TYPE and LINE — the
         // cross-pack reading of docs/40 stage 5 — without naming a stream.
         for slice in &slice_results {
@@ -1432,7 +1432,7 @@ pub(crate) fn fold_results(
             env.series = Arc::clone(&shared);
             env.series_offsets = Arc::clone(&shared_offsets);
             env.periods_per_year = Some(ppy);
-            // ENTITY FIELDS, AT THE HORIZON (`docs/13` §7.85). `docs/01` §15.3
+            // ENTITY FIELDS, AT THE HORIZON. `docs/01` §15.3
             // has promised these in normative text since metrics entered the
             // spec, and the binding was simply absent: `bind_states` is called
             // for streams, distributions and state evaluation, and was never
@@ -1475,7 +1475,7 @@ pub(crate) fn fold_results(
                 }
             };
             // A NAME NOTHING BINDS IS REFUSED, NOT READ AS ZERO
-            // (`docs/13` §7.85).
+            // (`docs/01` §15.3, `E1365`).
             //
             // `series_sum`/`series_avg` return 0.0 for a selector that matches
             // nothing, which is right for a `.*` selector — matching nothing is
@@ -1522,7 +1522,7 @@ pub(crate) fn fold_results(
                         // no answer, and the results schema has always
                         // permitted a null scalar; the catch-all below would
                         // have made that absence look like a value of type
-                        // text (`docs/13` §7.86).
+                        // text (`docs/03` §4).
                         ExprValue::Optional(None) => Scalar::Null,
                         other => Scalar::String(describe_value(other)),
                     };

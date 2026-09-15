@@ -76,7 +76,7 @@ externally validated).
 - **Ahead of SAM**, the same list as the other parity documents and it bears
   repeating once: the journal as a causal audit trail, text source under
   version control, byte-comparable runs, per-assumption Monte Carlo with
-  full metric distributions (`docs/13` §7.87).
+  full metric distributions (`docs/06`, `results_version` 0.9).
 
 **And the structural advantage that makes this document different from
 `docs/33` and `docs/38`:** SAM is BSD-3 licensed and `pip install nrel-pysam`

@@ -1027,3 +1027,57 @@ The same reasoning closed §7.78 and §7.79 on 5 September. Three umbrella
 entries in a week suggests the pattern is worth naming: file work, not
 signposts. When a backlog entry grows a document, delete the entry.
 
+### The metric surface: three entries, and what each got wrong before it shipped
+
+Filed as `docs/13` §7.85, §7.86 and §7.87 on 30 August 2026; all three shipped
+on 31 August and the entries were removed 15 September. The constructs live
+in `docs/01` §15.3 (what a metric may read), `docs/03` §4 (the six series
+reductions) and `docs/06` (`results_version` 0.9, every metric a trial
+computed). What is worth keeping is where the entries' own reasoning turned
+out wrong, because each was found by building and would be re-derived
+otherwise.
+
+**Binding both dialects dissolved the ambiguity it was feared to reopen.** The
+metric-environment entry warned that making the published keys
+(`stream.ops.rev`) visible beside the expression names (`ops.rev`) would
+recreate the August 2026 naming confusion `docs/03` records. The measurement
+said the opposite: the ambiguity WAS that one spelling read 300 while the
+other read 0, and binding both — in the metric environment only, since a pot's
+window and a guard's read are the walk's, not the finished projection's —
+makes them agree. A fixture proves it with a third metric that subtracts one
+from the other.
+
+**"Peak outstanding debt" is not a fold over the debt streams.** The
+reductions entry led with that example, and `series_max("dbt.*")` answers a
+different question: the largest per-period NET FLOW. A peak balance is a fold
+over the series that CARRIES the balance — an entity field, or now an
+account — which is why the two entries could only close together, and why
+`fixtures/valid/series_reductions` shows both readings side by side (6,000
+against 10,000 on the same draws).
+
+**Every fold reads the per-period aggregate.** When a selector matches several
+streams they are added within each period first and the fold runs over that
+one series. Addition is associative, so `series_sum` never showed the order
+and the shipped code flattened stream by stream; a maximum is not, and the
+peak of the combined position is the only reading "peak" means. A unit test
+holds data where the two answers differ.
+
+**Two absences, and collapsing them was measured.** A selection matching
+nothing and a window the walk has not reached both arrived as `None`. Turning
+the first into `null` — nothing has no maximum, and a zero would state a peak
+no period reached — also turned every REFUSED forward read into `null`, and a
+cash-trap guard that had said "not available in this context" began saying
+"cannot apply Sub to number and null". Four goldens caught it in one run.
+`NoAnswer` is a fact about the data; `Unavailable` is `docs/28` §4's refusal
+to clamp a forward read and stays an error. The same lesson is why a ratio
+subtotal is refused by name (`E1365`) rather than folded as though `null` were
+nothing — that decision is `docs/13` §7.95, still open.
+
+**A trial's record was one line from complete.** The scenario path already
+carried a run's whole metric map; the trial loop built a fresh one-entry map
+and kept `model.npv`. Carrying `trial_run.metrics` was the fix, and what the
+build found that the entry did not: not every trial publishes every name
+(`model.irr` only where the flows solve), so a summary must say how many
+trials it was taken over, or a mean over three and a mean over five hundred
+read identically.
+

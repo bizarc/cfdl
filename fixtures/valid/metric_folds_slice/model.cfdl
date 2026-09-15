@@ -19,7 +19,7 @@ slice debt_interest {
   line interest
 }
 
-// A METRIC FOLDS A SLICE (docs/13 §7.90: a named selection that functions
+// A METRIC FOLDS A SLICE (docs/01 §15.4: a named selection that functions
 // consume). `slice.debt_interest` is the slice's net, so the figure is
 // selected by type and line rather than by naming a stream or a pack's
 // category — the cross-pack reading of docs/40 stage 5.

@@ -589,11 +589,11 @@ pub struct Results {
     /// Rendered statements. Present only when the active pack declares one.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub statements: Option<StatementsSection>,
-    /// The model's entity graph (docs/13 §7.43, §7.91). Absent only for a
+    /// The model's entity graph (`docs/06`; `docs/01` §7.1). Absent only for a
     /// model declaring no entities.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub graph: Option<ResultsGraph>,
-    /// Declared slices and what each came to (docs/13 §7.90). Absent when
+    /// Declared slices and what each came to (docs/01 §15.4). Absent when
     /// the model declares none.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub slices: Option<Vec<SliceResult>>,
@@ -959,7 +959,7 @@ pub enum Scalar {
     /// always permitted for a scalar. A metric that folded a selection with
     /// nothing in it has no maximum, and stringifying that as `"null"` (which
     /// is what the catch-all arm used to do) makes an absence look like a
-    /// value of type text. `docs/13` §7.86.
+    /// value of type text. `docs/03` §4.
     Null,
 }
 
@@ -995,7 +995,7 @@ impl SeriesValue {
     }
 }
 
-/// A slice's published result (docs/13 §7.90): a named, deliberately
+/// A slice's published result (docs/01 §15.4): a named, deliberately
 /// partial selection and what it came to. NO reconciliation block, by
 /// design — the absence is what the declaration means. A partial number
 /// must not dress as a complete one, so a slice never publishes a residual
@@ -1054,8 +1054,8 @@ pub struct SliceWindow {
 
 /// The model's entity graph, published so a consumer holding results alone
 /// can build the hierarchy view — who is part of what, what each thing is,
-/// and the stable identity a governance layer assigned (docs/13 §7.43,
-/// §7.91). Values, not vocabulary: the pack's type ROSTER lives in the pack;
+/// and the stable identity a governance layer assigned (docs/06 `graph`;
+/// docs/01 §7.1). Values, not vocabulary: the pack's type ROSTER lives in the pack;
 /// this is the graph THIS model declared.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ResultsGraph {
@@ -1285,7 +1285,7 @@ pub struct MetricSummary {
     /// How many trials published this metric. Not every trial publishes every
     /// name: `model.irr` exists only where the flows solve for a rate, so a
     /// mean over three trials and a mean over five hundred would otherwise
-    /// read identically. `docs/13` §7.87.
+    /// read identically. `docs/06`, `results_version` 0.9.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub trials: Option<u32>,
     pub mean: Scalar,

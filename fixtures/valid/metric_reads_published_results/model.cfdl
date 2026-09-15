@@ -5,7 +5,7 @@ time calendar annual from 2026-01 for 3
 // A METRIC CAN READ WHAT THE VALUATION PLANE PUBLISHES — INCLUDING ITS OWN
 // AGGREGATES.
 //
-// `docs/13` §7.85. `docs/01` §15.3 has said in normative text since metrics
+// `docs/01` §15.3 has said in normative text since metrics
 // entered the spec that a metric's expression MAY read series, ENTITY FIELDS,
 // `inputs`, `cfg` and the engine's `model.*`. Entity fields it could not read:
 // the metric environment was built from stream and waterfall series and

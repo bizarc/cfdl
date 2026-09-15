@@ -34,7 +34,7 @@ pub enum Mode {
 /// It is NOT invisible for a maximum: the peak of the combined position and the
 /// largest single cell are different numbers, and only the first is what "peak
 /// outstanding debt" means. So the host aggregates within each period first,
-/// and this says what to do with the resulting vector (`docs/13` §7.86).
+/// and this says what to do with the resulting vector (`docs/03` §4).
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum SeriesReduction {
     Sum,
@@ -65,7 +65,7 @@ impl SeriesReduction {
     /// own honest answer: nothing sums to 0 and multiplies to 1, and no period
     /// carries a non-zero aggregate. A maximum is different — nothing has no
     /// maximum, and returning 0 would state a value where there is none, which
-    /// is the exact failure §7.86 exists to end.
+    /// is the exact failure the reductions exist to end (`docs/03` §4).
     ///
     /// `None` here means NO ANSWER, and the caller turns it into `Value::Null`
     /// rather than an error. Null is the language's existing word for absent —

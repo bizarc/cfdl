@@ -237,8 +237,8 @@ pub(crate) fn compute_results(
                 journal_firsts.entry(key).or_default().push(period);
             }
 
-            // EVERY metric the trial computed, not NPV alone (`docs/13`
-            // §7.87). A trial IS a complete deterministic run, so this map
+            // EVERY metric the trial computed, not NPV alone (`docs/06`,
+            // `results_version` 0.9). A trial IS a complete deterministic run, so this map
             // already holds `model.npv` beside `model.irr`, `model.moic`,
             // every `stream.*.total` and `entity.*.total`, each `domain.*` KPI
             // and every metric the model declared. The scenario path one
@@ -277,7 +277,7 @@ pub(crate) fn compute_results(
                 },
             })
         };
-        // ONE SUMMARY PER METRIC THE TRIALS PUBLISHED (`docs/13` §7.87).
+        // ONE SUMMARY PER METRIC THE TRIALS PUBLISHED (`docs/06`).
         //
         // This used to be a single hand-built entry for `model.npv`, which is
         // why a declared metric, a MoIC, an IRR or any `domain.*` KPI had no
@@ -390,7 +390,7 @@ pub(crate) fn compute_results(
     };
 
     // THE MODEL'S GRAPH, republished from the IR so results stand alone
-    // (docs/13 §7.43, §7.91): symbol, family, type, the stable id a layer
+    // (docs/06 `graph`; docs/01 §7.1): symbol, family, type, the stable id a layer
     // above assigned, and the part_of parent. What a consumer needed the IR
     // for — attributing a stream to a thing — it now has beside the values.
     // THE CONTRACTS BESIDE THE ENTITIES (docs/40 stage 4): each resolved to

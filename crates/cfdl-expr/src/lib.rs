@@ -874,8 +874,8 @@ impl cfdl_calc::Env for EnvAdapter<'_> {
                 return SeriesFold::Unavailable;
             }
         }
-        // THE PER-PERIOD AGGREGATE FIRST, then the fold over it (`docs/13`
-        // §7.86). Summing the matched streams within a period and then across
+        // THE PER-PERIOD AGGREGATE FIRST, then the fold over it (`docs/03`
+        // §4). Summing the matched streams within a period and then across
         // periods is what `series_sum` always did — addition is associative,
         // so the order was invisible and the code could flatten. A maximum is
         // not associative that way: the peak of the combined position and the
@@ -1290,7 +1290,7 @@ mod tests {
 
         // A SELECTION THAT MATCHES NOTHING. Sum and count have an identity,
         // a product has one, and a maximum does not — returning 0 there would
-        // state a peak no period reached, which is the failure §7.86 ends.
+        // state a peak no period reached, which is the failure the reductions end.
         let empty = |r| adapter.series_aggregate("nothing.*", 0, 3, r);
         assert_eq!(empty(R::Sum), SeriesFold::Value(Decimal::from(0)));
         assert_eq!(empty(R::CountNonZero), SeriesFold::Value(Decimal::from(0)));

@@ -3,7 +3,7 @@ model "slice-by-type"
 use pack "cre" version "0.1.0"
 time calendar monthly from 2026-01 for 60
 
-// BASE-TYPE SELECTION, THE REFINEMENT'S PAYOFF (docs/13 §7.92, §7.90).
+// BASE-TYPE SELECTION, THE REFINEMENT'S PAYOFF (docs/40; docs/01 §15.4).
 // `type Contract.Debt` names a MASTER; the compiler expands it through the
 // recorded refinement — CRE.Contract.PermanentDebt is_a Contract.Debt — to
 // every stream that contract lowers. The slice survives a new pack

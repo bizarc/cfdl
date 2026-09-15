@@ -2,7 +2,7 @@ version 0.1
 model "slices"
 time calendar annual from 2026-01 for 3
 
-// A SLICE IS A NAMED, DELIBERATELY PARTIAL SELECTION (docs/13 §7.90).
+// A SLICE IS A NAMED, DELIBERATELY PARTIAL SELECTION (docs/01 §15.4).
 // Clause kinds intersect, values within a kind union, `except` subtracts —
 // and a slice carries NO reconciliation block, because the absence is what
 // the declaration means: a partial number must not dress as a complete one.

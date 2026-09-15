@@ -4,7 +4,7 @@ time calendar annual from 2026-01 for 5
 
 // A TRIAL IS A COMPLETE RUN, AND EVERY FIGURE IT COMPUTED SURVIVES IT.
 //
-// `docs/13` §7.87: the trial loop used to build a fresh one-entry map holding
+// `docs/06`, `results_version` 0.9: the trial loop used to build a fresh one-entry map holding
 // `model.npv` and publish that as the trial's whole record. Every other figure
 // — the IRR, the MoIC, each entity's total, each stream's total, and every
 // metric the model declared — was computed inside the trial and dropped on the
@@ -17,14 +17,14 @@ time calendar annual from 2026-01 for 5
 // figure below MOVES with the draw and a distribution over it means something:
 //
 //   - `metric.exit_multiple` — a declared metric, the thing §7.25 built and
-//     the thing §7.87 was throwing away;
+//     the thing the old trial loop threw away;
 //   - `model.irr` and `model.moic` — the acquisition in 2026 is the sign
 //     change an IRR needs;
 //   - `entity.container.fund.total` — the ROLLED-UP total, which is the join
 //     to the results-plane graph: `graph.entities[].symbol` is
 //     `container.fund`, so a consumer holding results alone can read a
 //     per-entity distribution rather than inferring ownership from names
-//     (§7.43, §7.91).
+//     (`docs/06` `graph`; `docs/01` §7.1).
 //
 // The seed is stated, so every published percentile is reproducible: a Monte
 // Carlo run IS a golden when its seed is.

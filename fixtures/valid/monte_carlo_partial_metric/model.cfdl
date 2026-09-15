@@ -8,7 +8,7 @@ time calendar annual from 2026-01 for 3
 // drawn across zero, so in the trials that draw it negative there is no sign
 // change and no IRR — and a mean over the trials that DID solve would read
 // exactly like a mean over all of them, if the summary did not say how many it
-// was taken over. `trials` on a metric summary is that count (`docs/13` §7.87).
+// was taken over. `trials` on a metric summary is that count (`docs/06`).
 //
 // `model.npv` is published by every trial and `model.irr` by some, so this one
 // model shows both cases in one results document.

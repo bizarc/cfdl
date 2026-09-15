@@ -654,7 +654,7 @@ impl PackOntology {
                     "asset",
                     "many_to_many",
                     "secures",
-                    "Collateral. A mortgage names its property; LTV, recovery and release provisions read this edge (docs/13 §7.89).",
+                    "Collateral. A mortgage names its property; LTV, recovery and release provisions read this edge (docs/07 §6.1).",
                 ),
                 relation(
                     "guarantees",

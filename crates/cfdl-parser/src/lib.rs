@@ -4191,7 +4191,7 @@ impl<'a> Parser<'a> {
     }
 
     /// `slice <name> { ... }` — a named, deliberately partial selection
-    /// (docs/13 §7.90). Clause KINDS intersect, values within a kind union,
+    /// (docs/01 §15.4). Clause KINDS intersect, values within a kind union,
     /// `except` subtracts last. A slice carries no reconciliation: the
     /// absence is what the declaration means — a partial number must not
     /// dress as a complete one.
