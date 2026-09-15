@@ -320,27 +320,51 @@ service_corridors_sf       = 2094
 [capital]
 source = "mixed — land is now FACT, the rest assumption"
 land_basis_usd            = 67_000_000   # FACT [Arlington assessments, 2011-09-30]
-hard_cost_per_sf          = 0
-soft_cost_pct_of_hard     = 0
-developer_fee_pct         = 0
-contingency_pct           = 0
+# The construction budget, by line. ASSUMPTION, calibrated so that peak debt
+# sits at 97.5% of the reported facility. Each line is drawn on the same
+# parabola over the construction window.
+hard_buildings_usd        = 301_693_050.00
+hard_garage_usd           = 33_184_000.00
+fire_station_usd          = 7_454_800.00
+park_and_street_usd       = 14_000_000.00
+soft_costs_usd            = 60_576_414.50
+contingency_usd           = 17_816_592.50
+developer_fee_usd         = 17_994_713.10
+affordable_housing_usd    = 12_000_000    # ASSUMPTION — condition #42 fixes no amount
+cost_of_sale              = 0.01          # ASSUMPTION — on the two tower sales
+condo_selling_cost        = 0.05          # ASSUMPTION — on each Pierce closing
+
+[schedule]
+# Dates, stated once. The model counts month numbers from the grid's start.
+grid_start                = "2011-09"     # the land; month 0
+grid_periods              = 160
+grid_end                  = "2024-12"
+construction_start        = "2018-04"     # ASSUMPTION — 39 months, landing delivery
+construction_end          = "2021-06"     #   in Summer 2021 as the staff report says
+delivery_aubrey           = "2021-07"     # ASSUMPTION
+delivery_evo              = "2021-09"     # ASSUMPTION — the larger structure, two months later
+sale                      = "2022-05"     # FACT — both towers, 2022-05-17
+condo_first_close         = "2021-08"     # FACT — first recorded closing 2021-08-30
+condo_last_close          = "2024-06"     # FACT — last recorded closing 2024-06-04
 
 [debt]
 construction_loan_usd = 380000000    # press-reported, NOT yet verified to instrument
 lender                = "Mack Real Estate Credit Strategies"
 source                = "press: Commercial Observer / MHN"
-spread_bps            = 0            # assumption
+loan_rate             = 0.065        # ASSUMPTION — all-in, capitalized
 index                 = "assumption"
 term_months           = 0            # assumption
 extension_options     = "assumption"
-draw_curve            = "assumption"
+draw_curve            = "parabola over the construction window — see the model"
 
 [equity]
 source              = "assumption"
-sponsor_pct         = 0
-lp_pct              = 0
-pref_rate           = 0
-promote_tiers       = []             # Baupost JV terms not public
+equity_share_of_cost = 0.35          # ASSUMPTION — the commitment is this share of
+                                     #   total development cost; the facility takes
+                                     #   the rest
+sponsor_share       = 0.10           # placeholder — Baupost JV terms not public
+pref_rate           = 0.08           # placeholder
+promote_share       = 0.20           # placeholder
 
 [operations]
 # NOW SOURCED — Arlington Commercial Guidebook, High-Rise / effective age 2010+.
@@ -350,6 +374,10 @@ vacancy_pct           = 0.08       # FACT 2022 (2023 ed: 6%)
 parking_per_space_mo  = 150        # FACT: Guidebook garage range $50-$150
 replacement_reserve   = 0.002      # FACT: assumed inside the cap rate
 mgmt_fee_pct          = 0          # still assumption (inside opex/unit)
+other_income_pct      = 0.04       # ASSUMPTION — other income as a share of rent
+retail_rent_psf_year  = 48.0       # ASSUMPTION — retail, $/sf/year
+retail_occupancy      = 0.90       # ASSUMPTION
+effective_tax_rate    = 0.0113     # FACT — Arlington, on assessed value
 # NOTE: real estate tax is NOT an assumption — Arlington assessment history is
 # public per RPC. Pull it before defaulting to a rate.
 # NO LONGER AN ASSUMPTION — assessment histories pulled; see
@@ -363,8 +391,9 @@ source                  = "rents DERIVED from the assessor's own implied NOI"
 # using Guidebook opex, vacancy and parking. No CoStar needed.
 aubrey_rent_per_unit_mo = 3_522
 evo_rent_per_unit_mo    = 3_273
-evo_units_per_month     = 0        # pace still assumption
-aubrey_units_per_month  = 0
+aubrey_assessed_2022_usd = 229_060_900   # FACT — 1/1/2022 assessed value, the rent derivation's base
+evo_assessed_2022_usd    = 290_055_300   # FACT
+units_per_month         = 25       # ASSUMPTION — lease-up pace, each tower from its delivery
 
 [condo_sellout]
 source            = "FACT — Arlington assessments, 104 units scraped individually"

@@ -252,27 +252,30 @@
     <span class="eyebrow">The model</span>
     <h2>Four things this deal requires</h2>
     <p>
-      The model is 852 lines of CFDL. It runs on a monthly grid. Four parts of the deal drive most of it.
+      The model is 633 lines of CFDL. It runs on a monthly grid. Every figure it uses is a stated assumption, labeled as fact, derived or assumed, and everything else is arithmetic on those figures inside the model. Four parts of the deal drive most of it.
     </p>
 
     <h3>Carrying a balance across periods</h3>
     <p>
       The facility balance depends on its own previous value: this month&rsquo;s interest accrues on last month&rsquo;s balance. The model states that directly, and reads <code>prev</code> for the value at the last close. Each month resolves from the month before it, so the balance is always well defined.
     </p>
-<pre><code>entity asset facility : Asset.Financial {
-  <span class="cmt">// equity funds to its commitment first, then the loan draws</span>
-  equity_funded init min(inputs.equity_commitment, curve_value("dev_cost_cum", time.date))
-                next min(inputs.equity_commitment, curve_value("dev_cost_cum", time.date))
+<pre><code><span class="cmt">// this month&rsquo;s interest accrues on last month&rsquo;s balance</span>
+interest init 0.0
+         next prev.asset.facility.balance * inputs.loan_rate / 12.0
 
-  balance init 0.0
-          next max(0.0, prev + draw + interest - repay)
-}</code></pre>
+<span class="cmt">// the facility draws what the equity does not fund, up to the room left under the commitment</span>
+draw init max(0.0, inputs.land_price - inputs.equity_commitment)
+     next min(max(0.0, prev.asset.program.cost_ahead - (asset.facility.equity_funded - prev.asset.facility.equity_funded)),
+              max(0.0, inputs.loan_commitment - prev.asset.facility.balance * (1.0 + inputs.loan_rate / 12.0)))</code></pre>
+    <p class="note">
+      The draw is shown here with the month&rsquo;s equity step written as a difference of the equity-funded field. In the model that step is spelled out in closed form, because a field reads another field only at the prior close. The listing below carries it in full.
+    </p>
 
     <h3>A recorded schedule of closings</h3>
     <p>
       Every condominium closing is a declared point, taken from the recorded sales. The model follows the real absorption, including the long tail of closings through 2024.
     </p>
-<pre><code>curve pierce_sellout {
+<pre><code>curve pierce_sellout to 2024-12 {
   2021-08: 2056400.00
   2021-09: 8109000.00
   2021-10: 6243000.00
@@ -283,7 +286,7 @@
     <p>
       The model states the partners&rsquo; payment priority once, in order, and a named partner takes the residual. Capital comes back first, then the preferred return, then the promote, then what is left.
     </p>
-<pre><code>waterfall jv.distribution on entity asset.project {
+<pre><code>waterfall jv.distribution on entity container.project {
   schedule on 2024-06 end
   from deal_cash
 
@@ -291,7 +294,7 @@
   pay capital_sp    to party.penzance = min(0.0 - prev.penzance_capital, remaining)
   pay preferred_inv to party.baupost  = (asset.jv.unreturned - asset.jv.capital) * (1.0 - inputs.sponsor_share)
   pay preferred_sp  to party.penzance = (asset.jv.unreturned - asset.jv.capital) * inputs.sponsor_share
-  pay promote       to party.penzance = remaining * 0.20
+  pay promote       to party.penzance = remaining * inputs.promote_share
   pay residual_inv  to party.baupost  = remaining * (1.0 - inputs.sponsor_share)
   pay residual_sp   to party.penzance = remaining
 }</code></pre>
@@ -423,7 +426,7 @@
 
     <div class="note">
       The parties are the real ones: Penzance as sponsor, The Baupost Group as equity partner,
-      Mack Real Estate Credit Strategies as construction lender. The tier percentages are not. An 8% preferred return from construction start, a 90/10 capital split and a 20% promote stand in for them. Those economics appear in no public source. Replacing the three rates is a four-line change, and every figure above recomputes.
+      Mack Real Estate Credit Strategies as construction lender. The tier percentages are not. An 8% preferred return from construction start, a 90/10 capital split and a 20% promote stand in for them. Those economics appear in no public source. Replacing the three rates is a three-line change, and every figure above recomputes.
     </div>
   </section>
 
@@ -433,8 +436,9 @@
     <span class="eyebrow">Sensitivity</span>
     <h2>Which numbers are structural, and which are conventions</h2>
     <p>
-      One model, nine discount rates, one run. The engine values the same cash flows at
-      each rate and reports them together.
+      One model, nine discount rates, nine runs. The engine values the same cash flows at
+      each rate. The present value is the deal&rsquo;s own cash, the partners&rsquo; contributions
+      left out, which is the slice the return and the multiple are also solved from.
     </p>
 
     <div class="scroll">
@@ -474,12 +478,12 @@
       falls to <strong>219</strong> on a deal of $196 million.
     </p>
     <p>
-      Each row is one line of run configuration. The model itself is untouched.
+      Each row is one run with a different rate in its configuration. The model itself is
+      untouched, and the committed run file carries the 10% base alone.
     </p>
-<pre><code>"scenarios": {
-  "guideline_cap": { "annual_discount_rate": 0.0515 },
-  "ten":           { "annual_discount_rate": 0.10 },
-  "twenty":        { "annual_discount_rate": 0.20 }
+<pre><code>"deterministic": {
+  "annual_discount_rate": 0.10,
+  "as_of": "2011-09-01"
 }</code></pre>
   </section>
 
@@ -526,8 +530,9 @@
       <li>The joint-venture terms are named inputs, not the partnership's terms. Those are
         private, and nothing here should be read as a view on them.</li>
       <li>This case reports no net present value. The model includes financing streams, so its NPV would be a levered one. No source document for this deal states a discount rate.</li>
-      <li>Both towers were sold before they stabilized. The model shows them at 83% and
-        60% occupancy on the sale date.</li>
+      <li>Both towers were sold before they stabilized. At the assumed pace of 25 units a
+        month from each delivery, the model shows Aubrey 83% leased and Evo 49% leased on
+        the sale date. No source states either figure.</li>
     </ul>
     <p>
       Where the model and the real deal differ, the difference is in the assumptions, and
@@ -542,10 +547,10 @@
     <h2>The model in full</h2>
     <p>
       This is the whole model: entities, curves, streams, the facility and the
-      distribution. It runs as written. Four curves declare a value for every period of the 160-month grid. This listing abridges those runs of figures for length. The model itself carries them in full.
+      distribution. It runs as written, unabridged. Its one table is the recorded condominium sellout; every other schedule on the 160-month grid is an expression of the assumptions above it.
     </p>
     <details>
-      <summary>Show the model &mdash; 921 lines of CFDL</summary>
+      <summary>Show the model &mdash; 633 lines of CFDL</summary>
       <div class="scroll"><pre><code>version 0.1
 model &quot;penzance-highlands&quot; currency USD
 use pack &quot;cre&quot; version &quot;0.1.0&quot;
@@ -566,6 +571,12 @@ time calendar monthly from 2011-09 for 160
 // sellout are recorded fact — Arlington&#x27;s site-plan record, deed register,
 // assessment roll and Commercial Guidebook. Cost, debt pricing and the JV
 // split are stated assumptions. Provenance is in CASE.md.
+//
+// Every figure the model uses is an `assume` below, labeled with its
+// standing, and everything else is arithmetic on those figures: the budget&#x27;s
+// draw, the equity commitment, each tower&#x27;s lease-up, the facility and the
+// split. The one table is the condominium sellout, which is recorded fact.
+// `inputs/highlands.toml` records where each figure came from.
 // ===========================================================================
 
 phase predevelopment from 2011-09 to 2018-03
@@ -573,49 +584,147 @@ phase construction   from 2018-04 to 2021-06
 phase lease_up       from 2021-07 to 2022-05
 phase condo_tail     from 2022-06 to 2024-12
 
-assume loan_rate        = 0.065
-assume loan_commitment  = 380000000
-assume equity_commitment = 186245280.585
+// ----------------------------------------------------------------- the land
+// FACT. Deed 4491/2257, 2011-09-30, one price across the fee parcels.
+assume land_price = 67000000.0
+
+// -------------------------------------------------------------- the budget
+// ASSUMPTION, by line, calibrated so that peak debt sits at 97.5% of the
+// reported facility. Every line is drawn on one parabola over the 39-month
+// construction window.
+assume hard_buildings    = 301693050.0
+assume hard_garage       = 33184000.0
+assume fire_station      = 7454800.0
+assume park_and_street   = 14000000.0
+assume soft_costs        = 60576414.5
+assume contingency       = 17816592.5
+assume developer_fee     = 17994713.1
+assume construction_cost = inputs.hard_buildings + inputs.hard_garage + inputs.fire_station
+                         + inputs.park_and_street + inputs.soft_costs + inputs.contingency
+                         + inputs.developer_fee
+
+// SP #445 conditions. FACT except the affordable housing contribution, which
+// condition #42 leaves to the developer&#x27;s election and is an ASSUMPTION.
+// Utility undergrounding and TDM at permit; public art, green building and
+// affordable housing at certificate of occupancy.
+assume utility_fund         = 143303.0
+assume tdm_buy_in           = 14000.0
+assume public_art           = 250000.0
+assume green_building_fund  = 2500.0
+assume affordable_housing   = 12000000.0
+assume obligations_at_permit = inputs.utility_fund + inputs.tdm_buy_in
+assume obligations_at_co     = inputs.public_art + inputs.green_building_fund + inputs.affordable_housing
+assume total_cost = inputs.land_price + inputs.construction_cost
+                  + inputs.obligations_at_permit + inputs.obligations_at_co
+
+// ------------------------------------------------------------------ timing
+// Each date is stated once, in the schedules below and here; the month
+// numbers the expressions need are counted from the grid&#x27;s first month.
+assume construction_start  = months_between(parse_date(&quot;2011-09&quot;), parse_date(&quot;2018-04&quot;))
+assume construction_months = 39.0
+assume delivery_aubrey     = months_between(parse_date(&quot;2011-09&quot;), parse_date(&quot;2021-07&quot;))
+assume delivery_evo        = months_between(parse_date(&quot;2011-09&quot;), parse_date(&quot;2021-09&quot;))
+assume sale_month          = months_between(parse_date(&quot;2011-09&quot;), parse_date(&quot;2022-05&quot;))
+assume condo_first_close   = months_between(parse_date(&quot;2011-09&quot;), parse_date(&quot;2021-08&quot;))
+assume condo_last_close    = months_between(parse_date(&quot;2011-09&quot;), parse_date(&quot;2024-06&quot;))
+
+// The draw is a parabola over the construction window: the weight on month t
+// is (t - (start - 1)) * ((start + months) - t), and the weights sum to
+// n(n + 1)(n + 2) / 6 for n months, so each month&#x27;s draw is its weight&#x27;s share
+// of the budget.
+assume draw_weight_sum = inputs.construction_months * (inputs.construction_months + 1.0)
+                       * (inputs.construction_months + 2.0) / 6.0
+
+// ------------------------------------------------------------- the facility
+// The $380M construction facility is press-reported; its pricing is an
+// ASSUMPTION. Equity funds first, to a stated share of total development
+// cost; the facility draws the residual and capitalizes interest.
+assume loan_commitment      = 380000000.0
+assume loan_rate            = 0.065
+assume equity_share_of_cost = 0.35
+assume equity_commitment    = inputs.total_cost * inputs.equity_share_of_cost
+
+// -------------------------------------------------------------- operations
+// FACT from the 2022 Commercial Guidebook: expenses per unit, vacancy, the
+// garage rate. Rents are DERIVED, not assumed: each tower&#x27;s 1/1/2022 assessed
+// value times the County&#x27;s guideline loaded cap gives the assessor&#x27;s own net
+// operating income, solved back to a rent per unit. The other-income share,
+// the retail rent and occupancy and the lease-up pace are ASSUMPTIONS.
+assume aubrey_units       = 331.0
+assume evo_units          = 455.0
+assume aubrey_rent        = 3522.0      // DERIVED, $/unit/month
+assume evo_rent           = 3273.0      // DERIVED
+assume aubrey_assessed    = 229060900.0 // FACT, 1/1/2022
+assume evo_assessed       = 290055300.0 // FACT
+assume aubrey_retail_sf   = 9788.0      // FACT
+assume evo_retail_sf      = 13891.0     // FACT
+assume other_income_pct   = 0.04
+assume vacancy            = 0.08        // FACT
+assume expenses_per_unit  = 7511.0      // FACT, $/unit/year
+assume parking_per_space  = 150.0       // FACT, $/space/month
+assume parking_ratio      = 0.8        // FACT, spaces per unit
+assume retail_rent_psf    = 48.0        // $/sf/year
+assume retail_occupancy   = 0.9
+assume effective_tax_rate = 0.0113      // FACT, on assessed value
+assume units_per_month    = 25.0        // lease-up pace, each tower from its delivery
+
+// ---------------------------------------------------------------- the exit
+// FACT: both towers sold 2022-05-17 as ONE transaction; only the deed
+// recording dates differ, which is why the press reported two. The
+// condominium closings are the recorded schedule below. Costs of sale are
+// ASSUMPTIONS.
+assume aubrey_price       = 266455000.0
+assume evo_price          = 334642240.0
+assume cost_of_sale       = 0.01
 assume condo_selling_cost = 0.05
-assume cost_of_sale     = 0.01
-assume pref_rate        = 0.08
-assume sponsor_share    = 0.10
 
-// Development cost per period and its running total. Declared as curves so
-// the facility&#x27;s recurrence can read them. Cost here is a pure function of
-// time.
-//
-// EVERY period is declared, including the zeros. A step curve is
-// flat-forward (docs/03 §4): omit the quiet months and the last construction
-// draw is held forward indefinitely and the balance compounds without end.
-curve dev_cost {
-  2011-09: 67000000.0000
-  2011-10: 0.0000
-  2011-11: 0.0000
-  2011-12: 0.0000
-  // ... 154 further points, one per period, omitted for length
-  2024-11: 0.0000
-  2024-12: 0.0000
-}
+// ------------------------------------------------------------------ the JV
+// Penzance / Baupost terms are not public; these three rates are stated
+// placeholders. Replacing them recomputes every partner figure.
+assume pref_rate     = 0.08
+assume sponsor_share = 0.1
+assume promote_share = 0.2
 
-curve dev_cost_cum {
-  2011-09: 67000000.0000
-  2011-10: 67000000.0000
-  2011-11: 67000000.0000
-  2011-12: 67000000.0000
-  // ... 154 further points, one per period, omitted for length
-  2024-11: 532129373.1000
-  2024-12: 532129373.1000
-}
-
-// Pierce condo closings — every one of 102 recorded sales, by month.
-// 34 months, not the smooth absorption an assumption would give.
-curve pierce_sellout {
+// Pierce condo closings — every one of 102 recorded sales, by month. FACT,
+// from the assessment roll: 34 months, not the smooth absorption an
+// assumption would give. Every month in the range is declared, so a quiet
+// month reads zero. A step curve holds its end values outside its points, so
+// the curve states where it stops and every read below is gated to the
+// closings&#x27; own months.
+curve pierce_sellout to 2024-12 {
   2021-08: 2056400.00
   2021-09: 8109000.00
   2021-10: 6243000.00
   2021-11: 16820000.00
-  // ... 29 further points, one per period, omitted for length
+  2021-12: 22430000.00
+  2022-01: 23646000.00
+  2022-02: 11617000.00
+  2022-03: 4729000.00
+  2022-04: 7200000.00
+  2022-05: 2750000.00
+  2022-06: 2407000.00
+  2022-07: 5735000.00
+  2022-08: 3673000.00
+  2022-09: 10380320.00
+  2022-10: 1500000.00
+  2022-11: 1813000.00
+  2022-12: 6830500.00
+  2023-01: 2496000.00
+  2023-02: 0.00
+  2023-03: 2845000.00
+  2023-04: 12874000.00
+  2023-05: 2357000.00
+  2023-06: 4589000.00
+  2023-07: 0.00
+  2023-08: 2320000.00
+  2023-09: 6060000.00
+  2023-10: 3250000.00
+  2023-11: 2160000.00
+  2023-12: 3548000.00
+  2024-01: 0.00
+  2024-02: 1823000.00
+  2024-03: 0.00
+  2024-04: 0.00
   2024-05: 3950000.00
   2024-06: 3975000.00
 }
@@ -630,132 +739,172 @@ entity party penzance : CRE.Party.Sponsor  { name = &quot;Penzance&quot; }
 entity party baupost  : CRE.Party.Investor { name = &quot;The Baupost Group&quot; }
 entity party mack     : CRE.Party.Lender   { name = &quot;Mack Real Estate Credit Strategies&quot; }
 
+// -------------------------------------------------------------- the program
+// The development schedule, stated once. A field may read another field only
+// at the prior close, so each of these is held ONE PERIOD AHEAD: the value at
+// month t is the schedule for month t + 1, and the facility and the cost
+// streams read it as `prev.asset.program.&lt;field&gt;`, which is this month&#x27;s
+// figure.
+entity asset program : Asset.Financial {
+  // The draw curve, as each month&#x27;s share of the weights.
+  draw_share_ahead init 0.0
+                   next if(time.t + 1.0 &gt;= inputs.construction_start
+                           and time.t + 1.0 &lt;= inputs.construction_start + inputs.construction_months - 1.0,
+                           (time.t + 1.0 - (inputs.construction_start - 1.0))
+                             * ((inputs.construction_start + inputs.construction_months) - (time.t + 1.0))
+                             / inputs.draw_weight_sum,
+                           0.0)
+
+  // The month&#x27;s whole cost: the budget on the curve, and each obligation on
+  // its date. The land is month 0 and funds itself below.
+  cost_ahead init 0.0
+             next inputs.construction_cost
+                    * if(time.t + 1.0 &gt;= inputs.construction_start
+                         and time.t + 1.0 &lt;= inputs.construction_start + inputs.construction_months - 1.0,
+                         (time.t + 1.0 - (inputs.construction_start - 1.0))
+                           * ((inputs.construction_start + inputs.construction_months) - (time.t + 1.0))
+                           / inputs.draw_weight_sum,
+                         0.0)
+                  + if(time.t + 1.0 == inputs.construction_start, inputs.obligations_at_permit, 0.0)
+                  + if(time.t + 1.0 == inputs.delivery_evo, inputs.obligations_at_co, 0.0)
+
+  // Cash that retires the facility: each condominium closing net of its
+  // selling cost, and the two tower sales net of the cost of sale.
+  proceeds_ahead init 0.0
+                 next if(time.t + 1.0 &gt;= inputs.condo_first_close and time.t + 1.0 &lt;= inputs.condo_last_close,
+                         curve_value(&quot;pierce_sellout&quot;, edate(time.date, 1)) * (1.0 - inputs.condo_selling_cost),
+                         0.0)
+                    + if(time.t + 1.0 == inputs.sale_month,
+                         (inputs.aubrey_price + inputs.evo_price) * (1.0 - inputs.cost_of_sale), 0.0)
+}
+
 // ------------------------------------------------------------------ capital
 stream cre.land on entity container.project outflow currency USD {
   schedule on 2011-09
   category investing.capital.capex
-  amount = 67000000.00
+  amount = inputs.land_price
 }
-
 
 stream cre.hard_buildings on entity container.project outflow currency USD {
   schedule every month start from 2018-04 to 2021-06
   category investing.capital.construction
-  amount = 301693050.00 * (time.t - 78.0) * (118.0 - time.t) / 10660.0
+  amount = inputs.hard_buildings * prev.asset.program.draw_share_ahead
 }
 
 stream cre.hard_garage on entity container.project outflow currency USD {
   schedule every month start from 2018-04 to 2021-06
   category investing.capital.construction
-  amount = 33184000.00 * (time.t - 78.0) * (118.0 - time.t) / 10660.0
+  amount = inputs.hard_garage * prev.asset.program.draw_share_ahead
 }
 
 stream cre.fire_station on entity container.project outflow currency USD {
   schedule every month start from 2018-04 to 2021-06
   category investing.capital.construction
-  amount = 7454800.00 * (time.t - 78.0) * (118.0 - time.t) / 10660.0
+  amount = inputs.fire_station * prev.asset.program.draw_share_ahead
 }
 
 stream cre.park_and_street on entity container.project outflow currency USD {
   schedule every month start from 2018-04 to 2021-06
   category investing.capital.construction
-  amount = 14000000.00 * (time.t - 78.0) * (118.0 - time.t) / 10660.0
+  amount = inputs.park_and_street * prev.asset.program.draw_share_ahead
 }
 
 stream cre.soft_costs on entity container.project outflow currency USD {
   schedule every month start from 2018-04 to 2021-06
   category investing.capital.construction
-  amount = 60576414.50 * (time.t - 78.0) * (118.0 - time.t) / 10660.0
+  amount = inputs.soft_costs * prev.asset.program.draw_share_ahead
 }
 
 stream cre.contingency on entity container.project outflow currency USD {
   schedule every month start from 2018-04 to 2021-06
   category investing.capital.construction
-  amount = 17816592.50 * (time.t - 78.0) * (118.0 - time.t) / 10660.0
+  amount = inputs.contingency * prev.asset.program.draw_share_ahead
 }
 
 stream cre.developer_fee on entity container.project outflow currency USD {
   schedule every month start from 2018-04 to 2021-06
   category investing.capital.construction
-  amount = 17994713.10 * (time.t - 78.0) * (118.0 - time.t) / 10660.0
+  amount = inputs.developer_fee * prev.asset.program.draw_share_ahead
 }
-
 
 // SP #445 conditions: utility undergrounding and TDM at permit; public art,
 // green building and affordable housing at certificate of occupancy.
 stream cre.obligations_permit on entity container.project outflow currency USD {
   schedule on 2018-04
   category investing.capital.construction
-  amount = 157303.00
+  amount = inputs.obligations_at_permit
 }
 
 stream cre.obligations_co on entity container.project outflow currency USD {
   schedule on 2021-09
   category investing.capital.construction
-  amount = 12252500.00
+  amount = inputs.obligations_at_co
 }
 
-
-// ---- aubrey: delivered 2021-07, sold 2022-05 — still in lease-up
+// ---- aubrey: delivered 2021-07, sold 2022-05 — still in lease-up. Each
+// tower leases up from its own delivery at the stated pace; rent is the
+// derived rent plus other income, net of the vacancy allowance.
 stream cre.aubrey_rent on entity asset.west inflow currency USD {
   schedule every month start from 2021-07 to 2022-05
   category operating.revenue.base_rent
-  amount = min(331.0, max(0.0, (time.t - 117.0) * 25.0)) * 3369.8496
+  amount = min(inputs.aubrey_units, max(0.0, (time.t - (inputs.delivery_aubrey - 1.0)) * inputs.units_per_month))
+         * inputs.aubrey_rent * (1.0 + inputs.other_income_pct) * (1.0 - inputs.vacancy)
 }
 
 stream cre.aubrey_retail on entity asset.west inflow currency USD {
   schedule every month start from 2021-07 to 2022-05
   category operating.revenue.other
-  amount = 35236.8
+  amount = inputs.aubrey_retail_sf * inputs.retail_rent_psf * inputs.retail_occupancy / 12.0
 }
 
 stream cre.aubrey_parking on entity asset.west inflow currency USD {
   schedule every month start from 2021-07 to 2022-05
   category operating.revenue.other
-  amount = 39720
+  amount = inputs.aubrey_units * inputs.parking_ratio * inputs.parking_per_space
 }
 
 stream cre.aubrey_opex on entity asset.west outflow currency USD {
   schedule every month start from 2021-07 to 2022-05
   category operating.expense.opex
-  amount = 207178.4167
+  amount = inputs.aubrey_units * inputs.expenses_per_unit / 12.0
 }
 
 stream cre.aubrey_tax on entity asset.west outflow currency USD {
   schedule every month start from 2021-07 to 2022-05
   category operating.expense.opex
-  amount = 215699.0142
+  amount = inputs.aubrey_assessed * inputs.effective_tax_rate / 12.0
 }
 
 // ---- evo: delivered 2021-09, sold 2022-05 — still in lease-up
 stream cre.evo_rent on entity asset.east inflow currency USD {
   schedule every month start from 2021-09 to 2022-05
   category operating.revenue.base_rent
-  amount = min(455.0, max(0.0, (time.t - 119.0) * 25.0)) * 3131.6064
+  amount = min(inputs.evo_units, max(0.0, (time.t - (inputs.delivery_evo - 1.0)) * inputs.units_per_month))
+         * inputs.evo_rent * (1.0 + inputs.other_income_pct) * (1.0 - inputs.vacancy)
 }
 
 stream cre.evo_retail on entity asset.east inflow currency USD {
   schedule every month start from 2021-09 to 2022-05
   category operating.revenue.other
-  amount = 50007.6
+  amount = inputs.evo_retail_sf * inputs.retail_rent_psf * inputs.retail_occupancy / 12.0
 }
 
 stream cre.evo_parking on entity asset.east inflow currency USD {
   schedule every month start from 2021-09 to 2022-05
   category operating.revenue.other
-  amount = 54600
+  amount = inputs.evo_units * inputs.parking_ratio * inputs.parking_per_space
 }
 
 stream cre.evo_opex on entity asset.east outflow currency USD {
   schedule every month start from 2021-09 to 2022-05
   category operating.expense.opex
-  amount = 284792.0833
+  amount = inputs.evo_units * inputs.expenses_per_unit / 12.0
 }
 
 stream cre.evo_tax on entity asset.east outflow currency USD {
   schedule every month start from 2021-09 to 2022-05
   category operating.expense.opex
-  amount = 273135.4075
+  amount = inputs.evo_assessed * inputs.effective_tax_rate / 12.0
 }
 
 
@@ -765,19 +914,19 @@ stream cre.evo_tax on entity asset.east outflow currency USD {
 stream cre.aubrey_sale on entity asset.west inflow currency USD {
   schedule on 2022-05
   category investing.disposal.reversion
-  amount = 266455000.00
+  amount = inputs.aubrey_price
 }
 
 stream cre.evo_sale on entity asset.east inflow currency USD {
   schedule on 2022-05
   category investing.disposal.reversion
-  amount = 334642240.00
+  amount = inputs.evo_price
 }
 
 stream cre.sale_costs on entity container.project outflow currency USD {
   schedule on 2022-05
   category investing.disposal.selling_costs
-  amount = 601097240.00 * inputs.cost_of_sale
+  amount = (inputs.aubrey_price + inputs.evo_price) * inputs.cost_of_sale
 }
 
 stream cre.pierce_closings on entity asset.east inflow currency USD {
@@ -786,46 +935,100 @@ stream cre.pierce_closings on entity asset.east inflow currency USD {
   amount = curve_value(&quot;pierce_sellout&quot;, time.date) * (1.0 - inputs.condo_selling_cost)
 }
 
-// Cash available to repay the facility: condo closings net of selling costs,
-// plus the two tower sales net of cost of sale. Every period is declared, so
-// a quiet month reads zero.
-curve loan_proceeds {
-  2011-09: 0.0000
-  2011-10: 0.0000
-  2011-11: 0.0000
-  2011-12: 0.0000
-  // ... 154 further points, one per period, omitted for length
-  2024-11: 0.0000
-  2024-12: 0.0000
-}
-
-
 // ------------------------------------------------------------- the facility
 // The $380M construction facility (Mack Real Estate Credit Strategies).
 //
 // Equity funds to its commitment first, the loan draws the residual, interest
-// capitalizes into the balance, and sale and condo proceeds repay it. Four
-// recurrences, each a fact about the facility, each reading only values that
-// are already finished -- `prev` and the cost curves -- which is what keeps
-// the whole thing acyclic by construction.
+// capitalizes into the balance, and sale and condo proceeds repay it. Each
+// field reads only the prior close -- `prev` -- and the program&#x27;s schedule, so
+// every month resolves from the month before it.
+//
+// A field may read neither a stream nor a sibling field in the same period,
+// so the equity funded to date is stated in closed form -- the cost incurred
+// through the month, capped at the commitment; the parabola&#x27;s weights on
+// months 1..m sum to (n + 1) m (m + 1) / 2 - m (m + 1)(2m + 1) / 6 -- and the
+// month&#x27;s draw is spelled out where the repayment and the balance need it.
 entity asset facility : Asset.Financial {
-  equity_funded init min(inputs.equity_commitment, curve_value(&quot;dev_cost_cum&quot;, time.date))
-                next min(inputs.equity_commitment, curve_value(&quot;dev_cost_cum&quot;, time.date))
+  equity_funded init min(inputs.equity_commitment, inputs.land_price)
+                next min(inputs.equity_commitment,
+                         inputs.land_price
+                       + inputs.construction_cost
+                         * ((inputs.construction_months + 1.0)
+                              * clamp(time.t - inputs.construction_start + 1.0, 0.0, inputs.construction_months)
+                              * (clamp(time.t - inputs.construction_start + 1.0, 0.0, inputs.construction_months) + 1.0) / 2.0
+                            - clamp(time.t - inputs.construction_start + 1.0, 0.0, inputs.construction_months)
+                              * (clamp(time.t - inputs.construction_start + 1.0, 0.0, inputs.construction_months) + 1.0)
+                              * (2.0 * clamp(time.t - inputs.construction_start + 1.0, 0.0, inputs.construction_months) + 1.0) / 6.0)
+                         / inputs.draw_weight_sum
+                       + if(time.t &gt;= inputs.construction_start, inputs.obligations_at_permit, 0.0)
+                       + if(time.t &gt;= inputs.delivery_evo, inputs.obligations_at_co, 0.0))
 
   interest init 0.0
            next prev.asset.facility.balance * inputs.loan_rate / 12.0
 
-  draw init max(0.0, curve_value(&quot;dev_cost&quot;, time.date) - inputs.equity_commitment)
-       next min(max(0.0, curve_value(&quot;dev_cost&quot;, time.date) - (min(inputs.equity_commitment, curve_value(&quot;dev_cost_cum&quot;, time.date)) - min(inputs.equity_commitment, curve_value(&quot;dev_cost_cum&quot;, edate(time.date, -1))))), max(0.0, inputs.loan_commitment - prev.asset.facility.balance - prev.asset.facility.balance * inputs.loan_rate / 12.0))
+  // What the equity does not fund, up to the room left under the commitment
+  // after this month&#x27;s accrual.
+  draw init max(0.0, inputs.land_price - inputs.equity_commitment)
+       next min(max(0.0, prev.asset.program.cost_ahead
+                          - (min(inputs.equity_commitment,
+                                 inputs.land_price
+                               + inputs.construction_cost
+                                 * ((inputs.construction_months + 1.0)
+                                      * clamp(time.t - inputs.construction_start + 1.0, 0.0, inputs.construction_months)
+                                      * (clamp(time.t - inputs.construction_start + 1.0, 0.0, inputs.construction_months) + 1.0) / 2.0
+                                    - clamp(time.t - inputs.construction_start + 1.0, 0.0, inputs.construction_months)
+                                      * (clamp(time.t - inputs.construction_start + 1.0, 0.0, inputs.construction_months) + 1.0)
+                                      * (2.0 * clamp(time.t - inputs.construction_start + 1.0, 0.0, inputs.construction_months) + 1.0) / 6.0)
+                                 / inputs.draw_weight_sum
+                               + if(time.t &gt;= inputs.construction_start, inputs.obligations_at_permit, 0.0)
+                               + if(time.t &gt;= inputs.delivery_evo, inputs.obligations_at_co, 0.0))
+                             - prev.asset.facility.equity_funded)),
+                max(0.0, inputs.loan_commitment
+                         - prev.asset.facility.balance * (1.0 + inputs.loan_rate / 12.0)))
 
+  // Repaid from the month&#x27;s proceeds, up to what is outstanding after this
+  // month&#x27;s accrual and draw.
   repay init 0.0
-        next min(prev.asset.facility.balance + prev.asset.facility.balance * inputs.loan_rate / 12.0 + min(max(0.0, curve_value(&quot;dev_cost&quot;, time.date) - (min(inputs.equity_commitment, curve_value(&quot;dev_cost_cum&quot;, time.date)) - min(inputs.equity_commitment, curve_value(&quot;dev_cost_cum&quot;, edate(time.date, -1))))), max(0.0, inputs.loan_commitment - prev.asset.facility.balance - prev.asset.facility.balance * inputs.loan_rate / 12.0)), max(0.0, curve_value(&quot;loan_proceeds&quot;, time.date)))
+        next min(prev.asset.facility.balance * (1.0 + inputs.loan_rate / 12.0)
+                   + min(max(0.0, prev.asset.program.cost_ahead
+                          - (min(inputs.equity_commitment,
+                                 inputs.land_price
+                               + inputs.construction_cost
+                                 * ((inputs.construction_months + 1.0)
+                                      * clamp(time.t - inputs.construction_start + 1.0, 0.0, inputs.construction_months)
+                                      * (clamp(time.t - inputs.construction_start + 1.0, 0.0, inputs.construction_months) + 1.0) / 2.0
+                                    - clamp(time.t - inputs.construction_start + 1.0, 0.0, inputs.construction_months)
+                                      * (clamp(time.t - inputs.construction_start + 1.0, 0.0, inputs.construction_months) + 1.0)
+                                      * (2.0 * clamp(time.t - inputs.construction_start + 1.0, 0.0, inputs.construction_months) + 1.0) / 6.0)
+                                 / inputs.draw_weight_sum
+                               + if(time.t &gt;= inputs.construction_start, inputs.obligations_at_permit, 0.0)
+                               + if(time.t &gt;= inputs.delivery_evo, inputs.obligations_at_co, 0.0))
+                             - prev.asset.facility.equity_funded)),
+                max(0.0, inputs.loan_commitment
+                         - prev.asset.facility.balance * (1.0 + inputs.loan_rate / 12.0))),
+                 prev.asset.program.proceeds_ahead)
 
-  balance init max(0.0, curve_value(&quot;dev_cost&quot;, time.date) - inputs.equity_commitment)
-          next max(0.0, prev.asset.facility.balance + min(max(0.0, curve_value(&quot;dev_cost&quot;, time.date) - (min(inputs.equity_commitment, curve_value(&quot;dev_cost_cum&quot;, time.date)) - min(inputs.equity_commitment, curve_value(&quot;dev_cost_cum&quot;, edate(time.date, -1))))), max(0.0, inputs.loan_commitment - prev.asset.facility.balance - prev.asset.facility.balance * inputs.loan_rate / 12.0)) + prev.asset.facility.balance * inputs.loan_rate / 12.0 - min(prev.asset.facility.balance + prev.asset.facility.balance * inputs.loan_rate / 12.0 + min(max(0.0, curve_value(&quot;dev_cost&quot;, time.date) - (min(inputs.equity_commitment, curve_value(&quot;dev_cost_cum&quot;, time.date)) - min(inputs.equity_commitment, curve_value(&quot;dev_cost_cum&quot;, edate(time.date, -1))))), max(0.0, inputs.loan_commitment - prev.asset.facility.balance - prev.asset.facility.balance * inputs.loan_rate / 12.0)), max(0.0, curve_value(&quot;loan_proceeds&quot;, time.date))))
+  balance init max(0.0, inputs.land_price - inputs.equity_commitment)
+          next max(0.0, prev.asset.facility.balance * (1.0 + inputs.loan_rate / 12.0)
+                        + min(max(0.0, prev.asset.program.cost_ahead
+                          - (min(inputs.equity_commitment,
+                                 inputs.land_price
+                               + inputs.construction_cost
+                                 * ((inputs.construction_months + 1.0)
+                                      * clamp(time.t - inputs.construction_start + 1.0, 0.0, inputs.construction_months)
+                                      * (clamp(time.t - inputs.construction_start + 1.0, 0.0, inputs.construction_months) + 1.0) / 2.0
+                                    - clamp(time.t - inputs.construction_start + 1.0, 0.0, inputs.construction_months)
+                                      * (clamp(time.t - inputs.construction_start + 1.0, 0.0, inputs.construction_months) + 1.0)
+                                      * (2.0 * clamp(time.t - inputs.construction_start + 1.0, 0.0, inputs.construction_months) + 1.0) / 6.0)
+                                 / inputs.draw_weight_sum
+                               + if(time.t &gt;= inputs.construction_start, inputs.obligations_at_permit, 0.0)
+                               + if(time.t &gt;= inputs.delivery_evo, inputs.obligations_at_co, 0.0))
+                             - prev.asset.facility.equity_funded)),
+                max(0.0, inputs.loan_commitment
+                         - prev.asset.facility.balance * (1.0 + inputs.loan_rate / 12.0)))
+                        - prev.asset.program.proceeds_ahead)
 }
 
-// Interest is capitalized: it is repaid inside the principal repayment. That is the convention the reference workbook uses.
 stream cre.loan_draw on entity container.project inflow currency USD {
   schedule every month start from 2011-09 to 2024-12
   category financing.debt.proceeds
@@ -883,8 +1086,9 @@ entity asset jv : Asset.Financial {
              + (prev.asset.facility.equity_funded - prev.asset.jv.funded_prev)
 
   unreturned init 0.0
-             next prev.asset.jv.unreturned * (1.0 + if(time.t &gt;= 79, inputs.pref_rate / 12.0, 0.0))
-                + (prev.asset.facility.equity_funded - prev.asset.jv.funded_prev)
+             next prev.asset.jv.unreturned
+                    * (1.0 + if(time.t &gt;= inputs.construction_start, inputs.pref_rate / 12.0, 0.0))
+                  + (prev.asset.facility.equity_funded - prev.asset.jv.funded_prev)
 }
 
 // ------------------------------------------------------- the venture&#x27;s cash
@@ -964,7 +1168,7 @@ waterfall jv.distribution on entity container.project {
 
   pay preferred_inv to party.baupost  = (asset.jv.unreturned - asset.jv.capital) * (1.0 - inputs.sponsor_share)
   pay preferred_sp  to party.penzance = (asset.jv.unreturned - asset.jv.capital) * inputs.sponsor_share
-  pay promote       to party.penzance = remaining * 0.20
+  pay promote       to party.penzance = remaining * inputs.promote_share
   pay residual_inv  to party.baupost  = remaining * (1.0 - inputs.sponsor_share)
   pay residual_sp   to party.penzance = remaining
 }
@@ -986,7 +1190,7 @@ metric penzance_moic = moic(party.penzance)</code></pre></div>
   <footer>
     Prepared with CFDL, a domain language for cash-flow models. This page is shared
     privately and is access-controlled. Figures reflect the benchmark case as committed on
-    25 August 2026.
+    14 September 2026.
   </footer>
 
 </div>

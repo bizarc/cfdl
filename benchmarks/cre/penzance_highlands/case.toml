@@ -3,9 +3,11 @@
 # shared podium, carrying both for-sale and rental product on a single basis,
 # a $380M construction facility, and a phased exit.
 #
-# Reference: an independent Excel implementation (reference_gen.py generates
+# Reference: an independent Excel implementation (reference_gen.py writes
 # this model from the same frozen input set the workbook reads, so the two tie
-# by construction rather than by transcription).
+# by construction rather than by transcription; the writer fills the
+# assumptions, the dates and the recorded closings and calculates nothing —
+# every derived figure is the model's own, NOTES.md 2026-09-14).
 # Status: pending practitioner review.
 #
 # The JV split allocates from `account deal_cash` and both partners hold
