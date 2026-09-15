@@ -1834,3 +1834,88 @@ modeller interrogates".
 
 Related: `docs/26` (explain matches by name), §7.117, `crates/cfdl-mcp`.
 
+### 7.126 The ontology can generate an entry form and does not expose enough to
+
+Belongs with §5, language and engine (the tooling half). Found 14 September
+2026, asking what stands between the ontology and a form a modeller could use
+instead of a text editor.
+
+A form over a typed ontology should be GENERATED, not configured. Salesforce
+and its kind are configured per object — someone builds a layout, picks fields,
+writes validation — and the configuration is a second artefact that drifts from
+the schema. `lookup` already returns most of what a generator needs per contract
+type: `fields` with `field_type`, `required`, `unit`, `description` and
+`one_of`; `roles` with the master's word beside the pack's and an `unbound`
+flag; the `refines`/`master` chain; `lines` and `side`; and a `template`.
+
+Four affordances fall out of that with no configuration at all. `one_of` is a
+radio group — `rent_year` against `rent_psf` is a mutually exclusive choice the
+ONTOLOGY states. `unit` is the suffix and the parse rule. `required` is the
+asterisk, and the loader already refuses a template that omits one. And the
+master chain gives a label vocabulary, so a form can say "landlord" to a CRE
+modeller and store `lessor`.
+
+**Validation is where this beats a configured form, and it is already built.**
+Typed assumptions, `within [lo, hi]`, the `fraction` domain (`E5041`), pack
+bounds with warn-versus-refuse severity, and `E1372` for a missing required
+term are the SAME checks the compiler runs. A generated form therefore cannot
+accept what the model would reject, and cannot drift, because there is one
+implementation rather than two.
+
+**What blocks it is §7.117 exactly**, and the list is short: entity types (so
+"what may this contract be written on" is a dropdown rather than a guess),
+what a lowering publishes (so a step's amount can offer the series that exist),
+the categories a rule emits (so a statement row builder has a list), and the
+accounts on a subject (so "pay to" is a picker). Without those a form renders a
+contract's terms and nothing around them, which is why a prototype built on
+today's surface feels thin: it is working from half the ontology.
+
+**Order:** §7.117 first — alone it probably reaches a better-than-configured
+single-contract form. Then §7.113 (template extension) so a form starts from a
+pack template rather than empty, then §7.118 (named shapes) so a whole deal can
+be scaffolded rather than one contract at a time.
+
+**The honest limit.** A form is good for the structured 80% of a deal and bad
+for the bespoke 20%. An expression editor on any term field has to be
+first-class, or a modeller meets the wall and leaves. Terms already accept
+per-period expressions, so the language side of that escape hatch exists.
+
+Related: §7.117, §7.113, §7.118, `crates/cfdl-mcp/src/tools/lookup.rs`.
+
+### 7.127 A scenario diff can name the source line that moved the number, and nothing renders it
+
+Belongs with §5, language and engine (the tooling half). Found 14 September
+2026, beside §7.126.
+
+Scenarios publish as their own block carrying the same metric map and series
+shape as the deterministic run, so three panes are computable from ONE results
+document with no engine change: which `inputs.*` differ, the per-period series
+delta, and the metric delta. That much is table stakes and any BI tool does it.
+
+**Three things follow from the model being text plus a journal, and no tool on
+a binary format can do them.**
+
+CAUSE, NOT JUST MAGNITUDE. A workbook diff says "H47 changed". We can put the
+results delta beside `git diff` over the model and say *NPV moved 1.2m;
+`model.cfdl:214` changed `renewal_probability` 0.65 to 0.75*. The join is
+available today and unrendered: every IR node already carries `provenance` with
+`source_file` and `source_span`.
+
+BEHAVIOUR, NOT ARITHMETIC. The journal records each step's payment, each clamp,
+each transition, so a diff can say WHICH STEP behaved differently — "the OC test
+passed in month 14 under B, so 600 was not diverted". That is a causal
+explanation of a delta rather than a subtraction, and it composes with §7.125:
+explain-in-place on a delta cell rather than a value cell.
+
+SHAPE, NOT ONLY VALUES. Two scenarios may differ structurally — a contract in
+one and absent in the other. `results_version` 0.13 publishes `graph.contracts`,
+so the deal graph itself is diffable: "B has no mezzanine tranche". A
+spreadsheet has no deal graph to diff.
+
+**Sequencing.** The first two panes are cheap and unremarkable. The source
+attribution is the differentiator, needs nothing new, and should therefore be
+built first rather than last — which is the opposite of how a diff view is
+usually approached.
+
+Related: §7.125, §7.126, `docs/06` (`graph.contracts`, scenarios).
+
