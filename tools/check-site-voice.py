@@ -336,6 +336,13 @@ CE_PATTERNS = ce_patterns()
 #   X3  a hyphen is U+002D
 CE_IDS = ("W1", "W2", "W2", "W2", "W2", "W3", "X1", "X2", "X3", "V6")
 
+# W3 reads the line as written. Its pattern is anchored to the markup that makes
+# `Hit` an instruction aimed at a control — bold, or a backticked control name —
+# and the code-stripped copy every other CFDL-CE rule reads has already removed
+# the backticks, so that half of the pattern could never match. The selftest
+# found it. Rerun over the corpus: no finding changes.
+CE_READS_RAW = frozenset({"W3"})
+
 
 def build_registry() -> tuple[Rule, ...]:
     """Every mechanical rule, in the order the gate has always applied them.
@@ -359,7 +366,13 @@ def build_registry() -> tuple[Rule, ...]:
         for rid, (pattern, why) in zip(NARRATIVE_IDS, PATTERNS)
     ]
     rules += [
-        Rule(id=rid, layer=UNIVERSAL, why=why, pattern=pattern, on="prose")
+        Rule(
+            id=rid,
+            layer=UNIVERSAL,
+            why=why,
+            pattern=pattern,
+            on="raw" if rid in CE_READS_RAW else "prose",
+        )
         for rid, (pattern, why) in zip(CE_IDS, CE_PATTERNS)
     ]
     return tuple(rules)
@@ -448,18 +461,40 @@ def _lines_of(path: pathlib.Path) -> list[str]:
 
 def check_text_file(path: pathlib.Path, *, exempt: frozenset[str] = frozenset()) -> list[Finding]:
     """Check one published source against every rule its group does not exempt."""
+    return check_lines(
+        _lines_of(path),
+        exempt=exempt,
+        suffix=path.suffix,
+        # A case.toml's COMMENTS are maintainer's notes and are no longer
+        # published; only its declared `summary` reaches a page.
+        only_summary=path.name == "case.toml",
+        label=path.relative_to(REPO_ROOT).as_posix(),
+    )
+
+
+def check_lines(
+    lines,
+    *,
+    exempt: frozenset[str] = frozenset(),
+    suffix: str = ".md",
+    only_summary: bool = False,
+    label: str = "<case>",
+) -> list[Finding]:
+    """The checking, with the reading taken out.
+
+    Taking lines rather than a path is what makes a rule testable: the selftest
+    exercises `.mdx` and `.html` handling without a file, and nothing in the gate
+    has to be mocked.
+    """
     findings: list[Finding] = []
-    rel = path.relative_to(REPO_ROOT).as_posix()
+    rel = label
     applicable = rules_for(exempt)
-    # A case.toml's COMMENTS are maintainer's notes and are no longer published;
-    # only its declared `summary` reaches a page.
-    only_summary = path.name == "case.toml"
     # A fenced block is a command the reader runs, not prose written at them.
     # `git clone …` in an install page is the instruction; flagging it as
     # narrative would mean deleting the only documented way to install.
     in_fence = False
-    for n, line in enumerate(_lines_of(path), 1):
-        if path.suffix == ".md" and line.lstrip().startswith("```"):
+    for n, line in enumerate(lines, 1):
+        if suffix == ".md" and line.lstrip().startswith("```"):
             in_fence = not in_fence
             continue
         if in_fence:
@@ -545,6 +580,176 @@ def check_schema(path: pathlib.Path, *, exempt: frozenset[str] = frozenset()) ->
     return findings
 
 
+# --- Selftest ---------------------------------------------------------------
+#
+# The gate parses docs/22, loads word lists from the register, walks JSON
+# documents and handles two escape hatches, and until now nothing exercised any
+# of it. The only evidence of testing was a sentence in docs/21 recording a
+# manual pass that cannot be re-run.
+#
+# Cases live here rather than under a fixture directory because a positive case
+# is literally a string the gate bans: a fixture file would have to be excluded
+# from the gate's own reading, and a reader debugging a failure wants the case
+# beside the rule.
+
+
+@dataclass(frozen=True)
+class Case:
+    """One line, and the rule it must or must not trip."""
+
+    rule: str  # the id expected to fire; "" means nothing may fire
+    text: str
+    suffix: str = ".md"
+    only_summary: bool = False
+    exempt: frozenset[str] = frozenset()
+    note: str = ""
+
+
+SELFTEST: tuple[Case, ...] = (
+    # --- W1, the retired spellings -----------------------------------------
+    Case("W1", "The premium is amortised over the term."),
+    Case("", "The premium is amortized over the term."),
+    Case("", "The `amortising` flag is a pack identifier.", note="code span, not prose"),
+    # --- W2, one concept one term ------------------------------------------
+    Case("W2", "Edit the run config before the run."),
+    Case("W2", "Check the output document for the totals."),
+    Case("", "Edit the run configuration before the run."),
+    Case("", "Read the results document.", note="the approved form, not its prefix"),
+    # --- W3, the approved verb ---------------------------------------------
+    Case("W3", "Hit **Run** to evaluate the model."),
+    Case("W3", "Hit `Run` to evaluate the model."),
+    Case("", "Collections hit 60,000 in the third year.", note="not aimed at a control"),
+    # --- V6, contractions against possessives ------------------------------
+    Case("V6", "It's evaluated once per period."),
+    Case("V6", "The run doesn't converge."),
+    Case("V6", "They're declared in the pack."),
+    Case("", "The model's logic is declarative.", note="possessive, not a contraction"),
+    Case("", "The quarter's results are published.", note="possessive"),
+    # --- X1 to X3, the number formats --------------------------------------
+    Case("X1", "The exit is struck at 8.0× EBITDA."),
+    Case("", "The schedule holds 6,000 × 12 units.", note="spaced arithmetic"),
+    Case("", "The grid is 3×3.", note="dimensions, not a multiple"),
+    Case("X2", "The purchase price is $33.6mm."),
+    Case("", "The purchase price is $33.6m."),
+    Case("X3", "A non‑breaking hyphen is invisible in review."),
+    Case("", "A plain-hyphen compound is correct."),
+    # --- N1 to N6, the narrative rules -------------------------------------
+    Case("N1", "See docs/13_feature_backlog.md for the rest."),
+    Case("", "See docs/13_feature_backlog.md for the rest.", exempt=frozenset({"N1"}),
+         note="the specification carve-out"),
+    Case("N2", "The remaining items are on the backlog."),
+    Case("N2", "TODO: finish this section."),
+    Case("N3", "We chose the second form for its symmetry."),
+    Case("N3", "This page previously gave two reasons."),
+    Case("N4", "Run it from a checkout of the repository."),
+    Case("N4", "See `crates/cfdl-engine/src/lib.rs` for the loop."),
+    Case("N6", "This is an honest account of the arithmetic."),
+    Case("W6", "A blazingly fast engine."),
+    Case("", "The engine evaluates 40,000 periods in a second.", note="a figure, not a claim"),
+    # --- Fenced blocks ------------------------------------------------------
+    Case("", "```bash\ngit clone https://github.com/bizarc/cfdl\n```",
+         note="a command the reader runs is not prose written at them"),
+    Case("N4", "Clone it from https://github.com/bizarc/cfdl.",
+         note="the same string outside a fence"),
+    # --- The escape hatch ---------------------------------------------------
+    Case("", "See `crates/cfdl-cli` for the flag.  <!-- site-allow: explained here -->"),
+    Case("WAIVER", "x  <!-- ste-allow: Z9 no such rule -->",
+         note="an id docs/22 does not declare waives nothing forever"),
+    Case("", "x  <!-- ste-allow: W1 the register is quoted verbatim -->"),
+    # --- A case.toml publishes only its summary -----------------------------
+    Case("", "# TODO a maintainer's note", suffix=".toml", only_summary=True),
+    Case("N2", 'summary = "TODO write this"', suffix=".toml", only_summary=True),
+)
+
+# Rules docs/22 declares and this gate deliberately does not enforce. They are
+# judgment calls, and a gate that flags judgment gets disabled. Listing them
+# means adding a rule to docs/22 forces a decision here rather than being
+# silently unimplemented.
+NOT_MECHANICAL = frozenset(
+    {
+        "S1", "S2", "S3", "S4", "S5",   # length and list form
+        "V1", "V2", "V3", "V4", "V5",   # voice, tense, imperative form
+        "W4", "W5", "W7",               # registration, noun clusters, first use
+        "C1", "C2", "C3", "C4", "C5",   # clarity
+        "P1", "P2", "P3", "P4",         # procedures
+    }
+)
+
+
+def selftest() -> int:
+    """Prove each rule fires where it must, stays silent where it must not."""
+    failed = 0
+
+    for case in SELFTEST:
+        got = check_lines(
+            case.text.splitlines(),
+            exempt=case.exempt,
+            suffix=case.suffix,
+            only_summary=case.only_summary,
+        )
+        ids = [f.rule_id for f in got]
+        want = [case.rule] if case.rule else []
+        if ids != want:
+            failed += 1
+            trailer = f"  ({case.note})" if case.note else ""
+            print(
+                f"FAIL {case.text.splitlines()[0][:70]!r}{trailer}\n"
+                f"     want {want or 'no finding'}, got {ids or 'no finding'}",
+                file=sys.stderr,
+            )
+
+    # Structural assertions. The cases prove the rules fire; these prove the
+    # registry is coherent, which is what actually drifts.
+    declared = ce_rule_ids()
+    implemented = {rule.id for rule in REGISTRY}
+
+    unimplemented = declared - implemented - NOT_MECHANICAL
+    if unimplemented:
+        failed += 1
+        print(
+            f"FAIL docs/22 declares {sorted(unimplemented)}, which this gate neither "
+            f"enforces nor lists in NOT_MECHANICAL",
+            file=sys.stderr,
+        )
+
+    both = implemented & NOT_MECHANICAL
+    if both:
+        failed += 1
+        print(f"FAIL {sorted(both)} is both enforced and listed as judgment", file=sys.stderr)
+
+    for rule in REGISTRY:
+        if rule.layer == UNIVERSAL and rule.types != ALL_TYPES:
+            failed += 1
+            print(f"FAIL {rule.id} is universal but does not bind every type", file=sys.stderr)
+
+    covered = {case.rule for case in SELFTEST if case.rule}
+    uncovered = implemented - covered
+    if uncovered:
+        failed += 1
+        print(f"FAIL no positive case for {sorted(uncovered)}", file=sys.stderr)
+    if not any(case.rule == "" for case in SELFTEST):
+        failed += 1
+        print("FAIL no negative case at all", file=sys.stderr)
+
+    # Every retired spelling must be reachable by W1, or the register holds a
+    # word the gate silently ignores.
+    register = tomllib.loads((REPO_ROOT / "docs" / "terminology.toml").read_text(encoding="utf-8"))
+    for retired in register["spelling"]["map"]:
+        if not check_lines([f"The {retired} form is retired."]):
+            failed += 1
+            print(f"FAIL [spelling.map] holds {retired!r}, which no rule catches", file=sys.stderr)
+
+    if failed:
+        print(f"check-site-voice: {failed} selftest case(s) FAILED", file=sys.stderr)
+        return 1
+    print(
+        f"check-site-voice: selftest OK ({len(SELFTEST)} cases, "
+        f"{len(implemented)} rules, {len(REGISTRY)} checks)",
+        file=sys.stderr,
+    )
+    return 0
+
+
 def collect() -> tuple[list[Finding], int]:
     """Every finding across every published source, and how many were read."""
     findings: list[Finding] = []
@@ -593,6 +798,8 @@ def report(findings: list[Finding], checked: int) -> int:
 
 
 def main() -> int:
+    if "--selftest" in sys.argv[1:]:
+        return selftest()
     if "--report" in sys.argv[1:]:
         return report(*collect())
 

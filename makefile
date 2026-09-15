@@ -3,7 +3,7 @@
 
 SHELL := /bin/bash
 
-.PHONY: notebook-ids pack-series pack-templates keyword-register grammar-recogniser grammar-generation diagnostic-parity ci-gates invariants glossary glossary-check machine-docs machine-docs-check agent-eval-selftest agent-eval-replay shipped-examples benchmark-cases help fmt fmt-check lint test build clean gold gold-update ci verify site-voice verify-python verify-site verify-site-nofresh verify-site-fresh verify-learn-nofresh doc-examples training-examples py-develop py-test py-wheel notebooks-render notebooks-check wasm cadence-parity ir-schema results-schema run-schema pack-validations rule-fragments py-stamp py-check
+.PHONY: notebook-ids pack-series pack-templates keyword-register grammar-recogniser grammar-generation diagnostic-parity ci-gates invariants glossary glossary-check machine-docs machine-docs-check agent-eval-selftest agent-eval-replay shipped-examples benchmark-cases help fmt fmt-check lint test build clean gold gold-update ci verify site-voice site-voice-selftest verify-python verify-site verify-site-nofresh verify-site-fresh verify-learn-nofresh doc-examples training-examples py-develop py-test py-wheel notebooks-render notebooks-check wasm cadence-parity ir-schema results-schema run-schema pack-validations rule-fragments py-stamp py-check
 
 help:
 	@echo "Targets:"
@@ -96,7 +96,7 @@ bench:
 # was in this file and not in the workflow.
 ci-gates: analytic invariants cadence-parity ir-schema results-schema run-schema \
           notebook-ids \
-          pack-validations pack-series pack-templates keyword-register grammar-recogniser grammar-generation site-voice \
+          pack-validations pack-series pack-templates keyword-register grammar-recogniser grammar-generation site-voice site-voice-selftest \
           diagnostic-parity \
           glossary-check machine-docs-check agent-eval-selftest \
           rule-fragments \
@@ -206,6 +206,13 @@ agent-eval-replay:
 
 site-voice:
 	$(PYGATE) tools/check-site-voice.py
+
+# The gate's own rules, exercised against cases that live beside them. A prose
+# gate whose patterns nothing tests reports OK just as loudly when a pattern has
+# stopped matching — one of W3's two halves had, unreachably, until this ran.
+# Its own step so a fixture failure reads differently from a corpus failure.
+site-voice-selftest:
+	$(PYGATE) tools/check-site-voice.py --selftest
 
 # A pack must lower the same deal to the same annual economics on every
 # calendar. The golden runner compares a fixture to its own blessed output and
