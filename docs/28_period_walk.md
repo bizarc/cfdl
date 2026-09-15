@@ -110,12 +110,12 @@ provides. With this rule the dependency graph over (node, period) cells is
 acyclic by construction, and the engine keeps its founding commitment: a
 genuine cycle is refused with the path named, never iterated.
 
-Second, **the causal plane never reads forward.** The two shipped constructs
-that do — the expense stop reading a future base year, and the forward-income
-exit reading NOI beyond the sale — migrate under §7. Streams keep same-period
-reads of each other where the intra-period dependency order permits, which is
-today's wave discipline applied to one column of cells instead of the whole
-grid.
+Second, **the causal plane never reads forward.** A projection into the
+future is a valuation (§7). A `time.t + k` bound is refused at compile; a
+literal bound is refused at run if the read reaches ahead of what the walk
+has settled. Streams keep same-period reads of each other where the
+intra-period dependency order permits, which is today's wave discipline
+applied to one column of cells instead of the whole grid.
 
 ## 5. Waterfalls: schedule sovereignty
 
@@ -396,30 +396,70 @@ own window, which is what a second delinquency's cure period means — and a
 self-edge is an entry, so a renewal that restarts an 18-month window is a
 `leased -> leased` edge doing exactly its job.
 
-## 7. The valuation plane, and the priced exception
+## 7. The valuation plane, and the projection
 
-Forward reads live in the valuation plane. The two causal-plane constructs
-that read forward today migrate:
+*Amended 15 September 2026. This section previously admitted one forward read
+into the causal plane — the "priced exception", under which a stream's amount
+could fold periods after its own. It is withdrawn. The reasoning that produced
+it, and what it cost, is recorded in `docs/26`; the work that lands it is
+`docs/13` §7.128.*
 
-- **The forward-income exit.** The sale is a causal event; the receipt is
-  causal cash in `investing.disposal.reversion`; only the **amount** is a valuation —
-  forward NOI against a cap rate. The priced exception: a valuation-plane
-  value may set a causal amount **where the cell graph stays acyclic** — the
-  NOI the reversion reads lies beyond the sale and is unaffected by it. This
-  is how Argus computes a direct-cap reversion inside a projection, and how
-  `one_rosslyn` already behaves. An amount priced this way that does create a
-  cycle — sale proceeds feeding state that feeds the NOI being capitalized —
-  is refused with the path named, like any other cycle.
-- **The expense stop.** A recovery that reads a future base year is a
-  modeling convenience for a true-up that in reality settles later. It either
-  restates as a causal true-up (read the base year after it happens, adjust
-  then), or declares itself in the valuation plane. The MIT Rentleg benchmark
-  decides which, as the shipped case that exercises it.
+Forward reads live in the valuation plane, and only there. The causal plane
+never reads forward, with no exception. A stream is one cash flow item: its
+amount in the period it pays is a fact of the agreement on that date, computed
+from settled cash and state at or before that period. A stream has no window.
+
+A projection of a series into the future is a valuation. The timeline's
+`project <n>` clause exists for it: the tail is evaluated so the valuation
+plane may fold the periods beyond the hold, and the tail is excluded from cash
+results, totals and NPV. NOI is a subtotal — the per-period sum of the streams
+classified into it — and a valuation folds the published subtotal rather than
+re-listing the streams that compose it.
+
+Two things that were one are two:
+
+- **The valuation of an asset.** Income projected past a stated date, over a
+  cap rate, less the costs of realizing it. A figure at a date, not cash. It
+  sets no causal amount and needs no sale. The date is the modeler's: the
+  horizon, or any date named. The window after it is the modeler's too, one
+  year by default. The projection must run through the date plus the window;
+  when it does not, the valuation is refused naming the periods missing, never
+  folded short. A model may value the asset at several dates. Each valuation
+  publishes its components separately — forward income, cap rate, gross value,
+  each cost of sale, net value — so any may be asserted and a moved term shows
+  in the figure it moved.
+- **A sale.** A reversion stream paying a price on the sale date. The price is
+  a term or an input, stated by the case. It may equal the asset's valuation
+  at that date, and a case may assert that it does; the stream does not
+  compute it.
+
+**Window bounds, and what refuses them.** A bound of the form `time.t + k` is
+forward by construction and is refused at compile in a stream's amount, as in
+a guard. A literal period bound is neither forward nor backward until the run
+reaches it: it compiles, and the walk refuses the read at run if it reaches
+past the last settled period, naming the stream and the period. The walk never
+clamps a forward read to what exists.
+
+The two shipped constructs §4 once named as reading forward resolve as
+follows. The forward-income exit lowers no stream: it is the valuation above,
+and a sold case carries a reversion whose price is a term. The expense stop
+reads its base year by literal period — legal where the base year has happened
+when the read occurs, refused where it has not. A stop against a base year
+still ahead is what a lease settles by estimate and true-up, and the model
+writes that: the estimated stop until the year completes, the actual captured
+into a field by the occurrence that closes the year, and recoveries reading
+the field thereafter.
+
+**Landing with the engine change** (`docs/13` §7.128): `docs/01` §9's "priced
+amount" definition and example are removed and §9.1 gains "a stream's amount
+MUST NOT fold a window beyond its own period"; `docs/03` §4's note that
+windows may extend into the projection tail is qualified — in a metric or a
+pack valuation, never in a stream; `docs/29` phase 6 is annotated as
+superseded. Until then the compiler admits what this section refuses, and
+`docs/10` says so.
 
 What the valuation plane needs as a construct — declared metrics, subtotals,
-statements as readable objects — is `docs/13` §7.25, §7.43 and §7.55, and is
-M4. M1 only requires that the plane exist as the stated home of forward
-reads, which it already does as the results stage.
+statements as readable objects — shipped as `docs/01` §15.3–§15.5.
 
 ## 8. Provenance: the journal
 
