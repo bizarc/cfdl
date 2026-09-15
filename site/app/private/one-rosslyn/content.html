@@ -295,22 +295,43 @@
 
     <h3>One model, two strategies</h3>
     <p>
-      Both strategies run from one model, on one set of costs and one construction facility. The two columns in the table below differ only in when the venture sells. Every other figure is identical.
+      Both strategies run from one model, on one set of costs and one construction facility. The two columns in the table below differ only in when the venture sells. Every other figure is identical. The facility is repaid from the condominium closings and then from whichever liquidity event the strategy reaches, and the program states that month&rsquo;s proceeds once, one period ahead, for the facility to read.
     </p>
 
-<pre><code><span class="cmt">// the facility is repaid from condominium closings, then from the sale or the refinancing</span>
-  max(0.0, curve_value("condo_proceeds", time.date)
-         + curve_value("exit_a_proceeds", time.date) * (1.0 - inputs.scenario_b)
-         + curve_value("refi_proceeds", time.date) * inputs.scenario_b)</code></pre>
+<pre><code><span class="cmt">// cash that retires the facility: the condominium closings, then the sale or the refinancing</span>
+proceeds_ahead init 0.0
+               next if(time.t + 1.0 &gt;= inputs.delivery_nw
+                       and time.t + 1.0 &lt; inputs.delivery_nw + inputs.condo_months,
+                       inputs.condo_monthly, 0.0)
+                  + if(time.t + 1.0 == inputs.exit_a_month,
+                       inputs.exit_a_value * inputs.market_factor * (1.0 - inputs.scenario_b), 0.0)
+                  + if(time.t + 1.0 == inputs.refinance_month,
+                       inputs.perm_principal * inputs.scenario_b, 0.0)</code></pre>
+
+    <h3>Every figure derives inside the model</h3>
+    <p>
+      Each number the model uses is a stated assumption, labeled as fact, derived or projection. Everything else is arithmetic on those assumptions, written in the model: the construction budget from the Highlands unit costs and the BLS escalation, both commitments from the loan-to-cost, the draw curve, each tower&rsquo;s lease-up, the value each sale is priced on, and the permanent loan with its payment and payoff. Change the growth rate and both exits move, and so does the permanent loan.
+    </p>
+
+<pre><code><span class="cmt">// stabilized net operating income by the County&rsquo;s method, in 2026 dollars</span>
+assume stabilized_noi_2026 = inputs.rental_units
+                           * ((1.0 - inputs.vacancy) * (inputs.rent_per_unit
+                              + inputs.parking_per_space * inputs.parking_spaces_per_unit) * 12.0
+                              - inputs.expenses_per_unit)
+
+<span class="cmt">// the lease-up sale: stabilized income at the exit month&rsquo;s rent level, over the cap</span>
+assume exit_a_value = inputs.stabilized_noi_2026
+                    * pow(1.0 + inputs.growth, (inputs.exit_a_month - inputs.rent_base_month) / 12.0)
+                    / inputs.cap_rate</code></pre>
 
     <h3>The exit is derived, not stated</h3>
     <p>
-      The sale is valued on the twelve months of income that follow it, divided by the guideline loaded cap and adjusted by the market factor. That is the year a purchaser underwrites. Scenario A produces $734,980 per unit. Evo sold at $735,385.
+      Both sales are valued over the guideline loaded cap and adjusted by the market factor. The build-to-core sale reads the twelve months of income that follow it, which is the year a purchaser underwrites. The lease-up sale is priced on the building&rsquo;s stabilized income at that month&rsquo;s rent level, by the County&rsquo;s own method, because a purchaser prices what the asset will produce rather than what it collects mid-lease-up. Scenario A produces $734,980 per unit. Evo sold at $735,385.
     </p>
 
-    <h3>The south tower is 58% leased when scenario A sells</h3>
+    <h3>Each tower leases up on its own streams</h3>
     <p>
-      At the scenario A exit the south tower is roughly 58% leased, so the sale is priced on stabilized income. In-place income would understate it by about $140M. The Highlands towers sold at 83% and 60% occupancy.
+      The NW tower delivers in June 2030 and the S tower in December 2030, and each leases up over eighteen months from its own delivery, net of the vacancy allowance. At the scenario A exit the S tower is eleven months in, 58% leased net of the allowance, so the sale is priced on stabilized income; in-place income would understate it by about $140M. The Highlands towers sold before either had stabilized.
     </p>
   </section>
 
@@ -597,12 +618,12 @@
     <span class="eyebrow">The source</span>
     <h2>The model in full</h2>
     <p>
-      This is the whole model. It runs as written. Six curves declare a value for every
-      period of the 164-month grid, and those runs of figures are abridged here for length.
+      This is the whole model, unabridged. It runs as written. It declares no tables: every
+      schedule on the 164-month grid is stated as an expression of the assumptions above it.
     </p>
 
     <details>
-      <summary>Show the model &mdash; 1376 lines of CFDL</summary>
+      <summary>Show the model &mdash; 705 lines of CFDL</summary>
       <div class="scroll"><pre><code>version 0.1
 model &quot;penzance-one-rosslyn&quot; currency USD
 
@@ -617,6 +638,13 @@ use pack &quot;cre&quot; version &quot;0.1.0&quot;
 // fact, its economics are forecast. The two cases are written to be read
 // together, and the contrast is the point.
 //
+// Every figure the model uses is an `assume` below, labeled with its standing,
+// and everything else is arithmetic on those figures: the construction budget,
+// both commitments, the draw curve, each tower&#x27;s lease-up, the value the sale
+// is priced on, the permanent loan and its payoff. Nothing is computed outside
+// the model and pasted in. `inputs/one_rosslyn.toml` records where each figure
+// came from.
+//
 // Sourcing, strongest first:
 //   program        Arlington County Board Report, SP #419 -- fact
 //   land           deed 20230100013266, 2023-11-14, $52,000,000 -- fact
@@ -630,16 +658,20 @@ use pack &quot;cre&quot; version &quot;0.1.0&quot;
 //   growth         3.0%/yr, below BLS CUSR0000SEHA at 10yr 4.23% and 3yr 3.98%
 //   cost, debt, pace, condominium pricing, JV tiers -- projection
 //
-// THE EXIT IS DERIVED, NOT PICKED. The sale is valued on the twelve months of
-// income that follow it, read from the projection tail, divided by the County&#x27;s
-// guideline loaded cap and adjusted by a stated market factor. The factor is 1.00 -- the guideline basis itself. The two market
-// observations available bracket it: The Highlands sold at +32% to this basis
-// in 2022, and Central Place at -11.6% in 2026. Choosing either as the base
-// would import a market call the record does not support.
+// THE EXIT IS DERIVED, NOT PICKED. Both strategies value the sale over the
+// County&#x27;s guideline loaded cap, adjusted by a stated market factor. The
+// build-to-core sale is priced on the twelve months of income that follow it,
+// read from the projection tail. The lease-up sale is priced on the stabilized
+// income of the building at that month&#x27;s rent level, by the County&#x27;s own
+// method, because a purchaser underwrites what the asset will produce rather
+// than what it collects mid-lease-up. The factor is 1.00 -- the guideline basis
+// itself. The two market observations available bracket it: The Highlands sold
+// at +32% to this basis in 2022, and Central Place at -11.6% in 2026. Choosing
+// either as the base would import a market call the record does not support.
 //
-// At the scenario-A exit the south tower is roughly 58% leased, so that sale is
-// priced on stabilized NOI. In-place income would understate it by about $140M.
-// The Highlands towers sold at 83% and 60% occupancy.
+// At the lease-up sale the south tower is eleven months into an eighteen-month
+// lease-up, so in-place income would understate the price by roughly $140M.
+// The Highlands towers sold before either had stabilized.
 
 time calendar monthly from 2023-11 for 164 project 12
 
@@ -648,96 +680,152 @@ time calendar monthly from 2023-11 for 164 project 12
 assume scenario_b        = 1.0
 
 // The market&#x27;s premium or discount to the County&#x27;s guideline basis. 1.00 IS
-// the guideline basis. The two observations available bracket it: The
-// Highlands sold at +32% to this basis in 2022, Central Place at -11.6% in
-// 2026. It scales the EXIT only. A lender sizes the permanent loan off the
-// appraised basis at stabilization, not off the price a later buyer pays.
+// the guideline basis. It scales the SALE only: a lender sizes the permanent
+// loan off the appraised basis at stabilization, not off the price a later
+// buyer pays.
 assume market_factor     = 1.0
 
-assume rent_per_unit     = 3789.0
-assume expenses_per_unit = 9466.0
-assume vacancy           = 0.05
-assume parking_per_space = 100.0
-assume growth            = 0.03
-assume cap_rate          = 0.0545
-assume loan_rate         = 0.064
-assume loan_commitment   = 333572336.11
-assume equity_commitment = 249668882.6
-assume pref_rate         = 0.08
-assume sponsor_share     = 0.10
+// ------------------------------------------------------------- the program
+// FACT. Board Report SP #419, statistical summary. Three towers over one
+// podium: the NE tower is for sale, the NW and S towers are rental.
+assume gfa_total_sf      = 971890.0
+assume parking_spaces    = 429.0
+assume ne_units          = 73.0
+assume nw_units          = 311.0
+assume s_units           = 461.0
+assume rental_units      = inputs.nw_units + inputs.s_units
 
+// ----------------------------------------------------------------- the land
+// FACT. Recorded 2023-11-14, deed 20230100013266, sales code &quot;4-Multiple RPCs&quot;,
+// so the price is the aggregate across all three parcels. The County&#x27;s own
+// guideline land value for Metro high-rise is $78,000 per rental unit, putting
+// 772 rental units at $60,216,000: the site was bought 13.6% below guideline.
+assume land_price        = 52000000.0
 
-// Development cost by period, land and obligations included.
-// EVERY period is declared, including the zeros: a step curve is
-// flat-forward, so an omitted month holds the last draw forward.
-curve dev_cost to 2038-06 {
-  2023-11: 52000000.0000
-  2023-12: 0.0000
-  2024-01: 0.0000
-  2024-02: 0.0000
-  // ... 158 further points, one per period, omitted for length
-  2037-05: 0.0000
-  2037-06: 0.0000
-}
+// ------------------------------------------------------- public obligations
+// FACT, and the timing is fact too. The affordable-housing tranches are tied
+// to the first partial certificate of occupancy for each tower.
+assume ahif_base_density    = 3672828.0
+assume public_space_rmsa    = 2000000.0
+assume transportation_rmsa  = 3000000.0
+assume ahif_tranche_ne      = 651858.0
+assume ahif_tranche_nw      = 2777096.0
+assume ahif_tranche_s       = 4116531.0
+assume obligations_total    = inputs.ahif_base_density + inputs.public_space_rmsa
+                            + inputs.transportation_rmsa + inputs.ahif_tranche_ne
+                            + inputs.ahif_tranche_nw + inputs.ahif_tranche_s
 
+// ---------------------------------------------------- the construction basis
+// Anchored to the companion case&#x27;s ACTUAL spend and escalated by a published
+// index. Buildings and parking are priced separately: The Highlands built 1.17
+// spaces per unit and this project builds 0.51, and a blended rate would charge
+// it for parking it does not build. The soft, contingency and fee ratios are
+// the companion case&#x27;s own.
+assume highlands_buildings_psf   = 255.0        // FACT: 301,693,050 / 1,183,110 sf
+assume highlands_parking_space   = 32000.0      // FACT: 33,184,000 / 1,037 spaces
+assume escalation_realized       = 1.5340       // FACT: BLS WPUIP2312001, 2019-11 to 2026-07
+assume escalation_forward_rate   = 0.0343       // PROJECTION: 36-month trailing rate on the same index
+assume escalation_years_forward  = 2.17         // 2026-07 to the projected 2028-09 midpoint
+assume soft_ratio                = 0.180893     // FACT: ratio to hard, companion case
+assume contingency_ratio         = 0.053203     // FACT
+assume developer_fee_ratio       = 0.053736     // FACT
+assume escalation      = inputs.escalation_realized
+                       * pow(1.0 + inputs.escalation_forward_rate, inputs.escalation_years_forward)
+assume hard_cost       = (inputs.highlands_buildings_psf * inputs.gfa_total_sf
+                        + inputs.highlands_parking_space * inputs.parking_spaces) * inputs.escalation
+assume construction_cost = inputs.hard_cost
+                         * (1.0 + inputs.soft_ratio + inputs.contingency_ratio + inputs.developer_fee_ratio)
 
-// Rental units in occupancy, net of the 5% vacancy and
-// collection allowance the Guidebook states.
-curve units_occupied to 2038-06 {
-  2023-11: 0.0000
-  2023-12: 0.0000
-  2024-01: 0.0000
-  2024-02: 0.0000
-  // ... 158 further points, one per period, omitted for length
-  2037-05: 733.4000
-  2037-06: 733.4000
-}
+// ------------------------------------------------------------------ timing
+// PROJECTION, as month numbers on the grid: 2023-11 is month 0. The schedules
+// below name the same months as dates.
+assume construction_start   = 37.0    // 2026-12, reported &quot;late 2026&quot;
+assume construction_months  = 42.0
+assume delivery_nw          = 79.0    // 2030-06
+assume delivery_s           = 85.0    // 2030-12
+assume lease_up_months      = 18.0    // each tower, from its delivery
+assume exit_a_month         = 95.0    // 2031-10, ten months after the last delivery
+assume refinance_month      = 103.0   // 2032-06, stabilization
+assume exit_b_month         = 163.0   // 2037-06, five years past stabilization
+assume condo_months         = 24.0    // sellout from the NE delivery, 2030-06
 
+// The draw is a parabola over the construction window: the weight on month t
+// is (t - (start - 1)) * ((start + months) - t), and the weights sum to
+// n(n + 1)(n + 2) / 6 for n months, so each month&#x27;s draw is its weight&#x27;s share
+// of the budget.
+assume draw_weight_sum = inputs.construction_months * (inputs.construction_months + 1.0)
+                       * (inputs.construction_months + 2.0) / 6.0
 
-// Condominium sellout, net of selling costs.
-curve condo_proceeds to 2038-06 {
-  2023-11: 0.0000
-  2023-12: 0.0000
-  2024-01: 0.0000
-  2024-02: 0.0000
-  // ... 158 further points, one per period, omitted for length
-  2037-05: 0.0000
-  2037-06: 0.0000
-}
+// -------------------------------------------------------------- operations
+// FACT: Arlington 2026 Guidebook, MARKET Apartment Guidelines, High-Rise 9+,
+// effective age 2010+, Metro. Rent is DERIVED by the County&#x27;s own method: a
+// comparable&#x27;s assessed value times the guideline loaded cap gives the
+// assessor&#x27;s NOI; add back guideline expenses and gross up for vacancy. Rent,
+// parking and expenses escalate from the Guidebook&#x27;s 2026-07 vintage -- this
+// project delivers in 2030 and freezing 2026 dollars would understate it.
+assume rent_per_unit          = 3789.0    // DERIVED, $/unit/month, 2026 dollars
+assume expenses_per_unit      = 9466.0    // FACT, $/unit/year
+assume vacancy                = 0.05      // FACT, vacancy and collection
+assume parking_per_space      = 100.0     // midpoint of the Guidebook&#x27;s $50-150 garage range
+assume parking_spaces_per_unit = 0.5      // PROJECTION: 429 spaces over 845 units
+assume growth                 = 0.03      // PROJECTION, rent and expenses
+assume cap_rate               = 0.0545    // FACT, guideline loaded cap
+assume rent_base_month        = 32.0      // 2026-07, the Guidebook&#x27;s own vintage
 
-// Cumulative development cost, which is what the equity commitment is
-// measured against.
-curve dev_cost_cum to 2038-06 {
-  2023-11: 52000000.00
-  2023-12: 52000000.00
-  2024-01: 52000000.00
-  2024-02: 52000000.00
-  // ... 158 further points, one per period, omitted for length
-  2037-05: 624172206.51
-  2037-06: 624172206.51
-}
+// ------------------------------------------------------------ condominium
+// PROJECTION, and the weakest input in the case: the NE tower&#x27;s 73 units
+// average 2,273 sq ft, far larger than the Pierce units this is anchored to,
+// and no Rosslyn condominium of that size has traded recently.
+assume pierce_per_unit     = 1864571.0    // FACT: Pierce, 102 recorded closings
+assume condo_selling_cost  = 0.05
+assume condo_monthly       = inputs.ne_units / inputs.condo_months
+                           * inputs.pierce_per_unit * (1.0 - inputs.condo_selling_cost)
 
-// Scenario A: the lease-up sale.
-curve exit_a_proceeds to 2038-06 {
-  2023-11: 0.00
-  2023-12: 0.00
-  2024-01: 0.00
-  2024-02: 0.00
-  // ... 158 further points, one per period, omitted for length
-  2037-05: 0.00
-  2037-06: 0.00
-}
+// ----------------------------------------------------------------- finance
+// PROJECTION. No instrument is recorded. The index rates are FACT (FRED,
+// 2026-08-24); the spreads over them are projections.
+assume sofr                 = 0.0365
+assume construction_spread  = 0.0275
+assume loan_rate            = inputs.sofr + inputs.construction_spread
+assume ltc                  = 0.60
+assume loan_commitment      = inputs.construction_cost * inputs.ltc
+assume equity_commitment    = (inputs.land_price + inputs.construction_cost + inputs.obligations_total)
+                            * (1.0 - inputs.ltc)
+assume ust10                = 0.0470
+assume perm_spread          = 0.0175
+assume perm_rate            = inputs.ust10 + inputs.perm_spread
+assume perm_ltv             = 0.60
+assume perm_amortization_months = 360.0
 
-// Scenario B: permanent loan proceeds at stabilization.
-curve refi_proceeds to 2038-06 {
-  2023-11: 0.00
-  2023-12: 0.00
-  2024-01: 0.00
-  2024-02: 0.00
-  // ... 158 further points, one per period, omitted for length
-  2037-05: 0.00
-  2037-06: 0.00
-}
+// --------------------------------------------------------------- valuation
+// Stabilized net operating income by the County&#x27;s method, in 2026 dollars:
+// every rental unit&#x27;s rent and parking net of the vacancy allowance, less
+// guideline expenses on every unit. Escalated to the month it is struck.
+assume stabilized_noi_2026 = inputs.rental_units
+                           * ((1.0 - inputs.vacancy) * (inputs.rent_per_unit
+                              + inputs.parking_per_space * inputs.parking_spaces_per_unit) * 12.0
+                              - inputs.expenses_per_unit)
+
+// The lease-up sale: stabilized income at the exit month&#x27;s rent level, over
+// the guideline cap.
+assume exit_a_value = inputs.stabilized_noi_2026
+                    * pow(1.0 + inputs.growth, (inputs.exit_a_month - inputs.rent_base_month) / 12.0)
+                    / inputs.cap_rate
+
+// The permanent loan: sized at loan-to-value on the appraised basis at
+// stabilization, a level payment over thirty years.
+assume stabilized_value_at_refinance = inputs.stabilized_noi_2026
+                    * pow(1.0 + inputs.growth, (inputs.refinance_month - inputs.rent_base_month) / 12.0)
+                    / inputs.cap_rate
+assume perm_principal = inputs.stabilized_value_at_refinance * inputs.perm_ltv
+assume perm_payment   = 0.0 - pmt(inputs.perm_rate / 12.0, inputs.perm_amortization_months, inputs.perm_principal)
+
+// ------------------------------------------------------------------ the JV
+// Penzance / Baupost terms are not public; these three rates are stated
+// placeholders. Replacing them recomputes every partner figure.
+assume pref_rate      = 0.08
+assume sponsor_share  = 0.10
+assume promote_share  = 0.20
 
 
 // ---------------------------------------------------------------- structure
@@ -749,82 +837,318 @@ entity asset south : CRE.Asset.RealProperty { asset_class = &quot;multifamily&qu
 entity party penzance : CRE.Party.Sponsor  { name = &quot;Penzance&quot; }
 entity party baupost  : CRE.Party.Investor { name = &quot;The Baupost Group&quot; }
 
-// FACT. Recorded 2023-11-14, deed 20230100013266, sales code &quot;4-Multiple RPCs&quot;,
-// so the price is the aggregate across all three parcels. The County&#x27;s own
-// guideline land value for Metro high-rise is $78,000 per rental unit, putting
-// 772 rental units at $60,216,000: the site was bought 13.6% below guideline.
-stream cre.development on entity container.project outflow currency USD {
-  schedule every month start from 2023-11 to 2037-06
+// -------------------------------------------------------------- the program
+// The development schedule, stated once. A field may read another field only
+// at the prior close, so each of these is held ONE PERIOD AHEAD: the value at
+// month t is the schedule for month t + 1, and the facility and the cost
+// streams read it as `prev.asset.program.&lt;field&gt;`, which is this month&#x27;s
+// figure.
+entity asset program : Asset.Financial {
+  // The draw curve: a parabola over the construction window, each month&#x27;s
+  // weight (t - (start - 1)) * ((start + months) - t) as a share of the sum.
+  draw_share_ahead init 0.0
+                   next if(time.t + 1.0 &gt;= inputs.construction_start
+                           and time.t + 1.0 &lt;= inputs.construction_start + inputs.construction_months - 1.0,
+                           (time.t + 1.0 - (inputs.construction_start - 1.0))
+                             * ((inputs.construction_start + inputs.construction_months) - (time.t + 1.0))
+                             / inputs.draw_weight_sum,
+                           0.0)
+
+  // The month&#x27;s whole cost: the budget on the curve, and each obligation on
+  // the date the County ties it to. The land is month 0 and funds itself
+  // below.
+  cost_ahead init 0.0
+             next inputs.construction_cost
+                    * if(time.t + 1.0 &gt;= inputs.construction_start
+                         and time.t + 1.0 &lt;= inputs.construction_start + inputs.construction_months - 1.0,
+                         (time.t + 1.0 - (inputs.construction_start - 1.0))
+                           * ((inputs.construction_start + inputs.construction_months) - (time.t + 1.0))
+                           / inputs.draw_weight_sum,
+                         0.0)
+                  + if(time.t + 1.0 == inputs.construction_start,
+                       inputs.ahif_base_density + inputs.public_space_rmsa + inputs.transportation_rmsa, 0.0)
+                  + if(time.t + 1.0 == inputs.delivery_nw, inputs.ahif_tranche_ne + inputs.ahif_tranche_nw, 0.0)
+                  + if(time.t + 1.0 == inputs.delivery_s, inputs.ahif_tranche_s, 0.0)
+
+  // Cash that retires the facility: the condominium closings, then whichever
+  // liquidity event the scenario reaches -- the sale, or the refinancing.
+  proceeds_ahead init 0.0
+                 next if(time.t + 1.0 &gt;= inputs.delivery_nw
+                         and time.t + 1.0 &lt; inputs.delivery_nw + inputs.condo_months,
+                         inputs.condo_monthly, 0.0)
+                    + if(time.t + 1.0 == inputs.exit_a_month,
+                         inputs.exit_a_value * inputs.market_factor * (1.0 - inputs.scenario_b), 0.0)
+                    + if(time.t + 1.0 == inputs.refinance_month,
+                         inputs.perm_principal * inputs.scenario_b, 0.0)
+}
+
+// ------------------------------------------------------- development cost
+stream cre.cost.land on entity container.project outflow currency USD {
+  schedule on 2023-11
   category investing.capital.capex
-  amount = curve_value(&quot;dev_cost&quot;, time.date)
+  amount = inputs.land_price
 }
 
-// ------------------------------------------------------------- operations
-// Rent is DERIVED: a comparable&#x27;s assessed value times the guideline loaded cap
-// gives the assessor&#x27;s own NOI; add back guideline expenses and gross up for
-// vacancy. Escalated from the Guidebook&#x27;s 2026-07 vintage, NOT frozen there --
-// this project delivers in 2030 and freezing 2026 dollars would understate it.
-stream cre.rent on entity container.project inflow currency USD {
-  schedule every month start from 2023-11 to 2038-06
+// The budget on the curve, in the companion case&#x27;s four lines.
+stream cre.cost.hard on entity container.project outflow currency USD {
+  schedule every month start from 2026-12 to 2030-05
+  category investing.capital.construction
+  amount = inputs.hard_cost * prev.asset.program.draw_share_ahead
+}
+
+stream cre.cost.soft on entity container.project outflow currency USD {
+  schedule every month start from 2026-12 to 2030-05
+  category investing.capital.construction
+  amount = inputs.hard_cost * inputs.soft_ratio * prev.asset.program.draw_share_ahead
+}
+
+stream cre.cost.contingency on entity container.project outflow currency USD {
+  schedule every month start from 2026-12 to 2030-05
+  category investing.capital.construction
+  amount = inputs.hard_cost * inputs.contingency_ratio * prev.asset.program.draw_share_ahead
+}
+
+stream cre.cost.developer_fee on entity container.project outflow currency USD {
+  schedule every month start from 2026-12 to 2030-05
+  category investing.capital.construction
+  amount = inputs.hard_cost * inputs.developer_fee_ratio * prev.asset.program.draw_share_ahead
+}
+
+// The obligations, each on the date the County ties it to.
+stream cre.cost.obligations_at_start on entity container.project outflow currency USD {
+  schedule on 2026-12
+  category investing.capital.construction
+  amount = inputs.ahif_base_density + inputs.public_space_rmsa + inputs.transportation_rmsa
+}
+
+stream cre.cost.ahif_ne on entity asset.ne outflow currency USD {
+  schedule on 2030-06
+  category investing.capital.construction
+  amount = inputs.ahif_tranche_ne
+}
+
+stream cre.cost.ahif_nw on entity asset.nw outflow currency USD {
+  schedule on 2030-06
+  category investing.capital.construction
+  amount = inputs.ahif_tranche_nw
+}
+
+stream cre.cost.ahif_s on entity asset.south outflow currency USD {
+  schedule on 2030-12
+  category investing.capital.construction
+  amount = inputs.ahif_tranche_s
+}
+
+// -------------------------------------------------------------- operations
+// Each rental tower leases up from its own delivery, a straight line over
+// eighteen months, net of the vacancy and collection allowance. The blended
+// occupancy the exit reads is the sum of the two. Under the merchant build
+// the venture collects nothing after the sale month.
+stream cre.rent.nw on entity asset.nw inflow currency USD {
+  schedule every month start from 2030-06 to 2038-06
   category operating.revenue.base_rent
-  amount = curve_value(&quot;units_occupied&quot;, time.date) * inputs.rent_per_unit
-         * pow(1.0 + inputs.growth, (time.t - 32) / 12.0) * if(inputs.scenario_b &gt; 0.5, 1.0, if(time.t &lt;= 95, 1.0, 0.0))
+  amount = inputs.nw_units * clamp((time.t - inputs.delivery_nw + 1.0) / inputs.lease_up_months, 0.0, 1.0)
+         * (1.0 - inputs.vacancy) * inputs.rent_per_unit
+         * pow(1.0 + inputs.growth, (time.t - inputs.rent_base_month) / 12.0)
+         * if(inputs.scenario_b &gt; 0.5, 1.0, if(time.t &lt;= inputs.exit_a_month, 1.0, 0.0))
 }
 
-stream cre.parking on entity container.project inflow currency USD {
-  schedule every month start from 2023-11 to 2038-06
+stream cre.parking.nw on entity asset.nw inflow currency USD {
+  schedule every month start from 2030-06 to 2038-06
   category operating.revenue.other
-  amount = curve_value(&quot;units_occupied&quot;, time.date) * inputs.parking_per_space * 0.5
-         * pow(1.0 + inputs.growth, (time.t - 32) / 12.0) * if(inputs.scenario_b &gt; 0.5, 1.0, if(time.t &lt;= 95, 1.0, 0.0))
+  amount = inputs.nw_units * clamp((time.t - inputs.delivery_nw + 1.0) / inputs.lease_up_months, 0.0, 1.0)
+         * (1.0 - inputs.vacancy) * inputs.parking_per_space * inputs.parking_spaces_per_unit
+         * pow(1.0 + inputs.growth, (time.t - inputs.rent_base_month) / 12.0)
+         * if(inputs.scenario_b &gt; 0.5, 1.0, if(time.t &lt;= inputs.exit_a_month, 1.0, 0.0))
 }
 
-stream cre.opex on entity container.project outflow currency USD {
-  schedule every month start from 2023-11 to 2038-06
+stream cre.opex.nw on entity asset.nw outflow currency USD {
+  schedule every month start from 2030-06 to 2038-06
   category operating.expense.opex
-  amount = curve_value(&quot;units_occupied&quot;, time.date) * inputs.expenses_per_unit / 12.0
-         * pow(1.0 + inputs.growth, (time.t - 32) / 12.0) * if(inputs.scenario_b &gt; 0.5, 1.0, if(time.t &lt;= 95, 1.0, 0.0))
+  amount = inputs.nw_units * clamp((time.t - inputs.delivery_nw + 1.0) / inputs.lease_up_months, 0.0, 1.0)
+         * (1.0 - inputs.vacancy) * inputs.expenses_per_unit / 12.0
+         * pow(1.0 + inputs.growth, (time.t - inputs.rent_base_month) / 12.0)
+         * if(inputs.scenario_b &gt; 0.5, 1.0, if(time.t &lt;= inputs.exit_a_month, 1.0, 0.0))
 }
 
-// The weakest input in the case, and it carries the most weight: the NE tower&#x27;s
-// 73 units average 2,273 sq ft, far larger than the Pierce units this is
-// anchored to, and no Rosslyn condominium of that size has traded recently.
-stream cre.condo_closings on entity container.project inflow currency USD {
-  schedule every month start from 2023-11 to 2037-06
+stream cre.rent.south on entity asset.south inflow currency USD {
+  schedule every month start from 2030-12 to 2038-06
+  category operating.revenue.base_rent
+  amount = inputs.s_units * clamp((time.t - inputs.delivery_s + 1.0) / inputs.lease_up_months, 0.0, 1.0)
+         * (1.0 - inputs.vacancy) * inputs.rent_per_unit
+         * pow(1.0 + inputs.growth, (time.t - inputs.rent_base_month) / 12.0)
+         * if(inputs.scenario_b &gt; 0.5, 1.0, if(time.t &lt;= inputs.exit_a_month, 1.0, 0.0))
+}
+
+stream cre.parking.south on entity asset.south inflow currency USD {
+  schedule every month start from 2030-12 to 2038-06
+  category operating.revenue.other
+  amount = inputs.s_units * clamp((time.t - inputs.delivery_s + 1.0) / inputs.lease_up_months, 0.0, 1.0)
+         * (1.0 - inputs.vacancy) * inputs.parking_per_space * inputs.parking_spaces_per_unit
+         * pow(1.0 + inputs.growth, (time.t - inputs.rent_base_month) / 12.0)
+         * if(inputs.scenario_b &gt; 0.5, 1.0, if(time.t &lt;= inputs.exit_a_month, 1.0, 0.0))
+}
+
+stream cre.opex.south on entity asset.south outflow currency USD {
+  schedule every month start from 2030-12 to 2038-06
+  category operating.expense.opex
+  amount = inputs.s_units * clamp((time.t - inputs.delivery_s + 1.0) / inputs.lease_up_months, 0.0, 1.0)
+         * (1.0 - inputs.vacancy) * inputs.expenses_per_unit / 12.0
+         * pow(1.0 + inputs.growth, (time.t - inputs.rent_base_month) / 12.0)
+         * if(inputs.scenario_b &gt; 0.5, 1.0, if(time.t &lt;= inputs.exit_a_month, 1.0, 0.0))
+}
+
+// The condominium sells out evenly over two years from its delivery.
+stream cre.condo_closings on entity asset.ne inflow currency USD {
+  schedule every month start from 2030-06 to 2032-05
   category investing.disposal.reversion
-  amount = curve_value(&quot;condo_proceeds&quot;, time.date)
+  amount = inputs.condo_monthly
+}
+
+// ---------------------------------------------------------- the JV capital
+// WHAT EACH PARTNER PUTS IN, as cash. Equity funds first, pro rata -- 90%
+// Baupost, 10% Penzance, the same share the tiers split on -- so each month&#x27;s
+// contribution is the step in the equity funded to date, which the facility
+// states. Each contribution moves its partner&#x27;s capital account. The land is
+// funded in the first period, where there is no previous period to difference
+// against, so it is its own one-shot.
+stream cre.equity_contribution.baupost_land on entity container.project inflow currency USD {
+  schedule on 2023-11
+  category financing.equity.contribution
+  amount = asset.facility.equity_funded * (1.0 - inputs.sponsor_share)
+  moves baupost_capital
+}
+
+stream cre.equity_contribution.baupost on entity container.project inflow currency USD {
+  schedule every month start from 2023-12 to 2037-06
+  category financing.equity.contribution
+  amount = (asset.facility.equity_funded - prev.asset.facility.equity_funded) * (1.0 - inputs.sponsor_share)
+  moves baupost_capital
+}
+
+stream cre.equity_contribution.penzance_land on entity container.project inflow currency USD {
+  schedule on 2023-11
+  category financing.equity.contribution
+  amount = asset.facility.equity_funded * inputs.sponsor_share
+  moves penzance_capital
+}
+
+stream cre.equity_contribution.penzance on entity container.project inflow currency USD {
+  schedule every month start from 2023-12 to 2037-06
+  category financing.equity.contribution
+  amount = (asset.facility.equity_funded - prev.asset.facility.equity_funded) * inputs.sponsor_share
+  moves penzance_capital
+}
+
+// Each partner&#x27;s capital is DUE to it from the venture: a contribution lowers
+// the balance below zero, and an allocation from the split raises it back.
+account baupost_capital due {
+  owner party.baupost
+}
+
+account penzance_capital due {
+  owner party.penzance
 }
 
 // ------------------------------------------------------------- the facility
-// PROJECTION. No instrument is recorded. SOFR at 2026-08-24 was 3.65% (FRED);
-// the spread over it is a projection. Equity funds to its commitment first, the
-// facility draws the residual, and interest capitalizes into the balance.
-// Each recurrence reads `prev`, the cost curves and the inputs, so every month
+// PROJECTION. No instrument is recorded. Equity funds to its commitment first,
+// the facility draws the residual up to its own commitment, interest
+// capitalizes into the balance, and the proceeds retire it. Each field reads
+// only the prior close -- `prev` -- and the program&#x27;s schedule, so every month
 // resolves from the month before it.
+//
+// A field may read neither a stream nor a sibling field in the same period,
+// so the equity funded to date is stated in closed form -- the cost incurred
+// through the month, capped at the commitment; the parabola&#x27;s weights on
+// months 1..m sum to (n + 1) m (m + 1) / 2 - m (m + 1)(2m + 1) / 6 -- and the
+// month&#x27;s draw is spelled out where the repayment and the balance need it.
 entity asset facility : Asset.Financial {
-  equity_funded init min(inputs.equity_commitment, curve_value(&quot;dev_cost_cum&quot;, time.date))
-                next min(inputs.equity_commitment, curve_value(&quot;dev_cost_cum&quot;, time.date))
+  equity_funded init min(inputs.equity_commitment, inputs.land_price)
+                next min(inputs.equity_commitment,
+                         inputs.land_price
+                       + inputs.construction_cost
+                         * ((inputs.construction_months + 1.0)
+                              * clamp(time.t - inputs.construction_start + 1.0, 0.0, inputs.construction_months)
+                              * (clamp(time.t - inputs.construction_start + 1.0, 0.0, inputs.construction_months) + 1.0) / 2.0
+                            - clamp(time.t - inputs.construction_start + 1.0, 0.0, inputs.construction_months)
+                              * (clamp(time.t - inputs.construction_start + 1.0, 0.0, inputs.construction_months) + 1.0)
+                              * (2.0 * clamp(time.t - inputs.construction_start + 1.0, 0.0, inputs.construction_months) + 1.0) / 6.0)
+                         / inputs.draw_weight_sum
+                       + if(time.t &gt;= inputs.construction_start,
+                            inputs.ahif_base_density + inputs.public_space_rmsa + inputs.transportation_rmsa, 0.0)
+                       + if(time.t &gt;= inputs.delivery_nw, inputs.ahif_tranche_ne + inputs.ahif_tranche_nw, 0.0)
+                       + if(time.t &gt;= inputs.delivery_s, inputs.ahif_tranche_s, 0.0))
 
   interest init 0.0
            next prev.asset.facility.balance * inputs.loan_rate / 12.0
 
-  draw init max(0.0, curve_value(&quot;dev_cost&quot;, time.date) - inputs.equity_commitment)
-       next min(max(0.0, curve_value(&quot;dev_cost&quot;, time.date) - (min(inputs.equity_commitment, curve_value(&quot;dev_cost_cum&quot;, time.date)) - min(inputs.equity_commitment, curve_value(&quot;dev_cost_cum&quot;, edate(time.date, -1))))), max(0.0, inputs.loan_commitment - prev.asset.facility.balance - prev.asset.facility.balance * inputs.loan_rate / 12.0))
+  // What the equity does not fund, up to the room left under the commitment
+  // after this month&#x27;s accrual.
+  draw init max(0.0, inputs.land_price - inputs.equity_commitment)
+       next min(max(0.0, prev.asset.program.cost_ahead
+                          - (min(inputs.equity_commitment,
+                                 inputs.land_price
+                               + inputs.construction_cost
+                                 * ((inputs.construction_months + 1.0)
+                                      * clamp(time.t - inputs.construction_start + 1.0, 0.0, inputs.construction_months)
+                                      * (clamp(time.t - inputs.construction_start + 1.0, 0.0, inputs.construction_months) + 1.0) / 2.0
+                                    - clamp(time.t - inputs.construction_start + 1.0, 0.0, inputs.construction_months)
+                                      * (clamp(time.t - inputs.construction_start + 1.0, 0.0, inputs.construction_months) + 1.0)
+                                      * (2.0 * clamp(time.t - inputs.construction_start + 1.0, 0.0, inputs.construction_months) + 1.0) / 6.0)
+                                 / inputs.draw_weight_sum
+                               + if(time.t &gt;= inputs.construction_start,
+                                    inputs.ahif_base_density + inputs.public_space_rmsa + inputs.transportation_rmsa, 0.0)
+                               + if(time.t &gt;= inputs.delivery_nw, inputs.ahif_tranche_ne + inputs.ahif_tranche_nw, 0.0)
+                               + if(time.t &gt;= inputs.delivery_s, inputs.ahif_tranche_s, 0.0))
+                             - prev.asset.facility.equity_funded)),
+                max(0.0, inputs.loan_commitment
+                         - prev.asset.facility.balance * (1.0 + inputs.loan_rate / 12.0)))
 
-  // The facility is repaid from condominium closings, then from whichever
-  // liquidity event the scenario reaches: the sale, or the refinancing.
+  // Repaid from the month&#x27;s proceeds, up to what is outstanding after this
+  // month&#x27;s accrual and draw.
   repay init 0.0
-        next min(prev.asset.facility.balance + prev.asset.facility.balance * inputs.loan_rate / 12.0 + min(max(0.0, curve_value(&quot;dev_cost&quot;, time.date) - (min(inputs.equity_commitment, curve_value(&quot;dev_cost_cum&quot;, time.date)) - min(inputs.equity_commitment, curve_value(&quot;dev_cost_cum&quot;, edate(time.date, -1))))), max(0.0, inputs.loan_commitment - prev.asset.facility.balance - prev.asset.facility.balance * inputs.loan_rate / 12.0)),
-                 max(0.0, curve_value(&quot;condo_proceeds&quot;, time.date)
-                        + curve_value(&quot;exit_a_proceeds&quot;, time.date) * (1.0 - inputs.scenario_b)
-                        + curve_value(&quot;refi_proceeds&quot;, time.date) * inputs.scenario_b))
+        next min(prev.asset.facility.balance * (1.0 + inputs.loan_rate / 12.0)
+                   + min(max(0.0, prev.asset.program.cost_ahead
+                          - (min(inputs.equity_commitment,
+                                 inputs.land_price
+                               + inputs.construction_cost
+                                 * ((inputs.construction_months + 1.0)
+                                      * clamp(time.t - inputs.construction_start + 1.0, 0.0, inputs.construction_months)
+                                      * (clamp(time.t - inputs.construction_start + 1.0, 0.0, inputs.construction_months) + 1.0) / 2.0
+                                    - clamp(time.t - inputs.construction_start + 1.0, 0.0, inputs.construction_months)
+                                      * (clamp(time.t - inputs.construction_start + 1.0, 0.0, inputs.construction_months) + 1.0)
+                                      * (2.0 * clamp(time.t - inputs.construction_start + 1.0, 0.0, inputs.construction_months) + 1.0) / 6.0)
+                                 / inputs.draw_weight_sum
+                               + if(time.t &gt;= inputs.construction_start,
+                                    inputs.ahif_base_density + inputs.public_space_rmsa + inputs.transportation_rmsa, 0.0)
+                               + if(time.t &gt;= inputs.delivery_nw, inputs.ahif_tranche_ne + inputs.ahif_tranche_nw, 0.0)
+                               + if(time.t &gt;= inputs.delivery_s, inputs.ahif_tranche_s, 0.0))
+                             - prev.asset.facility.equity_funded)),
+                max(0.0, inputs.loan_commitment
+                         - prev.asset.facility.balance * (1.0 + inputs.loan_rate / 12.0))),
+                 prev.asset.program.proceeds_ahead)
 
-  balance init max(0.0, curve_value(&quot;dev_cost&quot;, time.date) - inputs.equity_commitment)
-          next max(0.0, prev.asset.facility.balance + min(max(0.0, curve_value(&quot;dev_cost&quot;, time.date) - (min(inputs.equity_commitment, curve_value(&quot;dev_cost_cum&quot;, time.date)) - min(inputs.equity_commitment, curve_value(&quot;dev_cost_cum&quot;, edate(time.date, -1))))), max(0.0, inputs.loan_commitment - prev.asset.facility.balance - prev.asset.facility.balance * inputs.loan_rate / 12.0))
-                      + prev.asset.facility.balance * inputs.loan_rate / 12.0
-                      - min(prev.asset.facility.balance + prev.asset.facility.balance * inputs.loan_rate / 12.0 + min(max(0.0, curve_value(&quot;dev_cost&quot;, time.date) - (min(inputs.equity_commitment, curve_value(&quot;dev_cost_cum&quot;, time.date)) - min(inputs.equity_commitment, curve_value(&quot;dev_cost_cum&quot;, edate(time.date, -1))))), max(0.0, inputs.loan_commitment - prev.asset.facility.balance - prev.asset.facility.balance * inputs.loan_rate / 12.0)),
-                            max(0.0, curve_value(&quot;condo_proceeds&quot;, time.date)
-                                   + curve_value(&quot;exit_a_proceeds&quot;, time.date) * (1.0 - inputs.scenario_b)
-                                   + curve_value(&quot;refi_proceeds&quot;, time.date) * inputs.scenario_b)))
+  balance init max(0.0, inputs.land_price - inputs.equity_commitment)
+          next max(0.0, prev.asset.facility.balance * (1.0 + inputs.loan_rate / 12.0)
+                        + min(max(0.0, prev.asset.program.cost_ahead
+                          - (min(inputs.equity_commitment,
+                                 inputs.land_price
+                               + inputs.construction_cost
+                                 * ((inputs.construction_months + 1.0)
+                                      * clamp(time.t - inputs.construction_start + 1.0, 0.0, inputs.construction_months)
+                                      * (clamp(time.t - inputs.construction_start + 1.0, 0.0, inputs.construction_months) + 1.0) / 2.0
+                                    - clamp(time.t - inputs.construction_start + 1.0, 0.0, inputs.construction_months)
+                                      * (clamp(time.t - inputs.construction_start + 1.0, 0.0, inputs.construction_months) + 1.0)
+                                      * (2.0 * clamp(time.t - inputs.construction_start + 1.0, 0.0, inputs.construction_months) + 1.0) / 6.0)
+                                 / inputs.draw_weight_sum
+                               + if(time.t &gt;= inputs.construction_start,
+                                    inputs.ahif_base_density + inputs.public_space_rmsa + inputs.transportation_rmsa, 0.0)
+                               + if(time.t &gt;= inputs.delivery_nw, inputs.ahif_tranche_ne + inputs.ahif_tranche_nw, 0.0)
+                               + if(time.t &gt;= inputs.delivery_s, inputs.ahif_tranche_s, 0.0))
+                             - prev.asset.facility.equity_funded)),
+                max(0.0, inputs.loan_commitment
+                         - prev.asset.facility.balance * (1.0 + inputs.loan_rate / 12.0)))
+                        - prev.asset.program.proceeds_ahead)
 }
 
 stream cre.loan_draw on entity container.project inflow currency USD {
@@ -860,55 +1184,69 @@ stream cre.loan_repayment on entity container.project outflow currency USD {
 stream cre.exit_a on entity container.project inflow currency USD {
   schedule on 2031-10 end
   category investing.disposal.reversion
-  amount = 567404297.94 * inputs.market_factor * (1.0 - inputs.scenario_b)
+  amount = inputs.exit_a_value * inputs.market_factor * (1.0 - inputs.scenario_b)
 }
 
 // ------------------------------------------- scenario B: refinance and hold
-// Permanent debt at stabilization: the 10-year Treasury at 2026-08-24 was
-// 4.70% (FRED) and the spread over it is a projection. Sized at 60% of the
-// stabilized value, amortizing over 30 years.
+// Permanent debt at stabilization, sized above from the appraised basis: a
+// level payment over thirty years, split into its interest and principal
+// legs so coverage reads both, and the balance carried month to month. The
+// payoff at the sale is what is left after the last payment.
+entity asset perm : Asset.Financial {
+  balance init 0.0
+          next if(time.t == inputs.refinance_month,
+                  inputs.perm_principal * inputs.scenario_b,
+                  max(0.0, prev.asset.perm.balance * (1.0 + inputs.perm_rate / 12.0)
+                           - if(prev.asset.perm.balance &gt; 0.0, inputs.perm_payment, 0.0)))
+}
+
 stream cre.refinance on entity container.project inflow currency USD {
   schedule on 2032-06 end
   category financing.debt.proceeds
-  amount = 347217832.21 * inputs.scenario_b
+  amount = inputs.perm_principal * inputs.scenario_b
 }
 
-stream cre.perm_debt_service on entity container.project outflow currency USD {
+stream cre.perm_interest on entity container.project outflow currency USD {
   schedule every month end from 2032-07 to 2037-06
-  category financing.debt.service
-  amount = 2183247.96 * inputs.scenario_b
+  category financing.debt.interest_paid
+  amount = prev.asset.perm.balance * inputs.perm_rate / 12.0
 }
 
-stream cre.exit_b on entity container.project inflow currency USD {
-  schedule on 2037-06 end
-  category investing.disposal.reversion
-  amount = (series_sum(&quot;cre.rent&quot;, time.t + 1, time.t + 12)
-          + series_sum(&quot;cre.parking&quot;, time.t + 1, time.t + 12)
-          + series_sum(&quot;cre.opex&quot;, time.t + 1, time.t + 12))
-         / inputs.cap_rate * inputs.market_factor * inputs.scenario_b
+stream cre.perm_principal on entity container.project outflow currency USD {
+  schedule every month end from 2032-07 to 2037-06
+  category financing.debt.principal
+  amount = (inputs.perm_payment - prev.asset.perm.balance * inputs.perm_rate / 12.0) * inputs.scenario_b
 }
 
 stream cre.perm_payoff on entity container.project outflow currency USD {
   schedule on 2037-06 end
   category investing.disposal.reversion
-  amount = 324846432.07 * inputs.scenario_b
+  amount = asset.perm.balance
 }
 
+// The stabilized sale: the twelve months of income that follow it, read from
+// the projection tail, over the guideline cap.
+stream cre.exit_b on entity container.project inflow currency USD {
+  schedule on 2037-06 end
+  category investing.disposal.reversion
+  amount = (series_sum(&quot;cre.rent.*&quot;, time.t + 1, time.t + 12)
+          + series_sum(&quot;cre.parking.*&quot;, time.t + 1, time.t + 12)
+          + series_sum(&quot;cre.opex.*&quot;, time.t + 1, time.t + 12))
+         / inputs.cap_rate * inputs.market_factor * inputs.scenario_b
+}
 
-// ------------------------------------------------------------ the JV capital
-// The companion case&#x27;s construction. Cash accrues to the venture and is split
-// once, so the preference and the capital are CUMULATIVE balances carried
-// forward rather than re-derived at the distribution -- 17_ordered_waterfall.md
-// section 10. Both partners fund pro rata and nothing is returned before the
-// split, so the two balances only grow; their difference is the accrued
+// ---------------------------------------------------------- the preference
+// Cash accrues to the venture and is split once, so the preference is a
+// CUMULATIVE balance carried forward rather than re-derived at the
+// distribution -- 17_ordered_waterfall.md section 10. It compounds on the
+// capital contributed to date, from CONSTRUCTION START rather than the 2023
+// land purchase: the venture is formed to build, and the land earns nothing
+// until there is something to build. The contributed capital itself is the
+// `equity_funded` account; the difference between the two is the accrued
 // preference.
-//
-// The preference accrues from CONSTRUCTION START (2026-12), not from the
-// 2023 land purchase, the convention the companion case states: the venture is
-// formed to build, and the land earns nothing until there is something to build.
 entity asset jv : Asset.Financial {
-  // The facility&#x27;s equity funding one period back, so a month&#x27;s contribution
-  // can be differenced without reaching two periods behind.
+  // The equity funded one period back, so a month&#x27;s contribution can be
+  // differenced without reaching two periods behind.
   funded_prev init 0.0
               next prev.asset.facility.equity_funded
 
@@ -917,8 +1255,9 @@ entity asset jv : Asset.Financial {
              + (prev.asset.facility.equity_funded - prev.asset.jv.funded_prev)
 
   unreturned init 0.0
-             next prev.asset.jv.unreturned * (1.0 + if(time.t &gt;= 37, inputs.pref_rate / 12.0, 0.0))
-                + (prev.asset.facility.equity_funded - prev.asset.jv.funded_prev)
+             next prev.asset.jv.unreturned
+                    * (1.0 + if(time.t &gt;= inputs.construction_start, inputs.pref_rate / 12.0, 0.0))
+                  + (prev.asset.facility.equity_funded - prev.asset.jv.funded_prev)
 }
 
 // ------------------------------------------------------- the venture&#x27;s cash
@@ -930,50 +1269,6 @@ account deal_cash {
   from series_sum(&quot;cre.*&quot;, time.t, time.t)
 }
 
-// WHAT EACH PARTNER PUT IN, as cash. The venture funds pro rata -- 90% Baupost,
-// 10% Penzance, the same share the tiers split on -- on the dates the facility
-// draws equity, which the facility&#x27;s own field states. Each contribution is a
-// stream into the project that moves the partner&#x27;s capital account.
-stream cre.equity_contribution.baupost_land on entity container.project inflow currency USD {
-  schedule on 2023-11
-  category financing.equity.contribution
-  amount = asset.facility.equity_funded * (1.0 - inputs.sponsor_share)
-  moves baupost_capital
-}
-
-stream cre.equity_contribution.baupost on entity container.project inflow currency USD {
-  schedule every month start from 2023-12 to 2037-06
-  category financing.equity.contribution
-  amount = (asset.facility.equity_funded - prev.asset.facility.equity_funded)
-           * (1.0 - inputs.sponsor_share)
-  moves baupost_capital
-}
-
-stream cre.equity_contribution.penzance_land on entity container.project inflow currency USD {
-  schedule on 2023-11
-  category financing.equity.contribution
-  amount = asset.facility.equity_funded * inputs.sponsor_share
-  moves penzance_capital
-}
-
-stream cre.equity_contribution.penzance on entity container.project inflow currency USD {
-  schedule every month start from 2023-12 to 2037-06
-  category financing.equity.contribution
-  amount = (asset.facility.equity_funded - prev.asset.facility.equity_funded)
-           * inputs.sponsor_share
-  moves penzance_capital
-}
-
-// Each partner&#x27;s capital is DUE to it from the venture: a contribution lowers
-// the balance below zero, and an allocation from the split raises it back.
-account baupost_capital due {
-  owner party.baupost
-}
-
-account penzance_capital due {
-  owner party.penzance
-}
-
 // The deal&#x27;s own cash, with the partners&#x27; contributions left out: what the
 // workbook ties to, and what the project returns on.
 slice deal {
@@ -982,8 +1277,6 @@ slice deal {
 }
 
 // -------------------------------------------------------------- the JV split
-// Penzance / Baupost terms are not public; these tiers are stated assumptions.
-//
 // Capital and the preference come back PRO RATA. The investor&#x27;s tier of each
 // pair is capped at its share of the pot, so a pot too small to return
 // everyone&#x27;s capital -- the 2026-discount scenario is one -- or to pay the
@@ -1007,7 +1300,7 @@ waterfall jv.distribution_a on entity container.project {
   pay capital_sp    to party.penzance = min(0.0 - prev.penzance_capital, remaining) * (1.0 - inputs.scenario_b)
   pay preferred_inv to party.baupost  = min((asset.jv.unreturned - asset.jv.capital) * (1.0 - inputs.sponsor_share), remaining * (1.0 - inputs.sponsor_share)) * (1.0 - inputs.scenario_b)
   pay preferred_sp  to party.penzance = (asset.jv.unreturned - asset.jv.capital) * inputs.sponsor_share * (1.0 - inputs.scenario_b)
-  pay promote       to party.penzance = remaining * 0.20 * (1.0 - inputs.scenario_b)
+  pay promote       to party.penzance = remaining * inputs.promote_share * (1.0 - inputs.scenario_b)
   pay residual_inv  to party.baupost  = remaining * (1.0 - inputs.sponsor_share) * (1.0 - inputs.scenario_b)
   pay residual_sp   to party.penzance = remaining * (1.0 - inputs.scenario_b)
 }
@@ -1022,7 +1315,7 @@ waterfall jv.distribution_b on entity container.project {
   pay capital_sp    to party.penzance = min(0.0 - prev.penzance_capital, remaining) * inputs.scenario_b
   pay preferred_inv to party.baupost  = min((asset.jv.unreturned - asset.jv.capital) * (1.0 - inputs.sponsor_share), remaining * (1.0 - inputs.sponsor_share)) * inputs.scenario_b
   pay preferred_sp  to party.penzance = (asset.jv.unreturned - asset.jv.capital) * inputs.sponsor_share * inputs.scenario_b
-  pay promote       to party.penzance = remaining * 0.20 * inputs.scenario_b
+  pay promote       to party.penzance = remaining * inputs.promote_share * inputs.scenario_b
   pay residual_inv  to party.baupost  = remaining * (1.0 - inputs.sponsor_share) * inputs.scenario_b
   pay residual_sp   to party.penzance = remaining * inputs.scenario_b
 }
@@ -1035,15 +1328,14 @@ waterfall jv.distribution_b on entity container.project {
 metric baupost_irr   = irr(party.baupost)
 metric baupost_moic  = moic(party.baupost)
 metric penzance_irr  = irr(party.penzance)
-metric penzance_moic = moic(party.penzance)
-</code></pre></div>
+metric penzance_moic = moic(party.penzance)</code></pre></div>
     </details>
   </section>
 
   <footer>
     Prepared with CFDL, a domain language for cash-flow models. This page is shared
     privately and is access-controlled. Figures reflect the benchmark case as committed on
-    12 September 2026.
+    14 September 2026.
   </footer>
 
 </div>

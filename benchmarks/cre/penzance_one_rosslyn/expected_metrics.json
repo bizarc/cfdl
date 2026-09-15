@@ -1,6 +1,6 @@
 {
   "slice.deal.total": {
-    "value": 223799127.44,
+    "value": 223799127.6,
     "tolerance": 1.0,
     "source": "lifetime net cash, levered, the partners' contributions left out: the workbook's scenario B net"
   },
@@ -13,17 +13,17 @@
     "tolerance": 0.0001
   },
   "model.total": {
-    "value": 473468010.04,
+    "value": 473468010.2,
     "tolerance": 1.0,
     "source": "the project's whole cash: 223,799,127.44 earned plus 249,668,882.60 contributed"
   },
   "entity.party.baupost.total": {
-    "value": 426121209.04,
+    "value": 426121209.18,
     "tolerance": 1.0,
     "source": "capital_inv + preferred_inv; the pot is short of the preference, so no promote and no residual"
   },
   "entity.party.penzance.total": {
-    "value": 47346801.0,
+    "value": 47346801.02,
     "tolerance": 1.0,
     "source": "capital_sp + preferred_sp, pro rata with the investor"
   },
