@@ -1,7 +1,8 @@
 # Argus parity — the real items
 
 Status: informative, 2026-09-01. Not published; repository-only, like the
-backlog. First written 2026-08-28; refreshed after §7.55 (model-declared
+backlog. One of four parity documents: `docs/38` (Intex),
+`docs/39` (SAM) and `docs/43` (OpCo and SaaS) are the others. First written 2026-08-28; refreshed after §7.55 (model-declared
 statements and slices), §7.85–§7.86 (the metric surface), and §7.87 (metric
 distributions) landed.
 
