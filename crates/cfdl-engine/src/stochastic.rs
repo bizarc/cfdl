@@ -240,8 +240,8 @@ pub(crate) fn round_share(value: f64) -> f64 {
 /// A trial is a complete deterministic run, so every name the base run
 /// publishes — `model.irr` and `model.moic`, each `stream.*.total` and
 /// `entity.*.total`, every `domain.*` KPI and every metric the model declared
-/// — is computed in each trial and can carry a distribution. `docs/13` §7.87
-/// records what happened before: the loop built a fresh one-entry map holding
+/// — is computed in each trial and can carry a distribution. `docs/06`
+/// (`results_version` 0.9) is the contract; before it, the loop built a fresh one-entry map holding
 /// `model.npv` and dropped the rest, and since per-trial SERIES are
 /// (reasonably) not retained, whatever the loop did not carry out was
 /// unrecoverable after it.

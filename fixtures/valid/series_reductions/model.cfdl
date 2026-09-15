@@ -4,7 +4,7 @@ time calendar annual from 2026-01 for 4
 
 // SUM AND MEAN WERE THE WHOLE REDUCTION VOCABULARY.
 //
-// `docs/13` §7.86. Peak outstanding debt, the worst period, a compounding
+// `docs/03` §4. Peak outstanding debt, the worst period, a compounding
 // factor, a count of periods that paid — none was expressible over a series,
 // and the miss LOOKED LIKE A HIT: `min`/`max`/`sum`/`avg` are variadic SCALAR
 // folds, so `max(series_sum("dbt.*", 0, 3))` compiles, runs, and returns the
@@ -20,7 +20,7 @@ time calendar annual from 2026-01 for 4
 // largest per-period NET FLOW, which is a different question. Peak outstanding
 // debt is `series_max` over the series that CARRIES the balance — an entity
 // field, readable in a metric under the key results publishes it under, which
-// is §7.85. The two entries close this together.
+// is `docs/01` §15.3. The two land together.
 
 entity asset tlb : Asset.Financial {
   // 6,000 drawn, 4,000 more, then repaid 3,500 a year: 6,000 / 10,000 /

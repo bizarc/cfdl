@@ -3,8 +3,8 @@
 Status: informative, 2026-09-01. Not published; repository-only, like the
 backlog. One of four parity documents: `docs/38` (Intex),
 `docs/39` (SAM) and `docs/43` (OpCo and SaaS) are the others. First written 2026-08-28; refreshed after §7.55 (model-declared
-statements and slices), §7.85–§7.86 (the metric surface), and §7.87 (metric
-distributions) landed.
+statements and slices), the metric surface (`docs/01` §15.3, `docs/03` §4), and metric
+distributions per trial (`results_version` 0.9) landed.
 
 Argus Enterprise is the reference application for institutional CRE cash flow
 projection. This document records what separates CFDL from it **at the level
@@ -63,14 +63,14 @@ narrow, not broad.
   A model also declares its own metrics (`docs/13` §7.25, shipped), and a
   metric reads everything the valuation plane publishes — entity rollups,
   accounts, subtotals — through six series reductions
-  (`docs/13` §7.85, §7.86).
+  (`docs/01` §15.3, `docs/03` §4).
 - **Ahead of Argus:** percentage rent as an expectation over a sales
   distribution (`cre.percentage_rent_expected` — the point-estimate form
   pays 0.00 on any breakpoint above expected sales, however wide the
   distribution); grain/day-count/roll-convention/holiday-calendar time
   machinery; the journal as a causal audit trail; text source under version
   control; byte-comparable runs; per-assumption Monte Carlo — and, since
-  §7.87 shipped (`results_version` 0.9), a Monte Carlo distribution with
+  `results_version` 0.9, a Monte Carlo distribution with
   p01–p99 tails for EVERY metric, declared ones included, not only NPV.
 - **Debt sizing needs no solver.** Every sizing met so far is closed-form,
   sequential once the wiring is untangled, or affine — the pattern is

@@ -458,508 +458,33 @@ language could not express the multiple. It can, and does.
 
 ---
 
-### 7.85 The valuation plane cannot read what it itself publishes
-
-*Belongs with the language and engine (section 5). Found with §7.86 and §7.87
-in one investigation; the three are separable and this is the widest.*
-
-`docs/01` §15.3 is normative: a metric's expression MAY read series, **entity
-fields**, `inputs`, `cfg` and the engine's `model.*`. Entity fields it cannot
-read. `metric x = asset.proj.drawn` is `EXPR_UNKNOWN_NAME`;
-`series_sum("asset.proj.drawn", 11, 11)` returns 0 while the published series
-holds 10,000. The metric environment is built from `stream_series` plus
-`waterfall_series` and nothing else (`crates/cfdl-engine/src/lib.rs`, the
-declared-metrics block), and `bind_states` — called for streams, distributions
-and state evaluation alike — is never called there. That is a missing binding,
-not a design: the restrictions the block does argue (horizon pinning,
-declaration order, folds never counting as cash) are documented at length, and
-this one appears nowhere.
-
-The same absence hides every computed aggregate. `entity.<symbol>.net_cash_flow`
-is computed, published, and unreachable: a two-loan pool probe reads loan A as
-3,600 by stream prefix and 0 by entity aggregate, silently. `domain.*`
-subtotals, `entity.*.total`, `run.*` scalars — all dropped, the last because the
-scalar binding filters on the `model.` prefix alone.
-
-**Every failure above is a silent zero.** `check_series_names` walks stream
-amounts, guards, waterfall sources and field rules — not metric expressions —
-so `series_sum("total.nonsense.xyz", 0, 11)` publishes 0 with no warning. The
-engine's own stance is that a metric that fails to evaluate is fatal, because
-"a missing key reads as 'not run' rather than 'not defined'"; a metric reading
-a name nothing binds deserves the same severity, and today gets none.
-
-**This is not a plane boundary, which the entry's first title implied by
-calling the published document a "results plane".** `docs/28` §2 names two
-planes and only two: the causal plane, and the VALUATION plane — the results
-stage, netting, rollups, discounting, metrics and statements alike. Every
-name listed above is computed in the valuation plane, published by the
-valuation plane, and unreachable from a metric evaluated in that same plane.
-A missing binding inside one plane is a worse finding than a boundary
-between two, because no rule was being upheld.
-
-**The fix must not recreate the August 2026 naming ambiguity.** Expression
-names and published results keys are different dialects (`ops.rev` vs
-`stream.ops.rev`), and `docs/03` records what happened when documentation
-conflated them: "a model that followed it got an empty pot rather than a
-diagnostic." Merging results keys into `env.series` reopens that. A distinct
-accessor for the published keys keeps the dialect explicit at the call site
-and leaves every existing metric meaning what it meant.
-
-Related: §7.43 (ownership is the other half of reaching results from an
-expression), the model-declared statement (`docs/01` §16) (the declaration surface these reads would serve), §7.84
-(another figure the valuation plane computes that the engine got wrong first).
-
-Provenance: found probing the metric environment against `docs/01` §15.3,
-30 August 2026. Six probe models; every number above reproduced from a run
-rather than read from the source.
-
-**Status, 31 August 2026 — shipped, in three pieces.**
-
-1. **Entity fields bind.** `bind_states` is called for the metric environment
-   at the horizon, which is the normative §15.3 promise that was simply
-   absent. `asset.proj.drawn` in a metric was `EXPR_UNKNOWN_NAME`; it now
-   reads the field's value at the horizon, in both spellings.
-
-2. **The published keys bind too, and the two dialects agree.** Every series
-   the valuation plane publishes is visible to a metric under the key the
-   results document uses: `stream.<name>`, `entity.<symbol>.net_cash_flow`,
-   `account.<name>`, a field's own series, a money subtotal, and
-   `model.net_cash_flow` — beside the bare expression names, which keep their
-   meaning exactly. The entry feared this "reopens the August 2026 naming
-   ambiguity" and the measurement says the opposite: the ambiguity IS that
-   `ops.rev` read 300 while `stream.ops.rev` read 0, and binding both
-   dissolves it. The binding is added to the METRIC environment only — a
-   pot's window and a guard's read are untouched, because a metric reads the
-   finished projection and they read the walk.
-
-3. **A name nothing publishes is refused** — `E1365_METRIC_UNKNOWN_SERIES`,
-   at compile time, walking the ASSEMBLED IR because the vocabulary is the
-   whole document (lowered streams, waterfall steps, entity rollups,
-   accounts, fields, pack subtotals) and half of it does not exist where
-   metrics are read. `series_sum("total.nonsense.xyz", 0, 11)` published 0
-   with no diagnostic; it is now a compile error. A `.*` selector may still
-   match nothing, because matching nothing is what a selector states at its
-   call site.
-
-**One thing deliberately left unbound: a RATIO subtotal.** Its undefined
-periods publish as `null` rather than zero — a coverage ratio in a period with
-no debt service — so a fold over it must decide what `null` means, and that
-decision belongs with the reductions of §7.86. Naming one is refused with its
-own hint rather than folded as though `null` were nothing. That is not the old
-behaviour: before, it read zero and said nothing.
-
-Fixtures: `valid/metric_reads_published_results` (both field spellings, the
-field's own series, the two stream dialects proved equal by a third metric
-that subtracts them, the entity rollup and the model aggregate) and
-`invalid/metric_unknown_series` (E1365). No golden value moved and all 45
-benchmark cases hold — nothing in the corpus was relying on a silent zero.
-
-The vocabulary now exists in two places, the compiler's check and the engine's
-binding, and they must agree. Both derive from the same published-series
-rules and the two fixtures pin the pairing from both ends; a third place would
-be the point to extract it.
-
----
-
-### 7.86 Sum and mean are the only reductions over a series
-
-*Belongs with the language and engine (section 5). Split from §7.85.*
-
-`series_sum` and `series_avg` are the whole reduction vocabulary. Peak
-outstanding debt, maximum drawdown, the period a balance peaked, the first
-period DSCR crosses a threshold, a count of breach periods — none is
-expressible over a series.
-
-**The trap is that the miss looks like a hit.** `min`/`max`/`sum`/`avg` are
-variadic scalar folds, so `max(series_sum("dbt.*", 0, 11))` compiles, runs,
-and returns the net lifetime figure — a one-element fold — silently labelled
-as a peak. Probed: draws of 6,000 and 4,000 with a 7,000 repayment publish
-`peak_naive` = 3,000 against a true peak of 10,000, no diagnostic. The
-hand-unrolled alternative (`max` over one cumulative window per period) is
-correct and O(horizon) of source text that silently under-measures if the
-horizon grows.
-
-**The two workarounds each poison something.** A helper stream carrying a
-running balance can read other series in a later wave, but a stream must be
-`inflow` or `outflow`, so the helper is cash: the probe corrupted
-`model.total` from 3,000 to 78,000 and `model.moic` to 20.5. A field
-recurrence is non-cash but its `next` reads no stream series at all
-(`docs/14` §3.1), so the schedule must be restated by hand and the two
-statements drift.
-
-Shape: `series_max` / `series_min` beside the existing pair — same signature,
-same selector dialect, same window semantics, projection-tail rules
-unchanged. Position-returning forms (argmax, first crossing) need one design
-decision — a period index is trivially comparable, a date is what a covenant
-clause names — and belong in the same pass.
-
-Provenance: found asking what a metric could do with a running balance,
-30 August 2026; every workaround above was run, not reasoned about.
-
-**Status, 31 August 2026 — shipped, and wider than the entry proposed.** Four
-reductions, not two: `series_max`, `series_min`, `series_prod` and
-`series_count`, beside the existing pair. Same signature, same selector
-dialect, same window semantics, same contexts, projection-tail rules
-unchanged.
-
-**The decision the entry did not anticipate: EVERY FOLD READS THE PER-PERIOD
-AGGREGATE.** When a selector matches several streams they are added together
-within each period first, and the fold runs over that one series. Addition is
-associative, so for `series_sum` the order was invisible and the shipped code
-flattened stream-by-stream. A maximum is not associative that way: the peak of
-the combined position and the largest single cell are different numbers, and
-only the first is what "peak outstanding" means. Pinned by a unit test whose
-data makes the two answers differ (a cell of 7 in a period whose aggregate is
-4). No golden moved, which is the evidence that `series_sum` and `series_avg`
-still compute what they computed.
-
-**A selection matching nothing** sums to 0, multiplies to 1 and counts 0.
-`series_max`/`series_min` publish NULL — nothing has no maximum, and a zero
-there would state a peak no period reached, which is this entry's own lesson
-applied to its own fix.
-
-Null rather than an evaluation error, decided after the first shipping and
-changed: null is already the language's word for absent (an entity state no
-event has set is one; a ratio's undefined period publishes as one), it carries
-the guard rails — `null == null` compares while ordering and arithmetic on it
-are errors, so an absence cannot quietly become a number — and unlike an error
-it leaves a model able to SAY a selector may legitimately be empty:
-`if(series_count("x.*", 0, t) == 0, 0, series_max("x.*", 0, t))`. The results
-schema has always permitted a null scalar, so this needed no version bump; what
-it needed was a `Scalar::Null`, because the catch-all arm was stringifying the
-absence as `"null"` and making it look like a value of type text. There is no
-`null` LITERAL in the dialect, so emptiness is tested through `series_count`.
-
-**Three outcomes, not two — and collapsing two of them was measured.** A
-selection that matched nothing and a window the walk has not reached both used
-to arrive at the caller as `None`, so the first attempt at the null change
-turned every REFUSED read into a null: a cash-trap guard that had said "series
-`ops.noi` is not available in this context" started saying "cannot apply Sub to
-number and null". Four goldens caught it inside one run. `SeriesFold` now
-distinguishes `NoAnswer` — a fact about the DATA — from `Unavailable`, a fact
-about the CONTEXT, which is `docs/28` §4's refusal to clamp a forward read and
-must stay an error. A unit test pins both.
-
-**And the entry's headline example needed correcting.** "Peak outstanding
-debt" is NOT `series_max` over the debt streams: that is the largest per-period
-NET FLOW, a different and also useful question. A peak balance is a fold over
-the series that CARRIES the balance — an entity field — which a metric could
-not read until §7.85 bound it. The two entries close this together, and the
-fixture shows both readings side by side: `series_max("dbt.*")` = 6,000, the
-largest flow; `series_max("asset.tlb.balance")` = 10,000, the peak the entry
-asked for.
-
-`series_prod` retires a documented workaround rather than duplicating one:
-`exp(series_sum(helper, 0, t))` with a helper stream carrying `ln(1 + r_t)`
-needs the helper to be `inflow` or `outflow`, so it IS cash, and both `ln` and
-`exp` escape to f64. `series_prod` needs no helper and stays decimal.
-
-Fixture: `valid/series_reductions`, which also pins the TRAP — `peak_wrong =
-max(series_sum("dbt.*", 0, 3))` and `lifetime` publish the same number, so the
-one-element fold cannot come back silently.
-
-**What this does NOT close** is §7.94: a reduction over a TRANSFORMED series
-(a count of breach periods, a maximum drawdown), and the position-returning
-forms. Both were part of this entry's "same pass" and neither is a reduction —
-see the entry for why they separated.
-
----
-
-### 7.87 A Monte Carlo trial discards every metric but model.npv
-
-*Belongs with the language and engine (section 5).*
-
-Each trial executes a complete deterministic run — journal, streams, every
-declared and domain metric. What survives into `trial_summaries` is a map
-built fresh with one entry, `model.npv`. The scenario path, one function up,
-does it right: `scenario_metrics = scenario_run.metrics` carries the whole
-map, which is why §15.3 can promise a declared metric in every scenario
-column. The trial loop has `trial_run.metrics` in scope and does not use it.
-
-Consequences, in order of cost. A declared metric gets no distribution — the
-figure a case exists to assert exists in no trial. `moic`, `irr`, every
-`domain.*` KPI: no distribution. The section-level `MetricSummary` schema
-defines p01 through p99; the engine fills mean, stdev, min, max, p50 and
-hard-codes the rest `None`. And because per-trial series are (reasonably) not
-retained, the metric map is the only window into a trial — whatever was not
-declared before the run is unrecoverable after it.
-
-The narrow fix is nearly free: carry `trial_run.metrics` into the summary and
-extend the aggregation to every key present, percentiles included. The volume
-question that makes per-trial *series* expensive does not arise for scalars.
-
-Related: §7.23 — the scenario plane has the mirror-image gap (metrics but no
-per-period series), and a decision about stochastic exports should cover both.
-
-Provenance: found checking the claim "the deterministic results are exported
-for each MC trial" against the trial loop, 30 August 2026. The claim is
-false today and one line from true.
-
-**Status, 31 August 2026 — shipped, `results_version` 0.9.** The trial loop
-carries `trial_run.metrics` into the trial summary, so a trial's record is now
-the same metric map the deterministic block publishes: `model.irr`,
-`model.moic`, every `stream.*.total` and `entity.*.total`, each `domain.*` KPI
-and every metric the model declared. `monte_carlo.metrics` summarises each name
-present rather than the one that was hard-coded, and fills p01 through p99 —
-the section whose whole subject is dispersion had been declining to state its
-tails. Percentiles interpolate linearly between order statistics (R type 7,
-Excel's `PERCENTILE`), which at q = 0.5 is exactly the median already
-published: every blessed NPV figure is unchanged, and the goldens show the
-change as purely additive. `period_distribution` keeps nearest-rank, because a
-period is an observation rather than a continuous amount.
-
-Two things the entry did not anticipate, both found by building it. Not every
-trial publishes every name — `model.irr` exists only where the flows solve for
-a rate — so a summary states `trials`, the count it was taken over, or a mean
-over three trials and a mean over five hundred would read identically. And a
-name a distribution cannot be taken over (a string, or a kind that changed
-between trials) is carried per trial and omitted from the summary rather than
-guessed at.
-
-The reach is wider than metrics, because of what shipped beside it: a trial row
-keys `entity.<symbol>.total`, and the published entity graph (§7.43, §7.91,
-`results_version` 0.7) keys `graph.entities[].symbol` — so a per-entity
-distribution is now readable from results alone, on the ownership axis rather
-than by inspecting names. Fixtures: `valid/monte_carlo_metric_distribution`
-(the declared metric, the IRR, the MoIC and the rolled-up container total, all
-distributed) and `valid/monte_carlo_partial_metric` (`model.irr` in 20 trials
-of 24, which is what `trials` exists to say). §7.23's mirror-image gap — the
-scenario plane publishes metrics but no per-period series — is untouched and
-still open.
-
----
-
-### 7.88 A container is not a kind of asset
-
-*Belongs with the language and engine (section 5).*
-
-`ENTITY_FAMILIES` is closed to `asset` and `party`, and the closure is right —
-"the language, not the pack, decides what kinds of thing a model contains."
-The roster is one family short. A fund, a portfolio, an SPV, a transaction is
-a grouping that *scopes* cash, not a thing that produces or consumes it.
-Modelling one as an `asset` with `part_of` children types it falsely, and the
-falsehood is load-bearing: `Asset.Financial` claims "a claim on cash," which a
-portfolio is not, and every validation built on families inherits the lie.
-
-Shape: a `container` family in the language base, with core types the platform
-layer above already specifies (Transaction, Portfolio, Fund, SPV) as pack- or
-base-supplied subtypes. `contains` already exists as the inverse of `part_of`;
-a container adds `container -> asset` and plausibly `container -> contract`
-edges. The rollup machinery is indifferent —
-`entity.<symbol>.net_cash_flow` follows `part_of` today and would follow a
-container edge identically — so the engine change is small; the change is to
-what a model may *say*.
-
-This is the standalone fraction of "model linking" (deferred past v1): one
-model, many assets, fund-level cash and fund-level metrics, no cross-model
-plumbing. What it does not cover — one model consuming another's published
-results — stays deferred.
-
-**Sequencing note: families are a closed vocabulary and results keys embed the
-family** (`<family>.<entity>.<field>`). Adding a family after 1.0 is a
-breaking change to every consumer that switches on it; adding it before is
-additive. This belongs in the release candidate, not after it.
-
-Provenance: raised comparing the language base against the platform ontology
-specification above it, 30 August 2026.
-
----
-
-**Addendum, 30 August 2026 — this is a restoration, not an addition.** The
-comment above `ENTITY_FAMILIES` declares "FOUR FAMILIES, fixed here": asset,
-party, contract, reference. The constant beneath it implements two. Contract
-and reference are already first-class rosters in the ontology
-(`OntologyContract`, `OntologyReference`) with their own declaration keywords
-— what was never finished is treating them as NODE families: identity-bearing,
-valid endpoints for relations. So the entry's real shape is: restore the
-roster to its own comment, add `container` as the fifth, and unify the GRAPH
-while leaving the syntax per-kind (`entity` declares asset/party/container;
-`contract` declares contracts; `curve`/`quantile` declare references).
-
-**Status, 30 August 2026 — shipped in cfdl-pack.** `ENTITY_FAMILIES` is
-asset/party/container; `NODE_FAMILIES` (asset, party, container, contract,
-reference) is the new superset relations validate against — the graph
-unified, the syntax per-kind, exactly as the addendum below specifies. Four
-container base types ship (`Container.Fund`/`Portfolio`/`SPV`/`Transaction`),
-`part_of` and `owns` endpoints widened to include containers (endpoints now
-accept one family or a list; every pre-widening pack file still parses). The
-engine needed nothing: `entity container fund` already compiled — the model
-namespace was never family-gated — and the rollup already follows `parent`
-regardless of family, verified with a probe whose container aggregated its
-child's cash. The Portfolio migration landed
-31 August 2026: `CRE.Container.Portfolio` and `Energy.Container.Portfolio`
-(renamed — "Asset" in a container's type_id would be incoherent), both
-penzance models re-declared (`entity container project`, every
-`asset.project` reference moved with it), economics identical — 45/45
-benchmarks. The migration settled a design point the models forced: a
-container MAY carry directly-attached cash (penzance hangs land and
-development costs on the project), so "does not produce" softened to
-"deal-level cash is real cash" in docs/01 and docs/07. What remains: deciding whether a model-level `entity` namespace should be
-validated against `ENTITY_FAMILIES` at all — today `entity carpark x` is
-legal and silently untyped, which is a finding of this work, not a change
-it made.
-
-**`part_of` is untouched, and containment reuses it.** Unit-in-building and
-loan-in-pool are asset→asset hierarchy and stay exactly as they are. A
-container's containment is the same relation with widened endpoint families
-(`container → asset`, plausibly `container → contract`), not a parallel edge:
-one hierarchy concept, and `contains` is already its registered inverse. The
-rollup machinery follows the relation and is indifferent to the family.
-
----
-
-### 7.89 Two relations are not a relation vocabulary
-
-*Belongs with the language and engine (section 5). Pairs with §7.88.*
-
-The language base declares `part_of` and `owns`. The machinery around them is
-complete — cardinality, inverse names, per-pack extension, the CRE pack adds
-`occupies` and `manages` — but the base vocabulary stops before the relations
-deal models actually turn on:
-
-- `secured_by` (contract -> asset): collateral. Loans and the assets securing
-  them are both modelled today with no way to bind one to the other, so LTV
-  is a hand-paired input, a release provision has no structure to read, and
-  nothing can validate that a mortgage names its property.
-- `guarantees` (party -> contract): the guarantee obligation recourse
-  analysis needs.
-- `is_counterparty_to` (party -> contract): who is on the other side —
-  today recoverable only by reading a contract's terms.
-
-First increment: declarative only. The relations exist, are validated
-(endpoint families, cardinality), and are published; no engine semantics
-change. That alone unlocks the "search-around" selection pattern the
-ontology's inspiration (Palantir's object sets) treats as primary: start at a
-party, traverse `guarantees` to contracts, `secured_by` to assets, and name
-the resulting cash — which is what "isolate one artist's royalties" or "one
-guarantor's exposure" actually is. Whether any relation later acquires engine
-semantics (does `secured_by` feed a recovery calculation?) is a separate
-decision per relation.
-
-Related: §7.43 — relational selection over results requires results to carry
-the graph; publishing ownership is the first edge of that.
-
-Provenance: raised comparing the language base against the platform ontology
-specification above it, 30 August 2026.
-
----
-
-**Status, 30 August 2026 — shipped with §7.88.** `secured_by`
-(contract→asset), `guarantees` (party→contract) and `is_counterparty_to`
-(party→contract) are in the language base, declarative as specified —
-validated, published with the ontology, no engine semantics. They typecheck
-because relation endpoints now range over `NODE_FAMILIES`, which is the
-contract-as-node dependency the addendum below records.
-
-**Addendum, 30 August 2026 — depends on §7.88's restoration.** `guarantees`
-and `is_counterparty_to` are party→CONTRACT edges. They can only typecheck
-once a contract is a node family, which is §7.88's graph unification. The two
-entries are one change wearing two numbers, and should land together.
-
----
-
-### 7.90 A slice: selection with a name, and no pretence of completeness
-
-*Belongs with the language and engine (section 5). Related: the model-declared statement (`docs/01` §16), §7.43.*
-
-A statement's defining property is completeness — every category in exactly
-one line row, a reconciliation block, a `residual` row for cash nothing
-claimed, `E5029` for cash outside every fold. The complementary thing has no
-name and no surface: a *deliberately partial* selection — one loan out of a
-pool, one artist's royalties, the portfolio with a product line removed — with
-metrics computed over the selection.
-
-Two design commitments, both load-bearing:
-
-**A slice must not inherit the reconciliation machinery.** A filtered total
-that publishes a residual invites reading a partial number as a complete one.
-The absence of the reconciliation block is what the declaration *means*; it is
-the difference between a slice and a statement, and the reason "a statement
-with a filter" is the wrong construction.
-
-**A slice is a selection, not a copy.** It names entities, categories,
-relations (once §7.89 lands) or stream patterns; everything computed over it
-carries the selection in its lineage the way a metric carries its formula.
-The precedent is Palantir's object set — a saved, composable, named selection
-that functions and views consume — which is the concept the platform layer's
-"ontology slice" already borrows for packages; this brings the same idea to
-what the valuation plane publishes. The EVS spelling ("slice: a subset of the graph relevant
-to a specific valuation... portable and self-contained") is the right one and
-the word should be registered in `docs/terminology.toml` beside `statement`
-and `metric` when this lands — noting that `subtotal` and `category`, both
-load-bearing, were never registered at all.
-
-Depends on: §7.43 (results must attribute streams to entities before a slice
-can select on them), §7.88/§7.89 (the vocabulary worth selecting with).
-Category- and pattern-scoped slices are expressible with nothing else landing
-first.
-
-Provenance: raised working out why "remove certain products and recompute" has
-no home in the language, 30 August 2026. The naming (`slice`, not `view`) was
-settled against the platform vocabulary the same day.
-
-**Status, 31 August 2026 — shipped** (docs/01 §15.4, normative). `slice` is
-the 87th reserved word; clause kinds intersect, values within a kind union,
-excepts subtract; entities are references selecting their `part of`
-descendants (a container's slice is its members'); `type` matches
-transitively through the recorded refinement, expanded at compile because
-the engine is pack-free; category and stream selectors are quoted — one
-dialect. Results publish selection lineage, matched streams (empty
-published, not omitted), net series, and total/npv/irr — and no
-reconciliation block, exactly as this entry demanded. Fixtures:
-`valid/slices` (intersection, container scope, except — 420/300/510 pinned),
-`valid/slice_by_type` (`Contract.Debt` expanding through
-CRE.Contract.PermanentDebt to the three lowered debt streams), four invalid
-fixtures for E1361–E1364. results_version 0.8.
-
----
-
-### 7.91 An entity may carry a stable identity, and results repeat it
-
-*Belongs with the language and engine (section 5). Related: §7.43, §7.88–§7.90.*
-
-An entity is a symbol scoped to one model. The governance layer above the
-language assigns canonical identifiers to real-world things — the same
-building, borrower or fund referenced across many deals — and its identity
-contract reads "CFDL references those IDs, never invents ambiguous entities."
-That contract has no CFDL half: an entity declaration has nowhere to carry an
-external identifier, and results publish none, so a consumer joining two
-packages on "the same asset" is joining on symbol names and hope.
-
-Shape: an optional `id "<opaque string>"` on an entity declaration. The engine
-ignores it entirely — no semantics, no resolution, no network anything.
-Validation is uniqueness within the model and nothing else, because the
-language cannot know what the string means and must not pretend to. It rides
-the IR with the entity's provenance and is published in results wherever the
-entity's symbol appears, which today means beside the rollup keys and — once
-§7.43 lands — beside each stream's owner.
-
-The standalone cost is near zero; that is the point. A model that carries no
-ids loses nothing. A layer above that assigns them gets the one hook it needs
-to make a package's numbers attributable to canonical things, without the
-language growing an opinion about identity.
-
-**Sequencing: pre-1.0, for the same reason as §7.88.** Adding an optional
-field is additive; retrofitting identity into published results after
-consumers exist forces a version switch on all of them. Reserving the
-declaration surface now costs one optional token.
-
-Provenance: raised from the platform layer's identity-contract gap analysis
-(H.3), 30 August 2026, which found the binding missing on both sides —
-and scoped here to the half the language can supply alone.
-
-**Status, 31 August 2026 — shipped.** The literal field `id` is the
-carrier: engine-opaque, unique within the model (`E1360`, with the
-join-would-merge reasoning in the hint), republished per entity in the
-results graph. `fixtures/valid/stable_identity` pins the round trip;
-`invalid/duplicate_entity_id` pins the refusal.
+### 7.88 A model-level entity namespace is not validated against the families
+
+*Belongs with the language and engine (section 5). What remains of the
+container entry: the construct shipped 30–31 August 2026 — `container` is the
+third entity family, `NODE_FAMILIES` adds contract and reference for
+relations to range over, and a container MAY carry deal-level cash
+(`docs/01` §7.1, `docs/07` §6.1, `CHANGELOG`).*
+
+`entity carpark x` is legal and silently untyped. The model namespace was
+never family-gated — which is why `entity container fund` compiled before
+the family existed — so a declaration whose family the language does not
+know is accepted as though it were one. Decide whether a model-level
+`entity` declaration should be validated against `ENTITY_FAMILIES` at all,
+and if so what the refusal says: the namespace is either a typo for a family
+the roster has or a family it lacks, and the diagnostic should let the author
+tell which. Found when the container family landed; it was a finding of that
+work, not a change it made.
+
+Related: `docs/01` §7.1, `docs/07` §6.1.
 
 ---
 
 ### 7.94 A reduction reads a series, never a transformed one — and cannot say WHERE
 
-*Belongs with the language and engine (section 5). Split from §7.86 when its
-four reductions shipped and these two did not.*
+*Belongs with the language and engine (section 5). Split from the
+series-reductions entry when its four reductions shipped (`docs/03` §4) and
+these two did not.*
 
 `series_max` answers "what was the peak". Two neighbouring questions it does
 not answer, and neither is a reduction:
@@ -990,7 +515,7 @@ missing thing is not a reduction, it is the line to reduce. **Do not build the
 predicate argument before the model-declared statement (`docs/01` §16) is decided.**
 
 **2. WHERE, not what.** `series_argmax`, and "the first period DSCR crossed
-1.20". Three decisions, which is why it did not ride along with §7.86:
+1.20". Three decisions, which is why it did not ride along with the reductions:
 
 - **The return type.** A period index composes with the windows every
   reduction already takes; a DATE is what a covenant clause names. And the
@@ -1015,13 +540,13 @@ so a later reader knows this was decided rather than overlooked (31 August
 2026).
 
 **Also unbuilt, and related: a cumulative scan.** A peak balance is a fold over
-a series that CARRIES the balance, and §7.86's fixture shows that working
+a series that CARRIES the balance, and `fixtures/valid/series_reductions` shows that working
 because the model declares the balance as a field. A model that has only flows
 cannot synthesise the running total to fold — that is a scan (a series in, a
 series out), not a reduction, and it is the same missing capability as part 1
 seen from another side.
 
-Provenance: split out of §7.86 on 31 August 2026, when its four reductions
+Provenance: split out of the series-reductions entry on 31 August 2026, when its four reductions
 shipped and these did not. The `period -> date` gap and the the model-declared statement (`docs/01` §16) dependency
 were both found while scoping that work, not before it.
 
@@ -1030,7 +555,8 @@ were both found while scoping that work, not before it.
 ### 7.95 Undefined is not zero, and a series cannot say so
 
 *Belongs with the language and engine (section 5). The design is SETTLED below
-and not built; §7.85 deferred it and §7.86 sharpened it.*
+and not built; the metric-environment work deferred it and the series
+reductions sharpened it (`docs/01` §15.3, `docs/03` §4).*
 
 A ratio subtotal publishes `null` for the periods where it is genuinely
 undefined — a coverage ratio in a period with no debt service — and no
@@ -1042,10 +568,10 @@ question, and the covenant question is the reason ratios exist.
 `BTreeMap<String, Vec<f64>>`, in which "undefined" has no spelling. Binding a
 ratio there would have to write SOMETHING in the undefined periods, and every
 candidate is a lie: 0 is a value the ratio never had, and it is the exact
-failure §7.86 exists to end.
+failure the series reductions exist to end (`docs/03` §4).
 
 **Two things look like "missing" and are not the same thing.** Conflating them
-is the trap this entry exists to avoid, and §7.86 already paid once for
+is the trap this entry exists to avoid, and the reductions already paid once for
 conflating a neighbouring pair:
 
 - **Past the end of the data** — the window runs into the projection tail or
@@ -1073,18 +599,18 @@ conflating a neighbouring pair:
 4. **An all-undefined window** gives null for max, min and avg, and 0 for sum
    and count. A mean of nothing is not zero.
 
-Note what this inherits: §7.86 already made `series_max` publish null for an
+Note what this inherits: `series_max` already publishes null for an
 empty selection, so the value shape and the `Scalar::Null` publication exist
 and the results schema already permits them. What remains is the
 representation and the skip rule.
 
-Related: §7.86 (the reductions), §7.85 (which bound everything else a metric
-can read), §7.94 (the transformed-series reductions, which need this decided
+Related: `docs/03` §4 (the reductions), `docs/01` §15.3 (which binds everything
+else a metric can read), §7.94 (the transformed-series reductions, which need this decided
 first — a breach indicator over a ratio is exactly a series with undefined
 periods).
 
-Provenance: deferred out of §7.85 on 31 August 2026, sharpened while building
-§7.86's four reductions, and settled the same day rather than left as an open
+Provenance: deferred out of the metric-environment work on 31 August 2026,
+sharpened while building the four reductions, and settled the same day rather than left as an open
 question — the decision is cheap to record now and expensive to re-derive.
 
 ### 7.96 A party owns at most one account

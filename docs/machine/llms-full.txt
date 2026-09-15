@@ -8279,7 +8279,7 @@ Fields that move:
 - `E1357_LIFECYCLE_AUGMENT_TOPOLOGY` — a `lifecycle` block names a machine the PACK declared and also states `initial`, `state`, or an edge. A model may add arrival actions to a pack's machine and nothing else (`docs/34` D2a): the pack's machine is the checkable contract, and a model needing different topology declares a separate machine under its own name. The states and edges are refused rather than ignored — silently dropping them would leave the model saying one thing and the machine doing another.
 - `E1358_ARRIVAL_ACTION_SETS_STATUS` — an `on enter` or edge action writes `status`. An arrival action sets FIELDS on the entity that transitioned; a status write would fire a second transition inside the same period, breaking one-transition-per-entity-per-period. A transition that should cause another transition is topology — an edge out of the target state, taken next period — and status writes remain the named event's privilege (`docs/34` D4).
 - `E1359_ARRIVAL_ACTION_UNKNOWN_FIELD` — an `on enter` or edge action sets a field the entity bound to that machine does not have. The name is entity-relative, so it resolves against every entity bound to the machine and all of them need the field; the set is the union of what the model's entity block declares and what its ontology type contributes. Refused because a misspelled field is a write that lands nowhere — the silent-substitution shape `docs/13` §7.38 records for a misspelled series. The action may instead name a FIELD ROLE a master declares (`set balance = 0`, `docs/40` §3); a role that no contract on the transitioning entity fills — a closed-form debt lowers no balance field — is refused with the same code, saying so.
-- `E1360_DUPLICATE_ENTITY_ID` — two entities declare the same literal field `id`. The id is a stable identity for the layer above the model — engine-opaque, published in the results graph (`docs/06`) — and a consumer joining on it would merge two things into one. Uniqueness within the model is the one thing the language can check about a value it must not interpret (`docs/13` §7.91).
+- `E1360_DUPLICATE_ENTITY_ID` — two entities declare the same literal field `id`. The id is a stable identity for the layer above the model — engine-opaque, published in the results graph (`docs/06`) — and a consumer joining on it would merge two things into one. Uniqueness within the model is the one thing the language can check about a value it must not interpret (`docs/01` §7.1).
 - `E1361_DUPLICATE_SLICE` — two slices share a name. Same rule as a metric: one name, one selection.
 - `E1362_SLICE_UNKNOWN_ENTITY` — a slice's `entity` (or `except entity`) names an entity the model does not declare. A slice selects by reference, and a reference is what the compiler can check — refused rather than silently matching nothing.
 - `E1363_SLICE_UNKNOWN_TYPE` — a slice's or a statement row's `type` names an ontology type the active ontology does not define. The hint lists the known contract types; a master type (`Contract.Debt`) matches transitively through `refines`.
@@ -8304,7 +8304,7 @@ Fields that move:
 - `E1369_STATEMENT_AUTHORED_AND_GENERATED` — a statement states both a `structure` and its own rows, or neither. A generated statement partitions the cash by construction, because a hierarchy covers its own tree; an authored one partitions it by the author's care. Mixed, neither guarantee holds — an authored row claims streams the generated rows already claimed, so the bottom line double-counts and the reconciliation that makes a statement trustworthy becomes noise. A statement stating neither would render nothing. `docs/13` §7.55.
 - `E1368_STATEMENT_UNKNOWN_REFERENCE` — a statement filters by a slice, or shows a metric, that the model does not declare. A presentation that silently shows nothing is the failure §7.55 exists to end.
 - `E1370_STATEMENT_SERIES_ROW_CLAIMS` — an authored row draws a published `series` beside a claim clause (`category`, `stream`, `slice`, `entity`, or a ratio's `of`/`to`). A series row presents a fold of the ledger, claims no streams and stays out of the bottom line; a claim clause beside it could only be resolved by a precedence the reader cannot see, which is a silently ignored clause. Refused instead. `docs/13` §7.55.
-- `E1365_METRIC_UNKNOWN_SERIES` — a metric folds a series name this model does not publish. `series_sum`/`series_avg` (and each sibling reduction, to its own identity) return 0.0 for a selector that matches nothing, which is right for a `.*` selector and wrong for a name spelled out in full; in a metric it is worse than wrong, because a fold publishes ONE number under a name the author chose, with no series beside it to show the zero (`docs/13` §7.85). A metric may fold any series the valuation plane publishes: a stream by its own name or as `stream.<name>`, a waterfall step, `entity.<symbol>.net_cash_flow`, `account.<name>`, an entity field, a money subtotal, a declared slice's net as `slice.<name>`, or `model.net_cash_flow`. A RATIO subtotal is refused with its own hint — its undefined periods publish as null rather than zero, and what a fold should do with null has not been decided.
+- `E1365_METRIC_UNKNOWN_SERIES` — a metric folds a series name this model does not publish. `series_sum`/`series_avg` (and each sibling reduction, to its own identity) return 0.0 for a selector that matches nothing, which is right for a `.*` selector and wrong for a name spelled out in full; in a metric it is worse than wrong, because a fold publishes ONE number under a name the author chose, with no series beside it to show the zero (`docs/01` §15.3). A metric may fold any series the valuation plane publishes: a stream by its own name or as `stream.<name>`, a waterfall step, `entity.<symbol>.net_cash_flow`, `account.<name>`, an entity field, a money subtotal, a declared slice's net as `slice.<name>`, or `model.net_cash_flow`. A RATIO subtotal is refused with its own hint — its undefined periods publish as null rather than zero, and what a fold should do with null has not been decided.
 - `E1304_UNRESOLVED_OPTION_REF` — an event exercises an option that is not declared. Checked in the compiler rather than the resolver, because options are not in the symbol tables.
 - `E1310_ENTITY_BLOCK_WITHOUT_TYPE` — an entity uses a block but declares no type, so there is nothing to check the block against.
 - `E1311_UNKNOWN_ENTITY_TYPE` — an entity declares a type the active ontology does not define. The known types are listed.
@@ -13362,7 +13362,7 @@ slice debt_interest {
   line interest
 }
 
-// A METRIC FOLDS A SLICE (docs/13 §7.90: a named selection that functions
+// A METRIC FOLDS A SLICE (docs/01 §15.4: a named selection that functions
 // consume). `slice.debt_interest` is the slice's net, so the figure is
 // selected by type and line rather than by naming a stream or a pack's
 // category — the cross-pack reading of docs/40 stage 5.
@@ -13379,7 +13379,7 @@ time calendar annual from 2026-01 for 3
 // A METRIC CAN READ WHAT THE VALUATION PLANE PUBLISHES — INCLUDING ITS OWN
 // AGGREGATES.
 //
-// `docs/13` §7.85. `docs/01` §15.3 has said in normative text since metrics
+// `docs/01` §15.3 has said in normative text since metrics
 // entered the spec that a metric's expression MAY read series, ENTITY FIELDS,
 // `inputs`, `cfg` and the engine's `model.*`. Entity fields it could not read:
 // the metric environment was built from stream and waterfall series and
@@ -13526,7 +13526,7 @@ time calendar annual from 2026-01 for 5
 
 // A TRIAL IS A COMPLETE RUN, AND EVERY FIGURE IT COMPUTED SURVIVES IT.
 //
-// `docs/13` §7.87: the trial loop used to build a fresh one-entry map holding
+// `docs/06`, `results_version` 0.9: the trial loop used to build a fresh one-entry map holding
 // `model.npv` and publish that as the trial's whole record. Every other figure
 // — the IRR, the MoIC, each entity's total, each stream's total, and every
 // metric the model declared — was computed inside the trial and dropped on the
@@ -13539,14 +13539,14 @@ time calendar annual from 2026-01 for 5
 // figure below MOVES with the draw and a distribution over it means something:
 //
 //   - `metric.exit_multiple` — a declared metric, the thing §7.25 built and
-//     the thing §7.87 was throwing away;
+//     the thing the old trial loop threw away;
 //   - `model.irr` and `model.moic` — the acquisition in 2026 is the sign
 //     change an IRR needs;
 //   - `entity.container.fund.total` — the ROLLED-UP total, which is the join
 //     to the results-plane graph: `graph.entities[].symbol` is
 //     `container.fund`, so a consumer holding results alone can read a
 //     per-entity distribution rather than inferring ownership from names
-//     (§7.43, §7.91).
+//     (`docs/06` `graph`; `docs/01` §7.1).
 //
 // The seed is stated, so every published percentile is reproducible: a Monte
 // Carlo run IS a golden when its seed is.
@@ -13599,7 +13599,7 @@ time calendar annual from 2026-01 for 3
 // drawn across zero, so in the trials that draw it negative there is no sign
 // change and no IRR — and a mean over the trials that DID solve would read
 // exactly like a mean over all of them, if the summary did not say how many it
-// was taken over. `trials` on a metric summary is that count (`docs/13` §7.87).
+// was taken over. `trials` on a metric summary is that count (`docs/06`).
 //
 // `model.npv` is published by every trial and `model.irr` by some, so this one
 // model shows both cases in one results document.
@@ -15861,7 +15861,7 @@ time calendar annual from 2026-01 for 4
 
 // SUM AND MEAN WERE THE WHOLE REDUCTION VOCABULARY.
 //
-// `docs/13` §7.86. Peak outstanding debt, the worst period, a compounding
+// `docs/03` §4. Peak outstanding debt, the worst period, a compounding
 // factor, a count of periods that paid — none was expressible over a series,
 // and the miss LOOKED LIKE A HIT: `min`/`max`/`sum`/`avg` are variadic SCALAR
 // folds, so `max(series_sum("dbt.*", 0, 3))` compiles, runs, and returns the
@@ -15877,7 +15877,7 @@ time calendar annual from 2026-01 for 4
 // largest per-period NET FLOW, which is a different question. Peak outstanding
 // debt is `series_max` over the series that CARRIES the balance — an entity
 // field, readable in a metric under the key results publishes it under, which
-// is §7.85. The two entries close this together.
+// is `docs/01` §15.3. The two land together.
 
 entity asset tlb : Asset.Financial {
   // 6,000 drawn, 4,000 more, then repaid 3,500 a year: 6,000 / 10,000 /
@@ -15997,7 +15997,7 @@ model "slice-by-type"
 use pack "cre" version "0.1.0"
 time calendar monthly from 2026-01 for 60
 
-// BASE-TYPE SELECTION, THE REFINEMENT'S PAYOFF (docs/13 §7.92, §7.90).
+// BASE-TYPE SELECTION, THE REFINEMENT'S PAYOFF (docs/40; docs/01 §15.4).
 // `type Contract.Debt` names a MASTER; the compiler expands it through the
 // recorded refinement — CRE.Contract.PermanentDebt is_a Contract.Debt — to
 // every stream that contract lowers. The slice survives a new pack
@@ -16080,7 +16080,7 @@ version 0.1
 model "slices"
 time calendar annual from 2026-01 for 3
 
-// A SLICE IS A NAMED, DELIBERATELY PARTIAL SELECTION (docs/13 §7.90).
+// A SLICE IS A NAMED, DELIBERATELY PARTIAL SELECTION (docs/01 §15.4).
 // Clause kinds intersect, values within a kind union, `except` subtracts —
 // and a slice carries NO reconciliation block, because the absence is what
 // the declaration means: a partial number must not dress as a complete one.
@@ -16135,7 +16135,7 @@ version 0.1
 model "stable-identity"
 time calendar annual from 2026-01 for 2
 
-// A STABLE IDENTITY IS CARRIED, NEVER INTERPRETED (docs/13 §7.91). The
+// A STABLE IDENTITY IS CARRIED, NEVER INTERPRETED (docs/01 §7.1). The
 // layer above the model assigns canonical ids to real-world things; the
 // literal field `id` is where a model carries one. The engine ignores it
 // entirely and republishes it in the results graph, which is what makes a

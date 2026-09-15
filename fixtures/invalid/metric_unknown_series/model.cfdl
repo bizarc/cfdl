@@ -4,7 +4,7 @@ time calendar annual from 2026-01 for 3
 
 // A NAME NOTHING BINDS IS REFUSED, NOT READ AS ZERO.
 //
-// `docs/13` §7.85: `series_sum` returns 0.0 for a selector that matches
+// `docs/01` §15.3: `series_sum` returns 0.0 for a selector that matches
 // nothing, which is right for a `.*` selector — matching nothing is a stated
 // possibility there — and wrong for a name spelled out in full. In a stream
 // the miss is a warning (`W5022`), because the series it produces is there to

@@ -35,7 +35,7 @@ use std::collections::{BTreeMap, BTreeSet};
 ///
 /// The two structures read what already exists rather than recomputing it. An
 /// entity row is the published `entity.<symbol>.net_cash_flow` rollup, and the
-/// tree is the one `graph` publishes (§7.43, §7.91). A category row folds the
+/// tree is the one `graph` publishes (`docs/06` `graph`; `docs/01` §7.1). A category row folds the
 /// streams whose published `category` sits under its path.
 pub fn generate(
     spec: &ModelStatement,

@@ -71,7 +71,7 @@ items concentrate in liability-side mechanics and analytics.
   test and every clamped step traceable to the entries that produced it; text
   source under version control; byte-comparable deterministic runs;
   per-assumption Monte Carlo, with a p01–p99 distribution for every declared
-  metric since §7.87 shipped; and model-declared metrics and statements
+  metric since `results_version` 0.9; and model-declared metrics and statements
   (`docs/13` §7.25, §7.55), so the output surface is versioned with the deal
   rather than configured in a terminal.
 
@@ -357,7 +357,7 @@ the measurement demands one.
 | Reserve accounts, trapped cash, interest on a funded balance | shipped — `docs/28` §5.1, `docs/13` §7.76, `benchmarks/credit/americredit_2017_1` |
 | An event that recurs, an action on arrival | shipped — `docs/13` §7.79, `docs/34` |
 | Deterministic scenario grids (the category's dominant workflow) | scenarios plus curves plus options, today |
-| Metric distributions per trial | shipped — `docs/13` §7.87, `results_version` 0.9 |
+| Metric distributions per trial | shipped — `docs/06`, `results_version` 0.9 |
 
 ## The benchmark this document wants
 

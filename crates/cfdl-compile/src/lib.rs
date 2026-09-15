@@ -4651,7 +4651,7 @@ fn check_entity_types(
         })
         .collect();
 
-    // A STABLE IDENTITY IS A FACT ABOUT ONE THING (docs/13 §7.91). The
+    // A STABLE IDENTITY IS A FACT ABOUT ONE THING (docs/01 §7.1). The
     // literal field `id` is engine-opaque and published in the results
     // graph; the one thing the language can check is that two entities do
     // not claim the same one, because a consumer joining on it would merge
@@ -5964,7 +5964,7 @@ fn build_ir(
         })
         .collect();
 
-    // SLICES (docs/13 §7.90): a named, deliberately partial selection.
+    // SLICES (docs/01 §15.4): a named, deliberately partial selection.
     // Clause kinds intersect, values within a kind union, `except` subtracts.
     // Validated here — a reference is what the compiler can resolve — and the
     // `type` clauses are EXPANDED here, because only the compiler holds the
@@ -6285,7 +6285,7 @@ fn build_ir(
     // expression reaches these no matter which construct carries it — a
     // stream amount, a field's `next`, an event guard, a waterfall step —
     // and a construct added later is covered without touching this.
-    // A METRIC NAMES A SERIES THIS MODEL DOES NOT PUBLISH (`docs/13` §7.85).
+    // A METRIC NAMES A SERIES THIS MODEL DOES NOT PUBLISH (`docs/01` §15.3).
     //
     // Walked here rather than in the metric block above, because the
     // vocabulary is the WHOLE assembled document — lowered streams, waterfall
@@ -6325,7 +6325,7 @@ fn build_ir(
 /// Every series name a metric may fold over: the vocabulary the valuation
 /// plane actually publishes, in both dialects.
 ///
-/// `docs/13` §7.85. `series_sum` returns 0.0 for a selector that matches
+/// `docs/01` §15.3. `series_sum` returns 0.0 for a selector that matches
 /// nothing, which is right for a `.*` selector and wrong for a name spelled
 /// out in full — and in a metric it is worse than wrong, because a fold
 /// publishes ONE number under a name the author chose, with no series beside
@@ -6366,14 +6366,14 @@ fn metric_series_vocabulary(ir: &Ir) -> BTreeSet<String> {
     // — a coverage ratio in a period with no debt service — which is why it
     // publishes `null` rather than zero, and a fold over it needs a decision
     // (skip the undefined periods, or refuse the fold) that belongs with the
-    // reductions of §7.86. Naming one is refused here, with a hint that says
+    // reductions (`docs/13` §7.95). Naming one is refused here, with a hint that says
     // so, rather than folded as though `null` were nothing.
     for subtotal in &ir.subtotals {
         if subtotal.kind == "money" {
             known.insert(subtotal.id.clone());
         }
     }
-    // A SLICE'S NET (docs/13 §7.90; docs/40 stage 5): a named selection by
+    // A SLICE'S NET (docs/01 §15.4; docs/40 stage 5): a named selection by
     // type and line is what lets a metric fold every debt's interest without
     // naming a stream or a pack's category.
     for slice in &ir.views.slices {

@@ -3230,7 +3230,7 @@ slice debt_interest {
   line interest
 }
 
-// A METRIC FOLDS A SLICE (docs/13 §7.90: a named selection that functions
+// A METRIC FOLDS A SLICE (docs/01 §15.4: a named selection that functions
 // consume). `slice.debt_interest` is the slice's net, so the figure is
 // selected by type and line rather than by naming a stream or a pack's
 // category — the cross-pack reading of docs/40 stage 5.
@@ -3247,7 +3247,7 @@ time calendar annual from 2026-01 for 3
 // A METRIC CAN READ WHAT THE VALUATION PLANE PUBLISHES — INCLUDING ITS OWN
 // AGGREGATES.
 //
-// `docs/13` §7.85. `docs/01` §15.3 has said in normative text since metrics
+// `docs/01` §15.3 has said in normative text since metrics
 // entered the spec that a metric's expression MAY read series, ENTITY FIELDS,
 // `inputs`, `cfg` and the engine's `model.*`. Entity fields it could not read:
 // the metric environment was built from stream and waterfall series and
@@ -3394,7 +3394,7 @@ time calendar annual from 2026-01 for 5
 
 // A TRIAL IS A COMPLETE RUN, AND EVERY FIGURE IT COMPUTED SURVIVES IT.
 //
-// `docs/13` §7.87: the trial loop used to build a fresh one-entry map holding
+// `docs/06`, `results_version` 0.9: the trial loop used to build a fresh one-entry map holding
 // `model.npv` and publish that as the trial's whole record. Every other figure
 // — the IRR, the MoIC, each entity's total, each stream's total, and every
 // metric the model declared — was computed inside the trial and dropped on the
@@ -3407,14 +3407,14 @@ time calendar annual from 2026-01 for 5
 // figure below MOVES with the draw and a distribution over it means something:
 //
 //   - `metric.exit_multiple` — a declared metric, the thing §7.25 built and
-//     the thing §7.87 was throwing away;
+//     the thing the old trial loop threw away;
 //   - `model.irr` and `model.moic` — the acquisition in 2026 is the sign
 //     change an IRR needs;
 //   - `entity.container.fund.total` — the ROLLED-UP total, which is the join
 //     to the results-plane graph: `graph.entities[].symbol` is
 //     `container.fund`, so a consumer holding results alone can read a
 //     per-entity distribution rather than inferring ownership from names
-//     (§7.43, §7.91).
+//     (`docs/06` `graph`; `docs/01` §7.1).
 //
 // The seed is stated, so every published percentile is reproducible: a Monte
 // Carlo run IS a golden when its seed is.
@@ -3467,7 +3467,7 @@ time calendar annual from 2026-01 for 3
 // drawn across zero, so in the trials that draw it negative there is no sign
 // change and no IRR — and a mean over the trials that DID solve would read
 // exactly like a mean over all of them, if the summary did not say how many it
-// was taken over. `trials` on a metric summary is that count (`docs/13` §7.87).
+// was taken over. `trials` on a metric summary is that count (`docs/06`).
 //
 // `model.npv` is published by every trial and `model.irr` by some, so this one
 // model shows both cases in one results document.
@@ -5729,7 +5729,7 @@ time calendar annual from 2026-01 for 4
 
 // SUM AND MEAN WERE THE WHOLE REDUCTION VOCABULARY.
 //
-// `docs/13` §7.86. Peak outstanding debt, the worst period, a compounding
+// `docs/03` §4. Peak outstanding debt, the worst period, a compounding
 // factor, a count of periods that paid — none was expressible over a series,
 // and the miss LOOKED LIKE A HIT: `min`/`max`/`sum`/`avg` are variadic SCALAR
 // folds, so `max(series_sum("dbt.*", 0, 3))` compiles, runs, and returns the
@@ -5745,7 +5745,7 @@ time calendar annual from 2026-01 for 4
 // largest per-period NET FLOW, which is a different question. Peak outstanding
 // debt is `series_max` over the series that CARRIES the balance — an entity
 // field, readable in a metric under the key results publishes it under, which
-// is §7.85. The two entries close this together.
+// is `docs/01` §15.3. The two land together.
 
 entity asset tlb : Asset.Financial {
   // 6,000 drawn, 4,000 more, then repaid 3,500 a year: 6,000 / 10,000 /
@@ -5865,7 +5865,7 @@ model "slice-by-type"
 use pack "cre" version "0.1.0"
 time calendar monthly from 2026-01 for 60
 
-// BASE-TYPE SELECTION, THE REFINEMENT'S PAYOFF (docs/13 §7.92, §7.90).
+// BASE-TYPE SELECTION, THE REFINEMENT'S PAYOFF (docs/40; docs/01 §15.4).
 // `type Contract.Debt` names a MASTER; the compiler expands it through the
 // recorded refinement — CRE.Contract.PermanentDebt is_a Contract.Debt — to
 // every stream that contract lowers. The slice survives a new pack
@@ -5948,7 +5948,7 @@ version 0.1
 model "slices"
 time calendar annual from 2026-01 for 3
 
-// A SLICE IS A NAMED, DELIBERATELY PARTIAL SELECTION (docs/13 §7.90).
+// A SLICE IS A NAMED, DELIBERATELY PARTIAL SELECTION (docs/01 §15.4).
 // Clause kinds intersect, values within a kind union, `except` subtracts —
 // and a slice carries NO reconciliation block, because the absence is what
 // the declaration means: a partial number must not dress as a complete one.
@@ -6003,7 +6003,7 @@ version 0.1
 model "stable-identity"
 time calendar annual from 2026-01 for 2
 
-// A STABLE IDENTITY IS CARRIED, NEVER INTERPRETED (docs/13 §7.91). The
+// A STABLE IDENTITY IS CARRIED, NEVER INTERPRETED (docs/01 §7.1). The
 // layer above the model assigns canonical ids to real-world things; the
 // literal field `id` is where a model carries one. The engine ignores it
 // entirely and republishes it in the results graph, which is what makes a

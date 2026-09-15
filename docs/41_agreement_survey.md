@@ -164,7 +164,7 @@ compensation is an expense line. None needs a master.
 | Derivative | `Contract.Derivative` | in the base |
 | Insurance | `Contract.Insurance` | in the base; `cre.mortgage_insurance` refines it |
 | Guarantee / credit enhancement | `Contract.Guarantee` | in the base (§4.17); the survey found it missing, see §4 |
-| Collateral | — | not a contract: a RELATION between an obligation and an asset (`docs/13` §7.89) |
+| Collateral | — | not a contract: a RELATION between an obligation and an asset (`docs/07` §6.1) |
 | CDS, repo, margining | — | out of scope: trading-book instruments outside a cash-flow model of a deal |
 | Tax | `Contract.Tax` | in the base |
 | Grant | `Contract.Grant` | in the base (§4.16) |
