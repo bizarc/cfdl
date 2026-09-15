@@ -13,7 +13,7 @@ and a set of backlog items.
 
 ## 1. Summary
 
-The documentation estate is **70,438 words of published prose across 160 files**
+The published documentation is **70,438 words of prose across 160 files**
 with no style guide, no glossary, and no prose linter. The only editorial control
 is `tools/check-site-voice.py`, which gates *provenance* — it keeps internal
 engineering narrative and marketing ornament off the site — and says nothing
@@ -163,8 +163,8 @@ localized; **conforms** means no material finding.
 
 The site's docs already sit inside both STE limits by a wide margin. The
 training material does not, and the exercise prompts — the most procedural
-content in the estate, the text a reader follows while typing — are as long as
-the chapters.
+content in the published documentation, the text a reader follows while
+typing — are as long as the chapters.
 
 That last row is the finding that matters most. A 63-word instruction is a
 defect regardless of which standard is adopted.
@@ -308,8 +308,8 @@ Two register decisions are already documented and should survive any adoption:
 - `docs/19_training_guide_plan.md` sets the per-chapter shape and the dual-track
   audience for the curriculum.
 
-A single controlled language applied flat across the estate would erase both.
-Any adopted standard must be tiered.
+A single controlled language applied flat across the published documentation
+would erase both. Any adopted standard must be tiered.
 
 ---
 
@@ -340,11 +340,12 @@ are terse and normative because a second implementer must be able to work from
 them. STE's dictionary constraint would force paraphrase of terms that are
 precise, and paraphrase in a normative document is a defect.
 
-**Conclusion.** STE's *writing rules* are broadly right for this estate. STE's
-*dictionary*, applied whole, is wrong for it — the approved word list excludes
-nearly the entire finance and compiler vocabulary this documentation exists to
-convey. The mechanism STE provides for exactly this situation (Technical Names
-and Technical Verbs) is the right lever, but using it at this vocabulary's scale
+**Conclusion.** STE's *writing rules* are broadly right for the published
+documentation. STE's *dictionary*, applied whole, is wrong for it — the
+approved word list excludes nearly the entire finance and compiler
+vocabulary this documentation exists to convey. The mechanism STE provides
+for exactly this situation (Technical Names and Technical Verbs) is the right
+lever, but using it at this vocabulary's scale
 means the result is a CFDL-specific controlled language that is *derived from*
 STE, not a claim of conformance to it.
 
@@ -372,7 +373,7 @@ of them:
 These documents exist so a second implementation can be written from them. A
 second implementer currently has to guess whether "should" is a requirement or
 advice. The fix is one short section per specification. It is the cheapest
-correctness improvement available in the entire estate.
+correctness improvement available anywhere in the published documentation.
 
 ### 6.2 ISO/IEC/IEEE 26514:2022 and IEC/IEEE 82079-1:2019 — adopt as the frame
 
@@ -445,9 +446,9 @@ Two consequences worth pricing correctly:
   111 pages as 111 editing tasks is wrong in both directions.
 - **The 38 benchmark pages share one template**, at `sync-content.mjs:805`. Any
   change to the sentence it emits is one edit that corrects 38 pages, which makes
-  it the highest-leverage prose surface in the estate. The sentence it currently
-  emits does not need changing (§4.3) — the leverage is worth knowing about
-  before it does.
+  it the highest-leverage prose surface in the published documentation. The
+  sentence it currently emits does not need changing (§4.3) — the leverage is
+  worth knowing about before it does.
 - **Per-case prose is not shared.** The doubly-passive redistribution note (20
   pages), the U+00D7 multiplication sign (4 files), and `$33.6mm`-style currency
   (37 files) all live in `benchmarks/*/*/case.toml` and `CASE.md`. These are
