@@ -28,7 +28,12 @@ another spec by filename is legitimate.
 ESCAPE HATCH. Append `site-allow: <reason>` on the offending line, following the
 convention `tools/check-doc-examples.py` uses. The CFDL-CE rules use
 `ste-allow: <rule id> <reason>` — a separate marker so a reviewer can see which
-standard is being waived.
+standard is being waived, and it turns off only the rule it names.
+
+An annotation is a TRAILING COMMENT: `<!-- ... -->` in Markdown, `//` in a model
+file, `#` in TOML. A sentence that merely mentions one is prose and waives
+nothing, which is the difference between documenting the escape hatch and using
+it.
 
 CFDL-CE. This gate also enforces the mechanical subset of the writing standard
 (docs/22_cfdl_controlled_english.md): retired spellings, retired synonyms,
@@ -64,11 +69,10 @@ sys.stdout.reconfigure(encoding="utf-8")
 sys.stderr.reconfigure(encoding="utf-8")
 
 REPO_ROOT = pathlib.Path(__file__).resolve().parents[1]
-ALLOW = re.compile(r"site-allow:|ste-allow:")
 # An ste-allow waiver names the docs/22 rule it waives. An id docs/22 does not
 # declare is a typo that silently waives nothing forever, so it is a failure —
-# the annotation contract (docs/22 §5) only works if the ids are real.
-STE_ALLOW_ID = re.compile(r"ste-allow:\s*(\S+)")
+# the annotation contract (docs/22 §5) only works if the ids are real. The
+# annotation itself is matched by WAIVER, below, which requires the comment form.
 RULE_ID = re.compile(r"^\|\s*([SVWCP]\d+)\s*\|")
 
 
@@ -101,8 +105,8 @@ CE_RULE_IDS = None  # populated lazily; docs/22 is read once
 #
 # The ids beginning `N` and `X` are not yet declared in docs/22 §3. They name
 # rules this gate has always enforced without writing them down. docs/22 gains
-# them when the standard is restructured; until then `assert_ids_declared`
-# checks only the ids the document does declare.
+# them when the standard is restructured; until then the selftest checks the
+# implemented set against the ids the document does declare, in both directions.
 
 ALL_TYPES = frozenset({"task", "concept", "reference", "marketing"})
 
@@ -125,6 +129,18 @@ class Rule:
     types: frozenset[str] = ALL_TYPES
     # A rule the escape hatch may not waive. Naming a competitor is the first.
     waivable: bool = True
+
+
+@dataclass(frozen=True)
+class Waiver:
+    """One annotation, and the rules it turns off on its line."""
+
+    kind: str  # "site" or "ste"
+    rule_ids: frozenset[str]  # empty means every rule, which is site-allow
+    reason: str
+
+    def waives(self, rule: Rule) -> bool:
+        return not self.rule_ids or rule.id in self.rule_ids
 
 
 @dataclass(frozen=True)
@@ -386,6 +402,67 @@ def rules_for(exempt: frozenset[str]) -> tuple[Rule, ...]:
     return tuple(rule for rule in REGISTRY if rule.id not in exempt)
 
 
+# --- The escape hatch -------------------------------------------------------
+#
+# A waiver is a trailing comment, which is how every one in the repository is
+# written. Requiring the comment form is what separates an annotation from a
+# sentence that merely mentions one: before this, any line containing the string
+# `ste-allow:` was skipped entirely, so the backlog citation in docs/22's own
+# status line was invisible to the gate rather than caught by it, and the rule
+# id it parsed out of that line was a backtick.
+_OPENER = r"(?:<!--|//|\#|/\*|\{/\*)"
+_CLOSER = r"(?:-->|\*/\}|\*/)?"
+WAIVER = re.compile(
+    rf"(?:^|\s){_OPENER}\s*(?P<kind>site|ste)-allow:\s*(?P<body>.*?)\s*{_CLOSER}\s*$"
+)
+
+
+def parse_waiver(prose: str) -> Waiver | None:
+    """Read a trailing annotation. `prose` has had its code spans removed."""
+    match = WAIVER.search(prose)
+    if match is None:
+        return None
+    body = match.group("body").strip()
+    if match.group("kind") == "ste":
+        # `ste-allow: <rule id> <reason>` — the id names what is being waived.
+        head, _, rest = body.partition(" ")
+        return Waiver(kind="ste", rule_ids=frozenset({head}) if head else frozenset(), reason=rest.strip())
+    return Waiver(kind="site", rule_ids=frozenset(), reason=body)
+
+
+def validate_waiver(waiver: Waiver, rel: str, lineno: int, excerpt: str) -> list[Finding]:
+    """A waiver that names nothing real, or explains nothing, waives nothing."""
+    global CE_RULE_IDS
+    if CE_RULE_IDS is None:
+        CE_RULE_IDS = ce_rule_ids()
+    findings = []
+    known = CE_RULE_IDS | {rule.id for rule in REGISTRY}
+    for rule_id in sorted(waiver.rule_ids):
+        if rule_id not in known:
+            findings.append(
+                Finding(
+                    rel=rel,
+                    lineno=lineno,
+                    rule_id="WAIVER",
+                    why=f"ste-allow names rule '{rule_id}', which docs/22 does not declare",
+                    excerpt=excerpt,
+                )
+            )
+            continue
+        unwaivable = [r for r in REGISTRY if r.id == rule_id and not r.waivable]
+        if unwaivable:
+            findings.append(
+                Finding(
+                    rel=rel,
+                    lineno=lineno,
+                    rule_id="WAIVER",
+                    why=f"{rule_id} may not be waived",
+                    excerpt=excerpt,
+                )
+            )
+    return findings
+
+
 def spec_sources() -> list[pathlib.Path]:
     """Published pages whose bytes come from docs/, checked for CE only.
 
@@ -499,37 +576,17 @@ def check_lines(
             continue
         if in_fence:
             continue
-        if ALLOW.search(line):
-            global CE_RULE_IDS
-            if CE_RULE_IDS is None:
-                CE_RULE_IDS = ce_rule_ids()
-            ste = STE_ALLOW_ID.search(line)
-            if ste and ste.group(1) not in CE_RULE_IDS:
-                findings.append(
-                    Finding(
-                        rel=rel,
-                        lineno=n,
-                        rule_id="WAIVER",
-                        why=(
-                            f"ste-allow names rule '{ste.group(1)}', which "
-                            f"docs/22 does not declare"
-                        ),
-                        excerpt=line.strip()[:100],
-                    )
-                )
-            continue
         if only_summary and not line.lstrip().startswith("summary"):
             continue
-        # A rule reads the raw line or the line with its code spans removed. The
-        # stripped copy is built once and only if some rule asks for it.
-        prose = None
+        # A rule reads the raw line or the line with its code spans removed.
+        prose = INLINE_CODE.sub("", line)
+        waiver = parse_waiver(prose)
+        if waiver is not None:
+            findings += validate_waiver(waiver, rel, n, line.strip()[:100])
         for rule in applicable:
-            if rule.on == "raw":
-                subject = line
-            else:
-                if prose is None:
-                    prose = INLINE_CODE.sub("", line)
-                subject = prose
+            if waiver is not None and waiver.waives(rule):
+                continue
+            subject = line if rule.on == "raw" else prose
             if rule.pattern.search(subject):
                 findings.append(
                     Finding(
@@ -554,16 +611,26 @@ def check_schema(path: pathlib.Path, *, exempt: frozenset[str] = frozenset()) ->
         if isinstance(node, dict):
             for key, value in node.items():
                 if key == "description" and isinstance(value, str):
-                    if ALLOW.search(value):
-                        continue
                     prose = INLINE_CODE.sub("", value)
+                    trail_s = ".".join(trail) or "<root>"
+                    # A description carries its annotation the same way a line
+                    # does, and suppression is per rule here too.
+                    waiver = parse_waiver(prose)
+                    if waiver is not None:
+                        findings.extend(
+                            Finding(rel=rel, locus=trail_s, rule_id=f.rule_id,
+                                    why=f.why, excerpt=f.excerpt)
+                            for f in validate_waiver(waiver, rel, 0, value.strip()[:100])
+                        )
                     for rule in applicable:
+                        if waiver is not None and waiver.waives(rule):
+                            continue
                         subject = value if rule.on == "raw" else prose
                         if rule.pattern.search(subject):
                             findings.append(
                                 Finding(
                                     rel=rel,
-                                    locus=".".join(trail) or "<root>",
+                                    locus=trail_s,
                                     rule_id=rule.id,
                                     why=rule.why,
                                     excerpt=value.strip()[:100],
@@ -655,7 +722,17 @@ SELFTEST: tuple[Case, ...] = (
     Case("", "See `crates/cfdl-cli` for the flag.  <!-- site-allow: explained here -->"),
     Case("WAIVER", "x  <!-- ste-allow: Z9 no such rule -->",
          note="an id docs/22 does not declare waives nothing forever"),
-    Case("", "x  <!-- ste-allow: W1 the register is quoted verbatim -->"),
+    Case("", "The amortised form.  <!-- ste-allow: W1 the register is quoted -->"),
+    Case("N2", "The backlog is cited here.  <!-- ste-allow: W1 wrong rule -->",
+         note="a named waiver must not suppress a different rule"),
+    Case("N2", "The tier map is unchecked (backlog 7.82). See `ste-allow:` in §5.",
+         note="a backticked mention is code, and waives nothing"),
+    Case("N2", "The backlog says ste-allow: is the escape hatch.",
+         note="a mid-sentence mention is prose, and waives nothing"),
+    Case("", "// TODO finish the pool  // site-allow: the note is for a maintainer",
+         suffix=".cfdl", note="a line comment is the opener in a model file"),
+    Case("N2", "// TODO finish the pool", suffix=".cfdl",
+         note="the same note without an annotation"),
     # --- A case.toml publishes only its summary -----------------------------
     Case("", "# TODO a maintainer's note", suffix=".toml", only_summary=True),
     Case("N2", 'summary = "TODO write this"', suffix=".toml", only_summary=True),
