@@ -580,8 +580,12 @@ expense stop resetting to the 2028 actual is
 `series_sum("cre.opex.line", 24, 24) * time.ppy`. Outflow streams book signed
 negative, so a read of one is usually negated.
 
-**The expense stop declares itself in the valuation plane** — the `docs/28`
-§7 decision, settled against MIT Rentleg in phase 6. The alternative was a
+**The expense stop declares itself in the valuation plane** — *superseded 15
+September 2026 by the `docs/28` §7 amendment: the causal plane never reads
+forward, a literal base-year read is legal where the year has happened and
+refused at run where it has not, and the priced amount is withdrawn (`docs/13`
+§7.128). The paragraph stands as the record of what was decided and why.* —
+the `docs/28` §7 decision, settled against MIT Rentleg in phase 6. The alternative was a
 causal true-up (read the base year after it happens, adjust then), which is
 what the settlement mechanics of a real lease do — but the reference the
 benchmark ties to is Rentleg's own spreadsheet, and a spreadsheet reads the

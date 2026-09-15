@@ -231,9 +231,13 @@ or Brent per `docs/17` §12 — never in the causal core, where a solver would
 cost provenance and replay.
 
 The **make-whole** is the one causal cash amount in this cluster: its size is
-a discounting computation, and the priced exception of `docs/28` §7 is the
-sanctioned mechanism, as with the direct-cap reversion — the primitive is the
-priced exception plus a PV expression, not a new solver. Adjacent:
+a discounting computation. *Corrected 15 September 2026:* it was recorded here
+as a use of the priced exception, which `docs/28` §7 has since withdrawn — the
+causal plane never reads forward. A make-whole needs no projection read: the
+coupons it discounts are the contract's own remaining schedule, known from
+terms on the call date, so the amount is a closed form over terms, the same
+category as a level payment. The primitive is a PV expression over the
+schedule, not a new solver. Adjacent:
 `docs/13` §7.4 (the discount curve, `docs/33` Item 2).
 
 ## Item 6 — per-period stochastic draws

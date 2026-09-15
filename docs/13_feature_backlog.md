@@ -1919,3 +1919,76 @@ usually approached.
 
 Related: §7.125, §7.126, `docs/06` (`graph.contracts`, scenarios).
 
+### 7.128 The forward exit is a valuation and lowers as a reversion; the engine grew a second phase to serve it
+
+*Belongs with §1 (CRE pack) for the rule and §5 (language and engine) for the
+phase. Found 15 September 2026 investigating §7.124, which it closes with
+§7.123. Amends `docs/28` §7.*
+
+**What is wrong.** `cre.exit_forward` lowers to a reversion stream whose
+amount is next year's NOI over the cap rate. That amount is the valuation of
+the asset — a figure at a date — written as cash because a stream's amount was
+the only place the language let a forward window stand. Serving it, the engine
+classifies any stream whose amount folds a non-backward window, takes the
+closure of everything reading one, skips the closure during the walk,
+evaluates it after the tail, and defers the whole waterfall stage behind it.
+One flag governs the model. The ledger is booked inside that stage, so in any
+flagged model no account rolls during the walk, and a stream reading an
+opening balance reads an unwritten cell (§7.124); a field reading one is
+refused whatever the account holds (§7.123). A literal period bound sets the
+same flag in a model with no sale at all, which is how the expense stop came
+to be evaluated after the walk.
+
+The rule also carries two recorded money bugs from re-listing the NOI
+components inline — a double count and a dropped opex line — because a
+lowering cannot fold the published subtotal.
+
+**The shape.** Four parts, in order.
+
+1. **The valuation.** `cre.exit_forward` lowers no stream. Terms: `as_of`,
+   the valuation date, the horizon when omitted; `forward`, the income window
+   after it, one year in the model's calendar when omitted; `cap_rate`;
+   `selling_costs`. It publishes at that date, as pack figures under its
+   instance: forward NOI from `domain.cre.noi` over the window; the cap rate
+   as stated; gross value; each cost of sale, rate and amount; net value.
+   Each component is its own figure, so a case asserts any of them and a
+   scenario shows which term moved which figure; a later cost is added beside
+   them, never folded into a net. The contract is instanceable, so an asset
+   may be valued at several dates. The projection must cover `as_of` plus
+   `forward`; otherwise the valuation is refused naming the periods missing.
+2. **The sale.** A sold case carries a reversion stream with its price as a
+   term. `cre.exit` already provides that for a supplied figure; a plain
+   stream provides it too. Where the price is the valuation, the case asserts
+   the two equal.
+3. **The engine.** The forward-amount classification, its closure, its
+   refusal and the deferred phase are removed. A `time.t + k` bound in a
+   stream's amount is a compile refusal, as in a guard; a literal bound is
+   refused by the walk's existing watermark if a read reaches ahead. The walk
+   is `docs/28` §3 unconditionally: the ledger rolls every period, a
+   distribution runs when scheduled. §7.123 and §7.124 close with nothing
+   built. `docs/01` §9, `docs/03` §4 and `docs/29` phase 6 are edited as the
+   amendment lists, in the same change.
+4. **The expense stop.** MIT Rentleg's stop reads its 2004 actual from 2004
+   onward and passes unchanged. The derived-lines fixture reads a 2028 actual
+   from 2026 and is respelled as the true-up a lease actually settles by: the
+   estimated stop until the base year completes, the actual captured into a
+   field by the occurrence that closes the year, recoveries reading the field
+   thereafter.
+
+**What moves.** The seven models on `cre.exit_forward` and One Rosslyn's
+hand-written equivalent. Each reference says whether it sold or is valued: a
+sold case keeps its cash and states the price; a valued case keeps the figure
+and publishes it as a metric, which is additive. Cash totals move only where a
+case was booking a valuation as receipts, and the reference decides which
+those are. The derived-lines fixture moves as part 4 says.
+
+**Not this entry.** A fold combining a cash series with a figure at a date. A
+sold case has its reversion in cash and its IRR is unchanged; a valued case
+publishes the valuation. Nothing here needs the fold.
+
+Related: `docs/28` §7 (amended), §7.123, §7.124,
+`packs/cre/lowering/rules.toml` (`cre_exit_forward_noi_derived`,
+`cre_exit_forward_selling_costs`), `crates/cfdl-engine/src/prepare.rs`
+(`priced_closure`, `priced_refusal`), `crates/cfdl-engine/src/walk.rs`,
+`fixtures/valid/cre_derived_lines`, `benchmarks/cre/mit_rentleg_plaza`.
+
