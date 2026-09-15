@@ -32,7 +32,13 @@ do not.
 
 An independent Excel implementation. The reference came first. Both
 implementations read the same frozen input set, so the two tie by construction
-rather than by transcription. Both scenarios agree to under a dollar.
+rather than by transcription. Both scenarios agree to under a cent.
+
+Every figure the model uses is a stated assumption labeled with its standing,
+and everything else derives from those figures inside the model: the
+construction budget, both commitments, the draw curve, each tower's lease-up,
+the value each sale is priced on, and the permanent loan with its payment and
+payoff. Nothing is computed elsewhere and carried in.
 
 Arlington County supplies the facts. The Board Report for SP #419 gives the
 program, unit mix, GFA, FAR and parking. Deed 20230100013266 records the land
@@ -73,9 +79,9 @@ condominium pricing, growth, and the JV tiers.
 | | |
 |---|---|
 | Pack | `cre` |
-| Declared | 6 curves, 8 entities, 16 streams, 8 field recurrences, 3 accounts, 2 waterfalls, 14 tiers, 4 metrics, 1 slice, 6 scenarios, a 12-month valuation tail |
+| Declared | 67 assumptions, 16 of them derived; 10 entities, 30 streams, 12 field recurrences, 3 accounts, 2 waterfalls, 14 tiers, 4 metrics, 1 slice, 6 scenarios, a 12-month valuation tail |
 | What the deal requires | carrying a balance across periods, an ordered priority of payments, cash that accumulates between distributions, a return measured per partner, two exits in one model |
-| Language features | `curve` lookups, entity field recurrences (`init`/`next`/`prev`), a scenario switch that weights streams and tiers through `inputs.*`, `pow` escalation from a stated index base, `series_sum` over a `project` tail for a forward-income valuation, `account` and `moves`, a `waterfall` paying `from` an account, `irr`/`moic` over a party, a `slice`, `part of` roll-up, `start` and `end` placement |
+| Language features | derived assumptions (`assume x = inputs.a * inputs.b`), `pmt` for the level payment, `clamp` for the lease-up ramp, entity field recurrences (`init`/`next`/`prev`) including a schedule held one period ahead, a scenario switch that weights streams and tiers through `inputs.*`, `pow` escalation from a stated index base, `series_sum` over a `project` tail for a forward-income valuation and over a `cre.rent.*` wildcard, `account` and `moves`, a `waterfall` paying `from` an account, `irr`/`moic` over a party, a `slice`, `part of` roll-up, `start` and `end` placement |
 | Conventions | equity-first funding, capitalized construction interest, a facility retired out of disposal proceeds, permanent refinance at stabilization, sale in lease-up, pro rata return of capital and preference, one distribution per strategy |
 
 The model carries **two exit strategies over one set of facts**. The input
@@ -83,7 +89,7 @@ The model carries **two exit strategies over one set of facts**. The input
 
 - **A, merchant build.** The venture sells in lease-up, roughly ten months
   after delivery. Penzance and Baupost did this at The Highlands. Both towers
-  sold on 2022-05-17 at 83% and 60% occupancy. No permanent loan existed.
+  sold on 2022-05-17 before either had stabilized. No permanent loan existed.
 - **B, build to core.** The venture stabilizes the asset. It then refinances
   into permanent debt at 60% of stabilized value over a 30-year amortization,
   and holds five years.
@@ -105,13 +111,18 @@ scenario set. Nothing outside it is asserted.
 
 The hold is the base. The sale is kept because the same partners chose it four
 blocks away, and because the two answer different questions about the same
-building. The hold length is five years past stabilization and is fixed by
-the generator; a longer hold is a different run, not a different input.
+building. The hold length is five years past stabilization and is a stated
+month; a longer hold is a different run, not a different input.
 
-**The engine derives the exit rather than states it.** The model declares a 12-month
-projection tail. The sale is valued on the twelve months of income that follow it,
-divided by the County's guideline loaded cap and adjusted by a stated market factor.
-Change the rent growth and the exit changes with it.
+**The engine derives both exits rather than states them.** Each is valued over the
+County's guideline loaded cap and adjusted by a stated market factor. The
+build-to-core sale reads the twelve months of income that follow it from a
+12-month projection tail. The lease-up sale is priced on the building's
+stabilized income at that month's rent level, by the County's own method,
+because a purchaser underwrites what the asset will produce rather than what
+it collects mid-lease-up. Change the rent growth and both exits change with
+it, and so does the permanent loan, which is sized on the same stabilized
+value at the refinance month.
 
 The factor is **1.00**, which is the guideline basis itself.
 
@@ -120,12 +131,16 @@ Highlands sold at **+32.1% and +32.3%** to this basis in 2022. Central Place
 sold at **-11.6%** in 2026. Either one as the base would import a market call
 that the record does not support.
 
-At the scenario-A exit the south tower is roughly 58% leased, so that sale is priced on
-stabilized income. In-place income would understate it by about $140M.
+At the scenario-A exit the south tower is eleven months into an eighteen-month
+lease-up, 58% leased net of the vacancy allowance, so that sale is priced on
+stabilized income. In-place income would understate it by about $140M. Each
+tower leases up on its own streams, so that figure is read from the model
+rather than asserted.
 
 ## The result
 
-Both scenarios tie to the workbook to under a dollar.
+Both scenarios tie to the workbook to under a cent, and the net to equity under
+each equals the workbook's Returns sheet to six decimals.
 
 | | A, merchant build | B, build to core |
 |---|---:|---:|
@@ -205,7 +220,7 @@ the market factor first. It moves the answer more than any other single input.
 The NE tower's 73 units average 2,273 sq ft. The units that anchor them are far
 smaller. No Rosslyn condominium of that size has traded recently.
 
-**Scenario B exits at $895,243 per unit, above every recorded comparable.** The figure is 2037 dollars, after eleven years of growth. The engine derives it from the twelve months of income after the sale, over the guideline cap. It is the figure most exposed to the growth rate and the market factor.
+**Scenario B exits at $895,243 per unit, above every recorded comparable.** The figure is 2037 dollars, after eleven years of growth. The engine derives it from the twelve months of income after the sale, over the guideline cap. It is the figure most exposed to the growth rate and the market factor. Scenario A's exit is derived too, from stabilized income at the exit month, and moves with the same inputs.
 
 **The JV tiers are placeholders.** The Penzance and Baupost terms are private.
 The tier percentages state a structure, not the partnership's economics. The

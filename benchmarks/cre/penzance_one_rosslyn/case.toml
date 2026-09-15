@@ -9,6 +9,12 @@
 # transcription. Reconciling them found three defects — see CASE.md.
 # Status: pending practitioner review.
 #
+# The model is authored, not generated: every figure is an `assume` labeled
+# with its standing, and the budget, the commitments, the draw curve, each
+# tower's lease-up, both exits and the permanent loan derive from them inside
+# the model (NOTES.md, 2026-09-14). The deterministic net equals the
+# workbook's Returns sheet to six decimals under both strategies.
+#
 # The JV split is the companion case's construction: the partners' contributions
 # are STREAMS that move each partner's due account (docs/42), the venture's cash
 # is an account fed by every cre.* stream, and a seven-tier waterfall fires once
@@ -21,8 +27,8 @@
 # independent recomputation of every tier from the pot and the balances.
 #
 # expected_merchant_build.csv is the workbook's ScenarioA equity column, checked
-# against a run with `inputs.scenario_b = 0`; it agrees to under a dollar, hence
-# the slice tolerance below. expected_scenarios.json pins the party figures under
+# against a run with `inputs.scenario_b = 0`; it agrees to under a cent, and
+# the slice tolerance below is kept at a dollar for the workbook's rounding. expected_scenarios.json pins the party figures under
 # every named scenario: the promote is zero at the guideline basis under either
 # strategy and appears only at the 2022 premium.
 summary = "A 170-month ground-up development of 845 units in three towers: land recorded in 2023, a 42-month build, a condominium sellout, and two exit strategies — sell in lease-up, or stabilize, refinance and hold five years — each with its own JV distribution and a return per partner."
@@ -38,7 +44,8 @@ period_tolerance = 0.01
 # build) is a named scenario in run.json, selected by `inputs.scenario_b`.
 
 [tolerance]
-# The workbook's scenario A column ties to under a dollar, not to the cent.
+# The workbook's scenario A column is stated to the cent; a dollar of room
+# covers its rounding.
 "slice.deal" = 1.0
 "domain.cre.noi" = 0.01
 "domain.cre.egi" = 0.01

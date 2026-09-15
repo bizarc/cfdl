@@ -1670,3 +1670,121 @@ deterministic run's refusal should stand.
 Related: §7.72 (participant-level return), §7.95 (undefined is not zero),
 `crates/cfdl-engine/src/fold.rs` (`party_returns`, and the `E5031` site for
 declared metrics), `benchmarks/cre/penzance_one_rosslyn/NOTES.md`.
+
+### 7.121 The cre pack has no multifamily lease-up: `cre.lease` ramps one tenant, linearly, and takes no expression
+
+Belongs with §1, CRE pack. Found 14 September 2026 authoring
+`benchmarks/cre/penzance_one_rosslyn` in full.
+
+Two rental towers deliver six months apart and each leases up over eighteen
+months, net of a vacancy and collection allowance, and the sale reads their
+combined income. Nothing in the pack states that. `cre.lease` is one tenant's
+rent with a ramp fixed in the rule — `clamp((elapsed + 1) / lease_up_months,
+0, 1)` from the term start, `lease_up_months` an integer (`E6003`) — so the
+ramp's shape cannot be an expression, cannot start at a delivery date inside
+the term, carries no unit count and nets no vacancy. `cre.revenue_line` has no
+occupancy term at all; `cre.opex_line` does (`occupancy = <expr>`), so an
+expense can follow a ramp a revenue cannot. `E6004`, which once validated
+lease-up occupancy terms, is retired because the terms it checked were
+removed. The two Penzance cases therefore write every tower's rent, parking
+and expense by hand, with the ramp inline, six streams per case for what an
+absorption contract would state once: units, delivery, pace, vacancy.
+
+The gap is not the ramp's shape — a straight line is the convention — but
+that a multifamily building is units absorbing on a schedule from a delivery
+date, and the pack models leases. Whether that is a new contract
+(`cre.absorption`: `units`, `delivery`, `lease_up_months`, `vacancy`, rent
+and expense per unit, emitting the occupancy-scaled streams) or an
+`occupancy` expression term on `cre.lease` and `cre.revenue_line` is the
+decision; the shipped Penzance streams are the fixture either must reproduce.
+
+Related: §7.3 (`lease` is one of three cre contracts no case exercises),
+`packs/cre/lowering/rules.toml` (`cre.lease`, `cre.revenue_line`,
+`cre.opex_line`), `packs/cre/validations.toml` (E6003, E6004 retired),
+`benchmarks/cre/penzance_one_rosslyn/model.cfdl`,
+`benchmarks/cre/penzance_highlands/model.cfdl`.
+
+### 7.122 `cre.construction_loan` funds from a curve's name, so a draw stated as a formula cannot use it
+
+Belongs with §1, CRE pack. Found 14 September 2026, same work.
+
+The contract's `draw_curve` term is the NAME of a declared `curve`, by design
+(`packs/cre/README.md`: "the draw schedule is a curve, not a term"). The
+argument there is right for a published sixteen-quarter schedule or a
+contractor's requisitions, which are data. It is wrong for the other common
+case: a draw profile stated as a formula — One Rosslyn's is a parabola over
+the construction window, `(t - (start - 1)) * ((start + months) - t)` as a
+share of the weights' sum — which a modeller can write as an expression and
+cannot write as a curve without tabulating it. Tabulating it means computing
+the table outside the model, which is what the case set out to stop. Both
+Penzance cases therefore build the facility from fields by hand: equity
+funded to date, interest, draw, repayment, balance.
+
+The contract should take the draw as an expression as well as a curve name —
+every other cre term already may hold an expression — or accept a field
+reference, so a model can state the profile once and hand it over. The
+hand-built facility in `penzance_one_rosslyn` is the fixture: same
+commitments, same rate, same capitalized interest to the cent.
+
+Related: §7.3, `packs/cre/README.md` (`cre.construction_loan`),
+`packs/cre/lowering/rules.toml`, `benchmarks/cre/one_lincoln_street` (the
+contract's shipped case).
+
+### 7.123 A field may not read `prev.<account>` in a model with a priced amount, whatever the account holds
+
+Belongs with §5, language and engine. Found 14 September 2026, same work.
+
+`priced_refusal` (`crates/cfdl-engine/src/prepare.rs`) refuses, as
+`E5035_SERIES_CYCLE`, any field rule that reads `prev.<account>` when the
+model carries a forward-priced amount — the message says so: "a balance may
+carry priced cash logic cannot yet see". The refusal is right when the account
+is fed by the priced stream or anything downstream of it: the priced pass
+runs after the causal walk, so the balance is not settled when the field
+reads it. It fires just the same when the account's members are all causal.
+On One Rosslyn the tail-valued sale is the priced amount; an `equity_funded`
+account rolled from the four contribution streams has nothing to do with it,
+and the preference recurrence that wanted to compound on `prev.equity_funded`
+was refused. The case restates the equity funded to date in closed form
+instead (a cubic in the months elapsed), which is the kind of restatement
+docs/42 exists to remove.
+
+The check has what it needs to be exact: `priced_closure` names the priced
+streams, and `initial_balances` resolves each account's members. Refuse the
+read when a member is in the closure, and allow it otherwise. The message
+already distinguishes the two cases in words; the code should.
+
+Related: docs/28 §7 (the priced exception), docs/42 §3.3 (a field reads the
+prior close), §7.124 (the same read from a stream),
+`crates/cfdl-engine/src/prepare.rs` (`priced_refusal`, `priced_closure`),
+`benchmarks/cre/penzance_one_rosslyn/NOTES.md`.
+
+### 7.124 A stream's `prev.<account>` read is a silent zero in a model with a priced amount
+
+Belongs with §5, language and engine. Found 14 September 2026, same work.
+The most serious of the four filed that day: a wrong number with no
+diagnostic.
+
+docs/42 §3.3 says a stream reads an account's OPENING balance — interest on
+what was outstanding at the open is the ordinary case — and in a model
+without a forward-priced amount it does: a stream whose amount is
+`prev.pot + 1.0`, rolling into `account pot`, produces 1, 2, 4, 8, 16 from
+the first period. Add one stream that prices a sale from the projection tail
+and the same model produces 0, 1, 1, 1, 1: every `prev.pot` read returns
+zero, the run finishes, and `warnings` is empty. On One Rosslyn a facility
+built the docs/42 way — `account facility_balance` rolled from the loan
+streams, interest as `prev.facility_balance * rate / 12` — compiled clean,
+ran clean, and accrued no interest at all; the loan repaid the wrong amount
+and the deal's cash was overstated by 764 million. Nothing said so.
+
+Two things to fix, in order. The read must be loud: whatever the walk does
+with accounts in a priced model, a stream reading a balance it cannot see
+must be refused the way `E5035` refuses the field, not answered with zero
+(§7.95: undefined is not zero). Then it should work: the priced pass changes
+how the walk fills accounts, and a causal account has a settled opening in
+every period whether or not a priced stream exists elsewhere in the model.
+The probe above is the fixture; the One Rosslyn facility is the case that
+wants it.
+
+Related: §7.95, §7.123, docs/42 §3.3, `crates/cfdl-engine/src/walk.rs`
+(`walk_periods`, the priced pass and `account_balances`),
+`benchmarks/cre/penzance_one_rosslyn/NOTES.md`.
