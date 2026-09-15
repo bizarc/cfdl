@@ -80,6 +80,15 @@
 
   /* ---------- data ---------- */
   .scroll{overflow-x:auto; margin:0 0 1.1rem}
+  /* A table too wide for the measure escapes it, centred, up to 1040px; on a
+     narrow screen it scrolls inside its wrapper instead of wrapping cells. */
+  .scroll.wide{width:min(calc(100vw - 48px), 1040px);
+    margin-left:calc((100% - min(calc(100vw - 48px), 1040px)) / 2)}
+  .scroll.wide th,.scroll.wide td{white-space:nowrap; padding-right:.6rem}
+  .scroll.wide table{font-size:.84rem}
+  .scroll.wide td.num,.scroll.wide th.num{padding-right:0}
+  .scroll.wide td.num + td:not(.num),.scroll.wide th.num + th:not(.num){padding-left:1.2rem}
+  td .sub{display:block; color:var(--muted); font-size:.8rem; line-height:1.4; margin-top:.1rem}
   table{border-collapse:collapse; width:100%; font-size:.88rem}
   caption{
     caption-side:top; text-align:left; font-family:var(--mono);
@@ -358,7 +367,7 @@ assume exit_a_value = inputs.stabilized_noi_2026
           <tr><td>Permanent loan</td><td class="num">&mdash;</td><td class="num">347,217,832</td></tr>
           <tr><td>Exit value</td><td class="num">567,404,298</td><td class="num">691,127,415</td></tr>
           <tr><td>Exit per unit</td><td class="num">734,980</td><td class="num">895,243</td></tr>
-          <tr><td>Net to equity</td><td class="num">28,591,606</td><td class="num">223,799,127</td></tr>
+          <tr><td>Net to equity</td><td class="num">28,591,606</td><td class="num">223,799,128</td></tr>
           <tr><td>Equity multiple</td><td class="num">1.094x</td><td class="num">1.738x</td></tr>
           <tr><td>Return</td><td class="num">2.02%</td><td class="num">6.57%</td></tr>
         </tbody>
@@ -381,15 +390,15 @@ assume exit_a_value = inputs.stabilized_noi_2026
       <table>
         <caption>The scenario set</caption>
         <thead>
-          <tr><th>Run</th><th>Strategy</th><th class="num">Exit</th><th class="num">Market factor</th><th>What it answers</th></tr>
+          <tr><th>Run</th><th>Strategy and exit</th><th class="num">Market factor</th></tr>
         </thead>
         <tbody>
-          <tr><td>Build to core (base)</td><td>Stabilize, refinance, hold five years</td><td class="num">2037-06</td><td class="num">1.000</td><td>The hold, at the guideline basis</td></tr>
-          <tr><td>Merchant build</td><td>Sell in lease-up</td><td class="num">2031-10</td><td class="num">1.000</td><td>The comparison, at the guideline basis</td></tr>
-          <tr><td>Core at the 2026 discount</td><td>Hold</td><td class="num">2037-06</td><td class="num">0.884</td><td>The hold, priced where Central Place traded</td></tr>
-          <tr><td>Core at the 2022 premium</td><td>Hold</td><td class="num">2037-06</td><td class="num">1.321</td><td>The hold, priced where The Highlands traded</td></tr>
-          <tr><td>Merchant at the 2026 discount</td><td>Sell</td><td class="num">2031-10</td><td class="num">0.884</td><td>The sale, at the discount</td></tr>
-          <tr><td>Merchant at the 2022 premium</td><td>Sell</td><td class="num">2031-10</td><td class="num">1.321</td><td>The sale, at the premium</td></tr>
+          <tr><td>Build to core (base)<span class="sub">The hold, at the guideline basis</span></td><td>Stabilize, refinance, hold five years; sell 2037-06</td><td class="num">1.000</td></tr>
+          <tr><td>Merchant build<span class="sub">The comparison, at the guideline basis</span></td><td>Sell in lease-up, 2031-10</td><td class="num">1.000</td></tr>
+          <tr><td>Core at the 2026 discount<span class="sub">The hold, priced where Central Place traded</span></td><td>Hold; sell 2037-06</td><td class="num">0.884</td></tr>
+          <tr><td>Core at the 2022 premium<span class="sub">The hold, priced where The Highlands traded</span></td><td>Hold; sell 2037-06</td><td class="num">1.321</td></tr>
+          <tr><td>Merchant at the 2026 discount<span class="sub">The sale, at the discount</span></td><td>Sell in lease-up, 2031-10</td><td class="num">0.884</td></tr>
+          <tr><td>Merchant at the 2022 premium<span class="sub">The sale, at the premium</span></td><td>Sell in lease-up, 2031-10</td><td class="num">1.321</td></tr>
         </tbody>
       </table>
     </div>
@@ -427,7 +436,7 @@ assume exit_a_value = inputs.stabilized_noi_2026
         <tbody>
           <tr><td>Distributed</td><td class="num">278,260,488</td><td class="num">473,468,010</td></tr>
           <tr><td>Preference owed</td><td class="num">115,348,264</td><td class="num">297,775,808</td></tr>
-          <tr><td>Preference paid</td><td class="num">28,591,606</td><td class="num">223,799,127</td></tr>
+          <tr><td>Preference paid</td><td class="num">28,591,606</td><td class="num">223,799,128</td></tr>
           <tr><td>Promote</td><td class="num">0</td><td class="num">0</td></tr>
           <tr><td>The Baupost Group, contributed</td><td class="num">224,701,994</td><td class="num">224,701,994</td></tr>
           <tr><td>The Baupost Group, distributed</td><td class="num">250,434,439</td><td class="num">426,121,209</td></tr>
@@ -476,8 +485,8 @@ assume exit_a_value = inputs.stabilized_noi_2026
           <tr><th>Scenario</th><th class="num">Spreadsheet</th><th class="num">CFDL</th><th class="num">Difference</th></tr>
         </thead>
         <tbody>
-          <tr><td>A &mdash; sell in lease-up</td><td class="num">28,591,606</td><td class="num">28,591,605.61</td><td class="num exact">0.39</td></tr>
-          <tr><td>B &mdash; hold five years</td><td class="num">223,799,128</td><td class="num">223,799,127.44</td><td class="num exact">0.56</td></tr>
+          <tr><td>A &mdash; sell in lease-up</td><td class="num">28,591,605.50</td><td class="num">28,591,605.50</td><td class="num exact">0.00</td></tr>
+          <tr><td>B &mdash; hold five years</td><td class="num">223,799,127.60</td><td class="num">223,799,127.60</td><td class="num exact">0.00</td></tr>
         </tbody>
       </table>
     </div>
@@ -500,7 +509,7 @@ assume exit_a_value = inputs.stabilized_noi_2026
       five factors.
     </p>
 
-    <div class="scroll">
+    <div class="scroll wide">
       <table>
         <caption>Net to equity, by market factor</caption>
         <thead>
@@ -518,7 +527,7 @@ assume exit_a_value = inputs.stabilized_noi_2026
         <tbody>
           <tr><td class="num">0.884</td><td class="num">&minus;37,227,293</td><td class="num">0.877x</td><td class="num">&minus;2.90%</td><td class="num">143,628,347</td><td class="num">1.474x</td><td class="num">4.70%</td><td>Central Place, 2026</td></tr>
           <tr><td class="num">0.950</td><td class="num">221,391</td><td class="num">1.001x</td><td class="num">0.02%</td><td class="num">189,242,757</td><td class="num">1.624x</td><td class="num">5.81%</td><td>&mdash;</td></tr>
-          <tr><td class="num">1.000</td><td class="num">28,591,606</td><td class="num">1.094x</td><td class="num">2.02%</td><td class="num">223,799,127</td><td class="num">1.738x</td><td class="num">6.57%</td><td>guideline basis</td></tr>
+          <tr><td class="num">1.000</td><td class="num">28,591,606</td><td class="num">1.094x</td><td class="num">2.02%</td><td class="num">223,799,128</td><td class="num">1.738x</td><td class="num">6.57%</td><td>guideline basis</td></tr>
           <tr><td class="num">1.100</td><td class="num">85,332,035</td><td class="num">1.281x</td><td class="num">5.59%</td><td class="num">292,911,869</td><td class="num">1.966x</td><td class="num">7.94%</td><td>&mdash;</td></tr>
           <tr><td class="num">1.321</td><td class="num">210,728,385</td><td class="num">1.695x</td><td class="num">12.00%</td><td class="num">445,651,028</td><td class="num">2.470x</td><td class="num">10.44%</td><td>The Highlands, 2022</td></tr>
         </tbody>
@@ -1338,7 +1347,7 @@ metric penzance_moic = moic(party.penzance)</code></pre></div>
   <footer>
     Prepared with CFDL, a domain language for cash-flow models. This page is shared
     privately and is access-controlled. Figures reflect the benchmark case as committed on
-    14 September 2026.
+    15 September 2026.
   </footer>
 
 </div>

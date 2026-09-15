@@ -150,7 +150,7 @@ each equals the workbook's Returns sheet to six decimals.
 | Permanent loan | — | 347,217,832 |
 | Exit value | 567,404,298 | 691,127,415 |
 | Exit per unit | 734,980 | 895,243 |
-| `slice.deal.total` | 28,591,606 | 223,799,127 |
+| `slice.deal.total` | 28,591,606 | 223,799,128 |
 | `slice.deal.moic` | 1.094 | 1.738 |
 | `slice.deal.irr` | 2.02% | 6.57% |
 
@@ -183,7 +183,7 @@ proportion.
 |---|---:|---:|
 | Distributed | 278,260,488 | 473,468,010 |
 | Preference owed | 115,348,264 | 297,775,808 |
-| Preference paid | 28,591,606 | 223,799,127 |
+| Preference paid | 28,591,606 | 223,799,128 |
 | Promote | 0 | 0 |
 | Baupost, contributed | 224,701,994 | 224,701,994 |
 | Baupost, distributed | 250,434,439 | 426,121,209 |
