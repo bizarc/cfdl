@@ -82,27 +82,81 @@ items concentrate in liability-side mechanics and analytics.
 **What could not be expressed:** three related things, all
 write-up-from-the-bottom mechanics that CMBS and CLO documents assume.
 
-- **Coupled interest/principal waterfalls.** Interest diverted into principal
-  redemption on a trigger failure crosses two waterfalls, and one pot does
-  not express it (`docs/17` §5, question 2 — "two declarations with an
-  explicit cross-link step, or a named-pot construct. **Unresolved.**"). The
-  account and the walk are the machinery an answer would use, but the answer
-  is not designed.
-- **A step's shortfall as a published series** (`docs/17` §5, question 3).
-  It is the thing an analyst reads first, and today it must be derived by
-  differencing — which `docs/20` §3.2 showed is also an assertion hole: a
-  clamped step and a satisfied one are indistinguishable from the residual.
+- ~~**Coupled interest/principal waterfalls.**~~ **EXPRESSIBLE TODAY, probed
+  14 September 2026.** This bullet said one pot does not express a trigger
+  diversion and the answer "is not designed". The answer was designed
+  afterwards and this row was never revisited: the ACCOUNT closed it. An
+  account carries a `from` expression, a waterfall draws `from <account>`, and
+  a step may pay TO an account — so the interest ladder's diversion step credits
+  the principal ladder's source account, and the principal waterfall sees it in
+  the SAME period. Two pots, two ladders, one cross-link, no new construct:
+
+      account interest_collections  { from series_sum("coll.int",  time.t, time.t) }
+      account principal_collections { from series_sum("coll.prin", time.t, time.t) }
+
+      waterfall trust.interest on entity legal.trust {
+        schedule every month from 2026-01 to 2026-04
+        from interest_collections
+        pay senior_int to legal.classA = 400
+        pay oc_divert  to account principal_collections = if(<oc fails>, remaining, 0)
+        pay residual   to legal.equity = remaining
+      }
+      waterfall trust.principal on entity legal.trust {
+        schedule every month from 2026-01 to 2026-04
+        from principal_collections
+        pay classA_prin to legal.classA = remaining
+      }
+
+  Class A principal pays 5,000 in a passing period and 5,600 in a failing one,
+  the 600 arriving from the interest ladder that period. `auto_abs_tranches`
+  already carries the two-account half of this shape. What remains is a pack
+  spelling and a case, not a language question.
+- **A step's shortfall cannot LEAVE the waterfall.** The earlier statement —
+  "a step's shortfall as a published series" — understates it, and the entry's
+  own suggestion of deriving it by differencing does not work. Probed:
+
+  1. The shortfall is exactly what its name says: a claim meeting available
+     cash. Senior claims 700 and sub claims 300 against 600 of collections;
+     senior takes 600, sub takes 0, and the sub's 300 shortfall exists.
+     `owed.sub_coupon - paid.sub_coupon` computes it correctly INSIDE the
+     waterfall.
+  2. A STEP cannot record it. A step moves cash and is clamped by `remaining`,
+     and a shortfall exists precisely when `remaining` is zero — so
+     `pay deficiency to account pik = owed.x - paid.x` pays 0.0 in every
+     period. Not a bug: a step is a cash instrument and a shortfall is the
+     absence of cash.
+  3. A NON-CASH ACCRUAL is the right instrument and cannot read the step.
+     `E5031_UNRESOLVED_NAME` at run time — loudly, which is §7.97's fix
+     working.
+
+  So the item is: **a waterfall has no non-cash exit.** One sentence, and it is
+  the root cause of PIK below and of the available-funds cap in Item 8.
 - **Deferred/PIK interest on an unpaid step** (`docs/17` §5, question 1 —
   "probably a second form, not a default"): the unpaid amount accrues as a
-  balance rather than vanishing.
+  balance rather than vanishing. It is the bullet above wearing a name — PIK
+  IS a shortfall reaching an account across periods.
+
+**A narrower repair than a new construct, and the one to try first.** A stream
+reading a step one period BACK is refused by `E1346_STREAM_READS_WATERFALL_STEP`,
+whose stated reason is that "steps publish when their waterfall finishes, and
+every waterfall runs after the causal plane — so this read could only ever
+aggregate to zero". That is true of a same-period read and false of a backward
+one: at `time.t - 1` the waterfall has finished and the period is closed. The
+engine already proves a window backward — numeric literals, `time.t` plus a
+chain of signed literals, `max`/`min`/`if` over those (`docs/10`, priced
+amounts) — so the machinery to narrow this check exists and is not applied to
+it. Narrowing `E1346` to same-period-or-unprovable would make the lagged
+shortfall, PIK and the available-funds cap expressible with no new construct.
+A same-period non-cash exit is the larger question and can stay open.
 
 **What forced the discovery:** the AmeriCredit waterfall work (`docs/17`) and
 the survey this document carries. The 22-clause deal happened not to need any of the three;
 the next tier of deals (CLO OC/IC diversion, CMBS appraisal reduction) is
 built from them.
 
-**The shape:** open — question 2 has two candidate forms and no decision.
-Design home: `docs/17` §5.
+**The shape:** question 2 is CLOSED by the account (see the first bullet);
+`docs/17` §5 should be read with that correction. What is open is the non-cash
+exit, with narrowing `E1346` as the cheap half. Design home: `docs/17` §5.
 
 ## Item 2 — the trigger that fails and cures, benchmarked
 
@@ -120,13 +174,29 @@ problem, not a language gap. Backlog: `docs/13` §7.77, `docs/20` §5.1.
 
 ## Item 3 — servicer advances
 
-**What could not be expressed:** nothing, probably — the item is that P&I
-advancing and stop-advance appear nowhere in the docs or the suite. Under the
-machine they are a state pair (`advancing`, `stopped`) with streams gated on
-it and a recoverable-advances account; `docs/30` §1 already names the
-recoverable-advances balance as one of the reserves every domain has under a
-different name. The item is naming that shape in the credit pack and shipping
-a case, not new machinery.
+**What could not be expressed:** nothing — the item is that P&I advancing and
+stop-advance appear nowhere in the docs or the suite.
+
+**Two corrections to how this was written, 14 September 2026.** The shape given
+here was a deal-level state pair (`advancing`, `stopped`). That is wrong about
+what carries the state: the servicer advances on a PARTICULAR DELINQUENT LOAN
+and stops when THAT loan's advance is deemed non-recoverable. The state belongs
+to the obligation on a loan, not to the deal and certainly not to a security —
+a deal-level pair is a pool approximation of a loan-level decision, and it is
+wrong on any deal where some loans are advanced and others are not.
+
+And the reason to care was overstated. For a GUARANTEED security — Ginnie Mae,
+where the issuer is on the hook — the certificate holder is paid on schedule
+whatever the collateral did, so advances change neither the security's cash nor
+its value. They are the issuer's economics, and they reach the SECURITY only
+through behaviour: an issuer carrying advances has an incentive to buy the loan
+out, which moves prepayment. For private-label paper with no guarantee,
+advances do change the timing the certificates see, and that is the case worth
+modelling.
+
+`docs/30` §1 already names the recoverable-advances balance as one of the
+reserves every domain has under a different name. The item is naming that shape
+— per loan — in the credit pack and shipping a case, not new machinery.
 
 ## Item 4 — the clean-up call, exercised. **SHIPPED.**
 
@@ -176,6 +246,30 @@ are seeded today — additive, journaled, replayable. Correlation stays
 excluded (`docs/01` §1.1.10) until a document forces it; a rate-dependent CPR
 is a recurrence reading the rate path and needs no correlation construct.
 
+**What it is NOT, recorded because both were proposed and neither fits.** Not a
+CURVE: a curve is a deterministic table, and the ask is a value that is random
+and whose next draw depends on the last. Not a QUANTILE either —
+`quantile_at` / `quantile_mean` / `quantile_of` (`docs/27`) query a DECLARED
+distribution by closed-form integral, deterministically, so they describe the
+shape of an uncertainty without ever drawing from it; two runs give the same
+number by construction, which is the property that makes them auditable. The
+per-period draw is the missing third thing:
+
+    r(t) = r(t-1) + kappa * (theta - r(t-1)) * dt + sigma * sqrt(dt) * eps(t)
+
+where the mean reversion is a field recurrence we already have and `eps(t)` is
+what we do not. Adding a DISTRIBUTION FAMILY is a separate and much smaller
+change — a name in `dist_name` and an arm in `cfdl-calc` — and is not this: the
+gap is the per-period draw, not the menu it is drawn from.
+
+**Who else wants it.** Energy, for merchant price paths.
+`benchmarks/energy/merchant_storage_arbitrage` is fully DETERMINISTIC today —
+every `assume` is `= <value>`, no `~`, no `monte_carlo` block — and takes its
+per-period variation from a price curve. That case is complete as written and
+is not blocked by this. What a per-period draw would add is a different
+question of the same deal: the distribution of arbitrage margin across price
+PATHS, rather than the margin under one path.
+
 ## Item 7 — the output surface an analyst reads
 
 Two published-figure classes still cannot be asserted, and both are recorded
@@ -207,6 +301,22 @@ trigger that REORDERS a waterfall is the shape `docs/17` §5 left open, and a
 deal exercising it would settle whether declaration order plus `when` is
 enough or whether priority needs to be first-class. `AFC` is Item 1's
 shortfall accrual wearing a class-type name. See `docs/20` §2.4.
+
+**Worked through against the constructs, 14 September 2026 — reasoned, not
+probed. A case demonstrates a claim here; it does not establish it.** `NAS` is
+a step gated on elapsed periods with a step-up curve: expressible. `CPT` is one
+class declared as its own notes and steps per component: expressible. `SEG` is
+a separate pool entity with its own collection account and waterfall, which is
+`auto_abs_tranches`' shape already: expressible. `JMP`/`SJ`/`NSJ` are
+expressible by declaring the class at each position it can occupy under
+complementary guards — `if(trigger, full, 0)` early, `if(trigger, 0, full)`
+late — which works and costs a duplicated step per position; that duplication
+IS the evidence for whether priority should be first-class, and it is available
+without waiting for a deal. `AFC` is the one that does not work: the capped
+coupon is `min(stated, available)` and trivial, but the CAP CARRYOVER is a
+shortfall accruing to a balance — Item 1's missing non-cash exit, blocked by
+the same `E1346` reading. Four expressible, one blocked, and the blocked one is
+not a class-type question at all.
 
 ## Item 9 — structured collateral
 

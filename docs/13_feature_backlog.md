@@ -1671,37 +1671,48 @@ Related: §7.72 (participant-level return), §7.95 (undefined is not zero),
 `crates/cfdl-engine/src/fold.rs` (`party_returns`, and the `E5031` site for
 declared metrics), `benchmarks/cre/penzance_one_rosslyn/NOTES.md`.
 
-### 7.121 The cre pack has no multifamily lease-up: `cre.lease` ramps one tenant, linearly, and takes no expression
+### 7.121 The cre pack has no multifamily absorption: a lease-up in units from a delivery date is written by hand
 
 Belongs with §1, CRE pack. Found 14 September 2026 authoring
-`benchmarks/cre/penzance_one_rosslyn` in full.
+`benchmarks/cre/penzance_one_rosslyn` in full; corrected the same day after
+a check against the pack's own rules.
 
 Two rental towers deliver six months apart and each leases up over eighteen
 months, net of a vacancy and collection allowance, and the sale reads their
-combined income. Nothing in the pack states that. `cre.lease` is one tenant's
-rent with a ramp fixed in the rule — `clamp((elapsed + 1) / lease_up_months,
-0, 1)` from the term start, `lease_up_months` an integer (`E6003`) — so the
-ramp's shape cannot be an expression, cannot start at a delivery date inside
-the term, carries no unit count and nets no vacancy. `cre.revenue_line` has no
-occupancy term at all; `cre.opex_line` does (`occupancy = <expr>`), so an
-expense can follow a ramp a revenue cannot. `E6004`, which once validated
-lease-up occupancy terms, is retired because the terms it checked were
-removed. The two Penzance cases therefore write every tower's rent, parking
-and expense by hand, with the ramp inline, six streams per case for what an
-absorption contract would state once: units, delivery, pace, vacancy.
+combined income. What the pack offers, exactly:
 
-The gap is not the ramp's shape — a straight line is the convention — but
-that a multifamily building is units absorbing on a schedule from a delivery
-date, and the pack models leases. Whether that is a new contract
-(`cre.absorption`: `units`, `delivery`, `lease_up_months`, `vacancy`, rent
-and expense per unit, emitting the occupancy-scaled streams) or an
-`occupancy` expression term on `cre.lease` and `cre.revenue_line` is the
-decision; the shipped Penzance streams are the fixture either must reproduce.
+- `cre.lease` — one tenant's rent with a ramp fixed in the rule,
+  `clamp((elapsed + 1) / lease_up_months, 0, 1)` from the term start,
+  `lease_up_months` an integer (`E6003`). The ramp's shape is not a term, it
+  cannot start at a delivery date inside the term, and it carries no unit
+  count and no vacancy.
+- `cre.vacancy_loss` — `rate * potential_gross_year / ppy`, where `rate` MAY
+  be an expression (the shipped template steps it at a date) and
+  `potential_gross_year` may read the rent roll. A lease-up CAN be stated
+  this way: a `cre.revenue_line` per tower at full potential rent, and a
+  vacancy loss whose rate is one minus the clamped ramp plus the allowance.
+- `cre.opex_line` — takes `occupancy = <expr>`, so an expense can follow the
+  same ramp. `cre.revenue_line` has no occupancy term.
+
+So the pack is not silent on occupancy, and the first version of this entry
+overstated the gap. What it lacks is the construct a multifamily
+underwriting states once — units, delivery, pace, allowance, rent and
+expense per unit — and emits the occupancy-scaled lines from. Written on the
+vacancy contract, the ramp appears twice per tower (the vacancy rate and the
+expense occupancy) and the potential-gross series carries rent the building
+cannot yet collect; written by hand, as both Penzance cases do, it appears
+three times per tower. Either is a restatement. The decision is between a
+`cre.absorption` contract and an `occupancy` term on `cre.lease` and
+`cre.revenue_line`; the Penzance streams are the fixture either must
+reproduce, and the One Rosslyn case is the candidate to restate on
+`cre.revenue_line` + `cre.vacancy_loss` first, so the pack is exercised
+rather than bypassed (§7.3).
 
 Related: §7.3 (`lease` is one of three cre contracts no case exercises),
-`packs/cre/lowering/rules.toml` (`cre.lease`, `cre.revenue_line`,
-`cre.opex_line`), `packs/cre/validations.toml` (E6003, E6004 retired),
-`benchmarks/cre/penzance_one_rosslyn/model.cfdl`,
+`packs/cre/lowering/rules.toml` (`cre.lease`, `cre.vacancy_loss`,
+`cre.revenue_line`, `cre.opex_line`), `packs/cre/templates.toml`
+(`cre.vacancy_loss.tracking`), `packs/cre/validations.toml` (E6003, E6004
+retired), `benchmarks/cre/penzance_one_rosslyn/model.cfdl`,
 `benchmarks/cre/penzance_highlands/model.cfdl`.
 
 ### 7.122 `cre.construction_loan` funds from a curve's name, so a draw stated as a formula cannot use it
@@ -1764,9 +1775,12 @@ Belongs with §5, language and engine. Found 14 September 2026, same work.
 The most serious of the four filed that day: a wrong number with no
 diagnostic.
 
-docs/42 §3.3 says a stream reads an account's OPENING balance — interest on
-what was outstanding at the open is the ordinary case — and in a model
-without a forward-priced amount it does: a stream whose amount is
+The language reference says a stream reads an account's OPENING balance:
+docs/01 §9.1, "A stream MAY read an account's OPENING balance as
+`prev.<account>` — the prior close, or the `init` in the first period. It
+never reads a same-period close (`E1382`)", and docs/03 §3's table lists
+`prev.<account>` as readable in stream amounts. In a model without a
+forward-priced amount the engine does what the reference says: a stream whose amount is
 `prev.pot + 1.0`, rolling into `account pot`, produces 1, 2, 4, 8, 16 from
 the first period. Add one stream that prices a sale from the projection tail
 and the same model produces 0, 1, 1, 1, 1: every `prev.pot` read returns
@@ -1788,3 +1802,35 @@ wants it.
 Related: §7.95, §7.123, docs/42 §3.3, `crates/cfdl-engine/src/walk.rs`
 (`walk_periods`, the priced pass and `account_balances`),
 `benchmarks/cre/penzance_one_rosslyn/NOTES.md`.
+
+### 7.125 A number in a rendered grid cannot be traced back to what made it
+
+Belongs with §5, language and engine (the tooling half). Found 14 September
+2026, reviewing what stands between the current surfaces and an Excel user.
+
+`explain` already does the hard half: it traces any number to the journal
+entries that produced it, which is the capability a spreadsheet cannot offer at
+all. Three surfaces render numbers — the site playground's results panel, the
+Python SDK's `results.cashflows()` DataFrame, and a statement — and none of them
+can reach it. A reader looking at a cell has no way to ask why it is that
+number.
+
+**What it needs is addressing, not new tracing.** A rendered cell is a pair:
+the series key it came from and the period index within that series. Both are
+already in the results document — keys are stable and `index` carries
+`{calendar, start, periods}`. So the ask is that `explain` accept
+`(series, period)` and return the acts, and that each surface offer it: a click
+in the playground, a method on the SDK results object, a cell reference in a
+statement.
+
+**The one known hazard** is `docs/26`'s "explain matches by name, not identity":
+the dot-versus-colon spelling means a stream's own act never matches on the full
+key. A cell-level lookup walks into that immediately, and it must be fixed
+first or every cell in a stream's own row will fail to explain.
+
+Ordering: independent of §7.117 and §7.118, and cheaper than either. It is the
+single largest gap between "a results document a reviewer trusts" and "a grid a
+modeller interrogates".
+
+Related: `docs/26` (explain matches by name), §7.117, `crates/cfdl-mcp`.
+

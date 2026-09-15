@@ -372,3 +372,40 @@ bespoke case with no pack. The toll-road entry of the roadmap's Tier 1 is
 this case with a pack behind it and a deduction-regime availability
 adjustment; the benchmark exists before the pack does, which is the right
 order and worth recording as such.
+
+## 4. A deal read from its prospectus, as the library question asked in one case
+
+*Added 14 September 2026. The other sections here ask for a deal because it
+exercises a convention. This one asks for a deal because of how it is
+OBTAINED.*
+
+Every credit case in the suite so far was modelled from a published exhibit —
+a percent-outstanding table, a speed grid, a collateral schedule — which is a
+document already reduced to numbers. The category's incumbent does something
+different and harder: Intex reads the PROSPECTUS, models the deal from its
+priority language, and maintains it as the deal amends. That library, not the
+engine, is what a subscriber pays for.
+
+**The case this section wants** is one deal modelled from its offering document
+rather than from a reduced exhibit: the priority clauses read as prose, written
+as a waterfall, and reconciled against whatever the document publishes. It
+would be the first case in the programme where the SOURCE is the legal text.
+
+**What it would settle, and it is not "can we model deals".** Three things:
+
+- **How much of a prospectus is mechanically recoverable.** `docs/32`'s bet is
+  that an agent reading a prospectus can replace a maintained library. The
+  transcribe run measured that bet on cases whose sources were already
+  numbers — 89 of 113 missed assertion groups were name-dependent, 24 economic
+  — and a prospectus is materially harder. This case is the first honest read
+  on it.
+- **What the pack vocabulary is missing** when the input is a document rather
+  than a table. Every clause with no term is a pack item found the expensive
+  way.
+- **What a library would cost per deal**, which is the number behind any
+  decision to build one — and `docs/38`'s position is that we do not, because
+  the agent substrate answers it.
+
+**Not a coverage item.** It exercises no convention the suite lacks. It is a
+measurement of a commercial hypothesis, and it should be read as one.
+
