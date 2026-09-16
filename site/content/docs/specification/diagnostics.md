@@ -583,7 +583,7 @@ see what is wrong with it.
   declare for it.
 - `E5025_TERM_EXPR_INVALID` — a term holds an expression that does not
   compile. Checked at the term's own span, before substitution: after the
-  splice the error would point at a rule the modeller did not write.
+  splice the error would point at a rule the modeler did not write.
 - `E5026_TERM_EXPR_IN_LITERAL_SLOT` — a term holding an expression is used by
   a rule where only a literal can go: a stream name, a schedule date, a
   frequency, or a net-days count. Those slots are never parsed as

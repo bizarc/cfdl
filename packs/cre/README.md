@@ -10,7 +10,7 @@ developer lifecycle:
 >
 > `_months` terms — `free_rent_months`, `downtime_months`, `lease_up_months` —
 > always mean **calendar months**, on every calendar. They describe the lease,
-> not the modeller's grid, so they pro-rate exactly: five months free rent is
+> not the modeler's grid, so they pro-rate exactly: five months free rent is
 > 5 periods monthly, 1.667 quarterly and 0.417 annually, and year one comes out
 > at 480,000 x 7/12 = 280,000 on all three.
 >
@@ -62,7 +62,7 @@ One contract spans the whole range:
 - **An itemized schedule.** One instance per expense —
   `cre.opex_line.property_tax`, `cre.opex_line.utilities` — each with its own
   escalation and its own fixed share. `templates.toml` ships the conventional
-  set as editor snippets; a modeller can name their own.
+  set as editor snippets; a modeler can name their own.
 - **Any level.** Property, building or suite is the ENTITY the contract hangs
   on, and `part_of` rolls them up. It is not a term, because that would restate
   the entity tree somewhere it could disagree with it.
@@ -478,7 +478,7 @@ percentage rent), and the
 Every stream this pack emits declares a `category`, and aggregation reads that
 rather than pattern-matching the stream's name. A name is an address; a category
 is a meaning. Deciding that `cre.vacancy.loss` is a deduction by looking at its
-spelling means every metric, fold and statement re-derives the same judgement
+spelling means every metric, fold and statement re-derives the same judgment
 independently — and they drift, which is exactly how two selector dialects came
 to disagree about what `.*` matched.
 

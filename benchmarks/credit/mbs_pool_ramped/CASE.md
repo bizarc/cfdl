@@ -6,7 +6,7 @@ ramp is the standard market assumption for a seasoning pool.
 
 ## The reference
 
-The industry's own standard formulas for analysing mortgage-backed securities,
+The industry's own standard formulas for analyzing mortgage-backed securities,
 which define the ramp and publish a complete cash flow schedule computed on it.
 
 **Not redistributable.** The publisher forbids reproduction in any form, so the

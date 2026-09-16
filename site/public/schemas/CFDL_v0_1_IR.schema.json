@@ -391,7 +391,7 @@
         },
         "parent": {
           "type": "string",
-          "description": "The entity this one is part of. ALWAYS OPTIONAL, and absent for most entities: hierarchy is available at every grain and required at none. A pool models collective behavior with no loans under it; a building needs no units. The modeller chooses the grain, and the language does not prefer one."
+          "description": "The entity this one is part of. ALWAYS OPTIONAL, and absent for most entities: hierarchy is available at every grain and required at none. A pool models collective behavior with no loans under it; a building needs no units. The modeler chooses the grain, and the language does not prefer one."
         },
         "initial_state": {
           "type": "string",
@@ -418,7 +418,7 @@
                 "$ref": "#/$defs/Schedule"
               }
             },
-            "description": "A field's recurrence. `schedule` is present only on a field a PACK emitted: it inherits the contract's payment rhythm, so a monthly-paying pool on a daily book compounds twelve times a year rather than 365. A field a modeller wrote has none and steps every period."
+            "description": "A field's recurrence. `schedule` is present only on a field a PACK emitted: it inherits the contract's payment rhythm, so a monthly-paying pool on a daily book compounds twelve times a year rather than 365. A field a modeler wrote has none and steps every period."
           }
         },
         "lifecycle": {

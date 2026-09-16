@@ -27,7 +27,7 @@ figure asserted against the pool is an aggregate.
 
 ## The reference
 
-The industry's own standard formulas for analysing mortgage-backed securities —
+The industry's own standard formulas for analyzing mortgage-backed securities —
 the document that defines CPR, SMM, PSA and SDA — and the complete 176-month
 cash flow schedule it publishes for this pool.
 

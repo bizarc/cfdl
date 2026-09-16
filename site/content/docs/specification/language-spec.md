@@ -301,7 +301,7 @@ entity party acme : CRE.Party.Tenant { name = "Acme Corp" }
   join a package's numbers to canonical things instead of to symbol names.
 - `part of` declares hierarchy and is **always optional, at every grain**. A
   pool models collective behavior perfectly well with no loans under it; a
-  building needs no units. The modeller chooses the grain and the language does
+  building needs no units. The modeler chooses the grain and the language does
   not prefer one. Where a parent does have children, its cash is aggregated from
   them **by the relation**, not by a name prefix — published as
   `entity.<symbol>.net_cash_flow`.
@@ -824,7 +824,7 @@ account reserve {
   liability of the owner) or `due` (a receivable), decides which way a cash
   stream that `moves` it changes it; a structure account may declare a side
   the same way, after its name. A pack contract's account takes its side
-  from the master, so no modeller using a pack writes it.
+  from the master, so no modeler using a pack writes it.
 - `init <expr>` is the balance at the timeline's first period. It defaults
   to zero: a balance outstanding when the model opens states it; one created
   during the run is raised from zero by the cash that creates it, and
@@ -1208,7 +1208,7 @@ quantile ercot_north linear by exceedance ref energy.power_price {
   quadrature: `quantile_mean` is the **exact integral** of the function these
   describe, so no separate quadrature mode is declared and none is needed.
 - `by exceedance` writes the points worst-first, as a duration curve reads.
-  It is authoring surface only: the compiler normalises to one ascending form,
+  It is authoring surface only: the compiler normalizes to one ascending form,
   so the IR carries no orientation. `by quantile` is the default.
 - `ref <id>` names the pack `[[references]]` entry this realises, which is what
   supplies its unit.
@@ -1470,7 +1470,7 @@ Rules:
 A trial IS a complete deterministic run, and every metric it computed is
 published: each trial summary carries the same metric map the deterministic
 block carries — `model.*`, `domain.*` and `metric.*` alike — and
-`monte_carlo.metrics` summarises each name across the trials with a mean, a
+`monte_carlo.metrics` summarizes each name across the trials with a mean, a
 standard deviation, a minimum, a maximum and the full set of percentiles. A
 summary also states `trials`, the number that published that name, because not
 every trial publishes every one: `model.irr` exists only where the flows solve

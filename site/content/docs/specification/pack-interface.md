@@ -536,7 +536,7 @@ to one currency, and the model must then agree (`E2107`).
 
 ### Contract design: decomposition and terms
 
-A contract is a helper: the modeller follows its shape and provides the terms,
+A contract is a helper: the modeler follows its shape and provides the terms,
 and the streams emerge. These rules are what make that shape trustworthy. Each
 exists because its violation shipped and cost something.
 
@@ -557,13 +557,13 @@ recoveries, servicing; a lease into rent, abatement, recoveries, TI/LC. A
 expense schedule — with the vocabulary carried by the instance name
 (`cre.opex_line.property_tax`), never by an enum term restating it.
 
-**Grain by instancing; level by entity.** The modeller chooses grain by how
+**Grain by instancing; level by entity.** The modeler chooses grain by how
 many instances they declare, and level by the entity each contract hangs on —
 `part_of` rolls it up. A rule MUST NOT take a `level` or `scope` term: that
 restates the entity tree in a place that can disagree with it.
 
 **Terms carry the agreement; rules carry the instrument.** A term may hold an
-expression, so a pack SHOULD NOT pre-bake value shapes the modeller can state
+expression, so a pack SHOULD NOT pre-bake value shapes the modeler can state
 directly — an escalator is `escalation = curve_value("cpi", time.date) + 0.005`,
 not a `rate`/`curve` twin-term pair with a selector spliced into the rule.
 What belongs in the rule is the instrument's own mechanics: amortization
@@ -577,7 +577,7 @@ carries `proceeds`, `interest` and `principal`. A line-item contract puts the
 line in the instance slot: `cre.opex.line.property_tax`. Contract TYPES may
 use underscores (`cre.lease_unit`, `cre.opex_line`) — they are authoring
 surface — but the streams a rule emits may not. This applies to PACK-LOWERED
-streams only: a hand-written stream is the modeller's own name and no pattern
+streams only: a hand-written stream is the modeler's own name and no pattern
 is enforced on it.
 
 **Categories are the semantics; names are addresses.** Every stream a rule
@@ -595,7 +595,7 @@ rare deliberate bare read.
 
 **The conventional vocabulary ships as templates.** `templates.toml` carries
 the standard set — the nine expense lines a statement usually shows, with
-sensible defaults — as editor snippets. The modeller starts from the
+sensible defaults — as editor snippets. The modeler starts from the
 convention and is free to name their own instance; anything unclaimed lands on
 the statement's residual row rather than vanishing.
 
@@ -1267,7 +1267,7 @@ models get `time.ppy` instead, which is the calendar-based equivalent.
 and daily-book versions of an instrument.
 
 **`_months` terms always mean calendar months**, on every calendar: they
-describe the contract, not the modeller's grid. `{{periods.X}}` converts one
+describe the contract, not the modeler's grid. `{{periods.X}}` converts one
 into a possibly-fractional period count and is for thresholds — five months
 free rent is 5 periods monthly, 1.667 quarterly, 0.417 annually, and pro-rates
 exactly in each case. `{{whole_periods.X}}` is for payment *counts* that go
