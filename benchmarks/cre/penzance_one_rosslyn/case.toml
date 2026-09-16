@@ -31,7 +31,7 @@
 # the slice tolerance below is kept at a dollar for the workbook's rounding. expected_scenarios.json pins the party figures under
 # every named scenario: the promote is zero at the guideline basis under either
 # strategy and appears only at the 2022 premium.
-summary = "A 170-month ground-up development of 845 units in three towers: land recorded in 2023, a 42-month build, a condominium sellout, and two exit strategies — sell in lease-up, or stabilize, refinance and hold five years — each with its own JV distribution and a return per partner."
+summary = "A forecast with every input labeled: a 170-month ground-up development of 845 units in three towers, land recorded in 2023, a 42-month build, a condominium sellout, and two exit strategies — sell in lease-up, or stabilize, refinance and hold five years — each with its own JV distribution and a return per partner."
 pack = "cre"
 period_tolerance = 0.01
 

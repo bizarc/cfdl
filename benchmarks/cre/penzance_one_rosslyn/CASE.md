@@ -20,7 +20,8 @@ ft and retail is 14,584 sq ft, at 9.92 FAR. The site plan allows 429 parking
 spaces.
 
 **Nobody has built this project.** The program and the land are recorded fact.
-The economics are forecast.
+The economics are forecast. The case is a forecast with every input labeled,
+so a reader can see each figure's standing and replace it.
 
 The companion case, `penzance_highlands`, reconstructs a deal that completed
 four blocks away. Same sponsor, same equity partner, same submarket. There, the
