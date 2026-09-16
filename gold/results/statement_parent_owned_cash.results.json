@@ -1,0 +1,592 @@
+{
+  "results_version": "0.14",
+  "model_hash": "45e3dee19f2ec83aa23139417c91caeb08b2a93358a67e51d8d1a9a4ef06469d",
+  "ledger_hash": "a0837366e83716bfed7e751a0025b504bcc63ad531a8fe4e0b04b5080617c233",
+  "engine": {
+    "name": "cfdl-engine",
+    "version": "0.9.0"
+  },
+  "warnings": [],
+  "deterministic": {
+    "status": "ok",
+    "metrics": {
+      "entity.asset.north.total": {
+        "amount": 255.0,
+        "currency": "USD"
+      },
+      "entity.asset.south.total": {
+        "amount": 180.0,
+        "currency": "USD"
+      },
+      "entity.container.fund.total": {
+        "amount": 375.0,
+        "currency": "USD"
+      },
+      "model.npv": {
+        "amount": 310.856499,
+        "currency": "USD"
+      },
+      "model.total": {
+        "amount": 375.0,
+        "currency": "USD"
+      },
+      "model.wal_years": 2.0,
+      "run.annual_discount_rate": 0.1,
+      "run.periods_per_year": 1.0,
+      "stream.fund.management_fee.total": {
+        "amount": -60.0,
+        "currency": "USD"
+      },
+      "stream.north.opex.total": {
+        "amount": -45.0,
+        "currency": "USD"
+      },
+      "stream.north.rent.total": {
+        "amount": 300.0,
+        "currency": "USD"
+      },
+      "stream.south.rent.total": {
+        "amount": 180.0,
+        "currency": "USD"
+      }
+    },
+    "series": {
+      "entity.asset.north.net_cash_flow": {
+        "index": {
+          "calendar": "annual",
+          "start": "2026-01-01",
+          "periods": 3
+        },
+        "values": [
+          {
+            "amount": 85.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 85.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 85.0,
+            "currency": "USD"
+          }
+        ]
+      },
+      "entity.asset.south.net_cash_flow": {
+        "index": {
+          "calendar": "annual",
+          "start": "2026-01-01",
+          "periods": 3
+        },
+        "values": [
+          {
+            "amount": 60.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 60.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 60.0,
+            "currency": "USD"
+          }
+        ]
+      },
+      "entity.container.fund.net_cash_flow": {
+        "index": {
+          "calendar": "annual",
+          "start": "2026-01-01",
+          "periods": 3
+        },
+        "values": [
+          {
+            "amount": 125.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 125.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 125.0,
+            "currency": "USD"
+          }
+        ]
+      },
+      "model.net_cash_flow": {
+        "index": {
+          "calendar": "annual",
+          "start": "2026-01-01",
+          "periods": 3
+        },
+        "values": [
+          {
+            "amount": 125.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 125.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 125.0,
+            "currency": "USD"
+          }
+        ]
+      },
+      "stream.fund.management_fee": {
+        "index": {
+          "calendar": "annual",
+          "start": "2026-01-01",
+          "periods": 3
+        },
+        "offset": 1.0,
+        "entity": "container.fund",
+        "category": "operating.expense",
+        "values": [
+          {
+            "amount": -20.0,
+            "currency": "USD"
+          },
+          {
+            "amount": -20.0,
+            "currency": "USD"
+          },
+          {
+            "amount": -20.0,
+            "currency": "USD"
+          }
+        ]
+      },
+      "stream.north.opex": {
+        "index": {
+          "calendar": "annual",
+          "start": "2026-01-01",
+          "periods": 3
+        },
+        "offset": 1.0,
+        "entity": "asset.north",
+        "category": "operating.expense.opex",
+        "values": [
+          {
+            "amount": -15.0,
+            "currency": "USD"
+          },
+          {
+            "amount": -15.0,
+            "currency": "USD"
+          },
+          {
+            "amount": -15.0,
+            "currency": "USD"
+          }
+        ]
+      },
+      "stream.north.rent": {
+        "index": {
+          "calendar": "annual",
+          "start": "2026-01-01",
+          "periods": 3
+        },
+        "offset": 1.0,
+        "entity": "asset.north",
+        "category": "operating.revenue.base_rent",
+        "values": [
+          {
+            "amount": 100.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 100.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 100.0,
+            "currency": "USD"
+          }
+        ]
+      },
+      "stream.south.rent": {
+        "index": {
+          "calendar": "annual",
+          "start": "2026-01-01",
+          "periods": 3
+        },
+        "offset": 1.0,
+        "entity": "asset.south",
+        "category": "operating.revenue.base_rent",
+        "values": [
+          {
+            "amount": 60.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 60.0,
+            "currency": "USD"
+          },
+          {
+            "amount": 60.0,
+            "currency": "USD"
+          }
+        ]
+      }
+    }
+  },
+  "scenarios": {
+    "status": "not_run",
+    "summaries": []
+  },
+  "monte_carlo": {
+    "status": "not_run",
+    "trials": 1,
+    "seed": 0,
+    "metrics": {},
+    "trial_summaries": []
+  },
+  "statements": {
+    "statements": [
+      {
+        "id": "by_property",
+        "label": "By property",
+        "default": false,
+        "grain": {
+          "calendar": "annual",
+          "start": "2026-01-01",
+          "labels": [
+            "2026",
+            "2027",
+            "2028"
+          ]
+        },
+        "rows": [
+          {
+            "kind": "subtotal",
+            "label": "Fund",
+            "depth": 0,
+            "display_sign": 1.0,
+            "values": [
+              {
+                "amount": 125.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 125.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 125.0,
+                "currency": "USD"
+              }
+            ],
+            "total": 375.0
+          },
+          {
+            "kind": "line",
+            "label": "Direct",
+            "depth": 1,
+            "display_sign": 1.0,
+            "values": [
+              {
+                "amount": -20.0,
+                "currency": "USD"
+              },
+              {
+                "amount": -20.0,
+                "currency": "USD"
+              },
+              {
+                "amount": -20.0,
+                "currency": "USD"
+              }
+            ],
+            "total": -60.0,
+            "streams": [
+              "fund.management_fee"
+            ]
+          },
+          {
+            "kind": "line",
+            "label": "North",
+            "depth": 1,
+            "display_sign": 1.0,
+            "values": [
+              {
+                "amount": 85.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 85.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 85.0,
+                "currency": "USD"
+              }
+            ],
+            "total": 255.0,
+            "streams": [
+              "north.opex",
+              "north.rent"
+            ]
+          },
+          {
+            "kind": "line",
+            "label": "South",
+            "depth": 1,
+            "display_sign": 1.0,
+            "values": [
+              {
+                "amount": 60.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 60.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 60.0,
+                "currency": "USD"
+              }
+            ],
+            "total": 180.0,
+            "streams": [
+              "south.rent"
+            ]
+          }
+        ],
+        "reconciliation": {
+          "bottom_line": 375.0,
+          "model_total": 375.0,
+          "residual": 0.0
+        }
+      },
+      {
+        "id": "by_property_summary",
+        "label": "Fund, one line",
+        "default": false,
+        "grain": {
+          "calendar": "annual",
+          "start": "2026-01-01",
+          "labels": [
+            "2026",
+            "2027",
+            "2028"
+          ]
+        },
+        "rows": [
+          {
+            "kind": "line",
+            "label": "Fund",
+            "depth": 0,
+            "display_sign": 1.0,
+            "values": [
+              {
+                "amount": 125.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 125.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 125.0,
+                "currency": "USD"
+              }
+            ],
+            "total": 375.0,
+            "streams": [
+              "fund.management_fee",
+              "north.opex",
+              "north.rent",
+              "south.rent"
+            ]
+          }
+        ],
+        "reconciliation": {
+          "bottom_line": 375.0,
+          "model_total": 375.0,
+          "residual": 0.0
+        }
+      },
+      {
+        "id": "by_category",
+        "label": "By category",
+        "default": false,
+        "grain": {
+          "calendar": "annual",
+          "start": "2026-01-01",
+          "labels": [
+            "2026",
+            "2027",
+            "2028"
+          ]
+        },
+        "rows": [
+          {
+            "kind": "subtotal",
+            "label": "Operating",
+            "depth": 0,
+            "display_sign": 1.0,
+            "values": [
+              {
+                "amount": 125.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 125.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 125.0,
+                "currency": "USD"
+              }
+            ],
+            "total": 375.0
+          },
+          {
+            "kind": "subtotal",
+            "label": "Expense",
+            "depth": 1,
+            "display_sign": 1.0,
+            "values": [
+              {
+                "amount": -35.0,
+                "currency": "USD"
+              },
+              {
+                "amount": -35.0,
+                "currency": "USD"
+              },
+              {
+                "amount": -35.0,
+                "currency": "USD"
+              }
+            ],
+            "total": -105.0
+          },
+          {
+            "kind": "line",
+            "label": "Direct",
+            "depth": 2,
+            "display_sign": 1.0,
+            "values": [
+              {
+                "amount": -20.0,
+                "currency": "USD"
+              },
+              {
+                "amount": -20.0,
+                "currency": "USD"
+              },
+              {
+                "amount": -20.0,
+                "currency": "USD"
+              }
+            ],
+            "total": -60.0,
+            "streams": [
+              "fund.management_fee"
+            ]
+          },
+          {
+            "kind": "line",
+            "label": "Opex",
+            "depth": 2,
+            "display_sign": 1.0,
+            "values": [
+              {
+                "amount": -15.0,
+                "currency": "USD"
+              },
+              {
+                "amount": -15.0,
+                "currency": "USD"
+              },
+              {
+                "amount": -15.0,
+                "currency": "USD"
+              }
+            ],
+            "total": -45.0,
+            "streams": [
+              "north.opex"
+            ]
+          },
+          {
+            "kind": "subtotal",
+            "label": "Revenue",
+            "depth": 1,
+            "display_sign": 1.0,
+            "values": [
+              {
+                "amount": 160.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 160.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 160.0,
+                "currency": "USD"
+              }
+            ],
+            "total": 480.0
+          },
+          {
+            "kind": "line",
+            "label": "Base rent",
+            "depth": 2,
+            "display_sign": 1.0,
+            "values": [
+              {
+                "amount": 160.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 160.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 160.0,
+                "currency": "USD"
+              }
+            ],
+            "total": 480.0,
+            "streams": [
+              "north.rent",
+              "south.rent"
+            ]
+          }
+        ],
+        "reconciliation": {
+          "bottom_line": 375.0,
+          "model_total": 375.0,
+          "residual": 0.0
+        }
+      }
+    ]
+  },
+  "graph": {
+    "entities": [
+      {
+        "symbol": "asset.north",
+        "family": "asset",
+        "type": "Asset.Financial",
+        "parent": "container.fund"
+      },
+      {
+        "symbol": "asset.south",
+        "family": "asset",
+        "type": "Asset.Financial",
+        "parent": "container.fund"
+      },
+      {
+        "symbol": "container.fund",
+        "family": "container",
+        "type": "Container.Fund"
+      }
+    ]
+  }
+}
