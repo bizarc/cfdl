@@ -28,7 +28,12 @@ another spec by filename is legitimate.
 ESCAPE HATCH. Append `site-allow: <reason>` on the offending line, following the
 convention `tools/check-doc-examples.py` uses. The CFDL-CE rules use
 `ste-allow: <rule id> <reason>` — a separate marker so a reviewer can see which
-standard is being waived.
+standard is being waived, and it turns off only the rule it names.
+
+An annotation is a TRAILING COMMENT: `<!-- ... -->` in Markdown, `//` in a model
+file, `#` in TOML. A sentence that merely mentions one is prose and waives
+nothing, which is the difference between documenting the escape hatch and using
+it.
 
 CFDL-CE. This gate also enforces the mechanical subset of the writing standard
 (docs/22_cfdl_controlled_english.md): retired spellings, retired synonyms,
@@ -38,7 +43,15 @@ length, voice, and imperative form — those are judgment calls (see the tiering
 in docs/22), and a gate that flags judgment gets disabled, which is this file's
 founding rule.
 
-Usage: python3 tools/check-site-voice.py
+THE REGISTRY. Every check is a `Rule` carrying the id a reviewer cites, the
+layer it belongs to and the document types it binds. Layer one is universal and
+applies to every published word; layer two is by type and is not implemented
+yet. An exemption names the rules it exempts, so the specification carve-out can
+be read rather than inferred from a boolean at the call site.
+
+Usage:
+  python3 tools/check-site-voice.py            gate: fails on any finding
+  python3 tools/check-site-voice.py --report   measure: groups by rule, never fails
 """
 
 from __future__ import annotations
@@ -49,16 +62,17 @@ import pathlib
 import re
 import sys
 import tomllib
+from collections import Counter
+from dataclasses import dataclass
 
 sys.stdout.reconfigure(encoding="utf-8")
 sys.stderr.reconfigure(encoding="utf-8")
 
 REPO_ROOT = pathlib.Path(__file__).resolve().parents[1]
-ALLOW = re.compile(r"site-allow:|ste-allow:")
 # An ste-allow waiver names the docs/22 rule it waives. An id docs/22 does not
 # declare is a typo that silently waives nothing forever, so it is a failure —
-# the annotation contract (docs/22 §5) only works if the ids are real.
-STE_ALLOW_ID = re.compile(r"ste-allow:\s*(\S+)")
+# the annotation contract (docs/22 §5) only works if the ids are real. The
+# annotation itself is matched by WAIVER, below, which requires the comment form.
 RULE_ID = re.compile(r"^\|\s*([SVWCP]\d+)\s*\|")
 
 
@@ -74,6 +88,77 @@ def ce_rule_ids() -> set[str]:
 
 
 CE_RULE_IDS = None  # populated lazily; docs/22 is read once
+
+
+# --- The rule registry ------------------------------------------------------
+#
+# A rule carries the id a reviewer cites, the layer it belongs to, and the types
+# it binds. Before this structure the gate held two flat lists of (pattern,
+# message) pairs and a boolean at the call site, so nothing could say WHICH rule
+# an exemption exempted — the specification exemption turned off all sixteen
+# narrative patterns while its docstring claimed it turned off one.
+#
+# LAYER ONE is universal: it applies to every published word whatever the
+# document is. LAYER TWO is by type. Only layer one is implemented today; the
+# `layer` field exists so the second can be added a rule at a time rather than
+# as one unreviewable change.
+#
+# The ids beginning `N` and `X` are not yet declared in docs/22 §3. They name
+# rules this gate has always enforced without writing them down. docs/22 gains
+# them when the standard is restructured; until then the selftest checks the
+# implemented set against the ids the document does declare, in both directions.
+
+ALL_TYPES = frozenset({"task", "concept", "reference", "marketing"})
+
+UNIVERSAL = "universal"
+BY_TYPE = "by_type"
+
+
+@dataclass(frozen=True)
+class Rule:
+    """One mechanical check, and the rule of the standard it enforces."""
+
+    id: str
+    layer: str
+    why: str
+    pattern: re.Pattern[str]
+    # "prose" matches the line with inline code spans removed: a backticked
+    # identifier is code, not prose, whatever it is spelled like. "raw" matches
+    # the line as written.
+    on: str = "prose"
+    types: frozenset[str] = ALL_TYPES
+    # A rule the escape hatch may not waive. Naming a competitor is the first.
+    waivable: bool = True
+
+
+@dataclass(frozen=True)
+class Waiver:
+    """One annotation, and the rules it turns off on its line."""
+
+    kind: str  # "site" or "ste"
+    rule_ids: frozenset[str]  # empty means every rule, which is site-allow
+    reason: str
+
+    def waives(self, rule: Rule) -> bool:
+        return not self.rule_ids or rule.id in self.rule_ids
+
+
+@dataclass(frozen=True)
+class Finding:
+    """One rule firing at one place, rendered the way the gate has always."""
+
+    rel: str
+    why: str
+    excerpt: str
+    rule_id: str
+    lineno: int | None = None
+    locus: str = ""  # the trail into a JSON document, for a schema finding
+
+    def render(self) -> str:
+        where = f"{self.rel}:{self.lineno}" if self.lineno is not None else self.rel
+        locus = f"  {self.locus}" if self.locus else ""
+        return f"  {where}{locus}  {self.why}\n      {self.excerpt}"
+
 
 # Each pattern is a thing that reads as development process rather than as
 # documentation. Kept narrow on purpose: a gate that cries wolf gets disabled.
@@ -154,6 +239,42 @@ PATTERNS = [
     ),
 ]
 
+# The rule each narrative pattern enforces, in PATTERNS order. Several patterns
+# share an id because one rule has several tells: a repository reference is a
+# generator path, a crate path, "from a checkout" and a GitHub link alike.
+#
+#   N1  cites an internal document
+#   N2  discloses unfinished work
+#   N3  narrates development
+#   N4  references the repository
+#   N6  claims something about the authors rather than the product
+#   W6  marketing ornament (docs/22 §3.3)
+NARRATIVE_IDS = (
+    "N1",  # docs/NN_name.md
+    "N2",  # backlog
+    "N3",  # SUPERSEDED
+    "N3",  # originally said
+    "N2",  # TODO / FIXME
+    "N4",  # reference_gen
+    "N4",  # in-house
+    "N2",  # pending practitioner review
+    "N6",  # honest / dishonest
+    "N3",  # we chose / decided
+    "N3",  # this page used to
+    "N4",  # generated from <repo path>
+    "N4",  # `crates/...`
+    "N4",  # in this repository
+    "N4",  # github.com
+    "W6",  # ornament
+)
+
+# The specification exemption. A normative document published as a labeled
+# section may cite another specification by filename, and before the registry
+# this exemption silently covered every narrative rule rather than this set.
+# Narrowing it is a corpus change and belongs in its own commit, so the set is
+# spelled out here rather than quietly reduced.
+SPEC_EXEMPT = frozenset(NARRATIVE_IDS)
+
 
 # --- CFDL-CE: the mechanical subset of docs/22 ------------------------------
 #
@@ -221,6 +342,125 @@ def ce_patterns() -> list[tuple[re.Pattern[str], str]]:
 
 
 CE_PATTERNS = ce_patterns()
+
+# The rule each CFDL-CE pattern enforces, in ce_patterns() order. W2 has four
+# tells because four retired synonyms name two defined things.
+#
+#   W1  one word, one form          W3  the approved verb for an action
+#   W2  one concept, one term       V6  no contractions
+#   X1  a multiple is 8.0x, not 8.0×   X2  millions are m, not mm
+#   X3  a hyphen is U+002D
+CE_IDS = ("W1", "W2", "W2", "W2", "W2", "W3", "X1", "X2", "X3", "V6")
+
+# W3 reads the line as written. Its pattern is anchored to the markup that makes
+# `Hit` an instruction aimed at a control — bold, or a backticked control name —
+# and the code-stripped copy every other CFDL-CE rule reads has already removed
+# the backticks, so that half of the pattern could never match. The selftest
+# found it. Rerun over the corpus: no finding changes.
+CE_READS_RAW = frozenset({"W3"})
+
+
+def build_registry() -> tuple[Rule, ...]:
+    """Every mechanical rule, in the order the gate has always applied them.
+
+    Order is load-bearing: the first rule to match a line is the one reported,
+    and the narrative rules read the raw line while the CFDL-CE rules read it
+    with its code spans removed.
+    """
+    if len(NARRATIVE_IDS) != len(PATTERNS):
+        raise SystemExit(
+            f"check-site-voice: {len(PATTERNS)} narrative patterns but "
+            f"{len(NARRATIVE_IDS)} ids. Every pattern names the rule it enforces."
+        )
+    if len(CE_IDS) != len(CE_PATTERNS):
+        raise SystemExit(
+            f"check-site-voice: {len(CE_PATTERNS)} CFDL-CE patterns but "
+            f"{len(CE_IDS)} ids. Every pattern names the rule it enforces."
+        )
+    rules = [
+        Rule(id=rid, layer=UNIVERSAL, why=why, pattern=pattern, on="raw")
+        for rid, (pattern, why) in zip(NARRATIVE_IDS, PATTERNS)
+    ]
+    rules += [
+        Rule(
+            id=rid,
+            layer=UNIVERSAL,
+            why=why,
+            pattern=pattern,
+            on="raw" if rid in CE_READS_RAW else "prose",
+        )
+        for rid, (pattern, why) in zip(CE_IDS, CE_PATTERNS)
+    ]
+    return tuple(rules)
+
+
+REGISTRY = build_registry()
+
+
+def rules_for(exempt: frozenset[str]) -> tuple[Rule, ...]:
+    """The rules that bind a source, given the exemptions its group carries."""
+    return tuple(rule for rule in REGISTRY if rule.id not in exempt)
+
+
+# --- The escape hatch -------------------------------------------------------
+#
+# A waiver is a trailing comment, which is how every one in the repository is
+# written. Requiring the comment form is what separates an annotation from a
+# sentence that merely mentions one: before this, any line containing the string
+# `ste-allow:` was skipped entirely, so the backlog citation in docs/22's own
+# status line was invisible to the gate rather than caught by it, and the rule
+# id it parsed out of that line was a backtick.
+_OPENER = r"(?:<!--|//|\#|/\*|\{/\*)"
+_CLOSER = r"(?:-->|\*/\}|\*/)?"
+WAIVER = re.compile(
+    rf"(?:^|\s){_OPENER}\s*(?P<kind>site|ste)-allow:\s*(?P<body>.*?)\s*{_CLOSER}\s*$"
+)
+
+
+def parse_waiver(prose: str) -> Waiver | None:
+    """Read a trailing annotation. `prose` has had its code spans removed."""
+    match = WAIVER.search(prose)
+    if match is None:
+        return None
+    body = match.group("body").strip()
+    if match.group("kind") == "ste":
+        # `ste-allow: <rule id> <reason>` — the id names what is being waived.
+        head, _, rest = body.partition(" ")
+        return Waiver(kind="ste", rule_ids=frozenset({head}) if head else frozenset(), reason=rest.strip())
+    return Waiver(kind="site", rule_ids=frozenset(), reason=body)
+
+
+def validate_waiver(waiver: Waiver, rel: str, lineno: int, excerpt: str) -> list[Finding]:
+    """A waiver that names nothing real, or explains nothing, waives nothing."""
+    global CE_RULE_IDS
+    if CE_RULE_IDS is None:
+        CE_RULE_IDS = ce_rule_ids()
+    findings = []
+    known = CE_RULE_IDS | {rule.id for rule in REGISTRY}
+    for rule_id in sorted(waiver.rule_ids):
+        if rule_id not in known:
+            findings.append(
+                Finding(
+                    rel=rel,
+                    lineno=lineno,
+                    rule_id="WAIVER",
+                    why=f"ste-allow names rule '{rule_id}', which docs/22 does not declare",
+                    excerpt=excerpt,
+                )
+            )
+            continue
+        unwaivable = [r for r in REGISTRY if r.id == rule_id and not r.waivable]
+        if unwaivable:
+            findings.append(
+                Finding(
+                    rel=rel,
+                    lineno=lineno,
+                    rule_id="WAIVER",
+                    why=f"{rule_id} may not be waived",
+                    excerpt=excerpt,
+                )
+            )
+    return findings
 
 
 def spec_sources() -> list[pathlib.Path]:
@@ -296,79 +536,107 @@ def _lines_of(path: pathlib.Path) -> list[str]:
     return [html.unescape(line) for line in text.splitlines()]
 
 
-def check_text_file(path: pathlib.Path, *, narrative: bool = True) -> list[str]:
-    """`narrative=False` runs only the CE rules — the specification exemption."""
-    findings = []
-    rel = path.relative_to(REPO_ROOT)
-    # A case.toml's COMMENTS are maintainer's notes and are no longer published;
-    # only its declared `summary` reaches a page.
-    only_summary = path.name == "case.toml"
+def check_text_file(path: pathlib.Path, *, exempt: frozenset[str] = frozenset()) -> list[Finding]:
+    """Check one published source against every rule its group does not exempt."""
+    return check_lines(
+        _lines_of(path),
+        exempt=exempt,
+        suffix=path.suffix,
+        # A case.toml's COMMENTS are maintainer's notes and are no longer
+        # published; only its declared `summary` reaches a page.
+        only_summary=path.name == "case.toml",
+        label=path.relative_to(REPO_ROOT).as_posix(),
+    )
+
+
+def check_lines(
+    lines,
+    *,
+    exempt: frozenset[str] = frozenset(),
+    suffix: str = ".md",
+    only_summary: bool = False,
+    label: str = "<case>",
+) -> list[Finding]:
+    """The checking, with the reading taken out.
+
+    Taking lines rather than a path is what makes a rule testable: the selftest
+    exercises `.mdx` and `.html` handling without a file, and nothing in the gate
+    has to be mocked.
+    """
+    findings: list[Finding] = []
+    rel = label
+    applicable = rules_for(exempt)
     # A fenced block is a command the reader runs, not prose written at them.
     # `git clone …` in an install page is the instruction; flagging it as
     # narrative would mean deleting the only documented way to install.
     in_fence = False
-    for n, line in enumerate(_lines_of(path), 1):
-        if path.suffix == ".md" and line.lstrip().startswith("```"):
+    for n, line in enumerate(lines, 1):
+        if suffix == ".md" and line.lstrip().startswith("```"):
             in_fence = not in_fence
             continue
         if in_fence:
             continue
-        if ALLOW.search(line):
-            global CE_RULE_IDS
-            if CE_RULE_IDS is None:
-                CE_RULE_IDS = ce_rule_ids()
-            ste = STE_ALLOW_ID.search(line)
-            if ste and ste.group(1) not in CE_RULE_IDS:
-                findings.append(
-                    f"  {rel}:{n}  ste-allow names rule '{ste.group(1)}', which "
-                    f"docs/22 does not declare\n      {line.strip()[:100]}"
-                )
-            continue
         if only_summary and not line.lstrip().startswith("summary"):
             continue
-        hit = None
-        if narrative:
-            for pattern, why in PATTERNS:
-                if pattern.search(line):
-                    hit = why
-                    break
-        if hit is None:
-            # CE rules see the line without its code spans: a backticked
-            # identifier is code, not prose, whatever it is spelled like.
-            prose = INLINE_CODE.sub("", line)
-            for pattern, why in CE_PATTERNS:
-                if pattern.search(prose):
-                    hit = why
-                    break
-        if hit is not None:
-            findings.append(f"  {rel}:{n}  {hit}\n      {line.strip()[:100]}")
+        # A rule reads the raw line or the line with its code spans removed.
+        prose = INLINE_CODE.sub("", line)
+        waiver = parse_waiver(prose)
+        if waiver is not None:
+            findings += validate_waiver(waiver, rel, n, line.strip()[:100])
+        for rule in applicable:
+            if waiver is not None and waiver.waives(rule):
+                continue
+            subject = line if rule.on == "raw" else prose
+            if rule.pattern.search(subject):
+                findings.append(
+                    Finding(
+                        rel=rel,
+                        lineno=n,
+                        rule_id=rule.id,
+                        why=rule.why,
+                        excerpt=line.strip()[:100],
+                    )
+                )
+                break
     return findings
 
 
-def check_schema(path: pathlib.Path) -> list[str]:
+def check_schema(path: pathlib.Path, *, exempt: frozenset[str] = frozenset()) -> list[Finding]:
     """Schema `description` strings are served publicly and rendered as prose."""
-    findings = []
-    rel = path.relative_to(REPO_ROOT)
+    findings: list[Finding] = []
+    rel = path.relative_to(REPO_ROOT).as_posix()
+    applicable = rules_for(exempt)
 
     def walk(node, trail):
         if isinstance(node, dict):
             for key, value in node.items():
                 if key == "description" and isinstance(value, str):
-                    if ALLOW.search(value):
-                        continue
                     prose = INLINE_CODE.sub("", value)
-                    hit = next(
-                        (why for pattern, why in PATTERNS if pattern.search(value)),
-                        None,
-                    ) or next(
-                        (why for pattern, why in CE_PATTERNS if pattern.search(prose)),
-                        None,
-                    )
-                    if hit is not None:
-                        findings.append(
-                            f"  {rel}  {'.'.join(trail) or '<root>'}  {hit}\n"
-                            f"      {value.strip()[:100]}"
+                    trail_s = ".".join(trail) or "<root>"
+                    # A description carries its annotation the same way a line
+                    # does, and suppression is per rule here too.
+                    waiver = parse_waiver(prose)
+                    if waiver is not None:
+                        findings.extend(
+                            Finding(rel=rel, locus=trail_s, rule_id=f.rule_id,
+                                    why=f.why, excerpt=f.excerpt)
+                            for f in validate_waiver(waiver, rel, 0, value.strip()[:100])
                         )
+                    for rule in applicable:
+                        if waiver is not None and waiver.waives(rule):
+                            continue
+                        subject = value if rule.on == "raw" else prose
+                        if rule.pattern.search(subject):
+                            findings.append(
+                                Finding(
+                                    rel=rel,
+                                    locus=trail_s,
+                                    rule_id=rule.id,
+                                    why=rule.why,
+                                    excerpt=value.strip()[:100],
+                                )
+                            )
+                            break
                 else:
                     walk(value, trail + [str(key)])
         elif isinstance(node, list):
@@ -379,8 +647,189 @@ def check_schema(path: pathlib.Path) -> list[str]:
     return findings
 
 
-def main() -> int:
-    findings: list[str] = []
+# --- Selftest ---------------------------------------------------------------
+#
+# The gate parses docs/22, loads word lists from the register, walks JSON
+# documents and handles two escape hatches, and until now nothing exercised any
+# of it. The only evidence of testing was a sentence in docs/21 recording a
+# manual pass that cannot be re-run.
+#
+# Cases live here rather than under a fixture directory because a positive case
+# is literally a string the gate bans: a fixture file would have to be excluded
+# from the gate's own reading, and a reader debugging a failure wants the case
+# beside the rule.
+
+
+@dataclass(frozen=True)
+class Case:
+    """One line, and the rule it must or must not trip."""
+
+    rule: str  # the id expected to fire; "" means nothing may fire
+    text: str
+    suffix: str = ".md"
+    only_summary: bool = False
+    exempt: frozenset[str] = frozenset()
+    note: str = ""
+
+
+SELFTEST: tuple[Case, ...] = (
+    # --- W1, the retired spellings -----------------------------------------
+    Case("W1", "The premium is amortised over the term."),
+    Case("", "The premium is amortized over the term."),
+    Case("", "The `amortising` flag is a pack identifier.", note="code span, not prose"),
+    # --- W2, one concept one term ------------------------------------------
+    Case("W2", "Edit the run config before the run."),
+    Case("W2", "Check the output document for the totals."),
+    Case("", "Edit the run configuration before the run."),
+    Case("", "Read the results document.", note="the approved form, not its prefix"),
+    # --- W3, the approved verb ---------------------------------------------
+    Case("W3", "Hit **Run** to evaluate the model."),
+    Case("W3", "Hit `Run` to evaluate the model."),
+    Case("", "Collections hit 60,000 in the third year.", note="not aimed at a control"),
+    # --- V6, contractions against possessives ------------------------------
+    Case("V6", "It's evaluated once per period."),
+    Case("V6", "The run doesn't converge."),
+    Case("V6", "They're declared in the pack."),
+    Case("", "The model's logic is declarative.", note="possessive, not a contraction"),
+    Case("", "The quarter's results are published.", note="possessive"),
+    # --- X1 to X3, the number formats --------------------------------------
+    Case("X1", "The exit is struck at 8.0× EBITDA."),
+    Case("", "The schedule holds 6,000 × 12 units.", note="spaced arithmetic"),
+    Case("", "The grid is 3×3.", note="dimensions, not a multiple"),
+    Case("X2", "The purchase price is $33.6mm."),
+    Case("", "The purchase price is $33.6m."),
+    Case("X3", "A non‑breaking hyphen is invisible in review."),
+    Case("", "A plain-hyphen compound is correct."),
+    # --- N1 to N6, the narrative rules -------------------------------------
+    Case("N1", "See docs/13_feature_backlog.md for the rest."),
+    Case("", "See docs/13_feature_backlog.md for the rest.", exempt=frozenset({"N1"}),
+         note="the specification carve-out"),
+    Case("N2", "The remaining items are on the backlog."),
+    Case("N2", "TODO: finish this section."),
+    Case("N3", "We chose the second form for its symmetry."),
+    Case("N3", "This page previously gave two reasons."),
+    Case("N4", "Run it from a checkout of the repository."),
+    Case("N4", "See `crates/cfdl-engine/src/lib.rs` for the loop."),
+    Case("N6", "This is an honest account of the arithmetic."),
+    Case("W6", "A blazingly fast engine."),
+    Case("", "The engine evaluates 40,000 periods in a second.", note="a figure, not a claim"),
+    # --- Fenced blocks ------------------------------------------------------
+    Case("", "```bash\ngit clone https://github.com/bizarc/cfdl\n```",
+         note="a command the reader runs is not prose written at them"),
+    Case("N4", "Clone it from https://github.com/bizarc/cfdl.",
+         note="the same string outside a fence"),
+    # --- The escape hatch ---------------------------------------------------
+    Case("", "See `crates/cfdl-cli` for the flag.  <!-- site-allow: explained here -->"),
+    Case("WAIVER", "x  <!-- ste-allow: Z9 no such rule -->",
+         note="an id docs/22 does not declare waives nothing forever"),
+    Case("", "The amortised form.  <!-- ste-allow: W1 the register is quoted -->"),
+    Case("N2", "The backlog is cited here.  <!-- ste-allow: W1 wrong rule -->",
+         note="a named waiver must not suppress a different rule"),
+    Case("N2", "The tier map is unchecked (backlog 7.82). See `ste-allow:` in §5.",
+         note="a backticked mention is code, and waives nothing"),
+    Case("N2", "The backlog says ste-allow: is the escape hatch.",
+         note="a mid-sentence mention is prose, and waives nothing"),
+    Case("", "// TODO finish the pool  // site-allow: the note is for a maintainer",
+         suffix=".cfdl", note="a line comment is the opener in a model file"),
+    Case("N2", "// TODO finish the pool", suffix=".cfdl",
+         note="the same note without an annotation"),
+    # --- A case.toml publishes only its summary -----------------------------
+    Case("", "# TODO a maintainer's note", suffix=".toml", only_summary=True),
+    Case("N2", 'summary = "TODO write this"', suffix=".toml", only_summary=True),
+)
+
+# Rules docs/22 declares and this gate deliberately does not enforce. They are
+# judgment calls, and a gate that flags judgment gets disabled. Listing them
+# means adding a rule to docs/22 forces a decision here rather than being
+# silently unimplemented.
+NOT_MECHANICAL = frozenset(
+    {
+        "S1", "S2", "S3", "S4", "S5",   # length and list form
+        "V1", "V2", "V3", "V4", "V5",   # voice, tense, imperative form
+        "W4", "W5", "W7",               # registration, noun clusters, first use
+        "C1", "C2", "C3", "C4", "C5",   # clarity
+        "P1", "P2", "P3", "P4",         # procedures
+    }
+)
+
+
+def selftest() -> int:
+    """Prove each rule fires where it must, stays silent where it must not."""
+    failed = 0
+
+    for case in SELFTEST:
+        got = check_lines(
+            case.text.splitlines(),
+            exempt=case.exempt,
+            suffix=case.suffix,
+            only_summary=case.only_summary,
+        )
+        ids = [f.rule_id for f in got]
+        want = [case.rule] if case.rule else []
+        if ids != want:
+            failed += 1
+            trailer = f"  ({case.note})" if case.note else ""
+            print(
+                f"FAIL {case.text.splitlines()[0][:70]!r}{trailer}\n"
+                f"     want {want or 'no finding'}, got {ids or 'no finding'}",
+                file=sys.stderr,
+            )
+
+    # Structural assertions. The cases prove the rules fire; these prove the
+    # registry is coherent, which is what actually drifts.
+    declared = ce_rule_ids()
+    implemented = {rule.id for rule in REGISTRY}
+
+    unimplemented = declared - implemented - NOT_MECHANICAL
+    if unimplemented:
+        failed += 1
+        print(
+            f"FAIL docs/22 declares {sorted(unimplemented)}, which this gate neither "
+            f"enforces nor lists in NOT_MECHANICAL",
+            file=sys.stderr,
+        )
+
+    both = implemented & NOT_MECHANICAL
+    if both:
+        failed += 1
+        print(f"FAIL {sorted(both)} is both enforced and listed as judgment", file=sys.stderr)
+
+    for rule in REGISTRY:
+        if rule.layer == UNIVERSAL and rule.types != ALL_TYPES:
+            failed += 1
+            print(f"FAIL {rule.id} is universal but does not bind every type", file=sys.stderr)
+
+    covered = {case.rule for case in SELFTEST if case.rule}
+    uncovered = implemented - covered
+    if uncovered:
+        failed += 1
+        print(f"FAIL no positive case for {sorted(uncovered)}", file=sys.stderr)
+    if not any(case.rule == "" for case in SELFTEST):
+        failed += 1
+        print("FAIL no negative case at all", file=sys.stderr)
+
+    # Every retired spelling must be reachable by W1, or the register holds a
+    # word the gate silently ignores.
+    register = tomllib.loads((REPO_ROOT / "docs" / "terminology.toml").read_text(encoding="utf-8"))
+    for retired in register["spelling"]["map"]:
+        if not check_lines([f"The {retired} form is retired."]):
+            failed += 1
+            print(f"FAIL [spelling.map] holds {retired!r}, which no rule catches", file=sys.stderr)
+
+    if failed:
+        print(f"check-site-voice: {failed} selftest case(s) FAILED", file=sys.stderr)
+        return 1
+    print(
+        f"check-site-voice: selftest OK ({len(SELFTEST)} cases, "
+        f"{len(implemented)} rules, {len(REGISTRY)} checks)",
+        file=sys.stderr,
+    )
+    return 0
+
+
+def collect() -> tuple[list[Finding], int]:
+    """Every finding across every published source, and how many were read."""
+    findings: list[Finding] = []
     checked = 0
 
     for path in sources():
@@ -388,7 +837,7 @@ def main() -> int:
         checked += 1
 
     for path in spec_sources():
-        findings += check_text_file(path, narrative=False)
+        findings += check_text_file(path, exempt=SPEC_EXEMPT)
         checked += 1
 
     for name in ("ir.schema.json", "results.schema.json"):
@@ -397,9 +846,45 @@ def main() -> int:
             findings += check_schema(path)
             checked += 1
 
+    return findings, checked
+
+
+def report(findings: list[Finding], checked: int) -> int:
+    """Print what the corpus holds, grouped by rule, and pass regardless.
+
+    A measurement, not a gate. Before widening a rule or narrowing an exemption,
+    this says how much it will surface — the number that decides whether the
+    change is one commit or twelve.
+    """
+    print(f"check-site-voice --report: {checked} site-facing sources, {len(findings)} findings\n")
+    if not findings:
+        print("  nothing to report")
+        return 0
+    by_rule = Counter(f.rule_id for f in findings)
+    width = max(len(rid) for rid in by_rule)
+    for rid, count in sorted(by_rule.items(), key=lambda kv: (-kv[1], kv[0])):
+        files = len({f.rel for f in findings if f.rule_id == rid})
+        why = next(f.why for f in findings if f.rule_id == rid)
+        plural = "file " if files == 1 else "files"
+        print(f"  {rid:<{width}}  {count:>4}  in {files:>3} {plural}   {why}")
+    print("\n  worst files:")
+    by_file = Counter(f.rel for f in findings)
+    for rel, count in by_file.most_common(10):
+        print(f"  {count:>4}  {rel}")
+    return 0
+
+
+def main() -> int:
+    if "--selftest" in sys.argv[1:]:
+        return selftest()
+    if "--report" in sys.argv[1:]:
+        return report(*collect())
+
+    findings, checked = collect()
+
     if findings:
         print("check-site-voice: internal narrative would be published.\n", file=sys.stderr)
-        print("\n".join(findings), file=sys.stderr)
+        print("\n".join(f.render() for f in findings), file=sys.stderr)
         print(
             "\nThese files feed the documentation site, so what is written here is\n"
             "what a reader sees. Rationale belongs in the repository — the design\n"
