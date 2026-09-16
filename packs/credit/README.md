@@ -108,7 +108,7 @@ A loan — or a representative loan standing for a pool of them. One type:
 the repayment pattern is the `amortization` term and the coupon is fixed or
 floating by which rate terms are stated, and the lowering rules select on
 those (a floating level-pay loan has no row and is refused, `E1385`). A pool
-of loans is not a type: it is a container the modeller names, holding one
+of loans is not a type: it is a container the modeler names, holding one
 `credit.loan` per loan or one representative loan, and its balance is the
 fold of its members'.
 
@@ -415,7 +415,7 @@ pattern-matching the stream's name.
 
 Collections sit under `operating`, not `financing`: for a lender, interest
 received is operating revenue rather than a financing flow. That is the same
-judgement an IFRS filer makes for a financial institution, and it is why CFDL
+judgment an IFRS filer makes for a financial institution, and it is why CFDL
 enforces only the root vocabulary and leaves the assignment to the pack.
 
 `principal` covers both scheduled amortization and a bullet, since both retire

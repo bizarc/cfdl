@@ -40,7 +40,7 @@
 # across — the same handling the CREST and national-laboratory cases get.
 #
 # period_tolerance = 1e-6, which is the ENGINE'S PUBLISHED PRECISION and not a
-# judgement about this deal. Results JSON carries money to six decimal places,
+# judgment about this deal. Results JSON carries money to six decimal places,
 # so half of that — 5e-7 — is the tightest any case here can assert.
 #
 # The worst disagreement across all 33 asserted figures is 4.5e-7, on the

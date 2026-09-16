@@ -223,7 +223,7 @@ register, so it cannot fall behind the language.
 | `E2402_OPTION_MISSING_PAYOFF` | Lowering/emission | an option declares no `payoff`, so exercising it would move no cash. |
 | `E5023_SUBTOTAL_UNKNOWN_CATEGORY` | Lowering/emission | a pack subtotal folds a category no rule emits, so the row would always be zero. |
 | `E5024_TERM_UNIT_MISMATCH` | Lowering/emission | a term is supplied in units the rule does not declare for it. |
-| `E5025_TERM_EXPR_INVALID` | Lowering/emission | a term holds an expression that does not compile. Checked at the term's own span, before substitution: after the splice the error would point at a rule the modeller did not write. |
+| `E5025_TERM_EXPR_INVALID` | Lowering/emission | a term holds an expression that does not compile. Checked at the term's own span, before substitution: after the splice the error would point at a rule the modeler did not write. |
 | `E5026_TERM_EXPR_IN_LITERAL_SLOT` | Lowering/emission | a term holding an expression is used by a rule where only a literal can go: a stream name, a schedule date, a frequency, or a net-days count. Those slots are never parsed as expressions, so an expression there is not evaluated late — it is wrong. Expression terms are valid where the rule uses the term in an expression, which is `amount_expr` and a field's `init`/`next`. |
 | `E6001_CRE_LEASE_MISSING_BASE_RENT` | Pack domain validations |  |
 | `E6002_CRE_LEASE_INVALID_TERM_RANGE` | Pack domain validations |  |

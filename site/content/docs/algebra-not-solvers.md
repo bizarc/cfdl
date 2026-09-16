@@ -13,7 +13,7 @@ interest gets a `CIRC` switch and Excel's iterative calculation. A subsidy sized
 to hold a cover ratio gets a circular reference and a tolerance.
 
 CFDL has no solver, and so far it has not needed one. Every sizing and every
-circularity the validation programme has met has fallen to algebra — four
+circularity the validation program has met has fallen to algebra — four
 worked cases across four domains, each reconciled against the external model
 that solved the same problem by iterating.
 
@@ -280,7 +280,7 @@ Where it stops, so the method is usable rather than merely encouraging.
 
 **A genuine simultaneous system.** Two or more unknowns that determine each
 other, where no lag and no substitution separates them. Nothing in the
-validation programme has produced one yet, which is evidence about the deals
+validation program has produced one yet, which is evidence about the deals
 met so far and not a theorem.
 
 **A threshold the unknown must be solved through.** `max(0, ...)` is fine when

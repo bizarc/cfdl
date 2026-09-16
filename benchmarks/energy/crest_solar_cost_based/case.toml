@@ -29,7 +29,7 @@
 # the restatement.
 #
 # period_tolerance = 1e-6, which is the ENGINE'S PUBLISHED PRECISION and not a
-# judgement about this deal. Results JSON carries money to six decimal places,
+# judgment about this deal. Results JSON carries money to six decimal places,
 # so half of that — 5e-7 — is the tightest any case here can assert.
 #
 # All seven individual stream columns agree with the reference EXACTLY: zero

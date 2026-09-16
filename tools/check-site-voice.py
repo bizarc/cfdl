@@ -49,9 +49,16 @@ applies to every published word; layer two is by type and is not implemented
 yet. An exemption names the rules it exempts, so the specification carve-out can
 be read rather than inferred from a boolean at the call site.
 
+TWO MODES. A GATE rule fails the build. A REVIEW rule is reported and never
+fails. The founding rule above is why: judgment cannot be blocked on, but it can
+be surfaced, and surfacing it beats the old choice between enforcing it badly and
+dropping it. A review rule is promoted to a gate once its findings are worked
+through and its list calibrated.
+
 Usage:
-  python3 tools/check-site-voice.py            gate: fails on any finding
-  python3 tools/check-site-voice.py --report   measure: groups by rule, never fails
+  python3 tools/check-site-voice.py             gate: fails on a gated finding
+  python3 tools/check-site-voice.py --report    every finding, split by mode
+  python3 tools/check-site-voice.py --selftest  the rules, against pinned cases
 """
 
 from __future__ import annotations
@@ -129,6 +136,12 @@ class Rule:
     types: frozenset[str] = ALL_TYPES
     # A rule the escape hatch may not waive. Naming a competitor is the first.
     waivable: bool = True
+    # GATE fails the build. REVIEW is reported and never fails. A rule that
+    # cannot be made precise enough to block on is worth seeing anyway, and the
+    # founding rule here is that a gate flagging judgment gets disabled — so
+    # judgment is surfaced rather than either enforced or dropped. A review rule
+    # is promoted once its findings are worked through and its list calibrated.
+    mode: str = "gate"
 
 
 @dataclass(frozen=True)
@@ -153,11 +166,18 @@ class Finding:
     rule_id: str
     lineno: int | None = None
     locus: str = ""  # the trail into a JSON document, for a schema finding
+    # The text the rule actually matched. An excerpt is cut at 100 characters,
+    # so for a broad rule the words that tripped it are often not in it, and a
+    # finding you cannot see the cause of cannot be triaged.
+    matched: str = ""
 
-    def render(self) -> str:
+    def render(self, *, show_match: bool = False) -> str:
         where = f"{self.rel}:{self.lineno}" if self.lineno is not None else self.rel
         locus = f"  {self.locus}" if self.locus else ""
-        return f"  {where}{locus}  {self.why}\n      {self.excerpt}"
+        head = f"  {where}{locus}  {self.why}"
+        if show_match and self.matched:
+            head += f"\n      matched: {self.matched!r}"
+        return f"{head}\n      {self.excerpt}"
 
 
 # Each pattern is a thing that reads as development process rather than as
@@ -226,18 +246,10 @@ PATTERNS = [
         "assumes the reader has the repository",
     ),
     (re.compile(r"https://github\.com/"), "links into the repository"),
-    # Ornament. Each of these is a claim the reader should be left to make.
-    (
-        re.compile(
-            r"\b(blazing(ly)?|lightning[- ]fast|world[- ]class|cutting[- ]edge"
-            r"|state[- ]of[- ]the[- ]art|revolutionary|seamless(ly)?|effortless(ly)?"
-            r"|game[- ]chang(er|ing)|best[- ]in[- ]class|unparalleled|robust and"
-            r"|powerful and|simply put|crown jewel)\b",
-            re.I,
-        ),
-        "reads as marketing rather than documentation",
-    ),
 ]
+# Ornament (W6) used to sit at the end of this list, hardcoded. It is built from
+# docs/terminology.toml `[[not_approved]]` now, so the register is the list
+# rather than a copy of it.
 
 # The rule each narrative pattern enforces, in PATTERNS order. Several patterns
 # share an id because one rule has several tells: a repository reference is a
@@ -265,7 +277,6 @@ NARRATIVE_IDS = (
     "N4",  # `crates/...`
     "N4",  # in this repository
     "N4",  # github.com
-    "W6",  # ornament
 )
 
 # The specification exemption. A normative document published as a labeled
@@ -359,6 +370,59 @@ CE_IDS = ("W1", "W2", "W2", "W2", "W2", "W3", "X1", "X2", "X3", "V6")
 # found it. Rerun over the corpus: no finding changes.
 CE_READS_RAW = frozenset({"W3"})
 
+GATE = "gate"
+REVIEW = "review"
+
+
+def _word_alternation(terms) -> str:
+    """A regex matching any of `terms` on word boundaries, longest first."""
+    ordered = sorted(terms, key=len, reverse=True)
+    return r"\b(?:" + "|".join(re.escape(t) for t in ordered) + r")\b"
+
+
+def register_rules() -> list[Rule]:
+    """The rules carried as data in docs/terminology.toml `[[rule]]`.
+
+    Keeping the word lists in the register rather than in this file is what stops
+    the gate and the register disagreeing. Before this, only `[spelling.map]`
+    loaded at run time while both documents claimed all of them did.
+    """
+    register = tomllib.loads((REPO_ROOT / "docs" / "terminology.toml").read_text(encoding="utf-8"))
+    rules: list[Rule] = []
+    entries = list(register.get("rule", []))
+    entries += [e for e in register.get("not_approved", []) if "id" in e]
+    for entry in entries:
+        mode = entry.get("mode", GATE)
+        if mode not in (GATE, REVIEW):
+            raise SystemExit(
+                f"check-site-voice: rule {entry['id']} declares mode {mode!r}; "
+                f"expected {GATE!r} or {REVIEW!r}"
+            )
+        if "terms" in entry:
+            pattern = re.compile(_word_alternation(entry["terms"]), re.I)
+        elif "subjects" in entry and "verbs" in entry:
+            # "the model wants", "the engine happily ..." — a subject from the
+            # list, then a verb or adverb from it, with the article in between.
+            subjects = "|".join(re.escape(s) for s in entry["subjects"])
+            verbs = "|".join(re.escape(v) for v in sorted(entry["verbs"], key=len, reverse=True))
+            pattern = re.compile(rf"\b(?:the|a|an)\s+(?:{subjects})\s+(?:{verbs})\b", re.I)
+        else:
+            raise SystemExit(
+                f"check-site-voice: rule {entry['id']} carries neither `terms` nor "
+                f"`subjects` and `verbs`"
+            )
+        rules.append(
+            Rule(
+                id=entry["id"],
+                layer=UNIVERSAL,
+                why=entry["why"],
+                pattern=pattern,
+                mode=mode,
+                waivable=entry.get("waivable", True),
+            )
+        )
+    return rules
+
 
 def build_registry() -> tuple[Rule, ...]:
     """Every mechanical rule, in the order the gate has always applied them.
@@ -391,6 +455,7 @@ def build_registry() -> tuple[Rule, ...]:
         )
         for rid, (pattern, why) in zip(CE_IDS, CE_PATTERNS)
     ]
+    rules += register_rules()
     return tuple(rules)
 
 
@@ -594,7 +659,8 @@ def check_lines(
             if waiver is not None and waiver.waives(rule):
                 continue
             subject = line if rule.on == "raw" else prose
-            if rule.pattern.search(subject):
+            hit = rule.pattern.search(subject)
+            if hit:
                 findings.append(
                     Finding(
                         rel=rel,
@@ -602,6 +668,7 @@ def check_lines(
                         rule_id=rule.id,
                         why=rule.why,
                         excerpt=line.strip()[:100],
+                        matched=hit.group(0).strip(),
                     )
                 )
                 break
@@ -633,7 +700,8 @@ def check_schema(path: pathlib.Path, *, exempt: frozenset[str] = frozenset()) ->
                         if waiver is not None and waiver.waives(rule):
                             continue
                         subject = value if rule.on == "raw" else prose
-                        if rule.pattern.search(subject):
+                        hit = rule.pattern.search(subject)
+                        if hit:
                             findings.append(
                                 Finding(
                                     rel=rel,
@@ -641,6 +709,7 @@ def check_schema(path: pathlib.Path, *, exempt: frozenset[str] = frozenset()) ->
                                     rule_id=rule.id,
                                     why=rule.why,
                                     excerpt=value.strip()[:100],
+                                    matched=hit.group(0).strip(),
                                 )
                             )
                             break
@@ -740,6 +809,22 @@ SELFTEST: tuple[Case, ...] = (
          suffix=".cfdl", note="a line comment is the opener in a model file"),
     Case("N2", "// TODO finish the pool", suffix=".cfdl",
          note="the same note without an annotation"),
+    # --- N5, N7, N8, N9: the rules carried as data --------------------------
+    Case("N5", "Unlike Argus, the model is declarative."),
+    Case("N5", "PySAM cannot express this structure."),
+    Case("", "Export the results to Excel.", note="an interchange format, not a competitor"),
+    Case("", "The Excel circularity is a two-column lookup.", note="a technique"),
+    Case("N8", "This is faster than the alternatives."),
+    Case("N8", "No other tool reads the whole deal.", note="'no other' is broad on purpose"),
+    Case("", "The engine evaluates the whole deal in one pass.", note="the same point, stated"),
+    Case("N9", "Rate paths are not yet supported."),
+    Case("N9", "The pack cannot yet ramp two conventions."),
+    Case("", "A pack cannot declare a stream it does not own.",
+         note="'cannot' alone is a rule, not an apology"),
+    Case("N7", "The model wants the balance at the open."),
+    Case("N7", "The compiler happily accepts it."),
+    Case("", "The compiler refuses the program.", note="the precise word, not a mind"),
+    Case("", "The engine rejects the model.", note="likewise"),
     # --- HTML comments are prose, in both formats ---------------------------
     # A comment is not rendered, but it ships in the bytes, and a note nobody
     # checks is how a maintainer's aside reaches a page in the first place.
@@ -832,6 +917,20 @@ def selftest() -> int:
             failed += 1
             print(f"FAIL [spelling.map] holds {retired!r}, which no rule catches", file=sys.stderr)
 
+    # Every term the register bans must be reachable. A word added to a list the
+    # gate cannot see is the exact drift this file exists to prevent, and it was
+    # live until 2026-09-16: nothing read [[not_approved]] at all.
+    for entry in register.get("not_approved", []) + register.get("rule", []):
+        if entry.get("context"):
+            continue  # a contextual ban (currency `mm`) needs its context to fire
+        for term in entry.get("terms", []):
+            if not check_lines([f"A sentence with {term} in it."]):
+                failed += 1
+                print(
+                    f"FAIL the register bans {term!r}, which no rule catches",
+                    file=sys.stderr,
+                )
+
     if failed:
         print(f"check-site-voice: {failed} selftest case(s) FAILED", file=sys.stderr)
         return 1
@@ -876,15 +975,28 @@ def report(findings: list[Finding], checked: int) -> int:
     if not findings:
         print("  nothing to report")
         return 0
-    by_rule = Counter(f.rule_id for f in findings)
-    width = max(len(rid) for rid in by_rule)
-    for rid, count in sorted(by_rule.items(), key=lambda kv: (-kv[1], kv[0])):
-        files = len({f.rel for f in findings if f.rule_id == rid})
-        why = next(f.why for f in findings if f.rule_id == rid)
-        plural = "file " if files == 1 else "files"
-        print(f"  {rid:<{width}}  {count:>4}  in {files:>3} {plural}   {why}")
-    print("\n  worst files:")
+    modes = {rule.id: rule.mode for rule in REGISTRY}
+    for heading, want in (("GATED — these fail the build", GATE), ("FOR REVIEW — reported, never fails", REVIEW)):
+        group = [f for f in findings if modes.get(f.rule_id, GATE) == want]
+        if not group:
+            continue
+        print(f"{heading}: {len(group)}\n")
+        by_rule = Counter(f.rule_id for f in group)
+        width = max(len(rid) for rid in by_rule)
+        for rid, count in sorted(by_rule.items(), key=lambda kv: (-kv[1], kv[0])):
+            mine = [f for f in group if f.rule_id == rid]
+            files = len({f.rel for f in mine})
+            plural = "file " if files == 1 else "files"
+            print(f"  {rid:<{width}}  {count:>4}  in {files:>3} {plural}   {mine[0].why}")
+            # A review rule is broad on purpose, so the words that tripped it are
+            # what a reader needs to judge whether the rule or the prose is wrong.
+            if want == REVIEW:
+                for f in mine:
+                    where = f"{f.rel}:{f.lineno}" if f.lineno is not None else f.rel
+                    print(f"        {f.matched!r:<28}  {where}")
+        print()
     by_file = Counter(f.rel for f in findings)
+    print("  worst files:")
     for rel, count in by_file.most_common(10):
         print(f"  {count:>4}  {rel}")
     return 0
@@ -896,7 +1008,10 @@ def main() -> int:
     if "--report" in sys.argv[1:]:
         return report(*collect())
 
-    findings, checked = collect()
+    all_findings, checked = collect()
+    modes = {rule.id: rule.mode for rule in REGISTRY}
+    findings = [f for f in all_findings if modes.get(f.rule_id, GATE) == GATE]
+    reviewable = [f for f in all_findings if modes.get(f.rule_id) == REVIEW]
 
     if findings:
         print("check-site-voice: internal narrative would be published.\n", file=sys.stderr)
@@ -918,6 +1033,13 @@ def main() -> int:
         f"check-site-voice: OK ({checked} site-facing sources carry no internal "
         "narrative and follow CFDL-CE)"
     )
+    if reviewable:
+        by_rule = Counter(f.rule_id for f in reviewable)
+        listed = ", ".join(f"{rid} {count}" for rid, count in sorted(by_rule.items()))
+        print(
+            f"check-site-voice: {len(reviewable)} finding(s) for review, not gated "
+            f"({listed}). See --report."
+        )
     return 0
 
 

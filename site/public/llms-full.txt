@@ -312,7 +312,7 @@ entity party acme : CRE.Party.Tenant { name = "Acme Corp" }
   join a package's numbers to canonical things instead of to symbol names.
 - `part of` declares hierarchy and is **always optional, at every grain**. A
   pool models collective behavior perfectly well with no loans under it; a
-  building needs no units. The modeller chooses the grain and the language does
+  building needs no units. The modeler chooses the grain and the language does
   not prefer one. Where a parent does have children, its cash is aggregated from
   them **by the relation**, not by a name prefix — published as
   `entity.<symbol>.net_cash_flow`.
@@ -835,7 +835,7 @@ account reserve {
   liability of the owner) or `due` (a receivable), decides which way a cash
   stream that `moves` it changes it; a structure account may declare a side
   the same way, after its name. A pack contract's account takes its side
-  from the master, so no modeller using a pack writes it.
+  from the master, so no modeler using a pack writes it.
 - `init <expr>` is the balance at the timeline's first period. It defaults
   to zero: a balance outstanding when the model opens states it; one created
   during the run is raised from zero by the cash that creates it, and
@@ -1219,7 +1219,7 @@ quantile ercot_north linear by exceedance ref energy.power_price {
   quadrature: `quantile_mean` is the **exact integral** of the function these
   describe, so no separate quadrature mode is declared and none is needed.
 - `by exceedance` writes the points worst-first, as a duration curve reads.
-  It is authoring surface only: the compiler normalises to one ascending form,
+  It is authoring surface only: the compiler normalizes to one ascending form,
   so the IR carries no orientation. `by quantile` is the default.
 - `ref <id>` names the pack `[[references]]` entry this realises, which is what
   supplies its unit.
@@ -1481,7 +1481,7 @@ Rules:
 A trial IS a complete deterministic run, and every metric it computed is
 published: each trial summary carries the same metric map the deterministic
 block carries — `model.*`, `domain.*` and `metric.*` alike — and
-`monte_carlo.metrics` summarises each name across the trials with a mean, a
+`monte_carlo.metrics` summarizes each name across the trials with a mean, a
 standard deviation, a minimum, a maximum and the full set of percentiles. A
 summary also states `trials`, the number that published that name, because not
 every trial publishes every one: `model.irr` exists only where the flows solve
@@ -3447,7 +3447,7 @@ against it by `make ir-schema`.
         },
         "parent": {
           "type": "string",
-          "description": "The entity this one is part of. ALWAYS OPTIONAL, and absent for most entities: hierarchy is available at every grain and required at none. A pool models collective behavior with no loans under it; a building needs no units. The modeller chooses the grain, and the language does not prefer one."
+          "description": "The entity this one is part of. ALWAYS OPTIONAL, and absent for most entities: hierarchy is available at every grain and required at none. A pool models collective behavior with no loans under it; a building needs no units. The modeler chooses the grain, and the language does not prefer one."
         },
         "initial_state": {
           "type": "string",
@@ -3474,7 +3474,7 @@ against it by `make ir-schema`.
                 "$ref": "#/$defs/Schedule"
               }
             },
-            "description": "A field's recurrence. `schedule` is present only on a field a PACK emitted: it inherits the contract's payment rhythm, so a monthly-paying pool on a daily book compounds twelve times a year rather than 365. A field a modeller wrote has none and steps every period."
+            "description": "A field's recurrence. `schedule` is present only on a field a PACK emitted: it inherits the contract's payment rhythm, so a monthly-paying pool on a daily book compounds twelve times a year rather than 365. A field a modeler wrote has none and steps every period."
           }
         },
         "lifecycle": {
@@ -5315,7 +5315,7 @@ against it by `make results-schema`.
     "results_version": {
       "type": "string",
       "const": "0.14",
-      "description": "Schema version of this document. 0.14 removes the `ignored` journal outcome — an action kind the engine does not execute refuses the run — and publishes `model.npv` and `run.annual_discount_rate` only when a discount rate was stated. 0.13 publishes the model's contracts in `graph.contracts` — each with its type, master, instance, subject, parties and the streams lowered from it — and attributes each lowered stream series to its contract and its line by role (`contract` and `line` on the series); a slice's selection records its `lines`. 0.12 separates the model from its views: `model_hash` covers the IR without `views` (slices and statements), and `ledger_hash` now covers the journal and transitions beside the series. 0.11 adds model-declared statements: `pack` on the statements section is optional, and a statement may carry `metrics`. 0.10 adds `window` to a slice's selection — a reporting bound whose periods are the only ones the slice folds. 0.9 carries every metric a Monte Carlo trial computed into its trial summary, summarises each of them across the trials with the full set of percentiles, and adds `trials` to a metric summary — the count of trials that published that name. 0.8 adds `slices` — declared partial selections with their matched streams, net series and figures, and no reconciliation block by design. 0.7 publishes the model's entity graph (`graph`) and attributes each stream series to its owning entity and category. 0.6 nests an act's own acts under it as `children`. 0.5 added the machine's `transition` journal action. 0.4 added the account journal actions. 0.3 added `ledger_hash`, the optional `inputs` section, and `category` on IR streams."
+      "description": "Schema version of this document. 0.14 removes the `ignored` journal outcome — an action kind the engine does not execute refuses the run — and publishes `model.npv` and `run.annual_discount_rate` only when a discount rate was stated. 0.13 publishes the model's contracts in `graph.contracts` — each with its type, master, instance, subject, parties and the streams lowered from it — and attributes each lowered stream series to its contract and its line by role (`contract` and `line` on the series); a slice's selection records its `lines`. 0.12 separates the model from its views: `model_hash` covers the IR without `views` (slices and statements), and `ledger_hash` now covers the journal and transitions beside the series. 0.11 adds model-declared statements: `pack` on the statements section is optional, and a statement may carry `metrics`. 0.10 adds `window` to a slice's selection — a reporting bound whose periods are the only ones the slice folds. 0.9 carries every metric a Monte Carlo trial computed into its trial summary, summarizes each of them across the trials with the full set of percentiles, and adds `trials` to a metric summary — the count of trials that published that name. 0.8 adds `slices` — declared partial selections with their matched streams, net series and figures, and no reconciliation block by design. 0.7 publishes the model's entity graph (`graph`) and attributes each stream series to its owning entity and category. 0.6 nests an act's own acts under it as `children`. 0.5 added the machine's `transition` journal action. 0.4 added the account journal actions. 0.3 added `ledger_hash`, the optional `inputs` section, and `category` on IR streams."
     },
     "model_hash": {
       "type": "string",
@@ -5518,7 +5518,7 @@ against it by `make results-schema`.
     },
     "SeriesMap": {
       "type": "object",
-      "description": "Named time series outputs. Keys are prefixed by what they are: `stream.<name>` and `option.<name>` are cash and carry a currency; `model.net_cash_flow` is their aggregate; `<family>.<entity>.<field>` is an entity field and is NOT cash — it is a bare number with no currency and no offset, published so a recurrence can be inspected, and it never enters model.total, model.npv, the annual rollup or any domain metric. `entity.<symbol>.net_cash_flow` is an entity's cash AGGREGATED BY RELATION — its own streams plus every descendant's, following `part_of` rather than a name prefix, so a building's cash is its units' cash because they ARE its units. An entity with no children carries its own streams only, which is the pool that models collective behavior directly; the grain is the modeller's choice. Like a subtotal it is a fold OF the cash and never counts AS cash — excluded from model.total, model.npv, model.net_cash_flow and the annual rollup, because counting a parent and its children would double what it touches. `domain.<pack>.<name>` is a per-period SUBTOTAL — a declared aggregation of the classified streams. Money for a sum, a bare number or `null` for a ratio whose denominator vanishes. Like a field, it never enters model.total, model.npv, model.net_cash_flow or the per-stream annual rollup: it is an aggregation OF the cash, so counting it as cash would double what it touches. It carries no `offset`, because a subtotal spans streams that may settle at different points in a period and so has no single placement to claim.",
+      "description": "Named time series outputs. Keys are prefixed by what they are: `stream.<name>` and `option.<name>` are cash and carry a currency; `model.net_cash_flow` is their aggregate; `<family>.<entity>.<field>` is an entity field and is NOT cash — it is a bare number with no currency and no offset, published so a recurrence can be inspected, and it never enters model.total, model.npv, the annual rollup or any domain metric. `entity.<symbol>.net_cash_flow` is an entity's cash AGGREGATED BY RELATION — its own streams plus every descendant's, following `part_of` rather than a name prefix, so a building's cash is its units' cash because they ARE its units. An entity with no children carries its own streams only, which is the pool that models collective behavior directly; the grain is the modeler's choice. Like a subtotal it is a fold OF the cash and never counts AS cash — excluded from model.total, model.npv, model.net_cash_flow and the annual rollup, because counting a parent and its children would double what it touches. `domain.<pack>.<name>` is a per-period SUBTOTAL — a declared aggregation of the classified streams. Money for a sum, a bare number or `null` for a ratio whose denominator vanishes. Like a field, it never enters model.total, model.npv, model.net_cash_flow or the per-stream annual rollup: it is an aggregation OF the cash, so counting it as cash would double what it touches. It carries no `offset`, because a subtotal spans streams that may settle at different points in a period and so has no single placement to claim.",
       "additionalProperties": {
         "$ref": "#/$defs/Series"
       }
@@ -6481,7 +6481,7 @@ against it by `make results-schema`.
         "from",
         "to"
       ],
-      "description": "A slice's reporting bound, inclusive, normalised to YYYY-MM-DD.",
+      "description": "A slice's reporting bound, inclusive, normalized to YYYY-MM-DD.",
       "properties": {
         "from": {
           "type": "string"
@@ -7101,7 +7101,7 @@ to one currency, and the model must then agree (`E2107`).
 
 ### Contract design: decomposition and terms
 
-A contract is a helper: the modeller follows its shape and provides the terms,
+A contract is a helper: the modeler follows its shape and provides the terms,
 and the streams emerge. These rules are what make that shape trustworthy. Each
 exists because its violation shipped and cost something.
 
@@ -7122,13 +7122,13 @@ recoveries, servicing; a lease into rent, abatement, recoveries, TI/LC. A
 expense schedule — with the vocabulary carried by the instance name
 (`cre.opex_line.property_tax`), never by an enum term restating it.
 
-**Grain by instancing; level by entity.** The modeller chooses grain by how
+**Grain by instancing; level by entity.** The modeler chooses grain by how
 many instances they declare, and level by the entity each contract hangs on —
 `part_of` rolls it up. A rule MUST NOT take a `level` or `scope` term: that
 restates the entity tree in a place that can disagree with it.
 
 **Terms carry the agreement; rules carry the instrument.** A term may hold an
-expression, so a pack SHOULD NOT pre-bake value shapes the modeller can state
+expression, so a pack SHOULD NOT pre-bake value shapes the modeler can state
 directly — an escalator is `escalation = curve_value("cpi", time.date) + 0.005`,
 not a `rate`/`curve` twin-term pair with a selector spliced into the rule.
 What belongs in the rule is the instrument's own mechanics: amortization
@@ -7142,7 +7142,7 @@ carries `proceeds`, `interest` and `principal`. A line-item contract puts the
 line in the instance slot: `cre.opex.line.property_tax`. Contract TYPES may
 use underscores (`cre.lease_unit`, `cre.opex_line`) — they are authoring
 surface — but the streams a rule emits may not. This applies to PACK-LOWERED
-streams only: a hand-written stream is the modeller's own name and no pattern
+streams only: a hand-written stream is the modeler's own name and no pattern
 is enforced on it.
 
 **Categories are the semantics; names are addresses.** Every stream a rule
@@ -7160,7 +7160,7 @@ rare deliberate bare read.
 
 **The conventional vocabulary ships as templates.** `templates.toml` carries
 the standard set — the nine expense lines a statement usually shows, with
-sensible defaults — as editor snippets. The modeller starts from the
+sensible defaults — as editor snippets. The modeler starts from the
 convention and is free to name their own instance; anything unclaimed lands on
 the statement's residual row rather than vanishing.
 
@@ -7832,7 +7832,7 @@ models get `time.ppy` instead, which is the calendar-based equivalent.
 and daily-book versions of an instrument.
 
 **`_months` terms always mean calendar months**, on every calendar: they
-describe the contract, not the modeller's grid. `{{periods.X}}` converts one
+describe the contract, not the modeler's grid. `{{periods.X}}` converts one
 into a possibly-fractional period count and is for thresholds — five months
 free rent is 5 periods monthly, 1.667 quarterly, 0.417 annually, and pro-rates
 exactly in each case. `{{whole_periods.X}}` is for payment *counts* that go
@@ -8574,7 +8574,7 @@ see what is wrong with it.
   declare for it.
 - `E5025_TERM_EXPR_INVALID` — a term holds an expression that does not
   compile. Checked at the term's own span, before substitution: after the
-  splice the error would point at a rule the modeller did not write.
+  splice the error would point at a rule the modeler did not write.
 - `E5026_TERM_EXPR_IN_LITERAL_SLOT` — a term holding an expression is used by
   a rule where only a literal can go: a stream name, a schedule date, a
   frequency, or a net-days count. Those slots are never parsed as
@@ -9476,6 +9476,73 @@ parameterised = "parameterized"
 parameterises = "parameterizes"
 parameterising = "parameterizing"
 
+# Added 2026-09-16. The list above is what the audit measured; these are forms it
+# never met, confirmed to pass the gate before being added.
+colour = "color"
+colours = "colors"
+coloured = "colored"
+analyse = "analyze"
+analysed = "analyzed"
+analyses = "analyzes"
+analysing = "analyzing"
+defence = "defense"
+programme = "program"
+programmes = "programs"
+utilise = "utilize"
+utilised = "utilized"
+utilises = "utilizes"
+optimise = "optimize"
+optimised = "optimized"
+optimises = "optimizes"
+optimising = "optimizing"
+optimisation = "optimization"
+optimiser = "optimizer"
+organisation = "organization"
+organisations = "organizations"
+organise = "organize"
+organises = "organizes"
+standardise = "standardize"
+standardised = "standardized"
+standardises = "standardizes"
+normalise = "normalize"
+normalised = "normalized"
+normalises = "normalizes"
+specialise = "specialize"
+specialised = "specialized"
+prioritise = "prioritize"
+prioritised = "prioritized"
+minimise = "minimize"
+minimised = "minimized"
+maximise = "maximize"
+maximised = "maximized"
+initialise = "initialize"
+initialised = "initialized"
+serialise = "serialize"
+serialised = "serialized"
+characterise = "characterize"
+characterised = "characterized"
+emphasise = "emphasize"
+emphasised = "emphasized"
+summarise = "summarize"
+summarises = "summarizes"
+modeller = "modeler"
+modellers = "modelers"
+centred = "centered"
+judgement = "judgment"
+judgements = "judgments"
+acknowledgement = "acknowledgment"
+ageing = "aging"
+whilst = "while"
+amongst = "among"
+learnt = "learned"
+spelt = "spelled"
+travelling = "traveling"
+labelling = "labeling"
+signalling = "signaling"
+offence = "offense"
+pretence = "pretense"
+grey = "gray"
+
 # One concept, one term.
 
 [[preferred]]
@@ -9952,11 +10019,26 @@ occurrences = 10
 # ---------------------------------------------------------------------------
 
 [[not_approved]]
+# This entry BUILDS rule W6. The terms below are the gate, not a copy of it:
+# tools/check-site-voice.py compiles them at run time, so adding one here is the
+# whole change. Until 2026-09-16 the list lived twice, hardcoded in the tool and
+# restated here under a comment claiming the two could not drift, while nothing
+# read this copy at all.
+id = "W6"
+why = "reads as marketing rather than documentation"
+mode = "gate"
 terms = [
-  "blazing", "blazingly", "lightning-fast", "world-class", "cutting-edge",
-  "state-of-the-art", "revolutionary", "seamless", "seamlessly", "effortless",
-  "effortlessly", "game-changer", "game-changing", "best-in-class",
+  "blazing", "blazingly", "lightning-fast", "lightning fast", "world-class",
+  "world class", "cutting-edge", "cutting edge", "best in class",
+  "state-of-the-art", "state of the art", "revolutionary", "seamless",
+  "seamlessly", "effortless", "effortlessly", "game-changer", "game changer",
+  "game-changing", "game changing", "best-in-class",
   "unparalleled", "robust and", "powerful and", "simply put", "crown jewel",
+  # Added 2026-09-16. Intensifiers and self-praise the original list missed.
+  "incredibly", "extremely", "remarkably", "dramatically", "vastly", "hugely",
+  "massively", "elegantly", "beautifully", "trivially", "effortless",
+  "just works", "magical", "magically", "turnkey", "bulletproof", "rock-solid",
+  "battle-tested", "enterprise-grade", "supercharge", "supercharged",
 ]
 reason = "Marketing ornament. Each is a claim the reader should be left to make."
 use_instead = "State what the software does."
@@ -9973,11 +10055,110 @@ context = "currency"
 terms = ["×"]
 reason = "U+00D7 multiplication sign. Present in the generated benchmark pages."
 use_instead = "x — write 8.0x"
+# Contextual, like `mm`: banned as a valuation multiple (a digit, then the sign),
+# correct in spaced arithmetic and in grid dimensions. X1 carries that context.
+context = "multiple"
 
 [[not_approved]]
 terms = ["‑"]
 reason = "U+2011 non-breaking hyphen. Invisible in review and breaks search. Present in docs/01_language_spec.md."
 use_instead = "- (U+002D)"
+
+# ---------------------------------------------------------------------------
+# Rules carried as data.
+#
+# Each entry builds one rule in tools/check-site-voice.py. `mode` decides what a
+# finding costs:
+#
+#   gate    — fails the build. For rules that are mechanical and measure zero,
+#             where a hit is a defect and never a judgment call.
+#   review  — reported, never fails. For rules that are worth seeing and cannot
+#             be made precise enough to block on. The gate's founding rule is
+#             that a gate flagging judgment gets disabled, so judgment is
+#             surfaced here instead of being either enforced or dropped.
+#
+# A review rule is promoted to a gate once its findings have been worked through
+# and its list calibrated. That is the intended direction of travel.
+# ---------------------------------------------------------------------------
+
+[[rule]]
+id = "N5"
+mode = "gate"
+why = "names a competitor product"
+terms = ["Argus", "Intex", "PySAM", "System Advisor Model", "NREL's SAM"]
+reason = """
+Comparison against these is internal work. The parity documents discuss them at
+length and none of that reaches a reader. Naming one on a published page turns a
+measurement into a competitive claim, which is not what the documentation is for.
+"""
+use_instead = "Say what CFDL does. Let the reader make the comparison."
+waivable = false
+occurrences = 0
+
+# Deliberately NOT in the list above: Excel. It is named across the published
+# pages as an interchange format and as a technique — the rounding it produces,
+# the compatibility mode that reproduces it, the circularity its users recognise.
+# Those are facts a reader needs. A claim of superiority over it is caught by N8.
+
+[[rule]]
+id = "N8"
+mode = "review"
+why = "claims superiority rather than stating what the software does"
+terms = [
+  "better than", "faster than", "simpler than", "cleaner than", "safer than",
+  "more accurate than", "more powerful than", "superior to", "outperforms",
+  "outperform", "beats", "no other", "the only tool", "the only language",
+  "unlike most", "unlike other", "replaces the need for", "industry-leading",
+]
+reason = "A comparison the reader did not ask for, and usually cannot check."
+use_instead = "State the behaviour and let it stand on its own."
+
+[[rule]]
+id = "N9"
+mode = "review"
+why = "discloses that the product is unfinished"
+terms = [
+  "not yet implemented", "not yet supported", "not yet built", "not yet shipped",
+  "cannot yet", "does not yet", "no support for", "currently lacks",
+  "for now", "in a future release", "future work", "planned for",
+  "a known limitation", "this limitation", "work around this",
+]
+reason = """
+docs/16 §2.2 settles this: the repository records why, the site publishes the
+conclusions. A sentence about what the software cannot do yet tells a reader the
+tool is a work in progress, which is a statement about the project rather than
+about the product.
+
+The word `cannot` alone is deliberately absent. A specification legitimately says
+what is not permitted, and the temporal markers are what distinguish a rule from
+an apology.
+"""
+use_instead = "State what the software does. Leave the roadmap in the repository."
+
+[[rule]]
+id = "N7"
+mode = "review"
+why = "gives software a mind"
+subjects = [
+  "model", "engine", "language", "compiler", "parser", "pack", "gate", "checker",
+  "stream", "contract", "waterfall", "schedule", "account", "scenario", "run",
+]
+verbs = [
+  "wants", "want", "knows", "know", "thinks", "think", "believes", "believe",
+  "hopes", "hope", "cares", "care", "likes", "like", "prefers", "prefer",
+  "tries", "try", "struggles", "struggle", "remembers", "remember", "forgets",
+  "forget", "understands", "understand", "learns", "learn", "feels", "feel",
+  "decides", "decide", "expects", "expect", "worries", "worry",
+  "happily", "patiently", "eagerly", "politely", "cheerfully",
+]
+reason = """
+A model that wants something is a metaphor standing in for the mechanism, and the
+mechanism is what the reader came for.
+
+`refuses` and `rejects` are deliberately absent. A compiler that refuses a program
+is the precise word for what it does, not a personification.
+"""
+use_instead = "Name what the software does: accepts, rejects, evaluates, reports."
 ```
 
 ---
@@ -22970,7 +23151,7 @@ The library is small and chosen — every function earns its place in cash-flow 
 
 **Aggregation.** `sum`, `avg` over a list; and six reductions over another stream's published series — `series_sum`, `series_avg`, `series_min`, `series_max`, `series_prod`, `series_count`, each taking a name (or a `prefix.*` selector) and an inclusive period window — plus `wal`, the weighted average life in years of what a series paid, for a metric over a finished projection. `series_sum` is the construct that lets a fee be "2% of collections" without restating collections. When a selector matches several streams, they are added together *within each period first*, and the fold runs over that combined series — for a sum the order never mattered, but for a maximum it decides the answer: the peak of the combined position and the largest single cell are different numbers. An empty selection returns each fold's own identity (sum 0, product 1, count 0); `series_max` and `series_min` have none and return null, which compares (`==`) but refuses to order or add — an absence can never quietly become a number. The family has an evaluation-order story worth understanding before you lean on it, told in the machinery chapter.
 
-One trap worth naming before you meet it in a review. `max(series_sum("dbt.*", 0, time.t), 0)` does not compute a peak anything — `series_sum` is one number, the lifetime net over the window, and `max` of one number and zero is a floor, not a peak. Peak outstanding debt is `series_max` over the series that *carries the balance* — an entity field, read under the key the results publish it under. A running total synthesized from flows alone is a scan rather than a reduction, and there is no scan. If you find yourself labelling a `series_sum` a "peak," the model is claiming a lifetime net and calling it a high-water mark.
+One trap worth naming before you meet it in a review. `max(series_sum("dbt.*", 0, time.t), 0)` does not compute a peak anything — `series_sum` is one number, the lifetime net over the window, and `max` of one number and zero is a floor, not a peak. Peak outstanding debt is `series_max` over the series that *carries the balance* — an entity field, read under the key the results publish it under. A running total synthesized from flows alone is a scan rather than a reduction, and there is no scan. If you find yourself labeling a `series_sum` a "peak," the model is claiming a lifetime net and calling it a high-water mark.
 
 (One scope note for later: a declared `metric` evaluates in this same expression environment, plus the keys the finished results publish — waterfall steps, account balances, `entity.<name>.net_cash_flow`, `model.net_cash_flow`. Part III introduces metrics properly.)
 
@@ -24124,7 +24305,7 @@ None of these is a compile error, and that is the point of Part III: the compile
 
 **Refactoring without an invariant.** Moving a claim between constructs must not move cash. The method from the exercises you have already done: run before, refactor, run after, compare to the penny. A construct refactor with a changed total is two changes pretending to be one.
 
-**Reviewing the shape and skipping the numbers.** A beautifully-constructed model can still claim the wrong rent. Construct choice is half of review; chapter 3's descent is the other half, and neither substitutes.
+**Reviewing the shape and skipping the numbers.** A well-formed model can still claim the wrong rent. Construct choice is half of review; chapter 3's descent is the other half, and neither substitutes.
 
 ## Exercises
 

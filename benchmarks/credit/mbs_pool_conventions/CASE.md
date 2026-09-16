@@ -7,7 +7,7 @@ the definitional mechanics of mortgage cash flow.
 
 ## The reference
 
-The industry's own standard formulas for analysing mortgage-backed securities —
+The industry's own standard formulas for analyzing mortgage-backed securities —
 the document that *defines* CPR, SMM, PSA and SDA. It ships two complete
 176-month cash flow schedules, so the comparison is period by period against
 the definitions themselves.

@@ -27,7 +27,7 @@
 #
 # period_tolerance = 2.01. Each published figure is rounded to a whole dollar
 # and up to four are added, so two dollars bounds the residual arithmetically.
-# Not a judgement about this deal, and not loosened past it: the largest
+# Not a judgment about this deal, and not loosened past it: the largest
 # observed difference is 1.76.
 summary = "The same mortgage pool declared loan by loan, with the published pool schedule asserted against the aggregate the engine rolls up from its children."
 pack = "credit"
