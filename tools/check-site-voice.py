@@ -518,7 +518,14 @@ def sources() -> list[pathlib.Path]:
 
 
 _HTML_DROP = re.compile(r"<(details|style|script|pre)\b.*?</\1>", re.S)
-_HTML_TAG = re.compile(r"<[^>]+>")
+# A comment is not a tag. `<[^>]+>` ate `<!-- ... -->` whole, so a maintainer's
+# note in a published HTML page — a TODO, a backlog citation, ornament — was
+# deleted before any rule saw it. The reader does not render a comment, but it
+# ships in the bytes, and a note nobody checks is how this kind of thing reaches
+# a page in the first place. Markdown already reads its comments; this makes HTML
+# agree. It also leaves `<!-- site-allow: ... -->` intact, so the waiver form
+# works the same in both.
+_HTML_TAG = re.compile(r"<(?!!--)[^>]+>")
 
 
 def _lines_of(path: pathlib.Path) -> list[str]:
@@ -733,6 +740,15 @@ SELFTEST: tuple[Case, ...] = (
          suffix=".cfdl", note="a line comment is the opener in a model file"),
     Case("N2", "// TODO finish the pool", suffix=".cfdl",
          note="the same note without an annotation"),
+    # --- HTML comments are prose, in both formats ---------------------------
+    # A comment is not rendered, but it ships in the bytes, and a note nobody
+    # checks is how a maintainer's aside reaches a page in the first place.
+    Case("N2", "<!-- TODO: finish the reconciliation -->", suffix=".md"),
+    Case("N2", "<!-- TODO: finish the reconciliation -->", suffix=".html",
+         note="the tag stripper used to eat the whole comment"),
+    Case("W6", "<!-- a blazingly fast engine -->", suffix=".html"),
+    Case("", "<p>TODO later</p>  <!-- site-allow: a maintainer note -->", suffix=".html",
+         note="the waiver form is itself a comment and must survive the stripper"),
     # --- A case.toml publishes only its summary -----------------------------
     Case("", "# TODO a maintainer's note", suffix=".toml", only_summary=True),
     Case("N2", 'summary = "TODO write this"', suffix=".toml", only_summary=True),
