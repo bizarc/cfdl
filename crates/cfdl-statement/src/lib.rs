@@ -377,6 +377,17 @@ pub fn generate(
                     // when something narrows them.
                     let mut values = vec![0.0_f64; periods];
                     let mut drawn: Vec<String> = Vec::new();
+                    // A PARENT MAY HOLD CASH OF ITS OWN. Its subtotal folds the
+                    // whole subtree and claims nothing, because the rows beneath
+                    // it claim their own streams — but a stream owned by the
+                    // parent DIRECTLY sits beneath no such row, and fell through
+                    // to the residual. A development entity holding the land, the
+                    // hard costs, the loan and the equity above two buildings put
+                    // its entire capital stack under `Unclassified`; the bottom
+                    // line still reconciled, because the residual row counts, so
+                    // nothing but `W3500` said so.
+                    let mut own_values = vec![0.0_f64; periods];
+                    let mut own_drawn: Vec<String> = Vec::new();
                     for key in cash_keys {
                         let Some(owner) = series.get(*key).and_then(|s| s.entity.as_deref()) else {
                             continue;
@@ -397,16 +408,24 @@ pub fn generate(
                             continue;
                         }
                         // A LINE claims its subtree's streams; a subtotal claims
-                        // nothing, because the rows beneath it will.
+                        // only what it owns directly, on the row rendered below.
+                        // Either way a stream is claimed exactly once, which is
+                        // what keeps `W3501` quiet.
                         if !is_subtotal {
                             *claimed.entry((*key).clone()).or_insert(0) += 1;
                             drawn.push(bare_name(key));
+                        } else if owner == symbol {
+                            *claimed.entry((*key).clone()).or_insert(0) += 1;
+                            own_drawn.push(bare_name(key));
                         }
                         if let Some(s) = series.get(*key) {
                             for (t, v) in s.values.iter().enumerate().take(periods) {
                                 if in_window[t] {
                                     if let SeriesValue::Money(m) = v {
                                         values[t] += m.amount;
+                                        if owner == symbol {
+                                            own_values[t] += m.amount;
+                                        }
                                     }
                                 }
                             }
@@ -422,6 +441,24 @@ pub fn generate(
                         values: money(&grain.sum(&values), results),
                         streams: drawn,
                     });
+                    // BENEATH THE SUBTOTAL, BESIDE THE CHILDREN — the parent's
+                    // own cash is a sibling of its children's rows, which is
+                    // where a consolidating statement has always put it. Only
+                    // reached when `is_subtotal` holds, and `has_shown_child`
+                    // required `d + 1 < depth_limit` to set it, so this row is
+                    // always within the depth a reader asked for.
+                    if !own_drawn.is_empty() {
+                        own_drawn.sort();
+                        rows.push(StatementRow {
+                            kind: "line".to_string(),
+                            label: "Direct".to_string(),
+                            depth: d + 1,
+                            display_sign: 1.0,
+                            total: Some(round6(own_values.iter().sum())),
+                            values: money(&grain.sum(&own_values), results),
+                            streams: own_drawn,
+                        });
+                    }
                 }
             }
             "category" => {
@@ -458,26 +495,41 @@ pub fn generate(
                         .any(|other| other != node && other.starts_with(&format!("{node}.")));
                     let mut acc = vec![0.0_f64; periods];
                     let mut drawn: Vec<String> = Vec::new();
+                    // THE SAME HOLE THE ENTITY TREE HAD. A stream filed at
+                    // `operating.expense` exactly, beside others at
+                    // `operating.expense.opex`, belongs to a node that renders as
+                    // a subtotal — and claimed nothing. A category path is a
+                    // hierarchy like any other, so it gets the same row.
+                    let mut own_acc = vec![0.0_f64; periods];
+                    let mut own_drawn: Vec<String> = Vec::new();
                     for key in cash_keys {
                         let name = key
                             .strip_prefix("stream.")
                             .or_else(|| key.strip_prefix("option."))
                             .unwrap_or(key);
-                        let under = stream_categories
-                            .get(name)
-                            .is_some_and(|c| c == node || c.starts_with(&format!("{node}.")));
+                        let exact = stream_categories.get(name).is_some_and(|c| c == node);
+                        let under = exact
+                            || stream_categories
+                                .get(name)
+                                .is_some_and(|c| c.starts_with(&format!("{node}.")));
                         if !under {
                             continue;
                         }
                         if !is_subtotal {
                             *claimed.entry((*key).clone()).or_insert(0) += 1;
                             drawn.push(bare_name(key));
+                        } else if exact {
+                            *claimed.entry((*key).clone()).or_insert(0) += 1;
+                            own_drawn.push(bare_name(key));
                         }
                         if let Some(s) = series.get(*key) {
                             for (t, v) in s.values.iter().enumerate().take(periods) {
                                 if in_window[t] {
                                     if let SeriesValue::Money(m) = v {
                                         acc[t] += m.amount;
+                                        if exact {
+                                            own_acc[t] += m.amount;
+                                        }
                                     }
                                 }
                             }
@@ -493,6 +545,22 @@ pub fn generate(
                         values: money(&grain.sum(&acc), results),
                         streams: drawn,
                     });
+                    // A node that renders as a subtotal only ever has deeper
+                    // nodes because those nodes are in `ordered`, and `ordered`
+                    // admits nothing past `depth_limit` — so `d + 1` is in range
+                    // whenever this row exists.
+                    if !own_drawn.is_empty() {
+                        own_drawn.sort();
+                        rows.push(StatementRow {
+                            kind: "line".to_string(),
+                            label: "Direct".to_string(),
+                            depth: d + 1,
+                            display_sign: 1.0,
+                            total: Some(round6(own_acc.iter().sum())),
+                            values: money(&grain.sum(&own_acc), results),
+                            streams: own_drawn,
+                        });
+                    }
                 }
             }
             other => {

@@ -393,6 +393,30 @@
           },
           {
             "kind": "line",
+            "label": "Direct",
+            "depth": 1,
+            "display_sign": 1.0,
+            "values": [
+              {
+                "amount": -30.0,
+                "currency": "USD"
+              },
+              {
+                "amount": -30.0,
+                "currency": "USD"
+              },
+              {
+                "amount": -30.0,
+                "currency": "USD"
+              }
+            ],
+            "total": -90.0,
+            "streams": [
+              "cre.opex.building"
+            ]
+          },
+          {
+            "kind": "line",
             "label": "Suite a",
             "depth": 1,
             "display_sign": 1.0,
@@ -438,43 +462,13 @@
             "streams": [
               "cre.rent.suite_b"
             ]
-          },
-          {
-            "kind": "residual",
-            "label": "Unclassified",
-            "depth": 1,
-            "display_sign": 1.0,
-            "values": [
-              {
-                "amount": -30.0,
-                "currency": "USD"
-              },
-              {
-                "amount": -30.0,
-                "currency": "USD"
-              },
-              {
-                "amount": -30.0,
-                "currency": "USD"
-              }
-            ],
-            "total": -90.0,
-            "streams": [
-              "cre.opex.building"
-            ]
           }
         ],
         "reconciliation": {
           "bottom_line": 360.0,
           "model_total": 360.0,
           "residual": 0.0
-        },
-        "diagnostics": [
-          {
-            "code": "W3500_STATEMENT_UNCLASSIFIED_STREAM",
-            "message": "1 stream(s) are in no row of statement 'by_entity', so the bottom line is short by -90.00: cre.opex.building. Classify them, or give the statement a row that claims them."
-          }
-        ]
+        }
       }
     ]
   },

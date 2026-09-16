@@ -383,6 +383,30 @@
           },
           {
             "kind": "line",
+            "label": "Direct",
+            "depth": 1,
+            "display_sign": 1.0,
+            "values": [
+              {
+                "amount": 100000.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 100000.0,
+                "currency": "USD"
+              },
+              {
+                "amount": 100000.0,
+                "currency": "USD"
+              }
+            ],
+            "total": 300000.0,
+            "streams": [
+              "cre.rent"
+            ]
+          },
+          {
+            "kind": "line",
             "label": "Suite a",
             "depth": 1,
             "display_sign": 1.0,
@@ -422,43 +446,13 @@
               }
             ],
             "total": 0.0
-          },
-          {
-            "kind": "residual",
-            "label": "Unclassified",
-            "depth": 1,
-            "display_sign": 1.0,
-            "values": [
-              {
-                "amount": 100000.0,
-                "currency": "USD"
-              },
-              {
-                "amount": 100000.0,
-                "currency": "USD"
-              },
-              {
-                "amount": 100000.0,
-                "currency": "USD"
-              }
-            ],
-            "total": 300000.0,
-            "streams": [
-              "cre.rent"
-            ]
           }
         ],
         "reconciliation": {
           "bottom_line": 300000.0,
           "model_total": 300000.0,
           "residual": 0.0
-        },
-        "diagnostics": [
-          {
-            "code": "W3500_STATEMENT_UNCLASSIFIED_STREAM",
-            "message": "1 stream(s) are in no row of statement 'by_entity', so the bottom line is short by 300000.00: cre.rent. Classify them, or give the statement a row that claims them."
-          }
-        ]
+        }
       }
     ]
   },

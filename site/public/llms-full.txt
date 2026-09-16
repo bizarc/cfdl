@@ -10137,7 +10137,7 @@ Templates (starting points; the `skeleton` MCP tool assembles them into a compil
 
 CFDL 0.9.0. Every model below compiles, and its IR and
 results are byte-asserted against goldens in CI (`fixtures/valid/`,
-170 models.
+171 models.
 
 `gold/ir/`, `gold/results/`). Each is single-purpose: the directory name
 says what it exercises. This is what right looks like — positive few-shot
@@ -16473,6 +16473,89 @@ statement by_year {
   grain annual
   line  "Net operating income" { slice noi }
   ratio "DSCR"                 { of noi to ds display positive }
+}
+```
+
+## statement_parent_owned_cash
+
+```cfdl
+version 0.1
+model "statement-parent-owned-cash"
+time calendar annual from 2026-01 for 3
+
+// A NODE THAT IS BOTH A PARENT AND AN OWNER.
+//
+// `statement_by_entity` hangs every stream on a LEAF, so each generated row
+// either claims its own cash or is a pure subtotal over rows beneath it. That
+// is the easy shape, and it hid a hole: a subtotal claimed nothing, on the
+// reasoning that the rows beneath it would, and cash owned by the parent
+// DIRECTLY sits beneath no such row. It fell through to the residual and was
+// published as `Unclassified` under `W3500`.
+//
+// The shape is not exotic. A development entity holding the land, the hard
+// costs, the construction loan and the equity above the buildings it is
+// putting up is exactly this, and it put its entire capital stack under
+// `Unclassified` while the bottom line still reconciled — because the residual
+// row counts toward it, so nothing but the diagnostic said so.
+
+entity container fund : Container.Fund
+
+entity asset north : Asset.Financial { part of container.fund }
+entity asset south : Asset.Financial { part of container.fund }
+
+stream north.rent on entity asset.north inflow currency USD {
+  schedule every year from 2026-01 to 2028-01
+  category operating.revenue.base_rent
+  amount = 100
+}
+
+stream south.rent on entity asset.south inflow currency USD {
+  schedule every year from 2026-01 to 2028-01
+  category operating.revenue.base_rent
+  amount = 60
+}
+
+// THE PARENT'S OWN CASH. A fee on the fund, not on either property — so no
+// property row can carry it, and the fund's row is a subtotal because its
+// children are shown.
+stream fund.management_fee on entity container.fund outflow currency USD {
+  schedule every year from 2026-01 to 2028-01
+  category operating.expense
+  amount = 20
+}
+
+// AND THE SAME SHAPE ON THE OTHER HIERARCHY. `operating.expense` is an
+// interior node once `operating.expense.opex` exists, so the category tree has
+// a stream filed at a node that renders as a subtotal — the entity defect's
+// twin, on the structure a category path describes.
+stream north.opex on entity asset.north outflow currency USD {
+  schedule every year from 2026-01 to 2028-01
+  category operating.expense.opex
+  amount = 15
+}
+
+// THE FUND IS A SUBTOTAL over its two properties, and its own fee is a line
+// beneath it beside them. Every stream is claimed exactly once, so the bottom
+// line is the sum of the lines and no residual row is emitted.
+statement by_property {
+  label     "By property"
+  structure entity
+  depth     2
+}
+
+// ONE LEVEL UP the children are cut off, so the fund is a LINE carrying all of
+// the cash including its own — the pre-existing rule, unchanged, and the case
+// that says the new row appears only where it is needed.
+statement by_property_summary {
+  label     "Fund, one line"
+  structure entity
+  depth     1
+}
+
+statement by_category {
+  label     "By category"
+  structure category
+  depth     3
 }
 ```
 
